@@ -1,0 +1,6 @@
+apiVersion: v2
+name: butano
+description: "BUTANO \u2014 Shared Health Record (HAPI FHIR R4 JPA)"
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

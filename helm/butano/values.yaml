@@ -1,0 +1,42 @@
+replicaCount: 1
+
+image:
+  repository: impilo/butano-service
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  httpPort: 8090
+
+env:
+  SPRING_DATASOURCE_URL: jdbc:postgresql://postgresql:5432/butano
+  SPRING_DATASOURCE_USERNAME: impilo
+  SPRING_DATASOURCE_PASSWORD: impilo
+  SPRING_DATA_REDIS_HOST: redis
+  SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+  SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/realms/impilo
+  HAPI_FHIR_SERVER_ADDRESS: http://butano-service:8090/fhir
+  BUTANO_SERVER_ADDRESS: http://butano-service:8090
+  LUCENE_INDEX_DIR: /data/lucene
+  ZIBO_SERVICE_URL: http://zibo-service:8085
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 512Mi
+  limits:
+    cpu: "2"
+    memory: 2Gi
+
+livenessProbe:
+  httpGet:
+    path: /actuator/health/liveness
+    port: 8090
+  initialDelaySeconds: 60
+
+readinessProbe:
+  httpGet:
+    path: /actuator/health/readiness
+    port: 8090
+  initialDelaySeconds: 30

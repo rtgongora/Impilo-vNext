@@ -1,0 +1,566 @@
+# =============================================================================
+# BUTANO — Shared Health Record: Custom (non-FHIR) Endpoints (OpenAPI 3.0)
+#
+# These endpoints sit alongside the standard HAPI FHIR R4 REST interface and
+# provide IPS generation, patient timelines, CPID reconciliation, and
+# operational introspection.
+# =============================================================================
+openapi: "3.0.3"
+
+info:
+  title: BUTANO — Shared Health Record (Custom Endpoints)
+  version: "1.0.0"
+  description: |
+    BUTANO wraps HAPI FHIR R4 JPA and exposes additional endpoints for:
+    * **IPS** — International Patient Summary bundle generation
+    * **Visit Summary** — Per-encounter bundle generation
+    * **Timeline** — Chronological patient resource timeline
+    * **Reconciliation** — CPID subject reconciliation (merge / re-key)
+    * **Ops** — Tenant health checks and resource statistics
+
+    All endpoints require a valid Bearer JWT and TSHEPO trust headers
+    (`X-Tenant-Id`, `X-Actor-Id`, `X-Correlation-Id`, etc.) injected by
+    Envoy ext_authz.
+
+    The standard FHIR R4 REST API is served under `/fhir/` and is not
+    documented here — see the HAPI FHIR capability statement instead.
+  contact:
+    name: Impilo Platform Team
+  license:
+    name: Proprietary
+
+servers:
+  - url: http://localhost:8090
+    description: Local development
+  - url: https://{tenant}.impilo.health/api
+    description: Production (per-tenant)
+    variables:
+      tenant:
+        default: demo
+
+# ---------------------------------------------------------------------------
+# Security — all requests carry trust headers injected by Envoy + TSHEPO
+# ---------------------------------------------------------------------------
+security:
+  - bearerAuth: []
+
+tags:
+  - name: IPS
+    description: International Patient Summary generation
+  - name: Visit
+    description: Visit / encounter summary bundles
+  - name: Timeline
+    description: Chronological patient resource timeline
+  - name: Reconciliation
+    description: CPID subject reconciliation (internal)
+  - name: Ops
+    description: Operational health and statistics (internal)
+
+# ===========================================================================
+# Paths
+# ===========================================================================
+paths:
+  # -------------------------------------------------------------------------
+  # IPS Bundle
+  # -------------------------------------------------------------------------
+  /v1/summary/ips/{cpid}:
+    get:
+      operationId: getIpsSummary
+      summary: Generate an International Patient Summary for a patient
+      description: |
+        Returns a FHIR Bundle (type: document) conforming to the IPS
+        Implementation Guide. The bundle contains Composition + referenced
+        resources (allergies, problems, medications, immunizations, vitals,
+        lab results, procedures, care plans).
+      tags: [IPS]
+      parameters:
+        - name: cpid
+          in: path
+          required: true
+          description: Client Pseudonymous ID (CPID) — the BUTANO-internal patient reference
+          schema:
+            type: string
+            example: "CPID-00000001"
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Actor-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+      responses:
+        '200':
+          description: IPS FHIR Bundle (type document)
+          content:
+            application/fhir+json:
+              schema:
+                description: FHIR R4 Bundle (IPS document)
+                type: object
+        '404':
+          description: Patient not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # -------------------------------------------------------------------------
+  # Visit Summary Bundle
+  # -------------------------------------------------------------------------
+  /v1/summary/visit/{encounterId}:
+    get:
+      operationId: getVisitSummary
+      summary: Generate a visit summary bundle for an encounter
+      description: |
+        Returns a FHIR Bundle containing all resources associated with the
+        specified encounter (observations, conditions, medications, etc.).
+      tags: [Visit]
+      parameters:
+        - name: encounterId
+          in: path
+          required: true
+          description: Logical FHIR Encounter ID
+          schema:
+            type: string
+            example: "enc-2024-00042"
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Actor-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+      responses:
+        '200':
+          description: Visit summary FHIR Bundle
+          content:
+            application/fhir+json:
+              schema:
+                description: FHIR R4 Bundle (visit summary)
+                type: object
+        '404':
+          description: Encounter not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # -------------------------------------------------------------------------
+  # Patient Timeline
+  # -------------------------------------------------------------------------
+  /v1/timeline/{cpid}:
+    get:
+      operationId: getPatientTimeline
+      summary: Retrieve a chronological timeline of patient resources
+      description: |
+        Aggregates clinical resources for the patient and returns them in
+        reverse-chronological order. Supports filtering by resource type and
+        date range, with cursor-based pagination.
+      tags: [Timeline]
+      parameters:
+        - name: cpid
+          in: path
+          required: true
+          description: Client Pseudonymous ID
+          schema:
+            type: string
+            example: "CPID-00000001"
+        - name: since
+          in: query
+          required: false
+          description: Only include resources created or updated after this date (ISO 8601)
+          schema:
+            type: string
+            format: date
+            example: "2024-01-01"
+        - name: type
+          in: query
+          required: false
+          description: Comma-separated list of FHIR resource types to include
+          schema:
+            type: string
+            example: "Encounter,Observation,Condition,MedicationRequest"
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 20
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Actor-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+      responses:
+        '200':
+          description: Paginated timeline
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseTimelineResponse'
+        '404':
+          description: Patient not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # -------------------------------------------------------------------------
+  # CPID Reconciliation — trigger
+  # -------------------------------------------------------------------------
+  /v1/internal/reconcile-subject:
+    post:
+      operationId: reconcileSubject
+      summary: Trigger CPID reconciliation (re-key patient references)
+      description: |
+        When VITO merges two identities, the surviving CPID must replace the
+        deprecated CPID across all FHIR resources. This endpoint queues an
+        asynchronous reconciliation job that updates Patient references,
+        Encounter subjects, Observation subjects, etc.
+      tags: [Reconciliation]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReconcileSubjectRequest'
+      responses:
+        '202':
+          description: Reconciliation accepted and queued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseReconciliationStatus'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # -------------------------------------------------------------------------
+  # CPID Reconciliation — status
+  # -------------------------------------------------------------------------
+  /v1/internal/reconciliation/{id}:
+    get:
+      operationId: getReconciliationStatus
+      summary: Get the status of a reconciliation job
+      tags: [Reconciliation]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Reconciliation job ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Reconciliation status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseReconciliationStatus'
+        '404':
+          description: Reconciliation job not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # -------------------------------------------------------------------------
+  # Tenant Health
+  # -------------------------------------------------------------------------
+  /v1/internal/health/tenants:
+    get:
+      operationId: getTenantHealth
+      summary: List tenant partition health
+      description: |
+        Returns the list of configured tenants and their active status.
+        Used by the ops console to verify multi-tenant FHIR partitioning.
+      tags: [Ops]
+      responses:
+        '200':
+          description: Array of tenant info
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseTenantInfoArray'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # -------------------------------------------------------------------------
+  # Resource Statistics
+  # -------------------------------------------------------------------------
+  /v1/internal/stats:
+    get:
+      operationId: getResourceStats
+      summary: Get aggregate resource counts by type
+      description: |
+        Returns a map of FHIR resource type names to their total count in the
+        current tenant's partition. Useful for ops dashboards.
+      tags: [Ops]
+      responses:
+        '200':
+          description: Resource statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseResourceStats'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+# ===========================================================================
+# Components
+# ===========================================================================
+components:
+  # -------------------------------------------------------------------------
+  # Security Schemes
+  # -------------------------------------------------------------------------
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Keycloak-issued JWT — also validated by Envoy ext_authz → TSHEPO
+
+  # -------------------------------------------------------------------------
+  # Reusable Parameters (trust headers)
+  # -------------------------------------------------------------------------
+  parameters:
+    X-Tenant-Id:
+      name: X-Tenant-Id
+      in: header
+      required: true
+      description: Tenant identifier injected by TSHEPO
+      schema:
+        type: string
+    X-Actor-Id:
+      name: X-Actor-Id
+      in: header
+      required: true
+      description: Actor (user/service) identifier injected by TSHEPO
+      schema:
+        type: string
+    X-Correlation-Id:
+      name: X-Correlation-Id
+      in: header
+      required: true
+      description: End-to-end correlation ID for distributed tracing
+      schema:
+        type: string
+        format: uuid
+
+  # -------------------------------------------------------------------------
+  # Reusable Responses
+  # -------------------------------------------------------------------------
+  responses:
+    Unauthorized:
+      description: Missing or invalid bearer token / trust headers
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+  # -------------------------------------------------------------------------
+  # Schemas
+  # -------------------------------------------------------------------------
+  schemas:
+    # -- API Envelope wrappers --
+    ApiResponseTimelineResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/TimelineResponse'
+
+    ApiResponseReconciliationStatus:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/ReconciliationStatus'
+
+    ApiResponseTenantInfoArray:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/TenantInfo'
+
+    ApiResponseResourceStats:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/ResourceStats'
+
+    # -- Domain Schemas --
+    TimelineResponse:
+      type: object
+      required: [items, page, size, totalElements, totalPages, hasNext]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimelineItem'
+        page:
+          type: integer
+          example: 0
+        size:
+          type: integer
+          example: 20
+        totalElements:
+          type: integer
+          format: int64
+          example: 142
+        totalPages:
+          type: integer
+          example: 8
+        hasNext:
+          type: boolean
+          example: true
+
+    TimelineItem:
+      type: object
+      required: [resourceType, resourceId, date, summary]
+      properties:
+        resourceType:
+          type: string
+          description: FHIR resource type name
+          example: "Observation"
+        resourceId:
+          type: string
+          description: Logical FHIR resource ID
+          example: "obs-lab-12345"
+        date:
+          type: string
+          format: date-time
+          description: Clinically relevant date of the resource
+          example: "2024-08-15T10:30:00Z"
+        summary:
+          type: string
+          description: Human-readable one-line summary
+          example: "Blood Pressure: 120/80 mmHg"
+        encounterRef:
+          type: string
+          description: Reference to the associated Encounter (if any)
+          example: "Encounter/enc-2024-00042"
+
+    ReconcileSubjectRequest:
+      type: object
+      required: [oldCpid, newCpid, reason]
+      properties:
+        oldCpid:
+          type: string
+          description: The deprecated CPID to be replaced
+          example: "CPID-OLD-00001"
+        newCpid:
+          type: string
+          description: The surviving CPID that replaces the old one
+          example: "CPID-NEW-00002"
+        reason:
+          type: string
+          description: Human-readable reason for the reconciliation
+          example: "VITO identity merge — duplicate detected"
+
+    ReconciliationStatus:
+      type: object
+      required: [id, tenantId, oldCpid, newCpid, status, resourcesUpdated, requestedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique reconciliation job ID
+        tenantId:
+          type: string
+          description: Tenant that owns this reconciliation
+        oldCpid:
+          type: string
+          description: The deprecated CPID
+        newCpid:
+          type: string
+          description: The surviving CPID
+        status:
+          type: string
+          enum: [PENDING, IN_PROGRESS, COMPLETED, FAILED]
+          description: Current job status
+        resourcesUpdated:
+          type: integer
+          description: Number of FHIR resources re-keyed so far
+          example: 47
+        requestedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+        errorMessage:
+          type: string
+          nullable: true
+          description: Error details if status is FAILED
+
+    TenantInfo:
+      type: object
+      required: [tenantId, tenantName, active]
+      properties:
+        tenantId:
+          type: string
+          example: "moh-zw"
+        tenantName:
+          type: string
+          example: "Ministry of Health — Zimbabwe"
+        active:
+          type: boolean
+          example: true
+
+    ResourceStats:
+      type: object
+      required: [counts]
+      properties:
+        counts:
+          type: object
+          description: Map of FHIR resource type to total count
+          additionalProperties:
+            type: integer
+          example:
+            Patient: 12450
+            Encounter: 87230
+            Observation: 342100
+            Condition: 15600
+            MedicationRequest: 23400
+            Immunization: 8900
+            AllergyIntolerance: 3200
+            Procedure: 11500
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "NOT_FOUND"
+            message:
+              type: string
+              example: "Patient with CPID CPID-00000001 not found"
