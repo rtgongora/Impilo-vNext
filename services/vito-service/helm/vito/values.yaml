@@ -7,12 +7,12 @@ image:
 
 service:
   type: ClusterIP
-  port: 8080
+  port: 8082
 
 resources:
   requests:
-    cpu: 250m
-    memory: 512Mi
-  limits:
-    cpu: 1000m
+    cpu: 500m
     memory: 1Gi
+  limits:
+    cpu: 2000m
+    memory: 2Gi

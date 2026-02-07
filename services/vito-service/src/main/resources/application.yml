@@ -1,0 +1,83 @@
+server:
+  port: 8082
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: vito-service
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/vito
+    username: ${POSTGRES_USER:impilo}
+    password: ${POSTGRES_PASSWORD:changeme}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_schema: vito
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    schemas: vito
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:impilo}
+
+# ---- VITO-specific configuration ----
+
+vito:
+  # Argon2id parameters (Architect directive: m=64MB, t=3, p=4)
+  argon2:
+    memory-cost-kb: 65536     # 64 MiB
+    iterations: 3
+    parallelism: 4
+
+  # HMAC pepper — must be supplied via K8s Secret or Vault
+  hmac:
+    pepper: ${VITO_HMAC_PEPPER:changeme-not-for-production}
+
+  # DID method for sovereign identity
+  did:
+    method: impilo
+
+  # Card lifecycle
+  card:
+    expiry-years: 5
+
+  # Matching engine
+  matching:
+    threshold-auto-link: 0.95
+    threshold-manual-review: 0.70
+
+  # Mode: OPENCR or STANDALONE
+  registry-mode: ${VITO_REGISTRY_MODE:STANDALONE}
+
+  # OpenCR integration (Mode A)
+  opencr:
+    base-url: ${OPENCR_BASE_URL:http://localhost:3000/fhir}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  metrics:
+    tags:
+      application: vito-service
