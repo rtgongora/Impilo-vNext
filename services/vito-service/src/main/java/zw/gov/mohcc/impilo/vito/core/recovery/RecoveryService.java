@@ -54,11 +54,9 @@ public class RecoveryService {
         // Step 2: Request new card
         SmartCardEntity newCard = cardService.requestCard(tenantId, healthId, newPublicKey, requestedBy);
 
-        // Step 3: Transfer wallet balance
-        String txRef = "HANDOVER-" + UUID.randomUUID().toString().substring(0, 8);
-        walletService.transferBalance(tenantId, healthId, healthId, "ZWL", txRef);
-
-        // Link new card to wallet if it exists
+        // Step 3: Re-associate wallet with new card
+        // Wallet is keyed by healthId (not cardId), so balance is already preserved.
+        // We only need to update the card reference.
         walletService.getWallet(tenantId, healthId)
                 .ifPresent(wallet -> {
                     wallet.setCardId(newCard.getId());

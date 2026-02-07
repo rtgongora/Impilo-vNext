@@ -27,8 +27,7 @@ CREATE TABLE vito.smart_card (
     created_at          TIMESTAMPTZ  NOT NULL DEFAULT now(),
     updated_at          TIMESTAMPTZ  NOT NULL DEFAULT now(),
 
-    CONSTRAINT uq_card_number UNIQUE (tenant_id, card_number),
-    CONSTRAINT uq_active_card UNIQUE (tenant_id, health_id) WHERE (status = 'ACTIVE')
+    CONSTRAINT uq_card_number UNIQUE (tenant_id, card_number)
 );
 
 -- Partial unique index: one active card per client per tenant

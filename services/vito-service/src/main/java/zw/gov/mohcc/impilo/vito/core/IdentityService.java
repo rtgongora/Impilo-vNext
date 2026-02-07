@@ -69,9 +69,9 @@ public class IdentityService {
         // Generate sovereign DID (Black Box — no PII input)
         String did = didGenerator.generate(client.getHealthId());
 
-        // Issue IMPILO_ID alias
-        aliasService.issueAlias(tenantId, client.getHealthId(), "IMPILO_ID",
-                client.getHealthId().toString());
+        // Note: IMPILO_ID alias is NOT created at registration time.
+        // The human-facing Impilo ID (#########X) is generated later during
+        // IssuanceStateMachineService.issue() when the issuance is approved.
 
         // Publish IDENTITY_CREATED event
         publishEvent("CLIENT", client.getHealthId().toString(),

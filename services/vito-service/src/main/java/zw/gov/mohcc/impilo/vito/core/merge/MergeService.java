@@ -41,10 +41,10 @@ public class MergeService {
     public MergeHistoryEntity merge(UUID tenantId, UUID survivorCrid, UUID mergedCrid,
                                      Long dedupCaseId, String strategy, String fieldDecisions,
                                      String actorId, String actorType) {
-        // Validate both clients exist
-        ClientEntity survivor = clientRepo.findByTenantIdAndHealthId(tenantId, survivorCrid)
+        // Validate both clients exist (lookup by CRID, not healthId)
+        ClientEntity survivor = clientRepo.findByTenantIdAndCrid(tenantId, survivorCrid)
                 .orElseThrow(() -> new IllegalArgumentException("Survivor client not found"));
-        ClientEntity merged = clientRepo.findByTenantIdAndHealthId(tenantId, mergedCrid)
+        ClientEntity merged = clientRepo.findByTenantIdAndCrid(tenantId, mergedCrid)
                 .orElseThrow(() -> new IllegalArgumentException("Merged client not found"));
 
         if (merged.getStatus() == IdentityStatus.MERGED) {
@@ -55,10 +55,11 @@ public class MergeService {
         merged.setStatus(IdentityStatus.MERGED);
         clientRepo.save(merged);
 
-        // Transfer active aliases from merged to survivor
-        List<IdentityAliasEntity> mergedAliases = aliasRepo.findByTenantIdAndHealthIdAndStatus(tenantId, mergedCrid, "ACTIVE");
+        // Transfer active aliases from merged to survivor (use actual healthIds, not CRIDs)
+        List<IdentityAliasEntity> mergedAliases = aliasRepo.findByTenantIdAndHealthIdAndStatus(
+                tenantId, merged.getHealthId(), "ACTIVE");
         for (IdentityAliasEntity alias : mergedAliases) {
-            alias.setHealthId(survivorCrid);
+            alias.setHealthId(survivor.getHealthId());
             aliasRepo.save(alias);
         }
 
@@ -118,8 +119,8 @@ public class MergeService {
             throw new IllegalStateException("This merge has already been reversed");
         }
 
-        // Restore merged client
-        ClientEntity merged = clientRepo.findByTenantIdAndHealthId(tenantId, history.getMergedCrid())
+        // Restore merged client (lookup by CRID)
+        ClientEntity merged = clientRepo.findByTenantIdAndCrid(tenantId, history.getMergedCrid())
                 .orElseThrow();
         merged.setStatus(IdentityStatus.ACTIVE);
         clientRepo.save(merged);
