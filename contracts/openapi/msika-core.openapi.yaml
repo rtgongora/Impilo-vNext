@@ -1,0 +1,1135 @@
+openapi: 3.0.3
+info:
+  title: MSIKA Core — National Products & Services Registry API
+  description: |
+    National registry of health products, services, orderables, chargeables,
+    and capability taxonomies for the Impilo platform.
+
+    Dual-mode: authoritative source-of-truth (internal) and external catalog
+    ingestion with mapping/governance workflows.
+
+    Trust headers required on all requests:
+    - X-Tenant-Id (UUID)
+    - X-Correlation-Id (UUID, auto-generated if absent)
+    - X-Actor-Id (string)
+    - X-Actor-Type (string)
+    - X-Purpose-Of-Use (string)
+    - X-Device-Fingerprint (string)
+
+    Step-up authentication required for:
+    - Publishing catalogs
+    - Approving mappings into national baseline
+    - Changing regulated flags/restrictions
+    - Bulk price/tariff imports
+    - Exporting full catalogs
+  version: 0.1.0
+  contact:
+    name: MoHCC Zimbabwe — Impilo Platform
+  license:
+    name: Government of Zimbabwe
+
+servers:
+  - url: http://localhost:8086
+    description: Local development
+  - url: https://{tenant}.impilo.health/msika
+    description: Production
+    variables:
+      tenant:
+        default: national
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Catalogs
+    description: Versioned catalog lifecycle management
+  - name: Items
+    description: Catalog item CRUD operations
+  - name: Search
+    description: Full-text search and discovery
+  - name: Packs
+    description: Consumer pack generation (stable integration contracts)
+  - name: Import
+    description: CSV upload, external source connectors, import jobs
+  - name: Mappings
+    description: External code mapping approval workflow
+  - name: Validation
+    description: Item and pack validation endpoints
+
+paths:
+  /v1/catalogs:
+    post:
+      tags: [Catalogs]
+      summary: Create a new catalog
+      operationId: createCatalog
+      parameters:
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCatalogRequest'
+      responses:
+        '200':
+          description: Catalog created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogResponse'
+    get:
+      tags: [Catalogs]
+      summary: List catalogs
+      operationId: listCatalogs
+      parameters:
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+        - name: tenantId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/size'
+      responses:
+        '200':
+          description: Paginated catalog list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedCatalogResponse'
+
+  /v1/catalogs/{catalogId}:
+    get:
+      tags: [Catalogs]
+      summary: Get catalog by ID
+      operationId: getCatalog
+      parameters:
+        - $ref: '#/components/parameters/catalogId'
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+      responses:
+        '200':
+          description: Catalog details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogResponse'
+
+  /v1/catalogs/{catalogId}/submit-review:
+    post:
+      tags: [Catalogs]
+      summary: Submit catalog for review
+      operationId: submitCatalogForReview
+      parameters:
+        - $ref: '#/components/parameters/catalogId'
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+      responses:
+        '200':
+          description: Catalog submitted for review
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogResponse'
+
+  /v1/catalogs/{catalogId}/approve:
+    post:
+      tags: [Catalogs]
+      summary: Approve catalog
+      operationId: approveCatalog
+      parameters:
+        - $ref: '#/components/parameters/catalogId'
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+      responses:
+        '200':
+          description: Catalog approved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogResponse'
+
+  /v1/catalogs/{catalogId}/publish:
+    post:
+      tags: [Catalogs]
+      summary: Publish catalog (requires step-up auth)
+      operationId: publishCatalog
+      parameters:
+        - $ref: '#/components/parameters/catalogId'
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+      responses:
+        '200':
+          description: Catalog published
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogResponse'
+
+  /v1/catalogs/{catalogId}/rollback/{version}:
+    post:
+      tags: [Catalogs]
+      summary: Rollback to a previously published version
+      operationId: rollbackCatalog
+      parameters:
+        - $ref: '#/components/parameters/catalogId'
+        - name: version
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+      responses:
+        '200':
+          description: New catalog created from rollback
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogResponse'
+
+  /v1/catalogs/{catalogId}/items:
+    post:
+      tags: [Items]
+      summary: Add item to catalog
+      operationId: createItem
+      parameters:
+        - $ref: '#/components/parameters/catalogId'
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateItemRequest'
+      responses:
+        '200':
+          description: Item created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemResponse'
+    get:
+      tags: [Items]
+      summary: List items in catalog
+      operationId: listItems
+      parameters:
+        - $ref: '#/components/parameters/catalogId'
+        - name: kind
+          in: query
+          schema:
+            $ref: '#/components/schemas/ItemKind'
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/size'
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+      responses:
+        '200':
+          description: Paginated item list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedItemResponse'
+
+  /v1/items/{itemId}:
+    get:
+      tags: [Items]
+      summary: Get item by ID
+      operationId: getItem
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+      responses:
+        '200':
+          description: Item details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemResponse'
+    put:
+      tags: [Items]
+      summary: Update item
+      operationId: updateItem
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateItemRequest'
+      responses:
+        '200':
+          description: Item updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemResponse'
+
+  /v1/search:
+    get:
+      tags: [Search]
+      summary: Full-text search across published catalogs
+      operationId: searchItems
+      parameters:
+        - name: q
+          in: query
+          description: Search query
+          schema:
+            type: string
+        - name: kind
+          in: query
+          schema:
+            $ref: '#/components/schemas/ItemKind'
+        - name: restriction
+          in: query
+          schema:
+            type: string
+        - name: tag
+          in: query
+          schema:
+            type: string
+        - name: ziboCode
+          in: query
+          schema:
+            type: string
+        - name: tenantId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/size'
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedItemResponse'
+
+  /v1/packs/orderables:
+    get:
+      tags: [Packs]
+      summary: Get orderables pack for OROS
+      operationId: getOrderablesPack
+      parameters:
+        - $ref: '#/components/parameters/tenantIdQuery'
+        - $ref: '#/components/parameters/versionQuery'
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+        - $ref: '#/components/parameters/If-None-Match'
+      responses:
+        '200':
+          description: Orderables pack
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PackResponse'
+        '304':
+          description: Not modified (ETag match)
+
+  /v1/packs/item-master:
+    get:
+      tags: [Packs]
+      summary: Get item master pack for Inventory/Pharmacy
+      operationId: getItemMasterPack
+      parameters:
+        - $ref: '#/components/parameters/tenantIdQuery'
+        - $ref: '#/components/parameters/versionQuery'
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+        - $ref: '#/components/parameters/If-None-Match'
+      responses:
+        '200':
+          description: Item master pack
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PackResponse'
+        '304':
+          description: Not modified
+
+  /v1/packs/chargeables:
+    get:
+      tags: [Packs]
+      summary: Get chargeables pack for costing/billing/MUSHEX
+      operationId: getChargeablesPack
+      parameters:
+        - $ref: '#/components/parameters/tenantIdQuery'
+        - $ref: '#/components/parameters/versionQuery'
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+        - $ref: '#/components/parameters/If-None-Match'
+      responses:
+        '200':
+          description: Chargeables pack
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PackResponse'
+
+  /v1/packs/capabilities/facility:
+    get:
+      tags: [Packs]
+      summary: Get facility capabilities pack for TUSO
+      operationId: getFacilityCapabilitiesPack
+      parameters:
+        - $ref: '#/components/parameters/tenantIdQuery'
+        - $ref: '#/components/parameters/versionQuery'
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+        - $ref: '#/components/parameters/If-None-Match'
+      responses:
+        '200':
+          description: Facility capabilities pack
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PackResponse'
+
+  /v1/packs/capabilities/provider:
+    get:
+      tags: [Packs]
+      summary: Get provider capabilities pack for VARAPI
+      operationId: getProviderCapabilitiesPack
+      parameters:
+        - $ref: '#/components/parameters/tenantIdQuery'
+        - $ref: '#/components/parameters/versionQuery'
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+        - $ref: '#/components/parameters/If-None-Match'
+      responses:
+        '200':
+          description: Provider capabilities pack
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PackResponse'
+
+  /v1/import/csv:
+    post:
+      tags: [Import]
+      summary: Import items from CSV file
+      operationId: importCsv
+      parameters:
+        - name: catalogId
+          in: query
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Import job result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportJobResponse'
+
+  /v1/import/sources:
+    post:
+      tags: [Import]
+      summary: Create external import source
+      operationId: createImportSource
+      parameters:
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImportSourceRequest'
+      responses:
+        '200':
+          description: Source created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+
+  /v1/import/sources/{sourceId}/run:
+    post:
+      tags: [Import]
+      summary: Trigger import from external source
+      operationId: runSourceImport
+      parameters:
+        - name: sourceId
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+      responses:
+        '200':
+          description: Import job queued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportJobResponse'
+
+  /v1/import/jobs/{jobId}:
+    get:
+      tags: [Import]
+      summary: Get import job status
+      operationId: getImportJob
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+      responses:
+        '200':
+          description: Import job details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportJobResponse'
+
+  /v1/mappings/pending:
+    get:
+      tags: [Mappings]
+      summary: List pending external mappings
+      operationId: getPendingMappings
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/size'
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+      responses:
+        '200':
+          description: Pending mapping list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+
+  /v1/mappings/{mappingId}/approve:
+    post:
+      tags: [Mappings]
+      summary: Approve mapping (requires step-up)
+      operationId: approveMapping
+      parameters:
+        - name: mappingId
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+      responses:
+        '200':
+          description: Mapping approved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+
+  /v1/mappings/{mappingId}/reject:
+    post:
+      tags: [Mappings]
+      summary: Reject mapping
+      operationId: rejectMapping
+      parameters:
+        - name: mappingId
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+      responses:
+        '200':
+          description: Mapping rejected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+
+  /v1/validate/item:
+    post:
+      tags: [Validation]
+      summary: Validate an item definition
+      operationId: validateItem
+      parameters:
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidationRequest'
+      responses:
+        '200':
+          description: Validation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationResponse'
+
+  /v1/validate/pack:
+    post:
+      tags: [Validation]
+      summary: Validate pack integrity
+      operationId: validatePack
+      parameters:
+        - name: kind
+          in: query
+          schema:
+            type: string
+        - name: tenantId
+          in: query
+          schema:
+            type: string
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+      responses:
+        '200':
+          description: Pack validation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationResponse'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    X-Tenant-Id:
+      name: X-Tenant-Id
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+    X-Correlation-Id:
+      name: X-Correlation-Id
+      in: header
+      schema:
+        type: string
+        format: uuid
+    If-None-Match:
+      name: If-None-Match
+      in: header
+      schema:
+        type: string
+    catalogId:
+      name: catalogId
+      in: path
+      required: true
+      schema:
+        type: string
+    tenantIdQuery:
+      name: tenantId
+      in: query
+      schema:
+        type: string
+        format: uuid
+    versionQuery:
+      name: version
+      in: query
+      schema:
+        type: string
+    page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        default: 0
+    size:
+      name: size
+      in: query
+      schema:
+        type: integer
+        default: 20
+
+  schemas:
+    ItemKind:
+      type: string
+      enum: [PRODUCT, SERVICE, ORDERABLE, CHARGEABLE, CAPABILITY_FACILITY, CAPABILITY_PROVIDER]
+
+    CreateCatalogRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        scope:
+          type: string
+          enum: [NATIONAL, TENANT]
+          default: NATIONAL
+        version:
+          type: string
+          default: "1.0.0"
+        parentCatalogId:
+          type: string
+
+    CreateItemRequest:
+      type: object
+      required: [kind, canonicalCode, displayName]
+      properties:
+        kind:
+          $ref: '#/components/schemas/ItemKind'
+        canonicalCode:
+          type: string
+        displayName:
+          type: string
+        description:
+          type: string
+        synonyms:
+          type: array
+          items:
+            type: string
+        tags:
+          type: array
+          items:
+            type: string
+        restrictions:
+          type: object
+        ziboBindings:
+          type: array
+          items:
+            type: object
+        metadata:
+          type: object
+        product:
+          $ref: '#/components/schemas/ProductDetail'
+        service:
+          $ref: '#/components/schemas/ServiceDetail'
+        orderable:
+          $ref: '#/components/schemas/OrderableDetail'
+        chargeable:
+          $ref: '#/components/schemas/ChargeableDetail'
+
+    UpdateItemRequest:
+      type: object
+      required: [lockVersion]
+      properties:
+        displayName:
+          type: string
+        description:
+          type: string
+        synonyms:
+          type: array
+          items:
+            type: string
+        tags:
+          type: array
+          items:
+            type: string
+        restrictions:
+          type: object
+        ziboBindings:
+          type: array
+          items:
+            type: object
+        metadata:
+          type: object
+        lockVersion:
+          type: integer
+        product:
+          $ref: '#/components/schemas/ProductDetail'
+        service:
+          $ref: '#/components/schemas/ServiceDetail'
+        orderable:
+          $ref: '#/components/schemas/OrderableDetail'
+        chargeable:
+          $ref: '#/components/schemas/ChargeableDetail'
+
+    ProductDetail:
+      type: object
+      properties:
+        form:
+          type: string
+        strength:
+          type: string
+        route:
+          type: string
+        uom:
+          type: string
+        packSize:
+          type: integer
+        barcode:
+          type: string
+        batchTracked:
+          type: boolean
+        expiryTracked:
+          type: boolean
+        coldChain:
+          type: boolean
+        controlled:
+          type: boolean
+        manufacturer:
+          type: string
+        atcCode:
+          type: string
+
+    ServiceDetail:
+      type: object
+      properties:
+        serviceCategory:
+          type: string
+        durationMinutes:
+          type: integer
+        requiresSchedule:
+          type: boolean
+        requiresReferral:
+          type: boolean
+        facilityLevelMin:
+          type: string
+        specialtyRequired:
+          type: string
+
+    OrderableDetail:
+      type: object
+      properties:
+        orderType:
+          type: string
+          enum: [LAB, IMAGING, PHARMACY, PROCEDURE, OTHER]
+        targetKind:
+          type: string
+          enum: [PRODUCT, SERVICE]
+        targetItemId:
+          type: string
+        specimenType:
+          type: string
+        bodySite:
+          type: string
+        instructionsTemplate:
+          type: string
+        criticalResultPolicy:
+          type: object
+
+    ChargeableDetail:
+      type: object
+      properties:
+        targetKind:
+          type: string
+          enum: [PRODUCT, SERVICE]
+        targetItemId:
+          type: string
+        tariffCode:
+          type: string
+        pricingRefs:
+          type: object
+        costMethodRef:
+          type: string
+        billableRules:
+          type: object
+
+    CatalogResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: '#/components/schemas/CatalogView'
+        correlationId:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    CatalogView:
+      type: object
+      properties:
+        catalogId:
+          type: string
+        tenantId:
+          type: string
+          format: uuid
+        scope:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [DRAFT, REVIEW, APPROVED, PUBLISHED]
+        version:
+          type: string
+        parentCatalogId:
+          type: string
+        checksum:
+          type: string
+        itemCount:
+          type: integer
+        publishedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    PagedCatalogResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/CatalogView'
+            page:
+              type: integer
+            size:
+              type: integer
+            totalElements:
+              type: integer
+            totalPages:
+              type: integer
+            hasNext:
+              type: boolean
+        correlationId:
+          type: string
+
+    ItemResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: '#/components/schemas/CatalogItemView'
+        correlationId:
+          type: string
+
+    CatalogItemView:
+      type: object
+      properties:
+        itemId:
+          type: string
+        catalogId:
+          type: string
+        kind:
+          $ref: '#/components/schemas/ItemKind'
+        canonicalCode:
+          type: string
+        displayName:
+          type: string
+        description:
+          type: string
+        synonyms:
+          type: array
+          items:
+            type: string
+        tags:
+          type: array
+          items:
+            type: string
+        restrictions:
+          type: object
+        ziboBindings:
+          type: array
+          items:
+            type: object
+        metadata:
+          type: object
+        active:
+          type: boolean
+        lockVersion:
+          type: integer
+        product:
+          $ref: '#/components/schemas/ProductDetail'
+        service:
+          $ref: '#/components/schemas/ServiceDetail'
+        orderable:
+          $ref: '#/components/schemas/OrderableDetail'
+        chargeable:
+          $ref: '#/components/schemas/ChargeableDetail'
+
+    PagedItemResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/CatalogItemView'
+            page:
+              type: integer
+            size:
+              type: integer
+            totalElements:
+              type: integer
+            totalPages:
+              type: integer
+            hasNext:
+              type: boolean
+
+    PackResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            kind:
+              type: string
+            tenantId:
+              type: string
+            version:
+              type: string
+            checksum:
+              type: string
+            producedAt:
+              type: string
+              format: date-time
+            itemCount:
+              type: integer
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/CatalogItemView'
+
+    ImportSourceRequest:
+      type: object
+      required: [name, mode]
+      properties:
+        name:
+          type: string
+        mode:
+          type: string
+          enum: [REST, CSV, KAFKA]
+        config:
+          type: object
+
+    ImportJobResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            jobId:
+              type: string
+            status:
+              type: string
+            totalRows:
+              type: integer
+            validRows:
+              type: integer
+            duplicateRows:
+              type: integer
+            errorRows:
+              type: integer
+            importedRows:
+              type: integer
+
+    ValidationRequest:
+      type: object
+      properties:
+        itemId:
+          type: string
+        kind:
+          type: string
+        canonicalCode:
+          type: string
+        restrictions:
+          type: object
+        ziboBindings:
+          type: array
+          items:
+            type: object
+
+    ValidationResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            valid:
+              type: boolean
+            issues:
+              type: array
+              items:
+                type: object
+                properties:
+                  severity:
+                    type: string
+                  code:
+                    type: string
+                  message:
+                    type: string
+                  path:
+                    type: string
+
+    ApiEnvelope:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            status:
+              type: integer
+        correlationId:
+          type: string
+        timestamp:
+          type: string
+          format: date-time

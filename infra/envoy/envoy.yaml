@@ -92,6 +92,22 @@ static_resources:
                         - match: { prefix: "/api/v1/control-tower" }
                           route: { cluster: tuso_service }
 
+                        # ── MSIKA Core — Products & Services Registry ──
+                        - match: { prefix: "/msika/v1/search" }
+                          route: { cluster: msika_service }
+                        - match: { prefix: "/msika/v1/packs" }
+                          route: { cluster: msika_service }
+                        - match: { prefix: "/msika/v1/catalogs" }
+                          route: { cluster: msika_service }
+                        - match: { prefix: "/msika/v1/items" }
+                          route: { cluster: msika_service }
+                        - match: { prefix: "/msika/v1/import" }
+                          route: { cluster: msika_service }
+                        - match: { prefix: "/msika/v1/mappings" }
+                          route: { cluster: msika_service }
+                        - match: { prefix: "/msika/v1/validate" }
+                          route: { cluster: msika_service }
+
                         # ── ZIBO — Terminology, Definitions & Classification ──
                         - match: { prefix: "/v1/artifacts" }
                           route: { cluster: zibo_service }
@@ -408,6 +424,17 @@ static_resources:
               - endpoint:
                   address:
                     socket_address: { address: host.docker.internal, port_value: 8084 }
+
+    # ── MSIKA Core — Products & Services Registry ──
+    - name: msika_service
+      type: STRICT_DNS
+      load_assignment:
+        cluster_name: msika_service
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: host.docker.internal, port_value: 8086 }
 
     # ── ZIBO — Terminology ──
     - name: zibo_service

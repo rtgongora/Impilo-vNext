@@ -1,18 +1,44 @@
 replicaCount: 1
 
 image:
-  repository: ghcr.io/mohcc/impilo/msika
-  tag: "latest"
+  repository: impilo/msika-service
+  tag: latest
   pullPolicy: IfNotPresent
 
 service:
   type: ClusterIP
-  port: 8086
+  httpPort: 8086
+
+env:
+  SPRING_DATASOURCE_URL: jdbc:postgresql://postgresql:5432/msika
+  SPRING_DATASOURCE_USERNAME: impilo
+  SPRING_DATASOURCE_PASSWORD: impilo
+  SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+  SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/realms/impilo
 
 resources:
   requests:
-    cpu: 250m
+    cpu: 500m
     memory: 512Mi
   limits:
-    cpu: 1000m
-    memory: 1Gi
+    cpu: 2
+    memory: 2Gi
+
+livenessProbe:
+  httpGet:
+    path: /actuator/health/liveness
+    port: 8086
+  initialDelaySeconds: 60
+  periodSeconds: 15
+
+readinessProbe:
+  httpGet:
+    path: /actuator/health/readiness
+    port: 8086
+  initialDelaySeconds: 30
+  periodSeconds: 10
+
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "8086"
+  prometheus.io/path: "/actuator/prometheus"

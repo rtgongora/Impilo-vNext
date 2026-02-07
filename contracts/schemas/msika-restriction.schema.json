@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://impilo.health/schemas/msika/restriction.schema.json",
+  "title": "MSIKA Catalog Item Restriction",
+  "description": "Structured restriction flags for catalog items. Each key is a restriction type with enforcement metadata.",
+  "type": "object",
+  "properties": {
+    "prescription_required": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "reason_code": { "type": "string" },
+        "enforcement_hint": { "type": "string", "enum": ["BLOCK", "WARN", "DISPLAY"] }
+      },
+      "required": ["enabled"]
+    },
+    "facility_only": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "reason_code": { "type": "string" },
+        "enforcement_hint": { "type": "string", "enum": ["BLOCK", "WARN", "DISPLAY"] }
+      },
+      "required": ["enabled"]
+    },
+    "provider_only_order": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "reason_code": { "type": "string" },
+        "enforcement_hint": { "type": "string", "enum": ["BLOCK", "WARN", "DISPLAY"] }
+      },
+      "required": ["enabled"]
+    },
+    "controlled_item": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "schedule": { "type": "string" },
+        "reason_code": { "type": "string" },
+        "enforcement_hint": { "type": "string", "enum": ["BLOCK", "WARN", "DISPLAY"] }
+      },
+      "required": ["enabled"]
+    },
+    "age_restricted": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "min_age_years": { "type": "integer", "minimum": 0 },
+        "max_age_years": { "type": "integer" },
+        "reason_code": { "type": "string" },
+        "enforcement_hint": { "type": "string", "enum": ["BLOCK", "WARN", "DISPLAY"] }
+      },
+      "required": ["enabled"]
+    },
+    "cold_chain_required": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "min_temp_celsius": { "type": "number" },
+        "max_temp_celsius": { "type": "number" },
+        "reason_code": { "type": "string" },
+        "enforcement_hint": { "type": "string", "enum": ["BLOCK", "WARN", "DISPLAY"] }
+      },
+      "required": ["enabled"]
+    },
+    "hazardous_handling_required": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "hazard_class": { "type": "string" },
+        "reason_code": { "type": "string" },
+        "enforcement_hint": { "type": "string", "enum": ["BLOCK", "WARN", "DISPLAY"] }
+      },
+      "required": ["enabled"]
+    },
+    "requires_schedule": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "reason_code": { "type": "string" },
+        "enforcement_hint": { "type": "string", "enum": ["BLOCK", "WARN", "DISPLAY"] }
+      },
+      "required": ["enabled"]
+    },
+    "requires_referral": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "reason_code": { "type": "string" },
+        "enforcement_hint": { "type": "string", "enum": ["BLOCK", "WARN", "DISPLAY"] }
+      },
+      "required": ["enabled"]
+    },
+    "requires_licenced_provider": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "licence_types": { "type": "array", "items": { "type": "string" } },
+        "reason_code": { "type": "string" },
+        "enforcement_hint": { "type": "string", "enum": ["BLOCK", "WARN", "DISPLAY"] }
+      },
+      "required": ["enabled"]
+    }
+  },
+  "additionalProperties": false
+}

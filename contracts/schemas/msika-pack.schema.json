@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://impilo.health/schemas/msika/pack.schema.json",
+  "title": "MSIKA Consumer Pack",
+  "description": "Versioned, checksummed pack of catalog items for downstream consumers (OROS, Pharmacy, Inventory, MUSHEX, TUSO, VARAPI).",
+  "type": "object",
+  "required": ["kind", "version", "checksum", "producedAt", "itemCount", "items"],
+  "properties": {
+    "kind": {
+      "type": "string",
+      "enum": ["PRODUCT", "SERVICE", "ORDERABLE", "CHARGEABLE", "CAPABILITY_FACILITY", "CAPABILITY_PROVIDER"]
+    },
+    "tenantId": {
+      "type": ["string", "null"],
+      "format": "uuid"
+    },
+    "version": {
+      "type": "string"
+    },
+    "checksum": {
+      "type": "string",
+      "description": "SHA-256 hex digest of pack contents"
+    },
+    "producedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "itemCount": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["itemId", "canonicalCode", "displayName", "kind"],
+        "properties": {
+          "itemId": { "type": "string" },
+          "catalogId": { "type": "string" },
+          "kind": { "type": "string" },
+          "canonicalCode": { "type": "string" },
+          "displayName": { "type": "string" },
+          "description": { "type": ["string", "null"] },
+          "synonyms": { "type": "array", "items": { "type": "string" } },
+          "tags": { "type": "array", "items": { "type": "string" } },
+          "restrictions": { "type": "object" },
+          "ziboBindings": { "type": "array" },
+          "metadata": { "type": "object" },
+          "active": { "type": "boolean" },
+          "product": { "type": ["object", "null"] },
+          "service": { "type": ["object", "null"] },
+          "orderable": { "type": ["object", "null"] },
+          "chargeable": { "type": ["object", "null"] }
+        }
+      }
+    }
+  }
+}

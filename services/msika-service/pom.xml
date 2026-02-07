@@ -12,15 +12,15 @@
     </parent>
 
     <artifactId>msika-service</artifactId>
-    <name>Msika — Products &amp; Services Registry</name>
+    <name>MSIKA Core — National Products &amp; Services Registry</name>
     <description>
-        National source of truth for all orderables, billables, and tariffs.
-        Dual-mode API: internal platform consumption + external national service.
-        MUSheX and EHR are strict consumers — they cannot define their own charges.
+        National registry of health products, services, orderables, chargeables,
+        and capability taxonomies. Dual-mode: authoritative source-of-truth and
+        external catalog ingestion with mapping/governance workflows.
     </description>
 
     <dependencies>
-        <!-- Shared Core (Argon2id, response envelope, trust context) -->
+        <!-- Shared Core (trust context, response envelope, utilities) -->
         <dependency>
             <groupId>zw.gov.mohcc.impilo</groupId>
             <artifactId>shared-core</artifactId>
@@ -33,7 +33,11 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
-        <!-- Security (Tshepo token validation for dual-mode) -->
+        <!-- Security (OAuth2 Resource Server for OIDC token validation) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
@@ -58,7 +62,7 @@
             <artifactId>flyway-database-postgresql</artifactId>
         </dependency>
 
-        <!-- Kafka (outbox) -->
+        <!-- Kafka (outbox pattern) -->
         <dependency>
             <groupId>org.springframework.kafka</groupId>
             <artifactId>spring-kafka</artifactId>
@@ -84,6 +88,13 @@
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+        </dependency>
+
+        <!-- CSV import -->
+        <dependency>
+            <groupId>com.opencsv</groupId>
+            <artifactId>opencsv</artifactId>
+            <version>5.9</version>
         </dependency>
 
         <!-- Test -->
