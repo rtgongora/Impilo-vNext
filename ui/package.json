@@ -10,7 +10,8 @@
     "ehr",
     "portal",
     "ops-docs",
-    "self-service"
+    "self-service",
+    "butano-web"
   ],
   "scripts": {
     "dev:shell": "npm -w one-ui-shell run dev",
@@ -19,6 +20,7 @@
     "dev:portal": "npm -w portal run dev",
     "dev:docs": "npm -w ops-docs run dev",
     "dev:self": "npm -w self-service run dev",
+    "dev:butano": "npm -w butano-web run dev",
     "build": "turbo run build",
     "lint": "turbo run lint",
     "type-check": "turbo run type-check"

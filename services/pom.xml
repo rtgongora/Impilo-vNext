@@ -72,6 +72,8 @@
         <module>landela-adapter-service</module>
         <module>credential-verification-service</module>
         <module>share-slip-service</module>
+        <!-- BUTANO — Shared Health Record (HAPI FHIR JPA) -->
+        <module>butano-service</module>
         <!-- TSHEPO decomposition (6 sub-services) -->
         <module>tshepo-authz-service</module>
         <module>tshepo-identity-service</module>
