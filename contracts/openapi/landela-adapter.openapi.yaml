@@ -1,0 +1,369 @@
+openapi: 3.0.3
+info:
+  title: Landela Adapter Service API
+  description: |
+    Canonical document gateway for Impilo vNext. Routes to Landela DMS or internal MinIO fallback.
+    All endpoints require TSHEPO trust headers.
+  version: 0.1.0
+  contact:
+    name: MoHCC Impilo Team
+
+servers:
+  - url: http://localhost:8092
+    description: Local development
+  - url: http://landela-adapter-service:8092
+    description: Kubernetes internal
+
+security:
+  - bearerAuth: []
+
+paths:
+  /v1/internal/documents:
+    post:
+      operationId: uploadDocument
+      summary: Upload a document (multipart)
+      tags: [Documents]
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file, subjectType, subjectId]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                subjectType:
+                  type: string
+                  enum: [CLIENT, PROVIDER, FACILITY, ENCOUNTER, REFERRAL, OTHER]
+                subjectId:
+                  type: string
+                documentTypeCode:
+                  type: string
+                source:
+                  type: string
+                  enum: [scanned, uploaded, generated]
+                  default: uploaded
+                issuer:
+                  type: string
+                confidentiality:
+                  type: string
+                  enum: [NORMAL, RESTRICTED, HIGHLY_RESTRICTED]
+                  default: NORMAL
+                retentionPolicyId:
+                  type: string
+                tags:
+                  type: string
+                  description: JSON string of key-value pairs
+      responses:
+        '201':
+          description: Document uploaded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDocumentResponse'
+        '403':
+          $ref: '#/components/responses/StepUpRequired'
+    get:
+      operationId: searchDocuments
+      summary: Search documents by metadata
+      tags: [Documents]
+      parameters:
+        - name: subjectType
+          in: query
+          schema:
+            type: string
+        - name: subjectId
+          in: query
+          schema:
+            type: string
+        - name: documentTypeCode
+          in: query
+          schema:
+            type: string
+        - name: lifecycleState
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponsePagedDocumentResponse'
+
+  /v1/internal/documents/{documentId}:
+    get:
+      operationId: getDocumentMetadata
+      summary: Get document metadata
+      tags: [Documents]
+      parameters:
+        - $ref: '#/components/parameters/DocumentId'
+      responses:
+        '200':
+          description: Document metadata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDocumentResponse'
+        '404':
+          description: Document not found
+
+  /v1/internal/documents/{documentId}/signed-url:
+    get:
+      operationId: generateSignedUrl
+      summary: Generate time-limited signed download URL
+      tags: [Documents]
+      parameters:
+        - $ref: '#/components/parameters/DocumentId'
+      responses:
+        '200':
+          description: Signed URL
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseSignedUrlResponse'
+
+  /v1/internal/documents/{documentId}/download:
+    get:
+      operationId: downloadDocument
+      summary: Proxy download (streams binary)
+      tags: [Documents]
+      parameters:
+        - $ref: '#/components/parameters/DocumentId'
+      responses:
+        '200':
+          description: Binary content
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+
+  /v1/internal/documents/{documentId}/metadata:
+    patch:
+      operationId: updateDocumentMetadata
+      summary: Update document tags and type code
+      tags: [Documents]
+      parameters:
+        - $ref: '#/components/parameters/DocumentId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tags:
+                  type: object
+                documentTypeCode:
+                  type: string
+      responses:
+        '200':
+          description: Updated metadata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDocumentResponse'
+
+  /v1/internal/documents/{documentId}/lifecycle:
+    post:
+      operationId: lifecycleAction
+      summary: Archive, revoke, supersede, or soft-delete a document
+      tags: [Documents]
+      parameters:
+        - $ref: '#/components/parameters/DocumentId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LifecycleActionRequest'
+      responses:
+        '200':
+          description: Lifecycle action applied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDocumentResponse'
+
+  /v1/internal/documents/{documentId}/audit:
+    get:
+      operationId: getDocumentAudit
+      summary: Get document audit trail
+      tags: [Audit]
+      parameters:
+        - $ref: '#/components/parameters/DocumentId'
+      responses:
+        '200':
+          description: Audit trail
+
+  /v1/internal/documentreference/push:
+    post:
+      operationId: pushDocumentReference
+      summary: Push FHIR DocumentReference to BUTANO
+      tags: [FHIR Integration]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [documentId]
+              properties:
+                documentId:
+                  type: string
+                  format: uuid
+      responses:
+        '201':
+          description: DocumentReference created in BUTANO
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    DocumentId:
+      name: documentId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    StepUpRequired:
+      description: Step-up authentication required
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: string
+                example: STEP_UP_REQUIRED
+              next:
+                type: object
+
+  schemas:
+    DocumentResponse:
+      type: object
+      properties:
+        documentId:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        subjectType:
+          type: string
+        subjectId:
+          type: string
+        documentTypeCode:
+          type: string
+        source:
+          type: string
+        issuer:
+          type: string
+        confidentiality:
+          type: string
+        hashSha256:
+          type: string
+        mimeType:
+          type: string
+        fileName:
+          type: string
+        fileSizeBytes:
+          type: integer
+          format: int64
+        storageProvider:
+          type: string
+        lifecycleState:
+          type: string
+        tags:
+          type: object
+        createdBy:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        version:
+          type: integer
+
+    SignedUrlResponse:
+      type: object
+      properties:
+        url:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+
+    LifecycleActionRequest:
+      type: object
+      required: [action]
+      properties:
+        action:
+          type: string
+          enum: [ARCHIVE, REVOKE, SUPERSEDE, DELETE]
+        reason:
+          type: string
+        supersededByDocumentId:
+          type: string
+          format: uuid
+
+    ApiResponseDocumentResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: '#/components/schemas/DocumentResponse'
+        correlationId:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    ApiResponsePagedDocumentResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/DocumentResponse'
+            page:
+              type: integer
+            size:
+              type: integer
+            totalElements:
+              type: integer
+              format: int64
+            totalPages:
+              type: integer
+            hasNext:
+              type: boolean
+        correlationId:
+          type: string
+        timestamp:
+          type: string
+          format: date-time

@@ -1,0 +1,132 @@
+openapi: 3.0.3
+info:
+  title: Document Store Service API
+  description: |
+    Internal MinIO/S3-backed document storage backend.
+    Used by landela-adapter-service when in INTERNAL mode.
+  version: 0.1.0
+
+servers:
+  - url: http://localhost:8093
+    description: Local development
+
+security:
+  - bearerAuth: []
+
+paths:
+  /v1/internal/objects:
+    post:
+      operationId: storeObject
+      summary: Store a binary object (multipart upload)
+      tags: [Object Storage]
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                originalFilename:
+                  type: string
+                mimeType:
+                  type: string
+                metadata:
+                  type: string
+                  description: JSON string
+      responses:
+        '201':
+          description: Object stored
+
+  /v1/internal/objects/{objectId}:
+    get:
+      operationId: getObjectMetadata
+      summary: Get object metadata
+      tags: [Object Storage]
+      parameters:
+        - name: objectId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Object metadata
+    delete:
+      operationId: deleteObject
+      summary: Soft-delete an object
+      tags: [Object Storage]
+      parameters:
+        - name: objectId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Object deleted
+
+  /v1/internal/objects/{objectId}/signed-url:
+    get:
+      operationId: generateSignedUrl
+      summary: Generate pre-signed download URL
+      tags: [Object Storage]
+      parameters:
+        - name: objectId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Signed URL
+
+  /v1/internal/objects/{objectId}/download:
+    get:
+      operationId: downloadObject
+      summary: Proxy download
+      tags: [Object Storage]
+      parameters:
+        - name: objectId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Binary stream
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+
+  /v1/internal/objects/by-hash/{sha256}:
+    get:
+      operationId: getObjectByHash
+      summary: Find object by SHA-256 hash
+      tags: [Object Storage]
+      parameters:
+        - name: sha256
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Object metadata
+        '404':
+          description: Object not found
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

@@ -1,0 +1,261 @@
+openapi: 3.0.3
+info:
+  title: Share Slip Service API
+  description: |
+    Delegated pickup and document sharing with OTP verification and QR-based share links.
+  version: 0.1.0
+
+servers:
+  - url: http://localhost:8095
+    description: Local development
+
+security:
+  - bearerAuth: []
+
+paths:
+  /v1/internal/share-links:
+    post:
+      operationId: createShareLink
+      summary: Create a share link with OTP
+      tags: [Share Links]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateShareLinkRequest'
+      responses:
+        '201':
+          description: Share link created (OTP returned in response for dev, sent via channel in prod)
+    get:
+      operationId: listShareLinks
+      summary: List share links by subject
+      tags: [Share Links]
+      parameters:
+        - name: subjectType
+          in: query
+          schema:
+            type: string
+        - name: subjectId
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Share link results
+
+  /v1/internal/share-links/{linkId}:
+    get:
+      operationId: getShareLink
+      summary: Get share link details
+      tags: [Share Links]
+      parameters:
+        - name: linkId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Share link details
+
+  /v1/internal/share-links/{linkId}/revoke:
+    post:
+      operationId: revokeShareLink
+      summary: Revoke a share link
+      tags: [Share Links]
+      parameters:
+        - name: linkId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Share link revoked
+
+  /v1/internal/share-links/{linkId}/pdf:
+    get:
+      operationId: getShareSlipPdf
+      summary: Generate share slip PDF with QR
+      tags: [Share Links]
+      parameters:
+        - name: linkId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Share slip PDF
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+
+  /v1/internal/share-links/{linkId}/audit:
+    get:
+      operationId: getShareLinkAudit
+      summary: Get share link audit trail
+      tags: [Audit]
+      parameters:
+        - name: linkId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Audit trail
+
+  /v1/public/share/claim:
+    post:
+      operationId: claimShare
+      summary: Claim a shared document bundle with OTP (public, rate-limited)
+      tags: [Public Share]
+      security: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClaimShareRequest'
+      responses:
+        '200':
+          description: Claim result with signed URLs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClaimResult'
+        '429':
+          description: Rate limit exceeded
+
+  /v1/public/share/verify/{token}:
+    get:
+      operationId: verifyShareLink
+      summary: Check if share link is valid (public, rate-limited)
+      tags: [Public Share]
+      security: []
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Link status (minimal info)
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    CreateShareLinkRequest:
+      type: object
+      required: [subjectType, subjectId, documentIds]
+      properties:
+        subjectType:
+          type: string
+        subjectId:
+          type: string
+        subjectName:
+          type: string
+        documentIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        purpose:
+          type: string
+        verificationMethod:
+          type: string
+          enum: [OTP, QR_SCAN]
+          default: OTP
+        expiryHours:
+          type: integer
+          default: 24
+        maxClaims:
+          type: integer
+          default: 1
+
+    ShareLinkResponse:
+      type: object
+      properties:
+        linkId:
+          type: string
+          format: uuid
+        shareToken:
+          type: string
+        subjectType:
+          type: string
+        subjectId:
+          type: string
+        purpose:
+          type: string
+        documentIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        verificationMethod:
+          type: string
+        maxClaims:
+          type: integer
+        claimCount:
+          type: integer
+        status:
+          type: string
+          enum: [ACTIVE, CLAIMED, EXPIRED, REVOKED]
+        expiresAt:
+          type: string
+          format: date-time
+        createdBy:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    ClaimShareRequest:
+      type: object
+      required: [shareToken]
+      properties:
+        shareToken:
+          type: string
+        otp:
+          type: string
+        deviceFingerprint:
+          type: string
+
+    ClaimResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+        documentIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        signedUrls:
+          type: array
+          items:
+            type: string
+        message:
+          type: string
