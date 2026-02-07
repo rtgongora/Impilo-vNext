@@ -126,11 +126,15 @@
 - [x] init-databases.sql updated with 6 TSHEPO databases
 - [x] Helm charts for all 6 services
 
-### Tests
-- [ ] Unit tests: PolicyEngine, RiskScoring, AuthzInternalRequest, BreakGlass, StepUp
-- [ ] Unit tests: AuditChainService, CpidGenerator, ConsentEvaluationService
-- [ ] Unit tests: Ed25519SigningService, CapabilityTokenService, OfflineRulesEngine
-- [ ] Unit tests: tshepo-contracts DTOs, tshepo-sdk TrustContext/Filter/Client
+### Tests (30 test files, ~9,400 lines)
+- [x] Unit tests: PolicyEngine (18 tests — all 7 PDP steps), RiskScoring, AuthzInternalRequest, BreakGlass, StepUp
+- [x] Unit tests: AuditChainService (12 tests — hash chaining, tamper detection, multi-tenant), AuditQuery, AuditExport
+- [x] Unit tests: CpidGenerator, IdResolution, MosipLink, TokenIssuance, Reconciliation
+- [x] Unit tests: ConsentEvaluation (8 tests — wildcard, cache), ConsentCrud, ShareLink
+- [x] Unit tests: Ed25519Signing, Jwks, KeyRotation
+- [x] Unit tests: CapabilityToken, OfflineRulesEngine, Reconciliation
+- [x] Unit tests: tshepo-contracts (AuthzResponse, Obligations, RiskLevel, TrustHeaders)
+- [x] Unit tests: tshepo-sdk (TrustContext, TrustContextHolder, TrustContextFilter, AuthzClient)
 - [ ] Integration tests: end-to-end ext_authz flow
 - [ ] Keycloak realm import script (`scripts/seed/keycloak-realm.json`)
 
