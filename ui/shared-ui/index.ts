@@ -7,6 +7,15 @@
 
 // Design tokens are imported via CSS: @import "shared-ui/tokens.css";
 
+// Trust layer contracts (shared across all apps)
+export { TRUST_HEADERS } from "./lib/contracts";
+export type {
+  PurposeOfUse,
+  ActorType,
+  ApiEnvelope,
+  PagedResponse,
+} from "./lib/contracts";
+
 // Components
 export { Button } from "./components/Button";
 export type { ButtonProps } from "./components/Button";

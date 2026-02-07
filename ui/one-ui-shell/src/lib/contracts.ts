@@ -1,54 +1,15 @@
 /**
  * Impilo vNext — Trust Layer Contracts
  *
- * These types define the contract between the UI and the TSHEPO trust service.
+ * Re-exports shared trust header constants from shared-ui and defines
+ * app-specific types for the one-ui-shell (clinical provider workflows).
+ *
  * Header names MUST match the Java TrustHeaders.java constants exactly.
  */
 
-// ============================================================================
-// Trust Header Names — SINGLE SOURCE OF TRUTH (frontend side)
-// Must match: services/tshepo-service/.../core/TrustHeaders.java
-// ============================================================================
-
-export const TRUST_HEADERS = {
-  // Request headers (UI → Envoy → TSHEPO)
-  TENANT_ID: "x-tenant-id",
-  ACTOR_ID: "x-actor-id",
-  ACTOR_TYPE: "x-actor-type",
-  PURPOSE_OF_USE: "x-purpose-of-use",
-  DEVICE_FINGERPRINT: "x-device-fingerprint",
-  CORRELATION_ID: "x-correlation-id",
-  FACILITY_ID: "x-facility-id",
-  WORKSPACE_ID: "x-workspace-id",
-  SHIFT_ID: "x-shift-id",
-
-  // Response / obligation headers (TSHEPO → Envoy → downstream)
-  DECISION: "x-decision",
-  OBLIGATIONS: "x-obligations",
-  MAX_SCOPE: "x-max-scope",
-  MASK_FIELDS: "x-mask-fields",
-  LOGGING_LEVEL: "x-logging-level",
-} as const;
-
-// ============================================================================
-// Purpose of Use
-// ============================================================================
-
-export type PurposeOfUse =
-  | "TREATMENT"
-  | "PAYMENT"
-  | "OPERATIONS"
-  | "RESEARCH"
-  | "PUBLIC_HEALTH"
-  | "EMERGENCY"
-  | "BREAK_GLASS"
-  | "SYSTEM";
-
-// ============================================================================
-// Actor Types
-// ============================================================================
-
-export type ActorType = "PROVIDER" | "OPERATOR" | "CITIZEN" | "SYSTEM";
+// Re-export shared trust contracts (single source of truth)
+export { TRUST_HEADERS } from "shared-ui";
+export type { PurposeOfUse, ActorType, ApiEnvelope, PagedResponse } from "shared-ui";
 
 // ============================================================================
 // Authorization Decision
