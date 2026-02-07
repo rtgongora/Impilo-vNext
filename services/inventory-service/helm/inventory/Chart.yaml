@@ -1,6 +1,6 @@
 apiVersion: v2
-name: inventory
-description: Impilo vNext — inventory service
+name: inventory-service
+description: Inventory & Supply Chain Service for Impilo vNext
 type: application
 version: 0.1.0
 appVersion: "0.1.0"

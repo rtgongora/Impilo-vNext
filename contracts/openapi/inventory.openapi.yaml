@@ -1,0 +1,3181 @@
+openapi: 3.0.3
+info:
+  title: Inventory & Supply Chain Service API
+  description: |
+    Inventory and supply chain management service for the Impilo vNext platform.
+    Manages stock items, on-hand positions (FEFO), ledger movements (receipt,
+    issue, transfer, adjust, wastage, return), stock counts with approval workflow,
+    requisitions, shift handover, and reconciliation against external eLMIS systems.
+
+    All requests must include trust headers (X-Tenant-Id, X-Actor-Id, X-Correlation-Id,
+    X-Facility-Id, etc.) which are validated by Envoy ext_authz -> TSHEPO before
+    reaching this service.
+  version: 1.0.0
+  contact:
+    name: Impilo Platform Team
+  license:
+    name: Proprietary
+
+servers:
+  - url: http://localhost:8098
+    description: Local development
+  - url: http://localhost:10000
+    description: Envoy gateway (local)
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Items
+    description: Item master management and barcode lookup
+  - name: Stock On-Hand
+    description: Current stock positions, near-expiry, and stockout risk
+  - name: Ledger
+    description: Stock movement ledger (receipt, issue, transfer, adjust, wastage, return)
+  - name: FEFO
+    description: First-Expiry-First-Out batch suggestions
+  - name: Stock Counts
+    description: Physical stock count sessions with approval workflow
+  - name: Requisitions
+    description: Requisition lifecycle (create, submit, approve, reject, fulfill)
+  - name: Handover
+    description: Shift handover with dual-signature verification
+  - name: Reconciliation
+    description: Stock reconciliation against external eLMIS systems
+  - name: Internal
+    description: Internal integration endpoints (capability refresh, consumption feeds, stores/bins)
+
+paths:
+  # ── Items ──────────────────────────────────────────────────────────────────
+  /v1/items:
+    post:
+      operationId: createItem
+      summary: Create an inventory item
+      description: |
+        Registers a new item in the inventory master. Each item has a unique
+        item code within a tenant. Publishes inventory.item.created event.
+      tags: [Items]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateItemRequest"
+      responses:
+        "201":
+          description: Item created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/Item"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /v1/items/import:
+    post:
+      operationId: importItems
+      summary: Bulk import inventory items
+      description: |
+        Imports multiple items in a single operation. Items that already exist
+        (by itemCode within the tenant) are updated; new items are created.
+        Returns a summary of imported, updated, skipped, and errored rows.
+      tags: [Items]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ItemImportRequest"
+      responses:
+        "200":
+          description: Import completed
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/ImportResult"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /v1/items/lookup-by-barcode:
+    get:
+      operationId: lookupItemByBarcode
+      summary: Look up item by barcode
+      description: |
+        Decodes a GS1/GTIN/EAN barcode and returns matching item details
+        including batch number and expiry date extracted from the barcode.
+        Used during receipt, count, and issue workflows.
+      tags: [Items]
+      parameters:
+        - name: code
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Barcode string (GS1, GTIN-14, GTIN-13, EAN, etc.)
+      responses:
+        "200":
+          description: Barcode decoded
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/BarcodeResult"
+        "404":
+          description: Barcode not recognized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /v1/items/{itemCode}:
+    get:
+      operationId: getItem
+      summary: Get item by code
+      description: Returns the full item master record for the given item code.
+      tags: [Items]
+      parameters:
+        - name: itemCode
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique item code
+      responses:
+        "200":
+          description: Item found
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/Item"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  # ── Stock On-Hand ──────────────────────────────────────────────────────────
+  /v1/onhand:
+    get:
+      operationId: getOnHand
+      summary: Get stock on-hand positions
+      description: |
+        Returns paginated stock-on-hand positions for the given facility/store.
+        Each row represents a unique (itemCode, batchNumber, storeId, binId)
+        combination. Supports filtering by item code, category, store, and bin.
+      tags: [Stock On-Hand]
+      parameters:
+        - $ref: "#/components/parameters/FacilityIdQuery"
+        - name: storeId
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter by store
+        - name: itemCode
+          in: query
+          schema:
+            type: string
+          description: Filter by item code
+        - name: category
+          in: query
+          schema:
+            type: string
+          description: Filter by item category
+        - name: belowReorder
+          in: query
+          schema:
+            type: boolean
+          description: Only return items below reorder point
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/SizeParam"
+      responses:
+        "200":
+          description: On-hand positions
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/PagedOnHand"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /v1/onhand/near-expiry:
+    get:
+      operationId: getNearExpiry
+      summary: Get near-expiry stock
+      description: |
+        Returns items expiring within the configurable threshold (default 90 days).
+        Sorted by expiry date ascending (soonest first). Used for FEFO compliance
+        monitoring and wastage prevention.
+      tags: [Stock On-Hand]
+      parameters:
+        - $ref: "#/components/parameters/FacilityIdQuery"
+        - name: storeId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: daysThreshold
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 90
+          description: Number of days until expiry to consider near-expiry
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/SizeParam"
+      responses:
+        "200":
+          description: Near-expiry items
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/PagedOnHand"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /v1/onhand/stockouts:
+    get:
+      operationId: getStockouts
+      summary: Get stockout risk items
+      description: |
+        Returns items that are either stocked out (qty=0) or at risk of
+        stockout based on average daily consumption and days-of-stock remaining.
+        Sorted by days-of-stock ascending (most urgent first).
+      tags: [Stock On-Hand]
+      parameters:
+        - $ref: "#/components/parameters/FacilityIdQuery"
+        - name: storeId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: daysOfStockThreshold
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 14
+          description: Items with fewer days of stock than this are included
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/SizeParam"
+      responses:
+        "200":
+          description: Stockout risk items
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/PagedStockoutRisk"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  # ── Ledger ─────────────────────────────────────────────────────────────────
+  /v1/ledger/receipt:
+    post:
+      operationId: postReceipt
+      summary: Record stock receipt
+      description: |
+        Records receipt of goods into inventory. Increases on-hand quantity.
+        Validates batch number and expiry. Publishes inventory.ledger.receipt event.
+      tags: [Ledger]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReceiptRequest"
+      responses:
+        "201":
+          description: Receipt recorded
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/LedgerEvent"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /v1/ledger/issue:
+    post:
+      operationId: postIssue
+      summary: Record stock issue
+      description: |
+        Records issue of goods from inventory. Decreases on-hand quantity.
+        Validates sufficient stock available. Publishes inventory.ledger.issue event.
+      tags: [Ledger]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IssueRequest"
+      responses:
+        "201":
+          description: Issue recorded
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/LedgerEvent"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /v1/ledger/transfer:
+    post:
+      operationId: postTransfer
+      summary: Record inter-store transfer
+      description: |
+        Records a transfer of goods between stores or facilities. Decreases
+        on-hand at source and increases at destination. Publishes
+        inventory.ledger.transfer event.
+      tags: [Ledger]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TransferRequest"
+      responses:
+        "201":
+          description: Transfer recorded
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/LedgerEvent"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /v1/ledger/adjust:
+    post:
+      operationId: postAdjust
+      summary: Record stock adjustment
+      description: |
+        Records an inventory adjustment (positive or negative). Used for
+        corrections, count reconciliation, and opening balances. Requires
+        a reason. Publishes inventory.ledger.adjustment event.
+      tags: [Ledger]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdjustRequest"
+      responses:
+        "201":
+          description: Adjustment recorded
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/LedgerEvent"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /v1/ledger/wastage:
+    post:
+      operationId: postWastage
+      summary: Record stock wastage
+      description: |
+        Records wastage/disposal of expired, damaged, or contaminated stock.
+        Decreases on-hand. Requires disposal method and optional witness for
+        controlled items. Publishes inventory.ledger.wastage event.
+      tags: [Ledger]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WastageRequest"
+      responses:
+        "201":
+          description: Wastage recorded
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/LedgerEvent"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /v1/ledger/return:
+    post:
+      operationId: postReturn
+      summary: Record stock return
+      description: |
+        Records return of goods to supplier or return to stock from department.
+        Increases on-hand if returned to stock; records supplier return for
+        audit. Publishes inventory.ledger.return event.
+      tags: [Ledger]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReturnRequest"
+      responses:
+        "201":
+          description: Return recorded
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/LedgerEvent"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /v1/ledger:
+    get:
+      operationId: queryLedger
+      summary: Query ledger events
+      description: |
+        Returns paginated ledger events filtered by item, store, movement type,
+        and date range. Events are sorted by timestamp descending (newest first).
+      tags: [Ledger]
+      parameters:
+        - $ref: "#/components/parameters/FacilityIdQuery"
+        - name: storeId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: itemCode
+          in: query
+          schema:
+            type: string
+        - name: movementType
+          in: query
+          schema:
+            $ref: "#/components/schemas/MovementType"
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Start of date range (inclusive)
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: End of date range (inclusive)
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/SizeParam"
+      responses:
+        "200":
+          description: Ledger events
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/PagedLedgerEvent"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  # ── FEFO ───────────────────────────────────────────────────────────────────
+  /v1/fefo/suggest:
+    post:
+      operationId: suggestFefo
+      summary: Get FEFO batch suggestions
+      description: |
+        Returns the optimal batch(es) to pick for a given item and quantity
+        using First-Expiry-First-Out logic. Each suggestion includes batch
+        number, expiry date, available quantity, and bin location.
+      tags: [FEFO]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FefoSuggestRequest"
+      responses:
+        "200":
+          description: FEFO suggestions
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/FefoSuggestion"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  # ── Stock Counts ───────────────────────────────────────────────────────────
+  /v1/counts:
+    post:
+      operationId: createCount
+      summary: Create a stock count session
+      description: |
+        Creates a new stock count session for a store. The session is initialized
+        with expected lines based on current on-hand positions. Status is DRAFT.
+        Publishes inventory.count.created event.
+      tags: [Stock Counts]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCountRequest"
+      responses:
+        "201":
+          description: Count session created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/StockCount"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /v1/counts/{id}:
+    get:
+      operationId: getCount
+      summary: Get stock count session
+      description: Returns the full stock count session including all count lines with variances.
+      tags: [Stock Counts]
+      parameters:
+        - $ref: "#/components/parameters/CountIdPath"
+      responses:
+        "200":
+          description: Stock count detail
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/StockCount"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /v1/counts/{id}/start:
+    post:
+      operationId: startCount
+      summary: Start a stock count session
+      description: |
+        Transitions the session from DRAFT to IN_PROGRESS. Snapshots current
+        system-on-hand quantities as the expected values. Publishes
+        inventory.count.started event.
+      tags: [Stock Counts]
+      parameters:
+        - $ref: "#/components/parameters/CountIdPath"
+      responses:
+        "200":
+          description: Count started
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/StockCount"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /v1/counts/{id}/lines/{lineId}:
+    post:
+      operationId: recordCountLine
+      summary: Record a count line entry
+      description: |
+        Records the physical count for a specific line item. Includes the
+        counted quantity and optional barcode scan. Calculates variance
+        against expected quantity.
+      tags: [Stock Counts]
+      parameters:
+        - $ref: "#/components/parameters/CountIdPath"
+        - name: lineId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Count line ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecordCountLineRequest"
+      responses:
+        "200":
+          description: Count line recorded
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/CountLine"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /v1/counts/{id}/submit:
+    post:
+      operationId: submitCount
+      summary: Submit stock count for approval
+      description: |
+        Transitions the session from IN_PROGRESS to SUBMITTED. All lines must
+        have a counted value. Publishes inventory.count.submitted event.
+      tags: [Stock Counts]
+      parameters:
+        - $ref: "#/components/parameters/CountIdPath"
+      responses:
+        "200":
+          description: Count submitted
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/StockCount"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /v1/counts/{id}/approve:
+    post:
+      operationId: approveCount
+      summary: Approve stock count
+      description: |
+        Approves the stock count, auto-generating ledger adjustments for each
+        variance. Transitions to APPROVED. Publishes inventory.count.approved
+        event.
+      tags: [Stock Counts]
+      parameters:
+        - $ref: "#/components/parameters/CountIdPath"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApproveCountRequest"
+      responses:
+        "200":
+          description: Count approved
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/StockCount"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /v1/counts/{id}/reject:
+    post:
+      operationId: rejectCount
+      summary: Reject stock count
+      description: |
+        Rejects the stock count, requiring a re-count. Transitions to REJECTED.
+        Publishes inventory.count.rejected event.
+      tags: [Stock Counts]
+      parameters:
+        - $ref: "#/components/parameters/CountIdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RejectCountRequest"
+      responses:
+        "200":
+          description: Count rejected
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/StockCount"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  # ── Requisitions ───────────────────────────────────────────────────────────
+  /v1/requisitions:
+    post:
+      operationId: createRequisition
+      summary: Create a requisition
+      description: |
+        Creates a new requisition in DRAFT status. Requisitions request stock
+        from a supplying facility or store. Includes line items with requested
+        quantities. Publishes inventory.requisition.created event.
+      tags: [Requisitions]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRequisitionRequest"
+      responses:
+        "201":
+          description: Requisition created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/Requisition"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /v1/requisitions/{id}/submit:
+    post:
+      operationId: submitRequisition
+      summary: Submit requisition for approval
+      description: |
+        Transitions the requisition from DRAFT to SUBMITTED. Publishes
+        inventory.requisition.submitted event.
+      tags: [Requisitions]
+      parameters:
+        - $ref: "#/components/parameters/RequisitionIdPath"
+      responses:
+        "200":
+          description: Requisition submitted
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/Requisition"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /v1/requisitions/{id}/approve:
+    post:
+      operationId: approveRequisition
+      summary: Approve a requisition
+      description: |
+        Approves the requisition with optional quantity adjustments per line.
+        Transitions to APPROVED. Publishes inventory.requisition.approved event.
+      tags: [Requisitions]
+      parameters:
+        - $ref: "#/components/parameters/RequisitionIdPath"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApproveRequisitionRequest"
+      responses:
+        "200":
+          description: Requisition approved
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/Requisition"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /v1/requisitions/{id}/reject:
+    post:
+      operationId: rejectRequisition
+      summary: Reject a requisition
+      description: |
+        Rejects the requisition with a reason. Transitions to REJECTED.
+        Publishes inventory.requisition.rejected event.
+      tags: [Requisitions]
+      parameters:
+        - $ref: "#/components/parameters/RequisitionIdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RejectRequisitionRequest"
+      responses:
+        "200":
+          description: Requisition rejected
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/Requisition"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /v1/requisitions/{id}/fulfill:
+    post:
+      operationId: fulfillRequisition
+      summary: Fulfill a requisition
+      description: |
+        Records fulfillment of an approved requisition. Specifies actual
+        quantities shipped per line, batch numbers, and expiry dates.
+        Transitions to FULFILLED. Publishes inventory.requisition.fulfilled event.
+      tags: [Requisitions]
+      parameters:
+        - $ref: "#/components/parameters/RequisitionIdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FulfillRequisitionRequest"
+      responses:
+        "200":
+          description: Requisition fulfilled
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/Requisition"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  # ── Handover ───────────────────────────────────────────────────────────────
+  /v1/handover/start:
+    post:
+      operationId: startHandover
+      summary: Start a shift handover
+      description: |
+        Initiates a shift handover between outgoing and incoming operators.
+        Snapshots current stock positions. Status is PENDING_OUTGOING_SIGN.
+        Publishes inventory.handover.started event.
+      tags: [Handover]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StartHandoverRequest"
+      responses:
+        "201":
+          description: Handover started
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/Handover"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /v1/handover/{id}/sign-outgoing:
+    post:
+      operationId: signOutgoing
+      summary: Outgoing operator signs handover
+      description: |
+        Records the outgoing operator's confirmation. Transitions to
+        PENDING_INCOMING_SIGN. Publishes inventory.handover.outgoing_signed event.
+      tags: [Handover]
+      parameters:
+        - $ref: "#/components/parameters/HandoverIdPath"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SignHandoverRequest"
+      responses:
+        "200":
+          description: Outgoing signature recorded
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/Handover"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /v1/handover/{id}/sign-incoming:
+    post:
+      operationId: signIncoming
+      summary: Incoming operator signs handover
+      description: |
+        Records the incoming operator's confirmation. Transitions to COMPLETED.
+        Publishes inventory.handover.completed event.
+      tags: [Handover]
+      parameters:
+        - $ref: "#/components/parameters/HandoverIdPath"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SignHandoverRequest"
+      responses:
+        "200":
+          description: Incoming signature recorded, handover complete
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/Handover"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /v1/handover:
+    get:
+      operationId: listHandovers
+      summary: List handover records
+      description: Returns paginated handover records filtered by store and status.
+      tags: [Handover]
+      parameters:
+        - $ref: "#/components/parameters/FacilityIdQuery"
+        - name: storeId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          schema:
+            $ref: "#/components/schemas/HandoverStatus"
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/SizeParam"
+      responses:
+        "200":
+          description: Handover records
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/PagedHandover"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  # ── Reconciliation ─────────────────────────────────────────────────────────
+  /v1/reconcile/pending:
+    get:
+      operationId: getReconcilePending
+      summary: Get pending reconciliation items
+      description: |
+        Returns paginated list of stock variances between internal inventory
+        and external eLMIS data. Items are ordered by variance magnitude
+        descending. Includes confidence scores for auto-match suggestions.
+      tags: [Reconciliation]
+      parameters:
+        - $ref: "#/components/parameters/FacilityIdQuery"
+        - name: storeId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/SizeParam"
+      responses:
+        "200":
+          description: Pending reconciliation items
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/PagedReconcileItem"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /v1/reconcile/{id}/resolve:
+    post:
+      operationId: resolveReconcile
+      summary: Resolve a reconciliation entry
+      description: |
+        Resolves a stock variance by accepting internal count, accepting
+        external count, or specifying a manual adjustment. Records resolution
+        notes for audit. Publishes inventory.reconcile.resolved event.
+      tags: [Reconciliation]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Reconciliation entry ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResolveReconcileRequest"
+      responses:
+        "200":
+          description: Reconciliation resolved
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/ReconcileItem"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  # ── Internal ───────────────────────────────────────────────────────────────
+  /v1/internal/capability/refresh:
+    post:
+      operationId: refreshCapability
+      summary: Refresh eLMIS capability configuration
+      description: |
+        Forces a reload of the eLMIS adapter mode and capability configuration
+        for the given facility. Called by ops when adapter config changes.
+      tags: [Internal]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - facilityId
+              properties:
+                facilityId:
+                  type: string
+                  format: uuid
+      responses:
+        "200":
+          description: Capability refreshed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /v1/internal/consumption/pharmacy:
+    post:
+      operationId: recordPharmacyConsumption
+      summary: Record pharmacy consumption
+      description: |
+        Internal endpoint called by the Pharmacy service after dispense
+        completion. Decreases on-hand and records the consumption event
+        against the dispensing context.
+      tags: [Internal]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConsumptionRequest"
+      responses:
+        "200":
+          description: Consumption recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /v1/internal/consumption/lab:
+    post:
+      operationId: recordLabConsumption
+      summary: Record lab consumption
+      description: |
+        Internal endpoint called by OROS lab adapter when lab reagents/supplies
+        are consumed during analysis. Decreases on-hand for consumed items.
+      tags: [Internal]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConsumptionRequest"
+      responses:
+        "200":
+          description: Consumption recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /v1/internal/consumption/clinical:
+    post:
+      operationId: recordClinicalConsumption
+      summary: Record clinical consumption
+      description: |
+        Internal endpoint for clinical supply consumption (e.g., wound
+        dressings, gloves, syringes) used during patient encounters.
+      tags: [Internal]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConsumptionRequest"
+      responses:
+        "200":
+          description: Consumption recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /v1/internal/stores:
+    post:
+      operationId: createStore
+      summary: Create an inventory store
+      description: |
+        Creates a new inventory store (warehouse, pharmacy storeroom, ward
+        cupboard) within a facility. Stores are the physical locations
+        where stock is held.
+      tags: [Internal]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateStoreRequest"
+      responses:
+        "201":
+          description: Store created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/Store"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /v1/internal/stores/{storeId}/bins:
+    post:
+      operationId: createBin
+      summary: Create a storage bin within a store
+      description: |
+        Creates a new bin (shelf, rack, cold-chain unit, etc.) within a
+        store. Bins are used for fine-grained location tracking within a store.
+      tags: [Internal]
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Store ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBinRequest"
+      responses:
+        "201":
+          description: Bin created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/Bin"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+components:
+  # ── Security ─────────────────────────────────────────────────────────────
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Keycloak-issued JWT token
+
+  # ── Parameters ─────────────────────────────────────────────────────────────
+  parameters:
+    FacilityIdQuery:
+      name: facilityId
+      in: query
+      schema:
+        type: string
+        format: uuid
+      description: Facility ID to filter by
+
+    CountIdPath:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: Stock count session ID
+
+    RequisitionIdPath:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: Requisition ID
+
+    HandoverIdPath:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: Handover ID
+
+    PageParam:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+      description: Zero-based page number
+
+    SizeParam:
+      name: size
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+      description: Page size
+
+  # ── Responses ──────────────────────────────────────────────────────────────
+  responses:
+    BadRequest:
+      description: Invalid request parameters or body
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiResponse"
+
+    Unauthorized:
+      description: Missing or invalid authentication token
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiResponse"
+
+    Forbidden:
+      description: Insufficient permissions for this operation
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiResponse"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiResponse"
+
+    Conflict:
+      description: State conflict (e.g., invalid status transition)
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiResponse"
+
+  # ── Schemas ────────────────────────────────────────────────────────────────
+  schemas:
+    # -- Enumerations --
+    MovementType:
+      type: string
+      enum:
+        - RECEIPT
+        - ISSUE
+        - TRANSFER
+        - ADJUSTMENT
+        - WASTAGE
+        - RETURN
+        - CONSUMPTION
+      description: Type of stock movement recorded in the ledger
+
+    ItemCategory:
+      type: string
+      enum:
+        - PHARMACEUTICAL
+        - MEDICAL_SUPPLY
+        - LAB_REAGENT
+        - EQUIPMENT
+        - CLINICAL_SUPPLY
+        - GENERAL
+      description: Category classification for inventory items
+
+    CountStatus:
+      type: string
+      enum:
+        - DRAFT
+        - IN_PROGRESS
+        - SUBMITTED
+        - APPROVED
+        - REJECTED
+      description: Stock count session lifecycle states
+
+    RequisitionStatus:
+      type: string
+      enum:
+        - DRAFT
+        - SUBMITTED
+        - APPROVED
+        - REJECTED
+        - FULFILLED
+        - PARTIALLY_FULFILLED
+        - CANCELLED
+      description: Requisition lifecycle states
+
+    HandoverStatus:
+      type: string
+      enum:
+        - PENDING_OUTGOING_SIGN
+        - PENDING_INCOMING_SIGN
+        - COMPLETED
+        - CANCELLED
+      description: Shift handover lifecycle states
+
+    ReconcileStatus:
+      type: string
+      enum:
+        - PENDING
+        - RESOLVED
+        - EXPIRED
+      description: Reconciliation entry status
+
+    AdjustmentAction:
+      type: string
+      enum:
+        - ACCEPT_INTERNAL
+        - ACCEPT_EXTERNAL
+        - MANUAL_ADJUST
+      description: Reconciliation resolution action
+
+    DisposalMethod:
+      type: string
+      enum:
+        - INCINERATION
+        - CHEMICAL
+        - RETURN_TO_SUPPLIER
+        - OTHER
+      description: Wastage disposal method
+
+    StoreType:
+      type: string
+      enum:
+        - MAIN_WAREHOUSE
+        - PHARMACY_STORE
+        - WARD_CUPBOARD
+        - COLD_CHAIN
+        - QUARANTINE
+        - LAB_STORE
+      description: Type of inventory store
+
+    # -- Item --
+    Item:
+      type: object
+      required:
+        - id
+        - tenantId
+        - itemCode
+        - name
+        - category
+        - unitOfMeasure
+        - active
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        itemCode:
+          type: string
+          description: Unique item code within tenant
+        name:
+          type: string
+          description: Item display name
+        description:
+          type: string
+          nullable: true
+        category:
+          $ref: "#/components/schemas/ItemCategory"
+        unitOfMeasure:
+          type: string
+          description: Unit (e.g., "TAB", "VIAL", "BOX", "ML", "PAIR")
+        barcode:
+          type: string
+          nullable: true
+          description: Primary barcode (GTIN)
+        manufacturer:
+          type: string
+          nullable: true
+        reorderPoint:
+          type: integer
+          nullable: true
+          description: Quantity at which reorder alert triggers
+        reorderQuantity:
+          type: integer
+          nullable: true
+          description: Default quantity for reorder requisitions
+        maxStockLevel:
+          type: integer
+          nullable: true
+          description: Maximum stock level for the item
+        coldChainRequired:
+          type: boolean
+          default: false
+        controlledSubstance:
+          type: boolean
+          default: false
+        active:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreateItemRequest:
+      type: object
+      required:
+        - itemCode
+        - name
+        - category
+        - unitOfMeasure
+      properties:
+        itemCode:
+          type: string
+          minLength: 1
+        name:
+          type: string
+          minLength: 1
+        description:
+          type: string
+        category:
+          $ref: "#/components/schemas/ItemCategory"
+        unitOfMeasure:
+          type: string
+          minLength: 1
+        barcode:
+          type: string
+        manufacturer:
+          type: string
+        reorderPoint:
+          type: integer
+          minimum: 0
+        reorderQuantity:
+          type: integer
+          minimum: 1
+        maxStockLevel:
+          type: integer
+          minimum: 1
+        coldChainRequired:
+          type: boolean
+        controlledSubstance:
+          type: boolean
+
+    ItemImportRequest:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/CreateItemRequest"
+
+    ImportResult:
+      type: object
+      required:
+        - imported
+        - updated
+        - skipped
+        - errors
+      properties:
+        imported:
+          type: integer
+        updated:
+          type: integer
+        skipped:
+          type: integer
+        errors:
+          type: array
+          items:
+            type: string
+
+    BarcodeResult:
+      type: object
+      required:
+        - itemCode
+        - itemName
+      properties:
+        itemCode:
+          type: string
+        itemName:
+          type: string
+        category:
+          $ref: "#/components/schemas/ItemCategory"
+        unitOfMeasure:
+          type: string
+        batchNumber:
+          type: string
+          nullable: true
+        expiryDate:
+          type: string
+          format: date
+          nullable: true
+        manufacturer:
+          type: string
+          nullable: true
+        gtin:
+          type: string
+          nullable: true
+
+    # -- On-Hand --
+    OnHandPosition:
+      type: object
+      required:
+        - id
+        - tenantId
+        - facilityId
+        - storeId
+        - itemCode
+        - itemName
+        - batchNumber
+        - expiryDate
+        - quantityOnHand
+        - quantityReserved
+        - quantityAvailable
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        facilityId:
+          type: string
+          format: uuid
+        storeId:
+          type: string
+          format: uuid
+        storeName:
+          type: string
+          nullable: true
+        binId:
+          type: string
+          format: uuid
+          nullable: true
+        binCode:
+          type: string
+          nullable: true
+        itemCode:
+          type: string
+        itemName:
+          type: string
+        category:
+          $ref: "#/components/schemas/ItemCategory"
+        unitOfMeasure:
+          type: string
+          nullable: true
+        batchNumber:
+          type: string
+        expiryDate:
+          type: string
+          format: date
+        quantityOnHand:
+          type: integer
+          description: Total physical quantity
+        quantityReserved:
+          type: integer
+          description: Quantity reserved for pending issues
+        quantityAvailable:
+          type: integer
+          description: quantityOnHand - quantityReserved
+        reorderPoint:
+          type: integer
+          nullable: true
+        belowReorder:
+          type: boolean
+          description: Whether quantity is below reorder point
+        updatedAt:
+          type: string
+          format: date-time
+
+    StockoutRisk:
+      type: object
+      required:
+        - itemCode
+        - itemName
+        - totalOnHand
+        - avgDailyConsumption
+        - daysOfStock
+        - facilityId
+        - storeId
+      properties:
+        itemCode:
+          type: string
+        itemName:
+          type: string
+        category:
+          $ref: "#/components/schemas/ItemCategory"
+        totalOnHand:
+          type: integer
+        avgDailyConsumption:
+          type: number
+          format: double
+        daysOfStock:
+          type: number
+          format: double
+          description: Estimated days until stockout
+        reorderPoint:
+          type: integer
+          nullable: true
+        facilityId:
+          type: string
+          format: uuid
+        storeId:
+          type: string
+          format: uuid
+        storeName:
+          type: string
+          nullable: true
+        isStockedOut:
+          type: boolean
+
+    # -- Ledger --
+    LedgerEvent:
+      type: object
+      required:
+        - id
+        - tenantId
+        - facilityId
+        - storeId
+        - itemCode
+        - itemName
+        - movementType
+        - quantity
+        - balanceAfter
+        - timestamp
+        - actorId
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        facilityId:
+          type: string
+          format: uuid
+        storeId:
+          type: string
+          format: uuid
+        storeName:
+          type: string
+          nullable: true
+        binId:
+          type: string
+          format: uuid
+          nullable: true
+        itemCode:
+          type: string
+        itemName:
+          type: string
+        batchNumber:
+          type: string
+          nullable: true
+        expiryDate:
+          type: string
+          format: date
+          nullable: true
+        movementType:
+          $ref: "#/components/schemas/MovementType"
+        quantity:
+          type: integer
+          description: Signed quantity (+receipt/-issue)
+        balanceAfter:
+          type: integer
+          description: On-hand balance after this movement
+        reason:
+          type: string
+          nullable: true
+        referenceType:
+          type: string
+          nullable: true
+          description: Reference context (REQUISITION, DISPENSE, COUNT, TRANSFER, etc.)
+        referenceId:
+          type: string
+          format: uuid
+          nullable: true
+          description: ID of the source document
+        sourceStoreId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Source store (for transfers)
+        destinationStoreId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Destination store (for transfers)
+        disposalMethod:
+          $ref: "#/components/schemas/DisposalMethod"
+        witnessId:
+          type: string
+          format: uuid
+          nullable: true
+        actorId:
+          type: string
+          format: uuid
+        timestamp:
+          type: string
+          format: date-time
+        notes:
+          type: string
+          nullable: true
+
+    ReceiptRequest:
+      type: object
+      required:
+        - storeId
+        - itemCode
+        - batchNumber
+        - expiryDate
+        - quantity
+      properties:
+        storeId:
+          type: string
+          format: uuid
+        binId:
+          type: string
+          format: uuid
+        itemCode:
+          type: string
+        batchNumber:
+          type: string
+        expiryDate:
+          type: string
+          format: date
+        quantity:
+          type: integer
+          minimum: 1
+        supplierName:
+          type: string
+        deliveryNote:
+          type: string
+        notes:
+          type: string
+
+    IssueRequest:
+      type: object
+      required:
+        - storeId
+        - itemCode
+        - batchNumber
+        - quantity
+      properties:
+        storeId:
+          type: string
+          format: uuid
+        binId:
+          type: string
+          format: uuid
+        itemCode:
+          type: string
+        batchNumber:
+          type: string
+        quantity:
+          type: integer
+          minimum: 1
+        issuedTo:
+          type: string
+          description: Department or person issued to
+        reason:
+          type: string
+        notes:
+          type: string
+
+    TransferRequest:
+      type: object
+      required:
+        - sourceStoreId
+        - destinationStoreId
+        - itemCode
+        - batchNumber
+        - quantity
+      properties:
+        sourceStoreId:
+          type: string
+          format: uuid
+        sourceBinId:
+          type: string
+          format: uuid
+        destinationStoreId:
+          type: string
+          format: uuid
+        destinationBinId:
+          type: string
+          format: uuid
+        itemCode:
+          type: string
+        batchNumber:
+          type: string
+        expiryDate:
+          type: string
+          format: date
+        quantity:
+          type: integer
+          minimum: 1
+        reason:
+          type: string
+        notes:
+          type: string
+
+    AdjustRequest:
+      type: object
+      required:
+        - storeId
+        - itemCode
+        - batchNumber
+        - quantity
+        - reason
+      properties:
+        storeId:
+          type: string
+          format: uuid
+        binId:
+          type: string
+          format: uuid
+        itemCode:
+          type: string
+        batchNumber:
+          type: string
+        expiryDate:
+          type: string
+          format: date
+        quantity:
+          type: integer
+          description: Signed quantity (+positive or -negative adjustment)
+        reason:
+          type: string
+          minLength: 1
+        referenceType:
+          type: string
+          description: Source of adjustment (COUNT, RECONCILE, MANUAL)
+        referenceId:
+          type: string
+          format: uuid
+        notes:
+          type: string
+
+    WastageRequest:
+      type: object
+      required:
+        - storeId
+        - itemCode
+        - batchNumber
+        - quantity
+        - reason
+        - disposalMethod
+      properties:
+        storeId:
+          type: string
+          format: uuid
+        binId:
+          type: string
+          format: uuid
+        itemCode:
+          type: string
+        batchNumber:
+          type: string
+        quantity:
+          type: integer
+          minimum: 1
+        reason:
+          type: string
+          minLength: 1
+        disposalMethod:
+          $ref: "#/components/schemas/DisposalMethod"
+        witnessId:
+          type: string
+          format: uuid
+          description: Required for controlled substances
+        notes:
+          type: string
+
+    ReturnRequest:
+      type: object
+      required:
+        - storeId
+        - itemCode
+        - batchNumber
+        - quantity
+        - reason
+        - returnType
+      properties:
+        storeId:
+          type: string
+          format: uuid
+        binId:
+          type: string
+          format: uuid
+        itemCode:
+          type: string
+        batchNumber:
+          type: string
+        expiryDate:
+          type: string
+          format: date
+        quantity:
+          type: integer
+          minimum: 1
+        reason:
+          type: string
+          minLength: 1
+        returnType:
+          type: string
+          enum:
+            - RETURN_TO_STOCK
+            - RETURN_TO_SUPPLIER
+          description: Whether items go back on shelf or back to supplier
+        condition:
+          type: string
+          enum:
+            - INTACT
+            - DAMAGED
+            - EXPIRED
+        notes:
+          type: string
+
+    # -- FEFO --
+    FefoSuggestRequest:
+      type: object
+      required:
+        - storeId
+        - itemCode
+        - quantityNeeded
+      properties:
+        storeId:
+          type: string
+          format: uuid
+        itemCode:
+          type: string
+        quantityNeeded:
+          type: integer
+          minimum: 1
+
+    FefoSuggestion:
+      type: object
+      required:
+        - batchNumber
+        - expiryDate
+        - quantityAvailable
+        - suggestedPickQty
+      properties:
+        batchNumber:
+          type: string
+        expiryDate:
+          type: string
+          format: date
+        quantityAvailable:
+          type: integer
+        suggestedPickQty:
+          type: integer
+          description: Quantity to pick from this batch
+        binId:
+          type: string
+          format: uuid
+          nullable: true
+        binCode:
+          type: string
+          nullable: true
+          description: Bin location label
+
+    # -- Stock Count --
+    StockCount:
+      type: object
+      required:
+        - id
+        - tenantId
+        - facilityId
+        - storeId
+        - status
+        - lines
+        - createdBy
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        facilityId:
+          type: string
+          format: uuid
+        storeId:
+          type: string
+          format: uuid
+        storeName:
+          type: string
+          nullable: true
+        status:
+          $ref: "#/components/schemas/CountStatus"
+        countType:
+          type: string
+          enum:
+            - FULL
+            - CYCLE
+            - SPOT
+          description: Type of count (full physical, cycle, or spot check)
+        lines:
+          type: array
+          items:
+            $ref: "#/components/schemas/CountLine"
+        totalLines:
+          type: integer
+        countedLines:
+          type: integer
+        totalVariance:
+          type: integer
+          description: Sum of absolute variances
+        createdBy:
+          type: string
+          format: uuid
+        approvedBy:
+          type: string
+          format: uuid
+          nullable: true
+        rejectedBy:
+          type: string
+          format: uuid
+          nullable: true
+        rejectionReason:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        startedAt:
+          type: string
+          format: date-time
+          nullable: true
+        submittedAt:
+          type: string
+          format: date-time
+          nullable: true
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+        updatedAt:
+          type: string
+          format: date-time
+
+    CountLine:
+      type: object
+      required:
+        - id
+        - countId
+        - itemCode
+        - itemName
+        - batchNumber
+        - expectedQty
+      properties:
+        id:
+          type: string
+          format: uuid
+        countId:
+          type: string
+          format: uuid
+        itemCode:
+          type: string
+        itemName:
+          type: string
+        batchNumber:
+          type: string
+        expiryDate:
+          type: string
+          format: date
+          nullable: true
+        binCode:
+          type: string
+          nullable: true
+        expectedQty:
+          type: integer
+          description: System on-hand at time of count start
+        countedQty:
+          type: integer
+          nullable: true
+          description: Physical count entered by operator
+        variance:
+          type: integer
+          nullable: true
+          description: countedQty - expectedQty
+        barcodeScan:
+          type: string
+          nullable: true
+          description: Barcode scan during count
+        notes:
+          type: string
+          nullable: true
+        countedAt:
+          type: string
+          format: date-time
+          nullable: true
+        countedBy:
+          type: string
+          format: uuid
+          nullable: true
+
+    CreateCountRequest:
+      type: object
+      required:
+        - storeId
+        - countType
+      properties:
+        storeId:
+          type: string
+          format: uuid
+        countType:
+          type: string
+          enum:
+            - FULL
+            - CYCLE
+            - SPOT
+        itemCodes:
+          type: array
+          items:
+            type: string
+          description: Item codes for CYCLE or SPOT count (optional; FULL counts all items)
+        notes:
+          type: string
+
+    RecordCountLineRequest:
+      type: object
+      required:
+        - countedQty
+      properties:
+        countedQty:
+          type: integer
+          minimum: 0
+        barcodeScan:
+          type: string
+        notes:
+          type: string
+
+    ApproveCountRequest:
+      type: object
+      properties:
+        notes:
+          type: string
+
+    RejectCountRequest:
+      type: object
+      required:
+        - reason
+      properties:
+        reason:
+          type: string
+          minLength: 1
+
+    # -- Requisition --
+    Requisition:
+      type: object
+      required:
+        - id
+        - tenantId
+        - requisitionNumber
+        - requestingFacilityId
+        - supplyingFacilityId
+        - status
+        - lines
+        - createdBy
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        requisitionNumber:
+          type: string
+          description: Human-readable requisition number
+        requestingFacilityId:
+          type: string
+          format: uuid
+        requestingFacilityName:
+          type: string
+          nullable: true
+        requestingStoreId:
+          type: string
+          format: uuid
+          nullable: true
+        supplyingFacilityId:
+          type: string
+          format: uuid
+        supplyingFacilityName:
+          type: string
+          nullable: true
+        supplyingStoreId:
+          type: string
+          format: uuid
+          nullable: true
+        status:
+          $ref: "#/components/schemas/RequisitionStatus"
+        priority:
+          type: string
+          enum:
+            - ROUTINE
+            - URGENT
+            - EMERGENCY
+          default: ROUTINE
+        lines:
+          type: array
+          items:
+            $ref: "#/components/schemas/RequisitionLine"
+        createdBy:
+          type: string
+          format: uuid
+        approvedBy:
+          type: string
+          format: uuid
+          nullable: true
+        rejectedBy:
+          type: string
+          format: uuid
+          nullable: true
+        rejectionReason:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        submittedAt:
+          type: string
+          format: date-time
+          nullable: true
+        approvedAt:
+          type: string
+          format: date-time
+          nullable: true
+        fulfilledAt:
+          type: string
+          format: date-time
+          nullable: true
+        updatedAt:
+          type: string
+          format: date-time
+
+    RequisitionLine:
+      type: object
+      required:
+        - id
+        - itemCode
+        - itemName
+        - quantityRequested
+      properties:
+        id:
+          type: string
+          format: uuid
+        itemCode:
+          type: string
+        itemName:
+          type: string
+        unitOfMeasure:
+          type: string
+          nullable: true
+        quantityRequested:
+          type: integer
+          minimum: 1
+        quantityApproved:
+          type: integer
+          nullable: true
+        quantityFulfilled:
+          type: integer
+          nullable: true
+        batchNumber:
+          type: string
+          nullable: true
+          description: Batch assigned during fulfillment
+        expiryDate:
+          type: string
+          format: date
+          nullable: true
+          description: Expiry of fulfilled batch
+        notes:
+          type: string
+          nullable: true
+
+    CreateRequisitionRequest:
+      type: object
+      required:
+        - requestingFacilityId
+        - supplyingFacilityId
+        - lines
+      properties:
+        requestingFacilityId:
+          type: string
+          format: uuid
+        requestingStoreId:
+          type: string
+          format: uuid
+        supplyingFacilityId:
+          type: string
+          format: uuid
+        supplyingStoreId:
+          type: string
+          format: uuid
+        priority:
+          type: string
+          enum:
+            - ROUTINE
+            - URGENT
+            - EMERGENCY
+        lines:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required:
+              - itemCode
+              - itemName
+              - quantityRequested
+            properties:
+              itemCode:
+                type: string
+              itemName:
+                type: string
+              quantityRequested:
+                type: integer
+                minimum: 1
+              notes:
+                type: string
+        notes:
+          type: string
+
+    ApproveRequisitionRequest:
+      type: object
+      properties:
+        lineAdjustments:
+          type: array
+          items:
+            type: object
+            required:
+              - lineId
+              - quantityApproved
+            properties:
+              lineId:
+                type: string
+                format: uuid
+              quantityApproved:
+                type: integer
+                minimum: 0
+        notes:
+          type: string
+
+    RejectRequisitionRequest:
+      type: object
+      required:
+        - reason
+      properties:
+        reason:
+          type: string
+          minLength: 1
+
+    FulfillRequisitionRequest:
+      type: object
+      required:
+        - lines
+      properties:
+        lines:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required:
+              - lineId
+              - quantityFulfilled
+              - batchNumber
+              - expiryDate
+            properties:
+              lineId:
+                type: string
+                format: uuid
+              quantityFulfilled:
+                type: integer
+                minimum: 0
+              batchNumber:
+                type: string
+              expiryDate:
+                type: string
+                format: date
+        notes:
+          type: string
+
+    # -- Handover --
+    Handover:
+      type: object
+      required:
+        - id
+        - tenantId
+        - facilityId
+        - storeId
+        - status
+        - outgoingActorId
+        - incomingActorId
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        facilityId:
+          type: string
+          format: uuid
+        storeId:
+          type: string
+          format: uuid
+        storeName:
+          type: string
+          nullable: true
+        status:
+          $ref: "#/components/schemas/HandoverStatus"
+        outgoingActorId:
+          type: string
+          format: uuid
+        outgoingActorName:
+          type: string
+          nullable: true
+        incomingActorId:
+          type: string
+          format: uuid
+        incomingActorName:
+          type: string
+          nullable: true
+        snapshotItemCount:
+          type: integer
+          nullable: true
+          description: Number of stock positions at handover time
+        outgoingNotes:
+          type: string
+          nullable: true
+        incomingNotes:
+          type: string
+          nullable: true
+        outgoingSignedAt:
+          type: string
+          format: date-time
+          nullable: true
+        incomingSignedAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    StartHandoverRequest:
+      type: object
+      required:
+        - storeId
+        - outgoingActorId
+        - incomingActorId
+      properties:
+        storeId:
+          type: string
+          format: uuid
+        outgoingActorId:
+          type: string
+          format: uuid
+        incomingActorId:
+          type: string
+          format: uuid
+        notes:
+          type: string
+
+    SignHandoverRequest:
+      type: object
+      properties:
+        notes:
+          type: string
+
+    # -- Reconciliation --
+    ReconcileItem:
+      type: object
+      required:
+        - id
+        - tenantId
+        - facilityId
+        - storeId
+        - itemCode
+        - itemName
+        - internalQuantity
+        - externalQuantity
+        - variance
+        - confidenceScore
+        - status
+        - source
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        facilityId:
+          type: string
+          format: uuid
+        storeId:
+          type: string
+          format: uuid
+        itemCode:
+          type: string
+        itemName:
+          type: string
+        batchNumber:
+          type: string
+          nullable: true
+        internalQuantity:
+          type: integer
+          description: Quantity according to internal inventory
+        externalQuantity:
+          type: integer
+          description: Quantity according to external eLMIS
+        variance:
+          type: integer
+          description: internalQuantity - externalQuantity
+        confidenceScore:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 1
+          description: Match confidence (0.0 to 1.0)
+        status:
+          $ref: "#/components/schemas/ReconcileStatus"
+        source:
+          type: string
+          description: Source system (e.g., "ELMIS", "DHIS2")
+        resolvedBy:
+          type: string
+          format: uuid
+          nullable: true
+        resolvedAt:
+          type: string
+          format: date-time
+          nullable: true
+        resolutionAction:
+          $ref: "#/components/schemas/AdjustmentAction"
+        resolutionNotes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+    ResolveReconcileRequest:
+      type: object
+      required:
+        - action
+        - notes
+      properties:
+        action:
+          $ref: "#/components/schemas/AdjustmentAction"
+        adjustedQuantity:
+          type: integer
+          minimum: 0
+          description: Required when action is MANUAL_ADJUST
+        notes:
+          type: string
+          minLength: 1
+
+    # -- Consumption --
+    ConsumptionRequest:
+      type: object
+      required:
+        - facilityId
+        - storeId
+        - items
+      properties:
+        facilityId:
+          type: string
+          format: uuid
+        storeId:
+          type: string
+          format: uuid
+        referenceType:
+          type: string
+          description: Context (DISPENSE, LAB_ANALYSIS, CLINICAL_ENCOUNTER)
+        referenceId:
+          type: string
+          format: uuid
+        items:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required:
+              - itemCode
+              - batchNumber
+              - quantity
+            properties:
+              itemCode:
+                type: string
+              batchNumber:
+                type: string
+              quantity:
+                type: integer
+                minimum: 1
+
+    # -- Store / Bin --
+    Store:
+      type: object
+      required:
+        - id
+        - tenantId
+        - facilityId
+        - code
+        - name
+        - storeType
+        - active
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        facilityId:
+          type: string
+          format: uuid
+        code:
+          type: string
+        name:
+          type: string
+        storeType:
+          $ref: "#/components/schemas/StoreType"
+        active:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    CreateStoreRequest:
+      type: object
+      required:
+        - facilityId
+        - code
+        - name
+        - storeType
+      properties:
+        facilityId:
+          type: string
+          format: uuid
+        code:
+          type: string
+          minLength: 1
+        name:
+          type: string
+          minLength: 1
+        storeType:
+          $ref: "#/components/schemas/StoreType"
+
+    Bin:
+      type: object
+      required:
+        - id
+        - storeId
+        - code
+        - name
+        - active
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        storeId:
+          type: string
+          format: uuid
+        code:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        coldChain:
+          type: boolean
+          default: false
+        active:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    CreateBinRequest:
+      type: object
+      required:
+        - code
+        - name
+      properties:
+        code:
+          type: string
+          minLength: 1
+        name:
+          type: string
+          minLength: 1
+        description:
+          type: string
+        coldChain:
+          type: boolean
+
+    # -- Paged Responses --
+    PagedOnHand:
+      type: object
+      required:
+        - content
+        - page
+        - size
+        - totalElements
+        - totalPages
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/OnHandPosition"
+        page:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
+
+    PagedStockoutRisk:
+      type: object
+      required:
+        - content
+        - page
+        - size
+        - totalElements
+        - totalPages
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/StockoutRisk"
+        page:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
+
+    PagedLedgerEvent:
+      type: object
+      required:
+        - content
+        - page
+        - size
+        - totalElements
+        - totalPages
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/LedgerEvent"
+        page:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
+
+    PagedReconcileItem:
+      type: object
+      required:
+        - content
+        - page
+        - size
+        - totalElements
+        - totalPages
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReconcileItem"
+        page:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
+
+    PagedHandover:
+      type: object
+      required:
+        - content
+        - page
+        - size
+        - totalElements
+        - totalPages
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/Handover"
+        page:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
+
+    # -- API Envelope --
+    ApiResponse:
+      type: object
+      required:
+        - success
+      properties:
+        success:
+          type: boolean
+          description: Whether the request was successful
+        data:
+          description: Response payload (type varies by endpoint)
+        error:
+          type: object
+          nullable: true
+          properties:
+            code:
+              type: string
+              description: Machine-readable error code
+            message:
+              type: string
+              description: Human-readable error message
+            details:
+              type: object
+              description: Additional error context
+        meta:
+          type: object
+          nullable: true
+          properties:
+            correlationId:
+              type: string
+              format: uuid
+            timestamp:
+              type: string
+              format: date-time
