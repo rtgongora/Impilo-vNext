@@ -20,9 +20,15 @@ import java.util.List;
  * delivery with transactional consistency.
  *
  * Topics:
- *   - vito.identity: IDENTITY_CREATED, IDENTITY_VERIFIED, IDENTITY_DECEASED
- *   - vito.cards:    CARD_REQUESTED, CARD_ACTIVATED, CARD_REVOKED
- *   - vito.wallet:   WALLET_TOPPED_UP, WALLET_PAYMENT
+ *   - vito.identity:  IDENTITY_CREATED, IDENTITY_VERIFIED, IDENTITY_DECEASED
+ *   - vito.cards:     CARD_REQUESTED, CARD_ACTIVATED, CARD_REVOKED
+ *   - vito.wallet:    WALLET_TOPPED_UP, WALLET_PAYMENT
+ *   - vito.issuance:  issuance.submitted, issuance.approved, issuance.issued
+ *   - vito.dedup:     dedup.case.created, merge.executed, merge.reversed
+ *   - vito.offline:   offline.provisional.created, offline.reconciled
+ *   - vito.alias:     alias.issued, alias.rotated
+ *   - vito.pickup:    pickup.created, pickup.redeemed
+ *   - vito.print:     print.job.created
  */
 @Component
 public class VitoOutboxPublisher {
@@ -60,8 +66,14 @@ public class VitoOutboxPublisher {
     private String resolveTopic(String aggregateType) {
         return switch (aggregateType) {
             case "CLIENT" -> "vito.identity";
+            case "ALIAS" -> "vito.alias";
             case "SMART_CARD" -> "vito.cards";
             case "WALLET" -> "vito.wallet";
+            case "ISSUANCE" -> "vito.issuance";
+            case "MERGE", "DEDUP" -> "vito.dedup";
+            case "PROVISIONAL" -> "vito.offline";
+            case "PICKUP" -> "vito.pickup";
+            case "PRINT_JOB" -> "vito.print";
             default -> "vito.events";
         };
     }

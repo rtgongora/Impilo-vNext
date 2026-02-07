@@ -74,10 +74,23 @@
             <artifactId>bcprov-jdk18on</artifactId>
         </dependency>
 
-        <!-- Nimbus JOSE+JWT (JWS/VC for Secure Health Summary) -->
+        <!-- Nimbus JOSE+JWT (JWS/VC for Secure Health Summary + Ed25519 QR signing) -->
         <dependency>
             <groupId>com.nimbusds</groupId>
             <artifactId>nimbus-jose-jwt</artifactId>
+        </dependency>
+
+        <!-- Apache PDFBox (Apache 2.0 — Emergency Capsule + Pickup Slip PDFs) -->
+        <dependency>
+            <groupId>org.apache.pdfbox</groupId>
+            <artifactId>pdfbox</artifactId>
+            <version>3.0.3</version>
+        </dependency>
+
+        <!-- AOP for step-up enforcement -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aop</artifactId>
         </dependency>
 
         <!-- Kafka (outbox) -->
