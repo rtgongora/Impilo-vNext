@@ -60,6 +60,7 @@
         <module>pharmacy-elmis-adapter</module>
         <module>inpatient-service</module>
         <module>inventory-service</module>
+        <module>inventory-elmis-adapter</module>
         <module>mushex-service</module>
         <module>costing-engine-service</module>
         <module>document-service</module>
