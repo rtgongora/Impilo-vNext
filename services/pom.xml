@@ -57,6 +57,7 @@
         <module>pct-service</module>
         <module>oros-service</module>
         <module>pharmacy-service</module>
+        <module>pharmacy-elmis-adapter</module>
         <module>inpatient-service</module>
         <module>inventory-service</module>
         <module>mushex-service</module>
