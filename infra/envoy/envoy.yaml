@@ -134,12 +134,26 @@ static_resources:
                         - match: { prefix: "/api/v1/patient" }
                           route: { cluster: pct_service }
 
-                        # ── OROS — Orders & Results ──
-                        - match: { prefix: "/api/v1/orders" }
+                        # ── OROS — Orders & Results Orchestration ──
+                        - match: { prefix: "/v1/orders" }
                           route: { cluster: oros_service }
-                        - match: { prefix: "/api/v1/worklists" }
+                        - match: { prefix: "/v1/worklists" }
                           route: { cluster: oros_service }
-                        - match: { prefix: "/api/v1/results" }
+                        - match: { prefix: "/v1/worksteps" }
+                          route: { cluster: oros_service }
+                        - match: { prefix: "/v1/routes" }
+                          route: { cluster: oros_service }
+                        - match: { prefix: "/v1/retry" }
+                          route: { cluster: oros_service }
+                        - match: { prefix: "/v1/reconcile" }
+                          route: { cluster: oros_service }
+                        - match: { prefix: "/v1/catalog" }
+                          route: { cluster: oros_service }
+                        - match: { prefix: "/v1/internal/butano" }
+                          route: { cluster: oros_service }
+                        - match: { prefix: "/v1/internal/pct" }
+                          route: { cluster: oros_service }
+                        - match: { prefix: "/v1/internal/capabilities" }
                           route: { cluster: oros_service }
 
                         # ── Landela Adapter — Document Gateway ──

@@ -13,7 +13,8 @@
     "self-service",
     "butano-web",
     "pct-web",
-    "zibo-web"
+    "zibo-web",
+    "oros-web"
   ],
   "scripts": {
     "dev:shell": "npm -w one-ui-shell run dev",
@@ -25,6 +26,7 @@
     "dev:butano": "npm -w butano-web run dev",
     "dev:pct": "npm -w pct-web run dev",
     "dev:zibo": "npm -w zibo-web run dev",
+    "dev:oros": "npm -w oros-web run dev",
     "build": "turbo run build",
     "lint": "turbo run lint",
     "type-check": "turbo run type-check"
