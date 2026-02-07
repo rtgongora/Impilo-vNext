@@ -1,6 +1,6 @@
 apiVersion: v2
 name: pct
-description: Impilo vNext — pct service
+description: "PCT \u2014 Patient Care Tracker Service"
 type: application
 version: 0.1.0
-appVersion: "0.1.0"
+appVersion: "1.0.0"

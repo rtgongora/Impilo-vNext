@@ -97,9 +97,27 @@ static_resources:
                           route: { cluster: zibo_service }
 
                         # ── PCT — Patient Care Tracker ──
-                        - match: { prefix: "/api/v1/encounters" }
+                        - match: { prefix: "/api/v1/work" }
+                          route: { cluster: pct_service }
+                        - match: { prefix: "/api/v1/journeys" }
                           route: { cluster: pct_service }
                         - match: { prefix: "/api/v1/queues" }
+                          route: { cluster: pct_service }
+                        - match: { prefix: "/api/v1/queue-items" }
+                          route: { cluster: pct_service }
+                        - match: { prefix: "/api/v1/encounters" }
+                          route: { cluster: pct_service }
+                        - match: { prefix: "/api/v1/admissions" }
+                          route: { cluster: pct_service }
+                        - match: { prefix: "/api/v1/discharge" }
+                          route: { cluster: pct_service }
+                        - match: { prefix: "/api/v1/death" }
+                          route: { cluster: pct_service }
+                        - match: { prefix: "/api/v1/ops" }
+                          route: { cluster: pct_service }
+                        - match: { prefix: "/api/v1/tasks" }
+                          route: { cluster: pct_service }
+                        - match: { prefix: "/api/v1/patient" }
                           route: { cluster: pct_service }
 
                         # ── OROS — Orders & Results ──
