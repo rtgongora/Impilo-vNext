@@ -1,0 +1,2589 @@
+# =============================================================================
+# OROS -- Orders & Results Orchestration Service API (OpenAPI 3.0)
+#
+# Comprehensive order lifecycle management: order placement, worklist-driven
+# processing, result reporting, acknowledgement, intelligent routing,
+# reconciliation, catalog management, and capability configuration.
+#
+# All endpoints require a valid Bearer JWT and TSHEPO trust headers
+# (X-Tenant-Id, X-Actor-Id, X-Correlation-Id, etc.) injected by
+# Envoy ext_authz.
+# =============================================================================
+openapi: "3.0.3"
+
+info:
+  title: "OROS -- Orders & Results Orchestration Service API"
+  version: "1.0.0"
+  description: |
+    OROS manages the complete order-to-result lifecycle for the Impilo platform:
+
+    * **Orders** -- Place, track, cancel, and query clinical orders (lab, imaging, pharmacy, referral)
+    * **Worklists** -- Department-scoped worklists for order acceptance and rejection
+    * **Worksteps** -- Granular work-step tracking within an order lifecycle
+    * **Results** -- Result posting, retrieval, and critical-result flagging
+    * **Acknowledgement** -- Clinician acknowledgement of results with audit trail
+    * **Routes** -- Intelligent order routing with retry capability
+    * **Reconciliation** -- Matching unmatched results to orders with confidence scoring
+    * **Catalog** -- Orderable-item catalog with import and lookup
+    * **Internal** -- BUTANO writeback, PCT hooks, capability configuration
+
+    All endpoints require TSHEPO trust headers injected by Envoy ext_authz.
+  contact:
+    name: Impilo Platform Team
+  license:
+    name: Proprietary
+
+servers:
+  - url: http://localhost:8089
+    description: Local development
+  - url: https://{tenant}.impilo.health/api
+    description: Production (per-tenant)
+    variables:
+      tenant:
+        default: demo
+
+# ---------------------------------------------------------------------------
+# Security
+# ---------------------------------------------------------------------------
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Order
+    description: Clinical order placement, tracking, and lifecycle management
+  - name: Worklist
+    description: Department worklists for order triage and acceptance
+  - name: Workstep
+    description: Granular work-step tracking within an order
+  - name: Result
+    description: Result posting, retrieval, and critical-result flagging
+  - name: Acknowledgement
+    description: Clinician acknowledgement of results
+  - name: Route
+    description: Intelligent order routing and retry
+  - name: Reconciliation
+    description: Unmatched result-to-order reconciliation
+  - name: Catalog
+    description: Orderable-item catalog management
+  - name: Internal
+    description: Internal hooks for BUTANO writeback, PCT integration, and capabilities
+
+# ===========================================================================
+# Paths
+# ===========================================================================
+paths:
+  # -------------------------------------------------------------------------
+  # Orders
+  # -------------------------------------------------------------------------
+  /v1/orders:
+    get:
+      operationId: listOrders
+      summary: List orders
+      description: |
+        Returns a paginated list of orders filtered by type, status, priority,
+        department, or patient CPID. Results are sorted by placedAt descending.
+      tags: [Order]
+      parameters:
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+        - $ref: '#/components/parameters/X-Actor-Id'
+        - $ref: '#/components/parameters/X-Actor-Type'
+        - $ref: '#/components/parameters/X-Purpose-Of-Use'
+        - name: type
+          in: query
+          description: Filter by order type
+          schema:
+            $ref: '#/components/schemas/OrderType'
+        - name: status
+          in: query
+          description: Filter by order status
+          schema:
+            $ref: '#/components/schemas/OrderStatus'
+        - name: priority
+          in: query
+          description: Filter by priority
+          schema:
+            $ref: '#/components/schemas/OrderPriority'
+        - name: departmentId
+          in: query
+          description: Filter by fulfilling department
+          schema:
+            type: string
+            format: uuid
+        - name: patientCpid
+          in: query
+          description: Filter by patient CPID
+          schema:
+            type: string
+        - name: placerProviderId
+          in: query
+          description: Filter by placer provider ID
+          schema:
+            type: string
+            format: uuid
+        - name: q
+          in: query
+          description: Free-text search across order number, patient CPID, notes
+          schema:
+            type: string
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
+      responses:
+        "200":
+          description: Paginated list of orders
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderListResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+
+    post:
+      operationId: placeOrder
+      summary: Place a new order
+      description: |
+        Creates a new clinical order. The order is validated against the
+        catalog, routed to the appropriate fulfillment department, and
+        a worklist entry is created. Emits `oros.order.placed` via Kafka.
+      tags: [Order]
+      parameters:
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+        - $ref: '#/components/parameters/X-Actor-Id'
+        - $ref: '#/components/parameters/X-Actor-Type'
+        - $ref: '#/components/parameters/X-Purpose-Of-Use'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlaceOrderRequest'
+      responses:
+        "201":
+          description: Order placed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /v1/orders/{orderId}:
+    get:
+      operationId: getOrder
+      summary: Get order by ID
+      description: Returns full order details including items, routing info, and status history.
+      tags: [Order]
+      parameters:
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+        - $ref: '#/components/parameters/X-Actor-Id'
+        - $ref: '#/components/parameters/X-Actor-Type'
+        - $ref: '#/components/parameters/X-Purpose-Of-Use'
+        - $ref: '#/components/parameters/OrderIdPath'
+      responses:
+        "200":
+          description: Order details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+  /v1/orders/{orderId}/cancel:
+    post:
+      operationId: cancelOrder
+      summary: Cancel an order
+      description: |
+        Cancels an order that has not yet been completed. Only orders in
+        PLACED, ACCEPTED, or IN_PROGRESS status can be cancelled.
+        Emits `oros.order.cancelled` via Kafka.
+      tags: [Order]
+      parameters:
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+        - $ref: '#/components/parameters/X-Actor-Id'
+        - $ref: '#/components/parameters/X-Actor-Type'
+        - $ref: '#/components/parameters/X-Purpose-Of-Use'
+        - $ref: '#/components/parameters/OrderIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CancelOrderRequest'
+      responses:
+        "200":
+          description: Order cancelled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "409":
+          $ref: '#/components/responses/Conflict'
+
+  /v1/orders/patient/{patientCpid}:
+    get:
+      operationId: getPatientOrders
+      summary: Get orders for a patient
+      description: |
+        Returns all orders for a given patient CPID, optionally filtered
+        by type and status. Results are sorted by placedAt descending.
+      tags: [Order]
+      parameters:
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+        - $ref: '#/components/parameters/X-Actor-Id'
+        - $ref: '#/components/parameters/X-Actor-Type'
+        - $ref: '#/components/parameters/X-Purpose-Of-Use'
+        - name: patientCpid
+          in: path
+          required: true
+          description: Patient CPID
+          schema:
+            type: string
+        - name: type
+          in: query
+          schema:
+            $ref: '#/components/schemas/OrderType'
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/OrderStatus'
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
+      responses:
+        "200":
+          description: Patient orders
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderListResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+
+  # -------------------------------------------------------------------------
+  # Worklists
+  # -------------------------------------------------------------------------
+  /v1/worklists:
+    get:
+      operationId: listWorklists
+      summary: Get department worklists
+      description: |
+        Returns worklist entries for the specified department, filtered by
+        order type, priority, and status. Used by lab techs, radiologists,
+        and pharmacists to view pending work.
+      tags: [Worklist]
+      parameters:
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+        - $ref: '#/components/parameters/X-Actor-Id'
+        - $ref: '#/components/parameters/X-Actor-Type'
+        - $ref: '#/components/parameters/X-Purpose-Of-Use'
+        - name: departmentId
+          in: query
+          description: Department ID (required for scoped worklists)
+          schema:
+            type: string
+            format: uuid
+        - name: type
+          in: query
+          schema:
+            $ref: '#/components/schemas/OrderType'
+        - name: priority
+          in: query
+          schema:
+            $ref: '#/components/schemas/OrderPriority'
+        - name: status
+          in: query
+          description: Filter by worklist item status
+          schema:
+            type: string
+            enum: [PENDING, ACCEPTED, IN_PROGRESS, COMPLETED, REJECTED]
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
+      responses:
+        "200":
+          description: Worklist entries
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorklistResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+
+  /v1/worklists/{worklistItemId}/accept:
+    post:
+      operationId: acceptWorklistItem
+      summary: Accept a worklist item
+      description: |
+        Marks a worklist item as accepted by the current actor. Transitions the
+        associated order to ACCEPTED status. Emits `oros.worklist.accepted` via Kafka.
+      tags: [Worklist]
+      parameters:
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+        - $ref: '#/components/parameters/X-Actor-Id'
+        - $ref: '#/components/parameters/X-Actor-Type'
+        - $ref: '#/components/parameters/X-Purpose-Of-Use'
+        - name: worklistItemId
+          in: path
+          required: true
+          description: Worklist item UUID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AcceptWorklistRequest'
+      responses:
+        "200":
+          description: Worklist item accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorklistItemResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "409":
+          $ref: '#/components/responses/Conflict'
+
+  /v1/worklists/{worklistItemId}/reject:
+    post:
+      operationId: rejectWorklistItem
+      summary: Reject a worklist item
+      description: |
+        Rejects a worklist item with a reason. The order may be re-routed
+        or cancelled depending on configuration. Emits `oros.worklist.rejected`.
+      tags: [Worklist]
+      parameters:
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+        - $ref: '#/components/parameters/X-Actor-Id'
+        - $ref: '#/components/parameters/X-Actor-Type'
+        - $ref: '#/components/parameters/X-Purpose-Of-Use'
+        - name: worklistItemId
+          in: path
+          required: true
+          description: Worklist item UUID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RejectWorklistRequest'
+      responses:
+        "200":
+          description: Worklist item rejected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorklistItemResponse'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "409":
+          $ref: '#/components/responses/Conflict'
+
+  # -------------------------------------------------------------------------
+  # Worksteps
+  # -------------------------------------------------------------------------
+  /v1/worksteps:
+    get:
+      operationId: listWorksteps
+      summary: List worksteps for an order
+      description: |
+        Returns the ordered list of worksteps for a given order. Worksteps
+        represent granular processing steps (e.g., specimen collection,
+        analysis, verification, reporting).
+      tags: [Workstep]
+      parameters:
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+        - $ref: '#/components/parameters/X-Actor-Id'
+        - $ref: '#/components/parameters/X-Actor-Type'
+        - $ref: '#/components/parameters/X-Purpose-Of-Use'
+        - name: orderId
+          in: query
+          required: true
+          description: Order UUID to list worksteps for
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: List of worksteps
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkstepListResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+  /v1/worksteps/{workstepId}/start:
+    post:
+      operationId: startWorkstep
+      summary: Start a workstep
+      description: |
+        Marks a workstep as started. The workstep must be in PENDING status
+        and its predecessor (if any) must be completed.
+        Emits `oros.workstep.started`.
+      tags: [Workstep]
+      parameters:
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+        - $ref: '#/components/parameters/X-Actor-Id'
+        - $ref: '#/components/parameters/X-Actor-Type'
+        - $ref: '#/components/parameters/X-Purpose-Of-Use'
+        - name: workstepId
+          in: path
+          required: true
+          description: Workstep UUID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StartWorkstepRequest'
+      responses:
+        "200":
+          description: Workstep started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkstepResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "409":
+          $ref: '#/components/responses/Conflict'
+
+  /v1/worksteps/{workstepId}/complete:
+    post:
+      operationId: completeWorkstep
+      summary: Complete a workstep
+      description: |
+        Marks a workstep as completed. If this is the final workstep,
+        the order transitions to COMPLETED. Emits `oros.workstep.completed`.
+      tags: [Workstep]
+      parameters:
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+        - $ref: '#/components/parameters/X-Actor-Id'
+        - $ref: '#/components/parameters/X-Actor-Type'
+        - $ref: '#/components/parameters/X-Purpose-Of-Use'
+        - name: workstepId
+          in: path
+          required: true
+          description: Workstep UUID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompleteWorkstepRequest'
+      responses:
+        "200":
+          description: Workstep completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkstepResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "409":
+          $ref: '#/components/responses/Conflict'
+
+  # -------------------------------------------------------------------------
+  # Results
+  # -------------------------------------------------------------------------
+  /v1/orders/{orderId}/results:
+    post:
+      operationId: postResult
+      summary: Post a result for an order
+      description: |
+        Posts a clinical result (lab values, imaging report, pharmacy dispense
+        confirmation) against an order. Emits `oros.result.posted`. If the
+        result is flagged as critical, emits `oros.result.critical` as well.
+      tags: [Result]
+      parameters:
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+        - $ref: '#/components/parameters/X-Actor-Id'
+        - $ref: '#/components/parameters/X-Actor-Type'
+        - $ref: '#/components/parameters/X-Purpose-Of-Use'
+        - $ref: '#/components/parameters/OrderIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostResultRequest'
+      responses:
+        "201":
+          description: Result posted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultResponse'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+
+    get:
+      operationId: getResults
+      summary: Get results for an order
+      description: Returns all results posted against a specific order.
+      tags: [Result]
+      parameters:
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+        - $ref: '#/components/parameters/X-Actor-Id'
+        - $ref: '#/components/parameters/X-Actor-Type'
+        - $ref: '#/components/parameters/X-Purpose-Of-Use'
+        - $ref: '#/components/parameters/OrderIdPath'
+      responses:
+        "200":
+          description: Results for order
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultListResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+  /v1/orders/{orderId}/results/{resultId}/mark-critical:
+    post:
+      operationId: markResultCritical
+      summary: Flag a result as critical
+      description: |
+        Marks an existing result as critical, triggering urgent notification
+        workflows. Emits `oros.result.critical` via Kafka.
+      tags: [Result]
+      parameters:
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+        - $ref: '#/components/parameters/X-Actor-Id'
+        - $ref: '#/components/parameters/X-Actor-Type'
+        - $ref: '#/components/parameters/X-Purpose-Of-Use'
+        - $ref: '#/components/parameters/OrderIdPath'
+        - name: resultId
+          in: path
+          required: true
+          description: Result UUID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MarkCriticalRequest'
+      responses:
+        "200":
+          description: Result marked as critical
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "409":
+          $ref: '#/components/responses/Conflict'
+
+  # -------------------------------------------------------------------------
+  # Acknowledgement
+  # -------------------------------------------------------------------------
+  /v1/orders/{orderId}/ack:
+    post:
+      operationId: acknowledgeResult
+      summary: Acknowledge order results
+      description: |
+        Records clinician acknowledgement of order results. This is a
+        medico-legal requirement for critical results. Emits `oros.ack.recorded`.
+      tags: [Acknowledgement]
+      parameters:
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+        - $ref: '#/components/parameters/X-Actor-Id'
+        - $ref: '#/components/parameters/X-Actor-Type'
+        - $ref: '#/components/parameters/X-Purpose-Of-Use'
+        - $ref: '#/components/parameters/OrderIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AcknowledgeRequest'
+      responses:
+        "201":
+          description: Acknowledgement recorded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AckResponse'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+    get:
+      operationId: getAcknowledgements
+      summary: Get acknowledgements for an order
+      description: Returns all acknowledgement records for an order.
+      tags: [Acknowledgement]
+      parameters:
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+        - $ref: '#/components/parameters/X-Actor-Id'
+        - $ref: '#/components/parameters/X-Actor-Type'
+        - $ref: '#/components/parameters/X-Purpose-Of-Use'
+        - $ref: '#/components/parameters/OrderIdPath'
+      responses:
+        "200":
+          description: Acknowledgements for order
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AckListResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+  # -------------------------------------------------------------------------
+  # Routes
+  # -------------------------------------------------------------------------
+  /v1/routes:
+    get:
+      operationId: listRoutes
+      summary: List order routes
+      description: |
+        Returns routing records showing how orders were dispatched to
+        fulfillment departments or external adapters. Includes route
+        status, attempt count, and failure reasons.
+      tags: [Route]
+      parameters:
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+        - $ref: '#/components/parameters/X-Actor-Id'
+        - $ref: '#/components/parameters/X-Actor-Type'
+        - $ref: '#/components/parameters/X-Purpose-Of-Use'
+        - name: orderId
+          in: query
+          description: Filter by order UUID
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          description: Filter by route status
+          schema:
+            type: string
+            enum: [PENDING, DISPATCHED, DELIVERED, FAILED, RETRYING]
+        - name: adapterType
+          in: query
+          description: Filter by adapter type
+          schema:
+            type: string
+            enum: [INTERNAL, LIS, RIS, PHARMACY, EXTERNAL]
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
+      responses:
+        "200":
+          description: Routing records
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RouteListResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+
+  /v1/routes/{routeId}/retry:
+    post:
+      operationId: retryRoute
+      summary: Retry a failed route
+      description: |
+        Retries delivery of a failed route. The route must be in FAILED status.
+        Increments the attempt count and re-dispatches. Emits `oros.route.retried`.
+      tags: [Route]
+      parameters:
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+        - $ref: '#/components/parameters/X-Actor-Id'
+        - $ref: '#/components/parameters/X-Actor-Type'
+        - $ref: '#/components/parameters/X-Purpose-Of-Use'
+        - name: routeId
+          in: path
+          required: true
+          description: Route UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Route retried
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RouteResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "409":
+          $ref: '#/components/responses/Conflict'
+
+  # -------------------------------------------------------------------------
+  # Reconciliation
+  # -------------------------------------------------------------------------
+  /v1/reconcile/pending:
+    get:
+      operationId: getPendingReconciliations
+      summary: Get pending reconciliation items
+      description: |
+        Returns unmatched results or orders that require manual reconciliation.
+        Each item includes a confidence score indicating the likelihood of a
+        match with candidate orders.
+      tags: [Reconciliation]
+      parameters:
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+        - $ref: '#/components/parameters/X-Actor-Id'
+        - $ref: '#/components/parameters/X-Actor-Type'
+        - $ref: '#/components/parameters/X-Purpose-Of-Use'
+        - name: type
+          in: query
+          schema:
+            $ref: '#/components/schemas/OrderType'
+        - name: minConfidence
+          in: query
+          description: Minimum confidence score (0.0 to 1.0)
+          schema:
+            type: number
+            format: double
+            minimum: 0.0
+            maximum: 1.0
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
+      responses:
+        "200":
+          description: Pending reconciliation items
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReconcileListResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+
+  /v1/reconcile/{reconcileId}/match:
+    post:
+      operationId: matchReconciliation
+      summary: Match an unmatched result to an order
+      description: |
+        Manually matches an unmatched result to a specific order. This
+        links the result and updates the order status accordingly.
+        Emits `oros.reconcile.matched`.
+      tags: [Reconciliation]
+      parameters:
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+        - $ref: '#/components/parameters/X-Actor-Id'
+        - $ref: '#/components/parameters/X-Actor-Type'
+        - $ref: '#/components/parameters/X-Purpose-Of-Use'
+        - name: reconcileId
+          in: path
+          required: true
+          description: Reconciliation item UUID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MatchReconcileRequest'
+      responses:
+        "200":
+          description: Reconciliation matched
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReconcileItemResponse'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "409":
+          $ref: '#/components/responses/Conflict'
+
+  /v1/reconcile/{reconcileId}/resolve:
+    post:
+      operationId: resolveReconciliation
+      summary: Resolve a reconciliation item without matching
+      description: |
+        Resolves an unmatched reconciliation item by marking it as
+        manually resolved (e.g., duplicate, invalid, or orphaned result).
+        Emits `oros.reconcile.resolved`.
+      tags: [Reconciliation]
+      parameters:
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+        - $ref: '#/components/parameters/X-Actor-Id'
+        - $ref: '#/components/parameters/X-Actor-Type'
+        - $ref: '#/components/parameters/X-Purpose-Of-Use'
+        - name: reconcileId
+          in: path
+          required: true
+          description: Reconciliation item UUID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResolveReconcileRequest'
+      responses:
+        "200":
+          description: Reconciliation resolved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReconcileItemResponse'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+  # -------------------------------------------------------------------------
+  # Catalog
+  # -------------------------------------------------------------------------
+  /v1/catalog:
+    get:
+      operationId: listCatalogItems
+      summary: List catalog items
+      description: |
+        Returns the orderable-item catalog filtered by type, department,
+        or search query. Catalog items define what can be ordered at a
+        given facility.
+      tags: [Catalog]
+      parameters:
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+        - $ref: '#/components/parameters/X-Actor-Id'
+        - $ref: '#/components/parameters/X-Actor-Type'
+        - $ref: '#/components/parameters/X-Purpose-Of-Use'
+        - name: type
+          in: query
+          description: Filter by order type
+          schema:
+            $ref: '#/components/schemas/OrderType'
+        - name: departmentId
+          in: query
+          description: Filter by department
+          schema:
+            type: string
+            format: uuid
+        - name: active
+          in: query
+          description: Filter by active status
+          schema:
+            type: boolean
+        - name: q
+          in: query
+          description: Free-text search across name, code, and description
+          schema:
+            type: string
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
+      responses:
+        "200":
+          description: Catalog items
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogListResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+
+  /v1/catalog/import:
+    post:
+      operationId: importCatalog
+      summary: Import catalog items
+      description: |
+        Bulk imports orderable items into the catalog. Existing items with
+        matching codes are updated; new items are created.
+      tags: [Catalog]
+      parameters:
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+        - $ref: '#/components/parameters/X-Actor-Id'
+        - $ref: '#/components/parameters/X-Actor-Type'
+        - $ref: '#/components/parameters/X-Purpose-Of-Use'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CatalogImportRequest'
+      responses:
+        "200":
+          description: Import result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogImportResponse'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /v1/catalog/lookup:
+    get:
+      operationId: lookupCatalogItem
+      summary: Lookup a catalog item by code
+      description: |
+        Resolves a specific catalog item by its code and optional system.
+        Used during order placement to validate orderable items.
+      tags: [Catalog]
+      parameters:
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+        - $ref: '#/components/parameters/X-Actor-Id'
+        - $ref: '#/components/parameters/X-Actor-Type'
+        - $ref: '#/components/parameters/X-Purpose-Of-Use'
+        - name: code
+          in: query
+          required: true
+          description: Catalog item code (e.g., LOINC, local code)
+          schema:
+            type: string
+        - name: system
+          in: query
+          description: Code system URI (e.g., http://loinc.org)
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Catalog item found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogItemResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+  # -------------------------------------------------------------------------
+  # Internal endpoints
+  # -------------------------------------------------------------------------
+  /v1/internal/butano/writeback:
+    post:
+      operationId: butanoWriteback
+      summary: Writeback results to BUTANO
+      description: |
+        Internal endpoint called to write finalized results back to the
+        Shared Health Record (BUTANO/HAPI FHIR) as DiagnosticReport and
+        Observation resources. Uses CPID only (no PII).
+      tags: [Internal]
+      parameters:
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+        - $ref: '#/components/parameters/X-Actor-Id'
+        - $ref: '#/components/parameters/X-Actor-Type'
+        - $ref: '#/components/parameters/X-Purpose-Of-Use'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ButanoWritebackRequest'
+      responses:
+        "200":
+          description: Writeback successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ButanoWritebackResponse'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /v1/internal/pct/order-hook:
+    post:
+      operationId: pctOrderHook
+      summary: PCT order lifecycle hook
+      description: |
+        Webhook called by PCT when a patient journey event requires order
+        status updates (e.g., patient discharged, encounter closed).
+      tags: [Internal]
+      parameters:
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+        - $ref: '#/components/parameters/X-Actor-Id'
+        - $ref: '#/components/parameters/X-Actor-Type'
+        - $ref: '#/components/parameters/X-Purpose-Of-Use'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PctOrderHookRequest'
+      responses:
+        "200":
+          description: Hook processed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+
+  /v1/internal/capabilities:
+    get:
+      operationId: listCapabilities
+      summary: List facility capabilities
+      description: |
+        Returns the configured capabilities for a tenant/facility, including
+        supported order types, adapter modes, and routing rules.
+      tags: [Internal]
+      parameters:
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+        - $ref: '#/components/parameters/X-Actor-Id'
+        - $ref: '#/components/parameters/X-Actor-Type'
+        - $ref: '#/components/parameters/X-Purpose-Of-Use'
+        - name: facilityId
+          in: query
+          description: Filter by facility ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Capability list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CapabilityListResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+
+    put:
+      operationId: upsertCapability
+      summary: Create or update a facility capability
+      description: |
+        Creates or updates the OROS capability configuration for a specific
+        tenant/facility. Defines supported order types, adapter mode
+        (INTERNAL, ADAPTER, HYBRID), and routing preferences.
+      tags: [Internal]
+      parameters:
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+        - $ref: '#/components/parameters/X-Actor-Id'
+        - $ref: '#/components/parameters/X-Actor-Type'
+        - $ref: '#/components/parameters/X-Purpose-Of-Use'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpsertCapabilityRequest'
+      responses:
+        "200":
+          description: Capability upserted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CapabilityResponse'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+
+# ===========================================================================
+# Components
+# ===========================================================================
+components:
+  # -------------------------------------------------------------------------
+  # Security Schemes
+  # -------------------------------------------------------------------------
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Keycloak-issued JWT via TSHEPO ext_authz
+
+  # -------------------------------------------------------------------------
+  # Parameters
+  # -------------------------------------------------------------------------
+  parameters:
+    X-Tenant-Id:
+      name: X-Tenant-Id
+      in: header
+      required: true
+      description: Tenant identifier injected by TSHEPO ext_authz
+      schema:
+        type: string
+      example: "moh-zw"
+
+    X-Correlation-Id:
+      name: X-Correlation-Id
+      in: header
+      required: true
+      description: Correlation ID for distributed tracing
+      schema:
+        type: string
+        format: uuid
+      example: "550e8400-e29b-41d4-a716-446655440000"
+
+    X-Actor-Id:
+      name: X-Actor-Id
+      in: header
+      required: true
+      description: Actor (user/system) identifier
+      schema:
+        type: string
+      example: "dr.moyo"
+
+    X-Actor-Type:
+      name: X-Actor-Type
+      in: header
+      required: true
+      description: Actor type classification
+      schema:
+        type: string
+        enum: [CLINICIAN, NURSE, LAB_TECH, PHARMACIST, ADMIN, SYSTEM]
+      example: "CLINICIAN"
+
+    X-Purpose-Of-Use:
+      name: X-Purpose-Of-Use
+      in: header
+      required: true
+      description: Purpose of use for this request
+      schema:
+        type: string
+        enum: [TREATMENT, PAYMENT, OPERATIONS, RESEARCH, PUBLIC_HEALTH, ADMIN, EMERGENCY]
+      example: "TREATMENT"
+
+    OrderIdPath:
+      name: orderId
+      in: path
+      required: true
+      description: Order UUID
+      schema:
+        type: string
+        format: uuid
+
+    PageParam:
+      name: page
+      in: query
+      description: Page number (0-indexed)
+      schema:
+        type: integer
+        default: 0
+        minimum: 0
+
+    SizeParam:
+      name: size
+      in: query
+      description: Page size
+      schema:
+        type: integer
+        default: 20
+        minimum: 1
+        maximum: 100
+
+  # -------------------------------------------------------------------------
+  # Responses
+  # -------------------------------------------------------------------------
+  responses:
+    BadRequest:
+      description: Bad request -- validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Unauthorized:
+      description: Unauthorized -- missing or invalid JWT
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Forbidden:
+      description: Forbidden -- insufficient permissions (TSHEPO policy deny)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Conflict:
+      description: Conflict -- invalid state transition
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    UnprocessableEntity:
+      description: Unprocessable entity -- business rule violation
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+  # -------------------------------------------------------------------------
+  # Schemas
+  # -------------------------------------------------------------------------
+  schemas:
+    # -- Enumerations --
+    OrderType:
+      type: string
+      enum: [LAB, IMAGING, PHARMACY, REFERRAL, PROCEDURE, SUPPLY]
+      description: Type of clinical order
+
+    OrderStatus:
+      type: string
+      enum: [PLACED, ACCEPTED, IN_PROGRESS, COMPLETED, CANCELLED, REJECTED, EXPIRED]
+      description: Order lifecycle status
+
+    OrderPriority:
+      type: string
+      enum: [ROUTINE, URGENT, STAT, ASAP]
+      description: Order priority level
+
+    AdapterMode:
+      type: string
+      enum: [INTERNAL, ADAPTER, HYBRID]
+      description: |
+        How the facility fulfills orders:
+        - INTERNAL: fully within Impilo
+        - ADAPTER: via external LIS/RIS/pharmacy
+        - HYBRID: mix of internal and external
+
+    RouteStatus:
+      type: string
+      enum: [PENDING, DISPATCHED, DELIVERED, FAILED, RETRYING]
+      description: Order routing status
+
+    ReconcileStatus:
+      type: string
+      enum: [PENDING, MATCHED, RESOLVED, EXPIRED]
+      description: Reconciliation item status
+
+    WorkstepStatus:
+      type: string
+      enum: [PENDING, IN_PROGRESS, COMPLETED, SKIPPED, FAILED]
+      description: Workstep execution status
+
+    # -- API Envelope --
+    ApiResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          description: Response payload (type varies per endpoint)
+        error:
+          $ref: '#/components/schemas/ApiError'
+        meta:
+          $ref: '#/components/schemas/ApiMeta'
+      required: [success]
+
+    ApiError:
+      type: object
+      properties:
+        code:
+          type: string
+          example: "VALIDATION_ERROR"
+        message:
+          type: string
+          example: "Order type LAB is not supported at this facility"
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+
+    ApiMeta:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 0
+        size:
+          type: integer
+          example: 20
+        totalElements:
+          type: integer
+          format: int64
+          example: 142
+        totalPages:
+          type: integer
+          example: 8
+        correlationId:
+          type: string
+          format: uuid
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          $ref: '#/components/schemas/ApiError'
+      required: [success, error]
+
+    # -- Order DTOs --
+    PlaceOrderRequest:
+      type: object
+      required: [type, priority, patientCpid, facilityId, items]
+      properties:
+        type:
+          $ref: '#/components/schemas/OrderType'
+        priority:
+          $ref: '#/components/schemas/OrderPriority'
+        patientCpid:
+          type: string
+          description: Patient CPID (no PII)
+          example: "CPID-2024-00012345"
+        facilityId:
+          type: string
+          format: uuid
+          description: Originating facility
+        departmentId:
+          type: string
+          format: uuid
+          description: Target fulfilling department (optional, auto-routed if omitted)
+        encounterId:
+          type: string
+          format: uuid
+          description: Associated PCT encounter (optional)
+        journeyId:
+          type: string
+          format: uuid
+          description: Associated PCT journey (optional)
+        clinicalNotes:
+          type: string
+          maxLength: 2000
+          description: Free-text clinical notes / indications
+        items:
+          type: array
+          minItems: 1
+          maxItems: 50
+          items:
+            $ref: '#/components/schemas/OrderItemRequest'
+        scheduledAt:
+          type: string
+          format: date-time
+          description: Scheduled execution time (future orders)
+
+    OrderItemRequest:
+      type: object
+      required: [catalogCode, name]
+      properties:
+        catalogCode:
+          type: string
+          description: Catalog item code (e.g., LOINC code)
+          example: "2160-0"
+        catalogSystem:
+          type: string
+          description: Code system URI
+          example: "http://loinc.org"
+        name:
+          type: string
+          description: Human-readable item name
+          example: "Serum Creatinine"
+        quantity:
+          type: integer
+          minimum: 1
+          default: 1
+        specimenType:
+          type: string
+          description: Required specimen type (for lab orders)
+          example: "BLOOD"
+        bodysite:
+          type: string
+          description: Target body site (for imaging/procedure orders)
+        notes:
+          type: string
+          maxLength: 500
+
+    CancelOrderRequest:
+      type: object
+      required: [reason]
+      properties:
+        reason:
+          type: string
+          maxLength: 500
+          description: Cancellation reason
+          example: "Duplicate order -- already placed by Dr. Moyo"
+
+    Order:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+        orderNumber:
+          type: string
+          description: Human-readable order number (e.g., ORD-2024-00001)
+          example: "ORD-2024-00001"
+        type:
+          $ref: '#/components/schemas/OrderType'
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+        priority:
+          $ref: '#/components/schemas/OrderPriority'
+        patientCpid:
+          type: string
+        facilityId:
+          type: string
+          format: uuid
+        departmentId:
+          type: string
+          format: uuid
+        placerProviderId:
+          type: string
+          format: uuid
+          description: Provider who placed the order
+        encounterId:
+          type: string
+          format: uuid
+        journeyId:
+          type: string
+          format: uuid
+        clinicalNotes:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItem'
+        resultCount:
+          type: integer
+          description: Number of results posted
+        acknowledged:
+          type: boolean
+          description: Whether results have been acknowledged
+        hasCriticalResult:
+          type: boolean
+          description: Whether any result is flagged as critical
+        cancelReason:
+          type: string
+        placedAt:
+          type: string
+          format: date-time
+        acceptedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+        cancelledAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    OrderItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        catalogCode:
+          type: string
+        catalogSystem:
+          type: string
+        name:
+          type: string
+        quantity:
+          type: integer
+        specimenType:
+          type: string
+        bodysite:
+          type: string
+        notes:
+          type: string
+        status:
+          type: string
+          enum: [PENDING, IN_PROGRESS, COMPLETED, CANCELLED]
+
+    OrderResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/Order'
+
+    OrderListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Order'
+        meta:
+          $ref: '#/components/schemas/ApiMeta'
+
+    # -- Worklist DTOs --
+    WorklistItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+        orderId:
+          type: string
+          format: uuid
+        orderNumber:
+          type: string
+        orderType:
+          $ref: '#/components/schemas/OrderType'
+        priority:
+          $ref: '#/components/schemas/OrderPriority'
+        status:
+          type: string
+          enum: [PENDING, ACCEPTED, IN_PROGRESS, COMPLETED, REJECTED]
+        patientCpid:
+          type: string
+        departmentId:
+          type: string
+          format: uuid
+        departmentName:
+          type: string
+        assignedTo:
+          type: string
+          description: Actor ID of the assigned worker
+        itemCount:
+          type: integer
+          description: Number of order items
+        placedAt:
+          type: string
+          format: date-time
+        acceptedAt:
+          type: string
+          format: date-time
+        rejectedAt:
+          type: string
+          format: date-time
+        rejectionReason:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    AcceptWorklistRequest:
+      type: object
+      properties:
+        notes:
+          type: string
+          maxLength: 500
+          description: Optional acceptance notes
+
+    RejectWorklistRequest:
+      type: object
+      required: [reason]
+      properties:
+        reason:
+          type: string
+          maxLength: 500
+          description: Rejection reason
+          example: "Specimen not received"
+
+    WorklistItemResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/WorklistItem'
+
+    WorklistResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorklistItem'
+        meta:
+          $ref: '#/components/schemas/ApiMeta'
+
+    # -- Workstep DTOs --
+    Workstep:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        orderId:
+          type: string
+          format: uuid
+        stepNumber:
+          type: integer
+          description: Sequential step number
+        name:
+          type: string
+          description: Step name (e.g., SPECIMEN_COLLECTION, ANALYSIS, VERIFICATION, REPORTING)
+          example: "ANALYSIS"
+        status:
+          $ref: '#/components/schemas/WorkstepStatus'
+        assignedTo:
+          type: string
+          description: Actor ID of the assigned worker
+        notes:
+          type: string
+        startedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    StartWorkstepRequest:
+      type: object
+      properties:
+        notes:
+          type: string
+          maxLength: 500
+
+    CompleteWorkstepRequest:
+      type: object
+      properties:
+        notes:
+          type: string
+          maxLength: 500
+        outputData:
+          type: object
+          description: Arbitrary key-value output data from the step
+          additionalProperties: true
+
+    WorkstepResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/Workstep'
+
+    WorkstepListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Workstep'
+
+    # -- Result DTOs --
+    PostResultRequest:
+      type: object
+      required: [resultType, value]
+      properties:
+        resultType:
+          type: string
+          description: Result type (e.g., NUMERIC, TEXT, CODED, DOCUMENT, IMAGE)
+          enum: [NUMERIC, TEXT, CODED, DOCUMENT, IMAGE]
+        orderItemId:
+          type: string
+          format: uuid
+          description: Specific order item this result applies to
+        code:
+          type: string
+          description: Result observation code (e.g., LOINC)
+          example: "2160-0"
+        codeSystem:
+          type: string
+          description: Code system URI
+          example: "http://loinc.org"
+        displayName:
+          type: string
+          description: Human-readable result name
+          example: "Serum Creatinine"
+        value:
+          type: string
+          description: Result value (numeric as string, text, or coded value)
+          example: "1.2"
+        unit:
+          type: string
+          description: Unit of measurement
+          example: "mg/dL"
+        referenceRange:
+          type: string
+          description: Normal reference range
+          example: "0.7-1.3 mg/dL"
+        interpretation:
+          type: string
+          description: Interpretation code
+          enum: [NORMAL, ABNORMAL, CRITICAL_HIGH, CRITICAL_LOW, HIGH, LOW]
+        isCritical:
+          type: boolean
+          default: false
+          description: Whether this is a critical result requiring immediate attention
+        notes:
+          type: string
+          maxLength: 2000
+        performedAt:
+          type: string
+          format: date-time
+          description: When the test/procedure was performed
+        performedBy:
+          type: string
+          description: Actor who performed the test
+        verifiedBy:
+          type: string
+          description: Actor who verified the result
+        documentUrl:
+          type: string
+          description: URL to associated document (for DOCUMENT/IMAGE types)
+        attachments:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResultAttachment'
+
+    ResultAttachment:
+      type: object
+      properties:
+        fileName:
+          type: string
+        contentType:
+          type: string
+          example: "application/pdf"
+        url:
+          type: string
+          format: uri
+        sizeBytes:
+          type: integer
+          format: int64
+
+    MarkCriticalRequest:
+      type: object
+      properties:
+        reason:
+          type: string
+          maxLength: 500
+          description: Reason for flagging as critical
+
+    Result:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        orderId:
+          type: string
+          format: uuid
+        orderItemId:
+          type: string
+          format: uuid
+        resultType:
+          type: string
+          enum: [NUMERIC, TEXT, CODED, DOCUMENT, IMAGE]
+        code:
+          type: string
+        codeSystem:
+          type: string
+        displayName:
+          type: string
+        value:
+          type: string
+        unit:
+          type: string
+        referenceRange:
+          type: string
+        interpretation:
+          type: string
+          enum: [NORMAL, ABNORMAL, CRITICAL_HIGH, CRITICAL_LOW, HIGH, LOW]
+        isCritical:
+          type: boolean
+        criticalFlaggedAt:
+          type: string
+          format: date-time
+        criticalFlaggedBy:
+          type: string
+        criticalReason:
+          type: string
+        notes:
+          type: string
+        performedAt:
+          type: string
+          format: date-time
+        performedBy:
+          type: string
+        verifiedBy:
+          type: string
+        documentUrl:
+          type: string
+        attachments:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResultAttachment'
+        acknowledged:
+          type: boolean
+        acknowledgedAt:
+          type: string
+          format: date-time
+        acknowledgedBy:
+          type: string
+        postedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    ResultResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/Result'
+
+    ResultListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Result'
+
+    # -- Acknowledgement DTOs --
+    AcknowledgeRequest:
+      type: object
+      required: [resultIds]
+      properties:
+        resultIds:
+          type: array
+          minItems: 1
+          items:
+            type: string
+            format: uuid
+          description: List of result IDs being acknowledged
+        notes:
+          type: string
+          maxLength: 1000
+          description: Clinician notes on acknowledgement
+
+    Ack:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        orderId:
+          type: string
+          format: uuid
+        resultIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        acknowledgedBy:
+          type: string
+          description: Actor who acknowledged
+        acknowledgedByName:
+          type: string
+        notes:
+          type: string
+        acknowledgedAt:
+          type: string
+          format: date-time
+
+    AckResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/Ack'
+
+    AckListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ack'
+
+    # -- Route DTOs --
+    Route:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        orderId:
+          type: string
+          format: uuid
+        orderNumber:
+          type: string
+        targetType:
+          type: string
+          enum: [INTERNAL, LIS, RIS, PHARMACY, EXTERNAL]
+          description: Target adapter/department type
+        targetIdentifier:
+          type: string
+          description: Target system identifier or department ID
+        status:
+          $ref: '#/components/schemas/RouteStatus'
+        attemptCount:
+          type: integer
+          description: Number of delivery attempts
+        maxAttempts:
+          type: integer
+          description: Maximum allowed attempts before permanent failure
+        lastAttemptAt:
+          type: string
+          format: date-time
+        lastError:
+          type: string
+          description: Error message from last failed attempt
+        deliveredAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    RouteResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/Route'
+
+    RouteListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Route'
+        meta:
+          $ref: '#/components/schemas/ApiMeta'
+
+    # -- Reconciliation DTOs --
+    ReconcileItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+        type:
+          type: string
+          enum: [UNMATCHED_RESULT, ORPHANED_ORDER]
+          description: Type of reconciliation item
+        status:
+          $ref: '#/components/schemas/ReconcileStatus'
+        sourceIdentifier:
+          type: string
+          description: External identifier from the source system
+        patientCpid:
+          type: string
+        orderType:
+          $ref: '#/components/schemas/OrderType'
+        resultSummary:
+          type: string
+          description: Summary of the unmatched result
+        candidateOrders:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReconcileCandidate'
+        confidenceScore:
+          type: number
+          format: double
+          description: Best match confidence (0.0 to 1.0)
+          minimum: 0.0
+          maximum: 1.0
+        matchedOrderId:
+          type: string
+          format: uuid
+          description: Order ID if matched
+        resolvedBy:
+          type: string
+        resolvedAt:
+          type: string
+          format: date-time
+        resolutionNotes:
+          type: string
+        receivedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    ReconcileCandidate:
+      type: object
+      properties:
+        orderId:
+          type: string
+          format: uuid
+        orderNumber:
+          type: string
+        patientCpid:
+          type: string
+        orderType:
+          $ref: '#/components/schemas/OrderType'
+        confidence:
+          type: number
+          format: double
+          minimum: 0.0
+          maximum: 1.0
+        matchReasons:
+          type: array
+          items:
+            type: string
+          description: Factors contributing to the confidence score
+
+    MatchReconcileRequest:
+      type: object
+      required: [orderId]
+      properties:
+        orderId:
+          type: string
+          format: uuid
+          description: Order to match against
+        notes:
+          type: string
+          maxLength: 500
+
+    ResolveReconcileRequest:
+      type: object
+      required: [resolution]
+      properties:
+        resolution:
+          type: string
+          enum: [DUPLICATE, INVALID, ORPHANED, OTHER]
+          description: Resolution type
+        notes:
+          type: string
+          maxLength: 500
+
+    ReconcileItemResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/ReconcileItem'
+
+    ReconcileListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReconcileItem'
+        meta:
+          $ref: '#/components/schemas/ApiMeta'
+
+    # -- Catalog DTOs --
+    CatalogItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+        code:
+          type: string
+          description: Item code (LOINC, local, etc.)
+          example: "2160-0"
+        codeSystem:
+          type: string
+          description: Code system URI
+          example: "http://loinc.org"
+        name:
+          type: string
+          description: Human-readable name
+          example: "Serum Creatinine"
+        description:
+          type: string
+        orderType:
+          $ref: '#/components/schemas/OrderType'
+        category:
+          type: string
+          description: Category (e.g., Chemistry, Hematology, CT, MRI)
+          example: "Chemistry"
+        departmentId:
+          type: string
+          format: uuid
+        departmentName:
+          type: string
+        specimenType:
+          type: string
+          description: Required specimen type (for lab items)
+        turnaroundMinutes:
+          type: integer
+          description: Expected turnaround time in minutes
+        active:
+          type: boolean
+        price:
+          type: number
+          format: double
+          description: Item price (for billing integration)
+        currency:
+          type: string
+          example: "USD"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CatalogImportRequest:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/CatalogImportItem'
+
+    CatalogImportItem:
+      type: object
+      required: [code, name, orderType]
+      properties:
+        code:
+          type: string
+        codeSystem:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        orderType:
+          $ref: '#/components/schemas/OrderType'
+        category:
+          type: string
+        departmentId:
+          type: string
+          format: uuid
+        specimenType:
+          type: string
+        turnaroundMinutes:
+          type: integer
+        active:
+          type: boolean
+          default: true
+        price:
+          type: number
+          format: double
+        currency:
+          type: string
+
+    CatalogImportResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            imported:
+              type: integer
+              description: Number of items imported
+            updated:
+              type: integer
+              description: Number of existing items updated
+            skipped:
+              type: integer
+              description: Number of items skipped (invalid)
+            errors:
+              type: array
+              items:
+                type: string
+
+    CatalogItemResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/CatalogItem'
+
+    CatalogListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/CatalogItem'
+        meta:
+          $ref: '#/components/schemas/ApiMeta'
+
+    # -- Capability DTOs --
+    Capability:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+        facilityId:
+          type: string
+          format: uuid
+        facilityName:
+          type: string
+        adapterMode:
+          $ref: '#/components/schemas/AdapterMode'
+        supportedOrderTypes:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderType'
+        routingRules:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoutingRule'
+        defaultDepartmentId:
+          type: string
+          format: uuid
+        autoAcceptOrders:
+          type: boolean
+          description: Whether orders are auto-accepted (no manual worklist step)
+        criticalResultNotification:
+          type: boolean
+          description: Whether critical results trigger notifications
+        active:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    RoutingRule:
+      type: object
+      properties:
+        orderType:
+          $ref: '#/components/schemas/OrderType'
+        targetType:
+          type: string
+          enum: [INTERNAL, LIS, RIS, PHARMACY, EXTERNAL]
+        targetIdentifier:
+          type: string
+        priority:
+          type: integer
+          description: Rule priority (lower = higher priority)
+
+    UpsertCapabilityRequest:
+      type: object
+      required: [facilityId, adapterMode, supportedOrderTypes]
+      properties:
+        facilityId:
+          type: string
+          format: uuid
+        adapterMode:
+          $ref: '#/components/schemas/AdapterMode'
+        supportedOrderTypes:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/OrderType'
+        routingRules:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoutingRule'
+        defaultDepartmentId:
+          type: string
+          format: uuid
+        autoAcceptOrders:
+          type: boolean
+          default: false
+        criticalResultNotification:
+          type: boolean
+          default: true
+
+    CapabilityResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/Capability'
+
+    CapabilityListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Capability'
+
+    # -- Internal DTOs --
+    ButanoWritebackRequest:
+      type: object
+      required: [orderId, patientCpid, results]
+      properties:
+        orderId:
+          type: string
+          format: uuid
+        patientCpid:
+          type: string
+          description: Patient CPID (no PII allowed)
+        encounterId:
+          type: string
+          format: uuid
+        results:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/ButanoResultEntry'
+
+    ButanoResultEntry:
+      type: object
+      required: [code, codeSystem, value]
+      properties:
+        code:
+          type: string
+        codeSystem:
+          type: string
+        displayName:
+          type: string
+        value:
+          type: string
+        unit:
+          type: string
+        interpretation:
+          type: string
+          enum: [NORMAL, ABNORMAL, CRITICAL_HIGH, CRITICAL_LOW, HIGH, LOW]
+        referenceRange:
+          type: string
+        performedAt:
+          type: string
+          format: date-time
+        performedBy:
+          type: string
+
+    ButanoWritebackResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            diagnosticReportId:
+              type: string
+              description: FHIR DiagnosticReport resource ID in BUTANO
+            observationIds:
+              type: array
+              items:
+                type: string
+              description: FHIR Observation resource IDs created in BUTANO
+
+    PctOrderHookRequest:
+      type: object
+      required: [eventType, journeyId]
+      properties:
+        eventType:
+          type: string
+          enum: [JOURNEY_DISCHARGED, JOURNEY_CANCELLED, ENCOUNTER_CLOSED, DEATH_RECORDED]
+          description: PCT event that triggered this hook
+        journeyId:
+          type: string
+          format: uuid
+        encounterId:
+          type: string
+          format: uuid
+        patientCpid:
+          type: string
+        cancelOpenOrders:
+          type: boolean
+          default: false
+          description: Whether to cancel all open orders for this journey
