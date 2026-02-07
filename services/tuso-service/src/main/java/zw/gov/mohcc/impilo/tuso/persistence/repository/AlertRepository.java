@@ -1,0 +1,27 @@
+package zw.gov.mohcc.impilo.tuso.persistence.repository;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+import zw.gov.mohcc.impilo.tuso.persistence.entity.AlertEntity;
+
+import java.util.Optional;
+import java.util.UUID;
+
+@Repository
+public interface AlertRepository extends JpaRepository<AlertEntity, UUID> {
+
+    @Query("SELECT a FROM AlertEntity a WHERE a.tenantId = :tenantId " +
+           "AND a.status = 'OPEN' ORDER BY a.createdAt DESC")
+    Page<AlertEntity> findOpenAlerts(@Param("tenantId") UUID tenantId, Pageable pageable);
+
+    Page<AlertEntity> findByFacilityIdAndStatusOrderByCreatedAtDesc(
+            Long facilityId, String status, Pageable pageable);
+
+    Page<AlertEntity> findByTenantIdOrderByCreatedAtDesc(UUID tenantId, Pageable pageable);
+
+    Optional<AlertEntity> findByFacilityIdAndAlertTypeAndStatus(Long facilityId, String alertType, String status);
+}
