@@ -1,0 +1,400 @@
+package zw.gov.mohcc.impilo.tshepo.identity.core;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import zw.gov.mohcc.impilo.tshepo.identity.api.dto.ProvisionalCpidResponse;
+import zw.gov.mohcc.impilo.tshepo.identity.api.dto.ReconcileRequest;
+import zw.gov.mohcc.impilo.tshepo.identity.api.dto.ReconcileResponse;
+import zw.gov.mohcc.impilo.tshepo.identity.persistence.entity.EventOutboxEntity;
+import zw.gov.mohcc.impilo.tshepo.identity.persistence.entity.IdMappingEntity;
+import zw.gov.mohcc.impilo.tshepo.identity.persistence.entity.ProvisionalCpidEntity;
+import zw.gov.mohcc.impilo.tshepo.identity.persistence.repository.EventOutboxRepository;
+import zw.gov.mohcc.impilo.tshepo.identity.persistence.repository.IdMappingRepository;
+import zw.gov.mohcc.impilo.tshepo.identity.persistence.repository.ProvisionalCpidRepository;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+/**
+ * Unit tests for {@link ReconciliationService}.
+ *
+ * <p>Validates offline O-CPID provisioning, reconciliation to canonical CPIDs,
+ * idempotent reconciliation, and listing of unreconciled entries.</p>
+ */
+@ExtendWith(MockitoExtension.class)
+@DisplayName("ReconciliationService")
+class ReconciliationServiceTest {
+
+    @Mock
+    private ProvisionalCpidRepository provisionalRepo;
+
+    @Mock
+    private IdMappingRepository mappingRepo;
+
+    @Mock
+    private EventOutboxRepository outboxRepo;
+
+    @Mock
+    private CpidGenerator cpidGenerator;
+
+    private ReconciliationService service;
+
+    @BeforeEach
+    void setUp() {
+        ObjectMapper objectMapper = new ObjectMapper();
+        service = new ReconciliationService(
+                provisionalRepo, mappingRepo, outboxRepo, cpidGenerator, objectMapper);
+    }
+
+    // ── Fixture helpers ────────────────────────────────────────────────────
+
+    private static UUID tenantId() {
+        return UUID.fromString("00000000-0000-0000-0000-000000000001");
+    }
+
+    private static UUID facilityId() {
+        return UUID.fromString("ffffffff-ffff-ffff-ffff-ffffffffffff");
+    }
+
+    private static UUID healthId() {
+        return UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+    }
+
+    private static UUID oCpid() {
+        return UUID.fromString("eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee");
+    }
+
+    private static UUID canonicalCpid() {
+        return UUID.fromString("cccccccc-cccc-cccc-cccc-cccccccccccc");
+    }
+
+    private static String deviceFingerprint() {
+        return "device-fp-abc123";
+    }
+
+    private ProvisionalCpidEntity buildProvisionalEntity(String status) {
+        ProvisionalCpidEntity entity = new ProvisionalCpidEntity();
+        entity.setId(1L);
+        entity.setTenantId(tenantId());
+        entity.setOCpid(oCpid());
+        entity.setFacilityId(facilityId());
+        entity.setDeviceFingerprint(deviceFingerprint());
+        entity.setStatus(status);
+        entity.setIssuedAt(Instant.now().minusSeconds(3600));
+        if ("RECONCILED".equals(status)) {
+            entity.setCanonicalCpid(canonicalCpid());
+            entity.setReconciledAt(Instant.now().minusSeconds(600));
+        }
+        return entity;
+    }
+
+    // ── createProvisionalCpid tests ────────────────────────────────────────
+
+    @Nested
+    @DisplayName("createProvisionalCpid")
+    class CreateProvisionalCpid {
+
+        @Test
+        @DisplayName("generates a random O-CPID and persists it")
+        void createProvisional_generatesAndPersists() {
+            UUID generatedOCpid = UUID.randomUUID();
+            when(cpidGenerator.generateProvisionalCpid()).thenReturn(generatedOCpid);
+            when(provisionalRepo.save(any(ProvisionalCpidEntity.class)))
+                    .thenAnswer(invocation -> {
+                        ProvisionalCpidEntity e = invocation.getArgument(0);
+                        e.setId(1L);
+                        e.setIssuedAt(Instant.now());
+                        return e;
+                    });
+
+            ProvisionalCpidResponse response = service.createProvisionalCpid(
+                    tenantId(), facilityId(), deviceFingerprint());
+
+            assertEquals(generatedOCpid, response.oCpid());
+            assertEquals(facilityId(), response.facilityId());
+            assertEquals(deviceFingerprint(), response.deviceFingerprint());
+            assertEquals("PROVISIONAL", response.status());
+            assertNull(response.canonicalCpid(),
+                    "Canonical CPID must be null for a new provisional entry");
+        }
+
+        @Test
+        @DisplayName("saved entity has correct fields")
+        void createProvisional_entityFieldsCorrect() {
+            UUID generatedOCpid = UUID.randomUUID();
+            when(cpidGenerator.generateProvisionalCpid()).thenReturn(generatedOCpid);
+            when(provisionalRepo.save(any(ProvisionalCpidEntity.class)))
+                    .thenAnswer(invocation -> {
+                        ProvisionalCpidEntity e = invocation.getArgument(0);
+                        e.setId(1L);
+                        e.setIssuedAt(Instant.now());
+                        return e;
+                    });
+
+            service.createProvisionalCpid(tenantId(), facilityId(), deviceFingerprint());
+
+            ArgumentCaptor<ProvisionalCpidEntity> captor =
+                    ArgumentCaptor.forClass(ProvisionalCpidEntity.class);
+            verify(provisionalRepo).save(captor.capture());
+            ProvisionalCpidEntity saved = captor.getValue();
+
+            assertEquals(tenantId(), saved.getTenantId());
+            assertEquals(generatedOCpid, saved.getOCpid());
+            assertEquals(facilityId(), saved.getFacilityId());
+            assertEquals(deviceFingerprint(), saved.getDeviceFingerprint());
+            assertEquals("PROVISIONAL", saved.getStatus());
+        }
+
+        @Test
+        @DisplayName("publishes OCPID_CREATED outbox event")
+        void createProvisional_publishesOutboxEvent() {
+            UUID generatedOCpid = UUID.randomUUID();
+            when(cpidGenerator.generateProvisionalCpid()).thenReturn(generatedOCpid);
+            when(provisionalRepo.save(any(ProvisionalCpidEntity.class)))
+                    .thenAnswer(invocation -> {
+                        ProvisionalCpidEntity e = invocation.getArgument(0);
+                        e.setId(1L);
+                        e.setIssuedAt(Instant.now());
+                        return e;
+                    });
+
+            service.createProvisionalCpid(tenantId(), facilityId(), deviceFingerprint());
+
+            ArgumentCaptor<EventOutboxEntity> captor = ArgumentCaptor.forClass(EventOutboxEntity.class);
+            verify(outboxRepo).save(captor.capture());
+            EventOutboxEntity event = captor.getValue();
+
+            assertEquals("ProvisionalCpid", event.getAggregateType());
+            assertEquals("OCPID_CREATED", event.getEventType());
+            assertEquals(generatedOCpid.toString(), event.getAggregateId());
+        }
+    }
+
+    // ── reconcile tests ────────────────────────────────────────────────────
+
+    @Nested
+    @DisplayName("reconcile")
+    class Reconcile {
+
+        @Test
+        @DisplayName("maps O-CPID to canonical CPID and creates id_mapping")
+        void reconcile_newReconciliation_mapsToCanonical() {
+            ProvisionalCpidEntity provisional = buildProvisionalEntity("PROVISIONAL");
+            when(provisionalRepo.findByTenantIdAndOCpid(tenantId(), oCpid()))
+                    .thenReturn(Optional.of(provisional));
+            when(cpidGenerator.generateCpid(tenantId(), healthId())).thenReturn(canonicalCpid());
+            when(mappingRepo.findByTenantIdAndHealthId(tenantId(), healthId()))
+                    .thenReturn(Optional.empty());
+            when(mappingRepo.save(any(IdMappingEntity.class)))
+                    .thenAnswer(invocation -> invocation.getArgument(0));
+            when(provisionalRepo.save(any(ProvisionalCpidEntity.class)))
+                    .thenAnswer(invocation -> invocation.getArgument(0));
+
+            ReconcileRequest request = new ReconcileRequest(tenantId(), oCpid(), healthId());
+            ReconcileResponse response = service.reconcile(request);
+
+            assertEquals(oCpid(), response.oCpid());
+            assertEquals(canonicalCpid(), response.canonicalCpid());
+            assertEquals("RECONCILED", response.status());
+            assertNotNull(response.reconciledAt(), "reconciledAt must be set");
+        }
+
+        @Test
+        @DisplayName("updates provisional entity status to RECONCILED")
+        void reconcile_updatesProvisionalEntity() {
+            ProvisionalCpidEntity provisional = buildProvisionalEntity("PROVISIONAL");
+            when(provisionalRepo.findByTenantIdAndOCpid(tenantId(), oCpid()))
+                    .thenReturn(Optional.of(provisional));
+            when(cpidGenerator.generateCpid(tenantId(), healthId())).thenReturn(canonicalCpid());
+            when(mappingRepo.findByTenantIdAndHealthId(tenantId(), healthId()))
+                    .thenReturn(Optional.empty());
+            when(mappingRepo.save(any(IdMappingEntity.class)))
+                    .thenAnswer(invocation -> invocation.getArgument(0));
+            when(provisionalRepo.save(any(ProvisionalCpidEntity.class)))
+                    .thenAnswer(invocation -> invocation.getArgument(0));
+
+            service.reconcile(new ReconcileRequest(tenantId(), oCpid(), healthId()));
+
+            ArgumentCaptor<ProvisionalCpidEntity> captor =
+                    ArgumentCaptor.forClass(ProvisionalCpidEntity.class);
+            verify(provisionalRepo).save(captor.capture());
+            ProvisionalCpidEntity saved = captor.getValue();
+
+            assertEquals("RECONCILED", saved.getStatus());
+            assertEquals(canonicalCpid(), saved.getCanonicalCpid());
+            assertNotNull(saved.getReconciledAt());
+        }
+
+        @Test
+        @DisplayName("creates id_mapping entry when none exists for the Health ID")
+        void reconcile_createsIdMapping() {
+            ProvisionalCpidEntity provisional = buildProvisionalEntity("PROVISIONAL");
+            when(provisionalRepo.findByTenantIdAndOCpid(tenantId(), oCpid()))
+                    .thenReturn(Optional.of(provisional));
+            when(cpidGenerator.generateCpid(tenantId(), healthId())).thenReturn(canonicalCpid());
+            when(mappingRepo.findByTenantIdAndHealthId(tenantId(), healthId()))
+                    .thenReturn(Optional.empty());
+            when(mappingRepo.save(any(IdMappingEntity.class)))
+                    .thenAnswer(invocation -> invocation.getArgument(0));
+            when(provisionalRepo.save(any(ProvisionalCpidEntity.class)))
+                    .thenAnswer(invocation -> invocation.getArgument(0));
+
+            service.reconcile(new ReconcileRequest(tenantId(), oCpid(), healthId()));
+
+            ArgumentCaptor<IdMappingEntity> captor = ArgumentCaptor.forClass(IdMappingEntity.class);
+            verify(mappingRepo).save(captor.capture());
+            IdMappingEntity mapping = captor.getValue();
+
+            assertEquals(tenantId(), mapping.getTenantId());
+            assertEquals(healthId(), mapping.getHealthId());
+            assertEquals(canonicalCpid(), mapping.getCpid());
+            assertEquals("ACTIVE", mapping.getMappingStatus());
+        }
+
+        @Test
+        @DisplayName("does not create duplicate id_mapping when one already exists")
+        void reconcile_existingMapping_doesNotDuplicate() {
+            ProvisionalCpidEntity provisional = buildProvisionalEntity("PROVISIONAL");
+            when(provisionalRepo.findByTenantIdAndOCpid(tenantId(), oCpid()))
+                    .thenReturn(Optional.of(provisional));
+            when(cpidGenerator.generateCpid(tenantId(), healthId())).thenReturn(canonicalCpid());
+
+            IdMappingEntity existingMapping = new IdMappingEntity();
+            existingMapping.setId(99L);
+            when(mappingRepo.findByTenantIdAndHealthId(tenantId(), healthId()))
+                    .thenReturn(Optional.of(existingMapping));
+            when(provisionalRepo.save(any(ProvisionalCpidEntity.class)))
+                    .thenAnswer(invocation -> invocation.getArgument(0));
+
+            service.reconcile(new ReconcileRequest(tenantId(), oCpid(), healthId()));
+
+            verify(mappingRepo, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("returns existing result if already reconciled (idempotent)")
+        void reconcile_alreadyReconciled_returnsExisting() {
+            ProvisionalCpidEntity alreadyReconciled = buildProvisionalEntity("RECONCILED");
+            when(provisionalRepo.findByTenantIdAndOCpid(tenantId(), oCpid()))
+                    .thenReturn(Optional.of(alreadyReconciled));
+
+            ReconcileRequest request = new ReconcileRequest(tenantId(), oCpid(), healthId());
+            ReconcileResponse response = service.reconcile(request);
+
+            assertEquals(oCpid(), response.oCpid());
+            assertEquals(canonicalCpid(), response.canonicalCpid());
+            assertEquals("RECONCILED", response.status());
+            assertNotNull(response.reconciledAt());
+
+            // Should NOT generate a new CPID or save anything
+            verify(cpidGenerator, never()).generateCpid(any(), any());
+            verify(provisionalRepo, never()).save(any());
+            verify(mappingRepo, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("throws IdentityNotFoundException for unknown O-CPID")
+        void reconcile_unknownOCpid_throws() {
+            when(provisionalRepo.findByTenantIdAndOCpid(tenantId(), oCpid()))
+                    .thenReturn(Optional.empty());
+
+            ReconcileRequest request = new ReconcileRequest(tenantId(), oCpid(), healthId());
+
+            assertThrows(IdentityNotFoundException.class,
+                    () -> service.reconcile(request),
+                    "Must throw IdentityNotFoundException for unknown O-CPID");
+        }
+
+        @Test
+        @DisplayName("publishes OCPID_RECONCILED outbox event")
+        void reconcile_publishesOutboxEvent() {
+            ProvisionalCpidEntity provisional = buildProvisionalEntity("PROVISIONAL");
+            when(provisionalRepo.findByTenantIdAndOCpid(tenantId(), oCpid()))
+                    .thenReturn(Optional.of(provisional));
+            when(cpidGenerator.generateCpid(tenantId(), healthId())).thenReturn(canonicalCpid());
+            when(mappingRepo.findByTenantIdAndHealthId(tenantId(), healthId()))
+                    .thenReturn(Optional.empty());
+            when(mappingRepo.save(any(IdMappingEntity.class)))
+                    .thenAnswer(invocation -> invocation.getArgument(0));
+            when(provisionalRepo.save(any(ProvisionalCpidEntity.class)))
+                    .thenAnswer(invocation -> invocation.getArgument(0));
+
+            service.reconcile(new ReconcileRequest(tenantId(), oCpid(), healthId()));
+
+            ArgumentCaptor<EventOutboxEntity> captor = ArgumentCaptor.forClass(EventOutboxEntity.class);
+            verify(outboxRepo).save(captor.capture());
+            EventOutboxEntity event = captor.getValue();
+
+            assertEquals("ProvisionalCpid", event.getAggregateType());
+            assertEquals("OCPID_RECONCILED", event.getEventType());
+            assertEquals(oCpid().toString(), event.getAggregateId());
+        }
+    }
+
+    // ── listUnreconciled tests ─────────────────────────────────────────────
+
+    @Nested
+    @DisplayName("listUnreconciled")
+    class ListUnreconciled {
+
+        @Test
+        @DisplayName("returns only PROVISIONAL entries for the given tenant")
+        void listUnreconciled_returnsProvisionalOnly() {
+            ProvisionalCpidEntity e1 = buildProvisionalEntity("PROVISIONAL");
+            e1.setOCpid(UUID.randomUUID());
+            ProvisionalCpidEntity e2 = buildProvisionalEntity("PROVISIONAL");
+            e2.setOCpid(UUID.randomUUID());
+
+            when(provisionalRepo.findByTenantIdAndStatus(tenantId(), "PROVISIONAL"))
+                    .thenReturn(List.of(e1, e2));
+
+            List<ProvisionalCpidResponse> result = service.listUnreconciled(tenantId());
+
+            assertEquals(2, result.size(), "Should return exactly 2 unreconciled entries");
+            result.forEach(r -> assertEquals("PROVISIONAL", r.status()));
+        }
+
+        @Test
+        @DisplayName("returns empty list when no unreconciled entries exist")
+        void listUnreconciled_empty_returnsEmptyList() {
+            when(provisionalRepo.findByTenantIdAndStatus(tenantId(), "PROVISIONAL"))
+                    .thenReturn(List.of());
+
+            List<ProvisionalCpidResponse> result = service.listUnreconciled(tenantId());
+
+            assertTrue(result.isEmpty(), "Must return empty list when no provisional entries exist");
+        }
+
+        @Test
+        @DisplayName("response entries contain facility and device info")
+        void listUnreconciled_entriesContainFacilityInfo() {
+            ProvisionalCpidEntity entity = buildProvisionalEntity("PROVISIONAL");
+            when(provisionalRepo.findByTenantIdAndStatus(tenantId(), "PROVISIONAL"))
+                    .thenReturn(List.of(entity));
+
+            List<ProvisionalCpidResponse> result = service.listUnreconciled(tenantId());
+
+            assertEquals(1, result.size());
+            ProvisionalCpidResponse entry = result.get(0);
+            assertEquals(facilityId(), entry.facilityId());
+            assertEquals(deviceFingerprint(), entry.deviceFingerprint());
+            assertNull(entry.canonicalCpid(),
+                    "Unreconciled entry must not have a canonical CPID");
+            assertNull(entry.reconciledAt(),
+                    "Unreconciled entry must not have a reconciledAt timestamp");
+        }
+    }
+}
