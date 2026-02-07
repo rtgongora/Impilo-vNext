@@ -1,11 +1,13 @@
 /**
  * VITO Registry API client for Ops Console.
  *
- * All calls route through the Envoy gateway (apiClient injects trust headers).
- * These functions provide typed wrappers for VITO's REST API.
+ * All calls route through apiClient which injects trust headers
+ * (x-actor-id, x-tenant-id, x-correlation-id, etc.) before they
+ * reach Envoy ext_authz → TSHEPO.
  */
 
-const VITO_BASE = "/api/v1";
+import { apiClient } from "./apiClient";
+import type { PagedResponse } from "shared-ui";
 
 // --- Types ---
 
@@ -55,73 +57,47 @@ export interface RegistryMode {
   opencrEnabled: boolean;
 }
 
-export interface PagedResponse<T> {
-  items: T[];
-  page: number;
-  size: number;
-  totalElements: number;
-  totalPages: number;
-  hasNext: boolean;
-}
-
-export interface ApiEnvelope<T> {
-  success: boolean;
-  data: T;
-  error?: { code: string; message: string; status: number };
-  correlationId: string;
-  timestamp: string;
-}
+const VITO_BASE = "/api/v1";
 
 // --- API Functions ---
-
-async function fetchApi<T>(path: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(path, {
-    headers: { "Content-Type": "application/json" },
-    ...options,
-  });
-  const envelope: ApiEnvelope<T> = await res.json();
-  if (!envelope.success) {
-    throw new Error(envelope.error?.message ?? "API error");
-  }
-  return envelope.data;
-}
 
 export const vitoApi = {
   // Clients
   listClients: (page = 0, size = 50, status?: string) =>
-    fetchApi<PagedResponse<Client>>(
+    apiClient.get<PagedResponse<Client>>(
       `${VITO_BASE}/clients?page=${page}&size=${size}${status ? `&status=${status}` : ""}`
     ),
 
   getClient: (healthId: string) =>
-    fetchApi<Client>(`${VITO_BASE}/clients/${healthId}`),
+    apiClient.get<Client>(`${VITO_BASE}/clients/${healthId}`),
 
   // Match queue
   getPendingMatches: (page = 0, size = 50) =>
-    fetchApi<PagedResponse<MatchResult>>(`${VITO_BASE}/match/pending?page=${page}&size=${size}`),
+    apiClient.get<PagedResponse<MatchResult>>(
+      `${VITO_BASE}/match/pending?page=${page}&size=${size}`
+    ),
 
   resolveMatch: (matchId: number, disposition: string) =>
-    fetchApi<MatchResult>(`${VITO_BASE}/match/${matchId}/resolve`, {
-      method: "POST",
-      body: JSON.stringify({ disposition }),
+    apiClient.post<MatchResult>(`${VITO_BASE}/match/${matchId}/resolve`, {
+      disposition,
     }),
 
   // Cards
   listCardsByStatus: (status: string, page = 0, size = 50) =>
-    fetchApi<PagedResponse<SmartCard>>(
+    apiClient.get<PagedResponse<SmartCard>>(
       `${VITO_BASE}/cards/by-status/${status}?page=${page}&size=${size}`
     ),
 
   printCard: (cardId: number) =>
-    fetchApi<SmartCard>(`${VITO_BASE}/cards/${cardId}/print`, { method: "POST" }),
+    apiClient.post<SmartCard>(`${VITO_BASE}/cards/${cardId}/print`),
 
   activateCard: (cardId: number) =>
-    fetchApi<SmartCard>(`${VITO_BASE}/cards/${cardId}/activate`, { method: "POST" }),
+    apiClient.post<SmartCard>(`${VITO_BASE}/cards/${cardId}/activate`),
 
   inactivateCard: (cardId: number) =>
-    fetchApi<SmartCard>(`${VITO_BASE}/cards/${cardId}/inactivate`, { method: "POST" }),
+    apiClient.post<SmartCard>(`${VITO_BASE}/cards/${cardId}/inactivate`),
 
   // Registry config
   getRegistryMode: () =>
-    fetchApi<RegistryMode>(`${VITO_BASE}/registry/mode`),
+    apiClient.get<RegistryMode>(`${VITO_BASE}/registry/mode`),
 };
