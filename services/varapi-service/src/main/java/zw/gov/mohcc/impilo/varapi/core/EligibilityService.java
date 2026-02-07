@@ -1,0 +1,161 @@
+package zw.gov.mohcc.impilo.varapi.core;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
+import zw.gov.mohcc.impilo.varapi.api.dto.EligibilityCheckRequest;
+import zw.gov.mohcc.impilo.varapi.api.dto.EligibilityResult;
+import zw.gov.mohcc.impilo.varapi.persistence.entity.LicenseEntity;
+import zw.gov.mohcc.impilo.varapi.persistence.entity.PrivilegeEntity;
+import zw.gov.mohcc.impilo.varapi.persistence.entity.ProviderEntity;
+import zw.gov.mohcc.impilo.varapi.persistence.repository.LicenseRepository;
+import zw.gov.mohcc.impilo.varapi.persistence.repository.PrivilegeRepository;
+import zw.gov.mohcc.impilo.varapi.persistence.repository.ProviderRepository;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+/**
+ * Login eligibility checks consumed by TSHEPO during authentication.
+ *
+ * Determines whether a provider is eligible to access clinical systems
+ * based on their registration status, license validity, and facility
+ * privileges. Called by TSHEPO's ext_authz pipeline to enforce
+ * practice-level access control.
+ *
+ * Eligibility criteria:
+ *   1. Provider exists and status is ACTIVE
+ *   2. At least one ACTIVE license that is not expired
+ *   3. If facilityId is provided, has an APPROVED privilege for that facility
+ *   4. Returns step-up flags for enhanced authentication when needed
+ */
+@Service
+public class EligibilityService {
+
+    private static final Logger log = LoggerFactory.getLogger(EligibilityService.class);
+
+    private final ProviderRepository providerRepository;
+    private final LicenseRepository licenseRepository;
+    private final PrivilegeRepository privilegeRepository;
+    private final TokenService tokenService;
+
+    public EligibilityService(ProviderRepository providerRepository,
+                              LicenseRepository licenseRepository,
+                              PrivilegeRepository privilegeRepository,
+                              TokenService tokenService) {
+        this.providerRepository = providerRepository;
+        this.licenseRepository = licenseRepository;
+        this.privilegeRepository = privilegeRepository;
+        this.tokenService = tokenService;
+    }
+
+    // ---- Public API ----
+
+    /**
+     * Check whether a provider is eligible to access clinical systems.
+     *
+     * Resolution order:
+     *   1. If providerPublicId is provided, resolve directly
+     *   2. Otherwise, attempt VA token verification via TokenService
+     *
+     * @param request the eligibility check parameters
+     * @return the eligibility result with coded reasons if ineligible
+     */
+    @Transactional(readOnly = true)
+    public EligibilityResult checkEligibility(EligibilityCheckRequest request) {
+        TrustContextHolder.require();
+        log.debug("Checking eligibility: providerPublicId={}, haVaToken={}, facilityId={}",
+                request.providerPublicId(),
+                request.vaToken() != null && !request.vaToken().isBlank(),
+                request.facilityId());
+
+        List<String> reasons = new ArrayList<>();
+        String resolvedProviderPublicId = null;
+
+        // Step 1: Resolve provider identity
+        if (request.providerPublicId() != null && !request.providerPublicId().isBlank()) {
+            resolvedProviderPublicId = request.providerPublicId();
+        } else if (request.vaToken() != null && !request.vaToken().isBlank()) {
+            resolvedProviderPublicId = tokenService.verifyToken(request.vaToken());
+            if (resolvedProviderPublicId == null) {
+                reasons.add("INVALID_TOKEN");
+                return new EligibilityResult(false, reasons, null, false, null);
+            }
+        } else {
+            reasons.add("NO_IDENTITY_PROVIDED");
+            return new EligibilityResult(false, reasons, null, false, null);
+        }
+
+        // Step 2: Check provider exists and is ACTIVE
+        Optional<ProviderEntity> providerOpt =
+                providerRepository.findByProviderPublicId(resolvedProviderPublicId);
+        if (providerOpt.isEmpty()) {
+            reasons.add("PROVIDER_NOT_FOUND");
+            return new EligibilityResult(false, reasons, null, false, resolvedProviderPublicId);
+        }
+
+        ProviderEntity provider = providerOpt.get();
+        if (!provider.isActive()) {
+            reasons.add("PROVIDER_NOT_ACTIVE");
+            log.debug("Provider not eligible: status={}", provider.getStatus());
+            return new EligibilityResult(false, reasons, null, false, resolvedProviderPublicId);
+        }
+
+        // Step 3: Check for at least one ACTIVE, non-expired license
+        Optional<LicenseEntity> activeLicenseOpt =
+                licenseRepository.findActiveByProviderId(provider.getId());
+        LocalDate licenseValidUntil = null;
+
+        if (activeLicenseOpt.isEmpty()) {
+            reasons.add("NO_ACTIVE_LICENSE");
+            log.debug("Provider not eligible: no active license");
+        } else {
+            LicenseEntity activeLicense = activeLicenseOpt.get();
+            licenseValidUntil = activeLicense.getValidTo();
+
+            if (activeLicense.isExpired()) {
+                reasons.add("LICENSE_EXPIRED");
+                log.debug("Provider not eligible: license expired on {}", activeLicense.getValidTo());
+            }
+        }
+
+        // Step 4: Check facility privilege if facilityId provided
+        boolean stepUpRequired = false;
+        if (request.facilityId() != null) {
+            List<PrivilegeEntity> facilityPrivileges =
+                    privilegeRepository.findByProviderIdAndFacilityIdAndStatus(
+                            provider.getId(), request.facilityId(), "APPROVED");
+            if (facilityPrivileges.isEmpty()) {
+                reasons.add("NO_FACILITY_PRIVILEGE");
+                log.debug("Provider not eligible: no APPROVED privilege for facilityId={}",
+                        request.facilityId());
+            }
+
+            // Check if step-up authentication is needed (e.g., sensitive facility)
+            // Step-up is required if any privilege for this facility demands it
+            for (PrivilegeEntity priv : facilityPrivileges) {
+                if ("RESTRICTED".equals(priv.getScope())) {
+                    stepUpRequired = true;
+                    break;
+                }
+            }
+        }
+
+        boolean eligible = reasons.isEmpty();
+        log.info("Eligibility check complete: providerPublicId={}, eligible={}, reasons={}",
+                resolvedProviderPublicId, eligible, reasons);
+
+        return new EligibilityResult(
+                eligible,
+                reasons,
+                licenseValidUntil,
+                stepUpRequired,
+                resolvedProviderPublicId
+        );
+    }
+}
