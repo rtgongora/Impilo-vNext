@@ -64,30 +64,51 @@
 ## Sovereign Service 2 — VITO (Client Registry)
 
 > Port 8082 · Registry Spine Plane
-> National client identity: Impilo ID issuance, HMAC alias, PII custodian.
+> WHO-compliant Identity Node: Impilo ID issuance, HMAC alias, PII custodian,
+> SMART Card management, health payments wallet, probabilistic matching.
 
-### Skeleton
+### Skeleton (complete)
+- [x] `pom.xml` (HAPI FHIR R4, Bouncy Castle, Nimbus JOSE, Redis, Kafka)
+- [x] `Dockerfile`, `application.yml`, `VitoApplication.java`
+- [x] `SecurityConfig.java` (dual-mode: platform + external identity consumers)
+- [x] `VitoProperties.java` — @ConfigurationProperties for Argon2id/HMAC/DID/Card/Matching
+- [x] `VitoServiceConfig.java` — wires Argon2id (m=64MB, t=3, p=4) + HmacService
 - [x] Flyway V001–V005 (client, aliases, dedup, provisional, ops)
-- [x] Helm chart
-- [ ] `pom.xml`, `Dockerfile`, `application.yml`, `VitoApplication.java`
-- [ ] `SecurityConfig.java` (dual-mode: platform + external identity consumers)
+- [x] Flyway V006–V010 (smart_card, wallet, biometric, matching, health_summary)
+- [x] Helm chart (port 8082, resources bumped for Argon2id)
 
-### Controllers
-- [ ] `ClientController.java` — client CRUD
-- [ ] `IdIssuanceController.java` — Impilo ID issuance flow
-- [ ] `RecoveryController.java` — alias recovery/rotation
-- [ ] `DedupController.java` — dedup case management
-- [ ] `OfflineController.java` — provisional ID handling
-- [ ] `OpsConsoleController.java` — ops overrides
+### Domain Model (complete)
+- [x] `SovereignIdGenerator.java` — W3C DID `did:impilo:[sha256]` (Black Box, stateless)
+- [x] Enums: `IdentityStatus`, `CardStatus`, `RevocationReason`, `BiometricModality`, `MatchDisposition`
+- [x] 10 JPA entities: Client, IdentityAlias, SmartCard, Wallet, WalletJournal, BiometricTemplate, MatchResult, DedupCase, ProvisionalId, EventOutbox
+- [x] 10 Repositories (with pessimistic locking on wallet)
 
-### Core Services
-- [ ] `ImpiloIdAliasService.java` — HMAC lookup_hash + Argon2id verifier (uses shared-core)
-- [ ] `IdentityProofingService.java` — proofing workflow
-- [ ] `DedupMatchingService.java` — duplicate detection
-- [ ] `ProvisionalIdService.java` — offline provisional IDs
+### Core Services (complete)
+- [x] `ImpiloIdAliasService.java` — HMAC lookup_hash + Argon2id verifier (VITO-specific params)
+- [x] `IdentityService.java` — WHO SMART L3/L4 lifecycle (PROVISIONAL→VERIFIED→ACTIVE→INACTIVE→DECEASED→MERGED)
+- [x] `BiometricService.java` — ITU-T X.1081, SHA-256 integrity, quality scoring
+- [x] `MatchingEngine.java` — Jaro-Winkler weighted scoring, auto-link ≥0.95, manual ≥0.70
+- [x] `CardLifecycleService.java` — SMART Card state machine + one-active-card enforcement
+- [x] `WalletService.java` — double-entry ledger, pessimistic locking, offline JWS signatures
+- [x] `RecoveryService.java` — Secure Handover (revoke → new card → transfer wallet)
+- [x] `HealthSummaryService.java` — JWS compact serialization (HS256, upgradable)
+- [x] `OpenCrAdapter.java` — FHIR Patient/$match client with graceful degradation
+- [x] `StandaloneRegistryService.java` — provisional ID reconciliation, dedup cases
+- [x] `VitoOutboxPublisher.java` — scheduled Kafka publisher (vito.identity, vito.cards, vito.wallet)
+
+### Controllers (complete)
+- [x] `ClientController.java` — client CRUD (EXTERNAL reads, INTERNAL writes)
+- [x] `IdIssuanceController.java` — register, resolve (anti-enumeration), rotate
+- [x] `BiometricController.java` — enroll, query (INTERNAL only)
+- [x] `MatchController.java` — FHIR $match, pending queue, resolve
+- [x] `CardController.java` — full lifecycle (request/print/activate/inactivate/revoke)
+- [x] `WalletController.java` — create/topup/pay/offline, balance, journal
+- [x] `RecoveryController.java` — handover, SHS create/verify
+- [x] `RegistryAdminController.java` — registry mode, provisional IDs, dedup, OpenCR $match
+
+### Remaining
 - [ ] `MergeService.java` — record merge/unmerge
-- [ ] JPA entities + repositories
-- [ ] `IdentityOutboxPublisher.java`
+- [ ] Integration tests (registration → card → wallet → handover)
 
 ---
 
@@ -330,7 +351,7 @@
 
 ### One UI Shell — Port 3000
 - [x] `package.json`, `next.config.js`, `tsconfig.json`, `tailwind.config.ts`
-- [x] `apiClient.ts` (14 trust headers injected), `contracts.ts`
+- [x] `apiClient.ts` (14 trust headers injected), `contracts.ts` (re-exports from shared-ui)
 - [x] Hooks: `useSession.ts`, `useContext.ts`, `usePolicyDecision.ts`
 - [ ] `src/app/layout.tsx` — root layout with shell, nav, context bar
 - [ ] `src/components/shell/AppShell.tsx`
@@ -339,11 +360,16 @@
 
 ### Shared UI Library
 - [x] `package.json`, `tokens.css`, `index.ts`
-- [ ] Base components: Button, Card, DataTable, Badge, StatusIndicator
+- [x] Trust contracts: `lib/contracts.ts` (TRUST_HEADERS, ApiEnvelope, PagedResponse — shared across all apps)
+- [x] Base components: Button, Card, DataTable, Badge, StatusIndicator
 
 ### Ops Console — Port 3001
 - [x] `package.json`
-- [ ] Full Next.js config + route stubs (tshepo, vito, varapi, tuso, zibo, oros, pct, mushex)
+- [x] `apiClient.ts` — trust-aware API client (injects all trust headers via Zustand session store)
+- [x] `sessionStore.ts` — operator session & work context store
+- [x] VITO Dashboard: registry overview, match-queue, cards management, config (4 pages)
+- [x] `vitoApi.ts` — typed VITO API client (routes through trust-aware apiClient)
+- [ ] Remaining route stubs (tshepo, varapi, tuso, zibo, oros, pct, mushex)
 
 ### EHR App — Port 3002
 - [x] `package.json`
