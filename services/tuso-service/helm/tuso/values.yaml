@@ -1,4 +1,4 @@
-replicaCount: 1
+replicaCount: 2
 
 image:
   repository: ghcr.io/mohcc/impilo/tuso
@@ -7,7 +7,28 @@ image:
 
 service:
   type: ClusterIP
-  port: 8080
+  port: 8084
+
+env:
+  POSTGRES_HOST: impilo-postgres
+  POSTGRES_PORT: "5432"
+  POSTGRES_USER: impilo
+  REDIS_HOST: impilo-redis
+  REDIS_PORT: "6379"
+  KAFKA_BOOTSTRAP_SERVERS: impilo-kafka:9092
+  KEYCLOAK_URL: http://impilo-keycloak:8080
+  KEYCLOAK_REALM: impilo
+  TUSO_REGISTRY_MODE: STANDALONE
+  GOFR_ENABLED: "false"
+  ZIBO_ENABLED: "false"
+  TUSO_ZIBO_MODE: LENIENT
+  ZIBO_BASE_URL: http://zibo-service:8085
+  VARAPI_BASE_URL: http://varapi-service:8083
+
+secrets:
+  - name: POSTGRES_PASSWORD
+    secretName: impilo-db-secret
+    secretKey: password
 
 resources:
   requests:
@@ -16,3 +37,20 @@ resources:
   limits:
     cpu: 1000m
     memory: 1Gi
+
+livenessProbe:
+  httpGet:
+    path: /actuator/health/liveness
+    port: 8084
+  initialDelaySeconds: 30
+  periodSeconds: 15
+
+readinessProbe:
+  httpGet:
+    path: /actuator/health/readiness
+    port: 8084
+  initialDelaySeconds: 20
+  periodSeconds: 10
+
+ingress:
+  enabled: false

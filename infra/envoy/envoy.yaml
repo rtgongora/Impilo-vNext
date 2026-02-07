@@ -83,6 +83,14 @@ static_resources:
                           route: { cluster: tuso_service }
                         - match: { prefix: "/api/v1/workspaces" }
                           route: { cluster: tuso_service }
+                        - match: { prefix: "/api/v1/resources" }
+                          route: { cluster: tuso_service }
+                        - match: { prefix: "/api/v1/bookings" }
+                          route: { cluster: tuso_service }
+                        - match: { prefix: "/api/v1/telemetry" }
+                          route: { cluster: tuso_service }
+                        - match: { prefix: "/api/v1/control-tower" }
+                          route: { cluster: tuso_service }
 
                         # ── ZIBO — Terminology ──
                         - match: { prefix: "/api/v1/terminology" }

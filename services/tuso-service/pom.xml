@@ -20,7 +20,14 @@
     </description>
 
     <dependencies>
-        <!-- TSHEPO SDK (trust context extraction, header propagation) -->
+        <!-- Shared Core (ApiResponse, TrustContext, TrustContextFilter) -->
+        <dependency>
+            <groupId>zw.gov.mohcc.impilo</groupId>
+            <artifactId>shared-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!-- TSHEPO SDK (trust header contracts) -->
         <dependency>
             <groupId>zw.gov.mohcc.impilo</groupId>
             <artifactId>tshepo-sdk</artifactId>

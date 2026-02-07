@@ -1,6 +1,10 @@
 apiVersion: v2
 name: tuso
-description: Impilo vNext — tuso service
+description: TUSO — Impilo Facility Registry Service
 type: application
 version: 0.1.0
 appVersion: "0.1.0"
+keywords:
+  - facility-registry
+  - gofr
+  - impilo
