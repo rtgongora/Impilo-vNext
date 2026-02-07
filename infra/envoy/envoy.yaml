@@ -92,8 +92,22 @@ static_resources:
                         - match: { prefix: "/api/v1/control-tower" }
                           route: { cluster: tuso_service }
 
-                        # ── ZIBO — Terminology ──
-                        - match: { prefix: "/api/v1/terminology" }
+                        # ── ZIBO — Terminology, Definitions & Classification ──
+                        - match: { prefix: "/v1/artifacts" }
+                          route: { cluster: zibo_service }
+                        - match: { prefix: "/v1/packs" }
+                          route: { cluster: zibo_service }
+                        - match: { prefix: "/v1/validate" }
+                          route: { cluster: zibo_service }
+                        - match: { prefix: "/v1/map" }
+                          route: { cluster: zibo_service }
+                        - match: { prefix: "/v1/assignments" }
+                          route: { cluster: zibo_service }
+                        - match: { prefix: "/v1/import" }
+                          route: { cluster: zibo_service }
+                        - match: { prefix: "/v1/export" }
+                          route: { cluster: zibo_service }
+                        - match: { prefix: "/v1/governance" }
                           route: { cluster: zibo_service }
 
                         # ── PCT — Patient Care Tracker ──
