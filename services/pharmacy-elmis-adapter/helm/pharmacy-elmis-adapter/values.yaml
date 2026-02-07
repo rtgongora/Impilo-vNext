@@ -1,0 +1,73 @@
+replicaCount: 1
+
+image:
+  repository: ghcr.io/mohcc/impilo/pharmacy-elmis-adapter
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 8097
+
+containerPort: 8097
+
+env:
+  # -- PostgreSQL --
+  SPRING_DATASOURCE_URL: jdbc:postgresql://postgresql:5432/pharmacy_elmis_adapter
+  SPRING_DATASOURCE_USERNAME: impilo
+  SPRING_DATASOURCE_PASSWORD: impilo
+  SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+  SPRING_FLYWAY_ENABLED: "true"
+
+  # -- Kafka --
+  SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+  SPRING_KAFKA_CONSUMER_GROUP_ID: pharmacy-elmis-adapter
+
+  # -- Redis --
+  SPRING_DATA_REDIS_HOST: redis
+  SPRING_DATA_REDIS_PORT: "6379"
+
+  # -- Keycloak --
+  SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/realms/impilo
+  SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
+
+  # -- Service config --
+  SERVER_PORT: "8097"
+
+  # -- eLMIS integration --
+  ELMIS_BASE_URL: http://elmis:8080
+  ELMIS_SYNC_CRON: "0 0 */4 * * *"
+  ELMIS_SYNC_ENABLED: "true"
+
+  # -- Pharmacy service --
+  PHARMACY_SERVICE_URL: http://pharmacy-service:8096
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+
+livenessProbe:
+  httpGet:
+    path: /actuator/health/liveness
+    port: 8097
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /actuator/health/readiness
+    port: 8097
+  initialDelaySeconds: 20
+  periodSeconds: 5
+  failureThreshold: 3
+
+ingress:
+  enabled: false
+
+autoscaling:
+  enabled: false

@@ -1,0 +1,1805 @@
+openapi: 3.0.3
+info:
+  title: OROS Pharmacy Service API
+  description: |
+    Pharmacy dispensing service for the Impilo vNext platform. Handles the
+    full dispense lifecycle from order acceptance through picking, partial/complete
+    dispense, pickup proof (OTP/QR/biometric), returns, wastage, reversals,
+    and stock reconciliation against external eLMIS systems.
+
+    All requests must include trust headers (X-Tenant-Id, X-Actor-Id, X-Correlation-Id,
+    X-Facility-Id, etc.) which are validated by Envoy ext_authz -> TSHEPO before
+    reaching this service.
+  version: 1.0.0
+  contact:
+    name: Impilo Platform Team
+  license:
+    name: Proprietary
+
+servers:
+  - url: http://localhost:8096
+    description: Local development
+  - url: http://localhost:10000
+    description: Envoy gateway (local)
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Worklist
+    description: Pharmacy dispensing worklist
+  - name: Dispense Orders
+    description: Dispense order lifecycle management
+  - name: Dispense Items
+    description: Individual dispense item operations (substitution, etc.)
+  - name: Barcode
+    description: Barcode lookup for drug identification
+  - name: Pickup
+    description: Pickup proof creation and claiming
+  - name: Returns
+    description: Return, wastage, and reversal operations
+  - name: Reconciliation
+    description: Stock reconciliation against external eLMIS
+  - name: Internal
+    description: Internal integration endpoints (OROS, MUSHEX callbacks)
+
+paths:
+  # ── Worklist ──────────────────────────────────────────────────────────────
+  /v1/worklists:
+    get:
+      operationId: getWorklist
+      summary: Get pharmacy dispensing worklist
+      description: |
+        Returns a list of dispense orders for the given facility, filtered by
+        status, priority, and other criteria. Orders are sorted by priority
+        (STAT > URGENT > ASAP > ROUTINE) then by creation time ascending.
+      tags: [Worklist]
+      parameters:
+        - $ref: "#/components/parameters/FacilityIdQuery"
+        - name: status
+          in: query
+          schema:
+            $ref: "#/components/schemas/DispenseStatus"
+        - name: priority
+          in: query
+          schema:
+            $ref: "#/components/schemas/DispensePriority"
+        - name: workspaceId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/SizeParam"
+      responses:
+        "200":
+          description: Worklist returned
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/DispenseOrderSummary"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  # ── Dispense Orders ──────────────────────────────────────────────────────
+  /v1/dispense-orders/{id}:
+    get:
+      operationId: getDispenseOrder
+      summary: Get dispense order detail
+      description: Returns full dispense order including all items, FEFO suggestions, and pickup proof.
+      tags: [Dispense Orders]
+      parameters:
+        - $ref: "#/components/parameters/OrderIdPath"
+      responses:
+        "200":
+          description: Dispense order detail
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/DispenseOrderDetail"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /v1/dispense-orders/patient/{cpid}:
+    get:
+      operationId: getPatientDispenseOrders
+      summary: Get dispense orders by patient CPID
+      description: Returns all dispense orders for a given patient, ordered by creation date descending.
+      tags: [Dispense Orders]
+      parameters:
+        - name: cpid
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Patient CPID
+        - name: status
+          in: query
+          schema:
+            $ref: "#/components/schemas/DispenseStatus"
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/SizeParam"
+      responses:
+        "200":
+          description: Patient dispense orders
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/DispenseOrderSummary"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /v1/dispense-orders/{id}/accept:
+    post:
+      operationId: acceptOrder
+      summary: Accept a dispense order
+      description: |
+        Transitions the order from PENDING to ACCEPTED. Assigns the current
+        actor as the dispensing pharmacist. Publishes pharmacy.dispense.accepted
+        event via outbox.
+      tags: [Dispense Orders]
+      parameters:
+        - $ref: "#/components/parameters/OrderIdPath"
+      responses:
+        "200":
+          description: Order accepted
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/DispenseOrderDetail"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /v1/dispense-orders/{id}/pick:
+    post:
+      operationId: pickItems
+      summary: Pick items for dispensing
+      description: |
+        Records the physical pick of drug items. Validates batch numbers,
+        expiry dates (FEFO compliance), and available stock. Transitions the
+        order to PICKING status. Each pick includes the barcode scan result.
+      tags: [Dispense Orders]
+      parameters:
+        - $ref: "#/components/parameters/OrderIdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PickRequest"
+      responses:
+        "200":
+          description: Items picked
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/DispenseOrderDetail"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /v1/dispense-orders/{id}/partial:
+    post:
+      operationId: partialDispense
+      summary: Record partial dispense
+      description: |
+        Marks the order as PARTIAL — some items have been dispensed but not all.
+        This allows the patient to collect available items while remaining items
+        are backordered or pending. Publishes pharmacy.dispense.partial event.
+      tags: [Dispense Orders]
+      parameters:
+        - $ref: "#/components/parameters/OrderIdPath"
+      responses:
+        "200":
+          description: Partial dispense recorded
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/DispenseOrderDetail"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /v1/dispense-orders/{id}/complete:
+    post:
+      operationId: completeDispense
+      summary: Complete dispense
+      description: |
+        Marks the order as COMPLETED — all items have been dispensed. Triggers
+        stock deduction, OROS writeback (order status update), and MUSHEX
+        charge event. Publishes pharmacy.dispense.completed event.
+      tags: [Dispense Orders]
+      parameters:
+        - $ref: "#/components/parameters/OrderIdPath"
+      responses:
+        "200":
+          description: Dispense completed
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/DispenseOrderDetail"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /v1/dispense-orders/{id}/backorder:
+    post:
+      operationId: backorder
+      summary: Backorder a dispense order
+      description: |
+        Marks the order as BACKORDERED when stock is unavailable.
+        Records expected restock date and notes. Publishes
+        pharmacy.dispense.backordered event.
+      tags: [Dispense Orders]
+      parameters:
+        - $ref: "#/components/parameters/OrderIdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BackorderRequest"
+      responses:
+        "200":
+          description: Order backordered
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/DispenseOrderDetail"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  # ── Dispense Items ──────────────────────────────────────────────────────
+  /v1/dispense-items/{itemId}/substitute:
+    post:
+      operationId: substituteItem
+      summary: Substitute a dispense item
+      description: |
+        Replaces a prescribed drug with a therapeutic equivalent. Records the
+        original drug, replacement drug, reason for substitution, and batch/expiry
+        details. Requires pharmacist authorization. Publishes
+        pharmacy.item.substituted event.
+      tags: [Dispense Items]
+      parameters:
+        - $ref: "#/components/parameters/ItemIdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubstituteRequest"
+      responses:
+        "200":
+          description: Item substituted
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/DispenseItem"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /v1/dispense-items/{itemId}/substitution-options:
+    get:
+      operationId: getSubstitutionOptions
+      summary: Get substitution options for an item
+      description: |
+        Returns a list of therapeutic equivalents that can be used to substitute
+        the given item. Includes stock-on-hand, nearest expiry, and therapeutic
+        equivalence classification for each option.
+      tags: [Dispense Items]
+      parameters:
+        - $ref: "#/components/parameters/ItemIdPath"
+      responses:
+        "200":
+          description: Substitution options
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/SubstitutionOption"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  # ── Barcode ─────────────────────────────────────────────────────────────
+  /v1/items/lookup-by-barcode:
+    get:
+      operationId: lookupBarcode
+      summary: Look up drug by barcode
+      description: |
+        Decodes a GS1/GTIN barcode and returns the drug details including
+        batch number, expiry date, and manufacturer. Used during the pick
+        process for verification.
+      tags: [Barcode]
+      parameters:
+        - name: code
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Barcode string (GS1, GTIN, EAN, etc.)
+      responses:
+        "200":
+          description: Barcode decoded
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/BarcodeResult"
+        "404":
+          description: Barcode not recognized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  # ── Returns / Wastage / Reversal ────────────────────────────────────────
+  /v1/dispense-orders/{id}/return:
+    post:
+      operationId: processReturn
+      summary: Process item returns
+      description: |
+        Records the return of dispensed items. Returns are classified by
+        condition (INTACT, DAMAGED, EXPIRED). Intact items may be restocked.
+        Publishes pharmacy.dispense.returned event.
+      tags: [Returns]
+      parameters:
+        - $ref: "#/components/parameters/OrderIdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReturnRequest"
+      responses:
+        "200":
+          description: Return processed
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/DispenseOrderDetail"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /v1/dispense-orders/{id}/wastage:
+    post:
+      operationId: processWastage
+      summary: Record drug wastage
+      description: |
+        Records wastage of dispensed drugs. Requires disposal method and
+        optional witness. Used for controlled substances and expired drugs.
+        Publishes pharmacy.dispense.wastage event.
+      tags: [Returns]
+      parameters:
+        - $ref: "#/components/parameters/OrderIdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WastageRequest"
+      responses:
+        "200":
+          description: Wastage recorded
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/DispenseOrderDetail"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /v1/dispense-orders/{id}/reversal:
+    post:
+      operationId: processReversal
+      summary: Reverse a completed dispense
+      description: |
+        Reverses a completed dispense order. Restores stock, reverses MUSHEX
+        charges, and updates OROS order status. Requires authorization and
+        reason. Publishes pharmacy.dispense.reversed event.
+      tags: [Returns]
+      parameters:
+        - $ref: "#/components/parameters/OrderIdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReversalRequest"
+      responses:
+        "200":
+          description: Dispense reversed
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/DispenseOrderDetail"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  # ── Pickup ──────────────────────────────────────────────────────────────
+  /v1/dispense-orders/{id}/pickup/create:
+    post:
+      operationId: createPickup
+      summary: Create pickup proof
+      description: |
+        Creates a pickup proof for a completed dispense order. Supports OTP
+        (SMS code), QR (scannable code), and biometric methods. Optionally
+        supports delegated pickup where a third party collects on behalf of
+        the patient. Token expires after a configurable period.
+      tags: [Pickup]
+      parameters:
+        - $ref: "#/components/parameters/OrderIdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PickupCreateRequest"
+      responses:
+        "201":
+          description: Pickup proof created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/PickupProof"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /v1/pickup/claim:
+    post:
+      operationId: claimPickup
+      summary: Claim a pickup
+      description: |
+        Claims a pickup using the token (OTP code or QR scan result) and
+        optional biometric fingerprint. Validates the token, marks the
+        pickup as claimed, and publishes pharmacy.pickup.claimed event.
+      tags: [Pickup]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PickupClaimRequest"
+      responses:
+        "200":
+          description: Pickup claimed
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/PickupProof"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          description: Token not found or expired
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+        "409":
+          description: Pickup already claimed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  # ── Stock Reconciliation ────────────────────────────────────────────────
+  /v1/reconcile/stock/pending:
+    get:
+      operationId: getReconcilePending
+      summary: Get pending stock reconciliation items
+      description: |
+        Returns paginated list of stock variances between internal inventory
+        and the external eLMIS system. Items are ordered by variance magnitude
+        descending.
+      tags: [Reconciliation]
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/SizeParam"
+        - name: facilityId
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Pending reconciliation items
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/PagedReconcileSummary"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /v1/reconcile/stock/{id}/resolve:
+    post:
+      operationId: resolveReconcile
+      summary: Resolve a stock reconciliation entry
+      description: |
+        Resolves a stock variance by accepting internal count, accepting
+        external count, or specifying a manual adjustment. Records resolution
+        notes for audit. Publishes pharmacy.reconcile.resolved event.
+      tags: [Reconciliation]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Reconciliation entry ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResolveRequest"
+      responses:
+        "200":
+          description: Reconciliation resolved
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/ReconcileSummary"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  # ── Internal Integration ────────────────────────────────────────────────
+  /v1/internal/oros/status:
+    post:
+      operationId: orosStatusCallback
+      summary: OROS order status callback
+      description: |
+        Internal endpoint called by OROS when a pharmacy-type order changes
+        status. Creates or updates the corresponding dispense order. Not
+        exposed externally.
+      tags: [Internal]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - orosOrderId
+                - status
+                - patientCpid
+                - facilityId
+                - items
+              properties:
+                orosOrderId:
+                  type: string
+                  format: uuid
+                orosOrderNumber:
+                  type: string
+                status:
+                  type: string
+                  enum: [PLACED, ACCEPTED, IN_PROGRESS, COMPLETED, CANCELLED, REJECTED]
+                patientCpid:
+                  type: string
+                facilityId:
+                  type: string
+                  format: uuid
+                priority:
+                  $ref: "#/components/schemas/DispensePriority"
+                items:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - catalogCode
+                      - name
+                      - quantity
+                    properties:
+                      catalogCode:
+                        type: string
+                      name:
+                        type: string
+                      quantity:
+                        type: integer
+                        minimum: 1
+                      form:
+                        type: string
+                      strength:
+                        type: string
+      responses:
+        "200":
+          description: Status update processed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /v1/internal/mushex/charge:
+    post:
+      operationId: mushexChargeCallback
+      summary: MUSHEX charge confirmation callback
+      description: |
+        Internal endpoint called after MUSHEX confirms billing for a dispense.
+        Updates the payment status on the dispense order.
+      tags: [Internal]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - dispenseOrderId
+                - chargeStatus
+              properties:
+                dispenseOrderId:
+                  type: string
+                  format: uuid
+                chargeStatus:
+                  type: string
+                  enum: [CHARGED, FAILED, REVERSED]
+                chargeId:
+                  type: string
+                amount:
+                  type: number
+                  format: double
+                currency:
+                  type: string
+                  default: USD
+                failureReason:
+                  type: string
+      responses:
+        "200":
+          description: Charge status processed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+components:
+  # ── Security ────────────────────────────────────────────────────────────
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Keycloak-issued JWT token
+
+  # ── Parameters ──────────────────────────────────────────────────────────
+  parameters:
+    OrderIdPath:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: Dispense order ID
+
+    ItemIdPath:
+      name: itemId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: Dispense item ID
+
+    FacilityIdQuery:
+      name: facilityId
+      in: query
+      schema:
+        type: string
+        format: uuid
+      description: Facility ID to filter by
+
+    PageParam:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+      description: Zero-based page number
+
+    SizeParam:
+      name: size
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+      description: Page size
+
+  # ── Responses ───────────────────────────────────────────────────────────
+  responses:
+    BadRequest:
+      description: Invalid request parameters or body
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiResponse"
+
+    Unauthorized:
+      description: Missing or invalid authentication token
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiResponse"
+
+    Forbidden:
+      description: Insufficient permissions for this operation
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiResponse"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiResponse"
+
+    Conflict:
+      description: State conflict (e.g., order already accepted)
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiResponse"
+
+  # ── Schemas ─────────────────────────────────────────────────────────────
+  schemas:
+    # -- Enumerations --
+    DispenseStatus:
+      type: string
+      enum:
+        - PENDING
+        - ACCEPTED
+        - PICKING
+        - PARTIAL
+        - COMPLETED
+        - BACKORDERED
+        - REVERSED
+        - CANCELLED
+      description: |
+        Dispense order lifecycle states:
+        PENDING -> ACCEPTED -> PICKING -> PARTIAL|COMPLETED
+        ACCEPTED|PICKING -> BACKORDERED
+        COMPLETED -> REVERSED
+
+    DispensePriority:
+      type: string
+      enum:
+        - ROUTINE
+        - URGENT
+        - STAT
+        - ASAP
+      description: Dispense priority level
+
+    ItemStatus:
+      type: string
+      enum:
+        - PENDING
+        - PICKED
+        - SUBSTITUTED
+        - BACKORDERED
+        - RETURNED
+      description: Individual dispense item status
+
+    PickupMethod:
+      type: string
+      enum:
+        - OTP
+        - QR
+        - BIOMETRIC
+      description: Method used for pickup proof
+
+    ReconcileStockStatus:
+      type: string
+      enum:
+        - PENDING
+        - RESOLVED
+        - EXPIRED
+      description: Stock reconciliation entry status
+
+    ItemCondition:
+      type: string
+      enum:
+        - INTACT
+        - DAMAGED
+        - EXPIRED
+      description: Condition of returned items
+
+    DisposalMethod:
+      type: string
+      enum:
+        - INCINERATION
+        - CHEMICAL
+        - RETURN_TO_SUPPLIER
+        - OTHER
+      description: Wastage disposal method
+
+    AdjustmentAction:
+      type: string
+      enum:
+        - ACCEPT_INTERNAL
+        - ACCEPT_EXTERNAL
+        - MANUAL_ADJUST
+      description: Stock reconciliation adjustment action
+
+    # -- Dispense Order --
+    DispenseOrderSummary:
+      type: object
+      required:
+        - id
+        - tenantId
+        - facilityId
+        - orosOrderId
+        - orosOrderNumber
+        - patientCpid
+        - priority
+        - status
+        - itemCount
+        - dispensedCount
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        facilityId:
+          type: string
+          format: uuid
+        orosOrderId:
+          type: string
+          format: uuid
+          description: Reference to the originating OROS order
+        orosOrderNumber:
+          type: string
+          description: Human-readable OROS order number
+        patientCpid:
+          type: string
+          description: Patient CPID (no PII)
+        priority:
+          $ref: "#/components/schemas/DispensePriority"
+        status:
+          $ref: "#/components/schemas/DispenseStatus"
+        itemCount:
+          type: integer
+          description: Total number of line items
+        dispensedCount:
+          type: integer
+          description: Number of items dispensed so far
+        pharmacistId:
+          type: string
+          format: uuid
+          nullable: true
+        pharmacistName:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        acceptedAt:
+          type: string
+          format: date-time
+          nullable: true
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    DispenseOrderDetail:
+      type: object
+      required:
+        - id
+        - tenantId
+        - facilityId
+        - orosOrderId
+        - orosOrderNumber
+        - patientCpid
+        - priority
+        - status
+        - items
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        facilityId:
+          type: string
+          format: uuid
+        orosOrderId:
+          type: string
+          format: uuid
+        orosOrderNumber:
+          type: string
+        patientCpid:
+          type: string
+        priority:
+          $ref: "#/components/schemas/DispensePriority"
+        status:
+          $ref: "#/components/schemas/DispenseStatus"
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/DispenseItem"
+        pharmacistId:
+          type: string
+          format: uuid
+          nullable: true
+        pharmacistName:
+          type: string
+          nullable: true
+        pickupProof:
+          $ref: "#/components/schemas/PickupProof"
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        acceptedAt:
+          type: string
+          format: date-time
+          nullable: true
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    # -- Dispense Item --
+    DispenseItem:
+      type: object
+      required:
+        - id
+        - dispenseOrderId
+        - drugCode
+        - drugName
+        - quantityRequested
+        - quantityDispensed
+        - quantityRemaining
+        - status
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        dispenseOrderId:
+          type: string
+          format: uuid
+        drugCode:
+          type: string
+          description: Drug code from formulary/catalog
+        drugName:
+          type: string
+          description: Drug display name
+        drugForm:
+          type: string
+          nullable: true
+          description: Dosage form (tablet, capsule, syrup, etc.)
+        drugStrength:
+          type: string
+          nullable: true
+          description: Drug strength (e.g., "500mg", "10mg/5ml")
+        quantityRequested:
+          type: integer
+          minimum: 1
+          description: Quantity ordered by prescriber
+        quantityDispensed:
+          type: integer
+          minimum: 0
+          description: Quantity actually dispensed
+        quantityRemaining:
+          type: integer
+          minimum: 0
+          description: Quantity still to be dispensed
+        status:
+          $ref: "#/components/schemas/ItemStatus"
+        batchNumber:
+          type: string
+          nullable: true
+          description: Batch/lot number of dispensed stock
+        expiryDate:
+          type: string
+          format: date
+          nullable: true
+          description: Expiry date of dispensed batch
+        barcode:
+          type: string
+          nullable: true
+          description: Barcode scanned during pick
+        substitutedFromCode:
+          type: string
+          nullable: true
+          description: Original drug code if this item was substituted
+        substitutedFromName:
+          type: string
+          nullable: true
+          description: Original drug name if this item was substituted
+        substitutionReason:
+          type: string
+          nullable: true
+          description: Reason for substitution
+        fefoSuggestion:
+          $ref: "#/components/schemas/FefoSuggestion"
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    # -- Pick --
+    PickRequest:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/PickItemData"
+        notes:
+          type: string
+
+    PickItemData:
+      type: object
+      required:
+        - itemId
+        - quantityPicked
+        - batchNumber
+        - expiryDate
+      properties:
+        itemId:
+          type: string
+          format: uuid
+          description: ID of the dispense item being picked
+        quantityPicked:
+          type: integer
+          minimum: 1
+          description: Number of units picked
+        batchNumber:
+          type: string
+          description: Batch/lot number of picked stock
+        expiryDate:
+          type: string
+          format: date
+          description: Expiry date of picked batch
+        barcode:
+          type: string
+          description: Barcode scanned for verification
+
+    # -- Backorder --
+    BackorderRequest:
+      type: object
+      required:
+        - notes
+      properties:
+        notes:
+          type: string
+          minLength: 1
+          description: Reason for backorder
+        expectedRestockDate:
+          type: string
+          format: date
+          description: Expected date stock will be available
+
+    # -- Substitution --
+    SubstituteRequest:
+      type: object
+      required:
+        - replacementDrugCode
+        - replacementDrugName
+        - reason
+        - quantity
+        - batchNumber
+        - expiryDate
+      properties:
+        replacementDrugCode:
+          type: string
+          description: Drug code of the replacement
+        replacementDrugName:
+          type: string
+          description: Name of the replacement drug
+        replacementDrugForm:
+          type: string
+          description: Dosage form of replacement
+        replacementDrugStrength:
+          type: string
+          description: Strength of replacement
+        reason:
+          type: string
+          minLength: 1
+          description: Clinical reason for substitution
+        quantity:
+          type: integer
+          minimum: 1
+          description: Quantity of replacement to dispense
+        batchNumber:
+          type: string
+          description: Batch number of replacement stock
+        expiryDate:
+          type: string
+          format: date
+          description: Expiry date of replacement batch
+
+    SubstitutionOption:
+      type: object
+      required:
+        - drugCode
+        - drugName
+        - drugForm
+        - drugStrength
+        - stockOnHand
+        - therapeuticEquivalence
+      properties:
+        drugCode:
+          type: string
+        drugName:
+          type: string
+        drugForm:
+          type: string
+        drugStrength:
+          type: string
+        stockOnHand:
+          type: integer
+          description: Current stock quantity available
+        nearestExpiry:
+          type: string
+          format: date
+          nullable: true
+          description: Nearest expiry date of available stock
+        therapeuticEquivalence:
+          type: string
+          description: Therapeutic equivalence classification (e.g., "A", "B", "AB")
+
+    # -- Barcode --
+    BarcodeResult:
+      type: object
+      required:
+        - drugCode
+        - drugName
+        - drugForm
+        - drugStrength
+        - batchNumber
+        - expiryDate
+      properties:
+        drugCode:
+          type: string
+          description: Decoded drug code
+        drugName:
+          type: string
+          description: Drug name from registry
+        drugForm:
+          type: string
+          description: Dosage form
+        drugStrength:
+          type: string
+          description: Drug strength
+        batchNumber:
+          type: string
+          description: Batch/lot number encoded in barcode
+        expiryDate:
+          type: string
+          format: date
+          description: Expiry date encoded in barcode
+        manufacturer:
+          type: string
+          nullable: true
+          description: Manufacturer name
+        gtin:
+          type: string
+          nullable: true
+          description: Global Trade Item Number
+
+    # -- FEFO --
+    FefoSuggestion:
+      type: object
+      required:
+        - batchNumber
+        - expiryDate
+        - quantityAvailable
+      properties:
+        batchNumber:
+          type: string
+          description: Batch with nearest expiry (First Expiry First Out)
+        expiryDate:
+          type: string
+          format: date
+          description: Expiry date of the suggested batch
+        quantityAvailable:
+          type: integer
+          description: Quantity available in this batch
+        location:
+          type: string
+          nullable: true
+          description: Storage location/bin
+
+    # -- Stock Position --
+    StockPosition:
+      type: object
+      required:
+        - drugCode
+        - drugName
+        - batchNumber
+        - expiryDate
+        - quantityOnHand
+        - quantityReserved
+        - quantityAvailable
+      properties:
+        drugCode:
+          type: string
+        drugName:
+          type: string
+        batchNumber:
+          type: string
+        expiryDate:
+          type: string
+          format: date
+        quantityOnHand:
+          type: integer
+          description: Total physical quantity
+        quantityReserved:
+          type: integer
+          description: Quantity reserved for pending dispenses
+        quantityAvailable:
+          type: integer
+          description: quantityOnHand - quantityReserved
+        location:
+          type: string
+          nullable: true
+
+    # -- Pickup --
+    PickupCreateRequest:
+      type: object
+      required:
+        - method
+      properties:
+        method:
+          $ref: "#/components/schemas/PickupMethod"
+        delegatedTo:
+          type: object
+          description: Delegate details for third-party pickup
+          properties:
+            name:
+              type: string
+              description: Full name of delegate
+            idNumber:
+              type: string
+              description: National ID or passport number
+            relationship:
+              type: string
+              description: Relationship to patient (e.g., spouse, parent, guardian)
+          required:
+            - name
+            - idNumber
+            - relationship
+
+    PickupClaimRequest:
+      type: object
+      required:
+        - token
+      properties:
+        token:
+          type: string
+          description: OTP code, QR data, or biometric token
+        fingerprint:
+          type: string
+          description: Device fingerprint for additional verification
+
+    PickupProof:
+      type: object
+      required:
+        - id
+        - dispenseOrderId
+        - method
+        - token
+        - claimed
+        - createdAt
+        - expiresAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        dispenseOrderId:
+          type: string
+          format: uuid
+        method:
+          $ref: "#/components/schemas/PickupMethod"
+        token:
+          type: string
+          description: Generated OTP/QR token
+        claimed:
+          type: boolean
+          description: Whether pickup has been claimed
+        claimedAt:
+          type: string
+          format: date-time
+          nullable: true
+        claimedBy:
+          type: string
+          nullable: true
+          description: Actor who claimed the pickup
+        delegatedTo:
+          type: object
+          nullable: true
+          properties:
+            name:
+              type: string
+            idNumber:
+              type: string
+            relationship:
+              type: string
+        createdAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+          description: Token expiry time
+
+    # -- Return --
+    ReturnRequest:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/ReturnItemData"
+        notes:
+          type: string
+
+    ReturnItemData:
+      type: object
+      required:
+        - itemId
+        - quantityReturned
+        - reason
+        - condition
+      properties:
+        itemId:
+          type: string
+          format: uuid
+        quantityReturned:
+          type: integer
+          minimum: 1
+        reason:
+          type: string
+          minLength: 1
+        condition:
+          $ref: "#/components/schemas/ItemCondition"
+
+    # -- Wastage --
+    WastageRequest:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/WastageItemData"
+        notes:
+          type: string
+        witnessId:
+          type: string
+          format: uuid
+          description: Actor ID of witness (required for controlled substances)
+
+    WastageItemData:
+      type: object
+      required:
+        - itemId
+        - quantityWasted
+        - reason
+        - disposalMethod
+      properties:
+        itemId:
+          type: string
+          format: uuid
+        quantityWasted:
+          type: integer
+          minimum: 1
+        reason:
+          type: string
+          minLength: 1
+        disposalMethod:
+          $ref: "#/components/schemas/DisposalMethod"
+
+    # -- Reversal --
+    ReversalRequest:
+      type: object
+      required:
+        - reason
+      properties:
+        reason:
+          type: string
+          minLength: 1
+          description: Reason for reversing the dispense
+        authorizedBy:
+          type: string
+          format: uuid
+          description: Actor ID who authorized the reversal
+
+    # -- Reconciliation --
+    ReconcileSummary:
+      type: object
+      required:
+        - id
+        - tenantId
+        - facilityId
+        - itemCode
+        - itemName
+        - internalQuantity
+        - externalQuantity
+        - variance
+        - confidenceScore
+        - status
+        - source
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        facilityId:
+          type: string
+          format: uuid
+        itemCode:
+          type: string
+          description: Drug/item code
+        itemName:
+          type: string
+          description: Drug/item name
+        internalQuantity:
+          type: integer
+          description: Quantity according to internal inventory
+        externalQuantity:
+          type: integer
+          description: Quantity according to external eLMIS
+        variance:
+          type: integer
+          description: internalQuantity - externalQuantity
+        confidenceScore:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 1
+          description: Confidence of the variance match (0.0 to 1.0)
+        status:
+          $ref: "#/components/schemas/ReconcileStockStatus"
+        source:
+          type: string
+          description: Source of external data (e.g., "ELMIS", "DHIS2")
+        resolvedBy:
+          type: string
+          format: uuid
+          nullable: true
+        resolvedAt:
+          type: string
+          format: date-time
+          nullable: true
+        resolutionNotes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+    ResolveRequest:
+      type: object
+      required:
+        - notes
+      properties:
+        notes:
+          type: string
+          minLength: 1
+          description: Resolution explanation
+        adjustmentAction:
+          $ref: "#/components/schemas/AdjustmentAction"
+        adjustedQuantity:
+          type: integer
+          minimum: 0
+          description: Manual adjustment quantity (required when action is MANUAL_ADJUST)
+
+    # -- API Envelope --
+    ApiResponse:
+      type: object
+      required:
+        - success
+      properties:
+        success:
+          type: boolean
+          description: Whether the request was successful
+        data:
+          description: Response payload (type varies by endpoint)
+        error:
+          type: object
+          nullable: true
+          properties:
+            code:
+              type: string
+              description: Machine-readable error code
+            message:
+              type: string
+              description: Human-readable error message
+            details:
+              type: object
+              description: Additional error context
+        meta:
+          type: object
+          nullable: true
+          properties:
+            correlationId:
+              type: string
+              format: uuid
+            timestamp:
+              type: string
+              format: date-time
+
+    PagedReconcileSummary:
+      type: object
+      required:
+        - content
+        - page
+        - size
+        - totalElements
+        - totalPages
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReconcileSummary"
+        page:
+          type: integer
+          description: Current page number (zero-based)
+        size:
+          type: integer
+          description: Page size
+        totalElements:
+          type: integer
+          description: Total number of matching items
+        totalPages:
+          type: integer
+          description: Total number of pages
+
+    PagedResponse:
+      type: object
+      description: Generic paged response wrapper
+      required:
+        - content
+        - page
+        - size
+        - totalElements
+        - totalPages
+      properties:
+        content:
+          type: array
+          items: {}
+          description: Page content (type varies by endpoint)
+        page:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer

@@ -176,6 +176,22 @@ static_resources:
                         - match: { prefix: "/v1/public/share" }
                           route: { cluster: share_slip_service }
 
+                        # ── Pharmacy — Dispensing Service ──
+                        - match: { prefix: "/v1/dispense-orders" }
+                          route: { cluster: pharmacy_service }
+                        - match: { prefix: "/v1/dispense-items" }
+                          route: { cluster: pharmacy_service }
+                        - match: { prefix: "/v1/items/lookup-by-barcode" }
+                          route: { cluster: pharmacy_service }
+                        - match: { prefix: "/v1/pickup" }
+                          route: { cluster: pharmacy_service }
+                        - match: { prefix: "/v1/reconcile/stock" }
+                          route: { cluster: pharmacy_service }
+                        - match: { prefix: "/v1/internal/oros/status" }
+                          route: { cluster: pharmacy_service }
+                        - match: { prefix: "/v1/internal/mushex/charge" }
+                          route: { cluster: pharmacy_service }
+
                         # ── BUTANO — Shared Health Record (HAPI FHIR R4) ──
                         - match: { prefix: "/fhir" }
                           route: { cluster: butano_service }
@@ -467,3 +483,14 @@ static_resources:
               - endpoint:
                   address:
                     socket_address: { address: host.docker.internal, port_value: 8090 }
+
+    # ── Pharmacy — Dispensing Service ──
+    - name: pharmacy_service
+      type: STRICT_DNS
+      load_assignment:
+        cluster_name: pharmacy_service
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: host.docker.internal, port_value: 8096 }
