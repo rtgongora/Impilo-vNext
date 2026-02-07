@@ -8,8 +8,11 @@ import zw.gov.mohcc.impilo.vito.config.VitoProperties;
 import zw.gov.mohcc.impilo.vito.core.CardStatus;
 import zw.gov.mohcc.impilo.vito.core.RevocationReason;
 import zw.gov.mohcc.impilo.vito.core.did.SovereignIdGenerator;
+import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
+import zw.gov.mohcc.impilo.vito.persistence.entity.CardStateTransitionEntity;
 import zw.gov.mohcc.impilo.vito.persistence.entity.EventOutboxEntity;
 import zw.gov.mohcc.impilo.vito.persistence.entity.SmartCardEntity;
+import zw.gov.mohcc.impilo.vito.persistence.repository.CardStateTransitionRepository;
 import zw.gov.mohcc.impilo.vito.persistence.repository.EventOutboxRepository;
 import zw.gov.mohcc.impilo.vito.persistence.repository.SmartCardRepository;
 
@@ -37,15 +40,18 @@ import java.util.UUID;
 public class CardLifecycleService {
 
     private final SmartCardRepository cardRepository;
+    private final CardStateTransitionRepository transitionRepository;
     private final SovereignIdGenerator didGenerator;
     private final VitoProperties properties;
     private final EventOutboxRepository outboxRepository;
 
     public CardLifecycleService(SmartCardRepository cardRepository,
+                                 CardStateTransitionRepository transitionRepository,
                                  SovereignIdGenerator didGenerator,
                                  VitoProperties properties,
                                  EventOutboxRepository outboxRepository) {
         this.cardRepository = cardRepository;
+        this.transitionRepository = transitionRepository;
         this.didGenerator = didGenerator;
         this.properties = properties;
         this.outboxRepository = outboxRepository;
@@ -80,6 +86,7 @@ public class CardLifecycleService {
         card.setExpiresAt(OffsetDateTime.now().plusYears(properties.getCard().getExpiryYears()));
 
         card = cardRepository.save(card);
+        recordTransition(card, null, CardStatus.REQUESTED, requestedBy, null);
 
         publishEvent("SMART_CARD", card.getId().toString(), "CARD_REQUESTED",
                 String.format("{\"cardId\":%d,\"healthId\":\"%s\",\"did\":\"%s\"}",
@@ -96,9 +103,12 @@ public class CardLifecycleService {
         SmartCardEntity card = getCard(tenantId, cardId);
         assertStatus(card, CardStatus.REQUESTED, "print");
 
+        CardStatus from = card.getStatus();
         card.setStatus(CardStatus.PRINTED);
         card.setPrintedAt(OffsetDateTime.now());
-        return cardRepository.save(card);
+        card = cardRepository.save(card);
+        recordTransition(card, from, CardStatus.PRINTED, resolveActor(), null);
+        return card;
     }
 
     /**
@@ -109,9 +119,11 @@ public class CardLifecycleService {
         SmartCardEntity card = getCard(tenantId, cardId);
         assertStatus(card, CardStatus.PRINTED, "activate");
 
+        CardStatus from = card.getStatus();
         card.setStatus(CardStatus.ACTIVE);
         card.setActivatedAt(OffsetDateTime.now());
         card = cardRepository.save(card);
+        recordTransition(card, from, CardStatus.ACTIVE, resolveActor(), null);
 
         publishEvent("SMART_CARD", card.getId().toString(), "CARD_ACTIVATED",
                 String.format("{\"cardId\":%d,\"healthId\":\"%s\"}", card.getId(), card.getHealthId()));
@@ -127,9 +139,12 @@ public class CardLifecycleService {
         SmartCardEntity card = getCard(tenantId, cardId);
         assertStatus(card, CardStatus.ACTIVE, "inactivate");
 
+        CardStatus from = card.getStatus();
         card.setStatus(CardStatus.INACTIVE);
         card.setInactivatedAt(OffsetDateTime.now());
-        return cardRepository.save(card);
+        card = cardRepository.save(card);
+        recordTransition(card, from, CardStatus.INACTIVE, resolveActor(), null);
+        return card;
     }
 
     /**
@@ -144,10 +159,12 @@ public class CardLifecycleService {
             throw new IllegalStateException("Can only revoke ACTIVE or INACTIVE cards");
         }
 
+        CardStatus from = card.getStatus();
         card.setStatus(CardStatus.REVOKED);
         card.setRevokedAt(OffsetDateTime.now());
         card.setRevocationReason(reason.name());
         card = cardRepository.save(card);
+        recordTransition(card, from, CardStatus.REVOKED, resolveActor(), reason.name());
 
         publishEvent("SMART_CARD", card.getId().toString(), "CARD_REVOKED",
                 String.format("{\"cardId\":%d,\"healthId\":\"%s\",\"reason\":\"%s\"}",
@@ -191,6 +208,23 @@ public class CardLifecycleService {
         return String.format("IMP-%d-%s",
                 OffsetDateTime.now().getYear(),
                 UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+    }
+
+    private void recordTransition(SmartCardEntity card, CardStatus from, CardStatus to,
+                                    String actor, String reason) {
+        CardStateTransitionEntity t = new CardStateTransitionEntity();
+        t.setTenantId(card.getTenantId());
+        t.setCardId(card.getId());
+        t.setFromStatus(from != null ? from.name() : null);
+        t.setToStatus(to.name());
+        t.setTransitionedBy(actor);
+        t.setReason(reason);
+        transitionRepository.save(t);
+    }
+
+    private String resolveActor() {
+        var ctx = TrustContextHolder.get();
+        return ctx != null ? ctx.actorId() : "SYSTEM";
     }
 
     private void publishEvent(String aggregateType, String aggregateId,
