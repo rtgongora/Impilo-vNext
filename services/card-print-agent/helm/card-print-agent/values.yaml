@@ -10,28 +10,44 @@ service:
   port: 8091
 
 env:
+  SERVER_PORT: "8091"
   SPRING_KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
   SPRING_KAFKA_CONSUMER_GROUP_ID: "card-print-agent"
-  SERVER_PORT: "8091"
+  POSTGRES_HOST: "postgresql"
+  POSTGRES_PORT: "5432"
+  POSTGRES_USER: "impilo"
+  POSTGRES_PASSWORD: "changeme"
+  KEYCLOAK_URL: "http://keycloak:8080"
+  KEYCLOAK_REALM: "impilo"
+  CARD_PRINT_QR_HMAC_SECRET: "changeme-not-for-production"
+  LANDELA_ADAPTER_URL: "http://landela-adapter-service:8092"
+
+volumes:
+  - name: print-output
+    emptyDir: {}
+
+volumeMounts:
+  - name: print-output
+    mountPath: /tmp/card-print-output
 
 resources:
   requests:
     cpu: 100m
-    memory: 256Mi
+    memory: 384Mi
   limits:
     cpu: 500m
-    memory: 512Mi
+    memory: 768Mi
 
 livenessProbe:
   httpGet:
-    path: /api/status
+    path: /actuator/health
     port: 8091
   initialDelaySeconds: 30
   periodSeconds: 10
 
 readinessProbe:
   httpGet:
-    path: /api/status
+    path: /actuator/health
     port: 8091
   initialDelaySeconds: 15
   periodSeconds: 5

@@ -1,0 +1,20 @@
+{
+  "templateId": "provider-card",
+  "description": "Health Provider SMART Card template — CR-80 format",
+  "cardType": "PROVIDER_CARD",
+  "dimensions": {
+    "widthMm": 85.6,
+    "heightMm": 53.98
+  },
+  "fields": [
+    { "name": "header", "label": "REPUBLIC OF ZIMBABWE", "type": "TEXT", "x": 10, "y": 15, "fontSize": 8, "bold": true },
+    { "name": "subheader", "label": "MINISTRY OF HEALTH AND CHILD CARE", "type": "TEXT", "x": 10, "y": 25, "fontSize": 6, "bold": true },
+    { "name": "cardTitle", "label": "HEALTH PROVIDER SMART CARD", "type": "TEXT", "x": 10, "y": 35, "fontSize": 7, "bold": true },
+    { "name": "fullName", "label": "Full Name", "type": "DATA", "x": 10, "y": 50, "fontSize": 7 },
+    { "name": "practitionerId", "label": "Practitioner ID", "type": "DATA", "x": 10, "y": 60, "fontSize": 6 },
+    { "name": "cadre", "label": "Cadre", "type": "DATA", "x": 10, "y": 70, "fontSize": 6 },
+    { "name": "facility", "label": "Facility", "type": "DATA", "x": 10, "y": 80, "fontSize": 6 },
+    { "name": "photo", "label": "Photo", "type": "IMAGE", "x": 188, "y": 15, "width": 45, "height": 50 },
+    { "name": "qrCode", "label": "QR Code", "type": "QR", "x": 10, "y": 95, "size": 40 }
+  ]
+}

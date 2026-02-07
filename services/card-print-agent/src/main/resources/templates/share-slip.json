@@ -1,0 +1,19 @@
+{
+  "templateId": "share-slip",
+  "description": "Health Record Share Slip — A5 format with QR and instructions",
+  "cardType": "SHARE_SLIP",
+  "dimensions": {
+    "widthMm": 148.0,
+    "heightMm": 210.0
+  },
+  "fields": [
+    { "name": "header", "label": "HEALTH RECORD SHARE SLIP", "type": "TEXT", "x": 20, "y": 30, "fontSize": 14, "bold": true },
+    { "name": "subheader", "label": "Ministry of Health and Child Care", "type": "TEXT", "x": 20, "y": 50, "fontSize": 10 },
+    { "name": "clientName", "label": "Client Name", "type": "DATA", "x": 20, "y": 80, "fontSize": 10 },
+    { "name": "clientId", "label": "Client ID", "type": "DATA", "x": 20, "y": 95, "fontSize": 9 },
+    { "name": "shareScope", "label": "Share Scope", "type": "DATA", "x": 20, "y": 110, "fontSize": 9 },
+    { "name": "validUntil", "label": "Valid Until", "type": "DATA", "x": 20, "y": 125, "fontSize": 9 },
+    { "name": "qrCode", "label": "QR Code", "type": "QR", "x": 140, "y": 160, "size": 120 },
+    { "name": "instructions", "label": "Scan this QR code at any participating health facility to share your health records.", "type": "TEXT", "x": 20, "y": 310, "fontSize": 8 }
+  ]
+}

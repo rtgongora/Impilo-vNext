@@ -1,6 +1,6 @@
 apiVersion: v2
 name: card-print-agent
-description: VITO Card Print Agent — stateless Kafka consumer for CR-80 card PDF generation
+description: Card Print Agent — Job-based SMART Card PDF rendering, QR assertion, and print spooling service
 type: application
 version: 0.1.0
 appVersion: "0.1.0"

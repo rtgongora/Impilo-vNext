@@ -1,0 +1,19 @@
+{
+  "templateId": "client-card",
+  "description": "Client Health SMART Card template — CR-80 format",
+  "cardType": "CLIENT_CARD",
+  "dimensions": {
+    "widthMm": 85.6,
+    "heightMm": 53.98
+  },
+  "fields": [
+    { "name": "header", "label": "REPUBLIC OF ZIMBABWE", "type": "TEXT", "x": 10, "y": 15, "fontSize": 8, "bold": true },
+    { "name": "subheader", "label": "NATIONAL HEALTH SMART CARD", "type": "TEXT", "x": 10, "y": 25, "fontSize": 7, "bold": true },
+    { "name": "fullName", "label": "Full Name", "type": "DATA", "x": 10, "y": 42, "fontSize": 7 },
+    { "name": "clientId", "label": "Client ID (CPID)", "type": "DATA", "x": 10, "y": 52, "fontSize": 6 },
+    { "name": "dateOfBirth", "label": "Date of Birth", "type": "DATA", "x": 10, "y": 62, "fontSize": 6 },
+    { "name": "gender", "label": "Gender", "type": "DATA", "x": 10, "y": 72, "fontSize": 6 },
+    { "name": "photo", "label": "Photo", "type": "IMAGE", "x": 188, "y": 15, "width": 45, "height": 50 },
+    { "name": "qrCode", "label": "QR Code", "type": "QR", "x": 10, "y": 95, "size": 40 }
+  ]
+}

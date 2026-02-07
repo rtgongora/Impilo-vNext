@@ -16,7 +16,10 @@ RUN addgroup -S impilo && adduser -S impilo -G impilo
 WORKDIR /app
 COPY --from=build /build/target/card-print-agent-*.jar app.jar
 
-RUN chown -R impilo:impilo /app
+# Create default spool output directory
+RUN mkdir -p /tmp/card-print-output && \
+    chown -R impilo:impilo /app /tmp/card-print-output
+
 USER impilo
 
 EXPOSE 8091
