@@ -7,6 +7,9 @@ import org.springframework.stereotype.Repository;
 import zw.gov.mohcc.impilo.vito.core.IdentityStatus;
 import zw.gov.mohcc.impilo.vito.persistence.entity.ClientEntity;
 
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
 import java.util.Optional;
 import java.util.UUID;
 
@@ -20,4 +23,17 @@ public interface ClientRepository extends JpaRepository<ClientEntity, Long> {
     Page<ClientEntity> findByTenantId(UUID tenantId, Pageable pageable);
 
     boolean existsByTenantIdAndHealthId(UUID tenantId, UUID healthId);
+
+    Optional<ClientEntity> findByTenantIdAndImpiloId(UUID tenantId, String impiloId);
+
+    Optional<ClientEntity> findByTenantIdAndCrid(UUID tenantId, UUID crid);
+
+    @Query("SELECT c FROM ClientEntity c WHERE c.tenantId = :tenantId " +
+           "AND (LOWER(c.givenName) LIKE LOWER(CONCAT('%', :q, '%')) " +
+           "OR LOWER(c.familyName) LIKE LOWER(CONCAT('%', :q, '%')) " +
+           "OR c.impiloId = :q)")
+    Page<ClientEntity> searchByNameOrImpiloId(
+            @Param("tenantId") UUID tenantId,
+            @Param("q") String query,
+            Pageable pageable);
 }
