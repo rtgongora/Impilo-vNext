@@ -110,6 +110,26 @@ static_resources:
                         - match: { prefix: "/api/v1/results" }
                           route: { cluster: oros_service }
 
+                        # ── Landela Adapter — Document Gateway ──
+                        - match: { prefix: "/api/v1/documents" }
+                          route: { cluster: landela_adapter_service }
+
+                        # ── Credential Verification ──
+                        - match: { prefix: "/api/v1/credentials" }
+                          route: { cluster: credential_verification_service }
+                        - match: { prefix: "/v1/public/verify" }
+                          route: { cluster: credential_verification_service }
+
+                        # ── Card Print Agent ──
+                        - match: { prefix: "/api/v1/print-jobs" }
+                          route: { cluster: card_print_agent }
+
+                        # ── Share Slip ──
+                        - match: { prefix: "/api/v1/share-links" }
+                          route: { cluster: share_slip_service }
+                        - match: { prefix: "/v1/public/share" }
+                          route: { cluster: share_slip_service }
+
                 http_filters:
                   # ---------------------------------------------------------------
                   # External authorization via TSHEPO Authz Service
@@ -319,3 +339,58 @@ static_resources:
               - endpoint:
                   address:
                     socket_address: { address: host.docker.internal, port_value: 8089 }
+
+    # ── Landela Adapter — Document Gateway ──
+    - name: landela_adapter_service
+      type: STRICT_DNS
+      load_assignment:
+        cluster_name: landela_adapter_service
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: host.docker.internal, port_value: 8092 }
+
+    # ── Document Store (internal — called by Landela Adapter) ──
+    - name: document_store_service
+      type: STRICT_DNS
+      load_assignment:
+        cluster_name: document_store_service
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: host.docker.internal, port_value: 8093 }
+
+    # ── Credential Verification ──
+    - name: credential_verification_service
+      type: STRICT_DNS
+      load_assignment:
+        cluster_name: credential_verification_service
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: host.docker.internal, port_value: 8094 }
+
+    # ── Card Print Agent ──
+    - name: card_print_agent
+      type: STRICT_DNS
+      load_assignment:
+        cluster_name: card_print_agent
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: host.docker.internal, port_value: 8091 }
+
+    # ── Share Slip Service ──
+    - name: share_slip_service
+      type: STRICT_DNS
+      load_assignment:
+        cluster_name: share_slip_service
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: host.docker.internal, port_value: 8095 }
