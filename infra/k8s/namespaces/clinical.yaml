@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: impilo-clinical
+  labels:
+    plane: clinical-execution
+    part-of: impilo-vnext

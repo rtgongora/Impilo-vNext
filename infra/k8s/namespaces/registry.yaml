@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: impilo-registry
+  labels:
+    plane: registry-spine
+    part-of: impilo-vnext

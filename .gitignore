@@ -1,0 +1,47 @@
+# ===== Java / Maven =====
+**/target/
+*.class
+*.jar
+*.war
+*.ear
+*.log
+hs_err_pid*
+
+# ===== IDE =====
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+.project
+.classpath
+.settings/
+
+# ===== Node / Frontend =====
+**/node_modules/
+**/.next/
+**/out/
+**/.turbo/
+*.tsbuildinfo
+
+# ===== Environment / Secrets =====
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+credentials.json
+
+# ===== Docker =====
+**/docker-compose.override.yml
+
+# ===== OS =====
+.DS_Store
+Thumbs.db
+
+# ===== Build =====
+**/dist/
+**/build/
+
+# ===== Helm =====
+**/charts/*.tgz

@@ -1,0 +1,6 @@
+apiVersion: v2
+name: pacs-adapter
+description: Impilo vNext — pacs-adapter service
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

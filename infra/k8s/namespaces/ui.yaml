@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: impilo-ui
+  labels:
+    plane: experience
+    part-of: impilo-vnext

@@ -1,0 +1,150 @@
+# =============================================================================
+# Impilo vNext — Envoy Gateway Configuration (Local Development)
+# Production: use Helm-templated version in infra/k8s
+# =============================================================================
+
+admin:
+  address:
+    socket_address:
+      address: 0.0.0.0
+      port_value: 9901
+
+static_resources:
+  listeners:
+    - name: public_listener
+      address:
+        socket_address:
+          address: 0.0.0.0
+          port_value: 10000
+      filter_chains:
+        - filters:
+            - name: envoy.filters.network.http_connection_manager
+              typed_config:
+                "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+                stat_prefix: ingress_http
+                codec_type: AUTO
+                route_config:
+                  name: local_route
+                  virtual_hosts:
+                    - name: impilo_services
+                      domains: ["*"]
+                      routes:
+                        # TSHEPO — Trust & Governance
+                        - match: { prefix: "/api/v1/authorize" }
+                          route: { cluster: tshepo_service }
+                        - match: { prefix: "/api/v1/consent" }
+                          route: { cluster: tshepo_service }
+                        - match: { prefix: "/api/v1/audit" }
+                          route: { cluster: tshepo_service }
+                        # VITO — Client Registry
+                        - match: { prefix: "/api/v1/clients" }
+                          route: { cluster: vito_service }
+                        # VARAPI — Provider Registry
+                        - match: { prefix: "/api/v1/providers" }
+                          route: { cluster: varapi_service }
+                        # TUSO — Facility Registry
+                        - match: { prefix: "/api/v1/facilities" }
+                          route: { cluster: tuso_service }
+                        # PCT — Patient Care Tracker
+                        - match: { prefix: "/api/v1/encounters" }
+                          route: { cluster: pct_service }
+                        - match: { prefix: "/api/v1/queues" }
+                          route: { cluster: pct_service }
+                        # OROS — Orders & Results
+                        - match: { prefix: "/api/v1/orders" }
+                          route: { cluster: oros_service }
+                        - match: { prefix: "/api/v1/worklists" }
+                          route: { cluster: oros_service }
+
+                http_filters:
+                  # External authorization via TSHEPO
+                  - name: envoy.filters.http.ext_authz
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthz
+                      grpc_service:
+                        envoy_grpc:
+                          cluster_name: tshepo_ext_authz
+                        timeout: 0.5s
+                      failure_mode_allow: false
+                      with_request_body:
+                        max_request_bytes: 8192
+                        allow_partial_message: true
+                  - name: envoy.filters.http.router
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+
+  clusters:
+    - name: tshepo_service
+      type: STRICT_DNS
+      load_assignment:
+        cluster_name: tshepo_service
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: host.docker.internal, port_value: 8081 }
+
+    - name: tshepo_ext_authz
+      type: STRICT_DNS
+      typed_extension_protocol_options:
+        envoy.extensions.upstreams.http.v3.HttpProtocolOptions:
+          "@type": type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions
+          explicit_http_config:
+            http2_protocol_options: {}
+      load_assignment:
+        cluster_name: tshepo_ext_authz
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: host.docker.internal, port_value: 8081 }
+
+    - name: vito_service
+      type: STRICT_DNS
+      load_assignment:
+        cluster_name: vito_service
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: host.docker.internal, port_value: 8082 }
+
+    - name: varapi_service
+      type: STRICT_DNS
+      load_assignment:
+        cluster_name: varapi_service
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: host.docker.internal, port_value: 8083 }
+
+    - name: tuso_service
+      type: STRICT_DNS
+      load_assignment:
+        cluster_name: tuso_service
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: host.docker.internal, port_value: 8084 }
+
+    - name: pct_service
+      type: STRICT_DNS
+      load_assignment:
+        cluster_name: pct_service
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: host.docker.internal, port_value: 8088 }
+
+    - name: oros_service
+      type: STRICT_DNS
+      load_assignment:
+        cluster_name: oros_service
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: host.docker.internal, port_value: 8089 }

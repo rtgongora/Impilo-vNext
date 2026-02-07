@@ -1,0 +1,6 @@
+apiVersion: v2
+name: varapi
+description: Impilo vNext — varapi service
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

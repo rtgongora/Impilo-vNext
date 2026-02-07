@@ -1,0 +1,6 @@
+apiVersion: v2
+name: fhir-gateway
+description: Impilo vNext — fhir-gateway service
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
