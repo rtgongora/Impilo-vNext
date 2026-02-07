@@ -51,7 +51,7 @@ tshepo:
     # AES-256-GCM key for MOSIP link_ref encryption (Base64-encoded, 32 bytes)
     mosip-kek: ${TSHEPO_MOSIP_KEK:Y2hhbmdlbWUtZ2VuZXJhdGUtYS1yZWFsLWtlaw==}
     # URL of the keys-service for Ed25519 signing
-    keys-service-url: ${TSHEPO_KEYS_SERVICE_URL:http://localhost:8086}
+    keys-service-url: ${TSHEPO_KEYS_SERVICE_URL:http://localhost:8184}
     # URL of VITO service for Impilo ID → Health ID resolution
     vito-service-url: ${VITO_SERVICE_URL:http://localhost:8082}
   outbox:

@@ -58,9 +58,9 @@ tshepo:
   outbox:
     poll-interval-ms: 1000
   services:
-    identity-url: ${TSHEPO_IDENTITY_URL:http://localhost:8186}
-    keys-url: ${TSHEPO_KEYS_URL:http://localhost:8187}
-    authz-url: ${TSHEPO_AUTHZ_URL:http://localhost:8188}
+    identity-url: ${TSHEPO_IDENTITY_URL:http://localhost:8181}
+    keys-url: ${TSHEPO_KEYS_URL:http://localhost:8184}
+    authz-url: ${TSHEPO_AUTHZ_URL:http://localhost:8081}
   kafka:
     topic: platform.offline.events
 

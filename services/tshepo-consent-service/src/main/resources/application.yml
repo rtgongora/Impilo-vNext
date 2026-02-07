@@ -7,7 +7,7 @@ spring:
   application:
     name: tshepo-consent-service
   datasource:
-    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/impilo
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/tshepo_consent
     username: ${POSTGRES_USER:impilo}
     password: ${POSTGRES_PASSWORD:changeme}
     hikari:

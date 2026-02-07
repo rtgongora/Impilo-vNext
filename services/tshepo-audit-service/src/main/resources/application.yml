@@ -56,7 +56,7 @@ spring:
 # --- TSHEPO Audit specific ---
 tshepo-audit:
   keys-service:
-    base-url: ${TSHEPO_KEYS_SERVICE_URL:http://localhost:8181}
+    base-url: ${TSHEPO_KEYS_SERVICE_URL:http://localhost:8184}
     sign-endpoint: /v1/sign
 
 management:

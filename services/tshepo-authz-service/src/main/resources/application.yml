@@ -7,7 +7,7 @@ spring:
   application:
     name: tshepo-authz-service
   datasource:
-    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/tshepo
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/tshepo_authz
     username: ${POSTGRES_USER:impilo}
     password: ${POSTGRES_PASSWORD:changeme}
     hikari:
@@ -77,15 +77,15 @@ tshepo:
       unknown-device-score: 70
       blocked-device-score: 100
     # Consent service
-    consent-service-url: ${TSHEPO_CONSENT_URL:http://localhost:8081}
+    consent-service-url: ${TSHEPO_CONSENT_URL:http://localhost:8182}
     consent-evaluate-path: /v1/consent/evaluate
     # Identity service
-    identity-service-url: ${TSHEPO_IDENTITY_URL:http://localhost:8082}
+    identity-service-url: ${TSHEPO_IDENTITY_URL:http://localhost:8181}
     # Audit service
-    audit-service-url: ${TSHEPO_AUDIT_URL:http://localhost:8086}
+    audit-service-url: ${TSHEPO_AUDIT_URL:http://localhost:8183}
     audit-kafka-topic: tshepo.audit.events
     # Keys service
-    keys-service-url: ${TSHEPO_KEYS_URL:http://localhost:8087}
+    keys-service-url: ${TSHEPO_KEYS_URL:http://localhost:8184}
     # eSignet OIDC (optional, for citizen auth)
     esignet:
       enabled: ${ESIGNET_ENABLED:false}
