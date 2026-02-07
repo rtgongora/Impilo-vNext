@@ -63,6 +63,7 @@
         <module>jobs-service</module>
         <module>integration-hub</module>
         <module>offline-sync-service</module>
+        <module>card-print-agent</module>
     </modules>
 
     <dependencyManagement>
