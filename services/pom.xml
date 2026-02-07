@@ -129,6 +129,13 @@
                 <version>${mapstruct.version}</version>
             </dependency>
 
+            <!-- Cryptography (Argon2id via Bouncy Castle — required by Spring Security) -->
+            <dependency>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bcprov-jdk18on</artifactId>
+                <version>${bouncycastle.version}</version>
+            </dependency>
+
             <!-- Observability -->
             <dependency>
                 <groupId>io.opentelemetry</groupId>

@@ -36,8 +36,16 @@ static_resources:
                           route: { cluster: tshepo_service }
                         - match: { prefix: "/api/v1/audit" }
                           route: { cluster: tshepo_service }
+                        - match: { prefix: "/api/v1/step-up" }
+                          route: { cluster: tshepo_service }
+                        - match: { prefix: "/api/v1/device-risk" }
+                          route: { cluster: tshepo_service }
                         # VITO — Client Registry
                         - match: { prefix: "/api/v1/clients" }
+                          route: { cluster: vito_service }
+                        - match: { prefix: "/api/v1/identity" }
+                          route: { cluster: vito_service }
+                        - match: { prefix: "/api/v1/recovery" }
                           route: { cluster: vito_service }
                         # VARAPI — Provider Registry
                         - match: { prefix: "/api/v1/providers" }
@@ -45,6 +53,11 @@ static_resources:
                         # TUSO — Facility Registry
                         - match: { prefix: "/api/v1/facilities" }
                           route: { cluster: tuso_service }
+                        - match: { prefix: "/api/v1/workspaces" }
+                          route: { cluster: tuso_service }
+                        # ZIBO — Terminology
+                        - match: { prefix: "/api/v1/terminology" }
+                          route: { cluster: zibo_service }
                         # PCT — Patient Care Tracker
                         - match: { prefix: "/api/v1/encounters" }
                           route: { cluster: pct_service }
@@ -55,16 +68,44 @@ static_resources:
                           route: { cluster: oros_service }
                         - match: { prefix: "/api/v1/worklists" }
                           route: { cluster: oros_service }
+                        - match: { prefix: "/api/v1/results" }
+                          route: { cluster: oros_service }
 
                 http_filters:
-                  # External authorization via TSHEPO
+                  # ---------------------------------------------------------------
+                  # External authorization via TSHEPO (HTTP, not gRPC)
+                  # TSHEPO is a Spring Boot REST service — use http_service.
+                  # ---------------------------------------------------------------
                   - name: envoy.filters.http.ext_authz
                     typed_config:
                       "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthz
-                      grpc_service:
-                        envoy_grpc:
-                          cluster_name: tshepo_ext_authz
-                        timeout: 0.5s
+                      http_service:
+                        server_uri:
+                          uri: http://host.docker.internal:8081
+                          cluster: tshepo_service
+                          timeout: 0.5s
+                        authorization_request:
+                          allowed_headers:
+                            patterns:
+                              - exact: "authorization"
+                              - exact: "x-tenant-id"
+                              - exact: "x-actor-id"
+                              - exact: "x-actor-type"
+                              - exact: "x-purpose-of-use"
+                              - exact: "x-device-fingerprint"
+                              - exact: "x-correlation-id"
+                              - exact: "x-facility-id"
+                              - exact: "x-workspace-id"
+                              - exact: "x-shift-id"
+                        authorization_response:
+                          allowed_upstream_headers:
+                            patterns:
+                              - exact: "x-obligations"
+                              - exact: "x-decision"
+                              - exact: "x-max-scope"
+                              - exact: "x-mask-fields"
+                              - exact: "x-logging-level"
+                        path_prefix: "/v1/authorize"
                       failure_mode_allow: false
                       with_request_body:
                         max_request_bytes: 8192
@@ -78,21 +119,6 @@ static_resources:
       type: STRICT_DNS
       load_assignment:
         cluster_name: tshepo_service
-        endpoints:
-          - lb_endpoints:
-              - endpoint:
-                  address:
-                    socket_address: { address: host.docker.internal, port_value: 8081 }
-
-    - name: tshepo_ext_authz
-      type: STRICT_DNS
-      typed_extension_protocol_options:
-        envoy.extensions.upstreams.http.v3.HttpProtocolOptions:
-          "@type": type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions
-          explicit_http_config:
-            http2_protocol_options: {}
-      load_assignment:
-        cluster_name: tshepo_ext_authz
         endpoints:
           - lb_endpoints:
               - endpoint:
@@ -128,6 +154,16 @@ static_resources:
               - endpoint:
                   address:
                     socket_address: { address: host.docker.internal, port_value: 8084 }
+
+    - name: zibo_service
+      type: STRICT_DNS
+      load_assignment:
+        cluster_name: zibo_service
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: host.docker.internal, port_value: 8085 }
 
     - name: pct_service
       type: STRICT_DNS
