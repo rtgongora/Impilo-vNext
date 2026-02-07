@@ -30,5 +30,10 @@ CREATE DATABASE tshepo_consent;
 CREATE DATABASE tshepo_audit;
 CREATE DATABASE tshepo_keys;
 CREATE DATABASE tshepo_offline;
+-- Landela-Integrated Credential & Document Suite
+CREATE DATABASE landela_adapter;
+CREATE DATABASE credential_verification;
+CREATE DATABASE share_slip;
+CREATE DATABASE card_print;
 CREATE DATABASE keycloak;
 CREATE DATABASE butano;

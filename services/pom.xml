@@ -68,6 +68,10 @@
         <module>integration-hub</module>
         <module>offline-sync-service</module>
         <module>card-print-agent</module>
+        <!-- Landela-Integrated Credential & Document Suite -->
+        <module>landela-adapter-service</module>
+        <module>credential-verification-service</module>
+        <module>share-slip-service</module>
         <!-- TSHEPO decomposition (6 sub-services) -->
         <module>tshepo-authz-service</module>
         <module>tshepo-identity-service</module>
