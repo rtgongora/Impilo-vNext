@@ -1,0 +1,70 @@
+server:
+  port: 8094
+
+spring:
+  application:
+    name: credential-verification-service
+
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/credential_verification
+    username: ${POSTGRES_USER:impilo}
+    password: ${POSTGRES_PASSWORD:changeme}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        default_schema: credential_verification
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
+
+  flyway:
+    enabled: true
+    schemas: credential_verification
+    default-schema: credential_verification
+    locations: classpath:db/migration
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8080/realms/impilo
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+# Credential Verification Service configuration
+credential:
+  signing:
+    key-store-path: keys/ed25519.pem
+    algorithm: Ed25519
+  verify:
+    base-url: http://localhost:8094/v1/public/verify
+  pdf:
+    issuer-name: "Ministry of Health and Child Care, Zimbabwe"
+    logo-path:
+  outbox:
+    poll-interval-ms: 1000
