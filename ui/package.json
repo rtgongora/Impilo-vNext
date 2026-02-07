@@ -8,13 +8,17 @@
     "one-ui-shell",
     "ops-console",
     "ehr",
-    "portal"
+    "portal",
+    "ops-docs",
+    "self-service"
   ],
   "scripts": {
     "dev:shell": "npm -w one-ui-shell run dev",
     "dev:ops": "npm -w ops-console run dev",
     "dev:ehr": "npm -w ehr run dev",
     "dev:portal": "npm -w portal run dev",
+    "dev:docs": "npm -w ops-docs run dev",
+    "dev:self": "npm -w self-service run dev",
     "build": "turbo run build",
     "lint": "turbo run lint",
     "type-check": "turbo run type-check"
