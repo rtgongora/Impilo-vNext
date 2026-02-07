@@ -1,0 +1,39 @@
+replicaCount: 2
+
+image:
+  repository: impilo/tshepo-audit-service
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 8183
+
+env:
+  SPRING_DATASOURCE_URL: jdbc:postgresql://postgresql:5432/tshepo_audit
+  SPRING_DATASOURCE_USERNAME: impilo
+  SPRING_DATASOURCE_PASSWORD: impilo
+  SPRING_DATA_REDIS_HOST: redis
+  SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+  SPRING_KAFKA_CONSUMER_GROUP_ID: tshepo-audit
+  TSHEPO_KEYS_URL: http://tshepo-keys-service:8184
+
+resources:
+  requests:
+    cpu: 200m
+    memory: 384Mi
+  limits:
+    cpu: 500m
+    memory: 768Mi
+
+livenessProbe:
+  httpGet:
+    path: /actuator/health/liveness
+    port: 8183
+  initialDelaySeconds: 30
+
+readinessProbe:
+  httpGet:
+    path: /actuator/health/readiness
+    port: 8183
+  initialDelaySeconds: 15

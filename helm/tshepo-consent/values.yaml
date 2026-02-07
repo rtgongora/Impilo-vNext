@@ -1,0 +1,37 @@
+replicaCount: 2
+
+image:
+  repository: impilo/tshepo-consent-service
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 8182
+
+env:
+  SPRING_DATASOURCE_URL: jdbc:postgresql://postgresql:5432/tshepo_consent
+  SPRING_DATASOURCE_USERNAME: impilo
+  SPRING_DATASOURCE_PASSWORD: impilo
+  SPRING_DATA_REDIS_HOST: redis
+  SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+
+resources:
+  requests:
+    cpu: 200m
+    memory: 384Mi
+  limits:
+    cpu: 500m
+    memory: 768Mi
+
+livenessProbe:
+  httpGet:
+    path: /actuator/health/liveness
+    port: 8182
+  initialDelaySeconds: 30
+
+readinessProbe:
+  httpGet:
+    path: /actuator/health/readiness
+    port: 8182
+  initialDelaySeconds: 15

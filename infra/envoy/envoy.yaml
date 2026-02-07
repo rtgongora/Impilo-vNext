@@ -1,6 +1,9 @@
 # =============================================================================
 # Impilo vNext — Envoy Gateway Configuration (Local Development)
 # Production: use Helm-templated version in infra/k8s
+#
+# TSHEPO decomposition: 6 sub-services behind Envoy.
+# ext_authz calls tshepo-authz-service (gRPC primary, HTTP fallback).
 # =============================================================================
 
 admin:
@@ -29,41 +32,69 @@ static_resources:
                     - name: impilo_services
                       domains: ["*"]
                       routes:
-                        # TSHEPO — Trust & Governance
+                        # ── TSHEPO Authz (ext_authz + break-glass + step-up + policies + devices) ──
                         - match: { prefix: "/api/v1/authorize" }
-                          route: { cluster: tshepo_service }
-                        - match: { prefix: "/api/v1/consent" }
-                          route: { cluster: tshepo_service }
-                        - match: { prefix: "/api/v1/audit" }
-                          route: { cluster: tshepo_service }
+                          route: { cluster: tshepo_authz_service }
                         - match: { prefix: "/api/v1/step-up" }
-                          route: { cluster: tshepo_service }
-                        - match: { prefix: "/api/v1/device-risk" }
-                          route: { cluster: tshepo_service }
-                        # VITO — Client Registry
-                        - match: { prefix: "/api/v1/clients" }
-                          route: { cluster: vito_service }
+                          route: { cluster: tshepo_authz_service }
+                        - match: { prefix: "/api/v1/break-glass" }
+                          route: { cluster: tshepo_authz_service }
+                        - match: { prefix: "/api/v1/policies" }
+                          route: { cluster: tshepo_authz_service }
+                        - match: { prefix: "/api/v1/devices" }
+                          route: { cluster: tshepo_authz_service }
+
+                        # ── TSHEPO Identity (resolution, CPID, tokens, MOSIP) ──
                         - match: { prefix: "/api/v1/identity" }
+                          route: { cluster: tshepo_identity_service }
+
+                        # ── TSHEPO Consent (FHIR Consent CRUD + evaluation + share-links) ──
+                        - match: { prefix: "/api/v1/consent" }
+                          route: { cluster: tshepo_consent_service }
+
+                        # ── TSHEPO Audit (events, access-history, export, chain verify) ──
+                        - match: { prefix: "/api/v1/audit" }
+                          route: { cluster: tshepo_audit_service }
+
+                        # ── TSHEPO Keys (JWKS, key management, signing, certificates) ──
+                        - match: { prefix: "/api/v1/keys" }
+                          route: { cluster: tshepo_keys_service }
+                        - match: { prefix: "/api/v1/sign" }
+                          route: { cluster: tshepo_keys_service }
+                        - match: { prefix: "/api/v1/certificates" }
+                          route: { cluster: tshepo_keys_service }
+
+                        # ── TSHEPO Offline (capability tokens, packs, reconciliation) ──
+                        - match: { prefix: "/api/v1/offline" }
+                          route: { cluster: tshepo_offline_service }
+
+                        # ── VITO — Client Registry ──
+                        - match: { prefix: "/api/v1/clients" }
                           route: { cluster: vito_service }
                         - match: { prefix: "/api/v1/recovery" }
                           route: { cluster: vito_service }
-                        # VARAPI — Provider Registry
+
+                        # ── VARAPI — Provider Registry ──
                         - match: { prefix: "/api/v1/providers" }
                           route: { cluster: varapi_service }
-                        # TUSO — Facility Registry
+
+                        # ── TUSO — Facility Registry ──
                         - match: { prefix: "/api/v1/facilities" }
                           route: { cluster: tuso_service }
                         - match: { prefix: "/api/v1/workspaces" }
                           route: { cluster: tuso_service }
-                        # ZIBO — Terminology
+
+                        # ── ZIBO — Terminology ──
                         - match: { prefix: "/api/v1/terminology" }
                           route: { cluster: zibo_service }
-                        # PCT — Patient Care Tracker
+
+                        # ── PCT — Patient Care Tracker ──
                         - match: { prefix: "/api/v1/encounters" }
                           route: { cluster: pct_service }
                         - match: { prefix: "/api/v1/queues" }
                           route: { cluster: pct_service }
-                        # OROS — Orders & Results
+
+                        # ── OROS — Orders & Results ──
                         - match: { prefix: "/api/v1/orders" }
                           route: { cluster: oros_service }
                         - match: { prefix: "/api/v1/worklists" }
@@ -73,39 +104,46 @@ static_resources:
 
                 http_filters:
                   # ---------------------------------------------------------------
-                  # External authorization via TSHEPO (HTTP, not gRPC)
-                  # TSHEPO is a Spring Boot REST service — use http_service.
+                  # External authorization via TSHEPO Authz Service
+                  # gRPC preferred (faster, typed); HTTP fallback available.
+                  # Envoy calls tshepo-authz-service on EVERY request.
                   # ---------------------------------------------------------------
                   - name: envoy.filters.http.ext_authz
                     typed_config:
                       "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthz
-                      http_service:
-                        server_uri:
-                          uri: http://host.docker.internal:8081
-                          cluster: tshepo_service
-                          timeout: 0.5s
-                        authorization_request:
-                          allowed_headers:
-                            patterns:
-                              - exact: "authorization"
-                              - exact: "x-tenant-id"
-                              - exact: "x-actor-id"
-                              - exact: "x-actor-type"
-                              - exact: "x-purpose-of-use"
-                              - exact: "x-device-fingerprint"
-                              - exact: "x-correlation-id"
-                              - exact: "x-facility-id"
-                              - exact: "x-workspace-id"
-                              - exact: "x-shift-id"
-                        authorization_response:
-                          allowed_upstream_headers:
-                            patterns:
-                              - exact: "x-obligations"
-                              - exact: "x-decision"
-                              - exact: "x-max-scope"
-                              - exact: "x-mask-fields"
-                              - exact: "x-logging-level"
-                        path_prefix: "/v1/authorize"
+                      transport_api_version: V3
+                      grpc_service:
+                        envoy_grpc:
+                          cluster_name: tshepo_authz_grpc
+                        timeout: 0.5s
+                      # Fallback: HTTP service if gRPC is unavailable
+                      # http_service:
+                      #   server_uri:
+                      #     uri: http://host.docker.internal:8081
+                      #     cluster: tshepo_authz_service
+                      #     timeout: 0.5s
+                      #   path_prefix: "/v1/authorize"
+                      #   authorization_request:
+                      #     allowed_headers:
+                      #       patterns:
+                      #         - exact: "authorization"
+                      #         - exact: "x-tenant-id"
+                      #         - exact: "x-actor-id"
+                      #         - exact: "x-actor-type"
+                      #         - exact: "x-purpose-of-use"
+                      #         - exact: "x-device-fingerprint"
+                      #         - exact: "x-correlation-id"
+                      #         - exact: "x-facility-id"
+                      #         - exact: "x-workspace-id"
+                      #         - exact: "x-shift-id"
+                      #   authorization_response:
+                      #     allowed_upstream_headers:
+                      #       patterns:
+                      #         - exact: "x-obligations"
+                      #         - exact: "x-decision"
+                      #         - exact: "x-max-scope"
+                      #         - exact: "x-mask-fields"
+                      #         - exact: "x-logging-level"
                       failure_mode_allow: false
                       with_request_body:
                         max_request_bytes: 8192
@@ -115,6 +153,89 @@ static_resources:
                       "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
 
   clusters:
+    # ── TSHEPO Authz (HTTP — for routes) ──
+    - name: tshepo_authz_service
+      type: STRICT_DNS
+      load_assignment:
+        cluster_name: tshepo_authz_service
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: host.docker.internal, port_value: 8081 }
+
+    # ── TSHEPO Authz (gRPC — for ext_authz) ──
+    - name: tshepo_authz_grpc
+      type: STRICT_DNS
+      typed_extension_protocol_options:
+        envoy.extensions.upstreams.http.v3.HttpProtocolOptions:
+          "@type": type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions
+          explicit_http_config:
+            http2_protocol_options: {}
+      load_assignment:
+        cluster_name: tshepo_authz_grpc
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: host.docker.internal, port_value: 9090 }
+
+    # ── TSHEPO Identity ──
+    - name: tshepo_identity_service
+      type: STRICT_DNS
+      load_assignment:
+        cluster_name: tshepo_identity_service
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: host.docker.internal, port_value: 8181 }
+
+    # ── TSHEPO Consent ──
+    - name: tshepo_consent_service
+      type: STRICT_DNS
+      load_assignment:
+        cluster_name: tshepo_consent_service
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: host.docker.internal, port_value: 8182 }
+
+    # ── TSHEPO Audit ──
+    - name: tshepo_audit_service
+      type: STRICT_DNS
+      load_assignment:
+        cluster_name: tshepo_audit_service
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: host.docker.internal, port_value: 8183 }
+
+    # ── TSHEPO Keys ──
+    - name: tshepo_keys_service
+      type: STRICT_DNS
+      load_assignment:
+        cluster_name: tshepo_keys_service
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: host.docker.internal, port_value: 8184 }
+
+    # ── TSHEPO Offline ──
+    - name: tshepo_offline_service
+      type: STRICT_DNS
+      load_assignment:
+        cluster_name: tshepo_offline_service
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: host.docker.internal, port_value: 8185 }
+
+    # ── Legacy TSHEPO (kept for backwards compat during migration) ──
     - name: tshepo_service
       type: STRICT_DNS
       load_assignment:
@@ -125,6 +246,7 @@ static_resources:
                   address:
                     socket_address: { address: host.docker.internal, port_value: 8081 }
 
+    # ── VITO — Client Registry ──
     - name: vito_service
       type: STRICT_DNS
       load_assignment:
@@ -135,6 +257,7 @@ static_resources:
                   address:
                     socket_address: { address: host.docker.internal, port_value: 8082 }
 
+    # ── VARAPI — Provider Registry ──
     - name: varapi_service
       type: STRICT_DNS
       load_assignment:
@@ -145,6 +268,7 @@ static_resources:
                   address:
                     socket_address: { address: host.docker.internal, port_value: 8083 }
 
+    # ── TUSO — Facility Registry ──
     - name: tuso_service
       type: STRICT_DNS
       load_assignment:
@@ -155,6 +279,7 @@ static_resources:
                   address:
                     socket_address: { address: host.docker.internal, port_value: 8084 }
 
+    # ── ZIBO — Terminology ──
     - name: zibo_service
       type: STRICT_DNS
       load_assignment:
@@ -165,6 +290,7 @@ static_resources:
                   address:
                     socket_address: { address: host.docker.internal, port_value: 8085 }
 
+    # ── PCT — Patient Care Tracker ──
     - name: pct_service
       type: STRICT_DNS
       load_assignment:
@@ -175,6 +301,7 @@ static_resources:
                   address:
                     socket_address: { address: host.docker.internal, port_value: 8088 }
 
+    # ── OROS — Orders & Results ──
     - name: oros_service
       type: STRICT_DNS
       load_assignment:

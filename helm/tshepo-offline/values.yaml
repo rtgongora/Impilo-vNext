@@ -1,0 +1,40 @@
+replicaCount: 1
+
+image:
+  repository: impilo/tshepo-offline-service
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 8185
+
+env:
+  SPRING_DATASOURCE_URL: jdbc:postgresql://postgresql:5432/tshepo_offline
+  SPRING_DATASOURCE_USERNAME: impilo
+  SPRING_DATASOURCE_PASSWORD: impilo
+  SPRING_DATA_REDIS_HOST: redis
+  SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+  TSHEPO_IDENTITY_URL: http://tshepo-identity-service:8181
+  TSHEPO_KEYS_URL: http://tshepo-keys-service:8184
+  TSHEPO_AUTHZ_URL: http://tshepo-authz-service:8081
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 250m
+    memory: 512Mi
+
+livenessProbe:
+  httpGet:
+    path: /actuator/health/liveness
+    port: 8185
+  initialDelaySeconds: 30
+
+readinessProbe:
+  httpGet:
+    path: /actuator/health/readiness
+    port: 8185
+  initialDelaySeconds: 15

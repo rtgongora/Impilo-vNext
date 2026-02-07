@@ -38,6 +38,10 @@
         <opentelemetry.version>1.41.0</opentelemetry.version>
         <mapstruct.version>1.6.2</mapstruct.version>
         <springdoc.version>2.6.0</springdoc.version>
+        <nimbus-jose.version>9.40</nimbus-jose.version>
+        <grpc.version>1.65.1</grpc.version>
+        <grpc-spring-boot.version>3.1.0.RELEASE</grpc-spring-boot.version>
+        <protobuf.version>3.25.3</protobuf.version>
     </properties>
 
     <modules>
@@ -64,6 +68,16 @@
         <module>integration-hub</module>
         <module>offline-sync-service</module>
         <module>card-print-agent</module>
+        <!-- TSHEPO decomposition (6 sub-services) -->
+        <module>tshepo-authz-service</module>
+        <module>tshepo-identity-service</module>
+        <module>tshepo-consent-service</module>
+        <module>tshepo-audit-service</module>
+        <module>tshepo-keys-service</module>
+        <module>tshepo-offline-service</module>
+        <!-- TSHEPO shared libraries (under libs/) -->
+        <module>../libs/tshepo-contracts</module>
+        <module>../libs/tshepo-sdk</module>
     </modules>
 
     <dependencyManagement>
@@ -137,6 +151,52 @@
                 <groupId>org.bouncycastle</groupId>
                 <artifactId>bcprov-jdk18on</artifactId>
                 <version>${bouncycastle.version}</version>
+            </dependency>
+
+            <!-- Nimbus JOSE (JWT/JWS/JWK) -->
+            <dependency>
+                <groupId>com.nimbusds</groupId>
+                <artifactId>nimbus-jose-jwt</artifactId>
+                <version>${nimbus-jose.version}</version>
+            </dependency>
+
+            <!-- gRPC -->
+            <dependency>
+                <groupId>io.grpc</groupId>
+                <artifactId>grpc-netty-shaded</artifactId>
+                <version>${grpc.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.grpc</groupId>
+                <artifactId>grpc-protobuf</artifactId>
+                <version>${grpc.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.grpc</groupId>
+                <artifactId>grpc-stub</artifactId>
+                <version>${grpc.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.devh</groupId>
+                <artifactId>grpc-server-spring-boot-starter</artifactId>
+                <version>${grpc-spring-boot.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.protobuf</groupId>
+                <artifactId>protobuf-java</artifactId>
+                <version>${protobuf.version}</version>
+            </dependency>
+
+            <!-- TSHEPO shared libraries -->
+            <dependency>
+                <groupId>zw.gov.mohcc.impilo</groupId>
+                <artifactId>tshepo-contracts</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>zw.gov.mohcc.impilo</groupId>
+                <artifactId>tshepo-sdk</artifactId>
+                <version>${project.version}</version>
             </dependency>
 
             <!-- Observability -->

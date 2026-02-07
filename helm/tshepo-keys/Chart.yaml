@@ -1,0 +1,6 @@
+apiVersion: v2
+name: tshepo-keys
+description: TSHEPO Service-to-Service Trust & Key Management
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

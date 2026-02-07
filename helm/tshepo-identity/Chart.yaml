@@ -1,0 +1,6 @@
+apiVersion: v2
+name: tshepo-identity
+description: TSHEPO Identity Resolution & Tokenisation
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
