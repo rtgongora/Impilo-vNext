@@ -86,7 +86,7 @@ public class EncounterService {
         encounter.setWorkspaceId(ctx.workspaceId());
         encounter.setEncounterType(encounterType);
         encounter.setStatus("STARTED");
-        encounter.setAssignedProvider(ctx.actorId());
+        encounter.setAssignedProviderId(ctx.actorId());
         encounter.setStartedAt(OffsetDateTime.now());
 
         encounter = encounterRepository.save(encounter);

@@ -90,9 +90,8 @@ public class TriageService {
         TriageRecordEntity record = new TriageRecordEntity();
         record.setJourneyId(journeyId);
         record.setTenantId(ctx.tenantId());
-        record.setFacilityId(journey.getFacilityId());
         record.setAcuity(acuity);
-        record.setVitalsJson(vitalsJson);
+        record.setVitals(vitalsJson);
         record.setNotes(notes);
         record.setTriagedBy(ctx.actorId());
         record.setCreatedAt(OffsetDateTime.now());
