@@ -1,0 +1,6 @@
+apiVersion: v2
+name: ubomi
+description: Impilo vNext — Ubomi Civil Registration & Vital Statistics Interface
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
