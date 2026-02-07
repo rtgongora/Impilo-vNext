@@ -73,7 +73,7 @@ class PatientJourneyIntegrationTest {
     void setUp() {
         objectMapper = new ObjectMapper();
 
-        telemetryService = new TelemetryService(telemetryRepository);
+        telemetryService = new TelemetryService(telemetryRepository, objectMapper);
 
         journeyStateMachine = new JourneyStateMachine(
                 journeyRepository, outboxRepository, telemetryService, objectMapper);

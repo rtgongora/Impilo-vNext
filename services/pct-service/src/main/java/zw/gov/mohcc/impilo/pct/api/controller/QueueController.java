@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.pct.api.dto.EnqueueRequest;
 import zw.gov.mohcc.impilo.pct.core.QueueEngine;
+import zw.gov.mohcc.impilo.pct.domain.QueueItemStatus;
 import zw.gov.mohcc.impilo.pct.persistence.entity.QueueEntity;
 import zw.gov.mohcc.impilo.pct.persistence.entity.QueueItemEntity;
 import zw.gov.mohcc.impilo.pct.persistence.repository.QueueItemRepository;
@@ -132,14 +133,16 @@ public class QueueController {
 
         List<QueueItemEntity> items;
         if (status != null && !status.isBlank()) {
+            QueueItemStatus queueStatus = QueueItemStatus.valueOf(status.toUpperCase());
             items = queueItemRepository
                     .findByTenantIdAndQueueIdAndStatusOrderByPriorityDescCreatedAtAsc(
-                            ctx.tenantId(), queueId, status);
+                            ctx.tenantId(), queueId, queueStatus);
         } else {
             items = queueItemRepository
                     .findByTenantIdAndQueueIdAndStatusInOrderByPriorityDescCreatedAtAsc(
                             ctx.tenantId(), queueId,
-                            List.of("WAITING", "CALLED", "IN_SERVICE", "PAUSED"));
+                            List.of(QueueItemStatus.WAITING, QueueItemStatus.CALLED,
+                                    QueueItemStatus.IN_SERVICE, QueueItemStatus.PAUSED));
         }
 
         return ResponseEntity.ok(ApiResponse.ok(items, correlationId));

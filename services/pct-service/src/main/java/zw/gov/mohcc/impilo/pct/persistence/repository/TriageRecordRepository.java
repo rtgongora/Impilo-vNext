@@ -5,6 +5,7 @@ import org.springframework.stereotype.Repository;
 import zw.gov.mohcc.impilo.pct.persistence.entity.TriageRecordEntity;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -23,4 +24,13 @@ public interface TriageRecordRepository extends JpaRepository<TriageRecordEntity
      * @return list of triage records for the journey
      */
     List<TriageRecordEntity> findByTenantIdAndJourneyId(UUID tenantId, String journeyId);
+
+    /**
+     * Finds the most recent triage record for a journey (across tenants).
+     * Used by the routing engine to derive queue priority from acuity.
+     *
+     * @param journeyId the journey identifier
+     * @return the most recent triage record if one exists
+     */
+    Optional<TriageRecordEntity> findTopByJourneyIdOrderByCreatedAtDesc(String journeyId);
 }

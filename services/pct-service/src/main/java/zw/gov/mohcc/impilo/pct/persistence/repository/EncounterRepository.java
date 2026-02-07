@@ -52,4 +52,13 @@ public interface EncounterRepository extends JpaRepository<EncounterEntity, Long
      * @return list of matching encounters
      */
     List<EncounterEntity> findByTenantIdAndWorkspaceIdAndStatus(UUID tenantId, UUID workspaceId, String status);
+
+    /**
+     * Finds all encounters for a given journey (across tenants).
+     * Used when tenant context is already validated by the calling service.
+     *
+     * @param journeyId the journey identifier
+     * @return list of encounters in the journey
+     */
+    List<EncounterEntity> findByJourneyId(String journeyId);
 }
