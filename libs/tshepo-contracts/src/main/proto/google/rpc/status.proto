@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package google.rpc;
+
+option java_multiple_files = true;
+option java_package = "com.google.rpc";
+
+import "google/protobuf/any.proto";
+
+// The canonical error model for gRPC APIs.
+message Status {
+  int32 code = 1;
+  string message = 2;
+  repeated google.protobuf.Any details = 3;
+}
