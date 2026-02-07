@@ -1,0 +1,2737 @@
+# =============================================================================
+# VITO — Client Identity Registry Service (OpenAPI 3.0)
+# Manages Health IDs, smart cards, wallets, biometric enrolment, dedup, and
+# identity recovery for the Impilo vNext platform.
+# =============================================================================
+openapi: "3.0.3"
+
+info:
+  title: VITO — Client Identity Registry
+  version: "1.0.0"
+  description: |
+    VITO is the single source of truth for client identities within Impilo.
+    PII never leaves VITO — downstream services (including BUTANO / HAPI FHIR)
+    reference clients by CPID only.
+
+    **Route classes**
+    * Portal — internet-facing, rate-limited, ext_authz route class `PORTAL`
+    * Internal — service-to-service via mTLS + TSHEPO
+  contact:
+    name: Impilo Platform Team
+  license:
+    name: Proprietary
+
+servers:
+  - url: http://localhost:8082
+    description: Local development
+  - url: https://{tenant}.impilo.health/api
+    description: Production (per-tenant)
+    variables:
+      tenant:
+        default: demo
+
+# ---------------------------------------------------------------------------
+# Security — all requests carry trust headers injected by Envoy + TSHEPO
+# ---------------------------------------------------------------------------
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Portal
+    description: Internet-facing endpoints for citizen self-service
+  - name: Internal-Clients
+    description: Client lookup and lifecycle (service-to-service)
+  - name: Internal-Identity
+    description: Core identity register / resolve / rotate
+  - name: Internal-Aliases
+    description: Alias resolution helpers
+  - name: Internal-Issuance
+    description: Health-ID issuance workflow
+  - name: Internal-Dedup
+    description: Deduplication case management
+  - name: Internal-Offline
+    description: Offline-capable wallet operations
+  - name: Cards
+    description: Smart-card lifecycle (request → print → activate → revoke)
+  - name: Wallet
+    description: Digital wallet (balance, top-up, pay, offline vouchers)
+  - name: Biometric
+    description: Biometric template enrolment and retrieval
+  - name: Print
+    description: Card print-job submission
+  - name: QR
+    description: QR token resolution and public-key distribution
+  - name: Slips
+    description: PDF generation for emergency capsules and pickup slips
+  - name: Match
+    description: Manual identity-match review queue
+  - name: Recovery
+    description: Identity recovery and SHS (Secure Handover Secret) flow
+  - name: Registry-Admin
+    description: Registry mode, provisional IDs, dedup queue, OpenCR bridge
+
+# ============================================================================
+# PATHS
+# ============================================================================
+paths:
+  # -------------------------------------------------------------------------
+  # Portal (internet-facing)
+  # -------------------------------------------------------------------------
+  /v1/portal/id/request:
+    post:
+      operationId: portalRequestId
+      tags: [Portal]
+      summary: Request a new Health ID via the citizen portal
+      description: Initiates a Health-ID issuance request from a self-service portal session.
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PortalIdRequestPayload"
+      responses:
+        "201":
+          description: Issuance request created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IssuanceRequest"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+
+  /v1/portal/id/recovery/start:
+    post:
+      operationId: portalRecoveryStart
+      tags: [Portal]
+      summary: Start portal-based identity recovery
+      description: Sends an OTP or recovery link to the citizen's registered channel.
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecoveryStartPayload"
+      responses:
+        "200":
+          description: Recovery challenge issued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+
+  /v1/portal/id/recovery/verify:
+    post:
+      operationId: portalRecoveryVerify
+      tags: [Portal]
+      summary: Verify recovery challenge (OTP / link)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecoveryVerifyPayload"
+      responses:
+        "200":
+          description: Recovery verified — new credentials returned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecoveryVerifyResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "410":
+          description: Challenge expired
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /v1/portal/me:
+    get:
+      operationId: portalGetMe
+      tags: [Portal]
+      summary: Get the authenticated citizen's profile
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+      responses:
+        "200":
+          description: Current citizen profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Client"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /v1/portal/health-id/qr:
+    get:
+      operationId: portalHealthIdQr
+      tags: [Portal]
+      summary: Download citizen's Health-ID as a QR code image
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - name: format
+          in: query
+          schema:
+            type: string
+            enum: [png, svg]
+            default: png
+      responses:
+        "200":
+          description: QR code image
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+            image/svg+xml:
+              schema:
+                type: string
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /v1/portal/delegated-pickup/create:
+    post:
+      operationId: portalDelegatedPickupCreate
+      tags: [Portal]
+      summary: Create a delegated card-pickup authorisation
+      description: |
+        Allows a citizen to authorise another person to collect their smart card
+        on their behalf.
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DelegatedPickupCreatePayload"
+      responses:
+        "201":
+          description: Delegated pickup created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DelegatedPickup"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /v1/portal/delegated-pickup/redeem:
+    post:
+      operationId: portalDelegatedPickupRedeem
+      tags: [Portal]
+      summary: Redeem a delegated card-pickup authorisation
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DelegatedPickupRedeemPayload"
+      responses:
+        "200":
+          description: Pickup redeemed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "410":
+          description: Authorisation expired or already redeemed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # -------------------------------------------------------------------------
+  # Internal — Identity core
+  # -------------------------------------------------------------------------
+  /v1/identity/register:
+    post:
+      operationId: identityRegister
+      tags: [Internal-Identity]
+      summary: Register a new client identity
+      description: |
+        Creates a new CPID, stores PII in VITO, and publishes
+        `client.registered` via the outbox.
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IdentityRegisterPayload"
+      responses:
+        "201":
+          description: Client registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Client"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /v1/identity/resolve:
+    post:
+      operationId: identityResolve
+      tags: [Internal-Identity]
+      summary: Resolve an identity from partial demographics or alias
+      description: Returns the best-match CPID for the supplied identifiers.
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IdentityResolvePayload"
+      responses:
+        "200":
+          description: Resolved identity
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdentityResolveResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /v1/identity/rotate:
+    post:
+      operationId: identityRotate
+      tags: [Internal-Identity]
+      summary: Rotate a client's CPID
+      description: |
+        Generates a new CPID and links it to the previous one. Downstream
+        services are notified via the `cpid.rotated` event.
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [healthId]
+              properties:
+                healthId:
+                  type: string
+                  description: Current Health ID
+                reason:
+                  type: string
+                  description: Reason for rotation
+      responses:
+        "200":
+          description: CPID rotated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdentityRotateResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # -------------------------------------------------------------------------
+  # Internal — Client lookup & lifecycle
+  # -------------------------------------------------------------------------
+  /v1/clients:
+    get:
+      operationId: listClients
+      tags: [Internal-Clients]
+      summary: List clients with paging and optional search filters
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PageNumber"
+        - $ref: "#/components/parameters/PageSize"
+        - name: q
+          in: query
+          description: Free-text search across name, ID number, phone
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [ACTIVE, INACTIVE, DECEASED]
+      responses:
+        "200":
+          description: Paged list of clients
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/PagedResponse"
+                  - type: object
+                    properties:
+                      content:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Client"
+
+  /v1/clients/{healthId}:
+    get:
+      operationId: getClient
+      tags: [Internal-Clients]
+      summary: Get a single client by Health ID
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/HealthIdPath"
+      responses:
+        "200":
+          description: Client found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Client"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /v1/clients/{healthId}/verify:
+    post:
+      operationId: verifyClient
+      tags: [Internal-Clients]
+      summary: Verify a client's identity (step-up)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/HealthIdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyClientPayload"
+      responses:
+        "200":
+          description: Verification result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /v1/clients/{healthId}/deactivate:
+    post:
+      operationId: deactivateClient
+      tags: [Internal-Clients]
+      summary: Deactivate a client
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/HealthIdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason:
+                  type: string
+      responses:
+        "200":
+          description: Client deactivated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /v1/clients/{healthId}/deceased:
+    post:
+      operationId: markClientDeceased
+      tags: [Internal-Clients]
+      summary: Mark a client as deceased
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/HealthIdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [dateOfDeath]
+              properties:
+                dateOfDeath:
+                  type: string
+                  format: date
+                source:
+                  type: string
+                  description: Source of death notification (e.g. DHA, facility)
+      responses:
+        "200":
+          description: Client marked as deceased
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # -------------------------------------------------------------------------
+  # Internal — Issuance workflow
+  # -------------------------------------------------------------------------
+  /v1/internal/issuance/submit:
+    post:
+      operationId: issuanceSubmit
+      tags: [Internal-Issuance]
+      summary: Submit a new Health-ID issuance request
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IssuanceSubmitPayload"
+      responses:
+        "201":
+          description: Issuance request submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IssuanceRequest"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /v1/internal/issuance/{requestId}/proofing:
+    post:
+      operationId: issuanceProofing
+      tags: [Internal-Issuance]
+      summary: Record identity-proofing event for an issuance request
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/RequestIdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProofingEvent"
+      responses:
+        "200":
+          description: Proofing event recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IssuanceRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /v1/internal/issuance/{requestId}/approve:
+    post:
+      operationId: issuanceApprove
+      tags: [Internal-Issuance]
+      summary: Approve an issuance request
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/RequestIdPath"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                notes:
+                  type: string
+      responses:
+        "200":
+          description: Request approved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IssuanceRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /v1/internal/issuance/{requestId}/issue:
+    post:
+      operationId: issuanceIssue
+      tags: [Internal-Issuance]
+      summary: Issue the Health ID (generates CPID + Health-ID)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/RequestIdPath"
+      responses:
+        "200":
+          description: Health ID issued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IssuanceRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /v1/internal/issuance/{requestId}/deliver:
+    post:
+      operationId: issuanceDeliver
+      tags: [Internal-Issuance]
+      summary: Record delivery of the Health-ID credential to the client
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/RequestIdPath"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                deliveryChannel:
+                  type: string
+                  enum: [IN_PERSON, SMS, EMAIL, DELEGATED_PICKUP]
+                deliveredAt:
+                  type: string
+                  format: date-time
+      responses:
+        "200":
+          description: Delivery recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IssuanceRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /v1/internal/issuance/{requestId}/reject:
+    post:
+      operationId: issuanceReject
+      tags: [Internal-Issuance]
+      summary: Reject an issuance request
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/RequestIdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason:
+                  type: string
+      responses:
+        "200":
+          description: Request rejected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IssuanceRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /v1/internal/issuance/queue:
+    get:
+      operationId: issuanceQueue
+      tags: [Internal-Issuance]
+      summary: List pending issuance requests
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PageNumber"
+        - $ref: "#/components/parameters/PageSize"
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [SUBMITTED, PROOFED, APPROVED, ISSUED, DELIVERED, REJECTED]
+      responses:
+        "200":
+          description: Paged issuance queue
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/PagedResponse"
+                  - type: object
+                    properties:
+                      content:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/IssuanceRequest"
+
+  /v1/internal/issuance/{requestId}:
+    get:
+      operationId: issuanceGet
+      tags: [Internal-Issuance]
+      summary: Get a single issuance request by ID
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/RequestIdPath"
+      responses:
+        "200":
+          description: Issuance request found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IssuanceRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # -------------------------------------------------------------------------
+  # Cards
+  # -------------------------------------------------------------------------
+  /v1/cards/request:
+    post:
+      operationId: cardRequest
+      tags: [Cards]
+      summary: Request a new smart card
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CardRequestPayload"
+      responses:
+        "201":
+          description: Card request accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SmartCard"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /v1/cards/{cardId}/print:
+    post:
+      operationId: cardPrint
+      tags: [Cards]
+      summary: Submit card for printing
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/CardIdPath"
+      responses:
+        "200":
+          description: Card submitted to print queue
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SmartCard"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /v1/cards/{cardId}/activate:
+    post:
+      operationId: cardActivate
+      tags: [Cards]
+      summary: Activate a printed card
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/CardIdPath"
+      responses:
+        "200":
+          description: Card activated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SmartCard"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /v1/cards/{cardId}/inactivate:
+    post:
+      operationId: cardInactivate
+      tags: [Cards]
+      summary: Temporarily inactivate a card (e.g. lost/stolen)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/CardIdPath"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason:
+                  type: string
+                  enum: [LOST, STOLEN, DAMAGED, OTHER]
+      responses:
+        "200":
+          description: Card inactivated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SmartCard"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /v1/cards/{cardId}/revoke:
+    post:
+      operationId: cardRevoke
+      tags: [Cards]
+      summary: Permanently revoke a card
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/CardIdPath"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason:
+                  type: string
+      responses:
+        "200":
+          description: Card revoked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SmartCard"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /v1/cards/active/{healthId}:
+    get:
+      operationId: cardGetActive
+      tags: [Cards]
+      summary: Get the active card for a client
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/HealthIdPath"
+      responses:
+        "200":
+          description: Active card
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SmartCard"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /v1/cards/history/{healthId}:
+    get:
+      operationId: cardHistory
+      tags: [Cards]
+      summary: Get full card history for a client
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/HealthIdPath"
+      responses:
+        "200":
+          description: Card history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SmartCard"
+
+  /v1/cards/by-status/{status}:
+    get:
+      operationId: cardsByStatus
+      tags: [Cards]
+      summary: List cards filtered by status
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - name: status
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [REQUESTED, PRINTING, PRINTED, ACTIVE, INACTIVE, REVOKED]
+        - $ref: "#/components/parameters/PageNumber"
+        - $ref: "#/components/parameters/PageSize"
+      responses:
+        "200":
+          description: Paged list of cards with the given status
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/PagedResponse"
+                  - type: object
+                    properties:
+                      content:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/SmartCard"
+
+  # -------------------------------------------------------------------------
+  # Wallet
+  # -------------------------------------------------------------------------
+  /v1/wallet/create:
+    post:
+      operationId: walletCreate
+      tags: [Wallet]
+      summary: Create a digital wallet for a client
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [healthId]
+              properties:
+                healthId:
+                  type: string
+                currency:
+                  type: string
+                  default: ZAR
+      responses:
+        "201":
+          description: Wallet created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Wallet"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /v1/wallet/{healthId}:
+    get:
+      operationId: walletGet
+      tags: [Wallet]
+      summary: Get wallet balance and metadata for a client
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/HealthIdPath"
+      responses:
+        "200":
+          description: Wallet details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Wallet"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /v1/wallet/topup:
+    post:
+      operationId: walletTopup
+      tags: [Wallet]
+      summary: Top up a wallet balance
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WalletTransactionPayload"
+      responses:
+        "200":
+          description: Top-up applied
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Wallet"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /v1/wallet/pay:
+    post:
+      operationId: walletPay
+      tags: [Wallet]
+      summary: Debit the wallet for a service payment
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WalletTransactionPayload"
+      responses:
+        "200":
+          description: Payment processed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Wallet"
+        "402":
+          description: Insufficient funds
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /v1/wallet/offline:
+    post:
+      operationId: walletOffline
+      tags: [Wallet]
+      summary: Generate an offline payment voucher
+      description: |
+        Creates a signed offline voucher that can be redeemed when connectivity
+        is restored. Used in areas with intermittent network coverage.
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [healthId, amount]
+              properties:
+                healthId:
+                  type: string
+                amount:
+                  type: number
+                  format: double
+                validityMinutes:
+                  type: integer
+                  default: 1440
+                  description: How long the offline voucher remains valid (default 24h)
+      responses:
+        "200":
+          description: Offline voucher generated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  voucherToken:
+                    type: string
+                  expiresAt:
+                    type: string
+                    format: date-time
+                  amount:
+                    type: number
+                    format: double
+
+  /v1/wallet/{walletId}/journal:
+    get:
+      operationId: walletJournal
+      tags: [Wallet]
+      summary: Get transaction journal for a wallet
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - name: walletId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: "#/components/parameters/PageNumber"
+        - $ref: "#/components/parameters/PageSize"
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Paged wallet journal
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/PagedResponse"
+                  - type: object
+                    properties:
+                      content:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/WalletJournal"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # -------------------------------------------------------------------------
+  # Biometric
+  # -------------------------------------------------------------------------
+  /v1/biometric/enroll:
+    post:
+      operationId: biometricEnroll
+      tags: [Biometric]
+      summary: Enrol a biometric template for a client
+      description: Stores fingerprint or iris template. Max payload 5 MB.
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BiometricEnrollPayload"
+      responses:
+        "201":
+          description: Biometric enrolled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /v1/biometric/{healthId}:
+    get:
+      operationId: biometricGet
+      tags: [Biometric]
+      summary: Retrieve biometric metadata for a client
+      description: Returns enrolment status and modality. Template bytes are never returned over the API.
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/HealthIdPath"
+      responses:
+        "200":
+          description: Biometric enrolment metadata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BiometricMetadata"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # -------------------------------------------------------------------------
+  # Match
+  # -------------------------------------------------------------------------
+  /v1/match/{healthId}:
+    post:
+      operationId: matchTrigger
+      tags: [Match]
+      summary: Trigger a manual identity-match review for a client
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/HealthIdPath"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                candidateCpids:
+                  type: array
+                  items:
+                    type: string
+                  description: CPIDs of potential duplicate records
+      responses:
+        "201":
+          description: Match review case created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MatchResult"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /v1/match/pending:
+    get:
+      operationId: matchPending
+      tags: [Match]
+      summary: List pending match-review cases
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PageNumber"
+        - $ref: "#/components/parameters/PageSize"
+      responses:
+        "200":
+          description: Paged list of pending match cases
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/PagedResponse"
+                  - type: object
+                    properties:
+                      content:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/MatchResult"
+
+  /v1/match/{matchId}/resolve:
+    post:
+      operationId: matchResolve
+      tags: [Match]
+      summary: Resolve a match-review case (merge, split, or dismiss)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - name: matchId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [resolution]
+              properties:
+                resolution:
+                  type: string
+                  enum: [MERGE, SPLIT, DISMISS]
+                survivorCpid:
+                  type: string
+                  description: Required when resolution is MERGE — the CPID that survives
+                notes:
+                  type: string
+      responses:
+        "200":
+          description: Match case resolved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MatchResult"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # -------------------------------------------------------------------------
+  # Recovery
+  # -------------------------------------------------------------------------
+  /v1/recovery/handover:
+    post:
+      operationId: recoveryHandover
+      tags: [Recovery]
+      summary: Hand over identity recovery to another channel (e.g. call centre)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [healthId, targetChannel]
+              properties:
+                healthId:
+                  type: string
+                targetChannel:
+                  type: string
+                  enum: [CALL_CENTRE, FACILITY, FIELD_WORKER]
+      responses:
+        "200":
+          description: Handover initiated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /v1/recovery/shs/create:
+    post:
+      operationId: recoverySHSCreate
+      tags: [Recovery]
+      summary: Create a Secure Handover Secret (SHS) for identity verification
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [healthId]
+              properties:
+                healthId:
+                  type: string
+                expiryMinutes:
+                  type: integer
+                  default: 30
+      responses:
+        "201":
+          description: SHS created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  shsToken:
+                    type: string
+                  expiresAt:
+                    type: string
+                    format: date-time
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /v1/recovery/shs/verify:
+    post:
+      operationId: recoverySHSVerify
+      tags: [Recovery]
+      summary: Verify a Secure Handover Secret
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [shsToken]
+              properties:
+                shsToken:
+                  type: string
+      responses:
+        "200":
+          description: SHS verified — identity confirmed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Client"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "410":
+          description: SHS expired
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # -------------------------------------------------------------------------
+  # Registry Admin
+  # -------------------------------------------------------------------------
+  /v1/registry/mode:
+    get:
+      operationId: registryMode
+      tags: [Registry-Admin]
+      summary: Get current registry operating mode
+      description: Returns whether the registry is in NORMAL, PROVISIONAL, or OFFLINE mode.
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+      responses:
+        "200":
+          description: Current registry mode
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  mode:
+                    type: string
+                    enum: [NORMAL, PROVISIONAL, OFFLINE]
+                  since:
+                    type: string
+                    format: date-time
+                  reason:
+                    type: string
+
+  /v1/registry/provisional/issue:
+    post:
+      operationId: registryProvisionalIssue
+      tags: [Registry-Admin]
+      summary: Issue a provisional Health ID (offline / degraded mode)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [givenName, familyName, dateOfBirth, facilityId]
+              properties:
+                givenName:
+                  type: string
+                familyName:
+                  type: string
+                dateOfBirth:
+                  type: string
+                  format: date
+                facilityId:
+                  type: string
+      responses:
+        "201":
+          description: Provisional ID issued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  provisionalRef:
+                    type: string
+                  issuedAt:
+                    type: string
+                    format: date-time
+                  expiresAt:
+                    type: string
+                    format: date-time
+
+  /v1/registry/provisional/{provisionalRef}/reconcile:
+    post:
+      operationId: registryProvisionalReconcile
+      tags: [Registry-Admin]
+      summary: Reconcile a provisional ID with a permanent Health ID
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - name: provisionalRef
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [healthId]
+              properties:
+                healthId:
+                  type: string
+                  description: The permanent Health ID to link to
+      responses:
+        "200":
+          description: Provisional ID reconciled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /v1/registry/provisional/pending:
+    get:
+      operationId: registryProvisionalPending
+      tags: [Registry-Admin]
+      summary: List unreconciled provisional IDs
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PageNumber"
+        - $ref: "#/components/parameters/PageSize"
+      responses:
+        "200":
+          description: Paged list of pending provisional IDs
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/PagedResponse"
+                  - type: object
+                    properties:
+                      content:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            provisionalRef:
+                              type: string
+                            givenName:
+                              type: string
+                            familyName:
+                              type: string
+                            dateOfBirth:
+                              type: string
+                              format: date
+                            facilityId:
+                              type: string
+                            issuedAt:
+                              type: string
+                              format: date-time
+                            expiresAt:
+                              type: string
+                              format: date-time
+
+  /v1/registry/dedup/pending:
+    get:
+      operationId: registryDedupPending
+      tags: [Registry-Admin]
+      summary: List pending deduplication cases
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PageNumber"
+        - $ref: "#/components/parameters/PageSize"
+      responses:
+        "200":
+          description: Paged dedup cases
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/PagedResponse"
+                  - type: object
+                    properties:
+                      content:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/DedupCase"
+
+  /v1/registry/dedup/{caseId}/resolve:
+    post:
+      operationId: registryDedupResolve
+      tags: [Registry-Admin]
+      summary: Resolve a deduplication case
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - name: caseId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action]
+              properties:
+                action:
+                  type: string
+                  enum: [MERGE, NOT_DUPLICATE]
+                survivorCpid:
+                  type: string
+                  description: Required when action is MERGE
+                notes:
+                  type: string
+      responses:
+        "200":
+          description: Dedup case resolved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DedupCase"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /v1/registry/opencr/match:
+    post:
+      operationId: registryOpenCRMatch
+      tags: [Registry-Admin]
+      summary: Trigger an OpenCR probabilistic match
+      description: Sends demographics to the OpenCR engine and returns scored candidates.
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [givenName, familyName, dateOfBirth]
+              properties:
+                givenName:
+                  type: string
+                familyName:
+                  type: string
+                dateOfBirth:
+                  type: string
+                  format: date
+                gender:
+                  type: string
+                  enum: [MALE, FEMALE, OTHER, UNKNOWN]
+                nationalId:
+                  type: string
+                phoneNumber:
+                  type: string
+      responses:
+        "200":
+          description: Match candidates
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  candidates:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        cpid:
+                          type: string
+                        healthId:
+                          type: string
+                        score:
+                          type: number
+                          format: double
+                          description: Match confidence score (0.0 - 1.0)
+                        matchedOn:
+                          type: array
+                          items:
+                            type: string
+                          description: Fields that contributed to the match
+
+  # -------------------------------------------------------------------------
+  # Print
+  # -------------------------------------------------------------------------
+  /v1/print/card/job:
+    post:
+      operationId: printCardJob
+      tags: [Print]
+      summary: Submit a card print job
+      description: Enqueues a print job for a card. Requires card to be in PRINTING status.
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [cardId, printerId]
+              properties:
+                cardId:
+                  type: string
+                  format: uuid
+                printerId:
+                  type: string
+                  description: ID of the target card printer
+                priority:
+                  type: string
+                  enum: [NORMAL, URGENT]
+                  default: NORMAL
+      responses:
+        "201":
+          description: Print job created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  jobId:
+                    type: string
+                    format: uuid
+                  status:
+                    type: string
+                    enum: [QUEUED, PRINTING, COMPLETED, FAILED]
+                  createdAt:
+                    type: string
+                    format: date-time
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # -------------------------------------------------------------------------
+  # QR
+  # -------------------------------------------------------------------------
+  /v1/qr/resolve/{token}:
+    get:
+      operationId: qrResolve
+      tags: [QR]
+      summary: Resolve a QR token to a Health ID
+      description: |
+        Public endpoint. The token is a signed, short-lived JWT containing the
+        CPID. Verification uses the public key from `/v1/qr/public-key`.
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Resolved identity
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  healthId:
+                    type: string
+                  cpid:
+                    type: string
+                  givenName:
+                    type: string
+                  familyName:
+                    type: string
+                  validUntil:
+                    type: string
+                    format: date-time
+        "400":
+          description: Invalid or malformed token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "410":
+          description: Token expired
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /v1/qr/public-key:
+    get:
+      operationId: qrPublicKey
+      tags: [QR]
+      summary: Get the public key used to verify QR tokens
+      description: Returns the current RSA/EC public key in JWK format.
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+      responses:
+        "200":
+          description: Public key in JWK format
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  kty:
+                    type: string
+                  kid:
+                    type: string
+                  use:
+                    type: string
+                  alg:
+                    type: string
+                  n:
+                    type: string
+                  e:
+                    type: string
+
+  # -------------------------------------------------------------------------
+  # Slips (PDF generation)
+  # -------------------------------------------------------------------------
+  /v1/slips/emergency-capsule.pdf:
+    get:
+      operationId: slipsEmergencyCapsule
+      tags: [Slips]
+      summary: Generate an emergency capsule PDF
+      description: |
+        Generates a single-page PDF containing essential identity and medical
+        information for emergency situations. Requires elevated trust level.
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - name: healthId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Emergency capsule PDF
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /v1/slips/pickup.pdf:
+    get:
+      operationId: slipsPickup
+      tags: [Slips]
+      summary: Generate a card-pickup slip PDF
+      description: Produces a printable slip for a client to collect their smart card.
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - name: healthId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: cardId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Pickup slip PDF
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+# ============================================================================
+# COMPONENTS
+# ============================================================================
+components:
+
+  # --------------------------------------------------------------------------
+  # Security schemes
+  # --------------------------------------------------------------------------
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Keycloak-issued access token (forwarded by Envoy)
+
+  # --------------------------------------------------------------------------
+  # Reusable parameters
+  # --------------------------------------------------------------------------
+  parameters:
+    TenantId:
+      name: X-Tenant-Id
+      in: header
+      required: true
+      description: Tenant identifier — injected by Envoy after TSHEPO authorisation
+      schema:
+        type: string
+    CorrelationId:
+      name: X-Correlation-Id
+      in: header
+      required: true
+      description: End-to-end correlation ID for distributed tracing
+      schema:
+        type: string
+        format: uuid
+    ActorId:
+      name: X-Actor-Id
+      in: header
+      required: true
+      description: Authenticated actor (user or service) identifier
+      schema:
+        type: string
+    ActorType:
+      name: X-Actor-Type
+      in: header
+      required: true
+      description: Type of actor making the request
+      schema:
+        type: string
+        enum: [CITIZEN, PROVIDER, ADMIN, SYSTEM, FIELD_WORKER]
+    HealthIdPath:
+      name: healthId
+      in: path
+      required: true
+      description: The client's Health ID
+      schema:
+        type: string
+    CardIdPath:
+      name: cardId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    RequestIdPath:
+      name: requestId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    PageNumber:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+    PageSize:
+      name: size
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+
+  # --------------------------------------------------------------------------
+  # Reusable responses
+  # --------------------------------------------------------------------------
+  responses:
+    BadRequest:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Conflict:
+      description: Resource already exists or state conflict
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    TooManyRequests:
+      description: Rate limit exceeded
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+  # --------------------------------------------------------------------------
+  # Schemas
+  # --------------------------------------------------------------------------
+  schemas:
+
+    # --- Core domain objects ------------------------------------------------
+
+    Client:
+      type: object
+      description: A registered client in the VITO identity registry
+      properties:
+        cpid:
+          type: string
+          description: Client Pseudonymous Identifier (never contains PII)
+        healthId:
+          type: string
+          description: Human-readable Health ID
+        givenName:
+          type: string
+        familyName:
+          type: string
+        dateOfBirth:
+          type: string
+          format: date
+        gender:
+          type: string
+          enum: [MALE, FEMALE, OTHER, UNKNOWN]
+        nationalId:
+          type: string
+        phoneNumber:
+          type: string
+        email:
+          type: string
+          format: email
+        address:
+          $ref: "#/components/schemas/Address"
+        status:
+          type: string
+          enum: [ACTIVE, INACTIVE, DECEASED]
+        registeredAt:
+          type: string
+          format: date-time
+        lastVerifiedAt:
+          type: string
+          format: date-time
+        tenantId:
+          type: string
+
+    Address:
+      type: object
+      properties:
+        line1:
+          type: string
+        line2:
+          type: string
+        city:
+          type: string
+        province:
+          type: string
+        postalCode:
+          type: string
+        country:
+          type: string
+          default: ZA
+
+    IssuanceRequest:
+      type: object
+      description: Tracks the lifecycle of a Health-ID issuance request
+      properties:
+        requestId:
+          type: string
+          format: uuid
+        healthId:
+          type: string
+          description: Assigned after ISSUE step
+        status:
+          type: string
+          enum: [SUBMITTED, PROOFED, APPROVED, ISSUED, DELIVERED, REJECTED]
+        applicantName:
+          type: string
+        dateOfBirth:
+          type: string
+          format: date
+        facilityId:
+          type: string
+        proofingEvents:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProofingEvent"
+        submittedAt:
+          type: string
+          format: date-time
+        approvedAt:
+          type: string
+          format: date-time
+        issuedAt:
+          type: string
+          format: date-time
+        deliveredAt:
+          type: string
+          format: date-time
+        rejectedAt:
+          type: string
+          format: date-time
+        rejectionReason:
+          type: string
+        actorId:
+          type: string
+
+    ProofingEvent:
+      type: object
+      description: An identity-proofing step within an issuance request
+      properties:
+        eventId:
+          type: string
+          format: uuid
+        method:
+          type: string
+          enum: [DOCUMENT_SCAN, BIOMETRIC, IN_PERSON, REMOTE_VIDEO, DHA_LOOKUP]
+        outcome:
+          type: string
+          enum: [PASSED, FAILED, INCONCLUSIVE]
+        confidence:
+          type: number
+          format: double
+          description: Confidence score (0.0 - 1.0)
+        performedAt:
+          type: string
+          format: date-time
+        performedBy:
+          type: string
+        notes:
+          type: string
+
+    SmartCard:
+      type: object
+      description: A physical or virtual smart card linked to a client
+      properties:
+        cardId:
+          type: string
+          format: uuid
+        healthId:
+          type: string
+        cardNumber:
+          type: string
+          description: Printed card serial number
+        status:
+          type: string
+          enum: [REQUESTED, PRINTING, PRINTED, ACTIVE, INACTIVE, REVOKED]
+        cardType:
+          type: string
+          enum: [PHYSICAL, VIRTUAL]
+        requestedAt:
+          type: string
+          format: date-time
+        printedAt:
+          type: string
+          format: date-time
+        activatedAt:
+          type: string
+          format: date-time
+        inactivatedAt:
+          type: string
+          format: date-time
+        revokedAt:
+          type: string
+          format: date-time
+        inactivationReason:
+          type: string
+        revocationReason:
+          type: string
+
+    Wallet:
+      type: object
+      description: A digital wallet holding prepaid health-service credits
+      properties:
+        walletId:
+          type: string
+          format: uuid
+        healthId:
+          type: string
+        balance:
+          type: number
+          format: double
+        currency:
+          type: string
+          default: ZAR
+        status:
+          type: string
+          enum: [ACTIVE, FROZEN, CLOSED]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    WalletJournal:
+      type: object
+      description: A single transaction entry in the wallet journal
+      properties:
+        journalId:
+          type: string
+          format: uuid
+        walletId:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [TOPUP, PAYMENT, REVERSAL, OFFLINE_VOUCHER, OFFLINE_REDEEM]
+        amount:
+          type: number
+          format: double
+        balanceAfter:
+          type: number
+          format: double
+        reference:
+          type: string
+          description: External reference (e.g. encounter ID, voucher code)
+        description:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        actorId:
+          type: string
+
+    MatchResult:
+      type: object
+      description: An identity-match review case
+      properties:
+        matchId:
+          type: string
+          format: uuid
+        primaryCpid:
+          type: string
+        candidateCpids:
+          type: array
+          items:
+            type: string
+        scores:
+          type: object
+          additionalProperties:
+            type: number
+            format: double
+          description: Map of candidateCpid to match score
+        status:
+          type: string
+          enum: [PENDING, MERGED, SPLIT, DISMISSED]
+        resolution:
+          type: string
+          enum: [MERGE, SPLIT, DISMISS]
+        survivorCpid:
+          type: string
+        resolvedAt:
+          type: string
+          format: date-time
+        resolvedBy:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    DelegatedPickup:
+      type: object
+      description: An authorisation for another person to collect a client's card
+      properties:
+        pickupId:
+          type: string
+          format: uuid
+        healthId:
+          type: string
+        delegateIdNumber:
+          type: string
+        delegateName:
+          type: string
+        delegatePhone:
+          type: string
+        pin:
+          type: string
+          description: One-time PIN for redemption (only returned on create)
+        status:
+          type: string
+          enum: [ACTIVE, REDEEMED, EXPIRED, CANCELLED]
+        createdAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+        redeemedAt:
+          type: string
+          format: date-time
+
+    DedupCase:
+      type: object
+      description: A deduplication case requiring manual resolution
+      properties:
+        caseId:
+          type: string
+          format: uuid
+        cpidA:
+          type: string
+        cpidB:
+          type: string
+        matchScore:
+          type: number
+          format: double
+        matchedFields:
+          type: array
+          items:
+            type: string
+        status:
+          type: string
+          enum: [PENDING, MERGED, NOT_DUPLICATE]
+        mergeHistory:
+          $ref: "#/components/schemas/MergeHistory"
+        createdAt:
+          type: string
+          format: date-time
+        resolvedAt:
+          type: string
+          format: date-time
+        resolvedBy:
+          type: string
+
+    MergeHistory:
+      type: object
+      description: Audit trail of a record merge operation
+      properties:
+        mergeId:
+          type: string
+          format: uuid
+        survivorCpid:
+          type: string
+        retiredCpid:
+          type: string
+        mergedFields:
+          type: array
+          items:
+            type: string
+        mergedAt:
+          type: string
+          format: date-time
+        mergedBy:
+          type: string
+        reversible:
+          type: boolean
+          default: true
+
+    BiometricMetadata:
+      type: object
+      description: Biometric enrolment metadata (template bytes are never exposed)
+      properties:
+        healthId:
+          type: string
+        modalities:
+          type: array
+          items:
+            type: string
+            enum: [FINGERPRINT_LEFT_INDEX, FINGERPRINT_RIGHT_INDEX, FINGERPRINT_LEFT_THUMB, FINGERPRINT_RIGHT_THUMB, IRIS_LEFT, IRIS_RIGHT]
+        enrolledAt:
+          type: string
+          format: date-time
+        quality:
+          type: number
+          format: double
+          description: Overall quality score (0.0 - 1.0)
+        templateFormat:
+          type: string
+          enum: [ISO_19794_2, ISO_19794_6, PROPRIETARY]
+
+    # --- Request payloads ---------------------------------------------------
+
+    PortalIdRequestPayload:
+      type: object
+      required: [givenName, familyName, dateOfBirth, nationalId, phoneNumber]
+      properties:
+        givenName:
+          type: string
+        familyName:
+          type: string
+        dateOfBirth:
+          type: string
+          format: date
+        gender:
+          type: string
+          enum: [MALE, FEMALE, OTHER, UNKNOWN]
+        nationalId:
+          type: string
+        phoneNumber:
+          type: string
+        email:
+          type: string
+          format: email
+        address:
+          $ref: "#/components/schemas/Address"
+
+    RecoveryStartPayload:
+      type: object
+      required: [identifier]
+      properties:
+        identifier:
+          type: string
+          description: Health ID, national ID, or phone number
+        channel:
+          type: string
+          enum: [SMS, EMAIL]
+          default: SMS
+
+    RecoveryVerifyPayload:
+      type: object
+      required: [identifier, otp]
+      properties:
+        identifier:
+          type: string
+        otp:
+          type: string
+
+    RecoveryVerifyResponse:
+      type: object
+      properties:
+        healthId:
+          type: string
+        temporaryToken:
+          type: string
+          description: Short-lived token to complete credential reset
+
+    IdentityRegisterPayload:
+      type: object
+      required: [givenName, familyName, dateOfBirth]
+      properties:
+        givenName:
+          type: string
+        familyName:
+          type: string
+        dateOfBirth:
+          type: string
+          format: date
+        gender:
+          type: string
+          enum: [MALE, FEMALE, OTHER, UNKNOWN]
+        nationalId:
+          type: string
+        phoneNumber:
+          type: string
+        email:
+          type: string
+          format: email
+        address:
+          $ref: "#/components/schemas/Address"
+        facilityId:
+          type: string
+          description: Facility where registration occurred
+        source:
+          type: string
+          enum: [FACILITY, PORTAL, FIELD, MIGRATION]
+          description: Origin channel of the registration
+
+    IdentityResolvePayload:
+      type: object
+      properties:
+        healthId:
+          type: string
+        nationalId:
+          type: string
+        phoneNumber:
+          type: string
+        givenName:
+          type: string
+        familyName:
+          type: string
+        dateOfBirth:
+          type: string
+          format: date
+      description: At least one identifier must be provided
+
+    IdentityResolveResponse:
+      type: object
+      properties:
+        cpid:
+          type: string
+        healthId:
+          type: string
+        confidence:
+          type: number
+          format: double
+          description: Match confidence (1.0 = exact match)
+        matchedOn:
+          type: array
+          items:
+            type: string
+
+    IdentityRotateResponse:
+      type: object
+      properties:
+        previousCpid:
+          type: string
+        newCpid:
+          type: string
+        healthId:
+          type: string
+        rotatedAt:
+          type: string
+          format: date-time
+
+    VerifyClientPayload:
+      type: object
+      required: [method]
+      properties:
+        method:
+          type: string
+          enum: [BIOMETRIC, OTP, DOCUMENT, PIN]
+        biometricTemplate:
+          type: string
+          format: byte
+          description: Base64-encoded template (only for BIOMETRIC method)
+        otp:
+          type: string
+        documentRef:
+          type: string
+
+    IssuanceSubmitPayload:
+      type: object
+      required: [givenName, familyName, dateOfBirth]
+      properties:
+        givenName:
+          type: string
+        familyName:
+          type: string
+        dateOfBirth:
+          type: string
+          format: date
+        gender:
+          type: string
+          enum: [MALE, FEMALE, OTHER, UNKNOWN]
+        nationalId:
+          type: string
+        phoneNumber:
+          type: string
+        facilityId:
+          type: string
+        source:
+          type: string
+          enum: [FACILITY, PORTAL, FIELD, MIGRATION]
+
+    CardRequestPayload:
+      type: object
+      required: [healthId, cardType]
+      properties:
+        healthId:
+          type: string
+        cardType:
+          type: string
+          enum: [PHYSICAL, VIRTUAL]
+        deliveryFacilityId:
+          type: string
+          description: Facility where the card will be collected
+
+    WalletTransactionPayload:
+      type: object
+      required: [healthId, amount]
+      properties:
+        healthId:
+          type: string
+        amount:
+          type: number
+          format: double
+          minimum: 0.01
+        reference:
+          type: string
+          description: External reference (encounter ID, voucher code, etc.)
+        description:
+          type: string
+
+    BiometricEnrollPayload:
+      type: object
+      required: [healthId, modality, template]
+      properties:
+        healthId:
+          type: string
+        modality:
+          type: string
+          enum: [FINGERPRINT_LEFT_INDEX, FINGERPRINT_RIGHT_INDEX, FINGERPRINT_LEFT_THUMB, FINGERPRINT_RIGHT_THUMB, IRIS_LEFT, IRIS_RIGHT]
+        template:
+          type: string
+          format: byte
+          description: Base64-encoded biometric template (max 5 MB)
+        templateFormat:
+          type: string
+          enum: [ISO_19794_2, ISO_19794_6, PROPRIETARY]
+          default: ISO_19794_2
+        quality:
+          type: number
+          format: double
+          description: Capture quality score (0.0 - 1.0)
+
+    DelegatedPickupCreatePayload:
+      type: object
+      required: [delegateIdNumber, delegateName, delegatePhone]
+      properties:
+        delegateIdNumber:
+          type: string
+        delegateName:
+          type: string
+        delegatePhone:
+          type: string
+        expiryHours:
+          type: integer
+          default: 72
+          description: Hours until the authorisation expires
+
+    DelegatedPickupRedeemPayload:
+      type: object
+      required: [pickupId, pin, delegateIdNumber]
+      properties:
+        pickupId:
+          type: string
+          format: uuid
+        pin:
+          type: string
+        delegateIdNumber:
+          type: string
+
+    # --- Generic response wrappers ------------------------------------------
+
+    GenericResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Machine-readable error code
+        message:
+          type: string
+          description: Human-readable error description
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+          description: Field-level validation errors (if applicable)
+        correlationId:
+          type: string
+          format: uuid
+        timestamp:
+          type: string
+          format: date-time
+
+    PagedResponse:
+      type: object
+      description: Spring Data-style paged response wrapper
+      properties:
+        content:
+          type: array
+          items: {}
+        page:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+        first:
+          type: boolean
+        last:
+          type: boolean

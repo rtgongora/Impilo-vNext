@@ -1,0 +1,304 @@
+# =============================================================================
+# VITO Service Routes — Public vs Internal Split
+# Included in main envoy.yaml via route_config
+#
+# Route classes:
+#   PORTAL   — internet-facing citizen self-service (rate-limited, 64 KB body)
+#   PUBLIC   — unauthenticated read-only endpoints (QR resolve, public keys)
+#   INTERNAL — service-to-service via mTLS + TSHEPO ext_authz
+#
+# Cluster: vito_service (host.docker.internal:8082)
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# PUBLIC routes (internet-facing portal + QR resolver)
+# - Rate limited via descriptors (30 req/min per source IP)
+# - Request size limited to 64 KB
+# - Security headers enforced
+# - ext_authz route class: PORTAL
+# -----------------------------------------------------------------------------
+public_routes:
+  # --- Portal: citizen self-service -----------------------------------------
+  - match:
+      prefix: "/api/v1/portal/"
+    route:
+      cluster: vito_service
+      timeout: 10s
+      retry_policy:
+        retry_on: "5xx,reset,connect-failure"
+        num_retries: 1
+        per_try_timeout: 5s
+    typed_per_filter_config:
+      envoy.filters.http.ext_authz:
+        "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthzPerRoute
+        check_settings:
+          context_extensions:
+            x-route-class: "PORTAL"
+      envoy.filters.http.buffer:
+        "@type": type.googleapis.com/envoy.extensions.filters.http.buffer.v3.BufferPerRoute
+        buffer:
+          max_request_bytes: 65536  # 64 KB — portal payloads are small
+
+  # --- QR: public token resolution ------------------------------------------
+  - match:
+      prefix: "/api/v1/qr/"
+    route:
+      cluster: vito_service
+      timeout: 5s
+    typed_per_filter_config:
+      envoy.filters.http.ext_authz:
+        "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthzPerRoute
+        check_settings:
+          context_extensions:
+            x-route-class: "PUBLIC"
+      envoy.filters.http.buffer:
+        "@type": type.googleapis.com/envoy.extensions.filters.http.buffer.v3.BufferPerRoute
+        buffer:
+          max_request_bytes: 4096  # QR requests are GET-only, minimal body
+
+  # --- Slips: PDF downloads (portal-accessible) -----------------------------
+  - match:
+      prefix: "/api/v1/slips/"
+    route:
+      cluster: vito_service
+      timeout: 30s
+    typed_per_filter_config:
+      envoy.filters.http.ext_authz:
+        "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthzPerRoute
+        check_settings:
+          context_extensions:
+            x-route-class: "PORTAL"
+
+# -----------------------------------------------------------------------------
+# INTERNAL routes (service-to-service via mTLS + TSHEPO)
+# - Full access to all VITO endpoints
+# - Higher timeouts for workflows and biometric processing
+# - Biometric endpoints allow up to 5 MB request body
+# -----------------------------------------------------------------------------
+internal_routes:
+  # --- Issuance workflow (longer timeout for multi-step processing) ----------
+  - match:
+      prefix: "/api/v1/internal/"
+    route:
+      cluster: vito_service
+      timeout: 30s
+      retry_policy:
+        retry_on: "5xx,reset,connect-failure"
+        num_retries: 2
+        per_try_timeout: 10s
+    typed_per_filter_config:
+      envoy.filters.http.ext_authz:
+        "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthzPerRoute
+        check_settings:
+          context_extensions:
+            x-route-class: "INTERNAL"
+
+  # --- Identity core (register, resolve, rotate) ----------------------------
+  - match:
+      prefix: "/api/v1/identity/"
+    route:
+      cluster: vito_service
+      timeout: 15s
+      retry_policy:
+        retry_on: "5xx,reset,connect-failure"
+        num_retries: 1
+        per_try_timeout: 8s
+    typed_per_filter_config:
+      envoy.filters.http.ext_authz:
+        "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthzPerRoute
+        check_settings:
+          context_extensions:
+            x-route-class: "INTERNAL"
+
+  # --- Client lookup and lifecycle ------------------------------------------
+  - match:
+      prefix: "/api/v1/clients"
+    route:
+      cluster: vito_service
+      timeout: 15s
+    typed_per_filter_config:
+      envoy.filters.http.ext_authz:
+        "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthzPerRoute
+        check_settings:
+          context_extensions:
+            x-route-class: "INTERNAL"
+
+  # --- Cards lifecycle ------------------------------------------------------
+  - match:
+      prefix: "/api/v1/cards/"
+    route:
+      cluster: vito_service
+      timeout: 15s
+    typed_per_filter_config:
+      envoy.filters.http.ext_authz:
+        "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthzPerRoute
+        check_settings:
+          context_extensions:
+            x-route-class: "INTERNAL"
+
+  # --- Wallet ---------------------------------------------------------------
+  - match:
+      prefix: "/api/v1/wallet/"
+    route:
+      cluster: vito_service
+      timeout: 15s
+    typed_per_filter_config:
+      envoy.filters.http.ext_authz:
+        "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthzPerRoute
+        check_settings:
+          context_extensions:
+            x-route-class: "INTERNAL"
+
+  # --- Biometric (large payloads — up to 5 MB for templates) ----------------
+  - match:
+      prefix: "/api/v1/biometric/"
+    route:
+      cluster: vito_service
+      timeout: 30s
+    typed_per_filter_config:
+      envoy.filters.http.ext_authz:
+        "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthzPerRoute
+        check_settings:
+          context_extensions:
+            x-route-class: "INTERNAL"
+      envoy.filters.http.buffer:
+        "@type": type.googleapis.com/envoy.extensions.filters.http.buffer.v3.BufferPerRoute
+        buffer:
+          max_request_bytes: 5242880  # 5 MB — biometric templates
+
+  # --- Match review ---------------------------------------------------------
+  - match:
+      prefix: "/api/v1/match/"
+    route:
+      cluster: vito_service
+      timeout: 30s
+    typed_per_filter_config:
+      envoy.filters.http.ext_authz:
+        "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthzPerRoute
+        check_settings:
+          context_extensions:
+            x-route-class: "INTERNAL"
+
+  # --- Recovery (SHS + handover) --------------------------------------------
+  - match:
+      prefix: "/api/v1/recovery/"
+    route:
+      cluster: vito_service
+      timeout: 15s
+    typed_per_filter_config:
+      envoy.filters.http.ext_authz:
+        "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthzPerRoute
+        check_settings:
+          context_extensions:
+            x-route-class: "INTERNAL"
+
+  # --- Registry admin (provisional IDs, dedup, OpenCR) ----------------------
+  - match:
+      prefix: "/api/v1/registry/"
+    route:
+      cluster: vito_service
+      timeout: 15s
+    typed_per_filter_config:
+      envoy.filters.http.ext_authz:
+        "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthzPerRoute
+        check_settings:
+          context_extensions:
+            x-route-class: "INTERNAL"
+
+  # --- Print jobs (card printing can be slow) -------------------------------
+  - match:
+      prefix: "/api/v1/print/"
+    route:
+      cluster: vito_service
+      timeout: 30s
+    typed_per_filter_config:
+      envoy.filters.http.ext_authz:
+        "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthzPerRoute
+        check_settings:
+          context_extensions:
+            x-route-class: "INTERNAL"
+
+# -----------------------------------------------------------------------------
+# Security hardening — response headers added to all VITO routes
+# -----------------------------------------------------------------------------
+response_headers_to_add:
+  - header:
+      key: "X-Frame-Options"
+      value: "DENY"
+    append_action: OVERWRITE_IF_EXISTS_OR_ADD
+  - header:
+      key: "X-Content-Type-Options"
+      value: "nosniff"
+    append_action: OVERWRITE_IF_EXISTS_OR_ADD
+  - header:
+      key: "Referrer-Policy"
+      value: "strict-origin-when-cross-origin"
+    append_action: OVERWRITE_IF_EXISTS_OR_ADD
+  - header:
+      key: "X-XSS-Protection"
+      value: "1; mode=block"
+    append_action: OVERWRITE_IF_EXISTS_OR_ADD
+  - header:
+      key: "Content-Security-Policy"
+      value: "default-src 'none'; frame-ancestors 'none'"
+    append_action: OVERWRITE_IF_EXISTS_OR_ADD
+  - header:
+      key: "Strict-Transport-Security"
+      value: "max-age=31536000; includeSubDomains"
+    append_action: OVERWRITE_IF_EXISTS_OR_ADD
+
+# Strip server identity headers
+response_headers_to_remove:
+  - "Server"
+  - "X-Powered-By"
+
+# -----------------------------------------------------------------------------
+# Request size limits (default for non-biometric routes)
+# Override per-route via typed_per_filter_config for biometric (5 MB)
+# -----------------------------------------------------------------------------
+max_request_bytes: 65536  # 64 KB default for portal / standard routes
+
+# -----------------------------------------------------------------------------
+# Rate limiting descriptors
+# Applied via Envoy rate-limit filter; references external rate-limit service
+# -----------------------------------------------------------------------------
+rate_limit_descriptors:
+  # Portal endpoints — 30 requests per minute per source IP
+  - entries:
+      - key: "route_class"
+        value: "PORTAL"
+    limit:
+      requests_per_unit: 30
+      unit: MINUTE
+
+  # QR resolve — 60 requests per minute (higher for scanning use-cases)
+  - entries:
+      - key: "route_class"
+        value: "PUBLIC"
+    limit:
+      requests_per_unit: 60
+      unit: MINUTE
+
+  # Internal routes — 300 requests per minute per calling service
+  - entries:
+      - key: "route_class"
+        value: "INTERNAL"
+    limit:
+      requests_per_unit: 300
+      unit: MINUTE
+
+# -----------------------------------------------------------------------------
+# CORS policy for portal routes
+# Production: restrict origins to the portal domain
+# -----------------------------------------------------------------------------
+cors_policy:
+  allow_origin_string_match:
+    - safe_regex:
+        regex: "https://.*\\.impilo\\.health"
+    # Local development
+    - exact: "http://localhost:3003"
+  allow_methods: "GET, POST, OPTIONS"
+  allow_headers: "Authorization, Content-Type, X-Tenant-Id, X-Correlation-Id, X-Actor-Id, X-Actor-Type, X-Device-Fingerprint"
+  expose_headers: "X-Correlation-Id"
+  max_age: "3600"
+  allow_credentials: true
