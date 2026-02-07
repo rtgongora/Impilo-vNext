@@ -19,8 +19,17 @@ public class EncounterEntity {
     @Column(name = "tenant_id", nullable = false)
     private UUID tenantId;
 
+    @Column(name = "encounter_ref")
+    private UUID encounterRef;
+
     @Column(name = "journey_id", nullable = false)
     private String journeyId;
+
+    @Column(name = "subject_cpid")
+    private String subjectCpid;
+
+    @Column(name = "facility_id")
+    private UUID facilityId;
 
     @Column(name = "butano_encounter_ref")
     private String butanoEncounterRef;
@@ -62,8 +71,17 @@ public class EncounterEntity {
     public UUID getTenantId() { return tenantId; }
     public void setTenantId(UUID tenantId) { this.tenantId = tenantId; }
 
+    public UUID getEncounterRef() { return encounterRef; }
+    public void setEncounterRef(UUID encounterRef) { this.encounterRef = encounterRef; }
+
     public String getJourneyId() { return journeyId; }
     public void setJourneyId(String journeyId) { this.journeyId = journeyId; }
+
+    public String getSubjectCpid() { return subjectCpid; }
+    public void setSubjectCpid(String subjectCpid) { this.subjectCpid = subjectCpid; }
+
+    public UUID getFacilityId() { return facilityId; }
+    public void setFacilityId(UUID facilityId) { this.facilityId = facilityId; }
 
     public String getButanoEncounterRef() { return butanoEncounterRef; }
     public void setButanoEncounterRef(String butanoEncounterRef) { this.butanoEncounterRef = butanoEncounterRef; }

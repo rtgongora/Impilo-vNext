@@ -78,6 +78,9 @@ public class DischargeCaseEntity {
 
     // Getters and setters
 
+    public UUID getId() { return caseId; }
+    public void setId(UUID id) { this.caseId = id; }
+
     public UUID getCaseId() { return caseId; }
     public void setCaseId(UUID caseId) { this.caseId = caseId; }
 
@@ -129,7 +132,4 @@ public class DischargeCaseEntity {
     public OffsetDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(OffsetDateTime updatedAt) { this.updatedAt = updatedAt; }
 
-    // Alias methods for JpaRepository<DischargeCaseEntity, UUID> compatibility
-    public UUID getId() { return caseId; }
-    public void setId(UUID id) { this.caseId = id; }
 }

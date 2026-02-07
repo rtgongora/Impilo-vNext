@@ -46,6 +46,15 @@ public class TransferEntity {
     @Column(name = "approved_by")
     private String approvedBy;
 
+    @Column(name = "admission_id")
+    private UUID admissionId;
+
+    @Column(name = "completed_by")
+    private String completedBy;
+
+    @Column(name = "completed_at")
+    private OffsetDateTime completedAt;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
@@ -55,6 +64,9 @@ public class TransferEntity {
     }
 
     // Getters and setters
+
+    public UUID getId() { return transferId; }
+    public void setId(UUID id) { this.transferId = id; }
 
     public UUID getTransferId() { return transferId; }
     public void setTransferId(UUID transferId) { this.transferId = transferId; }
@@ -90,4 +102,13 @@ public class TransferEntity {
     public void setApprovedBy(String approvedBy) { this.approvedBy = approvedBy; }
 
     public OffsetDateTime getCreatedAt() { return createdAt; }
+
+    public UUID getAdmissionId() { return admissionId; }
+    public void setAdmissionId(UUID admissionId) { this.admissionId = admissionId; }
+
+    public String getCompletedBy() { return completedBy; }
+    public void setCompletedBy(String completedBy) { this.completedBy = completedBy; }
+
+    public OffsetDateTime getCompletedAt() { return completedAt; }
+    public void setCompletedAt(OffsetDateTime completedAt) { this.completedAt = completedAt; }
 }

@@ -71,6 +71,9 @@ public class AdmissionEntity {
 
     // Getters and setters
 
+    public UUID getId() { return admissionId; }
+    public void setId(UUID id) { this.admissionId = id; }
+
     public UUID getAdmissionId() { return admissionId; }
     public void setAdmissionId(UUID admissionId) { this.admissionId = admissionId; }
 
@@ -116,7 +119,4 @@ public class AdmissionEntity {
     public OffsetDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(OffsetDateTime updatedAt) { this.updatedAt = updatedAt; }
 
-    // Alias methods for JpaRepository<AdmissionEntity, UUID> compatibility
-    public UUID getId() { return admissionId; }
-    public void setId(UUID id) { this.admissionId = id; }
 }

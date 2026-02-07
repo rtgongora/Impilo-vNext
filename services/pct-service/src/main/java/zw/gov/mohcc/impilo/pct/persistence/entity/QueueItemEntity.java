@@ -64,6 +64,9 @@ public class QueueItemEntity {
 
     // Getters and setters
 
+    public UUID getId() { return itemId; }
+    public void setId(UUID id) { this.itemId = id; }
+
     public UUID getItemId() { return itemId; }
     public void setItemId(UUID itemId) { this.itemId = itemId; }
 
@@ -106,7 +109,4 @@ public class QueueItemEntity {
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }
 
-    // Alias methods for JpaRepository<QueueItemEntity, UUID> compatibility
-    public UUID getId() { return itemId; }
-    public void setId(UUID id) { this.itemId = id; }
 }

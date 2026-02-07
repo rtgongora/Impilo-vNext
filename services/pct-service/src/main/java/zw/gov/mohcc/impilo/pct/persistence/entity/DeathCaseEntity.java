@@ -60,6 +60,9 @@ public class DeathCaseEntity {
 
     // Getters and setters
 
+    public UUID getId() { return caseId; }
+    public void setId(UUID id) { this.caseId = id; }
+
     public UUID getCaseId() { return caseId; }
     public void setCaseId(UUID caseId) { this.caseId = caseId; }
 
@@ -99,7 +102,4 @@ public class DeathCaseEntity {
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }
 
-    // Alias methods for JpaRepository<DeathCaseEntity, UUID> compatibility
-    public UUID getId() { return caseId; }
-    public void setId(UUID id) { this.caseId = id; }
 }

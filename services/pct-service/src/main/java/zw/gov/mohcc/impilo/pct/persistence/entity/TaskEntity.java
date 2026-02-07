@@ -65,6 +65,9 @@ public class TaskEntity {
 
     // Getters and setters
 
+    public UUID getId() { return taskId; }
+    public void setId(UUID id) { this.taskId = id; }
+
     public UUID getTaskId() { return taskId; }
     public void setTaskId(UUID taskId) { this.taskId = taskId; }
 
@@ -110,7 +113,4 @@ public class TaskEntity {
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }
 
-    // Alias methods for JpaRepository<TaskEntity, UUID> compatibility
-    public UUID getId() { return taskId; }
-    public void setId(UUID id) { this.taskId = id; }
 }

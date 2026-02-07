@@ -50,6 +50,9 @@ public class WorkspaceSessionEntity {
 
     // Getters and setters
 
+    public UUID getId() { return sessionId; }
+    public void setId(UUID id) { this.sessionId = id; }
+
     public UUID getSessionId() { return sessionId; }
     public void setSessionId(UUID sessionId) { this.sessionId = sessionId; }
 
