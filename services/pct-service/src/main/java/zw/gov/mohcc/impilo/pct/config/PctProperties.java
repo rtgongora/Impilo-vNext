@@ -26,6 +26,9 @@ public class PctProperties {
     public Discharge getDischarge() { return discharge; }
     public void setDischarge(Discharge discharge) { this.discharge = discharge; }
 
+    /** Convenience accessor used by ControlTowerService. */
+    public int getSlaWaitMinutes() { return queue.getDefaultSlaMinutes(); }
+
     // ── Nested configuration classes ───────────────────────────────────
 
     /**
