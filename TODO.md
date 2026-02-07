@@ -26,8 +26,9 @@
 
 ### Envoy Gateway
 - [x] `infra/envoy/envoy.yaml` (ext_authz HTTP + all service routes)
-- [ ] Route split: `public.yaml`, `internal.yaml`, `imaging.yaml`
-- [ ] Rate limiting configuration per service tier
+- [x] `infra/envoy/vito-routes.yaml` — public/internal route split with rate limiting
+- [ ] Route split: `imaging.yaml`
+- [ ] Rate limiting configuration for remaining services
 
 ---
 
@@ -106,9 +107,64 @@
 - [x] `RecoveryController.java` — handover, SHS create/verify
 - [x] `RegistryAdminController.java` — registry mode, provisional IDs, dedup, OpenCR $match
 
+### Impilo ID Format (complete)
+- [x] `ImpiloIdFormat.java` — 9 digits + check letter (#########X), weighted positional sum mod 24
+- [x] Unit tests: 12 tests including @RepeatedTest(100), transposition detection
+
+### Flyway V011–V015 (complete)
+- [x] `V011__alter_clients_add_jsonb_and_crid.sql` — CRID UUID, impilo_id, demographics/contacts/address JSONB
+- [x] `V012__proofing_events.sql` — proofing_event table (method, assurance_level, artifact_refs)
+- [x] `V013__issuance_requests.sql` — issuance_request table, one-active-issuance partial unique index
+- [x] `V014__delegated_pickup.sql` — delegated_pickup table (HMAC token hash, Argon2id OTP hash, max attempts)
+- [x] `V015__dedup_actions_and_merge_history.sql` — dedup_action audit trail, merge_history provenance
+
+### Extended Entities & Repositories (complete)
+- [x] Enums: IssuanceType, IssuanceChannel, IssuanceState, PickupStatus, ProofingMethod
+- [x] Entities: ProofingEventEntity, IssuanceRequestEntity, DelegatedPickupEntity, DedupActionEntity, MergeHistoryEntity
+- [x] Updated ClientEntity (crid UUID, impiloId, demographics/contacts/address JSONB)
+- [x] Updated DedupCaseEntity (risk, reasons JSONB, assignedTo)
+- [x] 5 new repositories with paged query support
+
+### Extended Core Services (complete)
+- [x] `IssuanceStateMachineService.java` — SUBMITTED→PROOFING→APPROVED→ISSUED→DELIVERED (+REJECTED/EXPIRED)
+- [x] `ProofingService.java` — proofing event tracking (5 methods, assurance levels 0–3)
+- [x] `DelegatedPickupService.java` — OTP/QR delegation with max-attempts + auto-revocation
+- [x] `MergeService.java` — record merge/unmerge with full provenance and alias transfer
+- [x] `QrSigningService.java` — Ed25519 JWS compact tokens (sign/verify/public key)
+- [x] `PdfGeneratorService.java` — Emergency Capsule + Pickup Slip (A5 PDFBox)
+
+### Extended Controllers (complete)
+- [x] `PortalController.java` — 7 citizen-facing endpoints with anti-enumeration responses
+- [x] `IssuanceController.java` — internal issuance workflow (submit/proofing/approve/issue/deliver/reject)
+- [x] `PrintJobController.java` — print job intake with step-up requirement
+- [x] `QrResolverController.java` — QR token resolution + public key exposure
+- [x] `SlipController.java` — PDF endpoints (emergency-capsule.pdf, pickup.pdf)
+- [x] `InternalSearchController.java` — PII-masked client search + full record access
+- [x] `DedupController.java` — score, cases queue, merge, unmerge
+- [x] `AuditController.java` — event outbox read-only feed for operators
+
+### Security (complete)
+- [x] `TrustHeaderFilter.java` — rejects missing mandatory headers (x-tenant-id, x-correlation-id, x-actor-id, x-actor-type)
+- [x] `StepUpRequired.java` + `StepUpAspect.java` — AOP step-up enforcement for sensitive operations
+
+### Tests (complete)
+- [x] `ImpiloIdFormatTest.java` — 12 tests including repeated validation and transposition detection
+- [x] `ImpiloIdAliasServiceTest.java` — 5 Mockito tests verifying no-plaintext storage
+- [x] `IssuanceStateMachineTest.java` — 7 tests for state machine guards and transitions
+- [x] `QrSigningServiceTest.java` — 7 tests for Ed25519 sign/verify/expiry/tamper detection
+- [x] `PortalControllerSecurityTest.java` — 2 anti-enumeration contract tests
+
+### card-print-agent (complete)
+- [x] `CardPrintAgentApplication.java`, `pom.xml`, `Dockerfile`, `application.yml`
+- [x] `PrintJobListener.java` — Kafka listener on vito.print, generates CR-80 card PDFs
+- [x] `CardPayloadGenerator.java` — 85.6mm×53.98mm card layout
+- [x] `HealthController.java` — GET /api/status
+- [x] Helm chart (port 8091, stateless, Kafka consumer group card-print-agent)
+
 ### Remaining
-- [ ] `MergeService.java` — record merge/unmerge
-- [ ] Integration tests (registration → card → wallet → handover)
+- [ ] Integration tests (registration → issuance → card → wallet → handover → recovery)
+- [ ] MockMvc tests for portal anti-enumeration responses
+- [ ] Kafka integration tests (outbox → publisher → consumer)
 
 ---
 
@@ -368,7 +424,12 @@
 - [x] `apiClient.ts` — trust-aware API client (injects all trust headers via Zustand session store)
 - [x] `sessionStore.ts` — operator session & work context store
 - [x] VITO Dashboard: registry overview, match-queue, cards management, config (4 pages)
-- [x] `vitoApi.ts` — typed VITO API client (routes through trust-aware apiClient)
+- [x] `vitoApi.ts` — typed VITO API client (15 types, 20+ API functions)
+- [x] Client search page — PII-masked results with status badges
+- [x] Dedup case review — score display, merge/reject actions
+- [x] Issuance queue — state-based tab filters, workflow actions
+- [x] Provisional reconciliation — verify button per client
+- [x] Audit event viewer — expandable JSON payloads, type filter
 - [ ] Remaining route stubs (tshepo, varapi, tuso, zibo, oros, pct, mushex)
 
 ### EHR App — Port 3002
@@ -376,14 +437,22 @@
 - [ ] Full Next.js config + route stubs (dashboard, patient, encounter, orders, results)
 
 ### Portal App — Port 3003
-- [x] `package.json`
-- [ ] Full Next.js config + route stubs (health-id, timeline, wallet, consent, recovery)
+- [x] `package.json`, `next.config.js`, `tailwind.config.ts`, `tsconfig.json`
+- [x] `portalApi.ts` — trust-aware API client (CITIZEN actor, EXTERNAL mode, step-up token support)
+- [x] Citizen layout with navigation (Request ID, Recovery, My QR, Pickup)
+- [x] Request ID page — form with type/name/DOB/sex, anti-enumeration response
+- [x] Recovery page — two-step flow with step-up handling
+- [x] My QR page — signed Health ID QR display with registration check
+- [x] Delegated Pickup page — create (step-up) + redeem tabs
+- [x] Helm chart (vito-web, port 3003, VITO_API_URL env)
+- [ ] Route stubs: timeline, wallet, consent
 
 ---
 
 ## API Contracts
 
-- [ ] OpenAPI specs for all 9 sovereign services
+- [x] `contracts/openapi/vito.openapi.yaml` — 56 endpoints, 14 tags, shared schemas
+- [ ] OpenAPI specs for remaining 8 sovereign services
 - [ ] AsyncAPI spec: `impilo.events.asyncapi.yaml`
 - [ ] Shared schemas: event-envelope, audit-event, errors, obligations
 - [ ] Shared docs: headers, purpose-of-use, error-codes, id-standards
