@@ -93,8 +93,8 @@ public class OrderController {
         // Step 3: Create worksteps
         List<WorkstepEntity> worksteps = workstepEngine.createWorkstepsForOrder(order);
 
-        // Step 4: Start SLA timer
-        SlaTimerEntity timer = slaService.startTimer(order);
+        // Step 4: Start SLA timer (OVERALL stage, 0 = use default TAT from config)
+        SlaTimerEntity timer = slaService.startTimer(order.getOrderId(), "OVERALL", 0);
 
         log.info("Order placed and routed: orderId={}, route={}, worksteps={}, slaTarget={}",
                 order.getOrderId(), route.getRouteTarget(), worksteps.size(), timer.getTargetAt());

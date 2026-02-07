@@ -8,8 +8,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.oros.config.OrosProperties;
 import zw.gov.mohcc.impilo.oros.persistence.entity.EventOutboxEntity;
+import zw.gov.mohcc.impilo.oros.persistence.entity.OrderEntity;
 import zw.gov.mohcc.impilo.oros.persistence.entity.SlaTimerEntity;
 import zw.gov.mohcc.impilo.oros.persistence.repository.EventOutboxRepository;
+import zw.gov.mohcc.impilo.oros.persistence.repository.OrderRepository;
 import zw.gov.mohcc.impilo.oros.persistence.repository.SlaTimerRepository;
 
 import java.time.Duration;
@@ -32,6 +34,7 @@ public class SlaService {
     private static final Logger log = LoggerFactory.getLogger(SlaService.class);
 
     private final SlaTimerRepository slaTimerRepository;
+    private final OrderRepository orderRepository;
     private final EventOutboxRepository outboxRepository;
     private final OrosProperties properties;
     private final ObjectMapper objectMapper;
@@ -40,15 +43,18 @@ public class SlaService {
      * Constructs the SlaService with all required dependencies.
      *
      * @param slaTimerRepository repository for SLA timer persistence
+     * @param orderRepository    repository for order queries (needed for tenantId lookup)
      * @param outboxRepository   repository for outbox event persistence
      * @param properties         OROS configuration properties
      * @param objectMapper       Jackson mapper for JSON serialization
      */
     public SlaService(SlaTimerRepository slaTimerRepository,
+                      OrderRepository orderRepository,
                       EventOutboxRepository outboxRepository,
                       OrosProperties properties,
                       ObjectMapper objectMapper) {
         this.slaTimerRepository = slaTimerRepository;
+        this.orderRepository = orderRepository;
         this.outboxRepository = outboxRepository;
         this.properties = properties;
         this.objectMapper = objectMapper;
@@ -109,6 +115,14 @@ public class SlaService {
             timer.setBreachedAt(now);
             slaTimerRepository.save(timer);
 
+            // Look up the order to get tenantId (required for outbox NOT NULL constraint)
+            OrderEntity order = orderRepository.findByOrderId(timer.getOrderId()).orElse(null);
+            if (order == null) {
+                log.warn("Order not found for SLA timer {}, skipping outbox event", timer.getTimerId());
+                count++;
+                continue;
+            }
+
             Map<String, Object> payload = new LinkedHashMap<>();
             payload.put("timerId", timer.getTimerId().toString());
             payload.put("orderId", timer.getOrderId());
@@ -124,6 +138,7 @@ public class SlaService {
                 outbox.setAggregateId(timer.getOrderId());
                 outbox.setEventType("SLA_BREACHED");
                 outbox.setPayload(objectMapper.writeValueAsString(payload));
+                outbox.setTenantId(order.getTenantId());
                 outboxRepository.save(outbox);
             } catch (Exception e) {
                 log.error("Failed to write SLA_BREACHED outbox event for timer {}: {}",
