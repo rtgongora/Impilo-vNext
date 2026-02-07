@@ -1,0 +1,44 @@
+package zw.gov.mohcc.impilo.pct.persistence.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import zw.gov.mohcc.impilo.pct.persistence.entity.QueueEntity;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+/**
+ * Repository for {@link QueueEntity} persistence operations.
+ * All finder methods are tenant-scoped to enforce multi-tenancy isolation.
+ */
+@Repository
+public interface QueueRepository extends JpaRepository<QueueEntity, UUID> {
+
+    /**
+     * Finds all queues at a given facility within a tenant.
+     *
+     * @param tenantId   the tenant identifier
+     * @param facilityId the facility identifier
+     * @return list of queues at the facility
+     */
+    List<QueueEntity> findByTenantIdAndFacilityId(UUID tenantId, UUID facilityId);
+
+    /**
+     * Finds active queues for a specific workspace within a tenant.
+     *
+     * @param tenantId    the tenant identifier
+     * @param workspaceId the workspace identifier
+     * @return list of active queues at the workspace
+     */
+    List<QueueEntity> findByTenantIdAndWorkspaceIdAndActiveTrue(UUID tenantId, UUID workspaceId);
+
+    /**
+     * Finds a specific queue by tenant and queue ID.
+     *
+     * @param tenantId the tenant identifier
+     * @param queueId  the queue identifier
+     * @return the queue if found
+     */
+    Optional<QueueEntity> findByTenantIdAndQueueId(UUID tenantId, UUID queueId);
+}
