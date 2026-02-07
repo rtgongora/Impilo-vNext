@@ -34,31 +34,105 @@
 
 ## Sovereign Service 1 — TSHEPO (Identity & Trust)
 
-> Port 8081 · Trust & Governance Plane
-> The gatekeeper: every request flows through Envoy ext_authz → TSHEPO.
+> Trust & Governance Plane — 7 sub-domains, 6 services, 2 shared libraries
+> The gatekeeper: every request flows through Envoy ext_authz gRPC → tshepo-authz.
 
-### Skeleton (complete)
-- [x] `pom.xml`, `Dockerfile`, `application.yml`, `TshepoApplication.java`
-- [x] `SecurityConfig.java`, `RateLimitConfig.java`
-- [x] `TrustHeaders.java` (14 header constants — single source of truth)
-- [x] `AuthorizeController.java` (Envoy ext_authz HTTP endpoint)
-- [x] `PolicyEngine.java` (7-step evaluation + serialized audit chain)
-- [x] `Decision.java`, `Obligations.java`, `PurposeOfUse.java`, `RiskScoring.java`
-- [x] JPA entities + repositories (6 entities, 6 repos)
-- [x] `AuditOutboxPublisher.java` (Kafka outbox poller)
-- [x] Flyway V001–V004 (policy log, audit chain, consent, device risk + outbox)
-- [x] Helm chart
+### Shared Libraries (complete)
+- [x] `libs/tshepo-contracts/` — TrustHeaders (14+), AuthzRequest/Response, Obligations, Verdict, ActorType, PurposeOfUse, RiskLevel, ConsentDecision, AuditEntry, Protobuf ext_authz definitions
+- [x] `libs/tshepo-sdk/` — TrustContext record, TrustContextHolder, TrustContextFilter, TrustHeaderPropagator (S2S), AuthzClient (default-deny on failure)
 
-### Remaining Controllers
-- [ ] `StepUpController.java` — step-up authentication challenge/response
-- [ ] `ConsentController.java` — CRUD consent directives
-- [ ] `AuditController.java` — audit trail query endpoints
-- [ ] `DeviceRiskController.java` — device profile management
+### tshepo-authz-service — Authorization & Policy Enforcement (complete)
+> Port 8081 (HTTP) + 9090 (gRPC) · The "brain"
 
-### Integration
+- [x] `PolicyEngine.java` — 7-step PDP: risk scoring → purpose validation → break-glass → RBAC/ABAC → consent → risk step-up → ALLOW with obligations
+- [x] `ExtAuthzGrpcService.java` — Envoy ext_authz gRPC endpoint (AuthorizationGrpc.AuthorizationImplBase)
+- [x] `AuthorizeController.java` — HTTP ext_authz fallback (all methods)
+- [x] `RiskScoring.java` — device reputation (unknown/new/known/blocked), Redis-cached
+- [x] `SessionAssuranceRouter.java` — pluggable adapter chain (Keycloak primary, eSignet optional)
+- [x] `KeycloakAdapter.java`, `ESignetAdapter.java` — session validation + token introspection
+- [x] `StepUpService.java` + `StepUpController.java` — MFA/biometric/supervisor challenges
+- [x] `BreakGlassService.java` + `BreakGlassController.java` — emergency override with mandatory review queue
+- [x] `DeviceService.java` + `DeviceController.java` — device profile CRUD + blocking
+- [x] `PolicyManagementService.java` + `PolicyController.java` — policy rule CRUD
+- [x] `PolicyCacheService.java`, `DeviceCacheService.java` — Redis caching layer
+- [x] `AuditPublisher.java` — Kafka outbox for audit events
+- [x] `ConsentClient.java` — consent evaluation S2S client
+- [x] 6 JPA entities (PolicyRule, PolicyDecisionLog, DeviceProfile, BreakGlassRequest, StepUpChallenge, EventOutbox)
+- [x] Flyway V001 (policy_rule, policy_decision_log, device_profile, break_glass_request, step_up_challenge, event_outbox)
+- [x] Helm chart (replicas=2, gRPC health probe)
+
+### tshepo-identity-service — Identity Resolution & Tokenisation (complete)
+> Port 8181
+
+- [x] `CpidGenerator.java` — deterministic UUID v5 from namespace + tenantId + healthId
+- [x] `IdResolutionService.java` — Impilo ID → CPID resolution, O-CPID provisioning
+- [x] `MosipLinkService.java` — indirect link (AES-256-GCM encrypted link_ref, SHA-256 lookup hash)
+- [x] `TokenIssuanceService.java` — scoped tokens for inter-service identity resolution
+- [x] `ReconciliationService.java` — O-CPID → CPID reconciliation
+- [x] Controllers: ResolutionController, CpidController, TokenController, MosipController, ReconciliationController
+- [x] Flyway V001 (id_mapping, provisional_cpid, mosip_link, scoped_token, event_outbox)
+- [x] Helm chart (replicas=2)
+
+### tshepo-consent-service — Consent & Preference Management (complete)
+> Port 8182
+
+- [x] `ConsentCrudService.java` — FHIR R4 Consent CRUD (JSONB storage)
+- [x] `ConsentEvaluationService.java` — evaluation engine (Redis-cached decisions)
+- [x] `ShareLinkService.java` — time-limited consent share links
+- [x] `FhirConsentMapper.java` — HAPI FHIR R4 parser/validator
+- [x] `ConsentCacheService.java` — Redis consent decision cache
+- [x] Controllers: ConsentController, ConsentEvaluationController, ShareLinkController, PortalConsentController
+- [x] Flyway V001 (consent_directive, consent_audit, share_link, event_outbox)
+- [x] Helm chart (replicas=2)
+
+### tshepo-audit-service — Provenance, Audit & Non-Repudiation (complete)
+> Port 8183
+
+- [x] `AuditChainService.java` — SHA-256 hash chain with PESSIMISTIC_WRITE locking for gapless sequencing
+- [x] `AuditQueryService.java` — query by correlation, actor, resource, time range
+- [x] `AuditExportService.java` — signed export bundles for legal defensibility
+- [x] `AuditKafkaConsumer.java` — consumes from tshepo.audit.events topic
+- [x] Controllers: AuditIngestController, AuditQueryController, AccessHistoryController, AuditExportController, ChainIntegrityController
+- [x] Flyway V001 (audit_event, audit_chain_head, audit_export)
+- [x] Helm chart (replicas=2, Kafka consumer group)
+
+### tshepo-keys-service — Service-to-Service Trust & Keys (complete)
+> Port 8184
+
+- [x] `Ed25519SigningService.java` — Bouncy Castle key generation + AES-256-GCM encrypted storage (KEK from config, Vault-ready)
+- [x] `KeyRotationService.java` — automated key rotation with rotation log
+- [x] `JwksService.java` — RFC 7517 JWKS endpoint (public keys only)
+- [x] `CertificateTrustService.java` — mTLS certificate trust management
+- [x] `TokenSigningService.java` — JWS signing for inter-service tokens
+- [x] Controllers: JwksController (public), KeyManagementController, CertificateController, SigningController
+- [x] Flyway V001 (signing_key, certificate_trust, key_rotation_log, event_outbox)
+- [x] Helm chart (replicas=1)
+
+### tshepo-offline-service — Offline Trust Controls (complete)
+> Port 8185
+
+- [x] `CapabilityTokenService.java` — facility-scoped, JWS-signed, short TTL capability tokens
+- [x] `OfflineRulesEngine.java` — offline action authorization (capability-based)
+- [x] `OfflinePackService.java` — downloadable offline data packs
+- [x] `OCpidIssuanceService.java` — offline provisional CPID issuance
+- [x] `ReconciliationService.java` — batch reconciliation of offline actions
+- [x] Controllers: CapabilityController, OfflinePackController, ReconciliationController, OfflineActionController
+- [x] Flyway V001 (capability_token, offline_action_log, offline_pack, reconciliation_batch, event_outbox)
+- [x] Helm chart (replicas=1)
+
+### Infrastructure (complete)
+- [x] Parent POM updated with 6 TSHEPO service modules + 2 lib modules
+- [x] Envoy ext_authz switched from HTTP to gRPC (port 9090)
+- [x] init-databases.sql updated with 6 TSHEPO databases
+- [x] Helm charts for all 6 services
+
+### Tests
+- [ ] Unit tests: PolicyEngine, RiskScoring, AuthzInternalRequest, BreakGlass, StepUp
+- [ ] Unit tests: AuditChainService, CpidGenerator, ConsentEvaluationService
+- [ ] Unit tests: Ed25519SigningService, CapabilityTokenService, OfflineRulesEngine
+- [ ] Unit tests: tshepo-contracts DTOs, tshepo-sdk TrustContext/Filter/Client
+- [ ] Integration tests: end-to-end ext_authz flow
 - [ ] Keycloak realm import script (`scripts/seed/keycloak-realm.json`)
-- [ ] Redis session/rate-limit cache integration
-- [ ] Kafka `tshepo.audit` topic producer tests
 
 ---
 
