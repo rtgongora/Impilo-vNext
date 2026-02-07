@@ -28,6 +28,15 @@ public class DedupCaseEntity {
     @Column(name = "status", nullable = false)
     private String status = "PENDING";
 
+    @Column(name = "risk")
+    private String risk;
+
+    @Column(name = "reasons", columnDefinition = "jsonb")
+    private String reasons;
+
+    @Column(name = "assigned_to")
+    private String assignedTo;
+
     @Column(name = "reviewed_by")
     private String reviewedBy;
 
@@ -54,6 +63,12 @@ public class DedupCaseEntity {
     public void setMatchScore(BigDecimal matchScore) { this.matchScore = matchScore; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+    public String getRisk() { return risk; }
+    public void setRisk(String risk) { this.risk = risk; }
+    public String getReasons() { return reasons; }
+    public void setReasons(String reasons) { this.reasons = reasons; }
+    public String getAssignedTo() { return assignedTo; }
+    public void setAssignedTo(String assignedTo) { this.assignedTo = assignedTo; }
     public String getReviewedBy() { return reviewedBy; }
     public void setReviewedBy(String reviewedBy) { this.reviewedBy = reviewedBy; }
     public OffsetDateTime getReviewedAt() { return reviewedAt; }

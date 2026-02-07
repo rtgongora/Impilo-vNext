@@ -36,6 +36,21 @@ public class ClientEntity {
     @Column(name = "phone_hash")
     private String phoneHash;
 
+    @Column(name = "crid", nullable = false, unique = true)
+    private UUID crid;
+
+    @Column(name = "impilo_id")
+    private String impiloId;
+
+    @Column(name = "demographics", columnDefinition = "jsonb")
+    private String demographics;
+
+    @Column(name = "contacts", columnDefinition = "jsonb")
+    private String contacts;
+
+    @Column(name = "address", columnDefinition = "jsonb")
+    private String address;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private IdentityStatus status = IdentityStatus.PROVISIONAL;
@@ -51,6 +66,7 @@ public class ClientEntity {
         createdAt = OffsetDateTime.now();
         updatedAt = OffsetDateTime.now();
         if (healthId == null) healthId = UUID.randomUUID();
+        if (crid == null) crid = UUID.randomUUID();
     }
 
     @PreUpdate
@@ -76,6 +92,16 @@ public class ClientEntity {
     public void setSex(String sex) { this.sex = sex; }
     public String getPhoneHash() { return phoneHash; }
     public void setPhoneHash(String phoneHash) { this.phoneHash = phoneHash; }
+    public UUID getCrid() { return crid; }
+    public void setCrid(UUID crid) { this.crid = crid; }
+    public String getImpiloId() { return impiloId; }
+    public void setImpiloId(String impiloId) { this.impiloId = impiloId; }
+    public String getDemographics() { return demographics; }
+    public void setDemographics(String demographics) { this.demographics = demographics; }
+    public String getContacts() { return contacts; }
+    public void setContacts(String contacts) { this.contacts = contacts; }
+    public String getAddress() { return address; }
+    public void setAddress(String address) { this.address = address; }
     public IdentityStatus getStatus() { return status; }
     public void setStatus(IdentityStatus status) { this.status = status; }
     public OffsetDateTime getCreatedAt() { return createdAt; }
