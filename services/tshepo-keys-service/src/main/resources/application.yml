@@ -1,0 +1,58 @@
+server:
+  port: 8184
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: tshepo-keys-service
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/tshepo_keys
+    username: ${POSTGRES_USER:impilo}
+    password: ${POSTGRES_PASSWORD:changeme}
+    hikari:
+      maximum-pool-size: 15
+      minimum-idle: 3
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_schema: tshepo_keys
+  flyway:
+    enabled: true
+    schemas: tshepo_keys
+    locations: classpath:db/migration
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:impilo}
+
+# --- TSHEPO Keys configuration ---
+tshepo:
+  keys:
+    # Key Encryption Key (KEK) for AES-256-GCM private key encryption at rest.
+    # In production, this MUST come from Vault or a KMS — never hardcode.
+    kek: ${TSHEPO_KEYS_KEK:000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f}
+    key-algorithm: Ed25519
+    rotation-interval-days: ${TSHEPO_KEYS_ROTATION_DAYS:90}
+    token-default-ttl-seconds: ${TSHEPO_KEYS_TOKEN_TTL:300}
+    jwks-cache-ttl-seconds: ${TSHEPO_KEYS_JWKS_CACHE_TTL:60}
+    events:
+      kafka-topic: platform.keys.events
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  metrics:
+    tags:
+      application: tshepo-keys-service
