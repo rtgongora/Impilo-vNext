@@ -2,7 +2,6 @@ package zw.gov.mohcc.impilo.vito.core.qr;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import zw.gov.mohcc.impilo.vito.config.VitoProperties;
 
 import java.util.Optional;
 
@@ -14,7 +13,7 @@ class QrSigningServiceTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        service = new QrSigningService(new VitoProperties());
+        service = new QrSigningService();
         service.init();
     }
 

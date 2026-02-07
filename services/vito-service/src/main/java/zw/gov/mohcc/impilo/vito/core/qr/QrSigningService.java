@@ -8,7 +8,6 @@ import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import zw.gov.mohcc.impilo.vito.config.VitoProperties;
 
 import java.text.ParseException;
 import java.time.Instant;
@@ -33,14 +32,9 @@ public class QrSigningService {
 
     private static final Logger log = LoggerFactory.getLogger(QrSigningService.class);
 
-    private final VitoProperties properties;
     private OctetKeyPair jwk;
     private JWSSigner signer;
     private JWSVerifier verifier;
-
-    public QrSigningService(VitoProperties properties) {
-        this.properties = properties;
-    }
 
     @PostConstruct
     public void init() throws Exception {
