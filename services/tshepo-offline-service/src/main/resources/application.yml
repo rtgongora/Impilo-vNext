@@ -1,0 +1,74 @@
+server:
+  port: 8185
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: tshepo-offline-service
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/tshepo_offline
+    username: ${POSTGRES_USER:impilo}
+    password: ${POSTGRES_PASSWORD:changeme}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_schema: tshepo_offline
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    schemas: tshepo_offline
+    default-schema: tshepo_offline
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:impilo}
+
+# --- TSHEPO Offline-specific ---
+tshepo:
+  offline:
+    default-capability-ttl-hours: 8
+    max-capability-ttl-hours: 72
+    max-offline-encounters: 50
+    allowed-offline-actions:
+      - READ_PATIENT
+      - CREATE_PROVISIONAL_ENCOUNTER
+      - CREATE_PROVISIONAL_REGISTRATION
+      - READ_MEDICATION
+      - DISPENSE_MEDICATION
+    offline-pack-ttl-hours: 24
+    reconciliation-batch-size: 100
+  outbox:
+    poll-interval-ms: 1000
+  services:
+    identity-url: ${TSHEPO_IDENTITY_URL:http://localhost:8186}
+    keys-url: ${TSHEPO_KEYS_URL:http://localhost:8187}
+    authz-url: ${TSHEPO_AUTHZ_URL:http://localhost:8188}
+  kafka:
+    topic: platform.offline.events
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  metrics:
+    tags:
+      application: tshepo-offline-service
