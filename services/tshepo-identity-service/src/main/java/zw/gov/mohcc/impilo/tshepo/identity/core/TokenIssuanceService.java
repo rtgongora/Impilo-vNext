@@ -1,0 +1,260 @@
+package zw.gov.mohcc.impilo.tshepo.identity.core;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nimbusds.jose.*;
+import com.nimbusds.jose.util.Base64URL;
+import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.SignedJWT;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
+import zw.gov.mohcc.impilo.tshepo.identity.api.dto.*;
+import zw.gov.mohcc.impilo.tshepo.identity.config.IdentityProperties;
+import zw.gov.mohcc.impilo.tshepo.identity.persistence.entity.EventOutboxEntity;
+import zw.gov.mohcc.impilo.tshepo.identity.persistence.entity.ScopedTokenEntity;
+import zw.gov.mohcc.impilo.tshepo.identity.persistence.repository.EventOutboxRepository;
+import zw.gov.mohcc.impilo.tshepo.identity.persistence.repository.ScopedTokenRepository;
+
+import java.text.ParseException;
+import java.time.Instant;
+import java.util.Date;
+import java.util.Map;
+import java.util.UUID;
+
+/**
+ * Issues, introspects, and revokes scoped JWS tokens.
+ *
+ * <h3>Token flow:</h3>
+ * <ol>
+ *   <li>Build JWT claims (tenantId, actorId, purpose, scope, subjectRef, exp, jti)</li>
+ *   <li>Serialize as JWS with Ed25519 signature via tshepo-keys-service POST /v1/sign</li>
+ *   <li>Persist token metadata in scoped_token table for revocation/introspection</li>
+ * </ol>
+ *
+ * <p>Tokens are NOT OIDC tokens. They are internal Impilo service-scoped tokens
+ * with short TTL (default 300s).</p>
+ */
+@Service
+public class TokenIssuanceService {
+
+    private static final Logger log = LoggerFactory.getLogger(TokenIssuanceService.class);
+
+    private final ScopedTokenRepository tokenRepo;
+    private final EventOutboxRepository outboxRepo;
+    private final RestTemplate keysRestTemplate;
+    private final ObjectMapper objectMapper;
+    private final int defaultTtlSeconds;
+
+    public TokenIssuanceService(ScopedTokenRepository tokenRepo,
+                                 EventOutboxRepository outboxRepo,
+                                 @Qualifier("keysRestTemplate") RestTemplate keysRestTemplate,
+                                 ObjectMapper objectMapper,
+                                 IdentityProperties properties) {
+        this.tokenRepo = tokenRepo;
+        this.outboxRepo = outboxRepo;
+        this.keysRestTemplate = keysRestTemplate;
+        this.objectMapper = objectMapper;
+        this.defaultTtlSeconds = properties.tokenTtlSeconds();
+    }
+
+    /**
+     * Issue a scoped access token.
+     *
+     * <p>The token is a JWS signed with Ed25519 by the keys-service. It carries
+     * the tenantId, actorId, purpose, scope, subjectRef, and expiry. The JTI
+     * is a random UUID stored in the scoped_token table for revocation.</p>
+     */
+    @Transactional
+    public ScopedTokenResponse issueToken(IssueScopedTokenRequest request) {
+        int ttl = (request.ttlSeconds() != null && request.ttlSeconds() > 0)
+                ? request.ttlSeconds()
+                : defaultTtlSeconds;
+
+        String jti = UUID.randomUUID().toString();
+        Instant now = Instant.now();
+        Instant expiresAt = now.plusSeconds(ttl);
+
+        // Build JWT claims
+        JWTClaimsSet claims = new JWTClaimsSet.Builder()
+                .jwtID(jti)
+                .issuer("tshepo-identity-service")
+                .claim("tenant_id", request.tenantId().toString())
+                .claim("actor_id", request.actorId())
+                .claim("purpose", request.purpose())
+                .claim("scope", request.scope())
+                .claim("target_service", request.targetService())
+                .claim("sub_ref", request.subjectRef())
+                .issueTime(Date.from(now))
+                .expirationTime(Date.from(expiresAt))
+                .build();
+
+        // Sign via keys-service
+        String signedToken = signViaKeysService(claims);
+
+        // Persist token record for revocation/introspection
+        ScopedTokenEntity entity = new ScopedTokenEntity();
+        entity.setTenantId(request.tenantId());
+        entity.setActorId(request.actorId());
+        entity.setTargetService(request.targetService());
+        entity.setScope(request.scope());
+        entity.setSubjectRef(request.subjectRef());
+        entity.setJti(jti);
+        entity.setExpiresAt(expiresAt);
+        entity.setStatus("ACTIVE");
+        tokenRepo.save(entity);
+
+        publishOutboxEvent("ScopedToken", jti, "TOKEN_ISSUED",
+                Map.of("tenantId", request.tenantId(),
+                       "actorId", request.actorId(),
+                       "targetService", request.targetService(),
+                       "jti", jti));
+
+        log.info("Issued scoped token: jti={}, actor={}, target={}, ttl={}s",
+                jti, request.actorId(), request.targetService(), ttl);
+
+        return new ScopedTokenResponse(signedToken, jti, request.scope(),
+                request.targetService(), expiresAt);
+    }
+
+    /**
+     * Introspect a token: check validity by JTI, expiry, and revocation status.
+     *
+     * <p>This does NOT cryptographically verify the JWS signature (that is the
+     * responsibility of the consuming service using the public key). This endpoint
+     * checks the server-side state: is the token still active and not expired?</p>
+     */
+    @Transactional(readOnly = true)
+    public IntrospectResponse introspect(IntrospectRequest request) {
+        // Parse the token to extract the JTI
+        String jti;
+        try {
+            SignedJWT signedJWT = SignedJWT.parse(request.token());
+            jti = signedJWT.getJWTClaimsSet().getJWTID();
+            if (jti == null || jti.isBlank()) {
+                return inactiveIntrospectResponse();
+            }
+        } catch (ParseException e) {
+            log.warn("Failed to parse token for introspection: {}", e.getMessage());
+            return inactiveIntrospectResponse();
+        }
+
+        // Look up in database
+        ScopedTokenEntity entity = tokenRepo.findByJti(jti).orElse(null);
+        if (entity == null) {
+            return inactiveIntrospectResponse();
+        }
+
+        // Check revocation
+        if ("REVOKED".equals(entity.getStatus()) || entity.getRevokedAt() != null) {
+            return inactiveIntrospectResponse();
+        }
+
+        // Check expiry
+        if (Instant.now().isAfter(entity.getExpiresAt())) {
+            return inactiveIntrospectResponse();
+        }
+
+        return new IntrospectResponse(
+                true,
+                entity.getJti(),
+                entity.getTenantId(),
+                entity.getActorId(),
+                entity.getScope(),
+                entity.getTargetService(),
+                entity.getSubjectRef(),
+                entity.getExpiresAt()
+        );
+    }
+
+    /**
+     * Revoke a token by its JTI.
+     */
+    @Transactional
+    public void revokeToken(String jti) {
+        ScopedTokenEntity entity = tokenRepo.findByJti(jti)
+                .orElseThrow(() -> new IdentityNotFoundException("Token not found"));
+
+        entity.setStatus("REVOKED");
+        entity.setRevokedAt(Instant.now());
+        tokenRepo.save(entity);
+
+        publishOutboxEvent("ScopedToken", jti, "TOKEN_REVOKED",
+                Map.of("jti", jti, "revokedAt", Instant.now().toString()));
+
+        log.info("Revoked scoped token: jti={}", jti);
+    }
+
+    // ── Internal methods ────────────────────────────────────────────────────
+
+    /**
+     * Signs the JWT claims by calling tshepo-keys-service POST /v1/sign.
+     *
+     * <p>Request body: { "algorithm": "EdDSA", "payload": "<base64url-encoded claims>" }
+     * Expected response: { "data": { "signature": "<base64url-encoded signature>" } }</p>
+     *
+     * <p>We construct the full JWS compact serialization:
+     * header.payload.signature</p>
+     */
+    private String signViaKeysService(JWTClaimsSet claims) {
+        try {
+            // Build the JWS header
+            JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.EdDSA)
+                    .type(JOSEObjectType.JWT)
+                    .build();
+
+            // Create the signing input (header.payload)
+            Base64URL headerB64 = header.toBase64URL();
+            Base64URL payloadB64 = Base64URL.encode(claims.toJSONObject().toString());
+            String signingInput = headerB64 + "." + payloadB64;
+
+            // Call keys-service for signature
+            Map<String, Object> signRequest = Map.of(
+                    "algorithm", "EdDSA",
+                    "payload", signingInput
+            );
+
+            ResponseEntity<String> response = keysRestTemplate.postForEntity(
+                    "/v1/sign", signRequest, String.class);
+
+            if (response.getStatusCode() != HttpStatus.OK || response.getBody() == null) {
+                throw new IllegalStateException("Keys service returned non-OK response");
+            }
+
+            JsonNode root = objectMapper.readTree(response.getBody());
+            String signature = root.path("data").path("signature").asText();
+            if (signature == null || signature.isBlank()) {
+                throw new IllegalStateException("Keys service returned empty signature");
+            }
+
+            // Construct the compact JWS: header.payload.signature
+            return signingInput + "." + signature;
+        } catch (Exception e) {
+            log.error("Failed to sign token via keys-service: {}", e.getMessage());
+            throw new IllegalStateException("Token signing failed", e);
+        }
+    }
+
+    private IntrospectResponse inactiveIntrospectResponse() {
+        return new IntrospectResponse(false, null, null, null, null, null, null, null);
+    }
+
+    private void publishOutboxEvent(String aggregateType, String aggregateId,
+                                     String eventType, Object payload) {
+        try {
+            EventOutboxEntity event = new EventOutboxEntity();
+            event.setAggregateType(aggregateType);
+            event.setAggregateId(aggregateId);
+            event.setEventType(eventType);
+            event.setPayload(objectMapper.writeValueAsString(payload));
+            outboxRepo.save(event);
+        } catch (Exception e) {
+            log.error("Failed to write outbox event: {}", e.getMessage());
+        }
+    }
+}

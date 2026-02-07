@@ -1,0 +1,68 @@
+server:
+  port: 8181
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: tshepo-identity-service
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/tshepo_identity
+    username: ${POSTGRES_USER:impilo}
+    password: ${POSTGRES_PASSWORD:changeme}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_schema: tshepo_identity
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    schemas: tshepo_identity
+    default-schema: tshepo_identity
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:impilo}
+
+# --- TSHEPO Identity-specific ---
+tshepo:
+  identity:
+    # UUID v5 namespace for deterministic CPID generation (DNS namespace from RFC 4122)
+    cpid-namespace: "6ba7b810-9dad-11d1-80b4-00c04fd430c8"
+    # Default scoped-token TTL in seconds
+    token-ttl-seconds: 300
+    # AES-256-GCM key for MOSIP link_ref encryption (Base64-encoded, 32 bytes)
+    mosip-kek: ${TSHEPO_MOSIP_KEK:Y2hhbmdlbWUtZ2VuZXJhdGUtYS1yZWFsLWtlaw==}
+    # URL of the keys-service for Ed25519 signing
+    keys-service-url: ${TSHEPO_KEYS_SERVICE_URL:http://localhost:8086}
+    # URL of VITO service for Impilo ID → Health ID resolution
+    vito-service-url: ${VITO_SERVICE_URL:http://localhost:8082}
+  outbox:
+    poll-interval-ms: 1000
+    kafka-topic: platform.identity.events
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  metrics:
+    tags:
+      application: tshepo-identity-service
