@@ -1,0 +1,6 @@
+apiVersion: v2
+name: card-print-agent
+description: Card Print Agent — job-based smart card and document printing
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

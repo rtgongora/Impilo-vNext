@@ -1,0 +1,38 @@
+replicaCount: 2
+
+image:
+  repository: impilo/credential-verification-service
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  httpPort: 8094
+
+env:
+  SPRING_DATASOURCE_URL: jdbc:postgresql://postgresql:5432/credential_verification
+  SPRING_DATASOURCE_USERNAME: impilo
+  SPRING_DATASOURCE_PASSWORD: impilo
+  SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+  SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/realms/impilo
+  CREDENTIAL_VERIFY_BASE_URL: https://verify.impilo.gov.zw/v1/public/verify
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: "1"
+    memory: 1Gi
+
+livenessProbe:
+  httpGet:
+    path: /actuator/health/liveness
+    port: 8094
+  initialDelaySeconds: 30
+
+readinessProbe:
+  httpGet:
+    path: /actuator/health/readiness
+    port: 8094
+  initialDelaySeconds: 15

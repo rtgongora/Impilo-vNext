@@ -1,0 +1,6 @@
+apiVersion: v2
+name: credential-verification
+description: Credential Verification Service — digitally signed PDF certificates, QR codes, and public verification
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

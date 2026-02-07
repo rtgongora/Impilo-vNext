@@ -1,0 +1,40 @@
+replicaCount: 1
+
+image:
+  repository: impilo/card-print-agent
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  httpPort: 8091
+
+env:
+  SPRING_DATASOURCE_URL: jdbc:postgresql://postgresql:5432/card_print
+  SPRING_DATASOURCE_USERNAME: impilo
+  SPRING_DATASOURCE_PASSWORD: impilo
+  SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+  SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/realms/impilo
+  CARD_PRINT_SPOOL_DIR: /var/spool/impilo/print
+  CARD_PRINT_SPOOLER_TYPE: FILE
+  DOCUMENT_STORE_URL: http://document-store-service:8093
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: "1"
+    memory: 1Gi
+
+livenessProbe:
+  httpGet:
+    path: /actuator/health/liveness
+    port: 8091
+  initialDelaySeconds: 30
+
+readinessProbe:
+  httpGet:
+    path: /actuator/health/readiness
+    port: 8091
+  initialDelaySeconds: 15
