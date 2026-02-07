@@ -1,16 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
-
-interface SmartCard {
-  id: number;
-  cardNumber: string;
-  healthId: string;
-  didUri: string;
-  status: string;
-  requestedAt: string;
-  expiresAt: string;
-}
+import { vitoApi, type SmartCard } from "@/lib/vitoApi";
 
 type CardTab = "REQUESTED" | "PRINTED" | "ACTIVE";
 
@@ -26,11 +17,8 @@ export default function CardsPage() {
   const loadCards = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/v1/cards/by-status/${activeTab}?page=0&size=50`);
-      const data = await res.json();
-      if (data.success) {
-        setCards(data.data.items ?? []);
-      }
+      const data = await vitoApi.listCardsByStatus(activeTab, 0, 50);
+      setCards(data.items ?? []);
     } catch {
       setCards([]);
     } finally {
@@ -42,9 +30,11 @@ export default function CardsPage() {
     loadCards();
   }, [loadCards]);
 
-  const performAction = async (cardId: number, action: string) => {
+  const performAction = async (cardId: number, action: "print" | "activate" | "inactivate") => {
     try {
-      await fetch(`/api/v1/cards/${cardId}/${action}`, { method: "POST" });
+      if (action === "print") await vitoApi.printCard(cardId);
+      else if (action === "activate") await vitoApi.activateCard(cardId);
+      else await vitoApi.inactivateCard(cardId);
       await loadCards();
     } catch {
       // Error handling via toast in production

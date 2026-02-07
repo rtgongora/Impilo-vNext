@@ -1,25 +1,24 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { vitoApi, type RegistryMode } from "@/lib/vitoApi";
 
 /**
  * Client Configuration — toggle OpenCR vs Standalone mode.
  * Displays current registry mode and OpenCR connection status.
  */
 export default function VitoConfigPage() {
-  const [mode, setMode] = useState<string>("STANDALONE");
-  const [opencrEnabled, setOpencrEnabled] = useState(false);
+  const [config, setConfig] = useState<RegistryMode>({
+    mode: "STANDALONE",
+    opencrEnabled: false,
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadMode() {
       try {
-        const res = await fetch("/api/v1/registry/mode");
-        const data = await res.json();
-        if (data.success) {
-          setMode(data.data.mode);
-          setOpencrEnabled(data.data.opencrEnabled);
-        }
+        const data = await vitoApi.getRegistryMode();
+        setConfig(data);
       } catch {
         // Default to standalone
       } finally {
@@ -54,12 +53,12 @@ export default function VitoConfigPage() {
           <h2 className="text-sm font-medium text-neutral-500 mb-4">Current Mode</h2>
           <div className="flex items-center gap-3">
             <span className={`w-3 h-3 rounded-full ${
-              mode === "OPENCR" ? "bg-info" : "bg-success"
+              config.mode === "OPENCR" ? "bg-info" : "bg-success"
             }`} />
-            <span className="text-lg font-semibold text-neutral-900">{mode}</span>
+            <span className="text-lg font-semibold text-neutral-900">{config.mode}</span>
           </div>
           <p className="text-sm text-neutral-500 mt-3">
-            {mode === "OPENCR"
+            {config.mode === "OPENCR"
               ? "Connected to external OpenCR instance for federated identity matching. FHIR $match operations route to the external registry."
               : "Operating as a standalone registry. All identity operations are handled locally. Use this mode for independent deployments."}
           </p>
@@ -74,14 +73,14 @@ export default function VitoConfigPage() {
           <h2 className="text-sm font-medium text-neutral-500 mb-4">OpenCR Integration</h2>
           <div className="flex items-center gap-3">
             <span className={`w-3 h-3 rounded-full ${
-              opencrEnabled ? "bg-success" : "bg-neutral-500"
+              config.opencrEnabled ? "bg-success" : "bg-neutral-500"
             }`} />
             <span className="text-lg font-semibold text-neutral-900">
-              {opencrEnabled ? "Enabled" : "Disabled"}
+              {config.opencrEnabled ? "Enabled" : "Disabled"}
             </span>
           </div>
           <p className="text-sm text-neutral-500 mt-3">
-            {opencrEnabled
+            {config.opencrEnabled
               ? "FHIR $match operations are routed to the external OpenCR instance for cross-registry identity resolution."
               : "OpenCR integration is not active. Enable by setting VITO_REGISTRY_MODE=OPENCR."}
           </p>

@@ -1,16 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
-
-interface MatchResult {
-  id: number;
-  sourceHealthId: string;
-  candidateHealthId: string;
-  matchScore: number;
-  matchAlgorithm: string;
-  disposition: string;
-  createdAt: string;
-}
+import { vitoApi, type MatchResult } from "@/lib/vitoApi";
 
 /**
  * Identity Resolution Queue — operator reviews pending matches.
@@ -23,11 +14,8 @@ export default function MatchQueuePage() {
   const loadMatches = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/v1/match/pending?page=0&size=50");
-      const data = await res.json();
-      if (data.success) {
-        setMatches(data.data.items ?? []);
-      }
+      const data = await vitoApi.getPendingMatches(0, 50);
+      setMatches(data.items ?? []);
     } catch {
       // Will show empty state
     } finally {
@@ -41,11 +29,7 @@ export default function MatchQueuePage() {
 
   const resolveMatch = async (matchId: number, disposition: string) => {
     try {
-      await fetch(`/api/v1/match/${matchId}/resolve`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ disposition }),
-      });
+      await vitoApi.resolveMatch(matchId, disposition);
       await loadMatches();
     } catch {
       // Error handling via toast in production
