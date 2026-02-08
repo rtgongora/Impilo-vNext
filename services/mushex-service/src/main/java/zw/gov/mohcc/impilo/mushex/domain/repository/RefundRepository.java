@@ -10,4 +10,6 @@ import java.util.List;
 public interface RefundRepository extends JpaRepository<RefundEntity, String> {
 
     List<RefundEntity> findByIntentId(String intentId);
+
+    long countByIntentId(String intentId);
 }

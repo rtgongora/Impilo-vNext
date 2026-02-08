@@ -17,4 +17,6 @@ public interface RemittanceTokenRepository extends JpaRepository<RemittanceToken
     List<RemittanceTokenEntity> findByIntentId(String intentId);
 
     long countByIntentIdAndStatusAndCreatedAtAfter(String intentId, RemittanceStatus status, OffsetDateTime after);
+
+    long countByIntentIdAndCreatedAtAfter(String intentId, OffsetDateTime after);
 }

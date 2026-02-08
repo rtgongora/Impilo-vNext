@@ -12,6 +12,8 @@ import java.util.UUID;
 @Repository
 public interface FraudFlagRepository extends JpaRepository<FraudFlagEntity, String> {
 
+    Page<FraudFlagEntity> findByTenantId(UUID tenantId, Pageable pageable);
+
     Page<FraudFlagEntity> findByTenantIdAndStatus(UUID tenantId, String status, Pageable pageable);
 
     List<FraudFlagEntity> findByEntityTypeAndEntityId(String entityType, String entityId);
