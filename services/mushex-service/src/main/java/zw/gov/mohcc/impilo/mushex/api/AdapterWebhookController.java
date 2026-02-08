@@ -17,7 +17,7 @@ import zw.gov.mohcc.impilo.mushex.domain.enums.AttemptStatus;
 import zw.gov.mohcc.impilo.mushex.persistence.PaymentAttemptRepository;
 import zw.gov.mohcc.impilo.mushex.service.PaymentIntentService;
 import zw.gov.mohcc.impilo.mushex.service.adapter.AdapterRegistry;
-import zw.gov.mohcc.impilo.mushex.service.adapter.PaymentAdapter;
+import zw.gov.mohcc.impilo.mushex.service.adapter.PaymentRailAdapter;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import zw.gov.mohcc.impilo.shared.response.ApiResponse;
 
@@ -55,9 +55,9 @@ public class AdapterWebhookController {
         String correlationId = ctx.correlationId().toString();
 
         AdapterType type = AdapterType.valueOf(adapterType.toUpperCase());
-        PaymentAdapter adapter = adapterRegistry.getAdapter(type);
+        PaymentRailAdapter adapter = adapterRegistry.getAdapter(type);
 
-        boolean valid = adapter.verifySignature(rawPayload, signature);
+        boolean valid = adapter.verifyWebhook(signature, rawPayload, Map.of());
         if (!valid) {
             log.warn("Invalid webhook signature for adapter {} — correlationId={}", adapterType, correlationId);
             return ResponseEntity.status(400)
