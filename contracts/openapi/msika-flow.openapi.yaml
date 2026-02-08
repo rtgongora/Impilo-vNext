@@ -1,0 +1,1011 @@
+openapi: 3.0.3
+info:
+  title: MSIKA Flow — Health Marketplace Orchestration API
+  description: |
+    Transaction and orchestration layer for regulated health commerce and self-service.
+    Handles patient self-service ordering, prescription fulfillment, service booking,
+    vendor onboarding, fulfillment routing, payments/settlements/refunds via MUSHEX,
+    and strict safety/regulatory enforcement via TSHEPO + MSIKA Core restrictions.
+  version: 0.1.0
+  contact:
+    name: Impilo vNext Platform Team
+    url: https://github.com/mohcc/impilo-vnext
+
+servers:
+  - url: http://localhost:10000
+    description: Local Envoy gateway
+  - url: http://localhost:8100
+    description: Direct service (dev only)
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Cart
+    description: Cart validation against MSIKA Core catalog restrictions
+  - name: Orders
+    description: Marketplace order lifecycle management
+  - name: Pickup
+    description: Pickup token issuance, QR/OTP claim flow, slip PDF
+  - name: Rx Fulfillment
+    description: Prescription fulfillment with substitution management
+  - name: Bookings
+    description: Service booking orchestration
+  - name: Vendors
+    description: Vendor onboarding, document management, order fulfillment
+  - name: Ops
+    description: Operations console — reviews, stuck orders, audits
+  - name: Refunds
+    description: Full and partial refund flows
+
+paths:
+  /v1/cart/validate:
+    post:
+      tags: [Cart]
+      operationId: validateCart
+      summary: Validate cart items against MSIKA Core catalog restrictions
+      parameters:
+        - $ref: '#/components/parameters/XTenantId'
+        - $ref: '#/components/parameters/XCorrelationId'
+        - $ref: '#/components/parameters/XActorId'
+        - $ref: '#/components/parameters/XActorType'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidateCartRequest'
+      responses:
+        '200':
+          description: Validation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse_ValidationResult'
+
+  /v1/orders:
+    post:
+      tags: [Orders]
+      operationId: createOrder
+      summary: Create a new marketplace order
+      parameters:
+        - $ref: '#/components/parameters/XTenantId'
+        - $ref: '#/components/parameters/XCorrelationId'
+        - $ref: '#/components/parameters/XActorId'
+        - $ref: '#/components/parameters/XActorType'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderRequest'
+      responses:
+        '201':
+          description: Order created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse_OrderView'
+
+  /v1/orders/{id}:
+    get:
+      tags: [Orders]
+      operationId: getOrder
+      summary: Get order by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/XTenantId'
+        - $ref: '#/components/parameters/XCorrelationId'
+      responses:
+        '200':
+          description: Order details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse_OrderView'
+
+  /v1/orders/{id}/cancel:
+    post:
+      tags: [Orders]
+      operationId: cancelOrder
+      summary: Cancel an order
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/XTenantId'
+        - $ref: '#/components/parameters/XActorId'
+      responses:
+        '200':
+          description: Order cancelled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse_OrderView'
+
+  /v1/orders/{id}/price:
+    post:
+      tags: [Orders]
+      operationId: priceOrder
+      summary: Compute and snapshot pricing for an order
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/XTenantId'
+        - $ref: '#/components/parameters/XActorId'
+      responses:
+        '200':
+          description: Order priced
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse_OrderView'
+
+  /v1/orders/{id}/pay:
+    post:
+      tags: [Orders]
+      operationId: createPaymentIntent
+      summary: Create MUSHEX payment intent for an order
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/XTenantId'
+        - $ref: '#/components/parameters/XActorId'
+      responses:
+        '200':
+          description: Payment intent created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse_PaymentIntentResponse'
+
+  /v1/orders/{id}/route:
+    post:
+      tags: [Orders]
+      operationId: routeOrder
+      summary: Route order to fulfillment target
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/XTenantId'
+        - $ref: '#/components/parameters/XActorId'
+      responses:
+        '200':
+          description: Order routed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse_OrderView'
+
+  /v1/orders/{id}/accept:
+    post:
+      tags: [Orders]
+      operationId: acceptOrder
+      summary: Accept a routed order (vendor/facility action)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/XTenantId'
+        - $ref: '#/components/parameters/XActorId'
+      responses:
+        '200':
+          description: Order accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse_OrderView'
+
+  /v1/orders/{id}/mark-ready:
+    post:
+      tags: [Orders]
+      operationId: markOrderReady
+      summary: Mark order ready for pickup
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/XTenantId'
+        - $ref: '#/components/parameters/XActorId'
+      responses:
+        '200':
+          description: Order marked ready
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse_OrderView'
+
+  /v1/orders/{id}/mark-delivered:
+    post:
+      tags: [Orders]
+      operationId: markOrderDelivered
+      summary: Mark order as delivered
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/XTenantId'
+        - $ref: '#/components/parameters/XActorId'
+      responses:
+        '200':
+          description: Order marked delivered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse_OrderView'
+
+  /v1/orders/{id}/tracking:
+    get:
+      tags: [Orders]
+      operationId: getOrderTracking
+      summary: Get order tracking and event history
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/XTenantId'
+      responses:
+        '200':
+          description: Tracking data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse_OrderView'
+
+  /v1/orders/{id}/pickup/issue:
+    post:
+      tags: [Pickup]
+      operationId: issuePickupToken
+      summary: Issue pickup token (OTP + QR) for ready-for-pickup order
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/XTenantId'
+        - $ref: '#/components/parameters/XActorId'
+      responses:
+        '201':
+          description: Pickup token issued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse_PickupIssueResponse'
+
+  /v1/pickup/claim:
+    post:
+      tags: [Pickup]
+      operationId: claimPickup
+      summary: Claim a pickup using token or OTP
+      parameters:
+        - $ref: '#/components/parameters/XTenantId'
+        - $ref: '#/components/parameters/XActorId'
+        - $ref: '#/components/parameters/XDeviceFingerprint'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClaimPickupRequest'
+      responses:
+        '200':
+          description: Pickup claimed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse_ClaimResult'
+
+  /v1/orders/{id}/pickup/slip.pdf:
+    get:
+      tags: [Pickup]
+      operationId: getPickupSlip
+      summary: Download pickup slip PDF
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Slip metadata (PDF via document-service)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse_Object'
+
+  /v1/rx/attach-token:
+    post:
+      tags: [Rx Fulfillment]
+      operationId: attachRxToken
+      summary: Attach and validate a prescription token from OROS/Pharmacy
+      responses:
+        '200':
+          description: Token attached
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse_Object'
+
+  /v1/rx/{orderId}/substitution/propose:
+    post:
+      tags: [Rx Fulfillment]
+      operationId: proposeSubstitution
+      summary: Propose a medication substitution
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubstitutionProposeRequest'
+      responses:
+        '200':
+          description: Substitution proposed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse_OrderLineView'
+
+  /v1/rx/{orderId}/substitution/approve:
+    post:
+      tags: [Rx Fulfillment]
+      operationId: approveSubstitution
+      summary: Approve a proposed substitution (patient/provider action)
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubstitutionApproveRequest'
+      responses:
+        '200':
+          description: Substitution approved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse_OrderLineView'
+
+  /v1/bookings/create:
+    post:
+      tags: [Bookings]
+      operationId: createBooking
+      summary: Create a service booking order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookingCreateRequest'
+      responses:
+        '201':
+          description: Booking created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse_OrderView'
+
+  /v1/bookings/{id}/reschedule:
+    post:
+      tags: [Bookings]
+      operationId: rescheduleBooking
+      summary: Reschedule a booking
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Booking rescheduled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse_OrderView'
+
+  /v1/bookings/{id}/cancel:
+    post:
+      tags: [Bookings]
+      operationId: cancelBooking
+      summary: Cancel a booking
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Booking cancelled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse_OrderView'
+
+  /v1/vendors/apply:
+    post:
+      tags: [Vendors]
+      operationId: applyVendor
+      summary: Submit vendor application
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VendorApplyRequest'
+      responses:
+        '201':
+          description: Vendor application submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse_Object'
+
+  /v1/vendors/{id}/documents/upload:
+    post:
+      tags: [Vendors]
+      operationId: uploadVendorDocument
+      summary: Upload vendor verification document
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VendorDocUploadRequest'
+      responses:
+        '201':
+          description: Document uploaded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse_Object'
+
+  /v1/vendors/{id}/orders:
+    get:
+      tags: [Vendors]
+      operationId: getVendorOrders
+      summary: Get orders assigned to a vendor
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Vendor orders
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse_Object'
+
+  /v1/vendors/{id}/orders/{orderId}/accept:
+    post:
+      tags: [Vendors]
+      operationId: vendorAcceptOrder
+      summary: Vendor accepts an assigned order
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Order accepted by vendor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse_OrderView'
+
+  /v1/orders/{id}/refund:
+    post:
+      tags: [Refunds]
+      operationId: requestRefund
+      summary: Request full or partial refund
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefundRequest'
+      responses:
+        '201':
+          description: Refund requested
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse_Object'
+
+  /v1/ops/reviews/pending:
+    get:
+      tags: [Ops]
+      operationId: getPendingReviews
+      summary: Get pending ops reviews
+      parameters:
+        - $ref: '#/components/parameters/XTenantId'
+      responses:
+        '200':
+          description: Pending reviews
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse_Object'
+
+  /v1/ops/reviews/{id}/approve:
+    post:
+      tags: [Ops]
+      operationId: approveReview
+      summary: Approve an ops review
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/XTenantId'
+        - $ref: '#/components/parameters/XActorId'
+      responses:
+        '200':
+          description: Review approved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse_Object'
+
+  /v1/ops/reviews/{id}/reject:
+    post:
+      tags: [Ops]
+      operationId: rejectReview
+      summary: Reject an ops review
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/XActorId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewActionRequest'
+      responses:
+        '200':
+          description: Review rejected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse_Object'
+
+  /v1/ops/stuck-orders:
+    get:
+      tags: [Ops]
+      operationId: getStuckOrders
+      summary: Get fulfillment routes that failed and need intervention
+      responses:
+        '200':
+          description: Stuck routes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse_Object'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    XTenantId:
+      name: X-Tenant-Id
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+    XCorrelationId:
+      name: X-Correlation-Id
+      in: header
+      required: false
+      schema:
+        type: string
+        format: uuid
+    XActorId:
+      name: X-Actor-Id
+      in: header
+      required: true
+      schema:
+        type: string
+    XActorType:
+      name: X-Actor-Type
+      in: header
+      required: false
+      schema:
+        type: string
+        enum: [PATIENT, PROVIDER, VENDOR, OPS, SYSTEM]
+    XDeviceFingerprint:
+      name: X-Device-Fingerprint
+      in: header
+      required: false
+      schema:
+        type: string
+
+  schemas:
+    ValidateCartRequest:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              msikaCoreCode:
+                type: string
+              qty:
+                type: integer
+        channel:
+          type: string
+
+    CreateOrderRequest:
+      type: object
+      required: [orderType]
+      properties:
+        orderType:
+          type: string
+          enum: [OTC_PRODUCT_ORDER, RX_FULFILLMENT_ORDER, SERVICE_BOOKING_ORDER, BUNDLE_ORDER]
+        patientCpid:
+          type: string
+        facilityId:
+          type: string
+          format: uuid
+        vendorId:
+          type: string
+          format: uuid
+        idempotencyKey:
+          type: string
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/LineItemRequest'
+
+    LineItemRequest:
+      type: object
+      required: [msikaCoreCode, qty]
+      properties:
+        msikaCoreCode:
+          type: string
+        kind:
+          type: string
+          enum: [PRODUCT, SERVICE]
+        qty:
+          type: integer
+          minimum: 1
+        unitPrice:
+          type: number
+        fulfillmentMode:
+          type: string
+          enum: [PHARMACY_PICKUP, HOME_DELIVERY, OUTREACH_DELIVERY, DIGITAL_FULFILLMENT, FACILITY_SERVICE]
+        substitutionPolicy:
+          type: string
+        metadata:
+          type: string
+
+    ClaimPickupRequest:
+      type: object
+      required: [tokenOrOtp]
+      properties:
+        tokenOrOtp:
+          type: string
+
+    SubstitutionProposeRequest:
+      type: object
+      required: [lineId, substituteCode]
+      properties:
+        lineId:
+          type: string
+        substituteCode:
+          type: string
+        substitutePrice:
+          type: number
+        reason:
+          type: string
+
+    SubstitutionApproveRequest:
+      type: object
+      required: [lineId]
+      properties:
+        lineId:
+          type: string
+
+    BookingCreateRequest:
+      type: object
+      required: [facilityId]
+      properties:
+        patientCpid:
+          type: string
+        facilityId:
+          type: string
+          format: uuid
+        serviceCode:
+          type: string
+        idempotencyKey:
+          type: string
+
+    VendorApplyRequest:
+      type: object
+      required: [name, type]
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+          enum: [FACILITY, PHARMACY, SUPPLIER]
+        coverage:
+          type: string
+
+    VendorDocUploadRequest:
+      type: object
+      required: [docType, landelaDocId]
+      properties:
+        docType:
+          type: string
+        landelaDocId:
+          type: string
+
+    RefundRequest:
+      type: object
+      required: [amount, reason]
+      properties:
+        amount:
+          type: number
+        reason:
+          type: string
+
+    ReviewActionRequest:
+      type: object
+      properties:
+        notes:
+          type: string
+
+    OrderView:
+      type: object
+      properties:
+        orderId:
+          type: string
+        tenantId:
+          type: string
+          format: uuid
+        actorId:
+          type: string
+        actorType:
+          type: string
+        patientCpid:
+          type: string
+        orderType:
+          type: string
+        status:
+          type: string
+        facilityId:
+          type: string
+          format: uuid
+        vendorId:
+          type: string
+          format: uuid
+        amountTotal:
+          type: number
+        currency:
+          type: string
+        priceSnapshot:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderLineView'
+
+    OrderLineView:
+      type: object
+      properties:
+        lineId:
+          type: string
+        orderId:
+          type: string
+        msikaCoreCode:
+          type: string
+        kind:
+          type: string
+        qty:
+          type: integer
+        unitPrice:
+          type: number
+        lineTotal:
+          type: number
+        fulfillmentMode:
+          type: string
+        state:
+          type: string
+        metadata:
+          type: string
+
+    PickupIssueResponse:
+      type: object
+      properties:
+        tokenId:
+          type: string
+        rawToken:
+          type: string
+        otp:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+        qrPayload:
+          type: string
+
+    PaymentIntentResponse:
+      type: object
+      properties:
+        orderId:
+          type: string
+        mushexPaymentIntentId:
+          type: string
+        status:
+          type: string
+
+    ApiResponse_OrderView:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: '#/components/schemas/OrderView'
+        correlationId:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    ApiResponse_OrderLineView:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: '#/components/schemas/OrderLineView'
+        correlationId:
+          type: string
+
+    ApiResponse_ValidationResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            valid:
+              type: boolean
+            items:
+              type: array
+              items:
+                type: object
+                properties:
+                  msikaCoreCode:
+                    type: string
+                  valid:
+                    type: boolean
+                  errors:
+                    type: array
+                    items:
+                      type: string
+        correlationId:
+          type: string
+
+    ApiResponse_PickupIssueResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: '#/components/schemas/PickupIssueResponse'
+        correlationId:
+          type: string
+
+    ApiResponse_PaymentIntentResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: '#/components/schemas/PaymentIntentResponse'
+        correlationId:
+          type: string
+
+    ApiResponse_ClaimResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            orderId:
+              type: string
+            tokenId:
+              type: string
+            claimedBy:
+              type: string
+        correlationId:
+          type: string
+
+    ApiResponse_Object:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+        correlationId:
+          type: string
