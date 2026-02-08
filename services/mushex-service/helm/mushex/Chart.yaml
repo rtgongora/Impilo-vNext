@@ -1,6 +1,6 @@
 apiVersion: v2
 name: mushex
-description: Impilo vNext — mushex service
+description: MUSHEX — Health Payments, Remittances & Claims Switching Service
 type: application
 version: 0.1.0
 appVersion: "0.1.0"

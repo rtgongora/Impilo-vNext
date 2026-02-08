@@ -1,0 +1,97 @@
+server:
+  port: ${SERVER_PORT:8087}
+
+spring:
+  application:
+    name: mushex-service
+
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/mushex_db
+    username: ${POSTGRES_USER:impilo}
+    password: ${POSTGRES_PASSWORD:changeme}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+      retries: 3
+    consumer:
+      group-id: mushex-service
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+    listener:
+      ack-mode: manual
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER:http://localhost:8080/realms/impilo}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+      probes:
+        enabled: true
+  metrics:
+    tags:
+      application: mushex-service
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+mushex:
+  outbox:
+    poll-interval-ms: 2000
+    batch-size: 100
+  currency: USD
+  hmac-pepper: ${MUSHEX_HMAC_PEPPER:mushex-dev-pepper-change-in-prod}
+  remittance:
+    otp-length: 6
+    expiry-minutes: 60
+    max-claims-per-token: 1
+    rate-limit-per-minute: 5
+  step-up:
+    payout-release: true
+    destination-change: true
+    large-refund-threshold: 1000.00
+    claim-override: true
+    settlement-release: true
+    cross-facility-dashboard: true
+  adapters:
+    sandbox:
+      enabled: true
+      simulate-delay-ms: 500

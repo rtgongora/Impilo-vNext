@@ -1,18 +1,41 @@
-replicaCount: 1
+replicaCount: 2
 
 image:
-  repository: ghcr.io/mohcc/impilo/mushex
+  repository: ghcr.io/mohcc/impilo/mushex-service
   tag: "latest"
   pullPolicy: IfNotPresent
 
 service:
   type: ClusterIP
-  port: 8080
+  port: 8087
+
+env:
+  SPRING_DATASOURCE_URL: jdbc:postgresql://postgresql:5432/mushex_db
+  SPRING_DATASOURCE_USERNAME: impilo
+  SPRING_DATASOURCE_PASSWORD: impilo
+  SPRING_DATA_REDIS_HOST: redis
+  SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+  SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/realms/impilo
+  MUSHEX_HMAC_PEPPER: change-me-in-production
 
 resources:
   requests:
     cpu: 250m
     memory: 512Mi
   limits:
-    cpu: 1000m
+    cpu: "1"
     memory: 1Gi
+
+livenessProbe:
+  httpGet:
+    path: /actuator/health/liveness
+    port: 8087
+  initialDelaySeconds: 60
+  periodSeconds: 15
+
+readinessProbe:
+  httpGet:
+    path: /actuator/health/readiness
+    port: 8087
+  initialDelaySeconds: 30
+  periodSeconds: 10
