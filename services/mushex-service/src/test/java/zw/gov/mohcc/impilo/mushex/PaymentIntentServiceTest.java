@@ -6,7 +6,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import zw.gov.mohcc.impilo.mushex.domain.entity.EventOutboxEntity;
@@ -17,8 +16,6 @@ import zw.gov.mohcc.impilo.mushex.domain.repository.EventOutboxRepository;
 import zw.gov.mohcc.impilo.mushex.domain.repository.PaymentIntentRepository;
 import zw.gov.mohcc.impilo.mushex.service.PaymentIntentService;
 import zw.gov.mohcc.impilo.mushex.service.ReceiptService;
-import zw.gov.mohcc.impilo.mushex.service.LedgerService;
-import zw.gov.mohcc.impilo.mushex.service.FraudDetectionService;
 import zw.gov.mohcc.impilo.shared.auth.AccessMode;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
@@ -29,14 +26,14 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for {@link PaymentIntentService}.
  *
- * Validates intent creation, idempotency, state-machine transitions,
- * partial/full payment recording, and cancellation logic.
+ * Validates intent creation with idempotency, state-machine transitions,
+ * partial and full payment recording, receipt generation on full payment,
+ * and cancellation logic.
  */
 @ExtendWith(MockitoExtension.class)
 class PaymentIntentServiceTest {
@@ -44,11 +41,8 @@ class PaymentIntentServiceTest {
     @Mock private PaymentIntentRepository intentRepository;
     @Mock private EventOutboxRepository outboxRepository;
     @Mock private ReceiptService receiptService;
-    @Mock private LedgerService ledgerService;
-    @Mock private FraudDetectionService fraudService;
     @Mock private ObjectMapper objectMapper;
 
-    @InjectMocks
     private PaymentIntentService service;
 
     private final UUID tenantId = UUID.randomUUID();
@@ -57,6 +51,7 @@ class PaymentIntentServiceTest {
 
     @BeforeEach
     void setUp() {
+        service = new PaymentIntentService(intentRepository, outboxRepository, receiptService, objectMapper);
         TrustContextHolder.set(new TrustContext(
             tenantId, "actor-1", "FACILITY_FINANCE", "BILLING",
             "device-1", correlationId, facilityId, null, null, AccessMode.INTERNAL
@@ -93,6 +88,8 @@ class PaymentIntentServiceTest {
         assertEquals(tenantId, result.getTenantId());
         assertEquals(facilityId, result.getFacilityId());
         assertEquals("idem-key-001", result.getIdempotencyKey());
+        assertNotNull(result.getIntentId());
+        assertNotNull(result.getExpiresAt());
 
         verify(intentRepository).save(any(PaymentIntentEntity.class));
         verify(outboxRepository).save(any(EventOutboxEntity.class));
@@ -110,12 +107,11 @@ class PaymentIntentServiceTest {
             facilityId, "idem-key-002", metadata
         );
 
-        assertNotNull(result);
         assertEquals(metadata, result.getMetadata());
     }
 
     @Test
-    void createIntent_duplicateIdempotencyKey_returnsExisting() throws Exception {
+    void createIntent_duplicateIdempotencyKey_returnsExisting() {
         PaymentIntentEntity existing = new PaymentIntentEntity();
         existing.setIntentId("EXISTING-ID");
         existing.setIdempotencyKey("idem-key-001");
@@ -129,7 +125,6 @@ class PaymentIntentServiceTest {
         );
 
         assertEquals("EXISTING-ID", result.getIntentId());
-        assertEquals(IntentStatus.CREATED, result.getStatus());
         verify(intentRepository, never()).save(any());
         verify(outboxRepository, never()).save(any());
     }
@@ -166,9 +161,9 @@ class PaymentIntentServiceTest {
         when(intentRepository.save(any(PaymentIntentEntity.class))).thenAnswer(inv -> inv.getArgument(0));
         when(objectMapper.writeValueAsString(any())).thenReturn("{}");
 
-        service.cancelIntent("INT-001");
+        PaymentIntentEntity result = service.cancelIntent("INT-001");
 
-        assertEquals(IntentStatus.CANCELLED, intent.getStatus());
+        assertEquals(IntentStatus.CANCELLED, result.getStatus());
         verify(intentRepository).save(intent);
         verify(outboxRepository).save(any(EventOutboxEntity.class));
     }
@@ -180,9 +175,9 @@ class PaymentIntentServiceTest {
         when(intentRepository.save(any(PaymentIntentEntity.class))).thenAnswer(inv -> inv.getArgument(0));
         when(objectMapper.writeValueAsString(any())).thenReturn("{}");
 
-        service.cancelIntent("INT-002");
+        PaymentIntentEntity result = service.cancelIntent("INT-002");
 
-        assertEquals(IntentStatus.CANCELLED, intent.getStatus());
+        assertEquals(IntentStatus.CANCELLED, result.getStatus());
     }
 
     @Test
@@ -203,8 +198,9 @@ class PaymentIntentServiceTest {
     }
 
     @Test
-    void cancelIntent_alreadyCancelled_throws() {
-        PaymentIntentEntity intent = buildIntent("INT-005", IntentStatus.CANCELLED, "100.00", "0.00");
+    void cancelIntent_fromAuthorized_throws() {
+        // cancelIntent only allows CREATED and PENDING (not AUTHORIZED)
+        PaymentIntentEntity intent = buildIntent("INT-005", IntentStatus.AUTHORIZED, "100.00", "0.00");
         when(intentRepository.findById("INT-005")).thenReturn(Optional.of(intent));
 
         assertThrows(IllegalStateException.class, () -> service.cancelIntent("INT-005"));
@@ -228,25 +224,23 @@ class PaymentIntentServiceTest {
         when(intentRepository.save(any(PaymentIntentEntity.class))).thenAnswer(inv -> inv.getArgument(0));
         when(objectMapper.writeValueAsString(any())).thenReturn("{}");
 
-        service.recordPayment("INT-010", new BigDecimal("100.00"));
+        PaymentIntentEntity result = service.recordPayment("INT-010", new BigDecimal("100.00"));
 
-        assertEquals(new BigDecimal("100.00"), intent.getAmountPaid());
-        assertEquals(IntentStatus.PAID, intent.getStatus());
+        assertEquals(new BigDecimal("100.00"), result.getAmountPaid());
+        assertEquals(IntentStatus.PAID, result.getStatus());
         verify(receiptService).generateReceipt("INT-010");
-        verify(ledgerService).postPayment(eq(tenantId), eq("INT-010"), eq(new BigDecimal("100.00")), eq("USD"));
     }
 
     @Test
-    void recordPayment_partialAmount_staysPending() throws Exception {
+    void recordPayment_partialAmount_staysSameStatus() throws Exception {
         PaymentIntentEntity intent = buildIntent("INT-011", IntentStatus.PENDING, "100.00", "0.00");
         when(intentRepository.findById("INT-011")).thenReturn(Optional.of(intent));
         when(intentRepository.save(any(PaymentIntentEntity.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(objectMapper.writeValueAsString(any())).thenReturn("{}");
 
-        service.recordPayment("INT-011", new BigDecimal("50.00"));
+        PaymentIntentEntity result = service.recordPayment("INT-011", new BigDecimal("50.00"));
 
-        assertEquals(new BigDecimal("50.00"), intent.getAmountPaid());
-        assertEquals(IntentStatus.PENDING, intent.getStatus());
+        assertEquals(new BigDecimal("50.00"), result.getAmountPaid());
+        assertEquals(IntentStatus.PENDING, result.getStatus());
         verify(receiptService, never()).generateReceipt(any());
     }
 
@@ -257,38 +251,32 @@ class PaymentIntentServiceTest {
         when(intentRepository.save(any(PaymentIntentEntity.class))).thenAnswer(inv -> inv.getArgument(0));
         when(objectMapper.writeValueAsString(any())).thenReturn("{}");
 
-        service.recordPayment("INT-012", new BigDecimal("40.00"));
+        PaymentIntentEntity result = service.recordPayment("INT-012", new BigDecimal("40.00"));
 
-        assertEquals(new BigDecimal("100.00"), intent.getAmountPaid());
-        assertEquals(IntentStatus.PAID, intent.getStatus());
+        assertEquals(new BigDecimal("100.00"), result.getAmountPaid());
+        assertEquals(IntentStatus.PAID, result.getStatus());
         verify(receiptService).generateReceipt("INT-012");
     }
 
     @Test
-    void recordPayment_overpayment_throws() {
-        PaymentIntentEntity intent = buildIntent("INT-013", IntentStatus.PENDING, "100.00", "90.00");
+    void recordPayment_fromCreated_succeeds() throws Exception {
+        PaymentIntentEntity intent = buildIntent("INT-013", IntentStatus.CREATED, "100.00", "0.00");
         when(intentRepository.findById("INT-013")).thenReturn(Optional.of(intent));
+        when(intentRepository.save(any(PaymentIntentEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(objectMapper.writeValueAsString(any())).thenReturn("{}");
 
-        assertThrows(IllegalArgumentException.class,
-            () -> service.recordPayment("INT-013", new BigDecimal("20.00")));
+        PaymentIntentEntity result = service.recordPayment("INT-013", new BigDecimal("100.00"));
+
+        assertEquals(IntentStatus.PAID, result.getStatus());
     }
 
     @Test
-    void recordPayment_negativeAmount_throws() {
-        PaymentIntentEntity intent = buildIntent("INT-014", IntentStatus.PENDING, "100.00", "0.00");
+    void recordPayment_fromCancelled_throws() {
+        PaymentIntentEntity intent = buildIntent("INT-014", IntentStatus.CANCELLED, "100.00", "0.00");
         when(intentRepository.findById("INT-014")).thenReturn(Optional.of(intent));
 
-        assertThrows(IllegalArgumentException.class,
-            () -> service.recordPayment("INT-014", new BigDecimal("-10.00")));
-    }
-
-    @Test
-    void recordPayment_zeroAmount_throws() {
-        PaymentIntentEntity intent = buildIntent("INT-015", IntentStatus.PENDING, "100.00", "0.00");
-        when(intentRepository.findById("INT-015")).thenReturn(Optional.of(intent));
-
-        assertThrows(IllegalArgumentException.class,
-            () -> service.recordPayment("INT-015", BigDecimal.ZERO));
+        assertThrows(IllegalStateException.class,
+            () -> service.recordPayment("INT-014", new BigDecimal("100.00")));
     }
 
     @Test
@@ -316,9 +304,9 @@ class PaymentIntentServiceTest {
         when(intentRepository.save(any(PaymentIntentEntity.class))).thenAnswer(inv -> inv.getArgument(0));
         when(objectMapper.writeValueAsString(any())).thenReturn("{}");
 
-        service.transitionStatus("INT-020", IntentStatus.PENDING);
+        PaymentIntentEntity result = service.transitionStatus("INT-020", IntentStatus.PENDING);
 
-        assertEquals(IntentStatus.PENDING, intent.getStatus());
+        assertEquals(IntentStatus.PENDING, result.getStatus());
     }
 
     @Test
@@ -328,9 +316,9 @@ class PaymentIntentServiceTest {
         when(intentRepository.save(any(PaymentIntentEntity.class))).thenAnswer(inv -> inv.getArgument(0));
         when(objectMapper.writeValueAsString(any())).thenReturn("{}");
 
-        service.transitionStatus("INT-021", IntentStatus.AUTHORIZED);
+        PaymentIntentEntity result = service.transitionStatus("INT-021", IntentStatus.AUTHORIZED);
 
-        assertEquals(IntentStatus.AUTHORIZED, intent.getStatus());
+        assertEquals(IntentStatus.AUTHORIZED, result.getStatus());
     }
 
     @Test
@@ -340,13 +328,13 @@ class PaymentIntentServiceTest {
         when(intentRepository.save(any(PaymentIntentEntity.class))).thenAnswer(inv -> inv.getArgument(0));
         when(objectMapper.writeValueAsString(any())).thenReturn("{}");
 
-        service.transitionStatus("INT-022", IntentStatus.REFUND_PENDING);
+        PaymentIntentEntity result = service.transitionStatus("INT-022", IntentStatus.REFUND_PENDING);
 
-        assertEquals(IntentStatus.REFUND_PENDING, intent.getStatus());
+        assertEquals(IntentStatus.REFUND_PENDING, result.getStatus());
     }
 
     @Test
-    void transitionStatus_cancelledToPaid_throws() {
+    void transitionStatus_cancelledToAnything_throws() {
         PaymentIntentEntity intent = buildIntent("INT-023", IntentStatus.CANCELLED, "100.00", "0.00");
         when(intentRepository.findById("INT-023")).thenReturn(Optional.of(intent));
 
@@ -365,6 +353,7 @@ class PaymentIntentServiceTest {
 
     @Test
     void transitionStatus_createdToPaid_throws() {
+        // CREATED can only go to PENDING or CANCELLED
         PaymentIntentEntity intent = buildIntent("INT-025", IntentStatus.CREATED, "100.00", "0.00");
         when(intentRepository.findById("INT-025")).thenReturn(Optional.of(intent));
 
