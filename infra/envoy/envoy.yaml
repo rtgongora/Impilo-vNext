@@ -232,6 +232,24 @@ static_resources:
                         - match: { prefix: "/v1/internal/stores" }
                           route: { cluster: inventory_service }
 
+                        # ── MSIKA Flow — Health Marketplace Orchestration ──
+                        - match: { prefix: "/msika-flow/v1/cart" }
+                          route: { cluster: msika_flow_service }
+                        - match: { prefix: "/msika-flow/v1/orders" }
+                          route: { cluster: msika_flow_service }
+                        - match: { prefix: "/msika-flow/v1/pickup" }
+                          route: { cluster: msika_flow_service }
+                        - match: { prefix: "/msika-flow/v1/rx" }
+                          route: { cluster: msika_flow_service }
+                        - match: { prefix: "/msika-flow/v1/bookings" }
+                          route: { cluster: msika_flow_service }
+                        - match: { prefix: "/msika-flow/v1/vendors" }
+                          route: { cluster: msika_flow_service }
+                        - match: { prefix: "/msika-flow/v1/ops" }
+                          route: { cluster: msika_flow_service }
+                        - match: { prefix: "/msika-flow/v1/refunds" }
+                          route: { cluster: msika_flow_service }
+
                         # ── BUTANO — Shared Health Record (HAPI FHIR R4) ──
                         - match: { prefix: "/fhir" }
                           route: { cluster: butano_service }
@@ -557,3 +575,14 @@ static_resources:
               - endpoint:
                   address:
                     socket_address: { address: host.docker.internal, port_value: 8098 }
+
+    # ── MSIKA Flow — Health Marketplace Orchestration ──
+    - name: msika_flow_service
+      type: STRICT_DNS
+      load_assignment:
+        cluster_name: msika_flow_service
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: host.docker.internal, port_value: 8100 }

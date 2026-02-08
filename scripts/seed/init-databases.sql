@@ -35,5 +35,6 @@ CREATE DATABASE landela_adapter;
 CREATE DATABASE credential_verification;
 CREATE DATABASE share_slip;
 CREATE DATABASE card_print;
+CREATE DATABASE msika_flow;
 CREATE DATABASE keycloak;
 CREATE DATABASE butano;

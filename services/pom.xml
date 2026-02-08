@@ -74,6 +74,8 @@
         <module>landela-adapter-service</module>
         <module>credential-verification-service</module>
         <module>share-slip-service</module>
+        <!-- MSIKA Flow — Health Marketplace Orchestration -->
+        <module>msika-flow-service</module>
         <!-- BUTANO — Shared Health Record (HAPI FHIR JPA) -->
         <module>butano-service</module>
         <!-- TSHEPO decomposition (6 sub-services) -->
