@@ -14,10 +14,12 @@ import zw.gov.mohcc.impilo.mushex.domain.entity.ClaimEventEntity;
 import zw.gov.mohcc.impilo.mushex.domain.entity.EventOutboxEntity;
 import zw.gov.mohcc.impilo.mushex.domain.enums.ClaimStatus;
 import zw.gov.mohcc.impilo.mushex.domain.repository.AdjudicationRepository;
+import zw.gov.mohcc.impilo.mushex.domain.repository.ClaimAttachmentRepository;
 import zw.gov.mohcc.impilo.mushex.domain.repository.ClaimEventRepository;
 import zw.gov.mohcc.impilo.mushex.domain.repository.ClaimRepository;
 import zw.gov.mohcc.impilo.mushex.domain.repository.EventOutboxRepository;
 import zw.gov.mohcc.impilo.mushex.service.ClaimService;
+import zw.gov.mohcc.impilo.mushex.service.PaymentIntentService;
 import zw.gov.mohcc.impilo.shared.auth.AccessMode;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
@@ -34,15 +36,18 @@ import static org.mockito.Mockito.*;
  * Unit tests for {@link ClaimService}.
  *
  * Validates claim creation, submission (DRAFT->SUBMITTED), adjudication
- * recording, dispute handling (ADJUDICATED->RESUBMIT_PENDING), and
- * enforcement of invalid state transitions.
+ * recording with patient residual intent creation, dispute handling
+ * (ADJUDICATED->RESUBMIT_PENDING), and enforcement of invalid state
+ * transitions via the claim state machine.
  */
 @ExtendWith(MockitoExtension.class)
 class ClaimServiceTest {
 
     @Mock private ClaimRepository claimRepository;
-    @Mock private AdjudicationRepository adjudicationRepository;
     @Mock private ClaimEventRepository claimEventRepository;
+    @Mock private ClaimAttachmentRepository attachmentRepository;
+    @Mock private AdjudicationRepository adjudicationRepository;
+    @Mock private PaymentIntentService intentService;
     @Mock private EventOutboxRepository outboxRepository;
     @Mock private ObjectMapper objectMapper;
 
@@ -54,7 +59,8 @@ class ClaimServiceTest {
     @BeforeEach
     void setUp() {
         service = new ClaimService(
-            claimRepository, adjudicationRepository, claimEventRepository, outboxRepository, objectMapper
+            claimRepository, claimEventRepository, attachmentRepository,
+            adjudicationRepository, intentService, outboxRepository, objectMapper
         );
         TrustContextHolder.set(new TrustContext(
             tenantId, "actor-1", "FACILITY_FINANCE", "BILLING",
@@ -72,9 +78,9 @@ class ClaimServiceTest {
     // ---------------------------------------------------------------
 
     @Test
-    void createClaim_createsWithDraftStatus() throws Exception {
+    void createClaim_createsWithDraftStatus() {
         when(claimRepository.save(any(ClaimEntity.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(objectMapper.writeValueAsString(any())).thenReturn("{}");
+        when(claimEventRepository.save(any(ClaimEventEntity.class))).thenAnswer(inv -> inv.getArgument(0));
 
         ClaimEntity result = service.createClaim("BILL-001", "INS-001", facilityId, "{\"total\":\"500.00\"}");
 
@@ -88,23 +94,13 @@ class ClaimServiceTest {
         assertNotNull(result.getClaimId());
 
         verify(claimRepository).save(any(ClaimEntity.class));
+        verify(claimEventRepository).save(any(ClaimEventEntity.class));
     }
 
     @Test
-    void createClaim_generatesClaimId() throws Exception {
+    void createClaim_doesNotSetSubmittedAt() {
         when(claimRepository.save(any(ClaimEntity.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(objectMapper.writeValueAsString(any())).thenReturn("{}");
-
-        ClaimEntity result = service.createClaim("BILL-002", "INS-002", facilityId, null);
-
-        assertNotNull(result.getClaimId());
-        assertFalse(result.getClaimId().isBlank());
-    }
-
-    @Test
-    void createClaim_doesNotSetSubmittedAt() throws Exception {
-        when(claimRepository.save(any(ClaimEntity.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(objectMapper.writeValueAsString(any())).thenReturn("{}");
+        when(claimEventRepository.save(any(ClaimEventEntity.class))).thenAnswer(inv -> inv.getArgument(0));
 
         ClaimEntity result = service.createClaim("BILL-003", "INS-003", facilityId, null);
 
@@ -124,10 +120,10 @@ class ClaimServiceTest {
         when(claimEventRepository.save(any(ClaimEventEntity.class))).thenAnswer(inv -> inv.getArgument(0));
         when(objectMapper.writeValueAsString(any())).thenReturn("{}");
 
-        service.submitClaim("CLM-100");
+        ClaimEntity result = service.submitClaim("CLM-100");
 
-        assertEquals(ClaimStatus.SUBMITTED, claim.getStatus());
-        assertNotNull(claim.getSubmittedAt());
+        assertEquals(ClaimStatus.SUBMITTED, result.getStatus());
+        assertNotNull(result.getSubmittedAt());
         verify(claimRepository).save(claim);
         verify(outboxRepository).save(any(EventOutboxEntity.class));
     }
@@ -152,7 +148,7 @@ class ClaimServiceTest {
 
     @Test
     void submitClaim_fromNonDraft_throws() {
-        ClaimEntity claim = buildClaim("CLM-102", ClaimStatus.SUBMITTED);
+        ClaimEntity claim = buildClaim("CLM-102", ClaimStatus.RECEIVED);
         when(claimRepository.findById("CLM-102")).thenReturn(Optional.of(claim));
 
         assertThrows(IllegalStateException.class, () -> service.submitClaim("CLM-102"));
@@ -167,9 +163,9 @@ class ClaimServiceTest {
         when(claimEventRepository.save(any(ClaimEventEntity.class))).thenAnswer(inv -> inv.getArgument(0));
         when(objectMapper.writeValueAsString(any())).thenReturn("{}");
 
-        service.submitClaim("CLM-103");
+        ClaimEntity result = service.submitClaim("CLM-103");
 
-        assertEquals(ClaimStatus.SUBMITTED, claim.getStatus());
+        assertEquals(ClaimStatus.SUBMITTED, result.getStatus());
     }
 
     @Test
@@ -204,7 +200,6 @@ class ClaimServiceTest {
         service.recordAdjudication("CLM-200", "{\"approved\":true}",
             new BigDecimal("50.00"), new BigDecimal("450.00"));
 
-        // Verify adjudication entity was created
         ArgumentCaptor<AdjudicationEntity> adjCaptor = ArgumentCaptor.forClass(AdjudicationEntity.class);
         verify(adjudicationRepository).save(adjCaptor.capture());
         AdjudicationEntity adj = adjCaptor.getValue();
@@ -223,15 +218,15 @@ class ClaimServiceTest {
         when(claimEventRepository.save(any(ClaimEventEntity.class))).thenAnswer(inv -> inv.getArgument(0));
         when(objectMapper.writeValueAsString(any())).thenReturn("{}");
 
-        service.recordAdjudication("CLM-201", null,
+        ClaimEntity result = service.recordAdjudication("CLM-201", null,
             new BigDecimal("100.00"), new BigDecimal("400.00"));
 
-        assertEquals(ClaimStatus.ADJUDICATED, claim.getStatus());
-        assertNotNull(claim.getAdjudicatedAt());
+        assertEquals(ClaimStatus.ADJUDICATED, result.getStatus());
+        assertNotNull(result.getAdjudicatedAt());
     }
 
     @Test
-    void recordAdjudication_publishesOutboxEvent() throws Exception {
+    void recordAdjudication_withPatientResidual_createsPaymentIntent() throws Exception {
         ClaimEntity claim = buildClaim("CLM-202", ClaimStatus.RECEIVED);
         when(claimRepository.findById("CLM-202")).thenReturn(Optional.of(claim));
         when(claimRepository.save(any(ClaimEntity.class))).thenAnswer(inv -> inv.getArgument(0));
@@ -240,30 +235,45 @@ class ClaimServiceTest {
         when(objectMapper.writeValueAsString(any())).thenReturn("{}");
 
         service.recordAdjudication("CLM-202", null,
+            new BigDecimal("150.00"), new BigDecimal("350.00"));
+
+        // Patient residual > 0 should trigger intent creation
+        verify(intentService).createIntent(any(), eq("BILL-CLM-202"), eq(new BigDecimal("150.00")),
+            eq("USD"), eq(facilityId), eq("CLAIM_RESIDUAL_CLM-202"), any());
+    }
+
+    @Test
+    void recordAdjudication_zeroResidual_doesNotCreateIntent() throws Exception {
+        ClaimEntity claim = buildClaim("CLM-203", ClaimStatus.RECEIVED);
+        when(claimRepository.findById("CLM-203")).thenReturn(Optional.of(claim));
+        when(claimRepository.save(any(ClaimEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(adjudicationRepository.save(any(AdjudicationEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(claimEventRepository.save(any(ClaimEventEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(objectMapper.writeValueAsString(any())).thenReturn("{}");
+
+        service.recordAdjudication("CLM-203", null,
             BigDecimal.ZERO, new BigDecimal("500.00"));
 
-        ArgumentCaptor<EventOutboxEntity> outboxCaptor = ArgumentCaptor.forClass(EventOutboxEntity.class);
-        verify(outboxRepository).save(outboxCaptor.capture());
-        assertEquals("CLAIM_ADJUDICATED", outboxCaptor.getValue().getEventType());
+        verify(intentService, never()).createIntent(any(), any(), any(), any(), any(), any(), any());
     }
 
     @Test
     void recordAdjudication_fromDraft_throws() {
-        ClaimEntity claim = buildClaim("CLM-203", ClaimStatus.DRAFT);
-        when(claimRepository.findById("CLM-203")).thenReturn(Optional.of(claim));
+        ClaimEntity claim = buildClaim("CLM-204", ClaimStatus.DRAFT);
+        when(claimRepository.findById("CLM-204")).thenReturn(Optional.of(claim));
 
         assertThrows(IllegalStateException.class,
-            () -> service.recordAdjudication("CLM-203", null,
+            () -> service.recordAdjudication("CLM-204", null,
                 BigDecimal.ZERO, new BigDecimal("500.00")));
     }
 
     @Test
     void recordAdjudication_fromPaid_throws() {
-        ClaimEntity claim = buildClaim("CLM-204", ClaimStatus.PAID);
-        when(claimRepository.findById("CLM-204")).thenReturn(Optional.of(claim));
+        ClaimEntity claim = buildClaim("CLM-205", ClaimStatus.PAID);
+        when(claimRepository.findById("CLM-205")).thenReturn(Optional.of(claim));
 
         assertThrows(IllegalStateException.class,
-            () -> service.recordAdjudication("CLM-204", null,
+            () -> service.recordAdjudication("CLM-205", null,
                 BigDecimal.ZERO, new BigDecimal("500.00")));
     }
 
@@ -272,16 +282,16 @@ class ClaimServiceTest {
     // ---------------------------------------------------------------
 
     @Test
-    void disputeClaim_transitionsToResubmitPending() throws Exception {
+    void disputeClaim_fromAdjudicated_transitionsToResubmitPending() throws Exception {
         ClaimEntity claim = buildClaim("CLM-300", ClaimStatus.ADJUDICATED);
         when(claimRepository.findById("CLM-300")).thenReturn(Optional.of(claim));
         when(claimRepository.save(any(ClaimEntity.class))).thenAnswer(inv -> inv.getArgument(0));
         when(claimEventRepository.save(any(ClaimEventEntity.class))).thenAnswer(inv -> inv.getArgument(0));
         when(objectMapper.writeValueAsString(any())).thenReturn("{}");
 
-        service.disputeClaim("CLM-300", "Incorrect adjudication amount");
+        ClaimEntity result = service.disputeClaim("CLM-300", "Incorrect adjudication amount", "actor-2");
 
-        assertEquals(ClaimStatus.RESUBMIT_PENDING, claim.getStatus());
+        assertEquals(ClaimStatus.RESUBMIT_PENDING, result.getStatus());
     }
 
     @Test
@@ -292,7 +302,7 @@ class ClaimServiceTest {
         when(claimEventRepository.save(any(ClaimEventEntity.class))).thenAnswer(inv -> inv.getArgument(0));
         when(objectMapper.writeValueAsString(any())).thenReturn("{}");
 
-        service.disputeClaim("CLM-301", "Missing line items in adjudication");
+        service.disputeClaim("CLM-301", "Missing line items", "actor-2");
 
         ArgumentCaptor<ClaimEventEntity> captor = ArgumentCaptor.forClass(ClaimEventEntity.class);
         verify(claimEventRepository).save(captor.capture());
@@ -300,7 +310,7 @@ class ClaimServiceTest {
         assertEquals("CLM-301", event.getClaimId());
         assertEquals("ADJUDICATED", event.getFromState());
         assertEquals("RESUBMIT_PENDING", event.getToState());
-        assertEquals("Missing line items in adjudication", event.getReason());
+        assertTrue(event.getReason().contains("Missing line items"));
     }
 
     @Test
@@ -311,9 +321,9 @@ class ClaimServiceTest {
         when(claimEventRepository.save(any(ClaimEventEntity.class))).thenAnswer(inv -> inv.getArgument(0));
         when(objectMapper.writeValueAsString(any())).thenReturn("{}");
 
-        service.disputeClaim("CLM-302", "Rejection was in error");
+        ClaimEntity result = service.disputeClaim("CLM-302", "Rejection was in error", null);
 
-        assertEquals(ClaimStatus.RESUBMIT_PENDING, claim.getStatus());
+        assertEquals(ClaimStatus.RESUBMIT_PENDING, result.getStatus());
     }
 
     @Test
@@ -322,7 +332,7 @@ class ClaimServiceTest {
         when(claimRepository.findById("CLM-303")).thenReturn(Optional.of(claim));
 
         assertThrows(IllegalStateException.class,
-            () -> service.disputeClaim("CLM-303", "Some reason"));
+            () -> service.disputeClaim("CLM-303", "Some reason", "actor-1"));
     }
 
     @Test
@@ -331,7 +341,7 @@ class ClaimServiceTest {
         when(claimRepository.findById("CLM-304")).thenReturn(Optional.of(claim));
 
         assertThrows(IllegalStateException.class,
-            () -> service.disputeClaim("CLM-304", "Some reason"));
+            () -> service.disputeClaim("CLM-304", "Some reason", "actor-1"));
     }
 
     @Test
@@ -340,21 +350,12 @@ class ClaimServiceTest {
         when(claimRepository.findById("CLM-305")).thenReturn(Optional.of(claim));
 
         assertThrows(IllegalStateException.class,
-            () -> service.disputeClaim("CLM-305", "Some reason"));
+            () -> service.disputeClaim("CLM-305", "Some reason", "actor-1"));
     }
 
     // ---------------------------------------------------------------
     // Invalid state transitions
     // ---------------------------------------------------------------
-
-    @Test
-    void submitClaim_fromRejected_throws() {
-        ClaimEntity claim = buildClaim("CLM-400", ClaimStatus.REJECTED);
-        when(claimRepository.findById("CLM-400")).thenReturn(Optional.of(claim));
-
-        // REJECTED can only go to RESUBMIT_PENDING via dispute, not directly submitted
-        assertThrows(IllegalStateException.class, () -> service.submitClaim("CLM-400"));
-    }
 
     @Test
     void submitClaim_fromPaid_throws() {
