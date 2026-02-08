@@ -1,0 +1,74 @@
+server:
+  port: ${SERVER_PORT:8100}
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: msika-flow-service
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/msika_flow
+    username: ${POSTGRES_USER:impilo}
+    password: ${POSTGRES_PASSWORD:changeme}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      group-id: msika-flow-service
+      auto-offset-reset: earliest
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER:http://localhost:8080/realms/impilo}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  metrics:
+    tags:
+      application: msika-flow-service
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+msika-flow:
+  outbox:
+    poll-interval-ms: 2000
+  pickup:
+    otp-length: 6
+    expiry-hours: 48
+    max-claim-attempts-per-hour: 5
+  routing:
+    default-mode: INTERNAL
+  pricing:
+    platform-fee-rate: "0.015"
+    platform-fee-cap: "50.00"
+  integration:
+    msika-core-url: ${MSIKA_CORE_URL:http://localhost:8086}
+    mushex-url: ${MUSHEX_URL:http://localhost:8087}
+    tuso-url: ${TUSO_URL:http://localhost:8084}
+    varapi-url: ${VARAPI_URL:http://localhost:8083}

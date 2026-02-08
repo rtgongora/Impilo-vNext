@@ -1,0 +1,58 @@
+replicaCount: 1
+
+image:
+  repository: ghcr.io/mohcc/impilo/msika-flow
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 8100
+
+containerPort: 8100
+
+env:
+  SPRING_DATASOURCE_URL: jdbc:postgresql://postgresql:5432/msika_flow
+  SPRING_DATASOURCE_USERNAME: impilo
+  SPRING_DATASOURCE_PASSWORD: impilo
+  SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+  SPRING_FLYWAY_ENABLED: "true"
+  SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+  SPRING_KAFKA_CONSUMER_GROUP_ID: msika-flow-service
+  SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/realms/impilo
+  SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
+  SERVER_PORT: "8100"
+  MSIKA_CORE_URL: http://msika-service:8086
+  MUSHEX_URL: http://mushex-service:8087
+  TUSO_URL: http://tuso-service:8084
+  VARAPI_URL: http://varapi-service:8083
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+
+livenessProbe:
+  httpGet:
+    path: /actuator/health/liveness
+    port: 8100
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /actuator/health/readiness
+    port: 8100
+  initialDelaySeconds: 20
+  periodSeconds: 5
+  failureThreshold: 3
+
+ingress:
+  enabled: false
+
+autoscaling:
+  enabled: false
