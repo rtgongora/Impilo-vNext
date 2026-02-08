@@ -1,0 +1,616 @@
+openapi: 3.0.3
+info:
+  title: MUSHEX — Health Payments, Remittances & Claims Switching API
+  description: >
+    National payment intent engine, remittance/split payments, claims switching,
+    double-entry-lite ledger, settlement batches, fraud/waste/abuse detection,
+    and provider-neutral payment rail adapters for the Impilo health platform.
+  version: 0.1.0
+  contact:
+    name: MoHCC Digital Health Division
+
+servers:
+  - url: http://localhost:10000
+    description: Local Envoy gateway
+  - url: http://localhost:8087
+    description: Direct service access
+
+paths:
+  /mushex/v1/payment-intents:
+    post:
+      tags: [Payments]
+      summary: Create a payment intent
+      operationId: createPaymentIntent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateIntentRequest'
+      responses:
+        '201':
+          description: Intent created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse_PaymentIntent'
+
+  /mushex/v1/payment-intents/{id}:
+    get:
+      tags: [Payments]
+      summary: Get payment intent by ID
+      operationId: getPaymentIntent
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Intent found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse_PaymentIntent'
+
+  /mushex/v1/payment-intents/{id}/cancel:
+    post:
+      tags: [Payments]
+      summary: Cancel a payment intent
+      operationId: cancelPaymentIntent
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Intent cancelled
+
+  /mushex/v1/payment-intents/{id}/issue-remittance-slip:
+    post:
+      tags: [Remittance]
+      summary: Issue a remittance slip (OTP/QR) for delegated payment
+      operationId: issueRemittanceSlip
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: Slip issued with token and OTP
+
+  /mushex/v1/payment-intents/{id}/refund:
+    post:
+      tags: [Refunds]
+      summary: Request a refund for a paid intent
+      operationId: requestRefund
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefundRequest'
+      responses:
+        '201':
+          description: Refund requested
+
+  /mushex/v1/payment-intents/{id}/receipts:
+    get:
+      tags: [Receipts]
+      summary: Get receipts for a payment intent
+      operationId: getReceipts
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Receipts found
+
+  /mushex/v1/remittance/claim:
+    post:
+      tags: [Remittance]
+      summary: Claim a remittance slip using token and OTP
+      operationId: claimRemittance
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RemittanceClaimRequest'
+      responses:
+        '200':
+          description: Remittance claimed
+
+  /mushex/v1/adapters/{adapterType}/webhook:
+    post:
+      tags: [Adapters]
+      summary: Receive payment webhook callback (internal only)
+      operationId: adapterWebhook
+      parameters:
+        - name: adapterType
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: X-Webhook-Signature
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: string
+      responses:
+        '200':
+          description: Webhook acknowledged
+
+  /mushex/v1/claims:
+    post:
+      tags: [Claims]
+      summary: Create a claim
+      operationId: createClaim
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClaimCreateRequest'
+      responses:
+        '201':
+          description: Claim created
+
+  /mushex/v1/claims/{id}:
+    get:
+      tags: [Claims]
+      summary: Get claim by ID
+      operationId: getClaim
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Claim found
+
+  /mushex/v1/claims/{id}/submit:
+    post:
+      tags: [Claims]
+      summary: Submit claim to insurer
+      operationId: submitClaim
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Claim submitted
+
+  /mushex/v1/claims/{id}/adjudication:
+    post:
+      tags: [Claims]
+      summary: Record adjudication from insurer (callback)
+      operationId: recordAdjudication
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClaimAdjudicationRequest'
+      responses:
+        '200':
+          description: Adjudication recorded
+
+  /mushex/v1/claims/{id}/dispute:
+    post:
+      tags: [Claims]
+      summary: Dispute a claim decision
+      operationId: disputeClaim
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClaimDisputeRequest'
+      responses:
+        '200':
+          description: Dispute filed
+
+  /mushex/v1/settlements/run:
+    post:
+      tags: [Settlements]
+      summary: Run settlement computation for a period
+      operationId: runSettlement
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SettlementRunRequest'
+      responses:
+        '201':
+          description: Settlement created
+
+  /mushex/v1/settlements/{id}:
+    get:
+      tags: [Settlements]
+      summary: Get settlement details
+      operationId: getSettlement
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Settlement found
+
+  /mushex/v1/settlements/{id}/release-payouts:
+    post:
+      tags: [Settlements]
+      summary: Release settlement payouts (step-up required)
+      operationId: releasePayouts
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Payouts released
+
+  /mushex/v1/recon/import-statement:
+    post:
+      tags: [Reconciliation]
+      summary: Import bank statement lines for reconciliation
+      operationId: importStatement
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/ReconImportLine'
+      responses:
+        '201':
+          description: Statement imported
+
+  /mushex/v1/recon/unmatched:
+    get:
+      tags: [Reconciliation]
+      summary: List unmatched reconciliation entries
+      operationId: getUnmatched
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Unmatched entries
+
+  /mushex/v1/recon/match:
+    post:
+      tags: [Reconciliation]
+      summary: Match a reconciliation entry to a payment intent
+      operationId: matchReconEntry
+      parameters:
+        - name: reconId
+          in: query
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReconMatchRequest'
+      responses:
+        '200':
+          description: Entry matched
+
+  /mushex/v1/ops/reviews/pending:
+    get:
+      tags: [Operations]
+      summary: List pending ops reviews
+      operationId: getPendingReviews
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Pending reviews
+
+  /mushex/v1/ops/reviews/{id}/approve:
+    post:
+      tags: [Operations]
+      summary: Approve an ops review
+      operationId: approveReview
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Review approved
+
+  /mushex/v1/fraud/flags:
+    get:
+      tags: [Fraud]
+      summary: List fraud flags
+      operationId: getFraudFlags
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Fraud flags
+
+  /mushex/v1/ledger/entries:
+    get:
+      tags: [Ledger]
+      summary: List ledger entries
+      operationId: getLedgerEntries
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Ledger entries
+
+components:
+  schemas:
+    CreateIntentRequest:
+      type: object
+      required: [sourceType, sourceId, amount, idempotencyKey]
+      properties:
+        sourceType:
+          type: string
+          enum: [COSTA_BILL, MSIKA_ORDER, ADHOC]
+        sourceId:
+          type: string
+        amount:
+          type: number
+          format: decimal
+          minimum: 0.01
+        currency:
+          type: string
+          default: USD
+        facilityId:
+          type: string
+          format: uuid
+        idempotencyKey:
+          type: string
+        metadata:
+          type: string
+
+    RefundRequest:
+      type: object
+      required: [amount]
+      properties:
+        amount:
+          type: number
+          format: decimal
+          minimum: 0.01
+        reason:
+          type: string
+
+    RemittanceClaimRequest:
+      type: object
+      required: [token, otp]
+      properties:
+        token:
+          type: string
+        otp:
+          type: string
+
+    ClaimCreateRequest:
+      type: object
+      required: [billId, insurerId]
+      properties:
+        billId:
+          type: string
+        insurerId:
+          type: string
+        facilityId:
+          type: string
+          format: uuid
+        totals:
+          type: string
+
+    ClaimAdjudicationRequest:
+      type: object
+      required: [patientResidual, insurerPayable]
+      properties:
+        decision:
+          type: string
+        patientResidual:
+          type: number
+          format: decimal
+        insurerPayable:
+          type: number
+          format: decimal
+
+    ClaimDisputeRequest:
+      type: object
+      required: [reason]
+      properties:
+        reason:
+          type: string
+
+    SettlementRunRequest:
+      type: object
+      required: [periodStart, periodEnd]
+      properties:
+        periodStart:
+          type: string
+          format: date
+        periodEnd:
+          type: string
+          format: date
+
+    ReconImportLine:
+      type: object
+      properties:
+        statementRef:
+          type: string
+        statementDate:
+          type: string
+          format: date
+        amount:
+          type: number
+          format: decimal
+        currency:
+          type: string
+        counterparty:
+          type: string
+
+    ReconMatchRequest:
+      type: object
+      required: [intentId]
+      properties:
+        intentId:
+          type: string
+
+    PaymentIntent:
+      type: object
+      properties:
+        intentId:
+          type: string
+        tenantId:
+          type: string
+          format: uuid
+        sourceType:
+          type: string
+        sourceId:
+          type: string
+        currency:
+          type: string
+        amountTotal:
+          type: number
+        amountPaid:
+          type: number
+        status:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    ApiResponse_PaymentIntent:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: '#/components/schemas/PaymentIntent'
+        correlationId:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    trustHeaders:
+      type: apiKey
+      in: header
+      name: X-Tenant-Id
+
+security:
+  - bearerAuth: []
+    trustHeaders: []
+
+tags:
+  - name: Payments
+    description: Payment intent lifecycle
+  - name: Remittance
+    description: Delegated payment slips
+  - name: Refunds
+    description: Refund processing
+  - name: Receipts
+    description: Payment receipts
+  - name: Adapters
+    description: Payment rail adapter webhooks
+  - name: Claims
+    description: Insurance claims switching
+  - name: Settlements
+    description: Provider settlement and payouts
+  - name: Reconciliation
+    description: Bank statement reconciliation
+  - name: Operations
+    description: Ops review queue
+  - name: Fraud
+    description: Fraud/waste/abuse detection
+  - name: Ledger
+    description: Double-entry-lite ledger
