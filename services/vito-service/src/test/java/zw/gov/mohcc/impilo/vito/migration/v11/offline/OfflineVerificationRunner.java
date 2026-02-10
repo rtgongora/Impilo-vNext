@@ -75,6 +75,16 @@ public final class OfflineVerificationRunner {
         }
     }
 
+    /** Assert that the source does NOT contain the exact literal string (negative check). */
+    public void assertNotContains(String source, String literal, String checkLabel) {
+        if (source == null) return;
+        if (!source.contains(literal)) {
+            pass(checkLabel);
+        } else {
+            fail(checkLabel, "Literal SHOULD NOT be present but was found: «" + literal + "»");
+        }
+    }
+
     /** Assert that multiple literals are ALL present. */
     public void assertContainsAll(String source, List<String> literals, String checkLabel) {
         if (source == null) return;

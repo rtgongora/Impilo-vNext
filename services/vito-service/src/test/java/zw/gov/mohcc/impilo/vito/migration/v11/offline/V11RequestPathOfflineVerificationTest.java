@@ -133,6 +133,19 @@ public final class V11RequestPathOfflineVerificationTest {
         r.assertContains(src, "/external/v1/",
                 "R2.9 Filter also targets /external/v1/ path prefix");
 
+        // ---- NEGATIVE CHECKS (R2) ----
+        // Must NOT use legacy-only header names (without v1.1 dash convention)
+        r.assertNotContains(src, "\"TenantId\"",
+                "R2.NEG1 Does NOT use legacy header name \"TenantId\" (must be \"X-Tenant-ID\")");
+
+        // Must NOT hardcode only /v1/ — must include the /internal/ or /external/ prefix
+        r.assertNotContains(src, "path.startsWith(\"/v1/\")",
+                "R2.NEG2 Does NOT match bare /v1/ path (must be /internal/v1/ or /external/v1/)");
+
+        // Must NOT return 401 instead of 400 for missing headers
+        r.assertNotContains(src, "setStatus(401)",
+                "R2.NEG3 Does NOT use 401 for missing headers (must be 400)");
+
         System.out.println();
     }
 
@@ -171,6 +184,19 @@ public final class V11RequestPathOfflineVerificationTest {
 
         r.assertContains(src, "@Order(11)",
                 "R3.8 IdempotencyFilter runs after V1_1HeaderFilter (@Order 11 > 10)");
+
+        // ---- NEGATIVE CHECKS (R3) ----
+        // Must NOT check only GET requests (idempotency is for mutating methods)
+        r.assertNotContains(src, "\"GET\"",
+                "R3.NEG1 Does NOT enforce idempotency on GET (read-only methods excluded)");
+
+        // Must NOT scope to /external/ paths (idempotency is internal-only per spec)
+        r.assertNotContains(src, "/external/v1/",
+                "R3.NEG2 Does NOT apply to /external/v1/ (idempotency is internal-only)");
+
+        // Must NOT use legacy header name without dashes
+        r.assertNotContains(src, "\"IdempotencyKey\"",
+                "R3.NEG3 Does NOT use \"IdempotencyKey\" (must be \"Idempotency-Key\")");
 
         System.out.println();
     }
@@ -213,6 +239,19 @@ public final class V11RequestPathOfflineVerificationTest {
             r.assertContains(handlerSrc, "FederationNotAuthorizedException",
                     "R4.9 Exception handler catches FederationNotAuthorizedException");
         }
+
+        // ---- NEGATIVE CHECKS (R4) ----
+        // Guard must NOT allow non-national pods by accepting any pod value
+        r.assertNotContains(src, "return true",
+                "R4.NEG1 Guard does NOT unconditionally allow (no 'return true' bypass)");
+
+        // Guard must NOT use 401 instead of 403 for unauthorized federation
+        r.assertNotContains(src, "401",
+                "R4.NEG2 Guard does NOT use 401 (must throw for 403 handling)");
+
+        // Guard error must use FEDERATION_NOT_AUTHORIZED, not FEDERATION_AUTHORITY_VIOLATION
+        r.assertNotContains(src, "FEDERATION_AUTHORITY_VIOLATION",
+                "R4.NEG3 Guard does NOT use wrong error code FEDERATION_AUTHORITY_VIOLATION");
 
         System.out.println();
     }
