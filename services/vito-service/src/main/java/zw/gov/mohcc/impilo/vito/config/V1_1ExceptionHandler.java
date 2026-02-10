@@ -25,7 +25,7 @@ public class V1_1ExceptionHandler {
 
         return ResponseEntity.status(403).body(Map.of(
                 "error", Map.of(
-                        "code", "FEDERATION_NOT_AUTHORIZED",
+                        "code", "FEDERATION_AUTHORITY_VIOLATION",
                         "message", "Only the national pod is authorized for merge operations",
                         "details", Map.of("pod_id", ex.getPodId() != null ? ex.getPodId() : "null"),
                         "request_id", requestId != null ? requestId : UUID.randomUUID().toString(),

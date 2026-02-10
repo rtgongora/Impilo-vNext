@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
  *
  * Per v1.1 Companion Spec:
  *   Patient merge operations MUST only be executed by the "national" pod.
- *   Any non-national pod attempting a merge => 403 FEDERATION_NOT_AUTHORIZED.
+ *   Any non-national pod attempting a merge => 403 FEDERATION_AUTHORITY_VIOLATION.
  *
  * Usage:
  *   Inject into MergeService and call {@link #requireNationalPodForMerge(String)}
@@ -37,7 +37,7 @@ public class FederationAuthorityGuard {
         private final String podId;
 
         public FederationNotAuthorizedException(String podId) {
-            super("FEDERATION_NOT_AUTHORIZED");
+            super("FEDERATION_AUTHORITY_VIOLATION");
             this.podId = podId;
         }
 
