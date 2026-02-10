@@ -47,6 +47,8 @@ public final class V11RequestPathOfflineVerificationTest {
         verifyV017Migration();
         verifyMergeServiceContextFields();
         verifyVitoEventEmission();
+        verifyFilterWiring();
+        verifyControllerHeaderBinding();
     }
 
     // ============================================================
@@ -204,7 +206,7 @@ public final class V11RequestPathOfflineVerificationTest {
     // ============================================================
     // REQ 4: FederationAuthorityGuard
     // X-Pod-ID must == "national" for merge operations
-    // Non-national => 403 FEDERATION_NOT_AUTHORIZED (via exception handler)
+    // Non-national => 403 FEDERATION_AUTHORITY_VIOLATION (via exception handler)
     // ============================================================
     private void verifyFederationAuthorityGuard() {
         System.out.println("--- REQ 4: FederationAuthorityGuard ---");
@@ -218,8 +220,8 @@ public final class V11RequestPathOfflineVerificationTest {
         r.assertContains(src, "requireNationalPodForMerge",
                 "R4.2 Guard has requireNationalPodForMerge method");
 
-        r.assertContains(src, "FEDERATION_NOT_AUTHORIZED",
-                "R4.3 Exception message contains FEDERATION_NOT_AUTHORIZED");
+        r.assertContains(src, "FEDERATION_AUTHORITY_VIOLATION",
+                "R4.3 Exception message contains FEDERATION_AUTHORITY_VIOLATION");
 
         r.assertContains(src, "FederationNotAuthorizedException",
                 "R4.4 Custom exception class exists");
@@ -230,14 +232,17 @@ public final class V11RequestPathOfflineVerificationTest {
             r.assertContains(handlerSrc, "403",
                     "R4.6 Exception handler returns HTTP 403");
 
-            r.assertContains(handlerSrc, "FEDERATION_NOT_AUTHORIZED",
-                    "R4.7 Exception handler error code is FEDERATION_NOT_AUTHORIZED");
+            r.assertContains(handlerSrc, "FEDERATION_AUTHORITY_VIOLATION",
+                    "R4.7 Exception handler error code is FEDERATION_AUTHORITY_VIOLATION");
 
             r.assertContainsAll(handlerSrc, List.of("\"error\"", "\"code\"", "\"message\""),
                     "R4.8 Exception handler uses v1.1 error envelope structure");
 
             r.assertContains(handlerSrc, "FederationNotAuthorizedException",
                     "R4.9 Exception handler catches FederationNotAuthorizedException");
+
+            r.assertContainsAll(handlerSrc, List.of("\"request_id\"", "\"correlation_id\""),
+                    "R4.10 Exception handler includes request_id + correlation_id in envelope");
         }
 
         // ---- NEGATIVE CHECKS (R4) ----
@@ -249,9 +254,9 @@ public final class V11RequestPathOfflineVerificationTest {
         r.assertNotContains(src, "401",
                 "R4.NEG2 Guard does NOT use 401 (must throw for 403 handling)");
 
-        // Guard error must use FEDERATION_NOT_AUTHORIZED, not FEDERATION_AUTHORITY_VIOLATION
-        r.assertNotContains(src, "FEDERATION_AUTHORITY_VIOLATION",
-                "R4.NEG3 Guard does NOT use wrong error code FEDERATION_AUTHORITY_VIOLATION");
+        // Guard must use canonical FEDERATION_AUTHORITY_VIOLATION, NOT the old code
+        r.assertNotContains(src, "FEDERATION_NOT_AUTHORIZED",
+                "R4.NEG3 Guard does NOT use obsolete error code FEDERATION_NOT_AUTHORIZED");
 
         System.out.println();
     }
@@ -421,6 +426,107 @@ public final class V11RequestPathOfflineVerificationTest {
             r.assertContains(mapSrc, "\"vito\"",
                     "R7.18 EventEnvelope producer is \"vito\"");
         }
+
+        System.out.println();
+    }
+
+    // ============================================================
+    // REQ 8: Filter Wiring Verification
+    // Verifies that V1_1HeaderFilter and IdempotencyFilter are correctly
+    // registered as @Component beans with proper @Order, and that path
+    // scoping is implemented in filter code (not just string presence).
+    // ============================================================
+    private void verifyFilterWiring() {
+        System.out.println("--- REQ 8: Filter Wiring ---");
+
+        // --- V1_1HeaderFilter wiring ---
+        String headerSrc = r.readSource(HEADER_FILTER, "R8.0 V1_1HeaderFilter source");
+        if (headerSrc != null) {
+            r.assertContains(headerSrc, "@Component",
+                    "R8.1 V1_1HeaderFilter is a Spring @Component");
+
+            r.assertContains(headerSrc, "@Order(10)",
+                    "R8.2 V1_1HeaderFilter has @Order(10)");
+
+            // Verify path-scoping logic: filter must programmatically check both v1.1 prefixes
+            r.assertMatches(headerSrc,
+                    "startsWith\\(\"/internal/v1/\"\\)",
+                    "R8.3 V1_1HeaderFilter programmatically checks /internal/v1/ prefix");
+
+            r.assertMatches(headerSrc,
+                    "startsWith\\(\"/external/v1/\"\\)",
+                    "R8.4 V1_1HeaderFilter programmatically checks /external/v1/ prefix");
+
+            // Verify it implements Filter interface (not OncePerRequestFilter or other)
+            r.assertContains(headerSrc, "implements Filter",
+                    "R8.5 V1_1HeaderFilter implements jakarta.servlet.Filter");
+        }
+
+        // --- IdempotencyFilter wiring ---
+        String idempSrc = r.readSource(IDEMPOTENCY_FILTER, "R8.6 IdempotencyFilter source");
+        if (idempSrc != null) {
+            r.assertContains(idempSrc, "@Component",
+                    "R8.7 IdempotencyFilter is a Spring @Component");
+
+            r.assertContains(idempSrc, "@Order(11)",
+                    "R8.8 IdempotencyFilter has @Order(11)");
+
+            // Verify ordering: IdempotencyFilter @Order(11) > V1_1HeaderFilter @Order(10)
+            // Already checked via R8.2 + R8.8, but explicitly verify the relationship
+            r.assertContains(idempSrc, "implements Filter",
+                    "R8.9 IdempotencyFilter implements jakarta.servlet.Filter");
+
+            // Verify IdempotencyFilter scopes to /internal/v1/ ONLY (not /external/)
+            r.assertMatches(idempSrc,
+                    "startsWith\\(\"/internal/v1/\"\\)",
+                    "R8.10 IdempotencyFilter scopes to /internal/v1/ prefix");
+
+            // Verify command method check is programmatic (Set.of or contains check)
+            r.assertContainsAll(idempSrc, List.of("\"POST\"", "\"PUT\"", "\"PATCH\""),
+                    "R8.11 IdempotencyFilter enforces on POST/PUT/PATCH methods");
+
+            // Negative: IdempotencyFilter must NOT apply to /external/ paths
+            r.assertNotContains(idempSrc, "startsWith(\"/external/v1/\")",
+                    "R8.NEG1 IdempotencyFilter does NOT scope to /external/v1/ paths");
+        }
+
+        System.out.println();
+    }
+
+    // ============================================================
+    // REQ 9: Controller Header Binding Verification
+    // Verifies V11PatientsController binds the four mandatory headers
+    // via @RequestHeader with the exact canonical header names.
+    // ============================================================
+    private void verifyControllerHeaderBinding() {
+        System.out.println("--- REQ 9: Controller Header Binding ---");
+
+        String src = r.readSource(CONTROLLER, "R9.0 V11PatientsController source");
+        if (src == null) return;
+
+        // Verify each header is bound via @RequestHeader with exact name
+        r.assertMatches(src,
+                "@RequestHeader\\(\"X-Tenant-ID\"\\)\\s+String\\s+\\w+",
+                "R9.1 X-Tenant-ID bound via @RequestHeader(\"X-Tenant-ID\") String param");
+
+        r.assertMatches(src,
+                "@RequestHeader\\(\"X-Pod-ID\"\\)\\s+String\\s+\\w+",
+                "R9.2 X-Pod-ID bound via @RequestHeader(\"X-Pod-ID\") String param");
+
+        r.assertMatches(src,
+                "@RequestHeader\\(\"X-Request-ID\"\\)\\s+String\\s+\\w+",
+                "R9.3 X-Request-ID bound via @RequestHeader(\"X-Request-ID\") String param");
+
+        r.assertMatches(src,
+                "@RequestHeader\\(\"X-Correlation-ID\"\\)\\s+String\\s+\\w+",
+                "R9.4 X-Correlation-ID bound via @RequestHeader(\"X-Correlation-ID\") String param");
+
+        // Negative: Must NOT use legacy-style header names without dashes/X- prefix
+        r.assertNotContains(src, "@RequestHeader(\"TenantId\")",
+                "R9.NEG1 Does NOT bind legacy \"TenantId\" header name");
+
+        r.assertNotContains(src, "@RequestHeader(\"PodId\")",
+                "R9.NEG2 Does NOT bind legacy \"PodId\" header name");
 
         System.out.println();
     }
