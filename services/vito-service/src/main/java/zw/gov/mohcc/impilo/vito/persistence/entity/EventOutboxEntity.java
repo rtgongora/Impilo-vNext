@@ -29,6 +29,19 @@ public class EventOutboxEntity {
     @Column(name = "published_at")
     private OffsetDateTime publishedAt;
 
+    // v1.1 context columns (nullable — null for legacy events)
+    @Column(name = "tenant_id")
+    private String tenantId;
+
+    @Column(name = "pod_id")
+    private String podId;
+
+    @Column(name = "correlation_id")
+    private String correlationId;
+
+    @Column(name = "idempotency_key")
+    private String idempotencyKey;
+
     @PrePersist
     protected void onCreate() {
         createdAt = OffsetDateTime.now();
@@ -47,4 +60,12 @@ public class EventOutboxEntity {
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public OffsetDateTime getPublishedAt() { return publishedAt; }
     public void setPublishedAt(OffsetDateTime publishedAt) { this.publishedAt = publishedAt; }
+    public String getTenantId() { return tenantId; }
+    public void setTenantId(String tenantId) { this.tenantId = tenantId; }
+    public String getPodId() { return podId; }
+    public void setPodId(String podId) { this.podId = podId; }
+    public String getCorrelationId() { return correlationId; }
+    public void setCorrelationId(String correlationId) { this.correlationId = correlationId; }
+    public String getIdempotencyKey() { return idempotencyKey; }
+    public void setIdempotencyKey(String idempotencyKey) { this.idempotencyKey = idempotencyKey; }
 }

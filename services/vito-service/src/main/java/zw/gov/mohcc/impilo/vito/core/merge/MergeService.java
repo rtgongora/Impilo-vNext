@@ -4,9 +4,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import zw.gov.mohcc.impilo.vito.core.FederationAuthorityGuard;
 import zw.gov.mohcc.impilo.vito.core.IdentityStatus;
 import zw.gov.mohcc.impilo.vito.persistence.entity.*;
 import zw.gov.mohcc.impilo.vito.persistence.repository.*;
+
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -20,16 +25,19 @@ public class MergeService {
     private final DedupCaseRepository dedupCaseRepo;
     private final DedupActionRepository dedupActionRepo;
     private final EventOutboxRepository outboxRepo;
+    private final FederationAuthorityGuard federationGuard;
 
     public MergeService(MergeHistoryRepository mergeRepo, ClientRepository clientRepo,
                          IdentityAliasRepository aliasRepo, DedupCaseRepository dedupCaseRepo,
-                         DedupActionRepository dedupActionRepo, EventOutboxRepository outboxRepo) {
+                         DedupActionRepository dedupActionRepo, EventOutboxRepository outboxRepo,
+                         FederationAuthorityGuard federationGuard) {
         this.mergeRepo = mergeRepo;
         this.clientRepo = clientRepo;
         this.aliasRepo = aliasRepo;
         this.dedupCaseRepo = dedupCaseRepo;
         this.dedupActionRepo = dedupActionRepo;
         this.outboxRepo = outboxRepo;
+        this.federationGuard = federationGuard;
     }
 
     /**
@@ -41,6 +49,9 @@ public class MergeService {
     public MergeHistoryEntity merge(UUID tenantId, UUID survivorCrid, UUID mergedCrid,
                                      Long dedupCaseId, String strategy, String fieldDecisions,
                                      String actorId, String actorType) {
+        // v1.1 federation guard: merge is NATIONAL_SPINE_ONLY
+        enforceFederationAuthority();
+
         // Validate both clients exist (lookup by CRID, not healthId)
         ClientEntity survivor = clientRepo.findByTenantIdAndCrid(tenantId, survivorCrid)
                 .orElseThrow(() -> new IllegalArgumentException("Survivor client not found"));
@@ -180,6 +191,40 @@ public class MergeService {
         event.setAggregateId(aggregateId);
         event.setEventType(eventType);
         event.setPayload(payload);
+
+        // Populate v1.1 context from current request if available
+        String podId = currentPodId();
+        if (podId != null) {
+            event.setTenantId(currentHeaderValue("X-Tenant-ID"));
+            event.setPodId(podId);
+            event.setCorrelationId(currentHeaderValue("X-Correlation-ID"));
+            event.setIdempotencyKey(currentHeaderValue("Idempotency-Key"));
+        }
+
         outboxRepo.save(event);
+    }
+
+    /**
+     * Enforce federation authority for merge operations.
+     * Only checks when running in a v1.1 request context (X-Pod-ID present).
+     * Legacy callers (without X-Pod-ID) are not gated.
+     */
+    private void enforceFederationAuthority() {
+        String podId = currentPodId();
+        if (podId != null) {
+            federationGuard.requireNationalPodForMerge(podId);
+        }
+    }
+
+    private static String currentPodId() {
+        return currentHeaderValue("X-Pod-ID");
+    }
+
+    private static String currentHeaderValue(String headerName) {
+        ServletRequestAttributes attrs = (ServletRequestAttributes)
+                RequestContextHolder.getRequestAttributes();
+        if (attrs == null) return null;
+        HttpServletRequest request = attrs.getRequest();
+        return request.getHeader(headerName);
     }
 }
