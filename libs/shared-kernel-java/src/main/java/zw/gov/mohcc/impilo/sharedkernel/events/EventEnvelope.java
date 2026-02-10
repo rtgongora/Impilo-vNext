@@ -14,12 +14,12 @@ import java.util.UUID;
  * Constructed exclusively via {@link Builder} to make it hard to create an invalid envelope.
  *
  * @param eventId        unique event identifier (ULID or UUID)
- * @param eventType      dot-notation event type (e.g. "vito.patient.created")
+ * @param eventType      dot-notation event type (e.g. "impilo.vito.patient.created.v1")
  * @param schemaVersion  version of the payload schema (must be >= 1)
  * @param correlationId  end-to-end correlation identifier
  * @param causationId    identifier of the event that caused this event
  * @param idempotencyKey client-supplied idempotency key for command deduplication
- * @param producer       name of the producing service (e.g. "vito-service")
+ * @param producer       name of the producing service (e.g. "vito")
  * @param tenantId       tenant scope
  * @param podId          originating pod/facility identifier
  * @param occurredAt     when the domain event actually happened

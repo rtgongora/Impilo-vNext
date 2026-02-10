@@ -12,12 +12,12 @@ class EventEnvelopeTest {
 
     private EventEnvelope.Builder validBuilder() {
         return EventEnvelope.builder()
-                .eventType("vito.patient.created")
+                .eventType("impilo.vito.patient.created.v1")
                 .schemaVersion(1)
                 .correlationId("corr-1")
                 .causationId("cause-1")
                 .idempotencyKey("idem-1")
-                .producer("vito-service")
+                .producer("vito")
                 .tenantId("tenant-zw")
                 .podId("pod-harare-central")
                 .occurredAt(OffsetDateTime.now())
@@ -30,7 +30,7 @@ class EventEnvelopeTest {
     void builderProducesValidEnvelope() {
         EventEnvelope env = validBuilder().build();
         assertNotNull(env.eventId());
-        assertEquals("vito.patient.created", env.eventType());
+        assertEquals("impilo.vito.patient.created.v1", env.eventType());
         assertEquals(1, env.schemaVersion());
         assertNotNull(env.emittedAt());
     }

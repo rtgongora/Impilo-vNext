@@ -125,7 +125,7 @@ public class StandaloneTestRunner {
         test("EventEnvelope: builder produces valid envelope", () -> {
             EventEnvelope env = validBuilder().build();
             assertNotNull(env.eventId(), "eventId");
-            assertEquals("vito.patient.created", env.eventType(), "eventType");
+            assertEquals("impilo.vito.patient.created.v1", env.eventType(), "eventType");
             assertEquals(1, env.schemaVersion(), "schemaVersion");
             assertNotNull(env.emittedAt(), "emittedAt");
         });
@@ -226,12 +226,12 @@ public class StandaloneTestRunner {
 
     private static EventEnvelope.Builder validBuilder() {
         return EventEnvelope.builder()
-                .eventType("vito.patient.created")
+                .eventType("impilo.vito.patient.created.v1")
                 .schemaVersion(1)
                 .correlationId("corr-1")
                 .causationId("cause-1")
                 .idempotencyKey("idem-1")
-                .producer("vito-service")
+                .producer("vito")
                 .tenantId("tenant-zw")
                 .podId("pod-harare-central")
                 .occurredAt(OffsetDateTime.now())
