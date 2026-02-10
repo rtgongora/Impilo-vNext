@@ -7,8 +7,11 @@ import java.util.UUID;
 /**
  * Standalone verification of v1.1 EventEnvelope contract for VITO.
  * Runs without JUnit — exit code 0 = all pass.
- * <p>
- * This mirrors EventEnvelopeContractTest but can be run with plain javac+java.
+ *
+ * Per Manifest v1.1:
+ * - event_type must begin with "impilo." (e.g. "impilo.vito.patient.created.v1")
+ * - producer must be "vito" (short service name)
+ * - All required fields must reject null
  */
 public class EventEnvelopeContractStandaloneTest {
 
@@ -58,14 +61,14 @@ public class EventEnvelopeContractStandaloneTest {
     }
 
     public static void main(String[] args) {
-        System.out.println("=== VITO v1.1 EventEnvelope Contract Tests ===\n");
+        System.out.println("=== VITO v1.1 EventEnvelope Contract Tests (Manifest v1.1) ===\n");
 
         test("Null schema_version throws at construction time", () -> {
             try {
                 new TestEventEnvelope(
-                        UUID.randomUUID().toString(), "vito.patient.created",
+                        UUID.randomUUID().toString(), "impilo.vito.patient.created.v1",
                         null, "corr-001", "cause-001", "idem-001",
-                        "vito-service", "tenant-zw", "pod-harare",
+                        "vito", "tenant-zw", "pod-harare",
                         OffsetDateTime.now(), OffsetDateTime.now(),
                         "Patient", "CPID-12345", Map.of(), Map.of());
                 throw new AssertionError("Expected IllegalArgumentException");
@@ -79,9 +82,9 @@ public class EventEnvelopeContractStandaloneTest {
         test("Zero schema_version throws at construction time", () -> {
             try {
                 new TestEventEnvelope(
-                        UUID.randomUUID().toString(), "vito.patient.updated",
+                        UUID.randomUUID().toString(), "impilo.vito.patient.updated.v1",
                         0, "corr-001", "cause-001", "idem-001",
-                        "vito-service", "tenant-zw", "pod-harare",
+                        "vito", "tenant-zw", "pod-harare",
                         OffsetDateTime.now(), OffsetDateTime.now(),
                         "Patient", "CPID-12345", Map.of(), Map.of());
                 throw new AssertionError("Expected IllegalArgumentException");
@@ -93,9 +96,9 @@ public class EventEnvelopeContractStandaloneTest {
         test("Negative schema_version throws at construction time", () -> {
             try {
                 new TestEventEnvelope(
-                        UUID.randomUUID().toString(), "vito.patient.merged",
+                        UUID.randomUUID().toString(), "impilo.vito.patient.merged.v1",
                         -1, "corr-001", "cause-001", "idem-001",
-                        "vito-service", "tenant-zw", "pod-harare",
+                        "vito", "tenant-zw", "pod-harare",
                         OffsetDateTime.now(), OffsetDateTime.now(),
                         "Patient", "CPID-12345", Map.of(), Map.of());
                 throw new AssertionError("Expected IllegalArgumentException");
@@ -106,8 +109,8 @@ public class EventEnvelopeContractStandaloneTest {
 
         test("Valid envelope constructs successfully", () -> {
             TestEventEnvelope env = validEnvelope();
-            if (!"vito.patient.created".equals(env.eventType()))
-                throw new AssertionError("eventType mismatch");
+            if (!"impilo.vito.patient.created.v1".equals(env.eventType()))
+                throw new AssertionError("eventType mismatch: " + env.eventType());
             if (env.schemaVersion() != 1)
                 throw new AssertionError("schemaVersion mismatch");
         });
@@ -115,9 +118,9 @@ public class EventEnvelopeContractStandaloneTest {
         test("Missing tenant_id throws", () -> {
             try {
                 new TestEventEnvelope(
-                        UUID.randomUUID().toString(), "vito.patient.created", 1,
+                        UUID.randomUUID().toString(), "impilo.vito.patient.created.v1", 1,
                         "corr-001", "cause-001", "idem-001",
-                        "vito-service", null, "pod-harare",
+                        "vito", null, "pod-harare",
                         OffsetDateTime.now(), OffsetDateTime.now(),
                         "Patient", "CPID-12345", Map.of(), Map.of());
                 throw new AssertionError("Expected IllegalArgumentException");
@@ -129,9 +132,9 @@ public class EventEnvelopeContractStandaloneTest {
         test("Missing pod_id throws", () -> {
             try {
                 new TestEventEnvelope(
-                        UUID.randomUUID().toString(), "vito.patient.created", 1,
+                        UUID.randomUUID().toString(), "impilo.vito.patient.created.v1", 1,
                         "corr-001", "cause-001", "idem-001",
-                        "vito-service", "tenant-zw", null,
+                        "vito", "tenant-zw", null,
                         OffsetDateTime.now(), OffsetDateTime.now(),
                         "Patient", "CPID-12345", Map.of(), Map.of());
                 throw new AssertionError("Expected IllegalArgumentException");
@@ -140,15 +143,57 @@ public class EventEnvelopeContractStandaloneTest {
             }
         });
 
-        test("VITO producer must be 'vito-service'", () -> {
+        test("Missing correlation_id throws", () -> {
+            try {
+                new TestEventEnvelope(
+                        UUID.randomUUID().toString(), "impilo.vito.patient.created.v1", 1,
+                        null, "cause-001", "idem-001",
+                        "vito", "tenant-zw", "pod-harare",
+                        OffsetDateTime.now(), OffsetDateTime.now(),
+                        "Patient", "CPID-12345", Map.of(), Map.of());
+                throw new AssertionError("Expected IllegalArgumentException");
+            } catch (IllegalArgumentException e) {
+                // expected
+            }
+        });
+
+        test("Missing idempotency_key throws", () -> {
+            try {
+                new TestEventEnvelope(
+                        UUID.randomUUID().toString(), "impilo.vito.patient.created.v1", 1,
+                        "corr-001", "cause-001", null,
+                        "vito", "tenant-zw", "pod-harare",
+                        OffsetDateTime.now(), OffsetDateTime.now(),
+                        "Patient", "CPID-12345", Map.of(), Map.of());
+                throw new AssertionError("Expected IllegalArgumentException");
+            } catch (IllegalArgumentException e) {
+                // expected
+            }
+        });
+
+        test("Missing payload throws", () -> {
+            try {
+                new TestEventEnvelope(
+                        UUID.randomUUID().toString(), "impilo.vito.patient.created.v1", 1,
+                        "corr-001", "cause-001", "idem-001",
+                        "vito", "tenant-zw", "pod-harare",
+                        OffsetDateTime.now(), OffsetDateTime.now(),
+                        "Patient", "CPID-12345", null, Map.of());
+                throw new AssertionError("Expected IllegalArgumentException");
+            } catch (IllegalArgumentException e) {
+                // expected
+            }
+        });
+
+        test("VITO producer must be 'vito'", () -> {
             TestEventEnvelope env = validEnvelope();
-            if (!"vito-service".equals(env.producer()))
+            if (!"vito".equals(env.producer()))
                 throw new AssertionError("producer mismatch: " + env.producer());
         });
 
-        test("VITO event types must start with 'vito.' prefix", () -> {
+        test("VITO event types must start with 'impilo.vito.' prefix", () -> {
             TestEventEnvelope env = validEnvelope();
-            if (!env.eventType().startsWith("vito."))
+            if (!env.eventType().startsWith("impilo.vito."))
                 throw new AssertionError("prefix mismatch: " + env.eventType());
         });
 
@@ -166,9 +211,9 @@ public class EventEnvelopeContractStandaloneTest {
 
     private static TestEventEnvelope validEnvelope() {
         return new TestEventEnvelope(
-                UUID.randomUUID().toString(), "vito.patient.created", 1,
+                UUID.randomUUID().toString(), "impilo.vito.patient.created.v1", 1,
                 "corr-001", "cause-001", "idem-001",
-                "vito-service", "tenant-zw", "pod-harare-central",
+                "vito", "tenant-zw", "pod-harare-central",
                 OffsetDateTime.now(), OffsetDateTime.now(),
                 "Patient", "CPID-12345",
                 Map.of("given_name_hash", "abc123"), Map.of());
