@@ -27,6 +27,13 @@
             <version>${project.version}</version>
         </dependency>
 
+        <!-- Shared Kernel (v1.1 enforcement: EventEnvelope, DualEmitPolicy, ConsistencyGate) -->
+        <dependency>
+            <groupId>zw.gov.mohcc.impilo</groupId>
+            <artifactId>shared-kernel-java</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- Web -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

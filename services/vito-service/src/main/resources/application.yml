@@ -74,11 +74,10 @@ vito:
     base-url: ${OPENCR_BASE_URL:http://localhost:3000/fhir}
 
   # v1.1 runtime enforcement
+  # Emit mode precedence: EMIT_MODE system property > EMIT_MODE env var > vito.v11.emit-mode > DUAL
   v11:
     # DualEmitPolicy: LEGACY_ONLY | V1_1_ONLY | DUAL
     emit-mode: ${VITO_EMIT_MODE:DUAL}
-    # Default pod ID for events created outside request context
-    default-pod-id: ${VITO_POD_ID:unknown}
 
 management:
   endpoints:
