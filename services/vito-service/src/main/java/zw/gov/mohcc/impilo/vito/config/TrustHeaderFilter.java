@@ -29,7 +29,9 @@ public class TrustHeaderFilter implements Filter {
     private static final List<String> SKIP_PREFIXES = List.of(
             "/actuator/",
             "/v3/api-docs",
-            "/swagger-ui"
+            "/swagger-ui",
+            "/internal/v1/",   // v1.1 paths have their own header contract (V1_1HeaderFilter)
+            "/external/v1/"    // v1.1 paths have their own header contract (V1_1HeaderFilter)
     );
 
     @Override
