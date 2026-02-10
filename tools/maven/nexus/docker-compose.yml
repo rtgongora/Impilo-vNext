@@ -1,0 +1,18 @@
+# =============================================================================
+# Local Nexus OSS — LAN Maven mirror for Impilo vNext
+# =============================================================================
+# Usage:  docker compose -f tools/maven/nexus/docker-compose.yml up -d
+# UI:     http://localhost:8081
+# Default admin password: stored in /nexus-data/admin.password on first boot
+# =============================================================================
+services:
+  nexus:
+    image: sonatype/nexus3:latest
+    container_name: impilo-nexus
+    ports:
+      - "8081:8081"
+    volumes:
+      - ./data:/nexus-data
+    environment:
+      - INSTALL4J_ADD_VM_PARAMS=-Xms512m -Xmx1024m -XX:MaxDirectMemorySize=1024m
+    restart: unless-stopped

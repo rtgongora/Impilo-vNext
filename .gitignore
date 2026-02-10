@@ -45,3 +45,10 @@ Thumbs.db
 
 # ===== Helm =====
 **/charts/*.tgz
+
+# ===== Vendored Maven repo (populated per-machine, not committed) =====
+vendor/m2/repository/*
+!vendor/m2/repository/.gitkeep
+
+# ===== Local Nexus data =====
+tools/maven/nexus/data/

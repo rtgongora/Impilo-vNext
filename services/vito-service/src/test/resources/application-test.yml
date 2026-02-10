@@ -21,6 +21,10 @@ spring:
         dialect: org.hibernate.dialect.H2Dialect
   flyway:
     enabled: false
+  sql:
+    init:
+      mode: always
+      data-locations: classpath:testdata/seed.sql
   kafka:
     bootstrap-servers: localhost:9092
     listener:

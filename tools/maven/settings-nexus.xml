@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- =============================================================================
+  Maven settings for local Nexus mirror (LAN-connected builds)
+  Usage: mvn -s tools/maven/settings-nexus.xml [goals...]
+  ============================================================================= -->
+<settings xmlns="http://maven.apache.org/SETTINGS/1.2.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.2.0
+                              https://maven.apache.org/xsd/settings-1.2.0.xsd">
+
+    <mirrors>
+        <!-- Mirror Maven Central through local Nexus -->
+        <mirror>
+            <id>nexus-central</id>
+            <mirrorOf>central</mirrorOf>
+            <name>Local Nexus — Maven Central proxy</name>
+            <url>http://localhost:8081/repository/maven-central/</url>
+        </mirror>
+    </mirrors>
+
+    <profiles>
+        <profile>
+            <id>nexus-repos</id>
+            <repositories>
+                <!-- Nexus-proxied Maven Central -->
+                <repository>
+                    <id>nexus-central</id>
+                    <url>http://localhost:8081/repository/maven-central/</url>
+                    <releases><enabled>true</enabled></releases>
+                    <snapshots><enabled>false</enabled></snapshots>
+                </repository>
+                <!-- Impilo internal hosted repo (for team-built artifacts) -->
+                <repository>
+                    <id>impilo-internal</id>
+                    <url>http://localhost:8081/repository/impilo-internal/</url>
+                    <releases><enabled>true</enabled></releases>
+                    <snapshots><enabled>true</enabled></snapshots>
+                </repository>
+            </repositories>
+            <pluginRepositories>
+                <pluginRepository>
+                    <id>nexus-central</id>
+                    <url>http://localhost:8081/repository/maven-central/</url>
+                    <releases><enabled>true</enabled></releases>
+                    <snapshots><enabled>false</enabled></snapshots>
+                </pluginRepository>
+            </pluginRepositories>
+        </profile>
+    </profiles>
+
+    <activeProfiles>
+        <activeProfile>nexus-repos</activeProfile>
+    </activeProfiles>
+
+</settings>
