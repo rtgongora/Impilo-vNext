@@ -1,0 +1,140 @@
+# ============================================================================
+# Envoy ext_authz Reference Configuration for Impilo v1.1 Gateway
+# ============================================================================
+#
+# This file shows the canonical Ingress → Envoy ext_authz → OPA/TSHEPO pattern
+# with mandatory header injection after ALLOW decision.
+#
+# Wire into your service's route by including this ext_authz filter
+# in the HTTP connection manager filter chain.
+#
+# For local dev: the existing infra/envoy/envoy.yaml already routes to TSHEPO.
+# This reference shows the OPA sidecar pattern for production.
+# ============================================================================
+
+static_resources:
+  listeners:
+    - name: ingress_listener
+      address:
+        socket_address:
+          address: 0.0.0.0
+          port_value: 10000
+      filter_chains:
+        - filters:
+            - name: envoy.filters.network.http_connection_manager
+              typed_config:
+                "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+                stat_prefix: ingress_http
+                codec_type: AUTO
+                route_config:
+                  name: local_route
+                  virtual_hosts:
+                    - name: impilo_services
+                      domains: ["*"]
+                      routes:
+                        # ── v1.1 API routes ──────────────────────────────
+                        - match:
+                            prefix: "/internal/v1/"
+                          route:
+                            cluster: upstream_service
+                            timeout: 30s
+                        - match:
+                            prefix: "/external/v1/"
+                          route:
+                            cluster: upstream_service
+                            timeout: 30s
+                        # ── Legacy v1 routes (passthrough) ───────────────
+                        - match:
+                            prefix: "/v1/"
+                          route:
+                            cluster: upstream_service
+                            timeout: 30s
+                        # ── Health/readiness ─────────────────────────────
+                        - match:
+                            prefix: "/actuator/"
+                          route:
+                            cluster: upstream_service
+
+                http_filters:
+                  # ── 1. ext_authz: OPA sidecar (gRPC) ──────────────
+                  - name: envoy.filters.http.ext_authz
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthz
+                      transport_api_version: V3
+
+                      # Option A: OPA as gRPC ext_authz server
+                      grpc_service:
+                        envoy_grpc:
+                          cluster_name: opa_sidecar
+                        timeout: 2s
+
+                      # Hard fail if OPA is down — do not allow requests
+                      failure_mode_allow: false
+
+                      # Forward request body for content-based policy
+                      with_request_body:
+                        max_request_bytes: 8192
+                        allow_partial_message: true
+
+                      # Clear any client-supplied policy headers (prevent spoofing)
+                      clear_route_cache: false
+
+                  # ── 2. Lua: inject policy decision headers after ALLOW ─
+                  - name: envoy.filters.http.lua
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.filters.http.lua.v3.Lua
+                      default_source_code:
+                        inline_string: |
+                          function envoy_on_request(request_handle)
+                            -- After ext_authz allows, the dynamic metadata contains the decision.
+                            -- Inject mandatory policy headers for downstream services.
+                            local meta = request_handle:streamInfo():dynamicMetadata()
+                            local authz = meta:get("envoy.filters.http.ext_authz") or {}
+
+                            local decision = authz["x-policy-decision"] or "ALLOW"
+                            local version  = authz["x-policy-version"]  or "v1.1"
+                            local reason   = authz["x-decision-reason"] or "ext_authz_pass"
+
+                            request_handle:headers():add("X-Policy-Decision", decision)
+                            request_handle:headers():add("X-Policy-Version",  version)
+                            request_handle:headers():add("X-Decision-Reason", reason)
+                          end
+
+                  # ── 3. Router ──────────────────────────────────────
+                  - name: envoy.filters.http.router
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+
+  clusters:
+    # ── Upstream service (placeholder — replace with actual service) ──
+    - name: upstream_service
+      type: STRICT_DNS
+      lb_policy: ROUND_ROBIN
+      load_assignment:
+        cluster_name: upstream_service
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address:
+                      address: 127.0.0.1
+                      port_value: 8080
+
+    # ── OPA sidecar (gRPC ext_authz) ────────────────────────────────
+    - name: opa_sidecar
+      type: STRICT_DNS
+      lb_policy: ROUND_ROBIN
+      typed_extension_protocol_options:
+        envoy.extensions.upstreams.http.v3.HttpProtocolOptions:
+          "@type": type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions
+          explicit_http_config:
+            http2_protocol_options: {}
+      load_assignment:
+        cluster_name: opa_sidecar
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address:
+                      address: 127.0.0.1
+                      port_value: 9191

@@ -88,6 +88,11 @@
         <!-- TSHEPO shared libraries (under libs/) -->
         <module>../libs/tshepo-contracts</module>
         <module>../libs/tshepo-sdk</module>
+        <!-- Tech Companion Suite (v1.1 enforcement primitives) -->
+        <module>../libs/tech-companion</module>
+        <module>../libs/federation-connector</module>
+        <module>../libs/tech-companion-harness</module>
+        <module>../libs/tech-companion-mock</module>
     </modules>
 
     <dependencyManagement>
@@ -214,6 +219,23 @@
                 <groupId>io.opentelemetry</groupId>
                 <artifactId>opentelemetry-api</artifactId>
                 <version>${opentelemetry.version}</version>
+            </dependency>
+
+            <!-- Tech Companion Suite -->
+            <dependency>
+                <groupId>zw.gov.mohcc.impilo</groupId>
+                <artifactId>tech-companion</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>zw.gov.mohcc.impilo</groupId>
+                <artifactId>federation-connector</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>zw.gov.mohcc.impilo</groupId>
+                <artifactId>tech-companion-harness</artifactId>
+                <version>${project.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

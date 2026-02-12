@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>zw.gov.mohcc.impilo</groupId>
+        <artifactId>impilo-parent</artifactId>
+        <version>0.1.0-SNAPSHOT</version>
+        <relativePath>../../services/pom.xml</relativePath>
+    </parent>
+
+    <artifactId>tech-companion</artifactId>
+    <packaging>jar</packaging>
+    <name>Impilo — Tech Companion Library</name>
+    <description>
+        Manifest v1.1 / Tech Companion Spec enforcement primitives:
+        RequestContext, header enforcement filters, error envelope, idempotency,
+        timeout enforcement, federation helpers, and observability hooks.
+        Services adopt by adding this dependency + registering filters.
+    </description>
+
+    <dependencies>
+        <!-- Spring Web (optional — consumers bring their own) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- Spring Data JPA (optional — for idempotency JPA repo) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- JDBC (optional — for idempotency JDBC repo) -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-jdbc</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- Jackson — JSON serialization for error envelope -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+
+        <!-- Servlet API (provided at runtime) -->
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Micrometer (optional — for observability hooks) -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-core</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- Test -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <!-- Library JAR — no spring-boot-maven-plugin -->
+</project>

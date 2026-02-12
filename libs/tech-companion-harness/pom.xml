@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>zw.gov.mohcc.impilo</groupId>
+        <artifactId>impilo-parent</artifactId>
+        <version>0.1.0-SNAPSHOT</version>
+        <relativePath>../../services/pom.xml</relativePath>
+    </parent>
+
+    <artifactId>tech-companion-harness</artifactId>
+    <packaging>jar</packaging>
+    <name>Impilo — Tech Companion Contract Harness</name>
+    <description>
+        Golden contract test suite for v1.1 compliance verification.
+        Provides reusable test classes that can be applied to any Impilo service
+        to verify header enforcement, error envelope, idempotency, and federation compliance.
+    </description>
+
+    <dependencies>
+        <dependency>
+            <groupId>zw.gov.mohcc.impilo</groupId>
+            <artifactId>tech-companion</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!-- JUnit 5 -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+            <scope>compile</scope>
+        </dependency>
+
+        <!-- AssertJ -->
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>compile</scope>
+        </dependency>
+
+        <!-- Jackson -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+
+        <!-- Spring Test (optional — for MockMvc-based harness) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+            <optional>true</optional>
+        </dependency>
+    </dependencies>
+</project>
