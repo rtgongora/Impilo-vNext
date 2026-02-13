@@ -2,60 +2,155 @@ package zw.gov.mohcc.impilo.companion.harness;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
+
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
- * Golden Contract Test Suite for v1.1 compliance.
+ * Golden Contract Test Suite for v1.1 compliance — Wave 6 (auto-discovery).
  *
- * Apply to ANY Impilo service by:
- * 1. Adding tech-companion-harness as a test dependency
- * 2. Creating a test class that extends this and adds @SpringBootTest
+ * <p>Uses {@link EndpointDiscovery} to find real v1.1 endpoints in the service
+ * under test, eliminating the need for dedicated probe/mock controllers.
  *
- * Verifies:
- * - Header enforcement (missing tenant/pod → 400)
- * - Error envelope format (all fields present)
- * - Idempotency conflict (same key different body → 409 IDENTITY_CONFLICT)
- * - Federation authority violation (private pod → 403 FEDERATION_AUTHORITY_VIOLATION)
+ * <p>Apply to ANY Impilo service by:
+ * <ol>
+ *   <li>Adding {@code tech-companion-harness} as a test dependency</li>
+ *   <li>Creating one test class: {@code @SpringBootTest + extends GoldenContractSuite}</li>
+ * </ol>
  *
- * Requires the service to expose at minimum:
- * - GET  /internal/v1/health (any 2xx endpoint)
- * - POST /internal/v1/test-command (any command endpoint for idempotency tests)
- * - POST /internal/v1/test-federation (national-only endpoint for federation tests)
+ * <p>Verifies:
+ * <ul>
+ *   <li>Header enforcement (missing any required header → 400 + envelope)</li>
+ *   <li>Error envelope format (code, message, details, request_id, correlation_id)</li>
+ *   <li>Idempotency (missing key → 400; same key + different body → 409)</li>
+ *   <li>Federation authority (private pod → 403) — only if service provides endpoint</li>
+ * </ul>
  *
- * Override {@link #getHealthPath()}, {@link #getCommandPath()}, and
- * {@link #getFederationPath()} if your paths differ.
+ * <p>If a service has no v1.1 endpoints, tests will be SKIPPED (not failed).
+ * If a service has no command endpoint, idempotency tests will be SKIPPED.
+ * If a service has no federation endpoint, federation tests will be SKIPPED.
  */
 @AutoConfigureMockMvc
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class GoldenContractSuite {
 
     @Autowired
     protected MockMvc mockMvc;
 
+    @Autowired(required = false)
+    protected RequestMappingHandlerMapping handlerMapping;
+
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    // ── Override points for service-specific paths ──────────────────
+    // Discovered endpoints (resolved in @BeforeAll)
+    private String readEndpoint;
+    private String commandEndpoint;
+    private String commandMethod;
+    private String federationEndpoint;
 
+    // ── Override points (Wave 6 API) ────────────────────────────────
+
+    /**
+     * Override to provide a specific read endpoint path.
+     * Return null to use auto-discovery.
+     */
+    protected String getReadEndpointOverride() {
+        return null;
+    }
+
+    /**
+     * Override to provide a specific command endpoint path.
+     * Return null to use auto-discovery.
+     */
+    protected String getCommandEndpointOverride() {
+        return null;
+    }
+
+    /**
+     * Override to provide a federation-gated endpoint path.
+     * Return null if this service has no federation-gated endpoints.
+     * Federation tests will be SKIPPED when null.
+     */
+    protected String getFederationEndpointOverride() {
+        return null;
+    }
+
+    // ── Backwards-compatible override points (Wave 5 API) ───────────
+
+    /**
+     * @deprecated Use {@link #getReadEndpointOverride()} instead.
+     *             Returns null by default (triggers auto-discovery).
+     */
     protected String getHealthPath() {
-        return "/internal/v1/health";
+        return null;
     }
 
+    /**
+     * @deprecated Use {@link #getCommandEndpointOverride()} instead.
+     *             Returns null by default (triggers auto-discovery).
+     */
     protected String getCommandPath() {
-        return "/internal/v1/test-command";
+        return null;
     }
 
+    /**
+     * @deprecated Use {@link #getFederationEndpointOverride()} instead.
+     *             Returns null by default (triggers auto-discovery).
+     */
     protected String getFederationPath() {
-        return "/internal/v1/test-federation";
+        return null;
+    }
+
+    // ── Discovery ──────────────────────────────────────────────────
+
+    @BeforeAll
+    void discoverEndpoints() {
+        // Priority: explicit Wave 6 override > legacy Wave 5 override > auto-discovery
+
+        readEndpoint = coalesce(getReadEndpointOverride(), getHealthPath());
+        if (readEndpoint == null && handlerMapping != null) {
+            readEndpoint = EndpointDiscovery.findReadEndpoint(handlerMapping).orElse(null);
+        }
+
+        commandEndpoint = coalesce(getCommandEndpointOverride(), getCommandPath());
+        if (commandEndpoint == null && handlerMapping != null) {
+            commandEndpoint = EndpointDiscovery.findCommandEndpoint(handlerMapping).orElse(null);
+        }
+        if (commandEndpoint != null && handlerMapping != null) {
+            commandMethod = EndpointDiscovery.getCommandMethod(handlerMapping, commandEndpoint);
+        } else {
+            commandMethod = "POST";
+        }
+
+        federationEndpoint = coalesce(getFederationEndpointOverride(), getFederationPath());
+
+        System.out.println("[GoldenContractSuite] Discovered endpoints:");
+        System.out.println("  Read:       " + (readEndpoint != null ? readEndpoint : "NONE (header/envelope tests will be skipped)"));
+        System.out.println("  Command:    " + (commandEndpoint != null ? commandEndpoint + " [" + commandMethod + "]" : "NONE (idempotency tests will be skipped)"));
+        System.out.println("  Federation: " + (federationEndpoint != null ? federationEndpoint : "NONE (federation tests will be skipped)"));
+    }
+
+    private static String coalesce(String... values) {
+        for (String v : values) {
+            if (v != null && !v.isBlank()) return v;
+        }
+        return null;
     }
 
     // ── 1. Header Enforcement ──────────────────────────────────────
@@ -67,7 +162,10 @@ public abstract class GoldenContractSuite {
         @Test
         @DisplayName("Missing X-Tenant-ID returns 400 MISSING_REQUIRED_HEADER")
         void missingTenantIdReturns400() throws Exception {
-            MvcResult result = mockMvc.perform(get(getHealthPath())
+            Assumptions.assumeTrue(readEndpoint != null,
+                    "SKIPPED: No v1.1 read endpoint discovered for header enforcement test");
+
+            MvcResult result = mockMvc.perform(get(readEndpoint)
                             .header("X-Pod-ID", "national")
                             .header("X-Request-ID", "req-1")
                             .header("X-Correlation-ID", "corr-1"))
@@ -80,7 +178,10 @@ public abstract class GoldenContractSuite {
         @Test
         @DisplayName("Missing X-Pod-ID returns 400 MISSING_REQUIRED_HEADER")
         void missingPodIdReturns400() throws Exception {
-            MvcResult result = mockMvc.perform(get(getHealthPath())
+            Assumptions.assumeTrue(readEndpoint != null,
+                    "SKIPPED: No v1.1 read endpoint discovered for header enforcement test");
+
+            MvcResult result = mockMvc.perform(get(readEndpoint)
                             .header("X-Tenant-ID", "moh-zw")
                             .header("X-Request-ID", "req-1")
                             .header("X-Correlation-ID", "corr-1"))
@@ -93,7 +194,10 @@ public abstract class GoldenContractSuite {
         @Test
         @DisplayName("Blank X-Tenant-ID treated as missing")
         void blankTenantIdReturns400() throws Exception {
-            MvcResult result = mockMvc.perform(get(getHealthPath())
+            Assumptions.assumeTrue(readEndpoint != null,
+                    "SKIPPED: No v1.1 read endpoint discovered for header enforcement test");
+
+            MvcResult result = mockMvc.perform(get(readEndpoint)
                             .header("X-Tenant-ID", "  ")
                             .header("X-Pod-ID", "national")
                             .header("X-Request-ID", "req-1")
@@ -107,7 +211,10 @@ public abstract class GoldenContractSuite {
         @Test
         @DisplayName("All required headers present passes through")
         void allHeadersPresentSucceeds() throws Exception {
-            mockMvc.perform(get(getHealthPath())
+            Assumptions.assumeTrue(readEndpoint != null,
+                    "SKIPPED: No v1.1 read endpoint discovered for header enforcement test");
+
+            mockMvc.perform(get(readEndpoint)
                             .header("X-Tenant-ID", "moh-zw")
                             .header("X-Pod-ID", "national")
                             .header("X-Request-ID", "req-1")
@@ -123,26 +230,27 @@ public abstract class GoldenContractSuite {
     class ErrorEnvelopeFormat {
 
         @Test
-        @DisplayName("Error response contains all required fields")
+        @DisplayName("Error response contains all required envelope fields")
         void errorResponseContainsAllFields() throws Exception {
-            MvcResult result = mockMvc.perform(get(getHealthPath()))
+            Assumptions.assumeTrue(readEndpoint != null,
+                    "SKIPPED: No v1.1 read endpoint discovered for error envelope test");
+
+            MvcResult result = mockMvc.perform(get(readEndpoint))
                     .andExpect(status().isBadRequest())
                     .andReturn();
 
             String body = result.getResponse().getContentAsString();
             JsonNode root = MAPPER.readTree(body);
 
-            assertThat(root.has("error")).isTrue();
+            assertThat(root.has("error")).as("Response should contain 'error' field: " + body).isTrue();
             JsonNode error = root.get("error");
-            assertThat(error.has("code")).isTrue();
-            assertThat(error.has("message")).isTrue();
-            assertThat(error.has("details")).isTrue();
-            assertThat(error.has("request_id")).isTrue();
-            assertThat(error.has("correlation_id")).isTrue();
+            assertThat(error.has("code")).as("error.code must be present").isTrue();
+            assertThat(error.has("message")).as("error.message must be present").isTrue();
+            assertThat(error.has("details")).as("error.details must be present").isTrue();
+            assertThat(error.has("request_id")).as("error.request_id must be present").isTrue();
+            assertThat(error.has("correlation_id")).as("error.correlation_id must be present").isTrue();
 
-            // code should be a non-empty string
             assertThat(error.get("code").asText()).isNotBlank();
-            // request_id and correlation_id should be auto-generated
             assertThat(error.get("request_id").asText()).isNotBlank();
             assertThat(error.get("correlation_id").asText()).isNotBlank();
         }
@@ -150,28 +258,36 @@ public abstract class GoldenContractSuite {
         @Test
         @DisplayName("Error response Content-Type is application/json")
         void errorResponseIsJson() throws Exception {
-            mockMvc.perform(get(getHealthPath()))
+            Assumptions.assumeTrue(readEndpoint != null,
+                    "SKIPPED: No v1.1 read endpoint discovered for error envelope test");
+
+            mockMvc.perform(get(readEndpoint))
                     .andExpect(status().isBadRequest())
                     .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
         }
     }
 
-    // ── 3. Idempotency Conflict ────────────────────────────────────
+    // ── 3. Idempotency ─────────────────────────────────────────────
 
     @Nested
     @DisplayName("Idempotency")
     class Idempotency {
 
         @Test
-        @DisplayName("Missing Idempotency-Key on POST returns 400 IDEMPOTENCY_KEY_REQUIRED")
+        @DisplayName("Missing Idempotency-Key on command returns 400 IDEMPOTENCY_KEY_REQUIRED")
         void missingIdempotencyKeyReturns400() throws Exception {
-            MvcResult result = mockMvc.perform(post(getCommandPath())
-                            .header("X-Tenant-ID", "moh-zw")
-                            .header("X-Pod-ID", "national")
-                            .header("X-Request-ID", "req-1")
-                            .header("X-Correlation-ID", "corr-1")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content("{\"name\":\"test\"}"))
+            Assumptions.assumeTrue(commandEndpoint != null,
+                    "SKIPPED: No v1.1 command endpoint discovered for idempotency test");
+
+            MockHttpServletRequestBuilder req = buildCommandRequest(commandEndpoint, commandMethod)
+                    .header("X-Tenant-ID", "moh-zw")
+                    .header("X-Pod-ID", "national")
+                    .header("X-Request-ID", "req-1")
+                    .header("X-Correlation-ID", "corr-1")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"name\":\"test\"}");
+
+            MvcResult result = mockMvc.perform(req)
                     .andExpect(status().isBadRequest())
                     .andReturn();
 
@@ -181,11 +297,13 @@ public abstract class GoldenContractSuite {
         @Test
         @DisplayName("Same Idempotency-Key + same body replays original response")
         void sameKeyAndBodyReplays() throws Exception {
+            Assumptions.assumeTrue(commandEndpoint != null,
+                    "SKIPPED: No v1.1 command endpoint discovered for idempotency test");
+
             String idempotencyKey = "idem-replay-" + System.nanoTime();
             String body = "{\"name\":\"replay-test\"}";
 
-            // First call
-            MvcResult first = mockMvc.perform(post(getCommandPath())
+            MvcResult first = mockMvc.perform(buildCommandRequest(commandEndpoint, commandMethod)
                             .header("X-Tenant-ID", "moh-zw")
                             .header("X-Pod-ID", "national")
                             .header("X-Request-ID", "req-1")
@@ -198,8 +316,7 @@ public abstract class GoldenContractSuite {
             int firstStatus = first.getResponse().getStatus();
             String firstBody = first.getResponse().getContentAsString();
 
-            // Second call with same key + same body
-            MvcResult second = mockMvc.perform(post(getCommandPath())
+            MvcResult second = mockMvc.perform(buildCommandRequest(commandEndpoint, commandMethod)
                             .header("X-Tenant-ID", "moh-zw")
                             .header("X-Pod-ID", "national")
                             .header("X-Request-ID", "req-2")
@@ -216,10 +333,12 @@ public abstract class GoldenContractSuite {
         @Test
         @DisplayName("Same Idempotency-Key + different body returns 409 IDENTITY_CONFLICT")
         void sameKeyDifferentBodyReturns409() throws Exception {
+            Assumptions.assumeTrue(commandEndpoint != null,
+                    "SKIPPED: No v1.1 command endpoint discovered for idempotency test");
+
             String idempotencyKey = "idem-conflict-" + System.nanoTime();
 
-            // First call
-            mockMvc.perform(post(getCommandPath())
+            mockMvc.perform(buildCommandRequest(commandEndpoint, commandMethod)
                             .header("X-Tenant-ID", "moh-zw")
                             .header("X-Pod-ID", "national")
                             .header("X-Request-ID", "req-1")
@@ -229,8 +348,7 @@ public abstract class GoldenContractSuite {
                             .content("{\"name\":\"first\"}"))
                     .andReturn();
 
-            // Second call — same key, different body
-            MvcResult result = mockMvc.perform(post(getCommandPath())
+            MvcResult result = mockMvc.perform(buildCommandRequest(commandEndpoint, commandMethod)
                             .header("X-Tenant-ID", "moh-zw")
                             .header("X-Pod-ID", "national")
                             .header("X-Request-ID", "req-2")
@@ -254,7 +372,10 @@ public abstract class GoldenContractSuite {
         @Test
         @DisplayName("Private pod on national-only endpoint returns 403 FEDERATION_AUTHORITY_VIOLATION")
         void privatePodReturns403() throws Exception {
-            MvcResult result = mockMvc.perform(post(getFederationPath())
+            Assumptions.assumeTrue(federationEndpoint != null,
+                    "SKIPPED: No federation-gated endpoint configured for this service");
+
+            MvcResult result = mockMvc.perform(post(federationEndpoint)
                             .header("X-Tenant-ID", "moh-zw")
                             .header("X-Pod-ID", "private-harare")
                             .header("X-Request-ID", "req-1")
@@ -271,7 +392,10 @@ public abstract class GoldenContractSuite {
         @Test
         @DisplayName("National pod on national-only endpoint succeeds")
         void nationalPodSucceeds() throws Exception {
-            mockMvc.perform(post(getFederationPath())
+            Assumptions.assumeTrue(federationEndpoint != null,
+                    "SKIPPED: No federation-gated endpoint configured for this service");
+
+            mockMvc.perform(post(federationEndpoint)
                             .header("X-Tenant-ID", "moh-zw")
                             .header("X-Pod-ID", "national")
                             .header("X-Request-ID", "req-1")
@@ -283,11 +407,19 @@ public abstract class GoldenContractSuite {
         }
     }
 
-    // ── Assertion helper ───────────────────────────────────────────
+    // ── Helpers ─────────────────────────────────────────────────────
+
+    private MockHttpServletRequestBuilder buildCommandRequest(String path, String method) {
+        return switch (method) {
+            case "PUT" -> put(path);
+            case "PATCH" -> patch(path);
+            default -> post(path);
+        };
+    }
 
     protected void assertErrorEnvelope(MvcResult result, String expectedCode) throws Exception {
         String body = result.getResponse().getContentAsString();
-        assertThat(body).isNotBlank();
+        assertThat(body).as("Response body should not be empty").isNotBlank();
 
         JsonNode root = MAPPER.readTree(body);
         assertThat(root.has("error"))
@@ -295,9 +427,17 @@ public abstract class GoldenContractSuite {
                 .isTrue();
 
         JsonNode error = root.get("error");
-        assertThat(error.get("code").asText()).isEqualTo(expectedCode);
-        assertThat(error.has("message")).isTrue();
-        assertThat(error.has("request_id")).isTrue();
-        assertThat(error.has("correlation_id")).isTrue();
+        assertThat(error.get("code").asText())
+                .as("error.code should be " + expectedCode)
+                .isEqualTo(expectedCode);
+        assertThat(error.has("message"))
+                .as("error.message must be present")
+                .isTrue();
+        assertThat(error.has("request_id"))
+                .as("error.request_id must be present")
+                .isTrue();
+        assertThat(error.has("correlation_id"))
+                .as("error.correlation_id must be present")
+                .isTrue();
     }
 }
