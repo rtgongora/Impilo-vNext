@@ -7,22 +7,15 @@ import zw.gov.mohcc.impilo.companion.harness.GoldenContractSuite;
 /**
  * Golden Contract integration test for TSHEPO v1.1 compliance.
  *
- * Extends the reusable GoldenContractSuite from tech-companion-harness.
- * Verifies:
- *   - Header enforcement (missing tenant/pod/request-id/correlation-id → 400)
- *   - Error envelope format (all required fields present)
- *   - Idempotency (same key + same body → replay; different body → 409)
- *   - Federation authority (private pod → 403)
- *
- * Requires running Spring Boot context with CompanionV11Config and
- * TshepoV11ProbeController active.
+ * Read and command endpoints are auto-discovered from TshepoV11ProbeController.
+ * Federation endpoint is explicitly specified (cannot be auto-detected).
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @ActiveProfiles("test")
 public class TshepoGoldenContractIT extends GoldenContractSuite {
-    // Inherits all tests from GoldenContractSuite.
-    // Default endpoint paths match TshepoV11ProbeController:
-    //   GET  /internal/v1/health
-    //   POST /internal/v1/test-command
-    //   POST /internal/v1/test-federation
+
+    @Override
+    protected String getFederationEndpointOverride() {
+        return "/internal/v1/test-federation";
+    }
 }
