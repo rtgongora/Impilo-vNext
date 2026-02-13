@@ -20,8 +20,11 @@ import java.util.UUID;
  *
  * Applies to {@code /internal/v1/**} and {@code /external/v1/**} paths.
  *
- * Hard rule: if X-Tenant-ID or X-Pod-ID missing => HTTP 400 with structured error envelope.
- * Auto-generates X-Request-ID and X-Correlation-ID if absent.
+ * Hard rule: ALL FOUR headers must be present and non-blank:
+ *   X-Tenant-ID, X-Pod-ID, X-Request-ID, X-Correlation-ID
+ * If any missing => HTTP 400 with structured error envelope.
+ * The error envelope always includes request_id and correlation_id
+ * (auto-generated UUIDs when the caller didn't supply them).
  *
  * Populates {@link RequestContext} on the thread-local {@link RequestContextHolder}.
  *
@@ -46,7 +49,7 @@ public class V11HeaderFilter implements Filter {
             return;
         }
 
-        // Check hard-required headers (X-Tenant-ID, X-Pod-ID)
+        // Check all four hard-required headers
         List<String> missing = new ArrayList<>();
         for (String header : CompanionHeaders.HARD_REQUIRED) {
             String value = httpReq.getHeader(header);
@@ -55,7 +58,7 @@ public class V11HeaderFilter implements Filter {
             }
         }
 
-        // Extract auto-generated headers
+        // Extract request/correlation IDs for envelope (auto-generate if absent)
         String requestId = httpReq.getHeader(CompanionHeaders.REQUEST_ID);
         String correlationId = httpReq.getHeader(CompanionHeaders.CORRELATION_ID);
 

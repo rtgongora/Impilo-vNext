@@ -39,12 +39,8 @@ public final class CompanionHeaders {
     public static final String DECISION_REASON = "X-Decision-Reason";
 
     // ── Hard-required headers (missing any of these => 400) ─────
+    // Manifest v1.1 spec: ALL FOUR must be present on every v1.1 request.
     public static final String[] HARD_REQUIRED = {
-            TENANT_ID, POD_ID
-    };
-
-    // ── All v1.1 context headers (auto-generated if absent: REQUEST_ID, CORRELATION_ID) ─
-    public static final String[] CONTEXT_HEADERS = {
             TENANT_ID, POD_ID, REQUEST_ID, CORRELATION_ID
     };
 }
