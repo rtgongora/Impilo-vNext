@@ -16,20 +16,16 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * Idempotency enforcement filter for v1.1 command endpoints.
+ * Idempotency enforcement filter (RETIRED — superseded by Tech Companion library).
  *
- * Applies ONLY to POST/PUT/PATCH on /internal/v1/** paths.
- * Requires Idempotency-Key header on those requests.
+ * The companion library's {@code IdempotencyFilter} is now authoritative for
+ * POST/PUT/PATCH on /internal/v1/** paths, registered via CompanionV11Config.
  *
- * Behavior:
- *   - same key + same request_hash => replay stored response (status + body)
- *   - same key + different request_hash => 409 IDENTITY_CONFLICT
- *   - new key => proceed, capture response, store for future replay
- *
- * Pure Servlet Filter — runs after V1_1HeaderFilter (Order 10).
+ * This class is retained for reference but is no longer auto-registered
+ * (the @Component annotation has been removed).
  */
-@Component
-@Order(11)
+// @Component — RETIRED: companion library IdempotencyFilter is authoritative
+// @Order(11)
 public class IdempotencyFilter implements Filter {
 
     private static final Set<String> COMMAND_METHODS = Set.of("POST", "PUT", "PATCH");

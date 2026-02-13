@@ -12,23 +12,16 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * V1.1 header enforcement filter.
+ * V1.1 header enforcement filter (RETIRED — superseded by Tech Companion library).
  *
- * Applies ONLY to /internal/v1/** and /external/v1/** paths.
- * Enforces mandatory v1.1 tenant context headers:
- *   X-Tenant-ID, X-Pod-ID, X-Request-ID, X-Correlation-ID
+ * The companion library's {@code V11HeaderFilter} is now authoritative for
+ * /internal/v1/** and /external/v1/** paths, registered via CompanionV11Config.
  *
- * If any are missing => HTTP 400 with standard v1.1 error envelope:
- *   error.code = "MISSING_REQUIRED_HEADER"
- *   details = { "missing": ["X-Tenant-ID", ...] }
- *
- * Does NOT interfere with:
- *   /actuator/**, /swagger/**, /v3/api-docs/**, /v1/** (legacy)
- *
- * Pure Servlet Filter — no Spring MVC dependency.
+ * This class is retained for reference but is no longer auto-registered
+ * (the @Component annotation has been removed).
  */
-@Component
-@Order(10)
+// @Component — RETIRED: companion library V11HeaderFilter is authoritative
+// @Order(10)
 public class V1_1HeaderFilter implements Filter {
 
     private static final List<String> REQUIRED_HEADERS = List.of(
