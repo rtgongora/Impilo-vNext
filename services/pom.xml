@@ -79,6 +79,8 @@
         <module>msika-flow-service</module>
         <!-- BUTANO — Shared Health Record (HAPI FHIR JPA) -->
         <module>butano-service</module>
+        <!-- Search Service — Enterprise Search -->
+        <module>search-service</module>
         <!-- TSHEPO decomposition (6 sub-services) -->
         <module>tshepo-authz-service</module>
         <module>tshepo-identity-service</module>
