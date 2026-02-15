@@ -17,6 +17,7 @@ import zw.gov.mohcc.impilo.notification.repository.TemplateRepository;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class TemplateService {
@@ -36,35 +37,41 @@ public class TemplateService {
     }
 
     @Transactional
-    public TemplateResponse upsertTemplate(TemplateRequest request, RequestContext ctx) {
+    public TemplateResponse createTemplate(TemplateRequest request, RequestContext ctx) {
         TemplateEntity entity = new TemplateEntity();
+        entity.setKey(request.key());
         entity.setChannel(request.channel());
-        entity.setName(request.name());
-        entity.setContent(request.content());
+        entity.setName(request.key());
+        entity.setSubject(request.subject());
+        entity.setContent(request.body());
         entity.setEnabled(request.isEnabledOrDefault());
         entity.setTenantId(ctx.tenantId());
         entity.setPodId(ctx.podId());
 
         entity = templateRepository.save(entity);
-        log.info("Upserted template id={} channel={} tenant={}", entity.getId(), entity.getChannel(), ctx.tenantId());
+        log.info("Created template id={} key={} channel={} tenant={}", entity.getId(), entity.getKey(), entity.getChannel(), ctx.tenantId());
 
-        // Publish outbox event
         OutboxEventEntity outbox = new OutboxEventEntity();
         outbox.setTenantId(ctx.tenantId());
         outbox.setPodId(ctx.podId());
         outbox.setCorrelationId(ctx.correlationId());
-        outbox.setEventType("notification.template.upserted");
+        outbox.setEventType("impilo.notify.template.created.v1");
         outbox.setSchemaVersion(1);
         outbox.setOccurredAt(OffsetDateTime.now());
         outbox.setPayloadJson(serializePayload(Map.of(
                 "templateId", entity.getId(),
+                "key", entity.getKey(),
                 "channel", entity.getChannel(),
-                "name", entity.getName(),
                 "enabled", entity.isEnabled()
         )));
         outboxEventRepository.save(outbox);
 
         return toResponse(entity);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<TemplateResponse> getByKey(String key) {
+        return templateRepository.findByKey(key).map(this::toResponse);
     }
 
     @Transactional(readOnly = true)
@@ -74,11 +81,34 @@ public class TemplateService {
                 .toList();
     }
 
+    public String renderBody(TemplateEntity template, Map<String, String> variables) {
+        return substituteVariables(template.getContent(), variables);
+    }
+
+    public String renderSubject(TemplateEntity template, Map<String, String> variables) {
+        if (template.getSubject() == null) {
+            return null;
+        }
+        return substituteVariables(template.getSubject(), variables);
+    }
+
+    private String substituteVariables(String text, Map<String, String> variables) {
+        if (text == null || variables == null || variables.isEmpty()) {
+            return text;
+        }
+        String result = text;
+        for (Map.Entry<String, String> entry : variables.entrySet()) {
+            result = result.replace("{{" + entry.getKey() + "}}", entry.getValue());
+        }
+        return result;
+    }
+
     private TemplateResponse toResponse(TemplateEntity entity) {
         return new TemplateResponse(
                 entity.getId(),
+                entity.getKey(),
                 entity.getChannel(),
-                entity.getName(),
+                entity.getSubject(),
                 entity.getContent(),
                 entity.isEnabled(),
                 entity.getCreatedAt(),

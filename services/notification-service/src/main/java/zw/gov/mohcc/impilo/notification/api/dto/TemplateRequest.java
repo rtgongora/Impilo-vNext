@@ -6,21 +6,21 @@ import jakarta.validation.constraints.Size;
 public record TemplateRequest(
 
         @NotBlank
+        @Size(max = 128)
+        String key,
+
+        @NotBlank
         @Size(max = 32)
         String channel,
 
-        @NotBlank
-        @Size(max = 256)
-        String name,
+        @Size(max = 512)
+        String subject,
 
         @NotBlank
-        String content,
+        String body,
 
         Boolean enabled
 ) {
-    /**
-     * Returns enabled value, defaulting to true if null.
-     */
     public boolean isEnabledOrDefault() {
         return enabled == null || enabled;
     }

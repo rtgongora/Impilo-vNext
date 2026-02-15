@@ -4,9 +4,10 @@ import java.time.OffsetDateTime;
 
 public record TemplateResponse(
         String id,
+        String key,
         String channel,
-        String name,
-        String content,
+        String subject,
+        String body,
         boolean enabled,
         OffsetDateTime createdAt,
         OffsetDateTime updatedAt

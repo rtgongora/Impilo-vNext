@@ -18,11 +18,17 @@ public class TemplateEntity {
     @Column(name = "id", length = 36, nullable = false)
     private String id;
 
+    @Column(name = "key", length = 128, nullable = false, unique = true)
+    private String key;
+
     @Column(name = "channel", length = 32, nullable = false)
     private String channel;
 
     @Column(name = "name", length = 256, nullable = false)
     private String name;
+
+    @Column(name = "subject", length = 512)
+    private String subject;
 
     @Column(name = "content", columnDefinition = "TEXT", nullable = false)
     private String content;
@@ -66,11 +72,17 @@ public class TemplateEntity {
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 
+    public String getKey() { return key; }
+    public void setKey(String key) { this.key = key; }
+
     public String getChannel() { return channel; }
     public void setChannel(String channel) { this.channel = channel; }
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
+
+    public String getSubject() { return subject; }
+    public void setSubject(String subject) { this.subject = subject; }
 
     public String getContent() { return content; }
     public void setContent(String content) { this.content = content; }

@@ -8,6 +8,9 @@ import java.util.Map;
 
 public record NotifyRequest(
 
+        @Size(max = 128)
+        String templateKey,
+
         @NotBlank
         @Size(max = 32)
         String channel,
@@ -16,8 +19,6 @@ public record NotifyRequest(
         @Size(max = 256)
         @JsonProperty("to")
         String recipient,
-
-        String templateId,
 
         Map<String, String> variables
 ) {
