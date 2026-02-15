@@ -87,6 +87,8 @@
         <module>data-pipeline-service</module>
         <!-- NDR — National Data Repository (v1.1-Native Analytics Store) -->
         <module>national-data-repository-service</module>
+        <!-- Reporting — Platform Analytics & Report Generation (v1.1-Native) -->
+        <module>reporting-service</module>
         <!-- TSHEPO decomposition (6 sub-services) -->
         <module>tshepo-authz-service</module>
         <module>tshepo-identity-service</module>
