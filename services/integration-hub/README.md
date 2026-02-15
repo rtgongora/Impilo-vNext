@@ -4,13 +4,13 @@ Central routing and dispatch framework for inter-service command/event delivery 
 
 ## Purpose
 
-The Integration Hub provides a registry of route definitions and a dispatch endpoint for recording inter-service event delivery requests. It is v1.1-native: all endpoints enforce mandatory headers, idempotency, federation authority, and timeout propagation via `tech-companion`.
+The Integration Hub provides a registry of route definitions with match criteria, transform rules, and dispatch handling including dead-letter support. It is v1.1-native: all endpoints enforce mandatory headers, idempotency, federation authority, and timeout propagation via `tech-companion`.
 
 ## Endpoints
 
 ### POST /internal/v1/routes (national-only)
 
-Create or update a route definition.
+Create a route definition with match criteria, transform rules, and target config.
 
 ```bash
 curl -X POST http://localhost:8110/internal/v1/routes \
@@ -21,10 +21,12 @@ curl -X POST http://localhost:8110/internal/v1/routes \
   -H "X-Correlation-ID: $(uuidgen)" \
   -H "Idempotency-Key: route-$(uuidgen)" \
   -d '{
-    "sourceService": "oros",
-    "eventTypePrefix": "oros.order.*",
-    "targetService": "pharmacy",
-    "targetUrl": "http://pharmacy:8096/internal/v1/orders",
+    "matchMethod": "POST",
+    "matchPathRegex": "/api/v1/orders/.*",
+    "targetUrl": "http://oros:8089/internal/v1/orders",
+    "targetTimeoutMs": 5000,
+    "transformHeaders": {"X-Source": "X-Origin"},
+    "transformFieldRenames": {"orderId": "order_id"},
     "enabled": true
   }'
 ```
@@ -43,7 +45,7 @@ curl http://localhost:8110/internal/v1/routes \
 
 ### POST /internal/v1/dispatch (any pod)
 
-Submit a dispatch request. The event is recorded in the outbox for later delivery.
+Submit a dispatch command. The hub matches the request method+path against registered routes, applies transforms, records the attempt, and writes an outbox event. If no route matches, the dispatch is recorded as failed and a dead-letter entry is created.
 
 ```bash
 curl -X POST http://localhost:8110/internal/v1/dispatch \
@@ -54,23 +56,52 @@ curl -X POST http://localhost:8110/internal/v1/dispatch \
   -H "X-Correlation-ID: $(uuidgen)" \
   -H "Idempotency-Key: dispatch-$(uuidgen)" \
   -d '{
-    "sourceService": "oros",
-    "eventType": "oros.order.placed",
-    "targetService": "pharmacy",
-    "payloadJson": "{\"orderId\":\"123\"}"
+    "method": "POST",
+    "path": "/api/v1/orders/create",
+    "body": "{\"orderId\":\"123\"}",
+    "headers": {"X-Source": "oros"}
   }'
 ```
+
+### GET /internal/v1/deadletters (any pod)
+
+List dead-letter entries (paged). Supports optional `resolved` filter and `page`/`size` params.
+
+```bash
+curl "http://localhost:8110/internal/v1/deadletters?page=0&size=20&resolved=false" \
+  -H "X-Tenant-ID: moh-zw" \
+  -H "X-Pod-ID: national" \
+  -H "X-Request-ID: $(uuidgen)" \
+  -H "X-Correlation-ID: $(uuidgen)"
+```
+
+## Route Matching
+
+Routes are matched against dispatch requests using:
+- **matchMethod**: HTTP method (`POST`, `GET`, `PUT`, etc.) or `*` for any method
+- **matchPathRegex**: Java regex pattern matched against the dispatch path
+
+Both criteria must match for a route to be selected. Routes without match criteria (legacy v1 routes) are not matched by the dispatch engine.
+
+## Transform Rules
+
+When a route is matched, the hub applies configured transforms:
+- **transformHeaders**: Maps incoming header names to new header names (e.g., `{"X-Old": "X-New"}`)
+- **transformFieldRenames**: Renames top-level JSON fields in the request body (e.g., `{"orderId": "order_id"}`)
 
 ## Event Types Emitted
 
 | Event Type | Trigger |
 |---|---|
-| `impilo.integration.route.upserted.v1` | Route created or updated |
-| `impilo.integration.dispatch.requested.v1` | Dispatch request recorded |
+| `impilo.integration.route.created.v1` | Route created |
+| `impilo.integration.dispatch.accepted.v1` | Dispatch matched a route and was accepted |
+| `impilo.integration.dispatch.failed.v1` | Dispatch failed (no matching route) |
 
 ## Data Model
 
-- **ih_route_definitions**: Route registry (source, target, URL, enabled)
+- **ih_route_definitions**: Route registry with match criteria, transforms, and target config
+- **ih_dispatch_attempts**: Records every dispatch command (matched or unmatched)
+- **ih_dead_letter_queue**: Failed dispatch attempts for later inspection/retry
 - **ih_event_outbox**: v1.1 outbox events pending Kafka publication
 - **idempotency_keys**: Idempotency deduplication (managed by tech-companion)
 

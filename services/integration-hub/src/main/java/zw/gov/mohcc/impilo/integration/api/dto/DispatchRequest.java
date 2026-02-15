@@ -3,18 +3,18 @@ package zw.gov.mohcc.impilo.integration.api.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+import java.util.Map;
+
 public record DispatchRequest(
 
-        @NotBlank @Size(max = 128)
-        String sourceService,
+        @NotBlank @Size(max = 16)
+        String method,
 
-        @NotBlank @Size(max = 256)
-        String eventType,
+        @NotBlank @Size(max = 512)
+        String path,
 
-        @NotBlank @Size(max = 128)
-        String targetService,
+        String body,
 
-        @NotBlank
-        String payloadJson
+        Map<String, String> headers
 ) {
 }

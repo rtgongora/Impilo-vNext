@@ -32,7 +32,7 @@ public class RouteController {
         FederationAuthority.requireNational();
         RequestContext ctx = RequestContextHolder.require();
 
-        RouteResponse response = routeService.upsertRoute(request, ctx);
+        RouteResponse response = routeService.createRoute(request, ctx);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 

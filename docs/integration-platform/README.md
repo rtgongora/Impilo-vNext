@@ -10,19 +10,33 @@ They do **not** replace or refactor any of the existing 16+ domain services. Ins
 
 ### A) integration-hub (port 8110)
 
-**Purpose**: Central routing and dispatch framework for inter-service command/event delivery.
+**Purpose**: Central routing and dispatch framework for inter-service command/event delivery with route matching, transforms, and dead-letter handling.
 
 | Endpoint | Method | Access | Description |
 |---|---|---|---|
-| `/internal/v1/routes` | POST | national-only | Create/update a route definition |
+| `/internal/v1/routes` | POST | national-only | Create a route definition with match + transform config |
 | `/internal/v1/routes` | GET | any pod | List current route definitions |
-| `/internal/v1/dispatch` | POST | any pod | Submit a dispatch request (recorded as outbox event) |
+| `/internal/v1/dispatch` | POST | any pod | Submit dispatch command (method/path/body); matches routes, applies transforms, records attempt, writes outbox |
+| `/internal/v1/deadletters` | GET | any pod | List dead-letter entries (paged, filterable by resolved status) |
+
+**Route matching**: Routes define `matchMethod` (HTTP method or `*`) and `matchPathRegex` (Java regex) to match incoming dispatch requests.
+
+**Transform rules**:
+- `transformHeaders`: Header name mapping (e.g., `{"X-Old": "X-New"}`)
+- `transformFieldRenames`: Top-level JSON field renaming (e.g., `{"orderId": "order_id"}`)
+
+**Target config**: `targetUrl` (service URL) + `targetTimeoutMs` (timeout in milliseconds).
 
 **Event types emitted**:
-- `impilo.integration.route.upserted.v1`
-- `impilo.integration.dispatch.requested.v1`
+- `impilo.integration.route.created.v1`
+- `impilo.integration.dispatch.accepted.v1`
+- `impilo.integration.dispatch.failed.v1`
 
-**Data model**: RouteDefinition (source_service, event_type_prefix, target_service, target_url, enabled)
+**Data model**:
+- `ih_route_definitions` — Route registry with match criteria, transforms, target config
+- `ih_dispatch_attempts` — Records every dispatch command (matched or unmatched)
+- `ih_dead_letter_queue` — Failed dispatch attempts for inspection/retry
+- `ih_event_outbox` — v1.1 outbox events pending Kafka publication
 
 ### B) notification-service (port 8111)
 
@@ -95,7 +109,9 @@ These services are designed to integrate with the existing fleet **without requi
 
 ### integration-hub
 - Legacy services can register routes via the `/internal/v1/routes` endpoint
-- The dispatch endpoint accepts any event payload and records it for delivery
+- The dispatch endpoint accepts method/path/body and matches against registered routes
+- Transform rules allow adapting payloads between services with different field conventions
+- Failed dispatches are captured in a dead-letter queue for ops visibility
 - Future: A Kafka consumer will read legacy outbox events and route them through the hub
 
 ### notification-service

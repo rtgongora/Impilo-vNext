@@ -1,5 +1,6 @@
 package zw.gov.mohcc.impilo.integration.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +16,7 @@ import zw.gov.mohcc.impilo.integration.repository.RouteDefinitionRepository;
 import zw.gov.mohcc.impilo.sharedkernel.events.EventEnvelope;
 
 import java.time.OffsetDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -24,6 +26,7 @@ import java.util.stream.Collectors;
 public class RouteService {
 
     private static final Logger log = LoggerFactory.getLogger(RouteService.class);
+    private static final TypeReference<Map<String, String>> MAP_TYPE = new TypeReference<>() {};
 
     private final RouteDefinitionRepository routeRepository;
     private final OutboxEventRepository outboxRepository;
@@ -38,7 +41,7 @@ public class RouteService {
     }
 
     @Transactional
-    public RouteResponse upsertRoute(RouteRequest request, RequestContext ctx) {
+    public RouteResponse createRoute(RouteRequest request, RequestContext ctx) {
         RouteDefinitionEntity entity = new RouteDefinitionEntity();
         entity.setId(UUID.randomUUID().toString());
         entity.setSourceService(request.sourceService());
@@ -49,25 +52,34 @@ public class RouteService {
         entity.setTenantId(ctx.tenantId());
         entity.setPodId(ctx.podId());
 
+        // v2 fields
+        entity.setMatchMethod(request.matchMethod());
+        entity.setMatchPathRegex(request.matchPathRegex());
+        entity.setTargetTimeoutMs(request.targetTimeoutMs());
+        entity.setTransformHeadersJson(serializeMap(request.transformHeaders()));
+        entity.setTransformFieldRenamesJson(serializeMap(request.transformFieldRenames()));
+
         entity = routeRepository.save(entity);
 
-        log.info("Upserted route: id={}, source={}, target={}", entity.getId(),
-                entity.getSourceService(), entity.getTargetService());
+        log.info("Created route: id={}, matchMethod={}, matchPathRegex={}, targetUrl={}",
+                entity.getId(), entity.getMatchMethod(), entity.getMatchPathRegex(), entity.getTargetUrl());
 
-        // Persist outbox event
-        String idempotencyKey = "route-upsert-" + entity.getId();
+        String idempotencyKey = "route-create-" + entity.getId();
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("routeId", entity.getId());
+        payload.put("targetUrl", entity.getTargetUrl());
+        payload.put("enabled", entity.isEnabled());
+        if (entity.getMatchMethod() != null) payload.put("matchMethod", entity.getMatchMethod());
+        if (entity.getMatchPathRegex() != null) payload.put("matchPathRegex", entity.getMatchPathRegex());
+        if (entity.getTargetTimeoutMs() != null) payload.put("targetTimeoutMs", entity.getTargetTimeoutMs());
+        if (entity.getSourceService() != null) payload.put("sourceService", entity.getSourceService());
+        if (entity.getTargetService() != null) payload.put("targetService", entity.getTargetService());
+
         persistOutboxEvent(
-                "impilo.integration.route.upserted.v1",
+                "impilo.integration.route.created.v1",
                 "RouteDefinition",
                 entity.getId(),
-                Map.of(
-                        "routeId", entity.getId(),
-                        "sourceService", entity.getSourceService(),
-                        "eventTypePrefix", entity.getEventTypePrefix(),
-                        "targetService", entity.getTargetService(),
-                        "targetUrl", entity.getTargetUrl(),
-                        "enabled", entity.isEnabled()
-                ),
+                payload,
                 idempotencyKey,
                 ctx
         );
@@ -81,7 +93,11 @@ public class RouteService {
                 .collect(Collectors.toList());
     }
 
-    private RouteResponse toResponse(RouteDefinitionEntity entity) {
+    public List<RouteDefinitionEntity> findEnabledRoutes(String tenantId) {
+        return routeRepository.findByTenantIdAndEnabled(tenantId, true);
+    }
+
+    RouteResponse toResponse(RouteDefinitionEntity entity) {
         return new RouteResponse(
                 entity.getId(),
                 entity.getSourceService(),
@@ -89,9 +105,38 @@ public class RouteService {
                 entity.getTargetService(),
                 entity.getTargetUrl(),
                 entity.isEnabled(),
+                entity.getMatchMethod(),
+                entity.getMatchPathRegex(),
+                deserializeMap(entity.getTransformHeadersJson()),
+                deserializeMap(entity.getTransformFieldRenamesJson()),
+                entity.getTargetTimeoutMs(),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt()
         );
+    }
+
+    private String serializeMap(Map<String, String> map) {
+        if (map == null || map.isEmpty()) {
+            return null;
+        }
+        try {
+            return objectMapper.writeValueAsString(map);
+        } catch (Exception e) {
+            log.error("Failed to serialize map", e);
+            return null;
+        }
+    }
+
+    Map<String, String> deserializeMap(String json) {
+        if (json == null || json.isBlank()) {
+            return null;
+        }
+        try {
+            return objectMapper.readValue(json, MAP_TYPE);
+        } catch (Exception e) {
+            log.error("Failed to deserialize map from JSON: {}", json, e);
+            return null;
+        }
     }
 
     private void persistOutboxEvent(String eventType, String subjectType, String subjectId,

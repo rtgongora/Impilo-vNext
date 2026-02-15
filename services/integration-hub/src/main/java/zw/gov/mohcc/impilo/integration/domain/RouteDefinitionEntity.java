@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.integration.domain;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -18,13 +19,13 @@ public class RouteDefinitionEntity {
     @Column(name = "id", length = 36, nullable = false)
     private String id;
 
-    @Column(name = "source_service", length = 128, nullable = false)
+    @Column(name = "source_service", length = 128)
     private String sourceService;
 
-    @Column(name = "event_type_prefix", length = 256, nullable = false)
+    @Column(name = "event_type_prefix", length = 256)
     private String eventTypePrefix;
 
-    @Column(name = "target_service", length = 128, nullable = false)
+    @Column(name = "target_service", length = 128)
     private String targetService;
 
     @Column(name = "target_url", length = 512, nullable = false)
@@ -38,6 +39,25 @@ public class RouteDefinitionEntity {
 
     @Column(name = "pod_id", length = 64, nullable = false)
     private String podId;
+
+    // --- v2 fields ---
+
+    @Column(name = "match_method", length = 16)
+    private String matchMethod;
+
+    @Column(name = "match_path_regex", length = 512)
+    private String matchPathRegex;
+
+    @Lob
+    @Column(name = "transform_headers_json", columnDefinition = "TEXT")
+    private String transformHeadersJson;
+
+    @Lob
+    @Column(name = "transform_field_renames_json", columnDefinition = "TEXT")
+    private String transformFieldRenamesJson;
+
+    @Column(name = "target_timeout_ms")
+    private Integer targetTimeoutMs;
 
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;
@@ -128,6 +148,46 @@ public class RouteDefinitionEntity {
 
     public void setPodId(String podId) {
         this.podId = podId;
+    }
+
+    public String getMatchMethod() {
+        return matchMethod;
+    }
+
+    public void setMatchMethod(String matchMethod) {
+        this.matchMethod = matchMethod;
+    }
+
+    public String getMatchPathRegex() {
+        return matchPathRegex;
+    }
+
+    public void setMatchPathRegex(String matchPathRegex) {
+        this.matchPathRegex = matchPathRegex;
+    }
+
+    public String getTransformHeadersJson() {
+        return transformHeadersJson;
+    }
+
+    public void setTransformHeadersJson(String transformHeadersJson) {
+        this.transformHeadersJson = transformHeadersJson;
+    }
+
+    public String getTransformFieldRenamesJson() {
+        return transformFieldRenamesJson;
+    }
+
+    public void setTransformFieldRenamesJson(String transformFieldRenamesJson) {
+        this.transformFieldRenamesJson = transformFieldRenamesJson;
+    }
+
+    public Integer getTargetTimeoutMs() {
+        return targetTimeoutMs;
+    }
+
+    public void setTargetTimeoutMs(Integer targetTimeoutMs) {
+        this.targetTimeoutMs = targetTimeoutMs;
     }
 
     public OffsetDateTime getCreatedAt() {

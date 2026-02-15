@@ -10,4 +10,6 @@ import java.util.List;
 public interface RouteDefinitionRepository extends JpaRepository<RouteDefinitionEntity, String> {
 
     List<RouteDefinitionEntity> findByTenantId(String tenantId);
+
+    List<RouteDefinitionEntity> findByTenantIdAndEnabled(String tenantId, boolean enabled);
 }

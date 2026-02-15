@@ -3,20 +3,34 @@ package zw.gov.mohcc.impilo.integration.api.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+import java.util.Map;
+
 public record RouteRequest(
 
-        @NotBlank @Size(max = 128)
+        @Size(max = 128)
         String sourceService,
 
-        @NotBlank @Size(max = 256)
+        @Size(max = 256)
         String eventTypePrefix,
 
-        @NotBlank @Size(max = 128)
+        @Size(max = 128)
         String targetService,
 
         @NotBlank @Size(max = 512)
         String targetUrl,
 
-        Boolean enabled
+        Boolean enabled,
+
+        @Size(max = 16)
+        String matchMethod,
+
+        @Size(max = 512)
+        String matchPathRegex,
+
+        Map<String, String> transformHeaders,
+
+        Map<String, String> transformFieldRenames,
+
+        Integer targetTimeoutMs
 ) {
 }
