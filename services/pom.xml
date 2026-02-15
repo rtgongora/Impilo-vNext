@@ -85,6 +85,8 @@
         <module>forms-service</module>
         <!-- Data Pipeline — v1.1-Native Ingestion & Watermarking -->
         <module>data-pipeline-service</module>
+        <!-- NDR — National Data Repository (v1.1-Native Analytics Store) -->
+        <module>national-data-repository-service</module>
         <!-- TSHEPO decomposition (6 sub-services) -->
         <module>tshepo-authz-service</module>
         <module>tshepo-identity-service</module>
