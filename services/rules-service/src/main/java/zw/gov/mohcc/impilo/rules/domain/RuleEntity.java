@@ -13,14 +13,20 @@ public class RuleEntity {
     @Column(name = "id", length = 36, nullable = false)
     private String id;
 
-    @Column(name = "name", length = 256, nullable = false)
+    @Column(name = "key", length = 128)
+    private String key;
+
+    @Column(name = "name", length = 256)
     private String name;
 
-    @Column(name = "expression", columnDefinition = "TEXT", nullable = false)
+    @Column(name = "expression", columnDefinition = "TEXT")
     private String expression;
 
     @Column(name = "enabled", nullable = false)
     private boolean enabled = true;
+
+    @Column(name = "status", length = 32, nullable = false)
+    private String status = "ACTIVE";
 
     @Column(name = "tenant_id", length = 64, nullable = false)
     private String tenantId;
@@ -52,6 +58,9 @@ public class RuleEntity {
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 
+    public String getKey() { return key; }
+    public void setKey(String key) { this.key = key; }
+
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
 
@@ -60,6 +69,9 @@ public class RuleEntity {
 
     public boolean isEnabled() { return enabled; }
     public void setEnabled(boolean enabled) { this.enabled = enabled; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 
     public String getTenantId() { return tenantId; }
     public void setTenantId(String tenantId) { this.tenantId = tenantId; }

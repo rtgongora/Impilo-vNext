@@ -1,13 +1,10 @@
 package zw.gov.mohcc.impilo.rules.api.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 public record RuleRequest(
-        @NotBlank String name,
-        @NotBlank String expression,
-        Boolean enabled
+        @NotBlank @Size(max = 128) String key,
+        @Size(max = 256) String name
 ) {
-    public boolean isEnabled() {
-        return enabled == null || enabled;
-    }
 }

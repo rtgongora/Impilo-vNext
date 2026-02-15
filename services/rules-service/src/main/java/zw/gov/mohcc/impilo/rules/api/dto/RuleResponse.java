@@ -4,9 +4,9 @@ import java.time.OffsetDateTime;
 
 public record RuleResponse(
         String id,
+        String key,
         String name,
-        String expression,
-        boolean enabled,
+        String status,
         OffsetDateTime createdAt,
         OffsetDateTime updatedAt
 ) {

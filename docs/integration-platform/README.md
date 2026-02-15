@@ -56,19 +56,32 @@ They do **not** replace or refactor any of the existing 16+ domain services. Ins
 
 ### C) rules-service (port 8112)
 
-**Purpose**: Simple rule storage and evaluation with decision logging.
+**Purpose**: Rule registry with versioning, activation lifecycle, evaluation audit, and decision logging.
 
 | Endpoint | Method | Access | Description |
 |---|---|---|---|
-| `/internal/v1/rules` | POST | national-only | Create/update a rule |
-| `/internal/v1/rules` | GET | any pod | List rules |
-| `/internal/v1/evaluate` | POST | any pod | Evaluate facts against active rules |
+| `/internal/v1/rules` | POST | national-only | Create a rule container (key + name) |
+| `/internal/v1/rules` | GET | any pod | List rules for tenant |
+| `/internal/v1/rules/{key}/versions` | POST | national-only | Create a new DSL version for a rule |
+| `/internal/v1/rules/{key}/activate?version=N` | POST | national-only | Activate a specific version |
+| `/internal/v1/rules/{key}/deactivate` | POST | national-only | Deactivate rule (evaluations return 422) |
+| `/internal/v1/rules/{key}/evaluate` | POST | any pod | Evaluate facts against active version; writes audit row |
+
+**Lifecycle**: `CREATE rule → CREATE version(s) → ACTIVATE → EVALUATE → DEACTIVATE`
 
 **Event types emitted**:
-- `impilo.rules.rule.upserted.v1`
-- `impilo.rules.decision.recorded.v1`
+- `impilo.rules.rule.created.v1`
+- `impilo.rules.version.created.v1`
+- `impilo.rules.rule.activated.v1`
+- `impilo.rules.rule.deactivated.v1`
+- `impilo.rules.evaluated.v1`
 
-**Data model**: Rule (name, expression, enabled), DecisionLog (rule_id, outcome, reason, facts)
+**Data model**:
+- `rs_rules` — Rule containers (key, name, status, tenant_id)
+- `rs_rule_versions` — Versioned DSL expressions (rule_id, version, dsl_text)
+- `rs_rule_activations` — Activation windows (rule_id, version_id, active_from, active_to)
+- `rs_evaluation_audit` — Audit trail (rule_key, version, input_hash SHA-256, result_json)
+- `rs_decision_logs` — Legacy v1 evaluation outcomes (kept for backward compat)
 
 **Rule DSL**: Simple boolean expression language supporting:
 - Fact references: `facts.age`, `facts.country`
@@ -120,9 +133,10 @@ These services are designed to integrate with the existing fleet **without requi
 - Future: Kafka consumers will trigger notifications from domain events automatically
 
 ### rules-service
-- Services can evaluate business rules without embedding rule logic
-- Decision logs provide an audit trail for rule-based decisions
-- Future: Rules can be updated at runtime without service redeployment
+- Services can evaluate versioned business rules without embedding rule logic
+- Rules are versioned and activated/deactivated at runtime without redeployment
+- SHA-256 input hashing and audit rows provide tamper-evident evaluation records
+- Decision logs and outbox events enable downstream analytics and compliance
 
 ## Running Tests (when Maven is online)
 
