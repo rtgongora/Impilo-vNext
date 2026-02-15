@@ -91,6 +91,10 @@
         <module>reporting-service</module>
         <!-- DAGS — Data Access Governance Service (v1.1-Native) -->
         <module>data-access-governance-service</module>
+        <!-- Surveillance — Public Health Event Monitoring (v1.1-Native) -->
+        <module>surveillance-service</module>
+        <!-- Campaigns — Public Health Campaign Management (v1.1-Native) -->
+        <module>campaigns-service</module>
         <!-- TSHEPO decomposition (6 sub-services) -->
         <module>tshepo-authz-service</module>
         <module>tshepo-identity-service</module>
