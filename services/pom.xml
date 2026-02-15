@@ -81,6 +81,8 @@
         <module>butano-service</module>
         <!-- Search Service — Enterprise Search -->
         <module>search-service</module>
+        <!-- Forms Service — Clinical Content Platform -->
+        <module>forms-service</module>
         <!-- TSHEPO decomposition (6 sub-services) -->
         <module>tshepo-authz-service</module>
         <module>tshepo-identity-service</module>

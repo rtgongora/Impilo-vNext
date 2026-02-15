@@ -1,0 +1,37 @@
+server:
+  port: ${SERVER_PORT:8130}
+
+spring:
+  application:
+    name: forms-service
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/impilo_forms
+    username: ${POSTGRES_USER:impilo}
+    password: ${POSTGRES_PASSWORD:impilo}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_schema: forms
+    open-in-view: false
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+    schemas: forms
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+forms:
+  outbox:
+    poll-interval-ms: 2000
+
+impilo:
+  companion:
+    enabled: true
