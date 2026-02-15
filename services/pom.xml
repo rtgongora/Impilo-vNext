@@ -89,6 +89,8 @@
         <module>national-data-repository-service</module>
         <!-- Reporting — Platform Analytics & Report Generation (v1.1-Native) -->
         <module>reporting-service</module>
+        <!-- DAGS — Data Access Governance Service (v1.1-Native) -->
+        <module>data-access-governance-service</module>
         <!-- TSHEPO decomposition (6 sub-services) -->
         <module>tshepo-authz-service</module>
         <module>tshepo-identity-service</module>
