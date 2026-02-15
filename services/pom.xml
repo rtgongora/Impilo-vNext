@@ -83,6 +83,8 @@
         <module>search-service</module>
         <!-- Forms Service — Clinical Content Platform -->
         <module>forms-service</module>
+        <!-- Data Pipeline — v1.1-Native Ingestion & Watermarking -->
+        <module>data-pipeline-service</module>
         <!-- TSHEPO decomposition (6 sub-services) -->
         <module>tshepo-authz-service</module>
         <module>tshepo-identity-service</module>
