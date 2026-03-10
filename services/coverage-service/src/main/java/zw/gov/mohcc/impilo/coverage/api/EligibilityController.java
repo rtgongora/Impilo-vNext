@@ -1,0 +1,124 @@
+package zw.gov.mohcc.impilo.coverage.api;
+
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import zw.gov.mohcc.impilo.coverage.api.dto.CheckEligibilityRequest;
+import zw.gov.mohcc.impilo.coverage.api.dto.EligibilityCheckResponse;
+import zw.gov.mohcc.impilo.coverage.core.CoverageEventService;
+import zw.gov.mohcc.impilo.coverage.domain.EligibilityCheckEntity;
+import zw.gov.mohcc.impilo.coverage.domain.MemberCoverageEntity;
+import zw.gov.mohcc.impilo.coverage.repository.EligibilityCheckRepository;
+import zw.gov.mohcc.impilo.coverage.repository.MemberCoverageRepository;
+
+import java.time.LocalDate;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+
+/**
+ * Eligibility check endpoint (internal).
+ *
+ * Class B: bounded stale allowed. Stores decision_evidence_json with staleness evidence.
+ */
+@RestController
+@RequestMapping("/internal/v1/coverage/eligibility")
+public class EligibilityController {
+
+    private final EligibilityCheckRepository eligibilityRepository;
+    private final MemberCoverageRepository memberCoverageRepository;
+    private final CoverageEventService eventService;
+
+    public EligibilityController(EligibilityCheckRepository eligibilityRepository,
+                                 MemberCoverageRepository memberCoverageRepository,
+                                 CoverageEventService eventService) {
+        this.eligibilityRepository = eligibilityRepository;
+        this.memberCoverageRepository = memberCoverageRepository;
+        this.eventService = eventService;
+    }
+
+    @PostMapping
+    @Transactional
+    public ResponseEntity<EligibilityCheckResponse> checkEligibility(
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @RequestHeader("X-Pod-ID") String podId,
+            @RequestHeader("X-Correlation-ID") String correlationId,
+            @Valid @RequestBody CheckEligibilityRequest request) {
+
+        UUID tid = UUID.fromString(tenantId);
+
+        // Look up the coverage
+        Optional<MemberCoverageEntity> coverageOpt =
+                memberCoverageRepository.findByIdAndTenantId(request.coverageId(), tid);
+
+        String resultCode;
+        String resultMessage;
+        if (coverageOpt.isEmpty()) {
+            resultCode = "INELIGIBLE";
+            resultMessage = "No active coverage found for the provided coverage ID";
+        } else {
+            MemberCoverageEntity coverage = coverageOpt.get();
+            if (!"ACTIVE".equals(coverage.getStatus())) {
+                resultCode = "INELIGIBLE";
+                resultMessage = "Coverage is not active (status: " + coverage.getStatus() + ")";
+            } else if (coverage.getEffectiveTo() != null
+                    && coverage.getEffectiveTo().isBefore(LocalDate.now())) {
+                resultCode = "INELIGIBLE";
+                resultMessage = "Coverage has expired";
+            } else {
+                resultCode = "ELIGIBLE";
+                resultMessage = "Member is eligible under the current coverage plan";
+            }
+        }
+
+        // Build decision evidence (Class B staleness evidence)
+        Map<String, Object> evidence = new LinkedHashMap<>();
+        evidence.put("consistency_class", "B");
+        evidence.put("staleness_source", "local_db_projection");
+        evidence.put("max_allowed_staleness_ms", 300000);
+        evidence.put("actual_staleness_ms", 0);
+        evidence.put("decision", resultCode);
+        String evidenceJson;
+        try {
+            evidenceJson = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(evidence);
+        } catch (Exception e) {
+            evidenceJson = "{}";
+        }
+
+        EligibilityCheckEntity check = new EligibilityCheckEntity(
+                tid, podId, request.coverageId(),
+                request.patientRef(), request.serviceCode(),
+                resultCode, resultMessage, evidenceJson);
+
+        eligibilityRepository.save(check);
+
+        // Emit event
+        eventService.emitCreated("eligibility", check.getId().toString(),
+                parseUuid(correlationId), tid, podId,
+                Map.of("coverage_id", request.coverageId().toString(),
+                        "patient_ref", request.patientRef(),
+                        "result_code", resultCode,
+                        "meta", Map.of("decision", Map.of("evidence", "bounded-stale-class-b"))));
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(check));
+    }
+
+    private EligibilityCheckResponse toResponse(EligibilityCheckEntity e) {
+        return new EligibilityCheckResponse(
+                e.getId(), e.getCoverageId(), e.getPatientRef(),
+                e.getServiceCode(), e.getResultCode(), e.getResultMessage(),
+                e.getCheckedAt());
+    }
+
+    private UUID parseUuid(String s) {
+        try { return s != null ? UUID.fromString(s) : null; }
+        catch (IllegalArgumentException e) { return null; }
+    }
+}
