@@ -82,6 +82,9 @@ Depends on Ring 0 for identity, registries, terminology, auth. Enforces Clinical
 | inpatient-service | `services/inpatient-service` | 8120 | inpatient | SKELETON | S | Bed management, ward allocation, transfer, discharge planning, nursing allocation |
 | scheduling-service | `services/scheduling-service` | 8121 | scheduling | NEW | S | Appointment booking, capacity management, slot generation, wait-list, resource calendar |
 | referral-service | `services/referral-service` | 8122 | referral | NEW | X | Referral routing, care coordination, counter-referral, care networks |
+| channels-service | `services/channels-service` | 8130 | channels | SKELETON | X | Omnichannel access gateway: session management, message routing, USSD/WhatsApp/SMS/IVR, escalation, assisted interactions |
+| coverage-service | `services/coverage-service` | 8140 | coverage | SKELETON | X | Coverage & eligibility engine: insurance verification, pre-authorization, claims lifecycle, payment coordination |
+| indawo-service | `services/indawo-service` | 8150 | indawo | SKELETON | X | Location & address registry: standardized addresses, geocoding, catchment areas, facility-location linking |
 
 ---
 
@@ -199,6 +202,7 @@ Operational support, analytics, integration. Must NOT impact Ring 1 latency or s
 | 8100–8109 | Ring 1 orchestration (MSIKA Flow, COSTA) |
 | 8110–8119 | Ring 2 integration + data (integration-hub, notification, rules, fhir-gw, pacs, offline-sync, jobs, analytics, surveillance, data-gov) |
 | 8120–8129 | Ring 1 clinical extensions + experience (inpatient, scheduling, referral, developer-portal) |
+| 8130–8159 | Omnichannel, coverage, location (channels, coverage, indawo) |
 | 8180–8189 | Ring 0 TSHEPO cluster + infra (identity, consent, audit, keys, offline, UBOMI, schema-registry) |
 | 3000–3019 | UI applications |
 | 9000–9999 | Infrastructure (MinIO, Kafka, gRPC, Prometheus) |
@@ -247,6 +251,9 @@ Operational support, analytics, integration. Must NOT impact Ring 1 latency or s
 | 8121 | scheduling-service |
 | 8122 | referral-service |
 | 8123 | developer-portal-service |
+| 8130 | channels-service |
+| 8140 | coverage-service |
+| 8150 | indawo-service |
 | 8180 | Schema Registry (Apicurio) |
 | 8181 | tshepo-identity-service |
 | 8182 | tshepo-consent-service |

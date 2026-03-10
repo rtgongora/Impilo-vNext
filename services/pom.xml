@@ -101,6 +101,12 @@
         <module>observability-service</module>
         <!-- Security Hardening — Policy Pack & Compliance Scan Registry (v1.1-Native Stub) -->
         <module>security-hardening-service</module>
+        <!-- Channels — Omnichannel Access Gateway (v1.1-Native) -->
+        <module>channels-service</module>
+        <!-- Coverage — Coverage & Eligibility Engine (v1.1-Native) -->
+        <module>coverage-service</module>
+        <!-- INDAWO — Location & Address Registry (v1.1-Native) -->
+        <module>indawo-service</module>
         <!-- TSHEPO decomposition (6 sub-services) -->
         <module>tshepo-authz-service</module>
         <module>tshepo-identity-service</module>
