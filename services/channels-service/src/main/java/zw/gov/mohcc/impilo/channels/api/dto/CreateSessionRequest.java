@@ -4,6 +4,6 @@ import jakarta.validation.constraints.NotBlank;
 
 public record CreateSessionRequest(
         @NotBlank String channelType,
-        String clientId,
+        String subjectRef,
         String facilityId
 ) {}

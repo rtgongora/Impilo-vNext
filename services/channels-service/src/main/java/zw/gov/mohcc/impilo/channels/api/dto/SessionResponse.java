@@ -6,9 +6,10 @@ import java.util.UUID;
 public record SessionResponse(
         UUID id,
         String channelType,
-        String sessionState,
-        String clientId,
+        String status,
+        String subjectRef,
         String agentId,
+        String facilityId,
         OffsetDateTime startedAt,
         OffsetDateTime lastActivity,
         OffsetDateTime closedAt

@@ -10,11 +10,11 @@ public class ChannelsGoldenContractIT extends GoldenContractSuite {
 
     @Override
     protected String getReadEndpointOverride() {
-        return "/internal/v1/sessions";
+        return "/internal/v1/channels/sessions";
     }
 
     @Override
     protected String getCommandEndpointOverride() {
-        return "/internal/v1/sessions";
+        return "/internal/v1/channels/sessions";
     }
 }
