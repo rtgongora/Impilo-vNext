@@ -15,8 +15,15 @@ import java.util.UUID;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(WorkspaceController.ResourceNotFoundException.class)
+    @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleNotFound(
+            ResourceNotFoundException ex,
+            HttpServletRequest request) {
+        return buildErrorResponse(HttpStatus.NOT_FOUND, "RESOURCE_NOT_FOUND", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(WorkspaceController.ResourceNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleWorkspaceNotFound(
             WorkspaceController.ResourceNotFoundException ex,
             HttpServletRequest request) {
         return buildErrorResponse(HttpStatus.NOT_FOUND, "RESOURCE_NOT_FOUND", ex.getMessage(), request);

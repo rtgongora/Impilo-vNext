@@ -104,6 +104,14 @@
             <version>1.20.1</version>
             <scope>test</scope>
         </dependency>
+
+        <!-- Tech Companion Harness (GoldenContractSuite) -->
+        <dependency>
+            <groupId>zw.gov.mohcc.impilo</groupId>
+            <artifactId>tech-companion-harness</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
