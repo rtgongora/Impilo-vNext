@@ -10,11 +10,11 @@ public class DataGovernanceGoldenContractIT extends GoldenContractSuite {
 
     @Override
     protected String getReadEndpointOverride() {
-        return "/internal/v1/governance-rules";
+        return "/internal/v1/governance/datasets";
     }
 
     @Override
     protected String getCommandEndpointOverride() {
-        return "/internal/v1/governance-rules/" + java.util.UUID.randomUUID();
+        return "/internal/v1/governance/datasets";
     }
 }
