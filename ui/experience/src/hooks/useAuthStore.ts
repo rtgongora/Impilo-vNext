@@ -24,12 +24,12 @@ interface AuthState {
   hasRole: (role: string) => boolean;
 }
 
-export const useAuthStore = create<AuthState>((set, get) => ({
+export const useAuthStore = create<AuthState>((set: (partial: Partial<AuthState>) => void, get: () => AuthState) => ({
   user: null,
   token: null,
   isAuthenticated: false,
 
-  setAuth: (user, token) => {
+  setAuth: (user: AuthUser, token: string) => {
     if (typeof window !== "undefined") {
       sessionStorage.setItem("exp:auth_token", token);
       sessionStorage.setItem("exp:auth_user", JSON.stringify(user));
@@ -45,7 +45,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ user: null, token: null, isAuthenticated: false });
   },
 
-  hasRole: (role) => {
+  hasRole: (role: string) => {
     const { user } = get();
     return user?.roles.includes(role) ?? false;
   },

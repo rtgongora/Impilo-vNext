@@ -34,7 +34,7 @@ export function useLogin() {
   const queryClient = useQueryClient();
 
   return useMutation<LoginResponse, unknown, LoginPayload>({
-    mutationFn: (payload) =>
+    mutationFn: (payload: LoginPayload) =>
       apiClient.post<LoginResponse>("/internal/v1/auth/login", payload),
     onSuccess: () => {
       queryClient.clear();

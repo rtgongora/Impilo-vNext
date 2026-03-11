@@ -58,7 +58,7 @@ export function useCreateOrder() {
   const queryClient = useQueryClient();
 
   return useMutation<MarketplaceOrderResponse, unknown, CreateOrderPayload>({
-    mutationFn: (payload) =>
+    mutationFn: (payload: CreateOrderPayload) =>
       apiClient.post<MarketplaceOrderResponse>("/internal/v1/marketplace/orders", payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["marketplace-orders"] });

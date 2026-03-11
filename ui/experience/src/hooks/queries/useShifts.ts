@@ -39,7 +39,7 @@ export function useStartShift() {
   const queryClient = useQueryClient();
 
   return useMutation<ShiftResponse, unknown, StartShiftPayload>({
-    mutationFn: (payload) =>
+    mutationFn: (payload: StartShiftPayload) =>
       apiClient.post<ShiftResponse>("/internal/v1/shifts/start", payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["shifts"] });
@@ -51,7 +51,7 @@ export function useEndShift() {
   const queryClient = useQueryClient();
 
   return useMutation<ShiftResponse, unknown, { id: string }>({
-    mutationFn: ({ id }) =>
+    mutationFn: ({ id }: { id: string }) =>
       apiClient.post<ShiftResponse>(`/internal/v1/shifts/${id}/end`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["shifts"] });

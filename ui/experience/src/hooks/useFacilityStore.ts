@@ -22,11 +22,11 @@ interface FacilityState {
   clearFacility: () => void;
 }
 
-export const useFacilityStore = create<FacilityState>((set) => ({
+export const useFacilityStore = create<FacilityState>((set: (partial: Partial<FacilityState>) => void) => ({
   facility: null,
   hasFacility: false,
 
-  setFacility: (facility) => {
+  setFacility: (facility: FacilityContext) => {
     if (typeof window !== "undefined") {
       sessionStorage.setItem("exp:facility", JSON.stringify(facility));
     }

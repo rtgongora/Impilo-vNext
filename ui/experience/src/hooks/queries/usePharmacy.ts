@@ -62,7 +62,7 @@ export function useDispensePrescription() {
   const queryClient = useQueryClient();
 
   return useMutation<DispenseResponse, unknown, DispensePayload>({
-    mutationFn: (payload) =>
+    mutationFn: (payload: DispensePayload) =>
       apiClient.post<DispenseResponse>("/internal/v1/pharmacy/dispense", payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["prescriptions"] });

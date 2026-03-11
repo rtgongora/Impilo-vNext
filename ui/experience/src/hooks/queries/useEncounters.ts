@@ -53,7 +53,7 @@ export function useCreateEncounter() {
   const queryClient = useQueryClient();
 
   return useMutation<EncounterResponse, unknown, CreateEncounterPayload>({
-    mutationFn: (payload) =>
+    mutationFn: (payload: CreateEncounterPayload) =>
       apiClient.post<EncounterResponse>("/internal/v1/encounters", payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["encounters"] });
@@ -65,7 +65,7 @@ export function useCloseEncounter() {
   const queryClient = useQueryClient();
 
   return useMutation<EncounterResponse, unknown, { id: string }>({
-    mutationFn: ({ id }) =>
+    mutationFn: ({ id }: { id: string }) =>
       apiClient.post<EncounterResponse>(`/internal/v1/encounters/${id}/close`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["encounters"] });

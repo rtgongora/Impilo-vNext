@@ -21,11 +21,11 @@ interface ShiftState {
   endShift: () => void;
 }
 
-export const useShiftStore = create<ShiftState>((set) => ({
+export const useShiftStore = create<ShiftState>((set: (partial: Partial<ShiftState>) => void) => ({
   shift: null,
   hasShift: false,
 
-  startShift: (shift) => {
+  startShift: (shift: ShiftContext) => {
     if (typeof window !== "undefined") {
       sessionStorage.setItem("exp:shift", JSON.stringify(shift));
     }

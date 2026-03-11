@@ -45,7 +45,7 @@ export function useCallPatient() {
   const queryClient = useQueryClient();
 
   return useMutation<QueueEntryResponse, unknown, { id: string }>({
-    mutationFn: ({ id }) =>
+    mutationFn: ({ id }: { id: string }) =>
       apiClient.post<QueueEntryResponse>(`/internal/v1/queue/entries/${id}/call`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["queue-entries"] });
@@ -57,7 +57,7 @@ export function useCompleteQueueEntry() {
   const queryClient = useQueryClient();
 
   return useMutation<QueueEntryResponse, unknown, { id: string }>({
-    mutationFn: ({ id }) =>
+    mutationFn: ({ id }: { id: string }) =>
       apiClient.post<QueueEntryResponse>(`/internal/v1/queue/entries/${id}/complete`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["queue-entries"] });

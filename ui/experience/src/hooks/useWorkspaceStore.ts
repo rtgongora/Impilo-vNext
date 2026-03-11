@@ -21,11 +21,11 @@ interface WorkspaceState {
   clearWorkspace: () => void;
 }
 
-export const useWorkspaceStore = create<WorkspaceState>((set) => ({
+export const useWorkspaceStore = create<WorkspaceState>((set: (partial: Partial<WorkspaceState>) => void) => ({
   workspace: null,
   hasWorkspace: false,
 
-  setWorkspace: (workspace) => {
+  setWorkspace: (workspace: WorkspaceContext) => {
     if (typeof window !== "undefined") {
       sessionStorage.setItem("exp:workspace", JSON.stringify(workspace));
     }

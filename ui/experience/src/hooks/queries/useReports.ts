@@ -27,7 +27,7 @@ type ReportResponse = ApiResponse<ReportResource>;
 
 export function useGenerateReport() {
   return useMutation<ReportResponse, unknown, GenerateReportPayload>({
-    mutationFn: (payload) =>
+    mutationFn: (payload: GenerateReportPayload) =>
       apiClient.post<ReportResponse>("/internal/v1/reports/generate", payload),
   });
 }
