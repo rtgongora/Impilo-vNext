@@ -10,11 +10,11 @@ public class DispatchGoldenContractIT extends GoldenContractSuite {
 
     @Override
     protected String getReadEndpointOverride() {
-        return "/internal/v1/dispatches";
+        return "/internal/v1/dispatch/jobs";
     }
 
     @Override
     protected String getCommandEndpointOverride() {
-        return "/internal/v1/dispatches/" + java.util.UUID.randomUUID();
+        return "/internal/v1/dispatch/jobs";
     }
 }
