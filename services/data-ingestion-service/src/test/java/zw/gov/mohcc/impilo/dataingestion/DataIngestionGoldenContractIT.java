@@ -10,11 +10,11 @@ public class DataIngestionGoldenContractIT extends GoldenContractSuite {
 
     @Override
     protected String getReadEndpointOverride() {
-        return "/internal/v1/ingestion-jobs";
+        return "/internal/v1/ingest/health";
     }
 
     @Override
     protected String getCommandEndpointOverride() {
-        return "/internal/v1/ingestion-jobs/" + java.util.UUID.randomUUID();
+        return "/internal/v1/ingest/events";
     }
 }
