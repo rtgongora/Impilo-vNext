@@ -56,7 +56,7 @@ public class Encounter {
 
     public void close() {
         this.endedAt = OffsetDateTime.now();
-        this.status = "CLOSED";
+        this.status = "COMPLETED";
         this.updatedAt = OffsetDateTime.now();
     }
 

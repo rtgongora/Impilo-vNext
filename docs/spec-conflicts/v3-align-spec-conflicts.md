@@ -72,3 +72,14 @@ Branch: claude/review-project-manifest-jb5O0
 | **What repo has** | All tests written and statically verified, but Maven cannot run in this environment |
 | **What's missing** | Runtime test execution proof |
 | **Question** | N/A — requires CI pipeline or local Maven environment to execute |
+
+### 8. Canonical Experience Platform spec documents are stubs
+
+| Field | Value |
+|-------|-------|
+| **Area** | docs/prototype/final/ (00–07) |
+| **What task says** | 8 "CANONICAL INPUTS (AUTHORITATIVE — DO NOT DEVIATE)" documents drive the 11-phase execution contract |
+| **What repo has** | All 8 files contain only 3–5 line summary paragraphs, not detailed specifications |
+| **What's missing** | Actual detailed specs: route definitions, component trees, API surface, state shapes, golden path scripts, phase checklists |
+| **Impact** | Cannot execute 11-phase contract faithfully without detailed input; existing implementation (51 Java + 125 TS/TSX files) was built from docs/plan/ specs instead |
+| **Question** | Should the existing implementation (built from docs/plan/ specs) be considered canonical, or must the 8 stub docs be populated with full content first? |

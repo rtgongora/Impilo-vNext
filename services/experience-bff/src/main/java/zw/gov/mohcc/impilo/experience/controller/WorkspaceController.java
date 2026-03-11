@@ -86,8 +86,4 @@ public class WorkspaceController {
 
         return ResponseEntity.ok(response);
     }
-
-    public static class ResourceNotFoundException extends RuntimeException {
-        public ResourceNotFoundException(String message) { super(message); }
-    }
 }

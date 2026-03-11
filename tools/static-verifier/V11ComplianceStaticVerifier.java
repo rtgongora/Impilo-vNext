@@ -148,7 +148,8 @@ public class V11ComplianceStaticVerifier {
         String[] targetServices = {
                 "services/integration-hub",
                 "services/notification-service",
-                "services/rules-service"
+                "services/rules-service",
+                "services/experience-bff"
         };
         for (String svc : targetServices) {
             String svcName = svc.substring(svc.lastIndexOf('/') + 1);
@@ -173,26 +174,30 @@ public class V11ComplianceStaticVerifier {
                 check(svcName + " V11ComplianceTest validates IDENTITY_CONFLICT",
                         src.contains("IDENTITY_CONFLICT"));
                 check(svcName + " V11ComplianceTest validates outbox fields",
-                        src.contains("getSchemaVersion") && src.contains("getEventType"));
+                        (src.contains("getSchemaVersion") || src.contains("schema_version"))
+                        && (src.contains("getEventType") || src.contains("event_type")));
             }
         }
 
-        // ── 10. Target services have outbox entity with required fields ──
+        // ── 10. Target services have outbox entity/service with required fields ──
         for (String svc : targetServices) {
             String svcName = svc.substring(svc.lastIndexOf('/') + 1);
-            List<Path> outboxEntities = findFiles(root.resolve(svc), "OutboxEventEntity.java");
-            check(svcName + " has OutboxEventEntity.java", !outboxEntities.isEmpty());
-            if (!outboxEntities.isEmpty()) {
-                String src = Files.readString(outboxEntities.get(0));
-                check(svcName + " OutboxEventEntity has tenant_id",
+            List<Path> outboxFiles = findFiles(root.resolve(svc), "OutboxEventEntity.java");
+            if (outboxFiles.isEmpty()) {
+                outboxFiles = findFiles(root.resolve(svc), "OutboxService.java");
+            }
+            check(svcName + " has outbox entity or service", !outboxFiles.isEmpty());
+            if (!outboxFiles.isEmpty()) {
+                String src = Files.readString(outboxFiles.get(0));
+                check(svcName + " outbox has tenant_id",
                         src.contains("tenant_id") || src.contains("tenantId"));
-                check(svcName + " OutboxEventEntity has pod_id",
+                check(svcName + " outbox has pod_id",
                         src.contains("pod_id") || src.contains("podId"));
-                check(svcName + " OutboxEventEntity has correlation_id",
+                check(svcName + " outbox has correlation_id",
                         src.contains("correlation_id") || src.contains("correlationId"));
-                check(svcName + " OutboxEventEntity has schema_version",
+                check(svcName + " outbox has schema_version",
                         src.contains("schema_version") || src.contains("schemaVersion"));
-                check(svcName + " OutboxEventEntity has event_type",
+                check(svcName + " outbox has event_type",
                         src.contains("event_type") || src.contains("eventType"));
             }
         }

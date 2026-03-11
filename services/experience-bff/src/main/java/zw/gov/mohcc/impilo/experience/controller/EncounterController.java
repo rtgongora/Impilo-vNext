@@ -127,7 +127,7 @@ public class EncounterController {
             INSERT INTO encounters
                 (id, tenant_id, facility_id, patient_id, encounter_type, chief_complaint,
                  status, started_at, created_at, updated_at)
-            VALUES (?, ?, ?::uuid, ?::uuid, ?, ?, 'OPEN', ?, ?, ?)
+            VALUES (?, ?, ?::uuid, ?::uuid, ?, ?, 'IN_PROGRESS', ?, ?, ?)
             """,
                 encounterId, tenantId, request.facility_id(), request.patient_id(),
                 request.encounter_type(), request.chief_complaint(),
@@ -147,7 +147,7 @@ public class EncounterController {
                         "patient_id", request.patient_id(),
                         "facility_id", request.facility_id(),
                         "encounter_type", request.encounter_type(),
-                        "status", "OPEN"
+                        "status", "IN_PROGRESS"
                 ),
                 Map.of()
         );
@@ -157,7 +157,7 @@ public class EncounterController {
         attributes.put("facility_id", request.facility_id());
         attributes.put("encounter_type", request.encounter_type());
         attributes.put("chief_complaint", request.chief_complaint());
-        attributes.put("status", "OPEN");
+        attributes.put("status", "IN_PROGRESS");
         attributes.put("started_at", now);
         attributes.put("created_at", now);
 
@@ -203,7 +203,7 @@ public class EncounterController {
                 id.toString(),
                 Map.of(
                         "encounter_id", id.toString(),
-                        "status", "CLOSED"
+                        "status", "COMPLETED"
                 ),
                 Map.of()
         );

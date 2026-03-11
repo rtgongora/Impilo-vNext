@@ -22,13 +22,6 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(HttpStatus.NOT_FOUND, "RESOURCE_NOT_FOUND", ex.getMessage(), request);
     }
 
-    @ExceptionHandler(WorkspaceController.ResourceNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleWorkspaceNotFound(
-            WorkspaceController.ResourceNotFoundException ex,
-            HttpServletRequest request) {
-        return buildErrorResponse(HttpStatus.NOT_FOUND, "RESOURCE_NOT_FOUND", ex.getMessage(), request);
-    }
-
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidation(
             MethodArgumentNotValidException ex,
