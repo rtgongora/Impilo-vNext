@@ -129,6 +129,8 @@
         <module>../libs/federation-connector</module>
         <module>../libs/tech-companion-harness</module>
         <module>../libs/tech-companion-mock</module>
+        <!-- Experience Platform BFF -->
+        <module>experience-bff</module>
     </modules>
 
     <dependencyManagement>
