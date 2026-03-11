@@ -129,6 +129,8 @@
         <module>../libs/federation-connector</module>
         <module>../libs/tech-companion-harness</module>
         <module>../libs/tech-companion-mock</module>
+        <!-- Shared Kernel Java (v1.1 event envelope, audit ledger) -->
+        <module>../libs/shared-kernel-java</module>
         <!-- Experience Platform BFF -->
         <module>experience-bff</module>
     </modules>
@@ -257,6 +259,13 @@
                 <groupId>io.opentelemetry</groupId>
                 <artifactId>opentelemetry-api</artifactId>
                 <version>${opentelemetry.version}</version>
+            </dependency>
+
+            <!-- Shared Kernel Java -->
+            <dependency>
+                <groupId>zw.gov.mohcc.impilo</groupId>
+                <artifactId>shared-kernel-java</artifactId>
+                <version>${project.version}</version>
             </dependency>
 
             <!-- Tech Companion Suite -->
