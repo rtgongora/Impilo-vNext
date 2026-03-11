@@ -44,9 +44,11 @@ class V11HeaderFilterTest {
          */
         @Test
         void hardRequiredHeadersAreDefinedCorrectly() {
-            assertEquals(2, zw.gov.mohcc.impilo.companion.context.CompanionHeaders.HARD_REQUIRED.length);
+            assertEquals(4, zw.gov.mohcc.impilo.companion.context.CompanionHeaders.HARD_REQUIRED.length);
             assertEquals("X-Tenant-ID", zw.gov.mohcc.impilo.companion.context.CompanionHeaders.HARD_REQUIRED[0]);
             assertEquals("X-Pod-ID", zw.gov.mohcc.impilo.companion.context.CompanionHeaders.HARD_REQUIRED[1]);
+            assertEquals("X-Request-ID", zw.gov.mohcc.impilo.companion.context.CompanionHeaders.HARD_REQUIRED[2]);
+            assertEquals("X-Correlation-ID", zw.gov.mohcc.impilo.companion.context.CompanionHeaders.HARD_REQUIRED[3]);
         }
     }
 }

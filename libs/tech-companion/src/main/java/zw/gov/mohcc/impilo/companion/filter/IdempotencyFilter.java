@@ -19,7 +19,7 @@ import java.util.Set;
 /**
  * Idempotency enforcement filter for v1.1 command endpoints.
  *
- * Applies to POST/PUT/PATCH on {@code /internal/v1/**} paths.
+ * Applies to POST/PUT/PATCH on {@code /internal/v1/**} and {@code /external/v1/**} paths.
  * Requires {@code Idempotency-Key} header on those requests.
  *
  * Behavior:
@@ -49,8 +49,8 @@ public class IdempotencyFilter implements Filter {
         String path = httpReq.getRequestURI();
         String method = httpReq.getMethod();
 
-        // Only enforce on command methods to /internal/v1/**
-        if (!COMMAND_METHODS.contains(method) || !path.startsWith("/internal/v1/")) {
+        // Only enforce on command methods to v1.1 API paths
+        if (!COMMAND_METHODS.contains(method) || !V11HeaderFilter.isV11Path(path)) {
             chain.doFilter(request, response);
             return;
         }

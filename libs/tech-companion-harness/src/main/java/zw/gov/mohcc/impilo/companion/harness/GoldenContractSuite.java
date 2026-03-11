@@ -192,6 +192,60 @@ public abstract class GoldenContractSuite {
         }
 
         @Test
+        @DisplayName("Missing X-Request-ID returns 400 MISSING_REQUIRED_HEADER")
+        void missingRequestIdReturns400() throws Exception {
+            Assumptions.assumeTrue(readEndpoint != null,
+                    "SKIPPED: No v1.1 read endpoint discovered for header enforcement test");
+
+            MvcResult result = mockMvc.perform(get(readEndpoint)
+                            .header("X-Tenant-ID", "moh-zw")
+                            .header("X-Pod-ID", "national")
+                            .header("X-Correlation-ID", "corr-1"))
+                    .andExpect(status().isBadRequest())
+                    .andReturn();
+
+            assertErrorEnvelope(result, "MISSING_REQUIRED_HEADER");
+            assertMissingHeaderInDetails(result, "X-Request-ID");
+        }
+
+        @Test
+        @DisplayName("Missing X-Correlation-ID returns 400 MISSING_REQUIRED_HEADER")
+        void missingCorrelationIdReturns400() throws Exception {
+            Assumptions.assumeTrue(readEndpoint != null,
+                    "SKIPPED: No v1.1 read endpoint discovered for header enforcement test");
+
+            MvcResult result = mockMvc.perform(get(readEndpoint)
+                            .header("X-Tenant-ID", "moh-zw")
+                            .header("X-Pod-ID", "national")
+                            .header("X-Request-ID", "req-1"))
+                    .andExpect(status().isBadRequest())
+                    .andReturn();
+
+            assertErrorEnvelope(result, "MISSING_REQUIRED_HEADER");
+            assertMissingHeaderInDetails(result, "X-Correlation-ID");
+        }
+
+        @Test
+        @DisplayName("Missing all four headers returns 400 with all four listed in details")
+        void missingAllFourHeadersReturns400() throws Exception {
+            Assumptions.assumeTrue(readEndpoint != null,
+                    "SKIPPED: No v1.1 read endpoint discovered for header enforcement test");
+
+            MvcResult result = mockMvc.perform(get(readEndpoint))
+                    .andExpect(status().isBadRequest())
+                    .andReturn();
+
+            assertErrorEnvelope(result, "MISSING_REQUIRED_HEADER");
+
+            String body = result.getResponse().getContentAsString();
+            JsonNode details = MAPPER.readTree(body).get("error").get("details");
+            assertThat(details.has("missing")).as("details should contain 'missing' array").isTrue();
+            JsonNode missing = details.get("missing");
+            assertThat(missing.isArray()).isTrue();
+            assertThat(missing.size()).isEqualTo(4);
+        }
+
+        @Test
         @DisplayName("Blank X-Tenant-ID treated as missing")
         void blankTenantIdReturns400() throws Exception {
             Assumptions.assumeTrue(readEndpoint != null,
@@ -490,6 +544,30 @@ public abstract class GoldenContractSuite {
                 .isTrue();
         assertThat(error.has("correlation_id"))
                 .as("error.correlation_id must be present")
+                .isTrue();
+        assertThat(error.has("details"))
+                .as("error.details must be present")
+                .isTrue();
+    }
+
+    protected void assertMissingHeaderInDetails(MvcResult result, String headerName) throws Exception {
+        String body = result.getResponse().getContentAsString();
+        JsonNode details = MAPPER.readTree(body).get("error").get("details");
+        assertThat(details).as("error.details must be present").isNotNull();
+        assertThat(details.has("missing")).as("details should contain 'missing' field").isTrue();
+
+        JsonNode missing = details.get("missing");
+        assertThat(missing.isArray()).as("details.missing should be an array").isTrue();
+
+        boolean found = false;
+        for (JsonNode item : missing) {
+            if (headerName.equals(item.asText())) {
+                found = true;
+                break;
+            }
+        }
+        assertThat(found)
+                .as("details.missing should include '%s', but was: %s", headerName, missing)
                 .isTrue();
     }
 }
