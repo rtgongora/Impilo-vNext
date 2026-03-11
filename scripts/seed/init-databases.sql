@@ -38,3 +38,5 @@ CREATE DATABASE card_print;
 CREATE DATABASE msika_flow;
 CREATE DATABASE keycloak;
 CREATE DATABASE butano;
+-- Experience Platform BFF
+CREATE DATABASE experience_bff;

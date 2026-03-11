@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Impilo vNext — Maven Settings for Mirrored/Cached Builds
+
+  Usage:
+    Set MAVEN_MIRROR_URL environment variable before building:
+      export MAVEN_MIRROR_URL=http://nexus:8081/repository/maven-public/
+      ./tools/dev/build-all.sh
+
+    Or pass directly:
+      mvn -s tools/dev/maven-settings.xml -DMAVEN_MIRROR_URL=http://nexus:8081/repository/maven-public/ package
+-->
+<settings xmlns="http://maven.apache.org/SETTINGS/1.2.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.2.0 https://maven.apache.org/xsd/settings-1.2.0.xsd">
+
+  <mirrors>
+    <mirror>
+      <id>impilo-mirror</id>
+      <name>Impilo Maven Mirror</name>
+      <url>${env.MAVEN_MIRROR_URL}</url>
+      <mirrorOf>central</mirrorOf>
+    </mirror>
+  </mirrors>
+
+  <profiles>
+    <profile>
+      <id>impilo-dev</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <repositories>
+        <repository>
+          <id>central</id>
+          <url>https://repo.maven.apache.org/maven2</url>
+          <releases><enabled>true</enabled></releases>
+          <snapshots><enabled>false</enabled></snapshots>
+        </repository>
+      </repositories>
+    </profile>
+  </profiles>
+</settings>
