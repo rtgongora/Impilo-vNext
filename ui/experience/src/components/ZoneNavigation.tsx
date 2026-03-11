@@ -11,7 +11,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ROUTES } from "@/lib/routes";
+import { useFacilityStore } from "@/hooks/useFacilityStore";
+import { useWorkspaceStore } from "@/hooks/useWorkspaceStore";
+import { useShiftStore } from "@/hooks/useShiftStore";
 
 interface NavItem {
   label: string;
@@ -24,6 +26,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Home", href: "/home", zone: "life" },
   { label: "Notifications", href: "/home/notifications", zone: "life" },
   { label: "Profile", href: "/home/profile", zone: "life" },
+  { label: "Preferences", href: "/home/preferences", zone: "life" },
 
   // Work Zone
   { label: "Queue", href: "/queue", zone: "work" },
@@ -40,20 +43,25 @@ const NAV_ITEMS: NavItem[] = [
 ];
 
 const ZONE_LABELS: Record<string, string> = {
+  life: "Life",
   work: "Work",
   professional: "Professional",
-  life: "Life",
 };
 
 const ZONE_ORDER: ("life" | "work" | "professional")[] = ["life", "work", "professional"];
 
 export function ZoneNavigation() {
   const pathname = usePathname();
+  const { facility } = useFacilityStore();
+  const { workspace } = useWorkspaceStore();
+  const { shift } = useShiftStore();
 
   return (
     <nav className="w-56 bg-gray-900 text-gray-300 flex flex-col shrink-0">
       <div className="h-14 flex items-center px-4 border-b border-gray-700">
-        <span className="text-white font-semibold text-sm">Impilo Experience</span>
+        <Link href="/home" className="text-white font-semibold text-sm hover:text-blue-300">
+          Impilo Experience
+        </Link>
       </div>
 
       <div className="flex-1 overflow-y-auto py-2">
@@ -83,8 +91,32 @@ export function ZoneNavigation() {
         ))}
       </div>
 
-      <div className="border-t border-gray-700 p-4">
-        <div className="text-xs text-gray-500">Facility / Workspace / Shift context</div>
+      <div className="border-t border-gray-700 p-3 space-y-1">
+        {facility ? (
+          <Link href="/facility" className="block text-xs text-gray-400 hover:text-white truncate">
+            <span className="text-gray-500">Facility:</span> {facility.name}
+          </Link>
+        ) : (
+          <Link href="/facility" className="block text-xs text-yellow-500 hover:text-yellow-400">
+            Select Facility
+          </Link>
+        )}
+        {workspace ? (
+          <Link href="/workspace" className="block text-xs text-gray-400 hover:text-white truncate">
+            <span className="text-gray-500">Workspace:</span> {workspace.name}
+          </Link>
+        ) : facility ? (
+          <Link href="/workspace" className="block text-xs text-yellow-500 hover:text-yellow-400">
+            Select Workspace
+          </Link>
+        ) : null}
+        {shift ? (
+          <div className="text-xs text-green-400">Shift Active</div>
+        ) : workspace ? (
+          <Link href="/shift" className="block text-xs text-yellow-500 hover:text-yellow-400">
+            Start Shift
+          </Link>
+        ) : null}
       </div>
     </nav>
   );
