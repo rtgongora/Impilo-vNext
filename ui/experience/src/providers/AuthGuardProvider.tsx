@@ -1,0 +1,75 @@
+"use client";
+
+/**
+ * Auth Guard Provider — wraps the router and enforces auth state hierarchy.
+ *
+ * Guard chain: auth → facility → workspace → shift → role
+ * Redirects to the appropriate selection page if context is missing.
+ */
+
+import { usePathname, useRouter } from "next/navigation";
+import { type ReactNode, useEffect } from "react";
+import { useAuthStore } from "@/hooks/useAuthStore";
+import { useFacilityStore } from "@/hooks/useFacilityStore";
+import { useWorkspaceStore } from "@/hooks/useWorkspaceStore";
+import { useShiftStore } from "@/hooks/useShiftStore";
+import { ROUTES, type GuardType } from "@/lib/routes";
+
+function findRouteGuard(pathname: string): { guard: GuardType; requiredRole?: string } | null {
+  // Try exact match first, then pattern match
+  for (const route of ROUTES) {
+    const pattern = route.path
+      .replace(/\[(\w+)\]/g, "[^/]+")
+      .replace(/\//g, "\\/");
+    const regex = new RegExp(`^${pattern}$`);
+    if (regex.test(pathname)) {
+      return { guard: route.guard, requiredRole: route.requiredRole };
+    }
+  }
+  return null;
+}
+
+export function AuthGuardProvider({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const { isAuthenticated, hasRole } = useAuthStore();
+  const { hasFacility } = useFacilityStore();
+  const { hasWorkspace } = useWorkspaceStore();
+  const { hasShift } = useShiftStore();
+
+  useEffect(() => {
+    const routeInfo = findRouteGuard(pathname);
+    if (!routeInfo) return;
+
+    const { guard, requiredRole } = routeInfo;
+
+    switch (guard) {
+      case "none":
+        return;
+      case "auth":
+        if (!isAuthenticated) { router.replace("/auth/login"); return; }
+        break;
+      case "facility":
+        if (!isAuthenticated) { router.replace("/auth/login"); return; }
+        if (!hasFacility) { router.replace("/facility"); return; }
+        break;
+      case "workspace":
+        if (!isAuthenticated) { router.replace("/auth/login"); return; }
+        if (!hasFacility) { router.replace("/facility"); return; }
+        if (!hasWorkspace) { router.replace("/workspace"); return; }
+        break;
+      case "shift":
+        if (!isAuthenticated) { router.replace("/auth/login"); return; }
+        if (!hasFacility) { router.replace("/facility"); return; }
+        if (!hasWorkspace) { router.replace("/workspace"); return; }
+        if (!hasShift) { router.replace("/shift"); return; }
+        break;
+      case "role":
+        if (!isAuthenticated) { router.replace("/auth/login"); return; }
+        if (requiredRole && !hasRole(requiredRole)) { router.replace("/home"); return; }
+        break;
+    }
+  }, [pathname, isAuthenticated, hasFacility, hasWorkspace, hasShift, hasRole, router]);
+
+  return <>{children}</>;
+}
