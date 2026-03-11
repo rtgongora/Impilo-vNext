@@ -10,11 +10,11 @@ public class IndawoGoldenContractIT extends GoldenContractSuite {
 
     @Override
     protected String getReadEndpointOverride() {
-        return "/internal/v1/addresses";
+        return "/internal/v1/sites";
     }
 
     @Override
     protected String getCommandEndpointOverride() {
-        return "/internal/v1/addresses";
+        return "/internal/v1/sites/" + java.util.UUID.randomUUID();
     }
 }
