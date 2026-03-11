@@ -111,6 +111,9 @@
         <module>data-ingestion-service</module>
         <module>data-governance-service</module>
         <module>ndr-service</module>
+        <!-- Supply & IoT Platform — Asset Registry + Dispatch -->
+        <module>asset-registry-service</module>
+        <module>dispatch-service</module>
         <!-- TSHEPO decomposition (6 sub-services) -->
         <module>tshepo-authz-service</module>
         <module>tshepo-identity-service</module>
