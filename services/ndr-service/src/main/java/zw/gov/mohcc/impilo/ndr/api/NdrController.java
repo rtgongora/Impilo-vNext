@@ -33,11 +33,16 @@ import zw.gov.mohcc.impilo.ndr.core.NdrIngestService;
 import zw.gov.mohcc.impilo.ndr.core.NdrIngestService.ValidationResult;
 import zw.gov.mohcc.impilo.ndr.domain.BronzeEventEntity;
 import zw.gov.mohcc.impilo.ndr.domain.GoldEncounterEntity;
+import zw.gov.mohcc.impilo.ndr.domain.OutboxEventEntity;
+import zw.gov.mohcc.impilo.ndr.domain.QueryAuditEntity;
 import zw.gov.mohcc.impilo.ndr.repository.BronzeEventRepository;
 import zw.gov.mohcc.impilo.ndr.repository.GoldEncounterRepository;
+import zw.gov.mohcc.impilo.ndr.repository.OutboxEventRepository;
+import zw.gov.mohcc.impilo.ndr.repository.QueryAuditRepository;
 
 import jakarta.servlet.http.HttpServletRequest;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -56,6 +61,8 @@ public class NdrController {
     private final GovernanceClient governanceClient;
     private final BronzeEventRepository bronzeRepository;
     private final GoldEncounterRepository goldEncounterRepository;
+    private final QueryAuditRepository queryAuditRepository;
+    private final OutboxEventRepository outboxEventRepository;
     private final ObjectMapper objectMapper;
 
     public NdrController(NdrIngestService ingestService,
@@ -63,12 +70,16 @@ public class NdrController {
                           GovernanceClient governanceClient,
                           BronzeEventRepository bronzeRepository,
                           GoldEncounterRepository goldEncounterRepository,
+                          QueryAuditRepository queryAuditRepository,
+                          OutboxEventRepository outboxEventRepository,
                           ObjectMapper objectMapper) {
         this.ingestService = ingestService;
         this.goldBuildService = goldBuildService;
         this.governanceClient = governanceClient;
         this.bronzeRepository = bronzeRepository;
         this.goldEncounterRepository = goldEncounterRepository;
+        this.queryAuditRepository = queryAuditRepository;
+        this.outboxEventRepository = outboxEventRepository;
         this.objectMapper = objectMapper;
     }
 
@@ -129,7 +140,7 @@ public class NdrController {
 
         // Governance check
         ResponseEntity<?> governanceDenied = enforceGovernance(
-                ctx, purposeOfUse, "ndr.bronze", httpRequest);
+                ctx, purposeOfUse, "ndr.bronze", "query.bronze", httpRequest);
         if (governanceDenied != null) return governanceDenied;
 
         UUID tenantId = UUID.fromString(ctx.tenantId());
@@ -201,7 +212,7 @@ public class NdrController {
 
         // Governance check
         ResponseEntity<?> governanceDenied = enforceGovernance(
-                ctx, purposeOfUse, "ndr.gold.encounters", httpRequest);
+                ctx, purposeOfUse, "ndr.gold.encounters", "query.gold.encounters", httpRequest);
         if (governanceDenied != null) return governanceDenied;
 
         UUID tenantId = UUID.fromString(ctx.tenantId());
@@ -231,15 +242,30 @@ public class NdrController {
         return ResponseEntity.ok(new GoldEncounterResponse(items, nextCursor, effectiveLimit, page.hasNext()));
     }
 
-    // ── Governance enforcement helper ──
+    // ── Governance enforcement helper with audit trail ──
 
     private ResponseEntity<?> enforceGovernance(RequestContext ctx, String purposeOfUse,
-                                                  String dataset, HttpServletRequest httpRequest) {
+                                                  String dataset, String queryType,
+                                                  HttpServletRequest httpRequest) {
         try {
             String principalId = ctx.principal() != null ? ctx.principal() : "anonymous";
             DecisionResult decision = governanceClient.decide(
                     principalId, dataset, purposeOfUse,
                     ctx.tenantId(), ctx.podId(), ctx.correlationId());
+
+            UUID tenantId = UUID.fromString(ctx.tenantId());
+            String decisionLabel = decision.isAllowed() ? "ALLOW" : "DENY";
+            String reasonCodesJson = serializeReasonCodes(decision.reasonCodes());
+
+            // Persist query audit record
+            QueryAuditEntity audit = new QueryAuditEntity(
+                    tenantId, principalId, dataset, purposeOfUse,
+                    decisionLabel, reasonCodesJson,
+                    decision.policyVersion(), queryType, ctx.correlationId());
+            queryAuditRepository.save(audit);
+
+            // Publish outbox event for downstream audit consumers
+            publishAuditOutboxEvent(audit, tenantId, ctx);
 
             if (!decision.isAllowed()) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
@@ -256,6 +282,53 @@ public class NdrController {
                     .body(ErrorEnvelope.of("GOVERNANCE_UNAVAILABLE",
                             "Governance service is unreachable, cannot process query",
                             ctx.requestId(), ctx.correlationId()));
+        }
+    }
+
+    private void publishAuditOutboxEvent(QueryAuditEntity audit, UUID tenantId, RequestContext ctx) {
+        try {
+            String payloadJson = objectMapper.writeValueAsString(Map.of(
+                    "audit_id", audit.getAuditId().toString(),
+                    "tenant_id", tenantId.toString(),
+                    "principal_id", audit.getPrincipalId(),
+                    "dataset", audit.getDataset(),
+                    "purpose_of_use", audit.getPurposeOfUse(),
+                    "decision", audit.getDecision(),
+                    "reason_codes_json", audit.getReasonCodesJson() != null ? audit.getReasonCodesJson() : "",
+                    "policy_version", audit.getPolicyVersion() != null ? audit.getPolicyVersion() : "",
+                    "query_type", audit.getQueryType() != null ? audit.getQueryType() : "",
+                    "correlation_id", audit.getCorrelationId() != null ? audit.getCorrelationId() : "",
+                    "decided_at", audit.getDecidedAt().toString()));
+
+            OutboxEventEntity outbox = new OutboxEventEntity();
+            outbox.setAggregateType("query-audit");
+            outbox.setAggregateId(audit.getAuditId().toString());
+            outbox.setEventType("impilo.ndr.query.audit.v1");
+            outbox.setSchemaVersion("1");
+            outbox.setCorrelationId(ctx.correlationId() != null ? UUID.fromString(ctx.correlationId()) : null);
+            outbox.setIdempotencyKey("query-audit-" + audit.getAuditId());
+            outbox.setTenantId(tenantId);
+            outbox.setPodId(ctx.podId() != null ? ctx.podId() : "national-spine");
+            outbox.setSubjectId(audit.getPrincipalId());
+            outbox.setSubjectType("principal");
+            outbox.setPartitionKey(tenantId.toString());
+            outbox.setOccurredAt(audit.getDecidedAt());
+            outbox.setPayloadJson(payloadJson);
+
+            outboxEventRepository.save(outbox);
+        } catch (Exception e) {
+            log.error("Failed to publish query audit outbox event for audit_id={}: {}",
+                    audit.getAuditId(), e.getMessage(), e);
+        }
+    }
+
+    private String serializeReasonCodes(List<String> reasonCodes) {
+        if (reasonCodes == null || reasonCodes.isEmpty()) return null;
+        try {
+            return objectMapper.writeValueAsString(reasonCodes);
+        } catch (JsonProcessingException e) {
+            log.warn("Failed to serialize reason codes: {}", e.getMessage());
+            return null;
         }
     }
 
