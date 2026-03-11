@@ -10,11 +10,11 @@ public class NdrGoldenContractIT extends GoldenContractSuite {
 
     @Override
     protected String getReadEndpointOverride() {
-        return "/internal/v1/datasets";
+        return "/internal/v1/ndr/query/bronze";
     }
 
     @Override
     protected String getCommandEndpointOverride() {
-        return "/internal/v1/datasets/" + java.util.UUID.randomUUID();
+        return "/internal/v1/ndr/ingest/events";
     }
 }
