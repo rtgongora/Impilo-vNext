@@ -55,6 +55,9 @@ public class BronzeEventEntity {
     @Column(name = "partition_key", nullable = false, length = 255)
     private String partitionKey;
 
+    @Column(name = "topic_name", length = 255)
+    private String topicName;
+
     @Column(name = "envelope_json", nullable = false, columnDefinition = "TEXT")
     private String envelopeJson;
 
@@ -78,6 +81,7 @@ public class BronzeEventEntity {
     public String getSubjectType() { return subjectType; }
     public String getSubjectId() { return subjectId; }
     public String getPartitionKey() { return partitionKey; }
+    public String getTopicName() { return topicName; }
     public String getEnvelopeJson() { return envelopeJson; }
     public OffsetDateTime getStoredAt() { return storedAt; }
 
@@ -96,6 +100,7 @@ public class BronzeEventEntity {
     public void setSubjectType(String subjectType) { this.subjectType = subjectType; }
     public void setSubjectId(String subjectId) { this.subjectId = subjectId; }
     public void setPartitionKey(String partitionKey) { this.partitionKey = partitionKey; }
+    public void setTopicName(String topicName) { this.topicName = topicName; }
     public void setEnvelopeJson(String envelopeJson) { this.envelopeJson = envelopeJson; }
     public void setStoredAt(OffsetDateTime storedAt) { this.storedAt = storedAt; }
 }

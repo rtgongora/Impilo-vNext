@@ -23,12 +23,15 @@ import zw.gov.mohcc.impilo.dataingestion.api.dto.IngestEventRequest;
 import zw.gov.mohcc.impilo.dataingestion.api.dto.IngestEventResponse;
 import zw.gov.mohcc.impilo.dataingestion.core.IngestService;
 import zw.gov.mohcc.impilo.dataingestion.core.IngestService.ValidationResult;
+import zw.gov.mohcc.impilo.dataingestion.repository.DeadLetterEventRepository;
 
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -39,10 +42,13 @@ public class IngestController {
 
     private final IngestService ingestService;
     private final ObjectMapper objectMapper;
+    private final DeadLetterEventRepository deadLetterRepository;
 
-    public IngestController(IngestService ingestService, ObjectMapper objectMapper) {
+    public IngestController(IngestService ingestService, ObjectMapper objectMapper,
+                            DeadLetterEventRepository deadLetterRepository) {
         this.ingestService = ingestService;
         this.objectMapper = objectMapper;
+        this.deadLetterRepository = deadLetterRepository;
     }
 
     // ── POST /internal/v1/ingest/events — Single event ingestion ──
@@ -166,6 +172,22 @@ public class IngestController {
 
         BatchIngestResponse response = new BatchIngestResponse(accepted, replayed, rejected, results);
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
+    }
+
+    // ── GET /internal/v1/ingestion/status — Ingestion status ──
+
+    @GetMapping("/internal/v1/ingestion/status")
+    public ResponseEntity<?> ingestionStatus() {
+        RequestContext ctx = RequestContextHolder.require();
+
+        Map<String, Object> status = new LinkedHashMap<>();
+        status.put("status", "ok");
+        status.put("bronze_event_count", ingestService.countBronzeEvents());
+        status.put("outbox_event_count", ingestService.countOutboxEvents());
+        status.put("dead_letter_count", deadLetterRepository.count());
+        status.put("time", OffsetDateTime.now().toString());
+
+        return ResponseEntity.ok(status);
     }
 
     // ── GET /internal/v1/ingest/health — Health check ──

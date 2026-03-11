@@ -20,6 +20,14 @@ spring:
     enabled: true
     baseline-on-migrate: true
     locations: classpath:db/migration
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+
+ingestion:
+  kafka:
+    topic-pattern: ${INGESTION_TOPIC_PATTERN:impilo\..*}
+    group-id: ${INGESTION_GROUP_ID:data-ingestion-service}
+    max-poll-records: ${INGESTION_MAX_POLL_RECORDS:100}
 
 impilo:
   companion:

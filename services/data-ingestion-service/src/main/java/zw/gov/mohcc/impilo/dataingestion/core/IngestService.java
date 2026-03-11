@@ -40,10 +40,6 @@ public class IngestService {
         this.objectMapper = objectMapper;
     }
 
-    /**
-     * Validates an inbound EventEnvelope against ingestion rules.
-     * Returns null if valid, or an error code string if invalid.
-     */
     public ValidationResult validate(IngestEventRequest request) {
         if (request.eventId() == null || request.eventId().isBlank()) {
             return new ValidationResult("INVALID_ENVELOPE", "event_id is required");
@@ -65,7 +61,6 @@ public class IngestService {
                     "event_type must end with '.v1' — was '" + request.eventType() + "'");
         }
 
-        // Resolve partition_key: from meta if present, else subject_id, else event_id
         String partitionKey = resolvePartitionKey(request);
         if (partitionKey == null || partitionKey.isBlank()) {
             return new ValidationResult("INVALID_ENVELOPE", "meta.partition_key is required");
@@ -81,20 +76,38 @@ public class IngestService {
             return new ValidationResult("INVALID_ENVELOPE", "occurred_at is required");
         }
 
-        return null; // valid
+        return null;
     }
 
     /**
-     * Ingest a single event. Returns the response with dedupe status.
-     * The rawJson parameter is the exact request body string for envelope_json storage.
+     * Ingest a single event from Kafka with topic_name captured.
+     */
+    @Transactional
+    public IngestEventResponse ingestEventFromKafka(IngestEventRequest request, String rawJson,
+                                                     UUID tenantId, String podId,
+                                                     String requestId, String correlationId,
+                                                     String idempotencyKey, String topicName) {
+        return ingestEventInternal(request, rawJson, tenantId, podId,
+                requestId, correlationId, idempotencyKey, topicName);
+    }
+
+    /**
+     * Ingest a single event via HTTP API.
      */
     @Transactional
     public IngestEventResponse ingestEvent(IngestEventRequest request, String rawJson,
                                            UUID tenantId, String podId,
                                            String requestId, String correlationId,
                                            String idempotencyKey) {
+        return ingestEventInternal(request, rawJson, tenantId, podId,
+                requestId, correlationId, idempotencyKey, null);
+    }
 
-        // Check for existing bronze row by event_id (dedup by event identity)
+    private IngestEventResponse ingestEventInternal(IngestEventRequest request, String rawJson,
+                                                     UUID tenantId, String podId,
+                                                     String requestId, String correlationId,
+                                                     String idempotencyKey, String topicName) {
+
         Optional<BronzeEventEntity> existingByEventId = bronzeRepository
                 .findByTenantIdAndPodIdAndEventId(tenantId, podId, request.eventId());
 
@@ -109,7 +122,6 @@ public class IngestService {
                     "REPLAY");
         }
 
-        // Check for existing by idempotency key
         Optional<BronzeEventEntity> existingByIdemKey = bronzeRepository
                 .findByTenantIdAndPodIdAndIdempotencyKey(tenantId, podId, idempotencyKey);
 
@@ -124,7 +136,6 @@ public class IngestService {
                     "REPLAY");
         }
 
-        // New event — store in bronze
         String partitionKey = resolvePartitionKey(request);
         OffsetDateTime occurredAt = OffsetDateTime.parse(request.occurredAt());
         OffsetDateTime emittedAt = request.emittedAt() != null
@@ -145,15 +156,15 @@ public class IngestService {
         bronze.setSubjectType(request.subjectType());
         bronze.setSubjectId(request.subjectId());
         bronze.setPartitionKey(partitionKey);
+        bronze.setTopicName(topicName);
         bronze.setEnvelopeJson(rawJson);
 
         bronzeRepository.save(bronze);
 
-        // Write outbox row for downstream consumers
         appendOutboxEvent(bronze, tenantId, podId, correlationId, idempotencyKey, partitionKey);
 
-        log.info("Ingested bronze event [receiptId={}, eventId={}, eventType={}]",
-                bronze.getReceiptId(), request.eventId(), request.eventType());
+        log.info("Ingested bronze event [receiptId={}, eventId={}, eventType={}, topic={}]",
+                bronze.getReceiptId(), request.eventId(), request.eventType(), topicName);
 
         return new IngestEventResponse(
                 bronze.getReceiptId().toString(),
@@ -200,12 +211,6 @@ public class IngestService {
         outboxRepository.save(outbox);
     }
 
-    /**
-     * Resolve partition_key from the envelope:
-     * 1. meta.partition_key if present
-     * 2. subject_id if present
-     * 3. event_id as fallback
-     */
     private String resolvePartitionKey(IngestEventRequest request) {
         if (request.meta() != null) {
             Object pk = request.meta().get("partition_key");
@@ -229,6 +234,14 @@ public class IngestService {
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Failed to serialize to JSON", e);
         }
+    }
+
+    public long countBronzeEvents() {
+        return bronzeRepository.count();
+    }
+
+    public long countOutboxEvents() {
+        return outboxRepository.count();
     }
 
     public record ValidationResult(String code, String message) {}
