@@ -59,6 +59,17 @@ public class TimeoutEnforcementFilter implements Filter {
 
         long deadline = System.currentTimeMillis() + timeoutMs;
 
+        // Pre-flight: if deadline is already expired before processing, short-circuit with 504
+        if (deadline <= System.currentTimeMillis()) {
+            String requestId = httpReq.getHeader(CompanionHeaders.REQUEST_ID);
+            String correlationId = httpReq.getHeader(CompanionHeaders.CORRELATION_ID);
+            ErrorEnvelopeWriter.write(httpRes, 504,
+                    ErrorCodes.CLIENT_TIMEOUT_EXCEEDED,
+                    "Client timeout of " + timeoutMs + "ms already expired before processing",
+                    requestId, correlationId);
+            return;
+        }
+
         // Store deadline on the request for downstream access
         httpReq.setAttribute("companion.deadline", deadline);
 

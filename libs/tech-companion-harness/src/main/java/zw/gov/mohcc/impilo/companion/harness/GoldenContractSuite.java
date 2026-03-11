@@ -363,7 +363,59 @@ public abstract class GoldenContractSuite {
         }
     }
 
-    // ── 4. Federation Authority ────────────────────────────────────
+    // ── 4. Timeout Enforcement ────────────────────────────────────
+
+    @Nested
+    @DisplayName("Timeout Enforcement")
+    class TimeoutEnforcement {
+
+        @Test
+        @DisplayName("Already-expired X-Client-Timeout-MS returns 504 CLIENT_TIMEOUT_EXCEEDED")
+        void alreadyExpiredTimeoutReturns504() throws Exception {
+            Assumptions.assumeTrue(readEndpoint != null,
+                    "SKIPPED: No v1.1 read endpoint discovered for timeout enforcement test");
+
+            MvcResult result = mockMvc.perform(get(readEndpoint)
+                            .header("X-Tenant-ID", "moh-zw")
+                            .header("X-Pod-ID", "national")
+                            .header("X-Request-ID", "req-timeout-1")
+                            .header("X-Correlation-ID", "corr-timeout-1")
+                            .header("X-Client-Timeout-MS", "1"))
+                    .andExpect(status().is(504))
+                    .andReturn();
+
+            assertErrorEnvelope(result, "CLIENT_TIMEOUT_EXCEEDED");
+        }
+
+        @Test
+        @DisplayName("Timeout response includes request_id and correlation_id")
+        void timeoutResponseIncludesTraceIds() throws Exception {
+            Assumptions.assumeTrue(readEndpoint != null,
+                    "SKIPPED: No v1.1 read endpoint discovered for timeout enforcement test");
+
+            MvcResult result = mockMvc.perform(get(readEndpoint)
+                            .header("X-Tenant-ID", "moh-zw")
+                            .header("X-Pod-ID", "national")
+                            .header("X-Request-ID", "req-timeout-2")
+                            .header("X-Correlation-ID", "corr-timeout-2")
+                            .header("X-Client-Timeout-MS", "1"))
+                    .andExpect(status().is(504))
+                    .andReturn();
+
+            String body = result.getResponse().getContentAsString();
+            JsonNode root = MAPPER.readTree(body);
+            JsonNode error = root.get("error");
+
+            assertThat(error.get("request_id").asText())
+                    .as("error.request_id should match the sent X-Request-ID")
+                    .isEqualTo("req-timeout-2");
+            assertThat(error.get("correlation_id").asText())
+                    .as("error.correlation_id should match the sent X-Correlation-ID")
+                    .isEqualTo("corr-timeout-2");
+        }
+    }
+
+    // ── 5. Federation Authority ────────────────────────────────────
 
     @Nested
     @DisplayName("Federation Authority")
