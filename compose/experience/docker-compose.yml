@@ -1,0 +1,65 @@
+##
+## Impilo vNext — Experience Platform Dev Runtime
+##
+## Starts: Postgres, Experience-BFF, Experience UI
+## Usage:  docker compose -f compose/experience/docker-compose.yml up
+##
+version: "3.9"
+
+services:
+  # ── PostgreSQL ───────────────────────────────────────────────────
+  experience-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: experience_bff
+      POSTGRES_USER: impilo
+      POSTGRES_PASSWORD: impilo
+    ports:
+      - "5433:5432"
+    volumes:
+      - experience-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U impilo -d experience_bff"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ── Experience BFF ───────────────────────────────────────────────
+  experience-bff:
+    build:
+      context: ../../
+      dockerfile: services/experience-bff/Dockerfile
+    environment:
+      DB_HOST: experience-db
+      DB_PORT: 5432
+      DB_NAME: experience_bff
+      DB_USER: impilo
+      DB_PASSWORD: impilo
+      SPRING_PROFILES_ACTIVE: default
+    ports:
+      - "8160:8160"
+    depends_on:
+      experience-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8160/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # ── Experience UI ────────────────────────────────────────────────
+  experience-ui:
+    build:
+      context: ../../ui/experience
+      dockerfile: Dockerfile
+    environment:
+      NEXT_PUBLIC_BFF_URL: http://experience-bff:8160
+    ports:
+      - "3020:3020"
+    depends_on:
+      experience-bff:
+        condition: service_healthy
+
+volumes:
+  experience-db-data:
