@@ -107,6 +107,10 @@
         <module>coverage-service</module>
         <!-- INDAWO — Location & Address Registry (v1.1-Native) -->
         <module>indawo-service</module>
+        <!-- Data Platform — Ring-2 v1.1-Native Services -->
+        <module>data-ingestion-service</module>
+        <module>data-governance-service</module>
+        <module>ndr-service</module>
         <!-- TSHEPO decomposition (6 sub-services) -->
         <module>tshepo-authz-service</module>
         <module>tshepo-identity-service</module>
