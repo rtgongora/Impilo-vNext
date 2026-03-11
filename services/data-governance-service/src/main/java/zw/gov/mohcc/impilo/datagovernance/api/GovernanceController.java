@@ -21,9 +21,13 @@ import zw.gov.mohcc.impilo.datagovernance.api.dto.DecideRequest;
 import zw.gov.mohcc.impilo.datagovernance.api.dto.DecideResponse;
 import zw.gov.mohcc.impilo.datagovernance.api.dto.ExternalDatasetResponse;
 import zw.gov.mohcc.impilo.datagovernance.api.dto.GrantResponse;
+import zw.gov.mohcc.impilo.datagovernance.api.dto.PolicyResponse;
+import zw.gov.mohcc.impilo.datagovernance.api.dto.PublishPolicyRequest;
+import zw.gov.mohcc.impilo.datagovernance.api.dto.RevokeGrantRequest;
 import zw.gov.mohcc.impilo.datagovernance.core.GovernanceService;
 import zw.gov.mohcc.impilo.datagovernance.domain.DatasetEntity;
 import zw.gov.mohcc.impilo.datagovernance.domain.GrantEntity;
+import zw.gov.mohcc.impilo.datagovernance.domain.PolicyEntity;
 
 import java.util.List;
 import java.util.UUID;
@@ -98,6 +102,48 @@ public class GovernanceController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    // ── POST /internal/v1/governance/grants/revoke — Revoke an existing grant ──
+
+    @PostMapping("/internal/v1/governance/grants/revoke")
+    public ResponseEntity<?> revokeGrant(@Valid @RequestBody RevokeGrantRequest request,
+                                          HttpServletRequest httpRequest) {
+        RequestContext ctx = RequestContextHolder.require();
+        String idempotencyKey = httpRequest.getHeader(CompanionHeaders.IDEMPOTENCY_KEY);
+
+        log.info("Revoke grant [grantId={}] correlationId={}", request.grantId(), ctx.correlationId());
+
+        GrantEntity grant = governanceService.revokeGrant(
+                request,
+                UUID.fromString(ctx.tenantId()),
+                ctx.podId(),
+                ctx.correlationId(),
+                idempotencyKey);
+
+        GrantResponse response = toGrantResponse(grant);
+        return ResponseEntity.ok(response);
+    }
+
+    // ── POST /internal/v1/governance/policies — Publish a new policy version ──
+
+    @PostMapping("/internal/v1/governance/policies")
+    public ResponseEntity<?> publishPolicy(@Valid @RequestBody PublishPolicyRequest request,
+                                            HttpServletRequest httpRequest) {
+        RequestContext ctx = RequestContextHolder.require();
+        String idempotencyKey = httpRequest.getHeader(CompanionHeaders.IDEMPOTENCY_KEY);
+
+        log.info("Publish policy [name={}] correlationId={}", request.name(), ctx.correlationId());
+
+        PolicyEntity policy = governanceService.publishPolicy(
+                request,
+                UUID.fromString(ctx.tenantId()),
+                ctx.podId(),
+                ctx.correlationId(),
+                idempotencyKey);
+
+        PolicyResponse response = toPolicyResponse(policy);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
     // ── POST /internal/v1/governance/decide — Access decision ──
 
     @PostMapping("/internal/v1/governance/decide")
@@ -149,6 +195,18 @@ public class GovernanceController {
                 entity.getPrincipalId(),
                 entity.getPurposeOfUse(),
                 entity.getExpiresAt() != null ? entity.getExpiresAt().toString() : null,
+                entity.getCreatedAt().toString());
+    }
+
+    private PolicyResponse toPolicyResponse(PolicyEntity entity) {
+        return new PolicyResponse(
+                entity.getPolicyId(),
+                entity.getTenantId(),
+                entity.getName(),
+                entity.getVersion(),
+                entity.getDescription(),
+                entity.getStatus(),
+                entity.getPublishedAt() != null ? entity.getPublishedAt().toString() : null,
                 entity.getCreatedAt().toString());
     }
 }

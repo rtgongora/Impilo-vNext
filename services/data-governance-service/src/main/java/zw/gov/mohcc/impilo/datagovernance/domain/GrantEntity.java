@@ -34,6 +34,12 @@ public class GrantEntity {
     @Column(name = "revoked", nullable = false)
     private boolean revoked = false;
 
+    @Column(name = "revoked_at")
+    private OffsetDateTime revokedAt;
+
+    @Column(name = "revoked_by", length = 255)
+    private String revokedBy;
+
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt = OffsetDateTime.now();
 
@@ -55,6 +61,8 @@ public class GrantEntity {
     public String getPurposeOfUse() { return purposeOfUse; }
     public OffsetDateTime getExpiresAt() { return expiresAt; }
     public boolean isRevoked() { return revoked; }
+    public OffsetDateTime getRevokedAt() { return revokedAt; }
+    public String getRevokedBy() { return revokedBy; }
     public OffsetDateTime getCreatedAt() { return createdAt; }
 
     public void setGrantId(UUID grantId) { this.grantId = grantId; }
@@ -64,4 +72,6 @@ public class GrantEntity {
     public void setPurposeOfUse(String purposeOfUse) { this.purposeOfUse = purposeOfUse; }
     public void setExpiresAt(OffsetDateTime expiresAt) { this.expiresAt = expiresAt; }
     public void setRevoked(boolean revoked) { this.revoked = revoked; }
+    public void setRevokedAt(OffsetDateTime revokedAt) { this.revokedAt = revokedAt; }
+    public void setRevokedBy(String revokedBy) { this.revokedBy = revokedBy; }
 }
