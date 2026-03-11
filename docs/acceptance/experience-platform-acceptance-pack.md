@@ -232,6 +232,46 @@ Manual UI flows to verify after Docker Compose is running (UI at `http://localho
 
 ---
 
+## 8. Spec Integrity Gate
+
+### Purpose
+
+Verifies that `docs/prototype/final/*.md` files are not stubs. These files serve as the index/contract layer pointing to canonical spec sources in `docs/plan/` and `docs/architecture/v1.1/`.
+
+### Command
+
+```bash
+cd /home/user/Impilo-vNext
+./scripts/spec-integrity-check.sh
+```
+
+### Expected Output (PASS)
+
+```
+=== Spec Integrity Check ===
+PASS: Canonical spec root exists with 7 files
+PASS: Architecture spec root exists with 8 files
+PASS: 00_executive_summary.md — index doc with >= 10 canonical links
+PASS: 01_site_map.md — index doc with >= 10 canonical links
+...
+(all 8 files pass)
+
+=== RESULTS ===
+Passed: 10
+Failed: 0
+
+SPEC INTEGRITY CHECK: PASS
+```
+
+Exit code: `0`
+
+### What Failure Means
+
+- **Exit code 1**: One or more spec files are stubs or degraded. Output lists each failing file with reasons.
+- **Resolution**: See `scripts/spec-integrity-check.README.md` for remediation steps.
+
+---
+
 ## Appendix: Key File Paths
 
 | Component | Path |
