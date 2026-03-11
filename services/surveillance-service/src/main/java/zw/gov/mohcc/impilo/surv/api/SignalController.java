@@ -1,15 +1,26 @@
 package zw.gov.mohcc.impilo.surv.api;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import zw.gov.mohcc.impilo.shared.auth.TrustContext;
-import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
-import zw.gov.mohcc.impilo.shared.response.ApiResponse;
+
+import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.companion.context.RequestContext;
+import zw.gov.mohcc.impilo.companion.context.RequestContextHolder;
+import zw.gov.mohcc.impilo.companion.error.ErrorEnvelope;
 import zw.gov.mohcc.impilo.surv.core.Severity;
 import zw.gov.mohcc.impilo.surv.core.SignalService;
 import zw.gov.mohcc.impilo.surv.persistence.entity.SignalEntity;
@@ -18,6 +29,8 @@ import zw.gov.mohcc.impilo.surv.persistence.entity.SignalEntity;
 @RequestMapping("/internal/v1/signals")
 public class SignalController {
 
+    private static final Logger log = LoggerFactory.getLogger(SignalController.class);
+
     private final SignalService signalService;
 
     public SignalController(SignalService signalService) {
@@ -25,29 +38,55 @@ public class SignalController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<SignalEntity>> createSignal(
-            @RequestBody CreateSignalRequest request) {
-        TrustContext ctx = TrustContextHolder.require();
+    public ResponseEntity<?> createSignal(@RequestBody CreateSignalRequest request,
+                                          HttpServletRequest httpRequest) {
+
+        RequestContext ctx = RequestContextHolder.require();
+        String idempotencyKey = httpRequest.getHeader(CompanionHeaders.IDEMPOTENCY_KEY);
+
+        log.info("Create signal [name={}, eventType={}] correlationId={}",
+                request.name(), request.eventType(), ctx.correlationId());
+
+        if (request.name() == null || request.name().isBlank()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ErrorEnvelope.of("INVALID_REQUEST",
+                            "Signal name is required",
+                            ctx.requestId(), ctx.correlationId()));
+        }
+
+        if (request.eventType() == null || request.eventType().isBlank()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ErrorEnvelope.of("INVALID_REQUEST",
+                            "eventType is required",
+                            ctx.requestId(), ctx.correlationId()));
+        }
 
         SignalEntity signal = signalService.createSignal(
-                ctx.tenantId(), ctx.actorId(), ctx.correlationId(),
+                UUID.fromString(ctx.tenantId()),
+                ctx.podId(),
+                ctx.correlationId(),
                 request.name(), request.description(),
                 request.eventType(), request.conditionField(),
                 request.threshold(), request.windowHours(),
-                request.severity());
+                request.severity(),
+                idempotencyKey);
 
-        return ResponseEntity.status(201).body(
-                ApiResponse.ok(signal, ctx.correlationId().toString()));
+        return ResponseEntity.status(HttpStatus.CREATED).body(signal);
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<SignalEntity>>> listSignals() {
-        TrustContext ctx = TrustContextHolder.require();
+    public ResponseEntity<?> listSignals() {
+        RequestContext ctx = RequestContextHolder.require();
 
-        List<SignalEntity> signals = signalService.listSignals(ctx.tenantId());
+        log.info("List signals correlationId={}", ctx.correlationId());
 
-        return ResponseEntity.ok(
-                ApiResponse.ok(signals, ctx.correlationId().toString()));
+        List<SignalEntity> signals = signalService.listSignals(
+                UUID.fromString(ctx.tenantId()));
+
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("items", signals);
+        body.put("total_elements", signals.size());
+        return ResponseEntity.ok(body);
     }
 
     public record CreateSignalRequest(
