@@ -1,0 +1,127 @@
+##
+## Prometheus Scrape Configuration — Impilo vNext
+## Scrapes Spring Boot Actuator + OTel Collector metrics.
+##
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  scrape_timeout: 10s
+
+scrape_configs:
+  # ── Trust & Governance Plane ──
+  - job_name: tshepo
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['tshepo-service:8081']
+        labels:
+          plane: trust
+          service: tshepo
+
+  # ── Registry Spine ──
+  - job_name: vito
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['vito-service:8082']
+        labels:
+          plane: registry
+          service: vito
+
+  - job_name: varapi
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['varapi-service:8083']
+        labels:
+          plane: registry
+          service: varapi
+
+  # ── Clinical Execution ──
+  - job_name: tuso
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['tuso-service:8084']
+        labels:
+          plane: clinical
+          service: tuso
+
+  - job_name: zibo
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['zibo-service:8085']
+        labels:
+          plane: clinical
+          service: zibo
+
+  # ── Finance ──
+  - job_name: pct
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['pct-service:8088']
+        labels:
+          plane: finance
+          service: pct
+
+  - job_name: oros
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['oros-service:8089']
+        labels:
+          plane: finance
+          service: oros
+
+  # ── Resilience & Operations ──
+  - job_name: support-service
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['support-service:8340']
+        labels:
+          plane: operations
+          service: support
+
+  - job_name: audit-ledger-service
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['audit-ledger-service:8350']
+        labels:
+          plane: operations
+          service: audit-ledger
+
+  - job_name: offline-edge-service
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['offline-edge-service:8360']
+        labels:
+          plane: operations
+          service: offline-edge
+
+  # ── Supply & IoT ──
+  - job_name: asset-registry-service
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['asset-registry-service:8310']
+        labels:
+          plane: supply
+          service: asset-registry
+
+  - job_name: dispatch-service
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['dispatch-service:8320']
+        labels:
+          plane: supply
+          service: dispatch
+
+  - job_name: iot-ingestion-service
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['iot-ingestion-service:8330']
+        labels:
+          plane: supply
+          service: iot-ingestion
+
+  # ── OTel Collector self-metrics ──
+  - job_name: otel-collector
+    static_configs:
+      - targets: ['otel-collector:8889']
+        labels:
+          service: otel-collector

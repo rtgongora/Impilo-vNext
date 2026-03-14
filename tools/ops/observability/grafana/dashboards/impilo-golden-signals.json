@@ -1,0 +1,203 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": "impilo-golden-signals",
+    "title": "Impilo vNext — Golden Signals",
+    "description": "Latency, Traffic, Errors, Saturation across all Impilo services",
+    "tags": ["impilo", "golden-signals", "sre"],
+    "timezone": "browser",
+    "refresh": "30s",
+    "time": { "from": "now-1h", "to": "now" },
+    "templating": {
+      "list": [
+        {
+          "name": "service",
+          "type": "query",
+          "datasource": "Prometheus",
+          "query": "label_values(http_server_requests_seconds_count, service)",
+          "refresh": 2,
+          "multi": true,
+          "includeAll": true
+        },
+        {
+          "name": "plane",
+          "type": "query",
+          "datasource": "Prometheus",
+          "query": "label_values(http_server_requests_seconds_count, plane)",
+          "refresh": 2,
+          "multi": true,
+          "includeAll": true
+        }
+      ]
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Request Latency (p50 / p95 / p99)",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, sum(rate(http_server_requests_seconds_bucket{service=~\"$service\"}[5m])) by (le, service))",
+            "legendFormat": "{{service}} p50"
+          },
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{service=~\"$service\"}[5m])) by (le, service))",
+            "legendFormat": "{{service}} p95"
+          },
+          {
+            "expr": "histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket{service=~\"$service\"}[5m])) by (le, service))",
+            "legendFormat": "{{service}} p99"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": { "unit": "s" }
+        }
+      },
+      {
+        "id": 2,
+        "title": "Request Rate (RPS)",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "sum(rate(http_server_requests_seconds_count{service=~\"$service\"}[5m])) by (service)",
+            "legendFormat": "{{service}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": { "unit": "reqps" }
+        }
+      },
+      {
+        "id": 3,
+        "title": "Error Rate (5xx)",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "sum(rate(http_server_requests_seconds_count{service=~\"$service\", status=~\"5..\"}[5m])) by (service)",
+            "legendFormat": "{{service}} 5xx"
+          },
+          {
+            "expr": "sum(rate(http_server_requests_seconds_count{service=~\"$service\", status=~\"5..\"}[5m])) by (service) / sum(rate(http_server_requests_seconds_count{service=~\"$service\"}[5m])) by (service) * 100",
+            "legendFormat": "{{service}} error %"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": { "unit": "percent" }
+        }
+      },
+      {
+        "id": 4,
+        "title": "JVM Heap Usage",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "jvm_memory_used_bytes{service=~\"$service\", area=\"heap\"} / jvm_memory_max_bytes{service=~\"$service\", area=\"heap\"} * 100",
+            "legendFormat": "{{service}} heap %"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": { "unit": "percent", "max": 100 }
+        }
+      },
+      {
+        "id": 5,
+        "title": "Outbox Event Lag",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "impilo_outbox_pending_count{service=~\"$service\"}",
+            "legendFormat": "{{service}} pending"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": { "unit": "short" }
+        }
+      },
+      {
+        "id": 6,
+        "title": "DB Connection Pool Utilization",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "hikaricp_connections_active{service=~\"$service\"} / hikaricp_connections_max{service=~\"$service\"} * 100",
+            "legendFormat": "{{service}} pool %"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": { "unit": "percent", "max": 100 }
+        }
+      },
+      {
+        "id": 7,
+        "title": "Audit Ledger Chain Length",
+        "type": "stat",
+        "gridPos": { "h": 4, "w": 6, "x": 0, "y": 24 },
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "impilo_audit_chain_length_total",
+            "legendFormat": "chain length"
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Offline Actions Queue Depth",
+        "type": "stat",
+        "gridPos": { "h": 4, "w": 6, "x": 6, "y": 24 },
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "impilo_offline_queued_actions_total",
+            "legendFormat": "queued actions"
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Support Tickets Open",
+        "type": "stat",
+        "gridPos": { "h": 4, "w": 6, "x": 12, "y": 24 },
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "impilo_support_tickets_open_total",
+            "legendFormat": "open tickets"
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Replay Success Rate",
+        "type": "gauge",
+        "gridPos": { "h": 4, "w": 6, "x": 18, "y": 24 },
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "impilo_offline_replay_success_total / (impilo_offline_replay_success_total + impilo_offline_replay_failed_total) * 100",
+            "legendFormat": "success %"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": { "unit": "percent", "max": 100, "thresholds": { "steps": [
+            { "color": "red", "value": 0 },
+            { "color": "yellow", "value": 90 },
+            { "color": "green", "value": 99 }
+          ]}}
+        }
+      }
+    ]
+  }
+}
