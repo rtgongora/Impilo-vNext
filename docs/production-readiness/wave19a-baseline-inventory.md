@@ -29,6 +29,21 @@
 | tshepo-keys-service | — | Key management |
 | tshepo-offline-service | — | Offline capability tokens |
 
+### 1.3 TSHEPO Sub-Service Deep Audit
+
+| Service | Port | ops-instrumentation | SecurityBaselineConfig | Helm Chart | Outbox Table | Prometheus Target |
+|---------|------|:-------------------:|:----------------------:|:----------:|:------------:|:-----------------:|
+| tshepo-authz-service | 8081 (HTTP) / 9090 (gRPC) | ❌ | ❌ | ❌ | ✅ `tshepo_authz.event_outbox` | ❌ |
+| tshepo-audit-service | 8183 | ❌ | ❌ | ❌ | ❌ (Kafka consumer only) | ❌ |
+| tshepo-consent-service | 8182 | ❌ | ❌ | ❌ | ✅ `tshepo_consent.event_outbox` | ❌ |
+| tshepo-identity-service | 8181 | ❌ | ❌ | ❌ | ✅ `tshepo_identity.event_outbox` | ❌ |
+| tshepo-keys-service | 8184 | ❌ | ❌ | ❌ | ✅ `tshepo_keys.event_outbox` | ❌ |
+| tshepo-offline-service | 8185 | ❌ | ❌ | ❌ | ✅ `tshepo_offline.event_outbox` | ❌ |
+
+**Critical finding:** All 6 TSHEPO sub-services declare actuator endpoints in `application.yml` but have NO ops-instrumentation library dependency. The endpoint declarations are inert — no structured logging, golden signals, or outbox health checks are actually registered.
+
+**Security finding:** `tshepo-identity-service` and `tshepo-keys-service` contain hardcoded cryptographic key placeholders in `application.yml` that must not reach production.
+
 ---
 
 ## 2. Health & Metrics Endpoint Inventory
