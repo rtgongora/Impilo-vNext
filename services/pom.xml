@@ -145,6 +145,11 @@
         <module>../libs/ops-instrumentation</module>
         <!-- Offline SDK (entitlement verifier + local queue format) -->
         <module>../libs/offline-sdk</module>
+        <!-- Contract Tests (schema compatibility + event envelope validator) -->
+        <module>../libs/contract-tests</module>
+        <!-- Developer & Governance Platform -->
+        <module>developer-portal-service</module>
+        <module>schema-registry-service</module>
         <!-- Experience Platform BFF -->
         <module>experience-bff</module>
     </modules>
@@ -286,6 +291,13 @@
             <dependency>
                 <groupId>zw.gov.mohcc.impilo</groupId>
                 <artifactId>offline-sdk</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- Contract Tests -->
+            <dependency>
+                <groupId>zw.gov.mohcc.impilo</groupId>
+                <artifactId>contract-tests</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
