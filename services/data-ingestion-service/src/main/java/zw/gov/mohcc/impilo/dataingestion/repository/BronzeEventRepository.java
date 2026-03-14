@@ -1,5 +1,7 @@
 package zw.gov.mohcc.impilo.dataingestion.repository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import zw.gov.mohcc.impilo.dataingestion.domain.BronzeEventEntity;
 
@@ -13,4 +15,6 @@ public interface BronzeEventRepository extends JpaRepository<BronzeEventEntity, 
     Optional<BronzeEventEntity> findByTenantIdAndPodIdAndIdempotencyKey(UUID tenantId, String podId, String idempotencyKey);
 
     long countByTenantIdAndPodIdAndEventId(UUID tenantId, String podId, String eventId);
+
+    Page<BronzeEventEntity> findByTenantId(UUID tenantId, Pageable pageable);
 }

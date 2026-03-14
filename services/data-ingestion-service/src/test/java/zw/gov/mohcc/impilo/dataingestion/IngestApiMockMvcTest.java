@@ -487,6 +487,68 @@ public class IngestApiMockMvcTest {
         }
     }
 
+    // ── Snapshot endpoint ──
+
+    @Nested
+    @DisplayName("Snapshot endpoint")
+    class SnapshotEndpoint {
+
+        @Test
+        @DisplayName("GET /internal/v1/bronze/events returns paginated snapshot")
+        void snapshotBronzeEventsReturnsPaginated() throws Exception {
+            mockMvc.perform(get("/internal/v1/bronze/events")
+                            .param("cursor", "0")
+                            .param("limit", "10")
+                            .header("X-Tenant-ID", TENANT_ID)
+                            .header("X-Pod-ID", "national")
+                            .header("X-Request-ID", "req-snap-1")
+                            .header("X-Correlation-ID", "corr-snap-1"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.items").isArray())
+                    .andExpect(jsonPath("$.has_next").isBoolean())
+                    .andExpect(jsonPath("$.limit").value(10));
+        }
+    }
+
+    // ── Schema version validation ──
+
+    @Nested
+    @DisplayName("Schema version validation")
+    class SchemaVersionValidation {
+
+        @Test
+        @DisplayName("Ingest event with missing schema_version returns 422 SCHEMA_VALIDATION_FAILED")
+        void ingestMissingSchemaVersionReturns422() throws Exception {
+            String body = "{" +
+                    "\"event_id\":\"evt-sv-1\"," +
+                    "\"event_type\":\"impilo.clinical.encounter.v1\"," +
+                    "\"subject_id\":\"sub-1\"," +
+                    "\"subject_type\":\"Patient\"," +
+                    "\"occurred_at\":\"2024-01-01T00:00:00Z\"," +
+                    "\"emitted_at\":\"2024-01-01T00:00:00Z\"," +
+                    "\"correlation_id\":\"" + UUID.randomUUID() + "\"," +
+                    "\"causation_id\":\"" + UUID.randomUUID() + "\"," +
+                    "\"idempotency_key\":\"ik-sv-1\"," +
+                    "\"producer\":\"test\"," +
+                    "\"tenant_id\":\"" + TENANT_ID + "\"," +
+                    "\"pod_id\":\"national\"," +
+                    "\"payload\":{\"key\":\"value\"}," +
+                    "\"meta\":{\"partition_key\":\"pk-1\"}" +
+                    "}";
+
+            mockMvc.perform(post("/internal/v1/ingest/events")
+                            .header("X-Tenant-ID", TENANT_ID)
+                            .header("X-Pod-ID", "national")
+                            .header("X-Request-ID", "req-sv-1")
+                            .header("X-Correlation-ID", "corr-sv-1")
+                            .header("Idempotency-Key", "idem-sv-1")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(body))
+                    .andExpect(status().isUnprocessableEntity())
+                    .andExpect(jsonPath("$.error.code").value("SCHEMA_VALIDATION_FAILED"));
+        }
+    }
+
     // ── Helpers ──
 
     private String buildValidEnvelopeJson() {

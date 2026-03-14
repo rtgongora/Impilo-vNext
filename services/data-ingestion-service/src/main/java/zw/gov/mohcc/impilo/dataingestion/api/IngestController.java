@@ -5,11 +5,16 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.companion.context.RequestContext;
@@ -23,6 +28,8 @@ import zw.gov.mohcc.impilo.dataingestion.api.dto.IngestEventRequest;
 import zw.gov.mohcc.impilo.dataingestion.api.dto.IngestEventResponse;
 import zw.gov.mohcc.impilo.dataingestion.core.IngestService;
 import zw.gov.mohcc.impilo.dataingestion.core.IngestService.ValidationResult;
+import zw.gov.mohcc.impilo.dataingestion.domain.BronzeEventEntity;
+import zw.gov.mohcc.impilo.dataingestion.repository.BronzeEventRepository;
 import zw.gov.mohcc.impilo.dataingestion.repository.DeadLetterEventRepository;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -42,12 +49,15 @@ public class IngestController {
 
     private final IngestService ingestService;
     private final ObjectMapper objectMapper;
+    private final BronzeEventRepository bronzeRepository;
     private final DeadLetterEventRepository deadLetterRepository;
 
     public IngestController(IngestService ingestService, ObjectMapper objectMapper,
+                            BronzeEventRepository bronzeRepository,
                             DeadLetterEventRepository deadLetterRepository) {
         this.ingestService = ingestService;
         this.objectMapper = objectMapper;
+        this.bronzeRepository = bronzeRepository;
         this.deadLetterRepository = deadLetterRepository;
     }
 
@@ -195,6 +205,50 @@ public class IngestController {
     @GetMapping("/internal/v1/ingest/health")
     public ResponseEntity<HealthResponse> health() {
         return ResponseEntity.ok(new HealthResponse("ok", OffsetDateTime.now().toString()));
+    }
+
+    // ── GET /internal/v1/bronze/events — Cursor-based snapshot bootstrap ──
+
+    @GetMapping("/internal/v1/bronze/events")
+    public ResponseEntity<?> snapshotBronzeEvents(
+            @RequestParam(defaultValue = "0") int cursor,
+            @RequestParam(defaultValue = "50") int limit) {
+
+        RequestContext ctx = RequestContextHolder.require();
+        UUID tenantId = UUID.fromString(ctx.tenantId());
+        int effectiveLimit = Math.min(Math.max(limit, 1), 200);
+
+        log.info("Snapshot bronze events [cursor={}, limit={}] correlationId={}",
+                cursor, effectiveLimit, ctx.correlationId());
+
+        Pageable pageable = PageRequest.of(cursor, effectiveLimit, Sort.by("storedAt").ascending());
+        Page<BronzeEventEntity> page = bronzeRepository.findByTenantId(tenantId, pageable);
+
+        List<Map<String, Object>> items = page.getContent().stream()
+                .map(e -> {
+                    Map<String, Object> item = new LinkedHashMap<>();
+                    item.put("receipt_id", e.getReceiptId());
+                    item.put("event_id", e.getEventId());
+                    item.put("event_type", e.getEventType());
+                    item.put("schema_version", e.getSchemaVersion());
+                    item.put("subject_type", e.getSubjectType());
+                    item.put("subject_id", e.getSubjectId());
+                    item.put("occurred_at", e.getOccurredAt());
+                    item.put("stored_at", e.getStoredAt());
+                    item.put("correlation_id", e.getCorrelationId());
+                    return item;
+                })
+                .toList();
+
+        boolean hasNext = page.hasNext();
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("items", items);
+        response.put("cursor", hasNext ? String.valueOf(cursor + 1) : null);
+        response.put("limit", effectiveLimit);
+        response.put("has_next", hasNext);
+        response.put("total", page.getTotalElements());
+
+        return ResponseEntity.ok(response);
     }
 
     private List<String> extractItemJsonStrings(String rawBody) {
