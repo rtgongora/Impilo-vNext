@@ -18,3 +18,5 @@ impilo:
   offline:
     entitlement-ttl-hours: 24
     hmac-secret: test-secret-key-for-testing-only
+    jwks-json:
+    clock-skew-seconds: 60

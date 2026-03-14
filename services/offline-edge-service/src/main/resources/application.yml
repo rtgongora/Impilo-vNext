@@ -25,3 +25,5 @@ impilo:
   offline:
     entitlement-ttl-hours: ${ENTITLEMENT_TTL_HOURS:24}
     hmac-secret: ${OFFLINE_HMAC_SECRET:changeme-not-for-production}
+    jwks-json: ${OFFLINE_JWKS_JSON:}
+    clock-skew-seconds: ${OFFLINE_CLOCK_SKEW_SECONDS:30}
