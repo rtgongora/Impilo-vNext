@@ -11,6 +11,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.lang.Nullable;
+import zw.gov.mohcc.impilo.companion.consistency.ActionRegistry;
+import zw.gov.mohcc.impilo.companion.consistency.ConsistencyClassFilter;
+import zw.gov.mohcc.impilo.companion.consistency.PdpClient;
+import zw.gov.mohcc.impilo.companion.consistency.StalenessProvider;
 import zw.gov.mohcc.impilo.companion.filter.CompanionExceptionHandler;
 import zw.gov.mohcc.impilo.companion.filter.IdempotencyFilter;
 import zw.gov.mohcc.impilo.companion.filter.TimeoutEnforcementFilter;
@@ -131,6 +136,23 @@ public class TechCompanionAutoConfiguration {
         reg.addUrlPatterns(V11_URL_PATTERNS);
         reg.setOrder(12);
         reg.setName("companionTimeoutFilter");
+        return reg;
+    }
+
+    // ── Consistency Class Enforcement ───────────────────────────
+
+    @Bean
+    @ConditionalOnMissingBean(name = "companionConsistencyClassFilter")
+    @ConditionalOnBean(ActionRegistry.class)
+    public FilterRegistrationBean<ConsistencyClassFilter> companionConsistencyClassFilter(
+            ActionRegistry actionRegistry,
+            @Nullable PdpClient pdpClient,
+            @Nullable StalenessProvider stalenessProvider) {
+        FilterRegistrationBean<ConsistencyClassFilter> reg = new FilterRegistrationBean<>();
+        reg.setFilter(new ConsistencyClassFilter(actionRegistry, pdpClient, stalenessProvider));
+        reg.addUrlPatterns(V11_URL_PATTERNS);
+        reg.setOrder(13);
+        reg.setName("companionConsistencyClassFilter");
         return reg;
     }
 }

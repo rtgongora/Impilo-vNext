@@ -28,6 +28,12 @@ public final class ErrorCodes {
     // ── Validation ──────────────────────────────────────────────
     public static final String VALIDATION_FAILED = "VALIDATION_FAILED";
 
+    // ── Consistency Class Enforcement ────────────────────────────
+    public static final String PDP_UNAVAILABLE = "PDP_UNAVAILABLE";
+    public static final String STALE_CONTEXT = "STALE_CONTEXT";
+    public static final String OFFLINE_ENTITLEMENT_REQUIRED = "OFFLINE_ENTITLEMENT_REQUIRED";
+    public static final String BREAK_GLASS_NOT_ALLOWED = "BREAK_GLASS_NOT_ALLOWED";
+
     // ── General ─────────────────────────────────────────────────
     public static final String NOT_FOUND = "NOT_FOUND";
     public static final String INTERNAL_ERROR = "INTERNAL_ERROR";
