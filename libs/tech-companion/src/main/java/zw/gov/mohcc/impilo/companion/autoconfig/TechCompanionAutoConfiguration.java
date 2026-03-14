@@ -18,6 +18,7 @@ import zw.gov.mohcc.impilo.companion.consistency.PdpClient;
 import zw.gov.mohcc.impilo.companion.consistency.StalenessProvider;
 import zw.gov.mohcc.impilo.companion.filter.CompanionExceptionHandler;
 import zw.gov.mohcc.impilo.companion.filter.IdempotencyFilter;
+import zw.gov.mohcc.impilo.companion.filter.CorrelationMdcFilter;
 import zw.gov.mohcc.impilo.companion.filter.TimeoutEnforcementFilter;
 import zw.gov.mohcc.impilo.companion.filter.V11HeaderFilter;
 import zw.gov.mohcc.impilo.companion.idempotency.IdempotencyRepository;
@@ -136,6 +137,19 @@ public class TechCompanionAutoConfiguration {
         reg.addUrlPatterns(V11_URL_PATTERNS);
         reg.setOrder(12);
         reg.setName("companionTimeoutFilter");
+        return reg;
+    }
+
+    // ── Correlation MDC Filter (structured logging) ────────────
+
+    @Bean
+    @ConditionalOnMissingBean(name = "companionCorrelationMdcFilter")
+    public FilterRegistrationBean<CorrelationMdcFilter> companionCorrelationMdcFilter() {
+        FilterRegistrationBean<CorrelationMdcFilter> reg = new FilterRegistrationBean<>();
+        reg.setFilter(new CorrelationMdcFilter());
+        reg.addUrlPatterns("/*");
+        reg.setOrder(15);
+        reg.setName("companionCorrelationMdcFilter");
         return reg;
     }
 
