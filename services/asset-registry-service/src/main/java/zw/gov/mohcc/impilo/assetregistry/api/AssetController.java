@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -95,6 +96,31 @@ public class AssetController {
         ExternalAssetResponse response = new ExternalAssetResponse(
                 a.getAssetId(), a.getFacilityRef(), a.getType(), a.getStatus());
         return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/internal/v1/assets/{asset_id}")
+    public ResponseEntity<?> retireAsset(
+            @PathVariable("asset_id") UUID assetId,
+            jakarta.servlet.http.HttpServletRequest httpRequest) {
+
+        RequestContext ctx = RequestContextHolder.require();
+        String idempotencyKey = httpRequest.getHeader(CompanionHeaders.IDEMPOTENCY_KEY);
+
+        log.info("Retire asset [assetId={}] correlationId={}", assetId, ctx.correlationId());
+
+        try {
+            AssetEntity asset = assetService.retireAsset(
+                    assetId,
+                    UUID.fromString(ctx.tenantId()),
+                    ctx.podId(),
+                    ctx.correlationId(),
+                    idempotencyKey);
+            return ResponseEntity.ok(toAssetResponse(asset));
+        } catch (AssetService.AssetNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ErrorEnvelope.of("NOT_FOUND", "Asset not found",
+                            ctx.requestId(), ctx.correlationId()));
+        }
     }
 
     @GetMapping("/internal/v1/assets")

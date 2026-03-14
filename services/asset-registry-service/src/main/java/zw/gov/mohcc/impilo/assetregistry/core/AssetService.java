@@ -127,9 +127,45 @@ public class AssetService {
         return new UpsertResult(asset, false);
     }
 
+    @Transactional
+    public AssetEntity retireAsset(UUID assetId, UUID tenantId, String podId,
+                                    String correlationId, String idempotencyKey) {
+        AssetEntity asset = assetRepository.findById(assetId)
+                .orElseThrow(() -> new AssetNotFoundException(assetId));
+
+        if ("RETIRED".equals(asset.getStatus())) {
+            return asset; // already retired — idempotent
+        }
+
+        Map<String, Object> beforeState = buildAssetState(asset);
+
+        asset.setStatus("RETIRED");
+        asset.setVersion(asset.getVersion() + 1);
+        asset.setUpdatedAt(OffsetDateTime.now());
+        assetRepository.save(asset);
+
+        Map<String, Object> afterState = buildAssetState(asset);
+        Map<String, Object> payload = buildDeltaPayload("UPDATE", beforeState, afterState,
+                List.of("status"));
+
+        appendOutboxEvent(
+                "impilo.asset.asset.retired.v1",
+                assetId.toString(), tenantId, podId, correlationId, idempotencyKey,
+                payload, assetId.toString());
+
+        log.info("Retired asset [assetId={}]", assetId);
+        return asset;
+    }
+
     @Transactional(readOnly = true)
     public Optional<AssetEntity> getAsset(UUID assetId) {
         return assetRepository.findById(assetId);
+    }
+
+    public static class AssetNotFoundException extends RuntimeException {
+        public AssetNotFoundException(UUID assetId) {
+            super("Asset not found: " + assetId);
+        }
     }
 
     @Transactional(readOnly = true)

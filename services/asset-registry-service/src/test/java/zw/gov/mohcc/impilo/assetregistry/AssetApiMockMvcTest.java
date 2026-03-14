@@ -311,6 +311,75 @@ public class AssetApiMockMvcTest {
         }
     }
 
+    // ── E) Retire lifecycle transition + outbox event ──
+
+    @Nested
+    @DisplayName("E) Retire asset => status=RETIRED + retired.v1 outbox event")
+    class RetireLifecycle {
+
+        @Test
+        @DisplayName("DELETE /internal/v1/assets/{id} retires asset and produces retired.v1 outbox row")
+        void retireAssetLifecycle() throws Exception {
+            UUID assetId = UUID.randomUUID();
+
+            // Create asset first
+            mockMvc.perform(put("/internal/v1/assets/" + assetId)
+                            .header("X-Tenant-ID", TENANT_ID)
+                            .header("X-Pod-ID", "national")
+                            .header("X-Request-ID", "req-retire-1")
+                            .header("X-Correlation-ID", UUID.randomUUID().toString())
+                            .header("Idempotency-Key", "retire-create-" + System.nanoTime())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"facilityRef\":\"FAC-RETIRE\",\"type\":\"COLD_CHAIN\"}"))
+                    .andExpect(status().isCreated());
+
+            // Retire
+            MvcResult result = mockMvc.perform(
+                            org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                                    .delete("/internal/v1/assets/" + assetId)
+                                    .header("X-Tenant-ID", TENANT_ID)
+                                    .header("X-Pod-ID", "national")
+                                    .header("X-Request-ID", "req-retire-2")
+                                    .header("X-Correlation-ID", UUID.randomUUID().toString())
+                                    .header("Idempotency-Key", "retire-key-" + System.nanoTime()))
+                    .andExpect(status().isOk())
+                    .andReturn();
+
+            JsonNode body = MAPPER.readTree(result.getResponse().getContentAsString());
+            assertThat(body.get("status").asText()).isEqualTo("RETIRED");
+
+            // Verify outbox has retired.v1 event
+            List<OutboxEventEntity> retireRows = outboxRepository
+                    .findByAggregateIdAndEventType(assetId.toString(), "impilo.asset.asset.retired.v1");
+            assertThat(retireRows).hasSize(1);
+
+            OutboxEventEntity row = retireRows.get(0);
+            assertThat(row.getPartitionKey()).isEqualTo(assetId.toString());
+
+            JsonNode payload = MAPPER.readTree(row.getPayloadJson());
+            assertThat(payload.get("op").asText()).isEqualTo("UPDATE");
+            assertThat(payload.get("after").get("status").asText()).isEqualTo("RETIRED");
+        }
+
+        @Test
+        @DisplayName("DELETE non-existent asset returns 404")
+        void retireNonExistentAsset() throws Exception {
+            UUID assetId = UUID.randomUUID();
+            MvcResult result = mockMvc.perform(
+                            org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                                    .delete("/internal/v1/assets/" + assetId)
+                                    .header("X-Tenant-ID", TENANT_ID)
+                                    .header("X-Pod-ID", "national")
+                                    .header("X-Request-ID", "req-retire-404")
+                                    .header("X-Correlation-ID", UUID.randomUUID().toString())
+                                    .header("Idempotency-Key", "retire-404-" + System.nanoTime()))
+                    .andExpect(status().isNotFound())
+                    .andReturn();
+
+            assertErrorEnvelope(result, "NOT_FOUND");
+        }
+    }
+
     // ── Helpers ──
 
     private void assertErrorEnvelope(MvcResult result, String expectedCode) throws Exception {
