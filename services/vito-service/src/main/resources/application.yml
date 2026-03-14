@@ -79,11 +79,19 @@ vito:
     # DualEmitPolicy: LEGACY_ONLY | V1_1_ONLY | DUAL
     emit-mode: ${VITO_EMIT_MODE:DUAL}
 
+impilo:
+  ops:
+    enabled: true
+    outbox-table: vito.event_outbox
+
 management:
   endpoints:
     web:
       exposure:
         include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
   metrics:
     tags:
       application: vito-service

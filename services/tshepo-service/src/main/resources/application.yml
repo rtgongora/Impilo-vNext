@@ -47,11 +47,19 @@ tshepo:
   audit:
     kafka-topic: platform.audit.events
 
+impilo:
+  ops:
+    enabled: true
+    outbox-table: tshepo.event_outbox
+
 management:
   endpoints:
     web:
       exposure:
         include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
   metrics:
     tags:
       application: tshepo-service

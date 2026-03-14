@@ -76,11 +76,19 @@ tuso:
     poll-interval-ms: 1000
     kafka-topic-prefix: tuso
 
+impilo:
+  ops:
+    enabled: true
+    outbox-table: tuso.event_outbox
+
 management:
   endpoints:
     web:
       exposure:
         include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
   metrics:
     tags:
       application: tuso-service

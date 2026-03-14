@@ -46,11 +46,16 @@ spring:
         jwt:
           issuer-uri: http://localhost:8080/realms/impilo
 
+impilo:
+  ops:
+    enabled: true
+    outbox-table: varapi.event_outbox
+
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,prometheus
+        include: health,info,prometheus,metrics
   endpoint:
     health:
       show-details: when-authorized

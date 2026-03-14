@@ -148,6 +148,13 @@
             <version>${project.version}</version>
         </dependency>
 
+        <!-- Ops Instrumentation (structured logging, metrics, health) -->
+        <dependency>
+            <groupId>zw.gov.mohcc.impilo</groupId>
+            <artifactId>ops-instrumentation</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- Test -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
