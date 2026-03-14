@@ -143,6 +143,8 @@
         <module>../libs/shared-kernel-java</module>
         <!-- Ops Instrumentation (structured logging, golden signals, health checks) -->
         <module>../libs/ops-instrumentation</module>
+        <!-- Offline SDK (entitlement verifier + local queue format) -->
+        <module>../libs/offline-sdk</module>
         <!-- Experience Platform BFF -->
         <module>experience-bff</module>
     </modules>
@@ -277,6 +279,13 @@
             <dependency>
                 <groupId>zw.gov.mohcc.impilo</groupId>
                 <artifactId>shared-kernel-java</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- Offline SDK -->
+            <dependency>
+                <groupId>zw.gov.mohcc.impilo</groupId>
+                <artifactId>offline-sdk</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
