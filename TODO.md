@@ -278,22 +278,41 @@
 > Port 8084 · Registry Spine Plane
 > Facility hierarchy, workspaces, capability registry, control tower.
 
-### Skeleton
-- [x] Flyway V001
+### Skeleton (complete)
+- [x] Flyway V001–V004 (init, full schema, companion idempotency, outbox v1.1 columns)
 - [x] Helm chart
-- [ ] `pom.xml`, `Dockerfile`, `application.yml`, `TusoApplication.java`
-- [ ] `SecurityConfig.java` (dual-mode: platform + external facility consumers)
+- [x] `pom.xml`, `Dockerfile`, `application.yml`, `TusoApplication.java`
+- [x] `SecurityConfig.java` (dual-mode: platform + external facility consumers)
+- [x] `TusoProperties.java` — @ConfigurationProperties (GOFR, ZIBO, VARAPI, alerts)
+- [x] `CompanionV11Config.java` — Tech Companion v1.1 enforcement
 
-### Controllers
-- [ ] `FacilityController.java`, `WorkspaceController.java`, `ResourceController.java`
-- [ ] `RosterController.java`, `ControlTowerController.java`
-- [ ] `ConfigController.java`, `OpsOverrideController.java`, `GofrSyncController.java`
+### Controllers (complete)
+- [x] `FacilityController.java`, `PublicFacilityController.java` — facility CRUD + public read
+- [x] `WorkspaceController.java` — workspace CRUD, eligibility, config overrides
+- [x] `ResourceController.java` — resource CRUD, calendars, bookings, availability
+- [x] `ControlTowerController.java` — dashboard, alerts, telemetry ingest (PCT/OROS)
+- [x] `ConfigController.java` — tenant config defaults, versioned facility config, rollback
+- [x] `ShiftController.java` — shift start/end, active shifts
+- [x] `SnapshotController.java` — bed/occupancy snapshots
+- [x] `TusoV11ProbeController.java` — v1.1 companion probe endpoint
 
-### Core Services
-- [ ] `CapabilityService.java`, `ResourceCalendarService.java`
-- [ ] `ControlTowerRulesEngine.java`, `TelemetryIngestService.java`
-- [ ] JPA entities + repositories
-- [ ] Additional migrations V002–V006
+### Core Services (complete)
+- [x] `FacilityService.java` — facility lifecycle, hierarchy, capabilities, readiness
+- [x] `WorkspaceService.java` — workspace management, eligibility, rules
+- [x] `ResourceService.java` — resource CRUD, calendars, booking orchestration
+- [x] `ControlTowerService.java` — dashboard aggregation, alerts, telemetry
+- [x] `ConfigService.java` — hierarchical config resolution, versioning, audit
+- [x] `ConfigResolutionEngine.java` — tenant → facility → workspace config cascade
+- [x] `BookingService.java` + `BookingConflictDetector.java` — slot booking with conflict detection
+- [x] `AlertRuleEngine.java` — configurable alert thresholds + auto-alerting
+- [x] `TusoOutboxPublisher.java` — scheduled Kafka publisher (tuso.facility, tuso.workspace)
+- [x] Integration: `GofrSyncAdapter.java`, `GofrSyncScheduler.java`, `VarapiClient.java`, `ZiboValidationClient.java`
+- [x] 25 JPA entities + 25 repositories (facility, workspace, resource, booking, config, telemetry, alerts, GOFR sync)
+
+### Tests (6 test files)
+- [x] `AlertRuleEngineTest.java`, `BookingConflictDetectorTest.java`, `ConfigResolutionEngineTest.java`
+- [x] `WorkspaceEligibilityEngineTest.java`, `OutboxV11EnvelopeContractTest.java`, `TusoGoldenContractIT.java`
+- [ ] Integration tests: end-to-end facility → workspace → resource → booking flow
 
 ---
 
