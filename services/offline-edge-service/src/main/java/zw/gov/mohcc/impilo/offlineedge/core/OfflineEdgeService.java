@@ -10,6 +10,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.offlineedge.api.dto.*;
+import zw.gov.mohcc.impilo.offlineedge.client.ButanoFhirClient;
 import zw.gov.mohcc.impilo.offlineedge.domain.*;
 import zw.gov.mohcc.impilo.offlineedge.repository.*;
 
@@ -28,6 +29,8 @@ public class OfflineEdgeService {
     private final CapturedActionRepository actionRepository;
     private final ReconciliationBatchRepository batchRepository;
     private final OutboxEventRepository outboxRepository;
+    private final ConflictReviewRepository conflictRepository;
+    private final ButanoFhirClient butanoFhirClient;
     private final ObjectMapper objectMapper;
     private final String hmacSecret;
     private final int entitlementTtlHours;
@@ -36,6 +39,8 @@ public class OfflineEdgeService {
                                CapturedActionRepository actionRepository,
                                ReconciliationBatchRepository batchRepository,
                                OutboxEventRepository outboxRepository,
+                               ConflictReviewRepository conflictRepository,
+                               ButanoFhirClient butanoFhirClient,
                                ObjectMapper objectMapper,
                                @Value("${impilo.offline.hmac-secret}") String hmacSecret,
                                @Value("${impilo.offline.entitlement-ttl-hours}") int entitlementTtlHours) {
@@ -43,6 +48,8 @@ public class OfflineEdgeService {
         this.actionRepository = actionRepository;
         this.batchRepository = batchRepository;
         this.outboxRepository = outboxRepository;
+        this.conflictRepository = conflictRepository;
+        this.butanoFhirClient = butanoFhirClient;
         this.objectMapper = objectMapper;
         this.hmacSecret = hmacSecret;
         this.entitlementTtlHours = entitlementTtlHours;
@@ -126,9 +133,49 @@ public class OfflineEdgeService {
         batch.setStartedAt(OffsetDateTime.now());
         batchRepository.save(batch);
 
-        int replayed = 0, failed = 0;
+        int replayed = 0, failed = 0, conflicts = 0;
         for (CapturedActionEntity action : queued) {
             try {
+                // Replay to BUTANO (FHIR Observation write) for vitals actions
+                if ("CAPTURE_VITALS".equals(action.getActionType()) || "VITAL_SIGN".equals(action.getActionType())) {
+                    Map<String, Object> vitalsPayload = parsePayload(action.getPayloadJson());
+                    ButanoFhirClient.FhirReplayResult fhirResult = butanoFhirClient.postObservation(
+                            action.getPatientRef(), vitalsPayload, tenantId.toString(), correlationId);
+
+                    if (fhirResult.isConflict()) {
+                        // Queue for manual review
+                        action.setStatus("CONFLICT");
+                        action.setReplayedAt(OffsetDateTime.now());
+                        action.setReplayError(fhirResult.detail());
+                        actionRepository.save(action);
+
+                        ConflictReviewEntity conflict = new ConflictReviewEntity();
+                        conflict.setActionId(action.getActionId());
+                        conflict.setBatchId(batchId);
+                        conflict.setTenantId(tenantId);
+                        conflict.setPatientRef(action.getPatientRef());
+                        conflict.setActionType(action.getActionType());
+                        conflict.setConflictReason(fhirResult.detail());
+                        conflict.setOfflinePayload(action.getPayloadJson());
+                        conflictRepository.save(conflict);
+
+                        // Emit conflict audit event
+                        Map<String, Object> conflictPayload = new LinkedHashMap<>();
+                        conflictPayload.put("action_id", action.getActionId().toString());
+                        conflictPayload.put("conflict_id", conflict.getConflictId().toString());
+                        conflictPayload.put("patient_ref", action.getPatientRef());
+                        conflictPayload.put("reason", fhirResult.detail());
+                        conflictPayload.put("batch_id", batchId.toString());
+                        appendOutboxEvent("impilo.offline.action.conflict.v1", action.getActionId().toString(),
+                                tenantId, podId, correlationId, null, conflictPayload, action.getPatientRef());
+
+                        conflicts++;
+                        continue;
+                    } else if (!fhirResult.isSuccess()) {
+                        throw new RuntimeException("BUTANO replay failed: " + fhirResult.detail());
+                    }
+                }
+
                 action.setStatus("REPLAYED");
                 action.setReplayedAt(OffsetDateTime.now());
                 actionRepository.save(action);
@@ -152,13 +199,23 @@ public class OfflineEdgeService {
         }
 
         batch.setReplayedCount(replayed);
-        batch.setFailedCount(failed);
-        batch.setStatus(failed == 0 ? "COMPLETED" : "PARTIAL");
+        batch.setFailedCount(failed + conflicts);
+        batch.setStatus(failed == 0 && conflicts == 0 ? "COMPLETED"
+                : conflicts > 0 && failed == 0 ? "CONFLICTS_PENDING" : "PARTIAL");
         batch.setCompletedAt(OffsetDateTime.now());
         batchRepository.save(batch);
 
-        log.info("Replay batch [batchId={}, replayed={}, failed={}]", batchId, replayed, failed);
+        log.info("Replay batch [batchId={}, replayed={}, conflicts={}, failed={}]", batchId, replayed, conflicts, failed);
         return batch;
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> parsePayload(String payloadJson) {
+        try {
+            return objectMapper.readValue(payloadJson, Map.class);
+        } catch (Exception e) {
+            return Map.of();
+        }
     }
 
     @Transactional(readOnly = true)
