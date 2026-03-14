@@ -206,13 +206,13 @@ public class TelemetryApiMockMvcTest {
             String readingId = respJson.get("reading_id").asText();
 
             List<OutboxEventEntity> outboxRows = outboxRepository
-                    .findByAggregateIdAndEventType(readingId, "impilo.telemetry.device.reading.ingested.v1");
+                    .findByAggregateIdAndEventType(readingId, "impilo.iot.telemetry.reading.ingested.v1");
 
             assertThat(outboxRows).hasSize(1);
             OutboxEventEntity row = outboxRows.get(0);
 
             // Verify telemetry namespace
-            assertThat(row.getEventType()).startsWith("impilo.telemetry.");
+            assertThat(row.getEventType()).startsWith("impilo.iot.telemetry.");
             assertThat(row.getEventId()).isNotNull();
             assertThat(row.getAggregateType()).isEqualTo("TelemetryReading");
             assertThat(row.getProducer()).isEqualTo("iot-ingestion-service");

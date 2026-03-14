@@ -35,5 +35,5 @@ impilo:
   telemetry:
     kafka:
       enabled: ${TELEMETRY_KAFKA_ENABLED:false}
-      topic: ${TELEMETRY_KAFKA_TOPIC:impilo.telemetry.device.raw}
+      topic: ${TELEMETRY_KAFKA_TOPIC:impilo.iot.telemetry.device.raw}
       group-id: ${TELEMETRY_KAFKA_GROUP:iot-ingestion-telemetry-cg}

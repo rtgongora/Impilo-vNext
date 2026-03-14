@@ -30,7 +30,7 @@ public class TelemetryKafkaConsumer {
     }
 
     @KafkaListener(
-            topics = "${impilo.telemetry.kafka.topic:impilo.telemetry.device.raw}",
+            topics = "${impilo.telemetry.kafka.topic:impilo.iot.telemetry.device.raw}",
             groupId = "${impilo.telemetry.kafka.group-id:iot-ingestion-telemetry-cg}",
             autoStartup = "${impilo.telemetry.kafka.enabled:false}")
     public void onTelemetryMessage(String message) {

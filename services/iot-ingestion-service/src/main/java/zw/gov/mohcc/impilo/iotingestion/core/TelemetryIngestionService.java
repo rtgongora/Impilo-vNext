@@ -87,7 +87,7 @@ public class TelemetryIngestionService {
         payload.put("source", source);
 
         appendOutboxEvent(
-                "impilo.telemetry.device.reading.ingested.v1",
+                "impilo.iot.telemetry.reading.ingested.v1",
                 readingId.toString(), tenantId, podId, correlationId,
                 null, payload, request.deviceId());
 
