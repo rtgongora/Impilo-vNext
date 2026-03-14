@@ -541,6 +541,83 @@ public class GovernanceApiMockMvcTest {
         }
     }
 
+    // ── Export endpoint tests ──
+
+    @Nested
+    @DisplayName("Export endpoint validation")
+    class ExportEndpoint {
+
+        @Test
+        @DisplayName("POST /external/v1/exports without purpose_of_use returns 400")
+        void exportWithoutPurposeReturns400() throws Exception {
+            mockMvc.perform(post("/external/v1/exports")
+                            .header("X-Tenant-ID", TENANT_ID)
+                            .header("X-Pod-ID", "national")
+                            .header("X-Request-ID", "req-exp-1")
+                            .header("X-Correlation-ID", "corr-exp-1")
+                            .header("Idempotency-Key", "idem-exp-1")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"dataset\": \"encounters\"}"))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.error.code").value("MISSING_PURPOSE_OF_USE"));
+        }
+
+        @Test
+        @DisplayName("POST /external/v1/exports denies by default without allow rule")
+        void exportDeniedByDefault() throws Exception {
+            mockMvc.perform(post("/external/v1/exports")
+                            .header("X-Tenant-ID", TENANT_ID)
+                            .header("X-Pod-ID", "national")
+                            .header("X-Request-ID", "req-exp-2")
+                            .header("X-Correlation-ID", "corr-exp-2")
+                            .header("Idempotency-Key", "idem-exp-2")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"dataset\": \"encounters\", \"purposeOfUse\": \"RESEARCH\"}"))
+                    .andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.decision").value("DENY"));
+        }
+    }
+
+    // ── Governance rules tests ──
+
+    @Nested
+    @DisplayName("Governance rules CRUD")
+    class GovernanceRules {
+
+        @Test
+        @DisplayName("GET /internal/v1/governance/rules returns list")
+        void listRulesReturnsOk() throws Exception {
+            mockMvc.perform(get("/internal/v1/governance/rules")
+                            .header("X-Tenant-ID", TENANT_ID)
+                            .header("X-Pod-ID", "national")
+                            .header("X-Request-ID", "req-rules-1")
+                            .header("X-Correlation-ID", "corr-rules-1"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$").isArray());
+        }
+
+        @Test
+        @DisplayName("POST /internal/v1/governance/rules creates a rule")
+        void createRuleReturnsCreated() throws Exception {
+            String body = """
+                    {"name": "allow-research-encounters", "resourcePattern": "encounters",
+                     "action": "EXPORT", "effect": "ALLOW", "requiredPurpose": "RESEARCH"}
+                    """;
+
+            mockMvc.perform(post("/internal/v1/governance/rules")
+                            .header("X-Tenant-ID", TENANT_ID)
+                            .header("X-Pod-ID", "national")
+                            .header("X-Request-ID", "req-rules-2")
+                            .header("X-Correlation-ID", "corr-rules-2")
+                            .header("Idempotency-Key", "idem-rule-1")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(body))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.name").value("allow-research-encounters"))
+                    .andExpect(jsonPath("$.effect").value("ALLOW"));
+        }
+    }
+
     // ── Helpers ──
 
     private UUID createTestDataset(String idempotencyKey) throws Exception {
