@@ -52,8 +52,8 @@ public class SnapshotController {
     private TicketResponse toTicketResponse(TicketEntity t) {
         return new TicketResponse(t.getTicketId(), t.getTenantId(), t.getTitle(), t.getDescription(),
                 t.getCategory(), t.getPriority(), t.getStatus(), t.getReporterRef(), t.getAssigneeRef(),
-                t.getFacilityRef(), t.getResolution(), t.getVersion(), t.getCreatedAt(), t.getUpdatedAt(),
-                t.getResolvedAt());
+                t.getFacilityRef(), t.getResolution(), t.getRequestId(), t.getCorrelationId(),
+                t.getVersion(), t.getCreatedAt(), t.getUpdatedAt(), t.getResolvedAt());
     }
 
     private ArticleResponse toArticleResponse(KnowledgeArticleEntity a) {

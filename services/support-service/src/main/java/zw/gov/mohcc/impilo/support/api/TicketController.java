@@ -31,7 +31,7 @@ public class TicketController {
         RequestContext ctx = RequestContextHolder.require();
         String idempotencyKey = httpRequest.getHeader(CompanionHeaders.IDEMPOTENCY_KEY);
         TicketEntity ticket = supportService.createTicket(UUID.fromString(ctx.tenantId()),
-                ctx.podId(), ctx.correlationId(), idempotencyKey, request);
+                ctx.podId(), ctx.correlationId(), ctx.requestId(), idempotencyKey, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(ticket));
     }
 
@@ -80,7 +80,7 @@ public class TicketController {
     private TicketResponse toResponse(TicketEntity t) {
         return new TicketResponse(t.getTicketId(), t.getTenantId(), t.getTitle(), t.getDescription(),
                 t.getCategory(), t.getPriority(), t.getStatus(), t.getReporterRef(), t.getAssigneeRef(),
-                t.getFacilityRef(), t.getResolution(), t.getVersion(), t.getCreatedAt(), t.getUpdatedAt(),
-                t.getResolvedAt());
+                t.getFacilityRef(), t.getResolution(), t.getRequestId(), t.getCorrelationId(),
+                t.getVersion(), t.getCreatedAt(), t.getUpdatedAt(), t.getResolvedAt());
     }
 }

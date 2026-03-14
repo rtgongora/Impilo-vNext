@@ -6,5 +6,6 @@ import java.util.UUID;
 public record TicketResponse(UUID ticketId, UUID tenantId, String title, String description,
                               String category, String priority, String status, String reporterRef,
                               String assigneeRef, String facilityRef, String resolution,
+                              String requestId, UUID correlationId,
                               int version, OffsetDateTime createdAt, OffsetDateTime updatedAt,
                               OffsetDateTime resolvedAt) {}

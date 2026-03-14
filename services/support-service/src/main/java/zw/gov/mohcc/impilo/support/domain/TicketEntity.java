@@ -19,6 +19,8 @@ public class TicketEntity {
     @Column(name = "facility_ref") private String facilityRef;
     @Column(columnDefinition = "TEXT") private String resolution;
     @Column(name = "metadata_json", columnDefinition = "TEXT") private String metadataJson;
+    @Column(name = "request_id") private String requestId;
+    @Column(name = "correlation_id") private java.util.UUID correlationId;
     @Column(name = "created_at", nullable = false) private OffsetDateTime createdAt;
     @Column(name = "updated_at", nullable = false) private OffsetDateTime updatedAt;
     @Column(name = "resolved_at") private OffsetDateTime resolvedAt;
@@ -52,6 +54,10 @@ public class TicketEntity {
     public void setResolution(String v) { this.resolution = v; }
     public String getMetadataJson() { return metadataJson; }
     public void setMetadataJson(String v) { this.metadataJson = v; }
+    public String getRequestId() { return requestId; }
+    public void setRequestId(String v) { this.requestId = v; }
+    public java.util.UUID getCorrelationId() { return correlationId; }
+    public void setCorrelationId(java.util.UUID v) { this.correlationId = v; }
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public OffsetDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(OffsetDateTime v) { this.updatedAt = v; }

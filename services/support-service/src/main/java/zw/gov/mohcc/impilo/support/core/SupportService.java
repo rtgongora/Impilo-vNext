@@ -36,13 +36,15 @@ public class SupportService {
 
     @Transactional
     public TicketEntity createTicket(UUID tenantId, String podId, String correlationId,
-                                      String idempotencyKey, CreateTicketRequest request) {
+                                      String requestId, String idempotencyKey, CreateTicketRequest request) {
         UUID ticketId = UUID.randomUUID();
         TicketEntity ticket = new TicketEntity(ticketId, tenantId, request.title(),
                 request.description(), request.reporterRef());
         if (request.category() != null) ticket.setCategory(request.category());
         if (request.priority() != null) ticket.setPriority(request.priority());
         if (request.facilityRef() != null) ticket.setFacilityRef(request.facilityRef());
+        if (requestId != null) ticket.setRequestId(requestId);
+        if (correlationId != null) ticket.setCorrelationId(UUID.fromString(correlationId));
         ticketRepository.save(ticket);
 
         Map<String, Object> payload = buildTicketState(ticket);
@@ -156,6 +158,8 @@ public class SupportService {
         s.put("category", t.getCategory()); s.put("priority", t.getPriority());
         s.put("status", t.getStatus()); s.put("reporter_ref", t.getReporterRef());
         s.put("assignee_ref", t.getAssigneeRef()); s.put("facility_ref", t.getFacilityRef());
+        if (t.getRequestId() != null) s.put("request_id", t.getRequestId());
+        if (t.getCorrelationId() != null) s.put("correlation_id", t.getCorrelationId().toString());
         return s;
     }
 

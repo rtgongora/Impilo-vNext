@@ -153,6 +153,33 @@ public class SupportApiMockMvcTest {
         }
     }
 
+    // ── E) Ticket stores request_id and correlation_id ──
+
+    @Nested
+    @DisplayName("E) Ticket stores request_id and correlation_id")
+    class RequestCorrelationTracking {
+
+        @Test
+        @DisplayName("Created ticket response includes requestId and correlationId")
+        void ticketHasRequestAndCorrelation() throws Exception {
+            String requestId = UUID.randomUUID().toString();
+            String correlationId = UUID.randomUUID().toString();
+
+            MvcResult result = mockMvc.perform(post("/internal/v1/support/tickets")
+                            .header("X-Tenant-ID", TENANT_ID)
+                            .header("X-Pod-ID", "national")
+                            .header("X-Request-ID", requestId)
+                            .header("X-Correlation-ID", correlationId)
+                            .header("Idempotency-Key", "tracking-" + System.nanoTime())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"title\":\"Track Test\",\"description\":\"Tracking IDs\",\"reporterRef\":\"user-track\"}"))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.requestId").value(requestId))
+                    .andExpect(jsonPath("$.correlationId").value(correlationId))
+                    .andReturn();
+        }
+    }
+
     // ── C) Outbox events on ticket creation ──
 
     @Nested
