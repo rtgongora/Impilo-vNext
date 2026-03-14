@@ -216,6 +216,53 @@ public class SupportApiMockMvcTest {
             assertThat(row.getIdempotencyKey()).isEqualTo(idempotencyKey);
             assertThat(row.getTenantId()).isNotNull();
             assertThat(row.getOccurredAt()).isNotNull();
+            assertThat(row.getSchemaVersion()).isEqualTo("1");
+            assertThat(row.getProducer()).isEqualTo("support-service");
+            assertThat(row.getSubjectType()).isEqualTo("Ticket");
+            assertThat(row.getPayloadJson()).isNotBlank();
+        }
+
+        @Test
+        @DisplayName("Updated ticket produces ticket.updated.v1 outbox row with schema_version")
+        void outboxOnUpdate() throws Exception {
+            String correlationId = UUID.randomUUID().toString();
+
+            // Create ticket first
+            MvcResult createResult = mockMvc.perform(post("/internal/v1/support/tickets")
+                            .header("X-Tenant-ID", TENANT_ID)
+                            .header("X-Pod-ID", "national")
+                            .header("X-Request-ID", UUID.randomUUID().toString())
+                            .header("X-Correlation-ID", UUID.randomUUID().toString())
+                            .header("Idempotency-Key", "outbox-update-create-" + System.nanoTime())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"title\":\"Update Outbox Test\",\"description\":\"Testing update outbox\",\"reporterRef\":\"test-user\"}"))
+                    .andExpect(status().isCreated())
+                    .andReturn();
+
+            String ticketId = MAPPER.readTree(createResult.getResponse().getContentAsString())
+                    .get("ticketId").asText();
+
+            String updateIdempotencyKey = "outbox-update-" + System.nanoTime();
+
+            // Update ticket
+            mockMvc.perform(patch("/internal/v1/support/tickets/" + ticketId)
+                            .header("X-Tenant-ID", TENANT_ID)
+                            .header("X-Pod-ID", "national")
+                            .header("X-Request-ID", UUID.randomUUID().toString())
+                            .header("X-Correlation-ID", correlationId)
+                            .header("Idempotency-Key", updateIdempotencyKey)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"status\":\"IN_PROGRESS\",\"assigneeRef\":\"tech-001\"}"))
+                    .andExpect(status().isOk());
+
+            var outboxRows = outboxRepository.findByAggregateIdAndEventType(
+                    ticketId, "impilo.support.ticket.updated.v1");
+
+            assertThat(outboxRows).hasSize(1);
+            var row = outboxRows.get(0);
+            assertThat(row.getSchemaVersion()).isEqualTo("1");
+            assertThat(row.getIdempotencyKey()).isEqualTo(updateIdempotencyKey);
+            assertThat(row.getCorrelationId().toString()).isEqualTo(correlationId);
         }
     }
 
