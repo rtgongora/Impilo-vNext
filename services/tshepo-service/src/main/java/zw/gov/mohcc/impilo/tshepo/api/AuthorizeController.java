@@ -84,6 +84,14 @@ public class AuthorizeController {
 
                 // Inject obligation headers for Envoy to forward to downstream service
                 builder.header(TrustHeaders.DECISION, "ALLOW");
+
+                // Policy decision evidence headers (v1.1 consistency class support)
+                builder.header("X-Policy-Decision", "ALLOW");
+                builder.header("X-Policy-Version", decision.policyVersion());
+                if (decision.reasonCodes() != null && !decision.reasonCodes().isEmpty()) {
+                    builder.header("X-Decision-Reason", String.join(",", decision.reasonCodes()));
+                }
+
                 if (decision.obligations() != null) {
                     builder.header(TrustHeaders.OBLIGATIONS, decision.obligations().toJson());
                     if (decision.obligations().maxScope() != null) {
@@ -103,6 +111,9 @@ public class AuthorizeController {
                 log.warn("ext_authz DENY: actor={}, reason={}, correlation={}",
                     authzRequest.actorId(), decision.denyReason(), authzRequest.correlationId());
                 yield ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .header("X-Policy-Decision", "DENY")
+                    .header("X-Policy-Version", decision.policyVersion())
+                    .header("X-Decision-Reason", decision.denyReason())
                     .body(AuthorizeResponse.denied(decision.denyReason(), decision.denyMessage()));
             }
 
@@ -110,6 +121,9 @@ public class AuthorizeController {
                 log.info("ext_authz STEP_UP: actor={}, methods={}, correlation={}",
                     authzRequest.actorId(), decision.stepUpMethods(), authzRequest.correlationId());
                 yield ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .header("X-Policy-Decision", "STEP_UP_REQUIRED")
+                    .header("X-Policy-Version", decision.policyVersion())
+                    .header("X-Decision-Reason", "STEP_UP_REQUIRED")
                     .body(AuthorizeResponse.stepUpRequired(decision.stepUpMethods()));
             }
         };

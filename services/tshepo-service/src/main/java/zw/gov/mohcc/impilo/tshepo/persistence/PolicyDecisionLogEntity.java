@@ -57,6 +57,12 @@ public class PolicyDecisionLogEntity {
     @Column(name = "duration_ms")
     private Integer durationMs;
 
+    @Column(name = "policy_version")
+    private String policyVersion;
+
+    @Column(name = "reason_codes")
+    private String reasonCodes;
+
     // --- Getters and Setters ---
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -90,4 +96,8 @@ public class PolicyDecisionLogEntity {
     public void setDecidedAt(Instant decidedAt) { this.decidedAt = decidedAt; }
     public Integer getDurationMs() { return durationMs; }
     public void setDurationMs(Integer durationMs) { this.durationMs = durationMs; }
+    public String getPolicyVersion() { return policyVersion; }
+    public void setPolicyVersion(String policyVersion) { this.policyVersion = policyVersion; }
+    public String getReasonCodes() { return reasonCodes; }
+    public void setReasonCodes(String reasonCodes) { this.reasonCodes = reasonCodes; }
 }

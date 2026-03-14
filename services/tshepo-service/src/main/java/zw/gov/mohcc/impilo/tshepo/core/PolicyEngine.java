@@ -101,7 +101,8 @@ public class PolicyEngine {
             }
             // Low-risk break-glass: allow with elevated logging
             Decision decision = Decision.allow(
-                new Obligations(null, null, "ELEVATED", null), riskScore
+                new Obligations(null, null, "ELEVATED", null), riskScore,
+                List.of("BREAK_GLASS_APPROVED", "LOW_RISK")
             );
             persistDecision(request, decision, startTime);
             appendAuditEntry(request, "ALLOW_BREAK_GLASS");
@@ -246,6 +247,10 @@ public class PolicyEngine {
         entry.setRiskScore((short) decision.riskScore());
         entry.setDecidedAt(Instant.now());
         entry.setDurationMs((int) durationMs);
+        entry.setPolicyVersion(decision.policyVersion());
+        if (decision.reasonCodes() != null && !decision.reasonCodes().isEmpty()) {
+            entry.setReasonCodes(String.join(",", decision.reasonCodes()));
+        }
 
         decisionLogRepo.save(entry);
     }
