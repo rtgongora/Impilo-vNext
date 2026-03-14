@@ -10,12 +10,16 @@ import zw.gov.mohcc.impilo.datagovernance.api.dto.CreateDatasetRequest;
 import zw.gov.mohcc.impilo.datagovernance.api.dto.CreateGrantRequest;
 import zw.gov.mohcc.impilo.datagovernance.api.dto.DecideRequest;
 import zw.gov.mohcc.impilo.datagovernance.api.dto.DecideResponse;
+import zw.gov.mohcc.impilo.datagovernance.api.dto.ExportRequest;
+import zw.gov.mohcc.impilo.datagovernance.api.dto.ExportResponse;
 import zw.gov.mohcc.impilo.datagovernance.domain.DatasetEntity;
 import zw.gov.mohcc.impilo.datagovernance.domain.DecisionAuditEntity;
+import zw.gov.mohcc.impilo.datagovernance.domain.GovernanceRuleEntity;
 import zw.gov.mohcc.impilo.datagovernance.domain.GrantEntity;
 import zw.gov.mohcc.impilo.datagovernance.domain.OutboxEventEntity;
 import zw.gov.mohcc.impilo.datagovernance.repository.DatasetRepository;
 import zw.gov.mohcc.impilo.datagovernance.repository.DecisionAuditRepository;
+import zw.gov.mohcc.impilo.datagovernance.repository.GovernanceRuleRepository;
 import zw.gov.mohcc.impilo.datagovernance.repository.GrantRepository;
 import zw.gov.mohcc.impilo.datagovernance.repository.OutboxEventRepository;
 
@@ -42,17 +46,20 @@ public class GovernanceService {
     private final GrantRepository grantRepository;
     private final DecisionAuditRepository decisionAuditRepository;
     private final OutboxEventRepository outboxRepository;
+    private final GovernanceRuleRepository ruleRepository;
     private final ObjectMapper objectMapper;
 
     public GovernanceService(DatasetRepository datasetRepository,
                              GrantRepository grantRepository,
                              DecisionAuditRepository decisionAuditRepository,
                              OutboxEventRepository outboxRepository,
+                             GovernanceRuleRepository ruleRepository,
                              ObjectMapper objectMapper) {
         this.datasetRepository = datasetRepository;
         this.grantRepository = grantRepository;
         this.decisionAuditRepository = decisionAuditRepository;
         this.outboxRepository = outboxRepository;
+        this.ruleRepository = ruleRepository;
         this.objectMapper = objectMapper;
     }
 
@@ -199,6 +206,64 @@ public class GovernanceService {
                 request.purposeOfUse(), decision);
 
         return new DecideResponse(decision, POLICY_VERSION, reasonCodes, DEFAULT_TTL_SECONDS);
+    }
+
+    // ── Export evaluation ──
+
+    @Transactional
+    public ExportResponse evaluateExport(ExportRequest request, UUID tenantId,
+                                          String correlationId, String idempotencyKey) {
+        // Find matching rules for this dataset + EXPORT action
+        List<GovernanceRuleEntity> rules = ruleRepository.findMatchingRules(
+                tenantId, request.dataset(), "EXPORT");
+
+        String decision = "DENY";  // deny by default
+        String message = "No explicit ALLOW rule found for this export";
+
+        for (GovernanceRuleEntity rule : rules) {
+            if ("ALLOW".equals(rule.getEffect())) {
+                // Check purpose matches if rule requires specific purpose
+                if (rule.getRequiredPurpose() == null ||
+                    rule.getRequiredPurpose().equals(request.purposeOfUse())) {
+                    decision = "ALLOW";
+                    message = "Export permitted by rule: " + rule.getName();
+                    break;
+                }
+            } else if ("DENY".equals(rule.getEffect())) {
+                decision = "DENY";
+                message = "Export denied by rule: " + rule.getName();
+                break;
+            }
+        }
+
+        String exportId = UUID.randomUUID().toString();
+
+        // Audit the export decision
+        DecisionAuditEntity audit = new DecisionAuditEntity();
+        audit.setTenantId(tenantId);
+        audit.setDatasetName(request.dataset());
+        audit.setPrincipalId("export-requester");
+        audit.setDecision(decision);
+        audit.setReasonCodesJson(toJson(List.of(decision.equals("ALLOW") ? "EXPORT_RULE_MATCH" : "NO_EXPORT_RULE")));
+        audit.setPolicyVersion(POLICY_VERSION);
+        audit.setCorrelationId(correlationId);
+        decisionAuditRepository.save(audit);
+
+        // Outbox event
+        String decisionIdempotencyKey = idempotencyKey != null ? idempotencyKey : "export-" + exportId;
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("export_id", exportId);
+        payload.put("dataset", request.dataset());
+        payload.put("purpose_of_use", request.purposeOfUse());
+        payload.put("decision", decision);
+
+        appendOutboxEvent("impilo.data.governance.export.evaluated.v1",
+                "Export", exportId,
+                tenantId, null, correlationId, decisionIdempotencyKey,
+                payload, "export-requester",
+                exportId, "Export");
+
+        return new ExportResponse(decision, request.dataset(), request.purposeOfUse(), exportId, message);
     }
 
     // ── Outbox helper ──
