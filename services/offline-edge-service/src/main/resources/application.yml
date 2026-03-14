@@ -1,0 +1,27 @@
+server:
+  port: ${SERVER_PORT:8360}
+
+spring:
+  application:
+    name: offline-edge-service
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:impilo_offline_edge}
+    username: ${DB_USER:impilo}
+    password: ${DB_PASS:impilo}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate.dialect: org.hibernate.dialect.PostgreSQLDialect
+    open-in-view: false
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
+impilo:
+  companion:
+    enabled: true
+  offline:
+    entitlement-ttl-hours: ${ENTITLEMENT_TTL_HOURS:24}
+    hmac-secret: ${OFFLINE_HMAC_SECRET:changeme-not-for-production}
