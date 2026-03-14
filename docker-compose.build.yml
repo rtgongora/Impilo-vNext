@@ -1,0 +1,74 @@
+# =============================================================================
+# Impilo vNext — Build Phase (Wave 18)
+# =============================================================================
+#
+# Builds all backend service JARs via Maven and the Experience UI via npm.
+# Uses host-mounted caches for Maven and npm to support offline/air-gapped builds.
+#
+# Usage:
+#   docker compose -f docker-compose.build.yml up --build
+#   (or: ./scripts/dev-runtime.sh build)
+#
+# Pre-warm caches on a connected machine:
+#   cd services && mvn dependency:go-offline -Dmaven.repo.local=../vendor/m2/repository
+#   cd ui/experience && npm install --legacy-peer-deps --cache ../vendor/node-cache
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # Maven Builder — builds ALL backend services in one pass
+  # ---------------------------------------------------------------------------
+  maven-builder:
+    image: eclipse-temurin:21-jdk-alpine
+    working_dir: /build/services
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -e
+        echo "=== Installing Maven ==="
+        apk add --no-cache maven bash
+        echo "=== Building all services (skip tests for build phase) ==="
+        mvn -B clean package -DskipTests \
+          -Dmaven.repo.local=/root/.m2/repository \
+          -T 1C \
+          --fail-at-end
+        echo "=== Maven build complete ==="
+        # Copy all built JARs to output directory for easy access
+        mkdir -p /build/output
+        find /build/services -path "*/target/*.jar" -not -name "*-sources.jar" -not -name "*-javadoc.jar" -not -name "original-*" | while read jar; do
+          svc_dir=$(echo "$jar" | sed 's|/build/services/||' | cut -d/ -f1)
+          mkdir -p "/build/output/$svc_dir"
+          cp "$jar" "/build/output/$svc_dir/"
+          echo "  -> $svc_dir/$(basename $jar)"
+        done
+        echo "=== JAR output complete ==="
+    volumes:
+      # Source code (read-only mount, except target dirs need write)
+      - .:/build:rw
+      # Maven local repository cache
+      - ./vendor/m2/repository:/root/.m2/repository:rw
+    environment:
+      MAVEN_OPTS: "-Xmx2g -XX:+UseZGC"
+
+  # ---------------------------------------------------------------------------
+  # UI Builder — builds the Experience UI
+  # ---------------------------------------------------------------------------
+  ui-builder:
+    image: node:20-alpine
+    working_dir: /build/ui/experience
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -e
+        echo "=== Installing npm dependencies ==="
+        npm install --legacy-peer-deps --cache /root/.npm
+        echo "=== Building Experience UI ==="
+        npm run build
+        echo "=== UI build complete ==="
+    volumes:
+      - ./ui/experience:/build/ui/experience:rw
+      # npm cache
+      - ./vendor/node-cache:/root/.npm:rw
+    environment:
+      NODE_ENV: production
+      NEXT_TELEMETRY_DISABLED: "1"

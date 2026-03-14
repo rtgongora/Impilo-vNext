@@ -1,0 +1,249 @@
+# =============================================================================
+# Impilo vNext — Envoy Gateway Configuration (Docker Compose Runtime)
+# =============================================================================
+#
+# Adapted from infra/envoy/envoy.yaml for Docker Compose networking.
+# Services are addressed by their compose service names instead of
+# host.docker.internal.
+#
+# OPA sidecar runs at opa:8181 and enforces v1.1 headers + idempotency.
+# =============================================================================
+
+admin:
+  address:
+    socket_address:
+      address: 0.0.0.0
+      port_value: 9901
+
+static_resources:
+  listeners:
+    - name: public_listener
+      address:
+        socket_address:
+          address: 0.0.0.0
+          port_value: 10000
+      filter_chains:
+        - filters:
+            - name: envoy.filters.network.http_connection_manager
+              typed_config:
+                "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+                stat_prefix: ingress_http
+                codec_type: AUTO
+                route_config:
+                  name: local_route
+                  virtual_hosts:
+                    - name: impilo_services
+                      domains: ["*"]
+                      routes:
+                        # ── TSHEPO Service (legacy + authz) ──
+                        - match: { prefix: "/api/v1/authorize" }
+                          route: { cluster: tshepo_service }
+                        - match: { prefix: "/api/v1/step-up" }
+                          route: { cluster: tshepo_service }
+                        - match: { prefix: "/api/v1/break-glass" }
+                          route: { cluster: tshepo_service }
+                        - match: { prefix: "/api/v1/policies" }
+                          route: { cluster: tshepo_service }
+                        - match: { prefix: "/api/v1/devices" }
+                          route: { cluster: tshepo_service }
+                        - match: { prefix: "/api/v1/identity" }
+                          route: { cluster: tshepo_service }
+                        - match: { prefix: "/api/v1/consent" }
+                          route: { cluster: tshepo_service }
+                        - match: { prefix: "/api/v1/audit" }
+                          route: { cluster: tshepo_service }
+                        - match: { prefix: "/api/v1/keys" }
+                          route: { cluster: tshepo_service }
+                        - match: { prefix: "/api/v1/sign" }
+                          route: { cluster: tshepo_service }
+                        - match: { prefix: "/api/v1/certificates" }
+                          route: { cluster: tshepo_service }
+                        - match: { prefix: "/api/v1/offline" }
+                          route: { cluster: tshepo_service }
+
+                        # ── VITO — Client Registry ──
+                        - match: { prefix: "/api/v1/clients" }
+                          route: { cluster: vito_service }
+                        - match: { prefix: "/api/v1/recovery" }
+                          route: { cluster: vito_service }
+
+                        # ── VARAPI — Provider Registry ──
+                        - match: { prefix: "/api/v1/providers" }
+                          route: { cluster: varapi_service }
+
+                        # ── TUSO — Facility Registry ──
+                        - match: { prefix: "/api/v1/facilities" }
+                          route: { cluster: tuso_service }
+                        - match: { prefix: "/api/v1/workspaces" }
+                          route: { cluster: tuso_service }
+                        - match: { prefix: "/api/v1/resources" }
+                          route: { cluster: tuso_service }
+                        - match: { prefix: "/api/v1/bookings" }
+                          route: { cluster: tuso_service }
+                        - match: { prefix: "/api/v1/telemetry" }
+                          route: { cluster: tuso_service }
+
+                        # ── ZIBO — Terminology ──
+                        - match: { prefix: "/v1/artifacts" }
+                          route: { cluster: zibo_service }
+                        - match: { prefix: "/v1/packs" }
+                          route: { cluster: zibo_service }
+
+                        # ── PCT — Patient Care Tracker ──
+                        - match: { prefix: "/api/v1/work" }
+                          route: { cluster: pct_service }
+                        - match: { prefix: "/api/v1/encounters" }
+                          route: { cluster: pct_service }
+                        - match: { prefix: "/api/v1/queues" }
+                          route: { cluster: pct_service }
+
+                        # ── OROS — Orders & Results ──
+                        - match: { prefix: "/v1/orders" }
+                          route: { cluster: oros_service }
+
+                        # ── v1.1 internal/external enforcement paths ──
+                        - match: { prefix: "/internal/v1/" }
+                          route: { cluster: tshepo_service }
+                        - match: { prefix: "/external/v1/" }
+                          route: { cluster: tshepo_service }
+
+                        # ── Experience BFF ──
+                        - match: { prefix: "/bff/" }
+                          route: { cluster: experience_bff }
+
+                        # ── Health check passthrough ──
+                        - match: { prefix: "/actuator/health" }
+                          route: { cluster: tshepo_service }
+
+                http_filters:
+                  # ── OPA ext_authz (v1.1 header + idempotency enforcement) ──
+                  - name: envoy.filters.http.ext_authz
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthz
+                      transport_api_version: V3
+                      http_service:
+                        server_uri:
+                          uri: http://opa:8181
+                          cluster: opa_sidecar
+                          timeout: 0.5s
+                        path_prefix: "/v1/data/impilo/gateway/headers"
+                        authorization_request:
+                          allowed_headers:
+                            patterns:
+                              - exact: "x-tenant-id"
+                              - exact: "x-pod-id"
+                              - exact: "x-request-id"
+                              - exact: "x-correlation-id"
+                              - exact: "idempotency-key"
+                              - exact: "authorization"
+                        authorization_response:
+                          allowed_upstream_headers:
+                            patterns:
+                              - exact: "x-policy-decision"
+                              - exact: "x-policy-version"
+                              - exact: "x-decision-reason"
+                      failure_mode_allow: false
+                  - name: envoy.filters.http.router
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+
+  clusters:
+    # ── OPA Sidecar ──
+    - name: opa_sidecar
+      type: STRICT_DNS
+      connect_timeout: 0.5s
+      load_assignment:
+        cluster_name: opa_sidecar
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: opa, port_value: 8181 }
+
+    # ── TSHEPO ──
+    - name: tshepo_service
+      type: STRICT_DNS
+      load_assignment:
+        cluster_name: tshepo_service
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: tshepo, port_value: 8081 }
+
+    # ── VITO ──
+    - name: vito_service
+      type: STRICT_DNS
+      load_assignment:
+        cluster_name: vito_service
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: vito, port_value: 8082 }
+
+    # ── VARAPI ──
+    - name: varapi_service
+      type: STRICT_DNS
+      load_assignment:
+        cluster_name: varapi_service
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: varapi, port_value: 8083 }
+
+    # ── TUSO ──
+    - name: tuso_service
+      type: STRICT_DNS
+      load_assignment:
+        cluster_name: tuso_service
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: tuso, port_value: 8084 }
+
+    # ── ZIBO ──
+    - name: zibo_service
+      type: STRICT_DNS
+      load_assignment:
+        cluster_name: zibo_service
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: zibo, port_value: 8085 }
+
+    # ── PCT ──
+    - name: pct_service
+      type: STRICT_DNS
+      load_assignment:
+        cluster_name: pct_service
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: pct, port_value: 8088 }
+
+    # ── OROS ──
+    - name: oros_service
+      type: STRICT_DNS
+      load_assignment:
+        cluster_name: oros_service
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: oros, port_value: 8089 }
+
+    # ── Experience BFF ──
+    - name: experience_bff
+      type: STRICT_DNS
+      load_assignment:
+        cluster_name: experience_bff
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: experience-bff, port_value: 8160 }
