@@ -5,13 +5,13 @@ set -euo pipefail
 # Full-Platform Compliance Verifier — Impilo vNext
 #
 # Scans all services under /services and asserts the presence of required
-# compliance markers. Fails non-zero if a real service is missing mandatory
-# items. Distinguishes STUB services from failing real services.
+# compliance markers. Every service with src/main/java is treated as a real
+# service and must pass ALL checks. No STUB or ADAPTER exemptions.
 #
 # Usage:
 #   ./scripts/compliance/full-platform-compliance-check.sh
 #
-# CI-friendly: returns 0 if all real services pass, non-zero otherwise.
+# CI-friendly: returns 0 if all services pass, non-zero otherwise.
 ###############################################################################
 
 REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -21,8 +21,7 @@ SERVICES_DIR="$REPO_ROOT/services"
 TOTAL=0
 PASS=0
 FAIL=0
-STUB=0
-ADAPTER=0
+LIBRARY=0
 
 # ANSI colors (CI-safe)
 RED='\033[0;31m'
@@ -30,12 +29,6 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 CYAN='\033[0;36m'
 NC='\033[0m'
-
-# STUB services (no meaningful runtime code)
-STUB_SERVICES="butano-fhir fhir-gateway-service inpatient-service jobs-service offline-sync-service pacs-adapter-service product-registry-service"
-
-# Headless adapter services (no API surface — exempt from /internal/v1 requirement)
-ADAPTER_SERVICES="inventory-elmis-adapter pharmacy-elmis-adapter"
 
 # Services with domain-specific event storage (not standard outbox pattern)
 CUSTOM_OUTBOX_SERVICES="tshepo-audit-service audit-ledger-service"
@@ -45,6 +38,7 @@ LIBRARY_SERVICES="shared-core"
 
 printf "\n${CYAN}╔══════════════════════════════════════════════════════════════════╗${NC}\n"
 printf "${CYAN}║  Impilo vNext — Full-Platform Compliance Verifier              ║${NC}\n"
+printf "${CYAN}║  Zero exemptions — every service must be fully compliant       ║${NC}\n"
 printf "${CYAN}╚══════════════════════════════════════════════════════════════════╝${NC}\n\n"
 
 printf "%-40s %-8s %-8s %-8s %-8s %-8s %-10s\n" \
@@ -56,63 +50,42 @@ for svc_dir in "$SERVICES_DIR"/*/; do
   svc_name=$(basename "$svc_dir")
   TOTAL=$((TOTAL + 1))
 
-  # Skip the parent POM
+  # Skip the parent POM directory
   if [ "$svc_name" = "pom.xml" ]; then
     TOTAL=$((TOTAL - 1))
     continue
   fi
 
-  # Check if STUB
-  if echo "$STUB_SERVICES" | grep -qw "$svc_name"; then
-    STUB=$((STUB + 1))
-    printf "%-40s %-8s %-8s %-8s %-8s %-8s ${YELLOW}%-10s${NC}\n" \
-      "$svc_name" "-" "-" "-" "-" "-" "STUB"
-    continue
-  fi
-
-  # Check if shared library
+  # Check if shared library (only exemption)
   if echo "$LIBRARY_SERVICES" | grep -qw "$svc_name"; then
-    STUB=$((STUB + 1))
+    LIBRARY=$((LIBRARY + 1))
     printf "%-40s %-8s %-8s %-8s %-8s %-8s ${CYAN}%-10s${NC}\n" \
       "$svc_name" "-" "-" "-" "-" "-" "LIBRARY"
     continue
   fi
 
-  # Check if headless adapter
-  is_adapter=false
-  if echo "$ADAPTER_SERVICES" | grep -qw "$svc_name"; then
-    is_adapter=true
-  fi
-
-  # Check for src/main/java
+  # Check for src/main/java — if absent, it's a failing service (no exemptions)
   if [ ! -d "$svc_dir/src/main/java" ]; then
-    STUB=$((STUB + 1))
-    printf "%-40s %-8s %-8s %-8s %-8s %-8s ${YELLOW}%-10s${NC}\n" \
-      "$svc_name" "-" "-" "-" "-" "-" "NO-CODE"
+    FAIL=$((FAIL + 1))
+    printf "%-40s %-8s %-8s %-8s %-8s %-8s ${RED}%-10s${NC}\n" \
+      "$svc_name" "FAIL" "FAIL" "FAIL" "FAIL" "FAIL" "NO-CODE"
     continue
   fi
 
   # === Compliance checks ===
 
-  # 1. tech-companion dependency (adapters exempt — no API surface)
+  # 1. tech-companion dependency
   tc_dep="FAIL"
   if [ -f "$svc_dir/pom.xml" ]; then
     if grep -q "tech-companion" "$svc_dir/pom.xml" 2>/dev/null; then
       tc_dep="PASS"
     fi
   fi
-  if $is_adapter; then
-    tc_dep="N/A"
-  fi
 
   # 2. /internal/v1 route in main source
   int_v1="FAIL"
   if grep -rq '/internal/v1' "$svc_dir/src/main/" 2>/dev/null; then
     int_v1="PASS"
-  fi
-  # Adapters are exempt
-  if $is_adapter; then
-    int_v1="N/A"
   fi
 
   # 3. Outbox table present (or domain-specific event storage)
@@ -124,17 +97,11 @@ for svc_dir in "$SERVICES_DIR"/*/; do
   elif echo "$CUSTOM_OUTBOX_SERVICES" | grep -qw "$svc_name"; then
     outbox="PASS"
   fi
-  if $is_adapter; then
-    outbox="N/A"
-  fi
 
   # 4. GoldenContractIT exists
   golden="FAIL"
   if find "$svc_dir" -name "*GoldenContract*" -type f 2>/dev/null | grep -q .; then
     golden="PASS"
-  fi
-  if $is_adapter; then
-    golden="N/A"
   fi
 
   # 5. Health endpoint (actuator dependency)
@@ -145,29 +112,10 @@ for svc_dir in "$SERVICES_DIR"/*/; do
     fi
   fi
 
-  # Determine overall status
+  # Determine overall status — ALL checks must pass
   status="PASS"
-  if $is_adapter; then
-    if [ "$health" = "FAIL" ]; then
-      status="FAIL"
-    fi
-  else
-    if [ "$tc_dep" = "FAIL" ] || [ "$int_v1" = "FAIL" ] || [ "$outbox" = "FAIL" ] || [ "$golden" = "FAIL" ] || [ "$health" = "FAIL" ]; then
-      status="FAIL"
-    fi
-  fi
-
-  if $is_adapter; then
-    ADAPTER=$((ADAPTER + 1))
-    if [ "$status" = "PASS" ]; then
-      printf "%-40s %-8s %-8s %-8s %-8s %-8s ${YELLOW}%-10s${NC}\n" \
-        "$svc_name" "$tc_dep" "$int_v1" "$outbox" "$golden" "$health" "ADAPTER"
-    else
-      FAIL=$((FAIL + 1))
-      printf "%-40s %-8s %-8s %-8s %-8s %-8s ${RED}%-10s${NC}\n" \
-        "$svc_name" "$tc_dep" "$int_v1" "$outbox" "$golden" "$health" "FAIL"
-    fi
-    continue
+  if [ "$tc_dep" = "FAIL" ] || [ "$int_v1" = "FAIL" ] || [ "$outbox" = "FAIL" ] || [ "$golden" = "FAIL" ] || [ "$health" = "FAIL" ]; then
+    status="FAIL"
   fi
 
   if [ "$status" = "PASS" ]; then
@@ -182,14 +130,14 @@ for svc_dir in "$SERVICES_DIR"/*/; do
 done
 
 printf "\n${CYAN}═══════════════════════════════════════════════════════════════════${NC}\n"
-printf "Total: %d | ${GREEN}Pass: %d${NC} | ${RED}Fail: %d${NC} | ${YELLOW}Stub/Library: %d${NC} | Adapter: %d\n" \
-  "$TOTAL" "$PASS" "$FAIL" "$STUB" "$ADAPTER"
+printf "Total: %d | ${GREEN}Pass: %d${NC} | ${RED}Fail: %d${NC} | ${CYAN}Library: %d${NC}\n" \
+  "$TOTAL" "$PASS" "$FAIL" "$LIBRARY"
 printf "${CYAN}═══════════════════════════════════════════════════════════════════${NC}\n\n"
 
 if [ "$FAIL" -gt 0 ]; then
   printf "${RED}COMPLIANCE CHECK FAILED — %d service(s) non-compliant.${NC}\n\n" "$FAIL"
   exit 1
 else
-  printf "${GREEN}ALL REAL SERVICES COMPLIANT.${NC}\n\n"
+  printf "${GREEN}ALL SERVICES COMPLIANT — ZERO EXEMPTIONS.${NC}\n\n"
   exit 0
 fi
