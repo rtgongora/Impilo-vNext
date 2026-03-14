@@ -116,6 +116,13 @@
             <version>${project.version}</version>
         </dependency>
 
+        <!-- Federation Connector (pod identity verification) -->
+        <dependency>
+            <groupId>zw.gov.mohcc.impilo</groupId>
+            <artifactId>federation-connector</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- Tech Companion Harness — golden contract tests -->
         <dependency>
             <groupId>zw.gov.mohcc.impilo</groupId>
