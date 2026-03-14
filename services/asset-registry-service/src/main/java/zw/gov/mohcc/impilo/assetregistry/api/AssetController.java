@@ -21,6 +21,7 @@ import zw.gov.mohcc.impilo.companion.context.RequestContextHolder;
 import zw.gov.mohcc.impilo.companion.error.ErrorEnvelope;
 import zw.gov.mohcc.impilo.assetregistry.api.dto.AssetResponse;
 import zw.gov.mohcc.impilo.assetregistry.api.dto.ExternalAssetResponse;
+import zw.gov.mohcc.impilo.assetregistry.api.dto.UpdateStatusRequest;
 import zw.gov.mohcc.impilo.assetregistry.api.dto.UpsertAssetRequest;
 import zw.gov.mohcc.impilo.assetregistry.core.AssetService;
 import zw.gov.mohcc.impilo.assetregistry.domain.AssetEntity;
@@ -81,6 +82,34 @@ public class AssetController {
         return ResponseEntity.ok(toAssetResponse(asset.get()));
     }
 
+    @PutMapping("/internal/v1/assets/{asset_id}/status")
+    public ResponseEntity<?> updateStatus(
+            @PathVariable("asset_id") UUID assetId,
+            @Valid @RequestBody UpdateStatusRequest request,
+            jakarta.servlet.http.HttpServletRequest httpRequest) {
+
+        RequestContext ctx = RequestContextHolder.require();
+        String idempotencyKey = httpRequest.getHeader(CompanionHeaders.IDEMPOTENCY_KEY);
+
+        log.info("Update asset status [assetId={}, status={}] correlationId={}",
+                assetId, request.status(), ctx.correlationId());
+
+        try {
+            AssetEntity asset = assetService.updateStatus(
+                    assetId,
+                    UUID.fromString(ctx.tenantId()),
+                    ctx.podId(),
+                    ctx.correlationId(),
+                    idempotencyKey,
+                    request.status());
+            return ResponseEntity.ok(toAssetResponse(asset));
+        } catch (AssetService.AssetNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ErrorEnvelope.of("NOT_FOUND", "Asset not found",
+                            ctx.requestId(), ctx.correlationId()));
+        }
+    }
+
     @GetMapping("/external/v1/assets/{asset_id}")
     public ResponseEntity<?> getAssetExternal(@PathVariable("asset_id") UUID assetId) {
         RequestContext ctx = RequestContextHolder.require();
@@ -96,6 +125,28 @@ public class AssetController {
         ExternalAssetResponse response = new ExternalAssetResponse(
                 a.getAssetId(), a.getFacilityRef(), a.getType(), a.getStatus());
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/external/v1/assets")
+    public ResponseEntity<?> listAssetsExternal(
+            @RequestParam(defaultValue = "0") int cursor,
+            @RequestParam(defaultValue = "20") int limit) {
+
+        RequestContext ctx = RequestContextHolder.require();
+        log.info("External list assets [cursor={}, limit={}] correlationId={}",
+                cursor, limit, ctx.correlationId());
+
+        Page<AssetEntity> page = assetService.listAssetsByTenant(
+                UUID.fromString(ctx.tenantId()), cursor, limit);
+
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("items", page.getContent().stream()
+                .map(a -> new ExternalAssetResponse(a.getAssetId(), a.getFacilityRef(), a.getType(), a.getStatus()))
+                .toList());
+        body.put("cursor", page.hasNext() ? String.valueOf(cursor + 1) : null);
+        body.put("limit", limit);
+        body.put("has_more", page.hasNext());
+        return ResponseEntity.ok(body);
     }
 
     @DeleteMapping("/internal/v1/assets/{asset_id}")
@@ -155,6 +206,8 @@ public class AssetController {
                 entity.getType(),
                 entity.getSerialNo(),
                 entity.getStatus(),
+                entity.getAssignedTo(),
+                entity.getLastSeenAt(),
                 metadata,
                 entity.getVersion(),
                 entity.getCreatedAt(),

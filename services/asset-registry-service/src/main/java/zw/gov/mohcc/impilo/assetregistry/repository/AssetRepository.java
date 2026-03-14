@@ -22,4 +22,6 @@ public interface AssetRepository extends JpaRepository<AssetEntity, UUID> {
 
     @Query("SELECT a FROM AssetEntity a WHERE a.updatedAt <= :asOf ORDER BY a.assetId")
     Page<AssetEntity> findSnapshotAsOf(@Param("asOf") OffsetDateTime asOf, Pageable pageable);
+
+    Page<AssetEntity> findByTenantId(UUID tenantId, Pageable pageable);
 }

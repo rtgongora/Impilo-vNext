@@ -69,6 +69,8 @@ public class SnapshotController {
                 entity.getType(),
                 entity.getSerialNo(),
                 entity.getStatus(),
+                entity.getAssignedTo(),
+                entity.getLastSeenAt(),
                 metadata,
                 entity.getVersion(),
                 entity.getCreatedAt(),

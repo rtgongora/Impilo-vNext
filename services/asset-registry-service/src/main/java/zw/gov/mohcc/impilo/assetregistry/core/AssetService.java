@@ -157,9 +157,46 @@ public class AssetService {
         return asset;
     }
 
+    @Transactional
+    public AssetEntity updateStatus(UUID assetId, UUID tenantId, String podId,
+                                     String correlationId, String idempotencyKey,
+                                     String newStatus) {
+        AssetEntity asset = assetRepository.findById(assetId)
+                .orElseThrow(() -> new AssetNotFoundException(assetId));
+
+        if (asset.getStatus().equals(newStatus)) {
+            return asset; // idempotent — no change
+        }
+
+        Map<String, Object> beforeState = buildAssetState(asset);
+        String previousStatus = asset.getStatus();
+
+        asset.setStatus(newStatus);
+        asset.setVersion(asset.getVersion() + 1);
+        asset.setUpdatedAt(OffsetDateTime.now());
+        assetRepository.save(asset);
+
+        Map<String, Object> afterState = buildAssetState(asset);
+        Map<String, Object> payload = buildDeltaPayload("UPDATE", beforeState, afterState,
+                List.of("status"));
+
+        appendOutboxEvent(
+                "impilo.asset.asset.status.changed.v1",
+                assetId.toString(), tenantId, podId, correlationId, idempotencyKey,
+                payload, assetId.toString());
+
+        log.info("Status changed asset [assetId={}, {} -> {}]", assetId, previousStatus, newStatus);
+        return asset;
+    }
+
     @Transactional(readOnly = true)
     public Optional<AssetEntity> getAsset(UUID assetId) {
         return assetRepository.findById(assetId);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<AssetEntity> listAssetsByTenant(UUID tenantId, int page, int size) {
+        return assetRepository.findByTenantId(tenantId, PageRequest.of(page, size));
     }
 
     public static class AssetNotFoundException extends RuntimeException {
@@ -210,6 +247,8 @@ public class AssetService {
         state.put("type", asset.getType());
         state.put("serial_no", asset.getSerialNo());
         state.put("status", asset.getStatus());
+        state.put("assigned_to", asset.getAssignedTo());
+        state.put("last_seen_at", asset.getLastSeenAt() != null ? asset.getLastSeenAt().toString() : null);
         state.put("metadata_json", asset.getMetadataJson());
         state.put("version", asset.getVersion());
         return state;

@@ -10,6 +10,8 @@ public record AssetResponse(
         String type,
         String serialNo,
         String status,
+        String assignedTo,
+        OffsetDateTime lastSeenAt,
         Object metadata,
         int version,
         OffsetDateTime createdAt,

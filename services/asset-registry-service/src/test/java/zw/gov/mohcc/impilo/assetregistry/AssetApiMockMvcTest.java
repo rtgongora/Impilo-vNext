@@ -380,6 +380,111 @@ public class AssetApiMockMvcTest {
         }
     }
 
+    // ── F) PUT /internal/v1/assets/{id}/status — status change ──
+
+    @Nested
+    @DisplayName("F) PUT /internal/v1/assets/{id}/status => status change + outbox event")
+    class StatusChange {
+
+        @Test
+        @DisplayName("PUT /internal/v1/assets/{id}/status changes status and emits status.changed.v1 outbox event")
+        void statusChangeEmitsOutboxEvent() throws Exception {
+            UUID assetId = UUID.randomUUID();
+
+            // Create asset
+            mockMvc.perform(put("/internal/v1/assets/" + assetId)
+                            .header("X-Tenant-ID", TENANT_ID)
+                            .header("X-Pod-ID", "national")
+                            .header("X-Request-ID", "req-sc-1")
+                            .header("X-Correlation-ID", UUID.randomUUID().toString())
+                            .header("Idempotency-Key", "sc-create-" + System.nanoTime())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"facilityRef\":\"FAC-SC\",\"type\":\"EQUIPMENT\"}"))
+                    .andExpect(status().isCreated());
+
+            // Change status
+            MvcResult result = mockMvc.perform(put("/internal/v1/assets/" + assetId + "/status")
+                            .header("X-Tenant-ID", TENANT_ID)
+                            .header("X-Pod-ID", "national")
+                            .header("X-Request-ID", "req-sc-2")
+                            .header("X-Correlation-ID", UUID.randomUUID().toString())
+                            .header("Idempotency-Key", "sc-status-" + System.nanoTime())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"status\":\"MAINTENANCE\"}"))
+                    .andExpect(status().isOk())
+                    .andReturn();
+
+            JsonNode body = MAPPER.readTree(result.getResponse().getContentAsString());
+            assertThat(body.get("status").asText()).isEqualTo("MAINTENANCE");
+
+            // Verify outbox event
+            List<OutboxEventEntity> rows = outboxRepository
+                    .findByAggregateIdAndEventType(assetId.toString(), "impilo.asset.asset.status.changed.v1");
+            assertThat(rows).hasSize(1);
+            assertThat(rows.get(0).getPartitionKey()).isEqualTo(assetId.toString());
+
+            JsonNode payload = MAPPER.readTree(rows.get(0).getPayloadJson());
+            assertThat(payload.get("op").asText()).isEqualTo("UPDATE");
+            assertThat(payload.get("after").get("status").asText()).isEqualTo("MAINTENANCE");
+        }
+
+        @Test
+        @DisplayName("PUT /internal/v1/assets/{id}/status for non-existent asset returns 404")
+        void statusChangeNotFound() throws Exception {
+            UUID assetId = UUID.randomUUID();
+            MvcResult result = mockMvc.perform(put("/internal/v1/assets/" + assetId + "/status")
+                            .header("X-Tenant-ID", TENANT_ID)
+                            .header("X-Pod-ID", "national")
+                            .header("X-Request-ID", "req-sc-404")
+                            .header("X-Correlation-ID", UUID.randomUUID().toString())
+                            .header("Idempotency-Key", "sc-404-" + System.nanoTime())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"status\":\"MAINTENANCE\"}"))
+                    .andExpect(status().isNotFound())
+                    .andReturn();
+
+            assertErrorEnvelope(result, "NOT_FOUND");
+        }
+    }
+
+    // ── G) GET /external/v1/assets — policy-filtered listing ──
+
+    @Nested
+    @DisplayName("G) GET /external/v1/assets returns policy-filtered listing")
+    class ExternalListing {
+
+        @Test
+        @DisplayName("GET /external/v1/assets returns paginated external response")
+        void externalListingReturnsPaged() throws Exception {
+            // Create an asset
+            UUID assetId = UUID.randomUUID();
+            mockMvc.perform(put("/internal/v1/assets/" + assetId)
+                            .header("X-Tenant-ID", TENANT_ID)
+                            .header("X-Pod-ID", "national")
+                            .header("X-Request-ID", "req-ext-1")
+                            .header("X-Correlation-ID", UUID.randomUUID().toString())
+                            .header("Idempotency-Key", "ext-create-" + System.nanoTime())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"facilityRef\":\"FAC-EXT\",\"type\":\"VEHICLE\"}"))
+                    .andExpect(status().isCreated());
+
+            MvcResult result = mockMvc.perform(get("/external/v1/assets")
+                            .header("X-Tenant-ID", TENANT_ID)
+                            .header("X-Pod-ID", "national")
+                            .header("X-Request-ID", "req-ext-2")
+                            .header("X-Correlation-ID", UUID.randomUUID().toString())
+                            .param("limit", "10"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.items").isArray())
+                    .andExpect(jsonPath("$.limit").value(10))
+                    .andExpect(jsonPath("$.has_more").exists())
+                    .andReturn();
+
+            JsonNode body = MAPPER.readTree(result.getResponse().getContentAsString());
+            assertThat(body.get("items").isArray()).isTrue();
+        }
+    }
+
     // ── Helpers ──
 
     private void assertErrorEnvelope(MvcResult result, String expectedCode) throws Exception {

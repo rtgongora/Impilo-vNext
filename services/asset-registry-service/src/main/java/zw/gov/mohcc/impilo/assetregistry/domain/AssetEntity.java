@@ -30,6 +30,12 @@ public class AssetEntity {
     @Column(name = "status", nullable = false, length = 32)
     private String status = "ACTIVE";
 
+    @Column(name = "assigned_to", length = 255)
+    private String assignedTo;
+
+    @Column(name = "last_seen_at")
+    private OffsetDateTime lastSeenAt;
+
     @Column(name = "metadata_json", columnDefinition = "TEXT")
     private String metadataJson;
 
@@ -64,6 +70,10 @@ public class AssetEntity {
     public void setSerialNo(String serialNo) { this.serialNo = serialNo; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+    public String getAssignedTo() { return assignedTo; }
+    public void setAssignedTo(String assignedTo) { this.assignedTo = assignedTo; }
+    public OffsetDateTime getLastSeenAt() { return lastSeenAt; }
+    public void setLastSeenAt(OffsetDateTime lastSeenAt) { this.lastSeenAt = lastSeenAt; }
     public String getMetadataJson() { return metadataJson; }
     public void setMetadataJson(String metadataJson) { this.metadataJson = metadataJson; }
     public OffsetDateTime getCreatedAt() { return createdAt; }
