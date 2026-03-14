@@ -27,6 +27,21 @@
             <version>${project.version}</version>
         </dependency>
 
+        <!-- Tech Companion (v1.1 header/idempotency/timeout enforcement) -->
+        <dependency>
+            <groupId>zw.gov.mohcc.impilo</groupId>
+            <artifactId>tech-companion</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!-- Tech Companion Harness (GoldenContractSuite for integration tests) -->
+        <dependency>
+            <groupId>zw.gov.mohcc.impilo</groupId>
+            <artifactId>tech-companion-harness</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+
         <!-- Web (actuator + REST endpoints) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
