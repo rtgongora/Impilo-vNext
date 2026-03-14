@@ -65,6 +65,26 @@
             <version>0.1.0-SNAPSHOT</version>
         </dependency>
 
+        <!-- Ops Instrumentation (structured logging, metrics, health) -->
+        <dependency>
+            <groupId>zw.gov.mohcc.impilo</groupId>
+            <artifactId>ops-instrumentation</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!-- Actuator (health, readiness, metrics endpoints) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <!-- Prometheus metrics registry -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
         <!-- Test -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

@@ -141,6 +141,8 @@
         <module>../libs/tech-companion-mock</module>
         <!-- Shared Kernel Java (v1.1 event envelope, audit ledger) -->
         <module>../libs/shared-kernel-java</module>
+        <!-- Ops Instrumentation (structured logging, golden signals, health checks) -->
+        <module>../libs/ops-instrumentation</module>
         <!-- Experience Platform BFF -->
         <module>experience-bff</module>
     </modules>
