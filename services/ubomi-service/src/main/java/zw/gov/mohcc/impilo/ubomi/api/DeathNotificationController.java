@@ -1,11 +1,14 @@
 package zw.gov.mohcc.impilo.ubomi.api;
 
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.shared.auth.AccessMode;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import zw.gov.mohcc.impilo.shared.response.ApiResponse;
+import zw.gov.mohcc.impilo.ubomi.core.DeathNotificationService;
+import zw.gov.mohcc.impilo.ubomi.persistence.entity.DeathNotificationEntity;
 
 /**
  * Death Notification API.
@@ -22,26 +25,40 @@ import zw.gov.mohcc.impilo.shared.response.ApiResponse;
 @RequestMapping("/v1/deaths")
 public class DeathNotificationController {
 
+    private final DeathNotificationService deathNotificationService;
+
+    public DeathNotificationController(DeathNotificationService deathNotificationService) {
+        this.deathNotificationService = deathNotificationService;
+    }
+
     @GetMapping
-    public ResponseEntity<ApiResponse<String>> listDeathNotifications(
+    public ResponseEntity<ApiResponse<Page<DeathNotificationEntity>>> listDeathNotifications(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
 
         TrustContext ctx = TrustContextHolder.require();
+        Page<DeathNotificationEntity> results = deathNotificationService.list(ctx.tenantId(), page, size);
 
-        // TODO: delegate to DeathNotificationService
         return ResponseEntity.ok(
-            ApiResponse.ok("Death notification list placeholder — mode: " + ctx.mode(), ctx.correlationId().toString())
+            ApiResponse.ok(results, ctx.correlationId().toString())
         );
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<String>> submitDeathNotification(@RequestBody String body) {
+    public ResponseEntity<ApiResponse<DeathNotificationEntity>> submitDeathNotification(
+            @RequestBody DeathNotificationEntity body) {
         TrustContext ctx = TrustContextHolder.require();
 
-        // TODO: delegate to DeathNotificationService
+        body.setTenantId(ctx.tenantId());
+        body.setNotifiedByActor(ctx.actorId());
+        if (ctx.facilityId() != null) {
+            body.setFacilityId(ctx.facilityId());
+        }
+
+        DeathNotificationEntity saved = deathNotificationService.submit(body);
+
         return ResponseEntity.ok(
-            ApiResponse.ok("Death notification submitted — mode: " + ctx.mode(), ctx.correlationId().toString())
+            ApiResponse.ok(saved, ctx.correlationId().toString())
         );
     }
 
@@ -50,8 +67,8 @@ public class DeathNotificationController {
      * INTERNAL mode only.
      */
     @PostMapping("/{notificationId}/certify")
-    public ResponseEntity<ApiResponse<String>> certifyDeath(
-            @PathVariable String notificationId) {
+    public ResponseEntity<ApiResponse<DeathNotificationEntity>> certifyDeath(
+            @PathVariable Long notificationId) {
         TrustContext ctx = TrustContextHolder.require();
 
         if (ctx.mode() == AccessMode.EXTERNAL) {
@@ -60,9 +77,11 @@ public class DeathNotificationController {
             );
         }
 
-        // TODO: delegate to DeathNotificationService
+        DeathNotificationEntity certified = deathNotificationService.certify(
+                ctx.tenantId(), notificationId, ctx.actorId(), "DOCTOR");
+
         return ResponseEntity.ok(
-            ApiResponse.ok("Death " + notificationId + " certified", ctx.correlationId().toString())
+            ApiResponse.ok(certified, ctx.correlationId().toString())
         );
     }
 }

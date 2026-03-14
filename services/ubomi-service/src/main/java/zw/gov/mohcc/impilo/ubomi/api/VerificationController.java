@@ -5,6 +5,8 @@ import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import zw.gov.mohcc.impilo.shared.response.ApiResponse;
+import zw.gov.mohcc.impilo.ubomi.core.VerificationService;
+import zw.gov.mohcc.impilo.ubomi.core.VerificationService.VerificationResult;
 
 /**
  * Vital Event Verification API.
@@ -17,20 +19,27 @@ import zw.gov.mohcc.impilo.shared.response.ApiResponse;
 @RequestMapping("/v1/verifications")
 public class VerificationController {
 
+    private final VerificationService verificationService;
+
+    public VerificationController(VerificationService verificationService) {
+        this.verificationService = verificationService;
+    }
+
     /**
      * Verify a vital event (birth or death) registration status.
      * Available to both modes — core interoperability function.
      */
     @GetMapping("/{registrationNumber}")
-    public ResponseEntity<ApiResponse<String>> verifyRegistration(
+    public ResponseEntity<ApiResponse<VerificationResult>> verifyRegistration(
             @PathVariable String registrationNumber) {
 
         TrustContext ctx = TrustContextHolder.require();
 
-        // TODO: delegate to VerificationService for registry lookup
+        VerificationResult result = verificationService.verify(
+                ctx.tenantId(), registrationNumber, ctx.actorId(), ctx.mode().name());
+
         return ResponseEntity.ok(
-            ApiResponse.ok("Verification placeholder for " + registrationNumber + " — mode: " + ctx.mode(),
-                ctx.correlationId().toString())
+            ApiResponse.ok(result, ctx.correlationId().toString())
         );
     }
 }
