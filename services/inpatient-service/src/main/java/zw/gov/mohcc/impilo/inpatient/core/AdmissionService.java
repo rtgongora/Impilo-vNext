@@ -1,0 +1,200 @@
+package zw.gov.mohcc.impilo.inpatient.core;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import zw.gov.mohcc.impilo.inpatient.api.dto.CreateAdmissionRequest;
+import zw.gov.mohcc.impilo.inpatient.api.dto.TransferRequest;
+import zw.gov.mohcc.impilo.inpatient.persistence.entity.AdmissionEntity;
+import zw.gov.mohcc.impilo.inpatient.persistence.entity.EventOutboxEntity;
+import zw.gov.mohcc.impilo.inpatient.persistence.entity.TransferEntity;
+import zw.gov.mohcc.impilo.inpatient.persistence.repository.AdmissionRepository;
+import zw.gov.mohcc.impilo.inpatient.persistence.repository.EventOutboxRepository;
+import zw.gov.mohcc.impilo.inpatient.persistence.repository.TransferRepository;
+
+import java.time.OffsetDateTime;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+/**
+ * Core service for inpatient admission, transfer, and discharge workflows.
+ * Each state transition appends an event to the outbox for reliable Kafka publishing.
+ */
+@Service
+public class AdmissionService {
+
+    private static final Logger log = LoggerFactory.getLogger(AdmissionService.class);
+
+    private final AdmissionRepository admissionRepository;
+    private final TransferRepository transferRepository;
+    private final EventOutboxRepository outboxRepository;
+    private final ObjectMapper objectMapper;
+
+    public AdmissionService(AdmissionRepository admissionRepository,
+                            TransferRepository transferRepository,
+                            EventOutboxRepository outboxRepository,
+                            ObjectMapper objectMapper) {
+        this.admissionRepository = admissionRepository;
+        this.transferRepository = transferRepository;
+        this.outboxRepository = outboxRepository;
+        this.objectMapper = objectMapper;
+    }
+
+    /**
+     * Lists admissions, optionally filtered by facility and/or status.
+     */
+    public List<AdmissionEntity> listAdmissions(UUID facilityId, String status) {
+        if (facilityId != null && status != null) {
+            return admissionRepository.findByFacilityIdAndStatus(facilityId, status);
+        } else if (facilityId != null) {
+            return admissionRepository.findByFacilityId(facilityId);
+        } else if (status != null) {
+            return admissionRepository.findByStatus(status);
+        }
+        return admissionRepository.findAll();
+    }
+
+    /**
+     * Retrieves a single admission by its unique reference.
+     */
+    public AdmissionEntity getAdmission(UUID admissionRef) {
+        return admissionRepository.findByAdmissionRef(admissionRef)
+                .orElseThrow(() -> new AdmissionNotFoundException(
+                        "Admission not found: " + admissionRef));
+    }
+
+    /**
+     * Creates a new admission and writes an ADMISSION_CREATED outbox event.
+     */
+    @Transactional
+    public AdmissionEntity createAdmission(CreateAdmissionRequest request) {
+        AdmissionEntity admission = new AdmissionEntity();
+        admission.setAdmissionRef(UUID.randomUUID());
+        admission.setTenantId(request.getTenantId());
+        admission.setEncounterId(request.getEncounterId());
+        admission.setSubjectCpid(request.getSubjectCpid());
+        admission.setFacilityId(request.getFacilityId());
+        admission.setWardId(request.getWardId());
+        admission.setBedId(request.getBedId());
+        admission.setStatus("ADMITTED");
+        admission.setAdmittedAt(OffsetDateTime.now());
+        admission.setCreatedAt(OffsetDateTime.now());
+
+        admission = admissionRepository.save(admission);
+
+        appendOutboxEvent(admission.getTenantId(), "ADMISSION_CREATED",
+                admission.getAdmissionRef().toString(), buildAdmissionPayload(admission));
+
+        log.info("Admission created: admissionRef={}, facility={}, subject={}",
+                admission.getAdmissionRef(), admission.getFacilityId(), admission.getSubjectCpid());
+
+        return admission;
+    }
+
+    /**
+     * Transfers a patient to a new ward/bed. Records the transfer and
+     * updates the admission entity with the new ward and bed.
+     */
+    @Transactional
+    public TransferEntity transferPatient(UUID admissionRef, TransferRequest request) {
+        AdmissionEntity admission = getAdmission(admissionRef);
+
+        if ("DISCHARGED".equals(admission.getStatus())) {
+            throw new IllegalStateException("Cannot transfer a discharged patient: " + admissionRef);
+        }
+
+        TransferEntity transfer = new TransferEntity();
+        transfer.setTenantId(admission.getTenantId());
+        transfer.setAdmissionRef(admissionRef);
+        transfer.setFromWardId(admission.getWardId());
+        transfer.setToWardId(request.getToWardId());
+        transfer.setToBedId(request.getToBedId());
+        transfer.setTransferredAt(OffsetDateTime.now());
+        transfer.setCreatedAt(OffsetDateTime.now());
+
+        transfer = transferRepository.save(transfer);
+
+        // Update admission with new ward/bed
+        admission.setWardId(request.getToWardId());
+        admission.setBedId(request.getToBedId());
+        admission.setStatus("ADMITTED");
+        admissionRepository.save(admission);
+
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("admissionRef", admissionRef.toString());
+        payload.put("fromWardId", transfer.getFromWardId() != null ? transfer.getFromWardId().toString() : null);
+        payload.put("toWardId", transfer.getToWardId().toString());
+        payload.put("toBedId", transfer.getToBedId() != null ? transfer.getToBedId().toString() : null);
+        payload.put("transferredAt", transfer.getTransferredAt().toString());
+
+        appendOutboxEvent(admission.getTenantId(), "PATIENT_TRANSFERRED",
+                admissionRef.toString(), payload);
+
+        log.info("Patient transferred: admissionRef={}, fromWard={}, toWard={}",
+                admissionRef, transfer.getFromWardId(), transfer.getToWardId());
+
+        return transfer;
+    }
+
+    /**
+     * Discharges a patient, setting the status to DISCHARGED and recording the timestamp.
+     */
+    @Transactional
+    public AdmissionEntity dischargePatient(UUID admissionRef) {
+        AdmissionEntity admission = getAdmission(admissionRef);
+
+        if ("DISCHARGED".equals(admission.getStatus())) {
+            throw new IllegalStateException("Patient already discharged: " + admissionRef);
+        }
+
+        admission.setStatus("DISCHARGED");
+        admission.setDischargedAt(OffsetDateTime.now());
+        admission = admissionRepository.save(admission);
+
+        appendOutboxEvent(admission.getTenantId(), "PATIENT_DISCHARGED",
+                admissionRef.toString(), buildAdmissionPayload(admission));
+
+        log.info("Patient discharged: admissionRef={}, facility={}",
+                admissionRef, admission.getFacilityId());
+
+        return admission;
+    }
+
+    private Map<String, Object> buildAdmissionPayload(AdmissionEntity admission) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("admissionRef", admission.getAdmissionRef().toString());
+        payload.put("tenantId", admission.getTenantId().toString());
+        payload.put("encounterId", admission.getEncounterId().toString());
+        payload.put("subjectCpid", admission.getSubjectCpid());
+        payload.put("facilityId", admission.getFacilityId().toString());
+        payload.put("wardId", admission.getWardId() != null ? admission.getWardId().toString() : null);
+        payload.put("bedId", admission.getBedId() != null ? admission.getBedId().toString() : null);
+        payload.put("status", admission.getStatus());
+        payload.put("admittedAt", admission.getAdmittedAt() != null ? admission.getAdmittedAt().toString() : null);
+        payload.put("dischargedAt", admission.getDischargedAt() != null ? admission.getDischargedAt().toString() : null);
+        return payload;
+    }
+
+    private void appendOutboxEvent(UUID tenantId, String eventType,
+                                   String aggregateId, Map<String, Object> payload) {
+        EventOutboxEntity outbox = new EventOutboxEntity();
+        outbox.setId(UUID.randomUUID().toString());
+        outbox.setTenantId(tenantId.toString());
+        outbox.setPodId(System.getenv("HOSTNAME") != null ? System.getenv("HOSTNAME") : "local");
+        outbox.setCorrelationId(UUID.randomUUID().toString());
+        outbox.setEventType(eventType);
+        outbox.setSchemaVersion(1);
+        outbox.setOccurredAt(OffsetDateTime.now());
+        try {
+            outbox.setPayloadJson(objectMapper.writeValueAsString(payload));
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to serialize outbox payload", e);
+        }
+        outboxRepository.save(outbox);
+    }
+}
