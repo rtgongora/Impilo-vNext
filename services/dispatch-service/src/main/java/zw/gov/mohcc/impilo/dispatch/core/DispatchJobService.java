@@ -141,6 +141,11 @@ public class DispatchJobService {
         return jobRepository.findFiltered(tenantId, facilityRef, status, PageRequest.of(page, size));
     }
 
+    @Transactional(readOnly = true)
+    public Page<DispatchJobEntity> getSnapshot(OffsetDateTime asOf, int page, int size) {
+        return jobRepository.findSnapshotAsOf(asOf, PageRequest.of(page, size));
+    }
+
     private void validateTransition(String currentStatus, String requestedStatus) {
         Set<String> allowed = VALID_TRANSITIONS.get(currentStatus);
         if (allowed == null || !allowed.contains(requestedStatus)) {

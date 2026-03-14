@@ -383,6 +383,55 @@ public class DispatchApiMockMvcTest {
         }
     }
 
+    // ── G) Snapshot endpoint returns paged jobs ──
+
+    @Nested
+    @DisplayName("G) Snapshot endpoint returns paged jobs with as_of semantics")
+    class SnapshotEndpoint {
+
+        @Test
+        @DisplayName("GET /internal/v1/snapshots/jobs returns paged response with as_of")
+        void snapshotReturnsPaged() throws Exception {
+            // Create a job first
+            mockMvc.perform(post("/internal/v1/dispatch/jobs")
+                            .header("X-Tenant-ID", TENANT_ID)
+                            .header("X-Pod-ID", "national")
+                            .header("X-Request-ID", "req-snap-1")
+                            .header("X-Correlation-ID", UUID.randomUUID().toString())
+                            .header("Idempotency-Key", "snap-create-" + System.nanoTime())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"facilityRef\":\"FAC-SNAP\"}"))
+                    .andExpect(status().isCreated());
+
+            // Query snapshot
+            mockMvc.perform(get("/internal/v1/snapshots/jobs")
+                            .header("X-Tenant-ID", TENANT_ID)
+                            .header("X-Pod-ID", "national")
+                            .header("X-Request-ID", "req-snap-2")
+                            .header("X-Correlation-ID", UUID.randomUUID().toString())
+                            .param("cursor", "0")
+                            .param("limit", "10"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.items").isArray())
+                    .andExpect(jsonPath("$.asOf").exists())
+                    .andExpect(jsonPath("$.limit").value(10));
+        }
+
+        @Test
+        @DisplayName("Snapshot with future as_of returns all jobs")
+        void snapshotWithFutureAsOf() throws Exception {
+            mockMvc.perform(get("/internal/v1/snapshots/jobs")
+                            .header("X-Tenant-ID", TENANT_ID)
+                            .header("X-Pod-ID", "national")
+                            .header("X-Request-ID", "req-snap-3")
+                            .header("X-Correlation-ID", UUID.randomUUID().toString())
+                            .param("as_of", "2099-12-31T23:59:59Z")
+                            .param("limit", "5"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.items").isArray());
+        }
+    }
+
     // ── Helpers ──
 
     private void assertErrorEnvelope(MvcResult result, String expectedCode) throws Exception {
