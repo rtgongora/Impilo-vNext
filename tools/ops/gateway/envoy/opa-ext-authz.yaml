@@ -1,0 +1,53 @@
+# =============================================================================
+# Envoy ext_authz configuration for OPA policy enforcement
+# =============================================================================
+#
+# Add this http_filter BEFORE the router filter in your Envoy config.
+# OPA sidecar must be running on port 9191 with the impilo policies loaded.
+#
+# This is a reference snippet — integrate into infra/envoy/envoy.yaml as needed.
+# =============================================================================
+
+# ── HTTP Filter (add to filter chain) ──────────────────────────────
+http_filter_snippet:
+  - name: envoy.filters.http.ext_authz.opa
+    typed_config:
+      "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthz
+      transport_api_version: V3
+      http_service:
+        server_uri:
+          uri: http://localhost:9191
+          cluster: opa_sidecar
+          timeout: 0.25s
+        path_prefix: "/v1/data/impilo/gateway/headers"
+        authorization_request:
+          allowed_headers:
+            patterns:
+              - exact: "x-tenant-id"
+              - exact: "x-pod-id"
+              - exact: "x-request-id"
+              - exact: "x-correlation-id"
+              - exact: "idempotency-key"
+              - exact: "authorization"
+        authorization_response:
+          allowed_upstream_headers:
+            patterns:
+              - exact: "x-policy-decision"
+              - exact: "x-policy-version"
+              - exact: "x-decision-reason"
+      failure_mode_allow: false
+
+# ── Cluster definition (add to clusters section) ───────────────────
+cluster_snippet:
+  - name: opa_sidecar
+    type: STATIC
+    connect_timeout: 0.25s
+    load_assignment:
+      cluster_name: opa_sidecar
+      endpoints:
+        - lb_endpoints:
+            - endpoint:
+                address:
+                  socket_address:
+                    address: 127.0.0.1
+                    port_value: 9191
