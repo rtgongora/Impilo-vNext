@@ -1,12 +1,16 @@
 package zw.gov.mohcc.impilo.forms.domain;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "event_outbox", schema = "forms")
+@Table(name = "fs_event_outbox")
 public class OutboxEventEntity {
 
     @Id
@@ -45,9 +49,15 @@ public class OutboxEventEntity {
 
     @PrePersist
     protected void onCreate() {
-        if (id == null) id = UUID.randomUUID().toString();
-        if (createdAt == null) createdAt = OffsetDateTime.now();
+        if (id == null) {
+            id = UUID.randomUUID().toString();
+        }
+        if (createdAt == null) {
+            createdAt = OffsetDateTime.now();
+        }
     }
+
+    // --- Getters and Setters ---
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
@@ -80,4 +90,5 @@ public class OutboxEventEntity {
     public void setPublishedAt(OffsetDateTime publishedAt) { this.publishedAt = publishedAt; }
 
     public OffsetDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }
 }

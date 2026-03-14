@@ -8,6 +8,11 @@ import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.companion.context.RequestContext;
 import zw.gov.mohcc.impilo.integration.api.dto.DispatchRequest;
 import zw.gov.mohcc.impilo.integration.api.dto.DispatchResponse;
+import zw.gov.mohcc.impilo.integration.connectors.Connector;
+import zw.gov.mohcc.impilo.integration.connectors.ConnectorRegistry;
+import zw.gov.mohcc.impilo.integration.connectors.ConnectorRequest;
+import zw.gov.mohcc.impilo.integration.connectors.ConnectorResult;
+import zw.gov.mohcc.impilo.integration.connectors.ConnectorType;
 import zw.gov.mohcc.impilo.integration.domain.DeadLetterEntity;
 import zw.gov.mohcc.impilo.integration.domain.DispatchAttemptEntity;
 import zw.gov.mohcc.impilo.integration.domain.OutboxEventEntity;
@@ -18,6 +23,7 @@ import zw.gov.mohcc.impilo.integration.repository.OutboxEventRepository;
 import zw.gov.mohcc.impilo.sharedkernel.events.EventEnvelope;
 
 import java.time.OffsetDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -32,6 +38,8 @@ public class DispatchService {
 
     private final RouteService routeService;
     private final TransformService transformService;
+    private final MappingTemplateService mappingTemplateService;
+    private final ConnectorRegistry connectorRegistry;
     private final DispatchAttemptRepository attemptRepository;
     private final DeadLetterRepository deadLetterRepository;
     private final OutboxEventRepository outboxRepository;
@@ -39,12 +47,16 @@ public class DispatchService {
 
     public DispatchService(RouteService routeService,
                            TransformService transformService,
+                           MappingTemplateService mappingTemplateService,
+                           ConnectorRegistry connectorRegistry,
                            DispatchAttemptRepository attemptRepository,
                            DeadLetterRepository deadLetterRepository,
                            OutboxEventRepository outboxRepository,
                            ObjectMapper objectMapper) {
         this.routeService = routeService;
         this.transformService = transformService;
+        this.mappingTemplateService = mappingTemplateService;
+        this.connectorRegistry = connectorRegistry;
         this.attemptRepository = attemptRepository;
         this.deadLetterRepository = deadLetterRepository;
         this.outboxRepository = outboxRepository;
@@ -70,7 +82,7 @@ public class DispatchService {
 
     private DispatchResponse handleMatchedDispatch(String dispatchId, DispatchRequest request,
                                                     RouteDefinitionEntity route, RequestContext ctx) {
-        // Apply transforms
+        // Apply transforms (header and field renames)
         Map<String, String> transformedHeaders = request.headers();
         Map<String, String> headerRules = routeService.deserializeMap(route.getTransformHeadersJson());
         if (headerRules != null) {
@@ -80,6 +92,38 @@ public class DispatchService {
         Map<String, String> fieldRenameRules = routeService.deserializeMap(route.getTransformFieldRenamesJson());
         String transformedBody = transformService.applyFieldRenames(request.body(), fieldRenameRules);
 
+        // Apply mapping template if route has one
+        if (route.getMappingTemplateId() != null) {
+            transformedBody = mappingTemplateService.applyMapping(route.getMappingTemplateId(), transformedBody);
+        }
+
+        // Resolve connector type
+        ConnectorType connectorType = resolveConnectorType(route.getConnectorType());
+        Connector connector = connectorRegistry.resolve(connectorType);
+
+        // Build connector request
+        Map<String, String> dispatchHeaders = transformedHeaders != null
+                ? new HashMap<>(transformedHeaders) : new HashMap<>();
+        dispatchHeaders.put("X-Dispatch-ID", dispatchId);
+        dispatchHeaders.put("X-Correlation-ID", ctx.correlationId());
+        dispatchHeaders.put("X-Tenant-ID", ctx.tenantId());
+        dispatchHeaders.put("X-Pod-ID", ctx.podId());
+
+        ConnectorRequest connectorRequest = new ConnectorRequest(
+                route.getId(),
+                request.method(),
+                request.path(),
+                dispatchHeaders,
+                transformedBody,
+                route.getTargetUrl(),
+                route.getTargetTimeoutMs()
+        );
+
+        // Execute connector
+        ConnectorResult connectorResult = connector.execute(connectorRequest);
+
+        String status = connectorResult.success() ? "DISPATCHED" : "DISPATCH_FAILED";
+
         // Record dispatch attempt
         DispatchAttemptEntity attempt = new DispatchAttemptEntity();
         attempt.setId(dispatchId);
@@ -88,32 +132,57 @@ public class DispatchService {
         attempt.setPath(request.path());
         attempt.setRequestBody(request.body());
         attempt.setMatched(true);
-        attempt.setStatus("ACCEPTED");
+        attempt.setStatus(status);
         attempt.setTransformedBody(transformedBody);
+        if (!connectorResult.success()) {
+            attempt.setErrorMessage(connectorResult.errorMessage());
+        }
         attempt.setTenantId(ctx.tenantId());
         attempt.setPodId(ctx.podId());
         attempt.setCorrelationId(ctx.correlationId());
         attemptRepository.save(attempt);
 
-        // Write outbox event
-        String idempotencyKey = "dispatch-" + dispatchId;
-        persistOutboxEvent(
-                "impilo.integration.dispatch.accepted.v1",
-                "DispatchAttempt",
-                dispatchId,
-                Map.of(
-                        "dispatchId", dispatchId,
-                        "routeId", route.getId(),
-                        "method", request.method(),
-                        "path", request.path(),
-                        "targetUrl", route.getTargetUrl(),
-                        "matched", true
-                ),
-                idempotencyKey,
-                ctx
-        );
+        // If dispatch failed, create dead-letter entry
+        if (!connectorResult.success()) {
+            DeadLetterEntity deadLetter = new DeadLetterEntity();
+            deadLetter.setDispatchAttemptId(dispatchId);
+            deadLetter.setRouteId(route.getId());
+            deadLetter.setMethod(request.method());
+            deadLetter.setPath(request.path());
+            deadLetter.setRequestBody(request.body());
+            deadLetter.setErrorReason(connectorResult.errorMessage() != null
+                    ? connectorResult.errorMessage()
+                    : "Connector returned failure with status " + connectorResult.statusCode());
+            deadLetter.setRetryCount(0);
+            deadLetter.setResolved(false);
+            deadLetter.setTenantId(ctx.tenantId());
+            deadLetter.setPodId(ctx.podId());
+            deadLetterRepository.save(deadLetter);
+        }
 
-        return new DispatchResponse(dispatchId, "ACCEPTED", route.getId(), route.getTargetUrl());
+        // Write outbox event
+        String eventType = connectorResult.success()
+                ? "impilo.integration.dispatch.completed.v1"
+                : "impilo.integration.dispatch.failed.v1";
+        String idempotencyKey = "dispatch-" + dispatchId;
+
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("dispatchId", dispatchId);
+        payload.put("routeId", route.getId());
+        payload.put("method", request.method());
+        payload.put("path", request.path());
+        payload.put("targetUrl", route.getTargetUrl());
+        payload.put("connectorType", connectorType.name());
+        payload.put("matched", true);
+        payload.put("success", connectorResult.success());
+        payload.put("statusCode", connectorResult.statusCode());
+        if (connectorResult.errorMessage() != null) {
+            payload.put("errorMessage", connectorResult.errorMessage());
+        }
+
+        persistOutboxEvent(eventType, "DispatchAttempt", dispatchId, payload, idempotencyKey, ctx);
+
+        return new DispatchResponse(dispatchId, status, route.getId(), route.getTargetUrl());
     }
 
     private DispatchResponse handleUnmatchedDispatch(String dispatchId, DispatchRequest request,
@@ -165,6 +234,18 @@ public class DispatchService {
         );
 
         return new DispatchResponse(dispatchId, "FAILED", null, null);
+    }
+
+    private ConnectorType resolveConnectorType(String connectorTypeStr) {
+        if (connectorTypeStr == null || connectorTypeStr.isBlank()) {
+            return ConnectorType.HTTP;
+        }
+        try {
+            return ConnectorType.valueOf(connectorTypeStr.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            log.warn("Unknown connector type '{}', falling back to HTTP", connectorTypeStr);
+            return ConnectorType.HTTP;
+        }
     }
 
     Optional<RouteDefinitionEntity> findMatchingRoute(String tenantId, String method, String path) {

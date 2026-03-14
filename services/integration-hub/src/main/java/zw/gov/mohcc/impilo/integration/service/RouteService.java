@@ -59,6 +59,10 @@ public class RouteService {
         entity.setTransformHeadersJson(serializeMap(request.transformHeaders()));
         entity.setTransformFieldRenamesJson(serializeMap(request.transformFieldRenames()));
 
+        // v3 fields
+        entity.setConnectorType(request.connectorType() != null ? request.connectorType() : "HTTP");
+        entity.setMappingTemplateId(request.mappingTemplateId());
+
         entity = routeRepository.save(entity);
 
         log.info("Created route: id={}, matchMethod={}, matchPathRegex={}, targetUrl={}",
@@ -74,6 +78,8 @@ public class RouteService {
         if (entity.getTargetTimeoutMs() != null) payload.put("targetTimeoutMs", entity.getTargetTimeoutMs());
         if (entity.getSourceService() != null) payload.put("sourceService", entity.getSourceService());
         if (entity.getTargetService() != null) payload.put("targetService", entity.getTargetService());
+        if (entity.getConnectorType() != null) payload.put("connectorType", entity.getConnectorType());
+        if (entity.getMappingTemplateId() != null) payload.put("mappingTemplateId", entity.getMappingTemplateId());
 
         persistOutboxEvent(
                 "impilo.integration.route.created.v1",
@@ -110,6 +116,8 @@ public class RouteService {
                 deserializeMap(entity.getTransformHeadersJson()),
                 deserializeMap(entity.getTransformFieldRenamesJson()),
                 entity.getTargetTimeoutMs(),
+                entity.getConnectorType(),
+                entity.getMappingTemplateId(),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt()
         );

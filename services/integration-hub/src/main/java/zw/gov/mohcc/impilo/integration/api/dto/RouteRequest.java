@@ -31,6 +31,12 @@ public record RouteRequest(
 
         Map<String, String> transformFieldRenames,
 
-        Integer targetTimeoutMs
+        Integer targetTimeoutMs,
+
+        @Size(max = 16)
+        String connectorType,
+
+        @Size(max = 36)
+        String mappingTemplateId
 ) {
 }

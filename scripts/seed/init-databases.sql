@@ -40,3 +40,6 @@ CREATE DATABASE keycloak;
 CREATE DATABASE butano;
 -- Experience Platform BFF
 CREATE DATABASE experience_bff;
+-- Wave 12 — Integration Platform expansion
+CREATE DATABASE impilo_forms;
+CREATE DATABASE impilo_search;

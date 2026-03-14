@@ -4,10 +4,10 @@ import java.time.OffsetDateTime;
 
 public record FormVersionResponse(
         String id,
-        String formId,
-        int versionNumber,
-        String contentJson,
-        String createdBy,
+        String formSchemaId,
+        int version,
+        String schemaJson,
+        String changelog,
         OffsetDateTime createdAt
 ) {
 }

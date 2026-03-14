@@ -1,40 +1,41 @@
--- Search Index Definitions
-CREATE TABLE srch_index_definitions (
-    id              VARCHAR(36)     NOT NULL PRIMARY KEY,
-    name            VARCHAR(256)    NOT NULL,
-    source_type     VARCHAR(128)    NOT NULL,
-    fields_json     TEXT            NOT NULL,
-    enabled         BOOLEAN         NOT NULL DEFAULT TRUE,
-    tenant_id       VARCHAR(64)     NOT NULL,
-    pod_id          VARCHAR(64)     NOT NULL,
-    created_at      TIMESTAMPTZ     NOT NULL DEFAULT now(),
-    updated_at      TIMESTAMPTZ     NOT NULL DEFAULT now()
-);
-CREATE INDEX idx_srch_index_defs_tenant ON srch_index_definitions (tenant_id);
+-- ============================================================
+-- Search Service  (v1.1-native)
+-- V001: Base schema
+-- ============================================================
 
--- Search Documents
-CREATE TABLE srch_documents (
-    id              VARCHAR(36)     NOT NULL PRIMARY KEY,
-    index_id        VARCHAR(36)     NOT NULL REFERENCES srch_index_definitions(id),
-    external_id     VARCHAR(256)    NOT NULL,
-    title           VARCHAR(512),
-    body_text       TEXT,
-    metadata_json   TEXT,
-    tenant_id       VARCHAR(64)     NOT NULL,
-    pod_id          VARCHAR(64)     NOT NULL,
-    created_at      TIMESTAMPTZ     NOT NULL DEFAULT now(),
-    updated_at      TIMESTAMPTZ     NOT NULL DEFAULT now()
-);
-CREATE UNIQUE INDEX idx_srch_docs_upsert ON srch_documents (tenant_id, index_id, external_id);
-CREATE INDEX idx_srch_docs_tenant ON srch_documents (tenant_id, index_id);
+-- ----------------------------------------------------------
+-- 1. ss_search_index — indexed entity content for search
+-- ----------------------------------------------------------
+CREATE TABLE ss_search_index (
+    id              VARCHAR(36)     PRIMARY KEY,
+    entity_type     VARCHAR(100)    NOT NULL,
+    entity_id       VARCHAR(255)    NOT NULL,
+    tenant_id       VARCHAR(255)    NOT NULL,
+    pod_id          VARCHAR(255),
+    content_json    TEXT            NOT NULL,
+    searchable_text TEXT            NOT NULL,
+    tags            VARCHAR(1000),
+    indexed_at      TIMESTAMPTZ     NOT NULL DEFAULT now(),
+    source_event    VARCHAR(255),
 
--- Event Outbox (v1.1 columns)
-CREATE TABLE srch_event_outbox (
-    id              VARCHAR(36)     NOT NULL PRIMARY KEY,
-    tenant_id       VARCHAR(64)     NOT NULL,
-    pod_id          VARCHAR(64)     NOT NULL,
-    correlation_id  VARCHAR(64)     NOT NULL,
-    idempotency_key VARCHAR(128),
+    CONSTRAINT uq_ss_entity_tenant UNIQUE (entity_type, entity_id, tenant_id)
+);
+
+CREATE INDEX idx_ss_search_index_tenant ON ss_search_index (tenant_id);
+CREATE INDEX idx_ss_search_index_tenant_type ON ss_search_index (tenant_id, entity_type);
+CREATE INDEX idx_ss_search_index_searchable ON ss_search_index (tenant_id, searchable_text);
+-- For PostgreSQL with pg_trgm extension, consider:
+-- CREATE INDEX idx_ss_search_index_trgm ON ss_search_index USING GIN (searchable_text gin_trgm_ops);
+
+-- ----------------------------------------------------------
+-- 2. ss_event_outbox — transactional outbox for Kafka
+-- ----------------------------------------------------------
+CREATE TABLE ss_event_outbox (
+    id              VARCHAR(36)     PRIMARY KEY,
+    tenant_id       VARCHAR(255)    NOT NULL,
+    pod_id          VARCHAR(255)    NOT NULL,
+    correlation_id  VARCHAR(255)    NOT NULL,
+    idempotency_key VARCHAR(255),
     event_type      VARCHAR(256)    NOT NULL,
     schema_version  INT             NOT NULL DEFAULT 1,
     occurred_at     TIMESTAMPTZ     NOT NULL,
@@ -42,19 +43,20 @@ CREATE TABLE srch_event_outbox (
     published_at    TIMESTAMPTZ,
     created_at      TIMESTAMPTZ     NOT NULL DEFAULT now()
 );
-CREATE INDEX idx_srch_outbox_unpublished ON srch_event_outbox (created_at) WHERE published_at IS NULL;
 
--- Idempotency Keys
+CREATE INDEX idx_ss_outbox_unpublished
+    ON ss_event_outbox (created_at) WHERE published_at IS NULL;
+
+-- ----------------------------------------------------------
+-- 3. idempotency_keys — request dedup
+-- ----------------------------------------------------------
 CREATE TABLE idempotency_keys (
-    tenant_id       TEXT        NOT NULL,
-    pod_id          TEXT        NOT NULL,
-    idempotency_key TEXT        NOT NULL,
-    request_hash    TEXT        NOT NULL,
-    response_status INT         NOT NULL,
-    response_body   TEXT        NOT NULL,
-    created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
-    expires_at      TIMESTAMPTZ,
-    CONSTRAINT pk_srch_idempotency_keys PRIMARY KEY (tenant_id, pod_id, idempotency_key)
+    id              BIGSERIAL       PRIMARY KEY,
+    idempotency_key VARCHAR(255)    NOT NULL UNIQUE,
+    request_hash    VARCHAR(64)     NOT NULL,
+    response_status INT             NOT NULL,
+    response_body   TEXT,
+    created_at      TIMESTAMPTZ     NOT NULL DEFAULT now()
 );
-CREATE INDEX idx_srch_idempotency_expires ON idempotency_keys (expires_at)
-    WHERE expires_at IS NOT NULL;
+
+CREATE INDEX idx_ss_idempotency_key ON idempotency_keys (idempotency_key);

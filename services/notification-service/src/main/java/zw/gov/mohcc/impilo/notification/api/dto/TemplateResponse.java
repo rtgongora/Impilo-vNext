@@ -9,6 +9,8 @@ public record TemplateResponse(
         String subject,
         String body,
         boolean enabled,
+        String status,
+        int currentVersion,
         OffsetDateTime createdAt,
         OffsetDateTime updatedAt
 ) {

@@ -15,6 +15,8 @@ public record RouteResponse(
         Map<String, String> transformHeaders,
         Map<String, String> transformFieldRenames,
         Integer targetTimeoutMs,
+        String connectorType,
+        String mappingTemplateId,
         OffsetDateTime createdAt,
         OffsetDateTime updatedAt
 ) {

@@ -1,7 +1,0 @@
-package zw.gov.mohcc.impilo.search.service;
-
-public class DocumentNotFoundException extends RuntimeException {
-    public DocumentNotFoundException(String id) {
-        super("Document not found: " + id);
-    }
-}

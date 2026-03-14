@@ -59,6 +59,12 @@ public class RouteDefinitionEntity {
     @Column(name = "target_timeout_ms")
     private Integer targetTimeoutMs;
 
+    @Column(name = "connector_type", length = 16)
+    private String connectorType = "HTTP";
+
+    @Column(name = "mapping_template_id", length = 36)
+    private String mappingTemplateId;
+
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;
 
@@ -188,6 +194,22 @@ public class RouteDefinitionEntity {
 
     public void setTargetTimeoutMs(Integer targetTimeoutMs) {
         this.targetTimeoutMs = targetTimeoutMs;
+    }
+
+    public String getConnectorType() {
+        return connectorType;
+    }
+
+    public void setConnectorType(String connectorType) {
+        this.connectorType = connectorType;
+    }
+
+    public String getMappingTemplateId() {
+        return mappingTemplateId;
+    }
+
+    public void setMappingTemplateId(String mappingTemplateId) {
+        this.mappingTemplateId = mappingTemplateId;
     }
 
     public OffsetDateTime getCreatedAt() {

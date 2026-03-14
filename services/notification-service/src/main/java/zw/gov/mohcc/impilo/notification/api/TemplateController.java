@@ -14,6 +14,8 @@ import zw.gov.mohcc.impilo.companion.context.RequestContextHolder;
 import zw.gov.mohcc.impilo.companion.federation.FederationAuthority;
 import zw.gov.mohcc.impilo.notification.api.dto.TemplateRequest;
 import zw.gov.mohcc.impilo.notification.api.dto.TemplateResponse;
+import zw.gov.mohcc.impilo.notification.api.dto.TemplateVersionRequest;
+import zw.gov.mohcc.impilo.notification.api.dto.TemplateVersionResponse;
 import zw.gov.mohcc.impilo.notification.service.TemplateService;
 
 import java.util.List;
@@ -52,5 +54,42 @@ public class TemplateController {
 
         List<TemplateResponse> templates = templateService.listTemplates(ctx.tenantId());
         return ResponseEntity.ok(templates);
+    }
+
+    @PostMapping("/{id}/publish")
+    public ResponseEntity<TemplateResponse> publishTemplate(@PathVariable String id) {
+        RequestContext ctx = RequestContextHolder.require();
+        FederationAuthority.requireNational();
+
+        TemplateResponse response = templateService.publishTemplate(id, ctx);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{id}/retire")
+    public ResponseEntity<TemplateResponse> retireTemplate(@PathVariable String id) {
+        RequestContext ctx = RequestContextHolder.require();
+        FederationAuthority.requireNational();
+
+        TemplateResponse response = templateService.retireTemplate(id, ctx);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{id}/versions")
+    public ResponseEntity<TemplateVersionResponse> createVersion(
+            @PathVariable String id,
+            @Valid @RequestBody TemplateVersionRequest request) {
+        RequestContext ctx = RequestContextHolder.require();
+        FederationAuthority.requireNational();
+
+        TemplateVersionResponse response = templateService.createVersion(id, request, ctx);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @GetMapping("/{id}/versions")
+    public ResponseEntity<List<TemplateVersionResponse>> listVersions(@PathVariable String id) {
+        RequestContextHolder.require();
+
+        List<TemplateVersionResponse> versions = templateService.listVersions(id);
+        return ResponseEntity.ok(versions);
     }
 }

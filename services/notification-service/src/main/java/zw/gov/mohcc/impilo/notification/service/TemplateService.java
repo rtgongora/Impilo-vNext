@@ -9,10 +9,14 @@ import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.companion.context.RequestContext;
 import zw.gov.mohcc.impilo.notification.api.dto.TemplateRequest;
 import zw.gov.mohcc.impilo.notification.api.dto.TemplateResponse;
+import zw.gov.mohcc.impilo.notification.api.dto.TemplateVersionRequest;
+import zw.gov.mohcc.impilo.notification.api.dto.TemplateVersionResponse;
 import zw.gov.mohcc.impilo.notification.domain.OutboxEventEntity;
 import zw.gov.mohcc.impilo.notification.domain.TemplateEntity;
+import zw.gov.mohcc.impilo.notification.domain.TemplateVersionEntity;
 import zw.gov.mohcc.impilo.notification.repository.OutboxEventRepository;
 import zw.gov.mohcc.impilo.notification.repository.TemplateRepository;
+import zw.gov.mohcc.impilo.notification.repository.TemplateVersionRepository;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -25,13 +29,16 @@ public class TemplateService {
     private static final Logger log = LoggerFactory.getLogger(TemplateService.class);
 
     private final TemplateRepository templateRepository;
+    private final TemplateVersionRepository templateVersionRepository;
     private final OutboxEventRepository outboxEventRepository;
     private final ObjectMapper objectMapper;
 
     public TemplateService(TemplateRepository templateRepository,
+                           TemplateVersionRepository templateVersionRepository,
                            OutboxEventRepository outboxEventRepository,
                            ObjectMapper objectMapper) {
         this.templateRepository = templateRepository;
+        this.templateVersionRepository = templateVersionRepository;
         this.outboxEventRepository = outboxEventRepository;
         this.objectMapper = objectMapper;
     }
@@ -81,6 +88,94 @@ public class TemplateService {
                 .toList();
     }
 
+    @Transactional
+    public TemplateResponse publishTemplate(String templateId, RequestContext ctx) {
+        TemplateEntity entity = templateRepository.findById(templateId)
+                .orElseThrow(() -> new IllegalArgumentException("Template not found: " + templateId));
+
+        if (!"DRAFT".equals(entity.getStatus())) {
+            throw new IllegalStateException("Only DRAFT templates can be published. Current status: " + entity.getStatus());
+        }
+
+        entity.setStatus("PUBLISHED");
+        entity = templateRepository.save(entity);
+        log.info("Published template id={} key={} tenant={}", entity.getId(), entity.getKey(), ctx.tenantId());
+
+        emitTemplateOutboxEvent(entity, "impilo.notify.template.published.v1", ctx);
+
+        return toResponse(entity);
+    }
+
+    @Transactional
+    public TemplateResponse retireTemplate(String templateId, RequestContext ctx) {
+        TemplateEntity entity = templateRepository.findById(templateId)
+                .orElseThrow(() -> new IllegalArgumentException("Template not found: " + templateId));
+
+        if (!"PUBLISHED".equals(entity.getStatus())) {
+            throw new IllegalStateException("Only PUBLISHED templates can be retired. Current status: " + entity.getStatus());
+        }
+
+        entity.setStatus("RETIRED");
+        entity = templateRepository.save(entity);
+        log.info("Retired template id={} key={} tenant={}", entity.getId(), entity.getKey(), ctx.tenantId());
+
+        emitTemplateOutboxEvent(entity, "impilo.notify.template.retired.v1", ctx);
+
+        return toResponse(entity);
+    }
+
+    @Transactional
+    public TemplateVersionResponse createVersion(String templateId, TemplateVersionRequest request, RequestContext ctx) {
+        TemplateEntity template = templateRepository.findById(templateId)
+                .orElseThrow(() -> new IllegalArgumentException("Template not found: " + templateId));
+
+        int nextVersion = template.getCurrentVersion() + 1;
+
+        TemplateVersionEntity version = new TemplateVersionEntity();
+        version.setTemplateId(templateId);
+        version.setVersion(nextVersion);
+        version.setContent(request.content());
+        version.setSubject(request.subject());
+        version.setChangelog(request.changelog());
+        version = templateVersionRepository.save(version);
+
+        template.setCurrentVersion(nextVersion);
+        template.setContent(request.content());
+        if (request.subject() != null) {
+            template.setSubject(request.subject());
+        }
+        templateRepository.save(template);
+
+        log.info("Created version {} for template id={} key={} tenant={}", nextVersion, templateId, template.getKey(), ctx.tenantId());
+
+        OutboxEventEntity outbox = new OutboxEventEntity();
+        outbox.setTenantId(ctx.tenantId());
+        outbox.setPodId(ctx.podId());
+        outbox.setCorrelationId(ctx.correlationId());
+        outbox.setEventType("impilo.notify.template.version_created.v1");
+        outbox.setSchemaVersion(1);
+        outbox.setOccurredAt(OffsetDateTime.now());
+        outbox.setPayloadJson(serializePayload(Map.of(
+                "templateId", templateId,
+                "key", template.getKey(),
+                "version", nextVersion,
+                "versionId", version.getId()
+        )));
+        outboxEventRepository.save(outbox);
+
+        return toVersionResponse(version);
+    }
+
+    @Transactional(readOnly = true)
+    public List<TemplateVersionResponse> listVersions(String templateId) {
+        templateRepository.findById(templateId)
+                .orElseThrow(() -> new IllegalArgumentException("Template not found: " + templateId));
+
+        return templateVersionRepository.findByTemplateIdOrderByVersionDesc(templateId).stream()
+                .map(this::toVersionResponse)
+                .toList();
+    }
+
     public String renderBody(TemplateEntity template, Map<String, String> variables) {
         return substituteVariables(template.getContent(), variables);
     }
@@ -103,6 +198,23 @@ public class TemplateService {
         return result;
     }
 
+    private void emitTemplateOutboxEvent(TemplateEntity entity, String eventType, RequestContext ctx) {
+        OutboxEventEntity outbox = new OutboxEventEntity();
+        outbox.setTenantId(ctx.tenantId());
+        outbox.setPodId(ctx.podId());
+        outbox.setCorrelationId(ctx.correlationId());
+        outbox.setEventType(eventType);
+        outbox.setSchemaVersion(1);
+        outbox.setOccurredAt(OffsetDateTime.now());
+        outbox.setPayloadJson(serializePayload(Map.of(
+                "templateId", entity.getId(),
+                "key", entity.getKey(),
+                "channel", entity.getChannel(),
+                "status", entity.getStatus()
+        )));
+        outboxEventRepository.save(outbox);
+    }
+
     private TemplateResponse toResponse(TemplateEntity entity) {
         return new TemplateResponse(
                 entity.getId(),
@@ -111,8 +223,22 @@ public class TemplateService {
                 entity.getSubject(),
                 entity.getContent(),
                 entity.isEnabled(),
+                entity.getStatus(),
+                entity.getCurrentVersion(),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt()
+        );
+    }
+
+    private TemplateVersionResponse toVersionResponse(TemplateVersionEntity entity) {
+        return new TemplateVersionResponse(
+                entity.getId(),
+                entity.getTemplateId(),
+                entity.getVersion(),
+                entity.getContent(),
+                entity.getSubject(),
+                entity.getChangelog(),
+                entity.getCreatedAt()
         );
     }
 

@@ -12,8 +12,6 @@ spring:
         dialect: org.hibernate.dialect.H2Dialect
   flyway:
     enabled: false
-  kafka:
-    bootstrap-servers: localhost:19092
 
 impilo:
   companion:

@@ -36,6 +36,12 @@ public class TemplateEntity {
     @Column(name = "enabled", nullable = false)
     private boolean enabled = true;
 
+    @Column(name = "status", length = 32, nullable = false)
+    private String status = "DRAFT";
+
+    @Column(name = "current_version", nullable = false)
+    private int currentVersion = 1;
+
     @Column(name = "tenant_id", length = 64, nullable = false)
     private String tenantId;
 
@@ -89,6 +95,12 @@ public class TemplateEntity {
 
     public boolean isEnabled() { return enabled; }
     public void setEnabled(boolean enabled) { this.enabled = enabled; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+
+    public int getCurrentVersion() { return currentVersion; }
+    public void setCurrentVersion(int currentVersion) { this.currentVersion = currentVersion; }
 
     public String getTenantId() { return tenantId; }
     public void setTenantId(String tenantId) { this.tenantId = tenantId; }
