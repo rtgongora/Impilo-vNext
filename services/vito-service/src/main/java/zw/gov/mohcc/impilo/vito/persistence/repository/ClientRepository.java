@@ -24,6 +24,8 @@ public interface ClientRepository extends JpaRepository<ClientEntity, Long> {
 
     boolean existsByTenantIdAndHealthId(UUID tenantId, UUID healthId);
 
+    long countByTenantId(UUID tenantId);
+
     Optional<ClientEntity> findByTenantIdAndImpiloId(UUID tenantId, String impiloId);
 
     Optional<ClientEntity> findByTenantIdAndCrid(UUID tenantId, UUID crid);

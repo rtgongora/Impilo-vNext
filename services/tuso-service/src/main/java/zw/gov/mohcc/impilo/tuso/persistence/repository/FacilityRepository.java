@@ -62,5 +62,7 @@ public interface FacilityRepository extends JpaRepository<FacilityEntity, Long> 
 
     boolean existsByTenantIdAndFacilityCode(UUID tenantId, String facilityCode);
 
+    long countByTenantId(UUID tenantId);
+
     Optional<FacilityEntity> findByTenantIdAndGofrId(UUID tenantId, String gofrId);
 }

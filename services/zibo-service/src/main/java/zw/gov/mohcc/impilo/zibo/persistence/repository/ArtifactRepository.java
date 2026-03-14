@@ -56,6 +56,8 @@ public interface ArtifactRepository extends JpaRepository<ArtifactEntity, UUID> 
      */
     boolean existsByTenantIdAndCanonicalUrlAndVersion(UUID tenantId, String canonicalUrl, String version);
 
+    long countByTenantId(UUID tenantId);
+
     /**
      * Finds all versions of an artifact identified by canonical URL, ordered by creation date descending.
      */
