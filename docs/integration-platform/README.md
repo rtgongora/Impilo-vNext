@@ -1,10 +1,14 @@
-# Integration Platform — Impilo vNext (Wave 7)
+# Integration Platform — Impilo vNext (Wave 7+)
 
 ## Overview
 
-The Integration Platform is a set of three **v1.1-native** services that provide cross-cutting infrastructure capabilities to the Impilo platform. These services are designed from the ground up to comply with Manifest v1.1 and the Tech Companion specification.
+The Integration Platform is a set of **v1.1-native** services that provide cross-cutting infrastructure capabilities to the Impilo platform. These services are designed from the ground up to comply with Manifest v1.1 and the Tech Companion specification.
 
 They do **not** replace or refactor any of the existing 16+ domain services. Instead, they provide reusable primitives that both legacy and new services can consume over time.
+
+The platform spans two waves:
+- **Wave 7** (initial): integration-hub, notification-service, rules-service
+- **Wave 7+** (expansion): workflow-service, connector-fhir-adapter, plus enhancements to search-service and forms-service
 
 ## Services
 
@@ -90,6 +94,88 @@ They do **not** replace or refactor any of the existing 16+ domain services. Ins
 - Parentheses for grouping
 - Example: `facts.age >= 18 AND facts.country == 'ZW'`
 
+---
+
+## Wave 7+ Expansion Services
+
+### D) workflow-service (port 8140)
+
+**Purpose**: Workflow engine for versioned definitions with step-based task execution, state transitions, and temporal snapshots.
+
+**Lifecycle**:
+- Definitions: `DRAFT → PUBLISHED` (immutable once published)
+- Instances: `CREATED → RUNNING → COMPLETED | FAILED | CANCELLED`
+- Tasks: `PENDING → IN_PROGRESS → COMPLETED` (auto-created per step)
+
+| Endpoint | Method | Access | Description |
+|---|---|---|---|
+| `/internal/v1/workflows/definitions` | POST | national-only | Create a workflow definition (starts as DRAFT) |
+| `/internal/v1/workflows/definitions` | GET | any pod | List definitions (filterable by status, category) |
+| `/internal/v1/workflows/definitions/{id}/publish` | POST | national-only | Publish a DRAFT definition |
+| `/internal/v1/workflows/instances` | POST | any pod | Start a workflow instance from a PUBLISHED definition |
+| `/internal/v1/workflows/instances` | GET | any pod | List instances (filterable by status) |
+| `/internal/v1/workflows/instances/{id}/transition` | POST | any pod | Transition instance (COMPLETE, FAIL, CANCEL, ADVANCE) |
+| `/internal/v1/workflows/instances/{id}/tasks` | GET | any pod | List tasks for an instance |
+| `/internal/v1/snapshots/workflows` | GET | any pod | Temporal snapshot of definitions |
+| `/internal/v1/snapshots/instances` | GET | any pod | Temporal snapshot of instances |
+
+**Event types emitted**:
+- `impilo.workflow.definition.created.v1`
+- `impilo.workflow.definition.published.v1`
+- `impilo.workflow.instance.started.v1`
+- `impilo.workflow.instance.transitioned.v1`
+
+**Data model**:
+- `wf_definitions` — Versioned workflow definitions with steps_json, category, status
+- `wf_instances` — Running workflow instances with current_step, context_json
+- `wf_tasks` — Individual step tasks with assignee, input/output JSON
+- `wf_event_outbox` — v1.1 outbox events
+
+### E) connector-fhir-adapter (port 8150)
+
+**Purpose**: FHIR adapter boundary that accepts FHIR bundles, routes to configured destinations, validates headers, and audits every relay decision.
+
+| Endpoint | Method | Access | Description |
+|---|---|---|---|
+| `/internal/v1/fhir/relay` | POST | any pod | Submit a FHIR bundle for relay to a destination |
+| `/internal/v1/fhir/destinations` | POST | national-only | Create a relay destination |
+| `/internal/v1/fhir/destinations` | GET | any pod | List configured FHIR destinations |
+| `/internal/v1/fhir/audit` | GET | any pod | List relay audit log (paged) |
+| `/internal/v1/fhir/audit/bundle/{bundleId}` | GET | any pod | Get audit entries for a specific bundle |
+
+**Relay flow**: Bundle received → destination resolved (explicit or default) → resource type validated against destination filter → audit record created (ACCEPTED/REJECTED) → outbox event emitted.
+
+**Event types emitted**:
+- `impilo.integration.relay.accepted.v1`
+- `impilo.integration.relay.rejected.v1`
+- `impilo.integration.destination.created.v1`
+
+**Data model**:
+- `cfa_relay_destinations` — Destination registry (endpoint_url, resource_types filter, auth config)
+- `cfa_relay_audit` — Audit trail of every relay decision with outcome
+- `cfa_event_outbox` — v1.1 outbox events
+
+### F) search-service enhancements
+
+Two new governed query surfaces added to the existing search-service:
+
+| Endpoint | Method | Description |
+|---|---|---|
+| `/internal/v1/search/clinical-safe` | POST | Search with governance: strips metadata from hits, returns only title/snippet/score |
+| `/internal/v1/search/global` | POST | Full search including metadata (requires stricter authorization) |
+
+**Clinical-safe governance**: The clinical-safe endpoint removes metadata from search results to prevent accidental exposure of sensitive categorization data in clinical contexts. The global endpoint returns full results for authorized administrative use.
+
+### G) forms-service enhancements
+
+New snapshot endpoint added to the existing forms-service:
+
+| Endpoint | Method | Description |
+|---|---|---|
+| `/internal/v1/snapshots/forms` | GET | Temporal snapshot of form definitions with `as_of` parameter |
+
+---
+
 ## v1.1 Compliance
 
 All three services enforce the full v1.1 contract via `tech-companion` auto-configuration:
@@ -138,17 +224,38 @@ These services are designed to integrate with the existing fleet **without requi
 - SHA-256 input hashing and audit rows provide tamper-evident evaluation records
 - Decision logs and outbox events enable downstream analytics and compliance
 
+### workflow-service
+- Provides a general-purpose workflow engine that any service can use for multi-step processes
+- Definitions are versioned and immutable once published, ensuring reproducibility
+- Instances track current step and support COMPLETE, FAIL, CANCEL, and ADVANCE transitions
+- Snapshot endpoints enable point-in-time queries for reporting and audit
+
+### connector-fhir-adapter
+- Acts as a boundary service for outbound FHIR bundle relay
+- Destinations are configurable with resource type filters and auth configuration
+- Every relay decision (ACCEPTED or REJECTED) is recorded in an audit trail
+- Outbox events enable downstream consumers to react to relay outcomes
+- Default destination fallback ensures bundles are always routed
+
+### search-service (governed query surfaces)
+- Clinical-safe endpoint strips metadata to prevent accidental exposure in clinical UIs
+- Global endpoint provides full search results for authorized administrative contexts
+- Both surfaces use the same underlying search engine; governance is applied at the API layer
+
+### forms-service (snapshot endpoints)
+- Temporal snapshot endpoint supports `as_of` parameter for point-in-time form definition queries
+- Integrates with the existing form definition lifecycle without modifying core logic
+
 ## Running Tests (when Maven is online)
 
 ```bash
-# Build and test all three services
+# Build and test all integration platform services
 cd services
-mvn -pl integration-hub,notification-service,rules-service -am clean verify
+mvn -pl integration-hub,notification-service,rules-service,workflow-service,connector-fhir-adapter -am clean verify
 
-# Run a single service's tests
-mvn -pl integration-hub clean test
-mvn -pl notification-service clean test
-mvn -pl rules-service clean test
+# Run individual service tests
+mvn -pl workflow-service clean test
+mvn -pl connector-fhir-adapter clean test
 ```
 
 ## Architecture Decisions

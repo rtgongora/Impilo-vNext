@@ -119,6 +119,9 @@
         <module>support-service</module>
         <module>audit-ledger-service</module>
         <module>offline-edge-service</module>
+        <!-- Integration Platform Expansion -->
+        <module>workflow-service</module>
+        <module>connector-fhir-adapter</module>
         <!-- TSHEPO decomposition (6 sub-services) -->
         <module>tshepo-authz-service</module>
         <module>tshepo-identity-service</module>
