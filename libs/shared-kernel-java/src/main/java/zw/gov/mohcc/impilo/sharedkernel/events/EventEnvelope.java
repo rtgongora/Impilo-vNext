@@ -72,6 +72,18 @@ public record EventEnvelope(
         payload = Map.copyOf(payload);
     }
 
+    /**
+     * Convenience accessor for meta.partition_key.
+     * Falls back to subjectId if partition_key is not set in meta.
+     */
+    public String partitionKey() {
+        Object pk = meta.get("partition_key");
+        if (pk != null && !pk.toString().isBlank()) {
+            return pk.toString();
+        }
+        return subjectId;
+    }
+
     public static Builder builder() {
         return new Builder();
     }
