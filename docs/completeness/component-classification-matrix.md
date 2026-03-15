@@ -70,9 +70,9 @@
 |---------|-----|------|-----|------|---------------|-------|
 | butano-service | 29 | 4 | 1 | N | **COMPLETE** | SHR with HAPI FHIR, PII prevention interceptors, IPS |
 | butano-fhir | 10 | 2 | 1 | Y | **ADEQUATE** | FHIR proxy layer |
-| pct-service | 93 | 6 | 3 | Y | **COMPLETE** | Patient Care Tracker: encounter state machine, queue, metrics |
-| oros-service | 85 | 6 | 1 | Y | **COMPLETE** | Orders & Results: order state machine, worklist, adapter router |
-| pharmacy-service | 85 | 6 | 1 | Y | **COMPLETE** | Dispensing, substitution, partial fill, inventory hooks |
+| pct-service | 93 | 6 | 3 | Y | **COMPLETE** | Patient Care Tracker: 14 repos, admissions/encounters/queues/triage/transfers/discharges |
+| oros-service | 85 | 6 | 1 | Y | **COMPLETE** | Orders & Results: 12 repos, order state machine, SLA tracking, worklist, reconciliation |
+| pharmacy-service | 85 | 6 | 1 | Y | **COMPLETE** | Dispensing: 8 repos, FEFO stock, formulary, substitution, OTP/QR pickup proof |
 | inpatient-service | 15 | 1 | 2 | Y | **ADEQUATE** | Admission, ward, bed management — thinner impl |
 | coverage-service | 34 | 3 | 2 | N | **ADEQUATE** | Eligibility, benefit plans, remittance |
 
@@ -81,7 +81,8 @@
 | Service | Src | Test | Mig | Helm | Classification | Notes |
 |---------|-----|------|-----|------|---------------|-------|
 | mushex-service | 106 | 9 | 1 | Y | **COMPLETE** | Payments: claims, adjudication, wallet, reconciliation |
-| costing-engine-service | 93 | 7 | 1 | Y | **COMPLETE** | Cost models, rule application, charge sheets |
+| inventory-service | 101 | 6 | 2 | Y | **COMPLETE** | Supply chain: 14 repos, event-sourced stock ledger, FEFO, requisitions, eLMIS sync |
+| costing-engine-service | 93 | 7 | 1 | Y | **COMPLETE** | Costing: 19 repos, tariffs, rules, insurance, refunds, currency/billing config |
 
 ## F. Ring 1 — Integration & Ops Services
 
