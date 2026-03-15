@@ -16,7 +16,8 @@
     "zibo-web",
     "oros-web",
     "pharmacy-web",
-    "inventory-web"
+    "inventory-web",
+    "support-console"
   ],
   "scripts": {
     "dev:shell": "npm -w one-ui-shell run dev",
@@ -31,6 +32,7 @@
     "dev:oros": "npm -w oros-web run dev",
     "dev:pharmacy": "npm -w pharmacy-web run dev",
     "dev:inventory": "npm -w inventory-web run dev",
+    "dev:support": "npm -w support-console run dev",
     "build": "turbo run build",
     "lint": "turbo run lint",
     "type-check": "turbo run type-check"
