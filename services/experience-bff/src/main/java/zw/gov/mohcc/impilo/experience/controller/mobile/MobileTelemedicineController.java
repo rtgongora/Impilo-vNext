@@ -142,8 +142,20 @@ public class MobileTelemedicineController {
             WHERE id = ? AND tenant_id = ?
             """, id, tenantId);
 
+        Map<String, Object> sessionData = rows.isEmpty() ? new LinkedHashMap<>() : toResource(rows.get(0));
+        if (!rows.isEmpty()) {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> attrs = (Map<String, Object>) sessionData.get("attributes");
+            String token = UUID.randomUUID().toString();
+            String channel = rows.get(0).get("room_url") != null
+                    ? rows.get(0).get("room_url").toString()
+                    : "session-" + id;
+            attrs.put("token", token);
+            attrs.put("channel", channel);
+        }
+
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", rows.isEmpty() ? Map.of() : toResource(rows.get(0)));
+        response.put("data", sessionData);
         response.put("meta", Map.of(
                 "request_id", requestId,
                 "correlation_id", correlationId

@@ -22,7 +22,8 @@ import java.util.*;
  * Mobile dynamic form endpoints.
  * GET  /internal/v1/mobile/provider/forms                           - list form schemas
  * GET  /internal/v1/mobile/provider/forms/{id}                      - get form schema
- * POST /internal/v1/mobile/provider/forms/submissions               - submit form
+ * POST /internal/v1/mobile/provider/forms/{id}/submit               - submit form
+ * POST /internal/v1/mobile/provider/forms/submissions               - submit form (legacy)
  * GET  /internal/v1/mobile/provider/forms/submissions?encounter_id= - list submissions
  */
 @RestController
