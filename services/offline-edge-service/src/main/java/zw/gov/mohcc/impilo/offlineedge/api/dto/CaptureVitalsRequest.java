@@ -19,5 +19,8 @@ public record CaptureVitalsRequest(
         String deviceId,
         int sequenceNum,
         String idempotencyKey,
-        String correlationId
+        String correlationId,
+        String hashChainPrev,
+        boolean breakGlass,
+        String breakGlassReason
 ) {}

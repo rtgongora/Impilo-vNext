@@ -12,6 +12,7 @@ import zw.gov.mohcc.impilo.offline.sdk.entitlement.OfflineEntitlement;
 import zw.gov.mohcc.impilo.offline.sdk.entitlement.OfflineEntitlementVerifier;
 import zw.gov.mohcc.impilo.offlineedge.api.dto.CaptureVitalsRequest;
 import zw.gov.mohcc.impilo.offlineedge.core.OfflineVitalsService;
+import zw.gov.mohcc.impilo.offlineedge.core.OfflineVitalsService.MaxEncountersExceededException;
 
 import java.util.*;
 
@@ -70,10 +71,27 @@ public class VitalsController {
 
         OfflineEntitlement entitlement = verification.entitlement();
 
-        // Step 2: Capture the vital sign
+        // Step 2: Verify device fingerprint binding
+        if (entitlement.deviceFingerprint() != null && !entitlement.deviceFingerprint().isBlank()) {
+            if (request.deviceId() == null || !entitlement.deviceFingerprint().equals(request.deviceId())) {
+                log.warn("Device fingerprint mismatch: entitlement={}, request={}",
+                        entitlement.deviceFingerprint(), request.deviceId());
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(ErrorEnvelope.of("DEVICE_MISMATCH",
+                                "Device fingerprint does not match entitlement binding",
+                                UUID.randomUUID().toString(), null));
+            }
+        }
+
+        // Step 3: Capture the vital sign
         try {
             Map<String, Object> result = vitalsService.captureVital(entitlement, request);
             return ResponseEntity.status(HttpStatus.CREATED).body(result);
+        } catch (OfflineVitalsService.MaxEncountersExceededException e) {
+            log.warn("Max offline encounters exceeded: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ErrorEnvelope.of("MAX_ENCOUNTERS_EXCEEDED", e.getMessage(),
+                            UUID.randomUUID().toString(), null));
         } catch (Exception e) {
             log.error("Failed to capture offline vital: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

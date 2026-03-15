@@ -67,8 +67,10 @@ public class OfflineEdgeService {
         String tokenHash = computeHmac(tokenInput);
 
         OffsetDateTime expiresAt = OffsetDateTime.now().plusHours(entitlementTtlHours);
+        int maxEncounters = request.maxOfflineEncounters() != null ? request.maxOfflineEncounters() : 50;
         EntitlementEntity entitlement = new EntitlementEntity(entitlementId, tenantId,
-                request.actorId(), request.facilityRef(), workflowType, scopeJson, tokenHash, expiresAt);
+                request.actorId(), request.facilityRef(), workflowType, scopeJson, tokenHash,
+                request.deviceFingerprint(), maxEncounters, expiresAt);
         entitlementRepository.save(entitlement);
 
         Map<String, Object> payload = new LinkedHashMap<>();
@@ -76,6 +78,8 @@ public class OfflineEdgeService {
         payload.put("actor_id", request.actorId());
         payload.put("facility_ref", request.facilityRef());
         payload.put("workflow_type", workflowType);
+        payload.put("device_fingerprint", request.deviceFingerprint());
+        payload.put("max_offline_encounters", maxEncounters);
         payload.put("expires_at", expiresAt.toString());
 
         appendOutboxEvent("impilo.offline.entitlement.issued.v1", entitlementId.toString(),

@@ -106,6 +106,7 @@ public class OfflineEdgeController {
     private EntitlementResponse toEntitlementResponse(EntitlementEntity e) {
         return new EntitlementResponse(e.getEntitlementId(), e.getTenantId(), e.getActorId(),
                 e.getFacilityRef(), e.getWorkflowType(), e.getTokenHash(),
+                e.getDeviceFingerprint(), e.getMaxOfflineEncounters(),
                 e.getIssuedAt(), e.getExpiresAt(), e.isRevoked());
     }
 

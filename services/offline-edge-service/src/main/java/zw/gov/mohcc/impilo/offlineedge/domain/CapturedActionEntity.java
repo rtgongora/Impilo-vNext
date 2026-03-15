@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.offlineedge.domain;
 
 import jakarta.persistence.*;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -17,8 +19,11 @@ public class CapturedActionEntity {
     @Column(name = "payload_json", nullable = false, columnDefinition = "TEXT") private String payloadJson;
     @Column(name = "captured_at", nullable = false) private OffsetDateTime capturedAt;
     @Column(name = "device_id") private String deviceId;
+    @Column(name = "idempotency_key") private String idempotencyKey;
     @Column(name = "sequence_num", nullable = false) private int sequenceNum = 1;
+    @Column(name = "hash_chain_prev") private String hashChainPrev;
     @Column(nullable = false) private String status = "QUEUED";
+    @Column(name = "break_glass") private boolean breakGlass = false;
     @Column(name = "replayed_at") private OffsetDateTime replayedAt;
     @Column(name = "replay_error", columnDefinition = "TEXT") private String replayError;
     @Column(name = "created_at", nullable = false) private OffsetDateTime createdAt = OffsetDateTime.now();
@@ -51,4 +56,28 @@ public class CapturedActionEntity {
     public String getReplayError() { return replayError; }
     public void setReplayError(String v) { this.replayError = v; }
     public OffsetDateTime getCreatedAt() { return createdAt; }
+    public String getIdempotencyKey() { return idempotencyKey; }
+    public void setIdempotencyKey(String v) { this.idempotencyKey = v; }
+    public String getHashChainPrev() { return hashChainPrev; }
+    public void setHashChainPrev(String v) { this.hashChainPrev = v; }
+    public boolean isBreakGlass() { return breakGlass; }
+    public void setBreakGlass(boolean v) { this.breakGlass = v; }
+
+    /**
+     * Compute SHA-256 hash of this action for hash chain tamper evidence.
+     */
+    public String computeHash() {
+        String input = actionId + "|" + entitlementId + "|" + patientRef + "|"
+                + actionType + "|" + sequenceNum + "|" + capturedAt
+                + "|" + (hashChainPrev != null ? hashChainPrev : "GENESIS");
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
+            StringBuilder hex = new StringBuilder();
+            for (byte b : hash) hex.append(String.format("%02x", b));
+            return hex.toString();
+        } catch (Exception e) {
+            throw new RuntimeException("SHA-256 computation failed", e);
+        }
+    }
 }

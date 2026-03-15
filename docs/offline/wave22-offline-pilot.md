@@ -1,6 +1,6 @@
 # Wave 22 — Offline Pilot at the Edge
 
-> Status: Not Started | Date: 2026-03-14
+> Status: Implemented | Date: 2026-03-15
 
 ## Goal
 

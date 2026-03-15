@@ -14,6 +14,8 @@ public class EntitlementEntity {
     @Column(name = "workflow_type", nullable = false) private String workflowType = "CAPTURE_VITALS";
     @Column(name = "scope_json", nullable = false, columnDefinition = "TEXT") private String scopeJson;
     @Column(name = "token_hash", nullable = false) private String tokenHash;
+    @Column(name = "device_fingerprint") private String deviceFingerprint;
+    @Column(name = "max_offline_encounters") private int maxOfflineEncounters = 50;
     @Column(name = "issued_at", nullable = false) private OffsetDateTime issuedAt;
     @Column(name = "expires_at", nullable = false) private OffsetDateTime expiresAt;
     @Column(nullable = false) private boolean revoked = false;
@@ -24,6 +26,13 @@ public class EntitlementEntity {
         this.entitlementId = entitlementId; this.tenantId = tenantId; this.actorId = actorId;
         this.facilityRef = facilityRef; this.workflowType = workflowType; this.scopeJson = scopeJson;
         this.tokenHash = tokenHash; this.issuedAt = OffsetDateTime.now(); this.expiresAt = expiresAt;
+    }
+    public EntitlementEntity(UUID entitlementId, UUID tenantId, String actorId, String facilityRef,
+                              String workflowType, String scopeJson, String tokenHash,
+                              String deviceFingerprint, int maxOfflineEncounters, OffsetDateTime expiresAt) {
+        this(entitlementId, tenantId, actorId, facilityRef, workflowType, scopeJson, tokenHash, expiresAt);
+        this.deviceFingerprint = deviceFingerprint;
+        this.maxOfflineEncounters = maxOfflineEncounters;
     }
 
     public UUID getEntitlementId() { return entitlementId; }
@@ -37,4 +46,8 @@ public class EntitlementEntity {
     public OffsetDateTime getExpiresAt() { return expiresAt; }
     public boolean isRevoked() { return revoked; }
     public void setRevoked(boolean v) { this.revoked = v; }
+    public String getDeviceFingerprint() { return deviceFingerprint; }
+    public void setDeviceFingerprint(String v) { this.deviceFingerprint = v; }
+    public int getMaxOfflineEncounters() { return maxOfflineEncounters; }
+    public void setMaxOfflineEncounters(int v) { this.maxOfflineEncounters = v; }
 }

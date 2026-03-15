@@ -54,6 +54,13 @@ public class OfflineVitalsService {
         String correlationId = request.correlationId() != null
                 ? request.correlationId() : UUID.randomUUID().toString();
 
+        // Enforce max offline encounters limit
+        long capturedCount = actionRepository.countByEntitlementId(entitlement.tokenId());
+        if (entitlement.maxOfflineEncounters() > 0 && capturedCount >= entitlement.maxOfflineEncounters()) {
+            throw new MaxEncountersExceededException(
+                    "Maximum offline encounters (" + entitlement.maxOfflineEncounters() + ") reached");
+        }
+
         // Store the captured action
         CapturedActionEntity action = new CapturedActionEntity(
                 actionId,
@@ -67,6 +74,9 @@ public class OfflineVitalsService {
                 request.deviceId(),
                 request.sequenceNum() > 0 ? request.sequenceNum() : 1
         );
+        action.setIdempotencyKey(request.idempotencyKey());
+        action.setHashChainPrev(request.hashChainPrev());
+        action.setBreakGlass(request.breakGlass());
         actionRepository.save(action);
 
         // Write audit event to outbox
@@ -92,10 +102,45 @@ public class OfflineVitalsService {
         eventPayload.put("action_type", "CAPTURE_VITALS");
         eventPayload.put("captured_at", request.capturedAt());
         eventPayload.put("device_id", request.deviceId());
+        eventPayload.put("sequence_num", action.getSequenceNum());
+        eventPayload.put("hash_chain_prev", request.hashChainPrev());
+        eventPayload.put("hash_chain_current", action.computeHash());
+        eventPayload.put("break_glass", request.breakGlass());
         eventPayload.put("status", "QUEUED");
         outbox.setPayloadJson(toJson(eventPayload));
         outbox.setPartitionKey(request.patientRef());
         outboxRepository.save(outbox);
+
+        // If break-glass, emit additional high-priority audit event
+        if (request.breakGlass()) {
+            OutboxEventEntity bgOutbox = new OutboxEventEntity();
+            bgOutbox.setAggregateType("BreakGlass");
+            bgOutbox.setAggregateId(actionId.toString());
+            bgOutbox.setEventType("impilo.offline.break_glass.activated.v1");
+            bgOutbox.setCorrelationId(parseUuid(correlationId));
+            bgOutbox.setCausationId(parseUuid(correlationId));
+            bgOutbox.setTenantId(entitlement.tenantId());
+            bgOutbox.setPodId(entitlement.facilityId().toString());
+            bgOutbox.setSubjectId(request.patientRef());
+            bgOutbox.setSubjectType("BreakGlass");
+            bgOutbox.setOccurredAt(capturedAt);
+
+            Map<String, Object> bgPayload = new LinkedHashMap<>();
+            bgPayload.put("action_id", actionId.toString());
+            bgPayload.put("actor_id", entitlement.actorId());
+            bgPayload.put("facility_id", entitlement.facilityId().toString());
+            bgPayload.put("patient_ref", request.patientRef());
+            bgPayload.put("reason", request.breakGlassReason());
+            bgPayload.put("override_type", "BREAK_GLASS_CAPTURE");
+            bgPayload.put("activated_at", capturedAt.toString());
+            bgPayload.put("priority", "HIGH");
+            bgOutbox.setPayloadJson(toJson(bgPayload));
+            bgOutbox.setPartitionKey(entitlement.actorId());
+            outboxRepository.save(bgOutbox);
+
+            log.warn("BREAK-GLASS vitals capture: actionId={}, actor={}, patient={}, reason={}",
+                    actionId, entitlement.actorId(), request.patientRef(), request.breakGlassReason());
+        }
 
         log.info("Captured offline vital [actionId={}, patient={}, actor={}, facility={}]",
                 actionId, request.patientRef(), entitlement.actorId(), entitlement.facilityId());
@@ -109,6 +154,10 @@ public class OfflineVitalsService {
         response.put("status", "QUEUED");
         response.put("captured_at", request.capturedAt());
         response.put("sequence_num", action.getSequenceNum());
+        response.put("hash_chain_current", action.computeHash());
+        if (request.breakGlass()) {
+            response.put("break_glass", true);
+        }
         return response;
     }
 
@@ -128,5 +177,9 @@ public class OfflineVitalsService {
         } catch (JsonProcessingException e) {
             throw new RuntimeException("JSON serialization failed", e);
         }
+    }
+
+    public static class MaxEncountersExceededException extends RuntimeException {
+        public MaxEncountersExceededException(String msg) { super(msg); }
     }
 }

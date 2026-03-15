@@ -67,6 +67,19 @@ public class SyncController {
 
         OfflineEntitlement entitlement = verification.entitlement();
 
+        // Verify device fingerprint binding
+        if (entitlement.deviceFingerprint() != null && !entitlement.deviceFingerprint().isBlank()) {
+            String requestDevice = request.deviceId();
+            if (requestDevice == null || !entitlement.deviceFingerprint().equals(requestDevice)) {
+                log.warn("Sync device fingerprint mismatch: entitlement={}, request={}",
+                        entitlement.deviceFingerprint(), requestDevice);
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(ErrorEnvelope.of("DEVICE_MISMATCH",
+                                "Device fingerprint does not match entitlement binding",
+                                UUID.randomUUID().toString(), null));
+            }
+        }
+
         try {
             SyncResponse response = syncService.processSyncBatch(entitlement, request);
             return ResponseEntity.status(HttpStatus.OK).body(response);

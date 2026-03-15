@@ -7,4 +7,6 @@ public record IssueEntitlementRequest(
         @NotBlank String actorId,
         @NotBlank String facilityRef,
         String workflowType,
-        Map<String, Object> scope) {}
+        Map<String, Object> scope,
+        String deviceFingerprint,
+        Integer maxOfflineEncounters) {}
