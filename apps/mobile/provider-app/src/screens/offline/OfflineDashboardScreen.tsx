@@ -3,7 +3,19 @@
  */
 
 import React, { useState, useCallback, useEffect } from "react";
-import { Screen, Header, Card, CardBody, CardHeader, Button, Badge, LoadingSpinner, ErrorState } from "@impilo/mobile-design-system";
+import { View, Text, ScrollView, StyleSheet } from "react-native";
+import {
+  Screen,
+  Header,
+  Card,
+  CardBody,
+  CardHeader,
+  Button,
+  Badge,
+  TextField,
+  LoadingSpinner,
+  ErrorState,
+} from "@impilo/mobile-design-system";
 import { useSyncEngine, useEdgeSnapshot, useConflicts } from "@impilo/mobile-offline";
 import { useAppStore } from "../../stores/appStore";
 import { apiClient } from "@impilo/mobile-api-client";
@@ -72,95 +84,200 @@ export function OfflineDashboardScreen() {
     } catch {}
   }, [facilityId, download]);
 
-  return React.createElement(
-    Screen, null,
-    React.createElement(Header, { title: "Offline Edge" }),
-    React.createElement("div", { "data-testid": "offline-dashboard", style: { padding: "16px" } },
+  return (
+    <Screen>
+      <Header title="Offline Edge" />
+      <ScrollView testID="offline-dashboard" style={styles.container}>
+        {/* Connection status */}
+        <Card>
+          <CardBody>
+            <View style={styles.statusRow}>
+              <View style={styles.statusLeft}>
+                <Badge variant={isOnline ? "primary" : "destructive"}>
+                  {isOnline ? "Online" : "Offline"}
+                </Badge>
+                <Text style={styles.syncStatusText}>
+                  {syncStatus === "syncing" ? "Syncing..." : `${pendingCount} pending operations`}
+                </Text>
+              </View>
+              {lastSyncAt && (
+                <Text style={styles.lastSyncText}>
+                  {`Last sync: ${new Date(lastSyncAt).toLocaleTimeString()}`}
+                </Text>
+              )}
+            </View>
+            <View style={styles.actionRow}>
+              <Button
+                title="Sync Now"
+                variant="primary"
+                onPress={triggerSync}
+                disabled={!isOnline}
+                testID="sync-now-btn"
+              />
+              <Button
+                title="Download Snapshot"
+                variant="outline"
+                onPress={handleDownloadSnapshot}
+                disabled={!isOnline}
+                testID="download-snapshot-btn"
+              />
+            </View>
+          </CardBody>
+        </Card>
 
-      // Connection status
-      React.createElement(Card, null,
-        React.createElement(CardBody, null,
-          React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center" } },
-            React.createElement("div", null,
-              React.createElement(Badge, { variant: isOnline ? "primary" : "destructive", children: isOnline ? "Online" : "Offline" }),
-              React.createElement("span", { style: { marginLeft: "8px", fontSize: "14px" } },
-                syncStatus === "syncing" ? "Syncing..." : `${pendingCount} pending operations`
-              )
-            ),
-            lastSyncAt
-              ? React.createElement("span", { style: { fontSize: "12px", color: "#9CA3AF" } },
-                  `Last sync: ${new Date(lastSyncAt).toLocaleTimeString()}`
-                )
-              : null
-          ),
-          React.createElement("div", { style: { display: "flex", gap: "8px", marginTop: "12px" } },
-            React.createElement(Button, { title: "Sync Now", variant: "primary", onPress: triggerSync, disabled: !isOnline, testID: "sync-now-btn" }),
-            React.createElement(Button, { title: "Download Snapshot", variant: "outline", onPress: handleDownloadSnapshot, disabled: !isOnline, testID: "download-snapshot-btn" })
-          )
-        )
-      ),
+        {/* Stats */}
+        <View style={styles.statsGrid}>
+          <Card>
+            <CardBody>
+              <View style={styles.statCenter}>
+                <Text style={styles.statValue}>{String(pendingCount)}</Text>
+                <Text style={styles.statLabel}>Pending Ops</Text>
+              </View>
+            </CardBody>
+          </Card>
+          <Card>
+            <CardBody>
+              <View style={styles.statCenter}>
+                <Text
+                  style={[
+                    styles.statValue,
+                    { color: conflicts.length > 0 ? "#DC2626" : "#111827" },
+                  ]}
+                >
+                  {String(conflicts.length)}
+                </Text>
+                <Text style={styles.statLabel}>Conflicts</Text>
+              </View>
+            </CardBody>
+          </Card>
+          <Card>
+            <CardBody>
+              <View style={styles.statCenter}>
+                <Text style={styles.statValue}>{snapshot ? "Yes" : "No"}</Text>
+                <Text style={styles.statLabel}>Edge Snapshot</Text>
+              </View>
+            </CardBody>
+          </Card>
+        </View>
 
-      // Stats
-      React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", margin: "16px 0" } },
-        React.createElement(Card, null, React.createElement(CardBody, null,
-          React.createElement("div", { style: { textAlign: "center" } },
-            React.createElement("div", { style: { fontSize: "24px", fontWeight: "700" } }, String(pendingCount)),
-            React.createElement("div", { style: { fontSize: "12px", color: "#6B7280" } }, "Pending Ops")
-          )
-        )),
-        React.createElement(Card, null, React.createElement(CardBody, null,
-          React.createElement("div", { style: { textAlign: "center" } },
-            React.createElement("div", { style: { fontSize: "24px", fontWeight: "700", color: conflicts.length > 0 ? "#DC2626" : "#111827" } }, String(conflicts.length)),
-            React.createElement("div", { style: { fontSize: "12px", color: "#6B7280" } }, "Conflicts")
-          )
-        )),
-        React.createElement(Card, null, React.createElement(CardBody, null,
-          React.createElement("div", { style: { textAlign: "center" } },
-            React.createElement("div", { style: { fontSize: "24px", fontWeight: "700" } }, snapshot ? "Yes" : "No"),
-            React.createElement("div", { style: { fontSize: "12px", color: "#6B7280" } }, "Edge Snapshot")
-          )
-        ))
-      ),
-
-      // Entitlement verification
-      React.createElement(CardHeader, { children: "Entitlement Verification" }),
-      React.createElement(Card, null,
-        React.createElement(CardBody, null,
-          React.createElement("div", { style: { display: "flex", gap: "8px" } },
-            React.createElement("input", {
-              value: cpidInput,
-              onChange: (e: React.ChangeEvent<HTMLInputElement>) => setCpidInput(e.target.value),
-              placeholder: "Enter CPID...",
-              "data-testid": "cpid-input",
-              style: { flex: 1, padding: "8px 12px", border: "1px solid #D1D5DB", borderRadius: "6px" },
-            }),
-            React.createElement(Button, {
-              title: "Verify",
-              onPress: handleCheckEntitlement,
-              loading: checkingEntitlement,
-              testID: "verify-entitlement-btn",
-            })
-          ),
-          entitlement
-            ? React.createElement("div", { style: { marginTop: "12px", padding: "12px", backgroundColor: "#F9FAFB", borderRadius: "8px" }, "data-testid": "entitlement-result" },
-                React.createElement("strong", null, entitlement.patientName),
-                React.createElement("div", { style: { display: "flex", gap: "8px", marginTop: "4px" } },
-                  React.createElement(Badge, {
-                    variant: entitlement.coverageStatus === "ACTIVE" ? "primary" : "destructive",
-                    children: entitlement.coverageStatus,
-                  }),
-                  entitlement.coverageType ? React.createElement(Badge, { variant: "outline", children: entitlement.coverageType }) : null,
-                  entitlement.verifiedOffline ? React.createElement(Badge, { variant: "secondary", children: "Verified Offline" }) : null
-                ),
-                entitlement.validUntil
-                  ? React.createElement("p", { style: { fontSize: "12px", color: "#6B7280", marginTop: "4px" } },
-                      `Valid until: ${new Date(entitlement.validUntil).toLocaleDateString()}`
-                    )
-                  : null
-              )
-            : null
-        )
-      )
-    )
+        {/* Entitlement verification */}
+        <CardHeader>Entitlement Verification</CardHeader>
+        <Card>
+          <CardBody>
+            <View style={styles.entitlementInputRow}>
+              <View style={styles.cpidInputContainer}>
+                <TextField
+                  label=""
+                  value={cpidInput}
+                  onChange={setCpidInput}
+                  placeholder="Enter CPID..."
+                  testID="cpid-input"
+                />
+              </View>
+              <Button
+                title="Verify"
+                onPress={handleCheckEntitlement}
+                loading={checkingEntitlement}
+                testID="verify-entitlement-btn"
+              />
+            </View>
+            {entitlement && (
+              <View testID="entitlement-result" style={styles.entitlementResult}>
+                <Text style={styles.boldText}>{entitlement.patientName}</Text>
+                <View style={styles.entitlementBadges}>
+                  <Badge
+                    variant={entitlement.coverageStatus === "ACTIVE" ? "primary" : "destructive"}
+                  >
+                    {entitlement.coverageStatus}
+                  </Badge>
+                  {entitlement.coverageType && (
+                    <Badge variant="outline">{entitlement.coverageType}</Badge>
+                  )}
+                  {entitlement.verifiedOffline && (
+                    <Badge variant="secondary">Verified Offline</Badge>
+                  )}
+                </View>
+                {entitlement.validUntil && (
+                  <Text style={styles.validUntilText}>
+                    {`Valid until: ${new Date(entitlement.validUntil).toLocaleDateString()}`}
+                  </Text>
+                )}
+              </View>
+            )}
+          </CardBody>
+        </Card>
+      </ScrollView>
+    </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 16,
+  },
+  statusRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  statusLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  syncStatusText: {
+    marginLeft: 8,
+    fontSize: 14,
+  },
+  lastSyncText: {
+    fontSize: 12,
+    color: "#9CA3AF",
+  },
+  actionRow: {
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 12,
+  },
+  statsGrid: {
+    flexDirection: "row",
+    gap: 12,
+    marginVertical: 16,
+  },
+  statCenter: {
+    alignItems: "center",
+  },
+  statValue: {
+    fontSize: 24,
+    fontWeight: "700",
+  },
+  statLabel: {
+    fontSize: 12,
+    color: "#6B7280",
+  },
+  entitlementInputRow: {
+    flexDirection: "row",
+    gap: 8,
+    alignItems: "center",
+  },
+  cpidInputContainer: {
+    flex: 1,
+  },
+  entitlementResult: {
+    marginTop: 12,
+    padding: 12,
+    backgroundColor: "#F9FAFB",
+    borderRadius: 8,
+  },
+  boldText: {
+    fontWeight: "700",
+  },
+  entitlementBadges: {
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 4,
+  },
+  validUntilText: {
+    fontSize: 12,
+    color: "#6B7280",
+    marginTop: 4,
+  },
+});

@@ -3,6 +3,7 @@
  */
 
 import React from "react";
+import { View, Text, StyleSheet } from "react-native";
 import { Button } from "@impilo/mobile-design-system";
 import { useAppStore } from "../stores/appStore";
 
@@ -11,31 +12,40 @@ export function GlobalErrorBanner() {
 
   if (!globalError) return null;
 
-  return React.createElement(
-    "div",
-    {
-      "data-testid": "global-error-banner",
-      role: "alert",
-      style: {
-        padding: "12px 16px",
-        backgroundColor: "#FEE2E2",
-        borderBottom: "1px solid #FECACA",
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-      },
-    },
-    React.createElement(
-      "span",
-      { style: { color: "#991B1B", fontSize: "14px" } },
-      `${globalError.code}: ${globalError.message}`
-    ),
-    React.createElement(Button, {
-      title: "Dismiss",
-      variant: "ghost",
-      size: "sm",
-      onPress: () => setGlobalError(null),
-      testID: "dismiss-error",
-    })
+  return (
+    <View
+      testID="global-error-banner"
+      accessibilityRole="alert"
+      style={styles.container}
+    >
+      <Text style={styles.errorText}>
+        {`${globalError.code}: ${globalError.message}`}
+      </Text>
+      <Button
+        title="Dismiss"
+        variant="ghost"
+        size="sm"
+        onPress={() => setGlobalError(null)}
+        testID="dismiss-error"
+      />
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 12,
+    paddingHorizontal: 16,
+    backgroundColor: "#FEE2E2",
+    borderBottomWidth: 1,
+    borderBottomColor: "#FECACA",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  errorText: {
+    color: "#991B1B",
+    fontSize: 14,
+    flex: 1,
+  },
+});

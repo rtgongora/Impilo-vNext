@@ -5,6 +5,7 @@
  */
 
 import React, { useState, useCallback } from "react";
+import { View, StyleSheet } from "react-native";
 import { TabBar } from "@impilo/mobile-design-system";
 import { SupervisorDashboardScreen } from "../screens/supervisor/SupervisorDashboardScreen";
 import { TeamOverviewScreen } from "../screens/supervisor/TeamOverviewScreen";
@@ -30,26 +31,35 @@ export function SupervisorTabs() {
   const renderContent = () => {
     switch (activeTab) {
       case "dashboard":
-        return React.createElement(SupervisorDashboardScreen, null);
+        return <SupervisorDashboardScreen />;
       case "team":
-        return React.createElement(TeamOverviewScreen, null);
+        return <TeamOverviewScreen />;
       case "stock":
-        return React.createElement(StockScreen, null);
+        return <StockScreen />;
       case "escalations":
-        return React.createElement(EscalationsScreen, null);
+        return <EscalationsScreen />;
       default:
-        return React.createElement(SupervisorDashboardScreen, null);
+        return <SupervisorDashboardScreen />;
     }
   };
 
-  return React.createElement(
-    "div",
-    { "data-testid": "supervisor-tabs" },
-    React.createElement("main", { style: { flex: 1 } }, renderContent()),
-    React.createElement(TabBar, {
-      items: TABS.map((t) => ({ key: t.key, label: t.label })),
-      activeKey: activeTab,
-      onSelect: handleTabChange,
-    })
+  return (
+    <View testID="supervisor-tabs" style={styles.container}>
+      <View style={styles.content}>{renderContent()}</View>
+      <TabBar
+        items={TABS.map((t) => ({ key: t.key, label: t.label }))}
+        activeKey={activeTab}
+        onSelect={handleTabChange}
+      />
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  content: {
+    flex: 1,
+  },
+});

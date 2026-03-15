@@ -5,6 +5,8 @@
  */
 
 import React, { useEffect, useCallback } from "react";
+import { View, Text, StyleSheet, Platform } from "react-native";
+import { Pressable } from "react-native";
 import {
   useNotifications,
   usePushRegistration,
@@ -49,7 +51,7 @@ export function NotificationsScreen() {
   const { register } = usePushRegistration();
 
   useEffect(() => {
-    register({ platform: "web", token: "web-push-token" }).catch(() => {
+    register({ platform: Platform.OS, token: "push-token" }).catch(() => {
       // Push registration is best-effort; silent failure acceptable
     });
   }, [register]);
@@ -59,10 +61,13 @@ export function NotificationsScreen() {
     appStore.getState().setUnreadNotifications(unread);
   }, [notifications]);
 
-  const handleMarkRead = useCallback(async (id: string) => {
-    await markRead(id);
-    refresh();
-  }, [refresh]);
+  const handleMarkRead = useCallback(
+    async (id: string) => {
+      await markRead(id);
+      refresh();
+    },
+    [refresh]
+  );
 
   const handleMarkAllRead = useCallback(async () => {
     await markAllRead();
@@ -70,111 +75,138 @@ export function NotificationsScreen() {
   }, [refresh]);
 
   if (loading) {
-    return React.createElement(
-      Screen,
-      null,
-      React.createElement(Header, { title: "Notifications" }),
-      React.createElement(LoadingSpinner, { size: "md" })
+    return (
+      <Screen>
+        <Header title="Notifications" />
+        <LoadingSpinner size="md" />
+      </Screen>
     );
   }
 
   if (error) {
-    return React.createElement(
-      Screen,
-      null,
-      React.createElement(Header, { title: "Notifications" }),
-      React.createElement(ErrorState, {
-        title: "Failed to load notifications",
-        message: error,
-        onRetry: refresh,
-      })
+    return (
+      <Screen>
+        <Header title="Notifications" />
+        <ErrorState
+          title="Failed to load notifications"
+          message={error}
+          onRetry={refresh}
+        />
+      </Screen>
     );
   }
 
-  return React.createElement(
-    Screen,
-    null,
-    React.createElement(Header, { title: "Notifications" }),
-    React.createElement(
-      "div",
-      { "data-testid": "notifications-screen", style: { padding: "16px" } },
-      notifications.length > 0
-        ? React.createElement(
-            "div",
-            { style: { marginBottom: "12px", textAlign: "right" } },
-            React.createElement(Button, {
-              title: "Mark all read",
-              variant: "ghost",
-              size: "sm",
-              onPress: handleMarkAllRead,
-              testID: "mark-all-read",
-            })
-          )
-        : null,
-      notifications.length === 0
-        ? React.createElement(EmptyState, {
-            title: "No notifications",
-            message: "You're all caught up",
-          })
-        : notifications.map((n: Notification) =>
-            React.createElement(
-              Card,
-              { key: n.id },
-              React.createElement(
-                CardBody,
-                null,
-                React.createElement(
-                  "div",
-                  {
-                    style: {
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "flex-start",
-                      opacity: n.readAt ? 0.6 : 1,
-                    },
-                    onClick: () => !n.readAt && handleMarkRead(n.id),
-                    "data-testid": `notification-${n.id}`,
-                  },
-                  React.createElement(
-                    "div",
-                    { style: { flex: 1 } },
-                    React.createElement(
-                      "div",
-                      { style: { display: "flex", gap: "8px", alignItems: "center" } },
-                      React.createElement("strong", null, n.title),
-                      React.createElement(Badge, {
-                        variant: PRIORITY_COLORS[n.priority] as "destructive" | "secondary" | "outline",
-                        children: n.priority,
-                      })
-                    ),
-                    React.createElement(
-                      "p",
-                      { style: { fontSize: "14px", color: "#6B7280", margin: "4px 0" } },
-                      n.body
-                    ),
-                    React.createElement(
-                      "span",
-                      { style: { fontSize: "12px", color: "#9CA3AF" } },
-                      formatTimestamp(n.createdAt)
-                    )
-                  ),
-                  !n.readAt
-                    ? React.createElement("div", {
-                        style: {
-                          width: "8px",
-                          height: "8px",
-                          borderRadius: "50%",
-                          backgroundColor: "#3B82F6",
-                          marginLeft: "8px",
-                          marginTop: "4px",
-                        },
-                        "aria-label": "Unread",
-                      })
-                    : null
-                )
-              )
-            )
-          )
-    )
+  return (
+    <Screen>
+      <Header title="Notifications" />
+      <View testID="notifications-screen" style={styles.container}>
+        {notifications.length > 0 ? (
+          <View style={styles.markAllReadContainer}>
+            <Button
+              title="Mark all read"
+              variant="ghost"
+              size="sm"
+              onPress={handleMarkAllRead}
+              testID="mark-all-read"
+            />
+          </View>
+        ) : null}
+        {notifications.length === 0 ? (
+          <EmptyState
+            title="No notifications"
+            message="You're all caught up"
+          />
+        ) : (
+          notifications.map((n: Notification) => (
+            <Card key={n.id}>
+              <CardBody>
+                <Pressable
+                  onPress={() => !n.readAt && handleMarkRead(n.id)}
+                  testID={`notification-${n.id}`}
+                  style={[
+                    styles.notificationRow,
+                    { opacity: n.readAt ? 0.6 : 1 },
+                  ]}
+                >
+                  <View style={styles.notificationContent}>
+                    <View style={styles.titleRow}>
+                      <Text style={styles.notificationTitle}>{n.title}</Text>
+                      <View style={styles.badgeWrapper}>
+                        <Badge
+                          variant={
+                            PRIORITY_COLORS[n.priority] as
+                              | "destructive"
+                              | "secondary"
+                              | "outline"
+                          }
+                        >
+                          {n.priority}
+                        </Badge>
+                      </View>
+                    </View>
+                    <Text style={styles.body}>{n.body}</Text>
+                    <Text style={styles.timestamp}>
+                      {formatTimestamp(n.createdAt)}
+                    </Text>
+                  </View>
+                  {!n.readAt ? (
+                    <View
+                      style={styles.unreadDot}
+                      accessibilityLabel="Unread"
+                    />
+                  ) : null}
+                </Pressable>
+              </CardBody>
+            </Card>
+          ))
+        )}
+      </View>
+    </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 16,
+  },
+  markAllReadContainer: {
+    marginBottom: 12,
+    alignItems: "flex-end",
+  },
+  notificationRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+  },
+  notificationContent: {
+    flex: 1,
+  },
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  notificationTitle: {
+    fontWeight: "bold",
+  },
+  badgeWrapper: {
+    marginLeft: 8,
+  },
+  body: {
+    fontSize: 14,
+    color: "#6B7280",
+    marginTop: 4,
+  },
+  timestamp: {
+    fontSize: 12,
+    color: "#9CA3AF",
+    marginTop: 4,
+  },
+  unreadDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#3B82F6",
+    marginLeft: 8,
+    marginTop: 4,
+  },
+});

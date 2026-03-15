@@ -3,6 +3,7 @@
  */
 
 import React, { useState, useCallback } from "react";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Card, CardBody, Button, TextField, Badge, DiagnosisBadge, Checkbox, ErrorState } from "@impilo/mobile-design-system";
 import { searchICD11, recordDiagnosis, type ICD11SearchResult } from "../../services/diagnosisService";
 import { encounterStore } from "../../stores/encounterStore";
@@ -54,100 +55,109 @@ export function DiagnosisPanel({ encounterId }: DiagnosisPanelProps) {
     }
   }, [encounterId, isPrimary, diagnoses.length]);
 
-  return React.createElement(
-    "div",
-    { "data-testid": "diagnosis-panel" },
+  return (
+    <View testID="diagnosis-panel">
+      {/* Search */}
+      <Card>
+        <CardBody>
+          <View style={styles.searchRow}>
+            <TextField
+              label="Search ICD-11"
+              value={query}
+              onChange={setQuery}
+              placeholder="Type condition name..."
+              testID="icd-search-input"
+            />
+            <Button
+              title="Search"
+              onPress={handleSearch}
+              loading={searching}
+              testID="icd-search-btn"
+            />
+          </View>
+          <Checkbox
+            label="Primary diagnosis"
+            checked={isPrimary}
+            onChange={setIsPrimary}
+            testID="primary-dx-checkbox"
+          />
+          {error ? <ErrorState title="Error" message={error} /> : null}
+        </CardBody>
+      </Card>
 
-    // Search
-    React.createElement(
-      Card,
-      null,
-      React.createElement(
-        CardBody,
-        null,
-        React.createElement(
-          "div",
-          { style: { display: "flex", gap: "8px", alignItems: "flex-end" } },
-          React.createElement(TextField, {
-            label: "Search ICD-11",
-            value: query,
-            onChange: setQuery,
-            placeholder: "Type condition name...",
-            testID: "icd-search-input",
-          }),
-          React.createElement(Button, {
-            title: "Search",
-            onPress: handleSearch,
-            loading: searching,
-            testID: "icd-search-btn",
-          })
-        ),
-        React.createElement(Checkbox, {
-          label: "Primary diagnosis",
-          checked: isPrimary,
-          onChange: setIsPrimary,
-          testID: "primary-dx-checkbox",
-        }),
-        error ? React.createElement(ErrorState, { title: "Error", message: error }) : null
-      )
-    ),
+      {/* Search results */}
+      {results.length > 0 ? (
+        <View style={styles.resultsContainer}>
+          {results.map((r) => (
+            <Card key={r.code}>
+              <CardBody>
+                <TouchableOpacity
+                  style={styles.resultRow}
+                  onPress={() => handleSelect(r)}
+                  testID={`icd-result-${r.code}`}
+                >
+                  <View style={styles.resultInfo}>
+                    <Badge variant="outline">{r.code}</Badge>
+                    <Text style={styles.resultDescription}>{r.description}</Text>
+                    <Text style={styles.resultChapter}>{r.chapter}</Text>
+                  </View>
+                  <Button
+                    title={saving ? "Adding..." : "Add"}
+                    variant="primary"
+                    size="sm"
+                    onPress={() => handleSelect(r)}
+                    loading={saving}
+                  />
+                </TouchableOpacity>
+              </CardBody>
+            </Card>
+          ))}
+        </View>
+      ) : null}
 
-    // Search results
-    results.length > 0
-      ? React.createElement(
-          "div",
-          { style: { marginTop: "8px" } },
-          results.map((r) =>
-            React.createElement(
-              Card,
-              { key: r.code },
-              React.createElement(
-                CardBody,
-                null,
-                React.createElement(
-                  "div",
-                  {
-                    style: { display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" },
-                    onClick: () => handleSelect(r),
-                    "data-testid": `icd-result-${r.code}`,
-                  },
-                  React.createElement(
-                    "div",
-                    null,
-                    React.createElement(Badge, { variant: "outline", children: r.code }),
-                    React.createElement("span", { style: { marginLeft: "8px" } }, r.description),
-                    React.createElement(
-                      "span",
-                      { style: { fontSize: "12px", color: "#9CA3AF", marginLeft: "8px" } },
-                      r.chapter
-                    )
-                  ),
-                  React.createElement(Button, {
-                    title: saving ? "Adding..." : "Add",
-                    variant: "primary",
-                    size: "sm",
-                    onPress: () => handleSelect(r),
-                    loading: saving,
-                  })
-                )
-              )
-            )
-          )
-        )
-      : null,
-
-    // Current diagnoses
-    React.createElement(
-      "div",
-      { style: { marginTop: "12px" } },
-      diagnoses.map((dx) =>
-        React.createElement(DiagnosisBadge, {
-          key: dx.id,
-          code: dx.icdCode,
-          description: dx.icdDescription,
-          isPrimary: dx.isPrimary,
-        })
-      )
-    )
+      {/* Current diagnoses */}
+      <View style={styles.diagnosesContainer}>
+        {diagnoses.map((dx) => (
+          <DiagnosisBadge
+            key={dx.id}
+            code={dx.icdCode}
+            description={dx.icdDescription}
+            isPrimary={dx.isPrimary}
+          />
+        ))}
+      </View>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  searchRow: {
+    flexDirection: "row",
+    gap: 8,
+    alignItems: "flex-end",
+  },
+  resultsContainer: {
+    marginTop: 8,
+  },
+  resultRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  resultInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  resultDescription: {
+    marginLeft: 8,
+  },
+  resultChapter: {
+    fontSize: 12,
+    color: "#9CA3AF",
+    marginLeft: 8,
+  },
+  diagnosesContainer: {
+    marginTop: 12,
+  },
+});

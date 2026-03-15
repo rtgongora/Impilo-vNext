@@ -1,10 +1,12 @@
 /**
  * NetworkStatusBar — Shows offline/online status.
  *
- * Listens to browser online/offline events and syncs with appStore.
+ * Listens to NetInfo connectivity changes and syncs with appStore.
  */
 
 import React, { useEffect } from "react";
+import { View, Text, StyleSheet } from "react-native";
+import NetInfo from "@react-native-community/netinfo";
 import { StatusIndicator } from "@impilo/mobile-design-system";
 import { useAppStore, appStore } from "../stores/appStore";
 import { useSyncEngine } from "@impilo/mobile-offline";
@@ -14,18 +16,18 @@ export function NetworkStatusBar() {
   const { status: syncStatus } = useSyncEngine();
 
   useEffect(() => {
-    const handleOnline = () => appStore.getState().setOnlineStatus(true);
-    const handleOffline = () => appStore.getState().setOnlineStatus(false);
-
-    window.addEventListener("online", handleOnline);
-    window.addEventListener("offline", handleOffline);
-
     // Set initial state
-    appStore.getState().setOnlineStatus(navigator.onLine);
+    NetInfo.fetch().then((state) => {
+      appStore.getState().setOnlineStatus(!!state.isConnected);
+    });
+
+    // Subscribe to connectivity changes
+    const unsubscribe = NetInfo.addEventListener((state) => {
+      appStore.getState().setOnlineStatus(!!state.isConnected);
+    });
 
     return () => {
-      window.removeEventListener("online", handleOnline);
-      window.removeEventListener("offline", handleOffline);
+      unsubscribe();
     };
   }, []);
 
@@ -34,7 +36,7 @@ export function NetworkStatusBar() {
   }
 
   const statusText = !isOnline
-    ? "Offline — changes will sync when connected"
+    ? "Offline \u2014 changes will sync when connected"
     : syncStatus === "syncing"
       ? `Syncing ${pendingSyncCount} items...`
       : pendingSyncCount > 0
@@ -43,23 +45,32 @@ export function NetworkStatusBar() {
 
   if (!statusText) return null;
 
-  return React.createElement(
-    "div",
-    {
-      "data-testid": "network-status-bar",
-      style: {
-        backgroundColor: isOnline ? "#FEF3C7" : "#FEE2E2",
-        padding: "8px 16px",
-        display: "flex",
-        alignItems: "center",
-        gap: "8px",
-        fontSize: "14px",
-      },
-    },
-    React.createElement(StatusIndicator, {
-      status: isOnline ? "syncing" : "offline",
-      size: "sm",
-    }),
-    React.createElement("span", null, statusText)
+  return (
+    <View
+      testID="network-status-bar"
+      style={[
+        styles.container,
+        { backgroundColor: isOnline ? "#FEF3C7" : "#FEE2E2" },
+      ]}
+    >
+      <StatusIndicator
+        status={isOnline ? "syncing" : "offline"}
+        size="sm"
+      />
+      <Text style={styles.statusText}>{statusText}</Text>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+  },
+  statusText: {
+    fontSize: 14,
+    marginLeft: 8,
+  },
+});

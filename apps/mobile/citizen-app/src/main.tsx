@@ -1,5 +1,4 @@
-/**
- * Citizen App — Entry point.
- */
+import { registerRootComponent } from "expo";
+import { App } from "./App";
 
-export { App } from "./App";
+registerRootComponent(App);

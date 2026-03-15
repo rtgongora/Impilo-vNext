@@ -3,6 +3,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from "react";
+import { View, Text, ScrollView, StyleSheet } from "react-native";
 import {
   Screen,
   Header,
@@ -103,94 +104,120 @@ export function HouseholdListScreen() {
       h.address.toLowerCase().includes(search.toLowerCase())
   );
 
-  return React.createElement(
-    Screen,
-    null,
-    React.createElement(Header, { title: "Households" }),
-    React.createElement(
-      "div",
-      { "data-testid": "household-list-screen", style: { padding: "16px" } },
+  return (
+    <Screen>
+      <Header title="Households" />
+      <ScrollView testID="household-list-screen" style={styles.container}>
+        <View style={styles.searchRow}>
+          <TextField
+            label="Search"
+            value={search}
+            onChange={setSearch}
+            placeholder="Search households..."
+            testID="household-search"
+          />
+          <Button
+            title="Register New"
+            variant="primary"
+            onPress={() => setShowRegister(true)}
+            testID="register-household-btn"
+          />
+        </View>
 
-      React.createElement(
-        "div",
-        { style: { display: "flex", gap: "8px", marginBottom: "16px" } },
-        React.createElement(TextField, {
-          label: "Search",
-          value: search,
-          onChange: setSearch,
-          placeholder: "Search households...",
-          testID: "household-search",
-        }),
-        React.createElement(Button, {
-          title: "Register New",
-          variant: "primary",
-          onPress: () => setShowRegister(true),
-          testID: "register-household-btn",
-        })
-      ),
+        {showRegister && (
+          <Card>
+            <CardBody>
+              <TextField
+                label="Head of Household"
+                value={registerForm.headOfHousehold}
+                onChange={(v: string) => setRegisterForm((f) => ({ ...f, headOfHousehold: v }))}
+                testID="hh-head"
+              />
+              <TextField
+                label="Address"
+                value={registerForm.address}
+                onChange={(v: string) => setRegisterForm((f) => ({ ...f, address: v }))}
+                testID="hh-address"
+              />
+              <View style={styles.formActions}>
+                <Button title="Save" onPress={handleRegister} loading={saving} testID="save-household-btn" />
+                <Button title="Cancel" variant="ghost" onPress={() => setShowRegister(false)} />
+              </View>
+            </CardBody>
+          </Card>
+        )}
 
-      showRegister
-        ? React.createElement(
-            Card,
-            null,
-            React.createElement(CardBody, null,
-              React.createElement(TextField, {
-                label: "Head of Household",
-                value: registerForm.headOfHousehold,
-                onChange: (v: string) => setRegisterForm((f) => ({ ...f, headOfHousehold: v })),
-                testID: "hh-head",
-              }),
-              React.createElement(TextField, {
-                label: "Address",
-                value: registerForm.address,
-                onChange: (v: string) => setRegisterForm((f) => ({ ...f, address: v })),
-                testID: "hh-address",
-              }),
-              React.createElement("div", { style: { display: "flex", gap: "8px", marginTop: "12px" } },
-                React.createElement(Button, { title: "Save", onPress: handleRegister, loading: saving, testID: "save-household-btn" }),
-                React.createElement(Button, { title: "Cancel", variant: "ghost", onPress: () => setShowRegister(false) })
-              )
-            )
-          )
-        : null,
-
-      loading
-        ? React.createElement(LoadingSpinner, { size: "md" })
-        : error
-          ? React.createElement(ErrorState, { title: "Error", message: error, onRetry: loadHouseholds })
-          : filtered.length === 0
-            ? React.createElement(EmptyState, { title: "No households", message: "Register a new household to begin" })
-            : filtered.map((hh) =>
-                React.createElement(
-                  Card,
-                  { key: hh.id },
-                  React.createElement(CardBody, null,
-                    React.createElement("div", { "data-testid": `household-${hh.id}`, style: { display: "flex", justifyContent: "space-between" } },
-                      React.createElement("div", null,
-                        React.createElement("strong", null, hh.headOfHousehold),
-                        React.createElement("p", { style: { fontSize: "14px", color: "#6B7280" } }, hh.address),
-                        React.createElement("div", { style: { display: "flex", gap: "4px", marginTop: "4px" } },
-                          React.createElement(Badge, { variant: "outline", children: `${hh.members.length} members` }),
-                          React.createElement(Badge, {
-                            variant: hh.riskCategory === "HIGH" ? "destructive" : hh.riskCategory === "MEDIUM" ? "secondary" : "outline",
-                            children: hh.riskCategory,
-                          }),
-                          hh.lastVisitDate
-                            ? React.createElement(Badge, { variant: "outline", children: `Last: ${new Date(hh.lastVisitDate).toLocaleDateString()}` })
-                            : null
-                        )
-                      ),
-                      React.createElement(Button, {
-                        title: "Visit",
-                        variant: "primary",
-                        size: "sm",
-                        onPress: () => handleStartVisit(hh),
-                        testID: `visit-hh-${hh.id}`,
-                      })
-                    )
-                  )
-                )
-              )
-    )
+        {loading ? (
+          <LoadingSpinner size="md" />
+        ) : error ? (
+          <ErrorState title="Error" message={error} onRetry={loadHouseholds} />
+        ) : filtered.length === 0 ? (
+          <EmptyState title="No households" message="Register a new household to begin" />
+        ) : (
+          filtered.map((hh) => (
+            <Card key={hh.id}>
+              <CardBody>
+                <View testID={`household-${hh.id}`} style={styles.householdRow}>
+                  <View>
+                    <Text style={styles.boldText}>{hh.headOfHousehold}</Text>
+                    <Text style={styles.addressText}>{hh.address}</Text>
+                    <View style={styles.badgeRow}>
+                      <Badge variant="outline">{`${hh.members.length} members`}</Badge>
+                      <Badge
+                        variant={hh.riskCategory === "HIGH" ? "destructive" : hh.riskCategory === "MEDIUM" ? "secondary" : "outline"}
+                      >
+                        {hh.riskCategory}
+                      </Badge>
+                      {hh.lastVisitDate && (
+                        <Badge variant="outline">{`Last: ${new Date(hh.lastVisitDate).toLocaleDateString()}`}</Badge>
+                      )}
+                    </View>
+                  </View>
+                  <Button
+                    title="Visit"
+                    variant="primary"
+                    size="sm"
+                    onPress={() => handleStartVisit(hh)}
+                    testID={`visit-hh-${hh.id}`}
+                  />
+                </View>
+              </CardBody>
+            </Card>
+          ))
+        )}
+      </ScrollView>
+    </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 16,
+  },
+  searchRow: {
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 16,
+  },
+  formActions: {
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 12,
+  },
+  householdRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  boldText: {
+    fontWeight: "700",
+  },
+  addressText: {
+    fontSize: 14,
+    color: "#6B7280",
+  },
+  badgeRow: {
+    flexDirection: "row",
+    gap: 4,
+    marginTop: 4,
+  },
+});

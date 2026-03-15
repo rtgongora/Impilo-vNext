@@ -6,6 +6,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from "react";
+import { View, Text, StyleSheet } from "react-native";
 import { apiClient } from "@impilo/mobile-api-client";
 import { useAuth } from "@impilo/mobile-auth";
 import {
@@ -80,78 +81,81 @@ export function SelectFacilityScreen() {
     [auth]
   );
 
-  return React.createElement(
-    Screen,
-    null,
-    React.createElement(Header, { title: "Select Facility" }),
-    React.createElement(
-      "div",
-      { "data-testid": "select-facility-screen", style: { padding: "16px" } },
-      React.createElement(TextField, {
-        label: "Search facilities",
-        value: search,
-        onChange: setSearch,
-        placeholder: "Type facility name...",
-        testID: "facility-search",
-      }),
-      React.createElement(
-        "div",
-        { style: { marginTop: "16px" } },
-        loading
-          ? React.createElement(LoadingSpinner, { size: "md" })
-          : error
-            ? React.createElement(ErrorState, {
-                title: "Error",
-                message: error,
-                onRetry: fetchFacilities,
-              })
-            : facilities.length === 0
-              ? React.createElement(EmptyState, {
-                  title: "No facilities found",
-                  message: "Try a different search term",
-                })
-              : facilities.map((f) =>
-                  React.createElement(
-                    Card,
-                    { key: f.id },
-                    React.createElement(
-                      CardBody,
-                      null,
-                      React.createElement(
-                        "div",
-                        {
-                          style: {
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                          },
-                        },
-                        React.createElement(
-                          "div",
-                          null,
-                          React.createElement(
-                            "strong",
-                            null,
-                            f.name
-                          ),
-                          React.createElement(
-                            "p",
-                            { style: { fontSize: "14px", color: "#6B7280", margin: "4px 0 0" } },
-                            `${f.facilityType} · ${f.district}, ${f.province}`
-                          )
-                        ),
-                        React.createElement(Button, {
-                          title: "Select",
-                          variant: "primary",
-                          size: "sm",
-                          onPress: () => handleSelectFacility(f),
-                          testID: `select-facility-${f.id}`,
-                        })
-                      )
-                    )
-                  )
-                )
-      )
-    )
+  return (
+    <Screen>
+      <Header title="Select Facility" />
+      <View testID="select-facility-screen" style={styles.container}>
+        <TextField
+          label="Search facilities"
+          value={search}
+          onChange={setSearch}
+          placeholder="Type facility name..."
+          testID="facility-search"
+        />
+        <View style={styles.listContainer}>
+          {loading ? (
+            <LoadingSpinner size="md" />
+          ) : error ? (
+            <ErrorState
+              title="Error"
+              message={error}
+              onRetry={fetchFacilities}
+            />
+          ) : facilities.length === 0 ? (
+            <EmptyState
+              title="No facilities found"
+              message="Try a different search term"
+            />
+          ) : (
+            facilities.map((f) => (
+              <Card key={f.id}>
+                <CardBody>
+                  <View style={styles.facilityRow}>
+                    <View style={styles.facilityInfo}>
+                      <Text style={styles.facilityName}>{f.name}</Text>
+                      <Text style={styles.facilityDetail}>
+                        {`${f.facilityType} \u00B7 ${f.district}, ${f.province}`}
+                      </Text>
+                    </View>
+                    <Button
+                      title="Select"
+                      variant="primary"
+                      size="sm"
+                      onPress={() => handleSelectFacility(f)}
+                      testID={`select-facility-${f.id}`}
+                    />
+                  </View>
+                </CardBody>
+              </Card>
+            ))
+          )}
+        </View>
+      </View>
+    </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 16,
+  },
+  listContainer: {
+    marginTop: 16,
+  },
+  facilityRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  facilityInfo: {
+    flex: 1,
+  },
+  facilityName: {
+    fontWeight: "bold",
+  },
+  facilityDetail: {
+    fontSize: 14,
+    color: "#6B7280",
+    marginTop: 4,
+  },
+});

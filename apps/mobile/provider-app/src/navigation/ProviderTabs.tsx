@@ -5,6 +5,7 @@
  */
 
 import React, { useState, useCallback } from "react";
+import { View, StyleSheet } from "react-native";
 import { TabBar } from "@impilo/mobile-design-system";
 import { ProviderDashboardScreen } from "../screens/provider/ProviderDashboardScreen";
 import { PatientLookupScreen } from "../screens/provider/PatientLookupScreen";
@@ -32,30 +33,39 @@ export function ProviderTabs() {
   const renderContent = () => {
     switch (activeTab) {
       case "dashboard":
-        return React.createElement(ProviderDashboardScreen, null);
+        return <ProviderDashboardScreen />;
       case "patients":
-        return React.createElement(PatientLookupScreen, null);
+        return <PatientLookupScreen />;
       case "activity":
-        return React.createElement(ActivityFeedScreen, null);
+        return <ActivityFeedScreen />;
       case "notifications":
-        return React.createElement(NotificationsScreen, null);
+        return <NotificationsScreen />;
       default:
-        return React.createElement(ProviderDashboardScreen, null);
+        return <ProviderDashboardScreen />;
     }
   };
 
-  return React.createElement(
-    "div",
-    { "data-testid": "provider-tabs" },
-    React.createElement("main", { style: { flex: 1 } }, renderContent()),
-    React.createElement(TabBar, {
-      items: TABS.map((t) => ({
-        key: t.key,
-        label: t.label,
-        badge: t.key === "notifications" && unreadNotifications > 0 ? unreadNotifications : undefined,
-      })),
-      activeKey: activeTab,
-      onSelect: handleTabChange,
-    })
+  return (
+    <View testID="provider-tabs" style={styles.container}>
+      <View style={styles.content}>{renderContent()}</View>
+      <TabBar
+        items={TABS.map((t) => ({
+          key: t.key,
+          label: t.label,
+          badge: t.key === "notifications" && unreadNotifications > 0 ? unreadNotifications : undefined,
+        }))}
+        activeKey={activeTab}
+        onSelect={handleTabChange}
+      />
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  content: {
+    flex: 1,
+  },
+});

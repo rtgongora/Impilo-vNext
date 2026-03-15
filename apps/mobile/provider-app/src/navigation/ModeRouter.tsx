@@ -6,6 +6,7 @@
  */
 
 import React, { useCallback } from "react";
+import { View, StyleSheet } from "react-native";
 import { useAppStore } from "../stores/appStore";
 import { ProviderTabs } from "./ProviderTabs";
 import { OutreachTabs } from "./OutreachTabs";
@@ -20,22 +21,28 @@ export function ModeRouter() {
   const renderMode = useCallback(() => {
     switch (mode) {
       case "provider":
-        return React.createElement(ProviderTabs, null);
+        return <ProviderTabs />;
       case "outreach":
-        return React.createElement(OutreachTabs, null);
+        return <OutreachTabs />;
       case "supervisor":
-        return React.createElement(SupervisorTabs, null);
+        return <SupervisorTabs />;
       case "offline":
-        return React.createElement(OfflineTabs, null);
+        return <OfflineTabs />;
       default:
-        return React.createElement(ProviderTabs, null);
+        return <ProviderTabs />;
     }
   }, [mode]);
 
-  return React.createElement(
-    "div",
-    { "data-testid": "mode-router", "data-mode": mode },
-    React.createElement(ModeSwitcher, null),
-    renderMode()
+  return (
+    <View testID="mode-router" style={styles.container}>
+      <ModeSwitcher />
+      {renderMode()}
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+});

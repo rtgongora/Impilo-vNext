@@ -3,7 +3,19 @@
  */
 
 import React, { useState, useEffect, useCallback } from "react";
-import { Screen, Header, Card, CardBody, Button, Badge, TextField, LoadingSpinner, EmptyState, ErrorState } from "@impilo/mobile-design-system";
+import { View, Text, ScrollView, StyleSheet } from "react-native";
+import {
+  Screen,
+  Header,
+  Card,
+  CardBody,
+  Button,
+  Badge,
+  TextField,
+  LoadingSpinner,
+  EmptyState,
+  ErrorState,
+} from "@impilo/mobile-design-system";
 import { getEscalations, acknowledgeEscalation, resolveEscalation, getSupportTickets, createSupportTicket } from "../../services/supportService";
 import { useAppStore } from "../../stores/appStore";
 import type { Escalation, SupportTicket } from "../../types";
@@ -37,7 +49,9 @@ export function EscalationsScreen() {
     }
   }, [facilityId]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+  }, [load]);
 
   const handleAcknowledge = useCallback(async (id: string) => {
     try { await acknowledgeEscalation(id); load(); } catch {}
@@ -64,84 +78,179 @@ export function EscalationsScreen() {
 
   const SEVERITY_COLORS: Record<string, string> = { CRITICAL: "destructive", HIGH: "destructive", MEDIUM: "secondary", LOW: "outline" };
 
-  return React.createElement(
-    Screen, null,
-    React.createElement(Header, { title: "Escalations & Support" }),
-    React.createElement("div", { "data-testid": "escalations-screen", style: { padding: "16px" } },
-      React.createElement("div", { style: { display: "flex", gap: "8px", marginBottom: "16px" } },
-        React.createElement(Button, { title: "Escalations", variant: view === "escalations" ? "primary" : "outline", onPress: () => setView("escalations"), testID: "view-escalations" }),
-        React.createElement(Button, { title: "Support Tickets", variant: view === "tickets" ? "primary" : "outline", onPress: () => setView("tickets"), testID: "view-tickets" })
-      ),
+  return (
+    <Screen>
+      <Header title="Escalations & Support" />
+      <ScrollView testID="escalations-screen" style={styles.container}>
+        <View style={styles.toggleRow}>
+          <Button
+            title="Escalations"
+            variant={view === "escalations" ? "primary" : "outline"}
+            onPress={() => setView("escalations")}
+            testID="view-escalations"
+          />
+          <Button
+            title="Support Tickets"
+            variant={view === "tickets" ? "primary" : "outline"}
+            onPress={() => setView("tickets")}
+            testID="view-tickets"
+          />
+        </View>
 
-      loading
-        ? React.createElement(LoadingSpinner, { size: "md" })
-        : error
-          ? React.createElement(ErrorState, { title: "Error", message: error, onRetry: load })
-          : view === "escalations"
-            ? escalations.length === 0
-              ? React.createElement(EmptyState, { title: "No escalations", message: "All clear" })
-              : escalations.map((esc) =>
-                  React.createElement(Card, { key: esc.id },
-                    React.createElement(CardBody, null,
-                      React.createElement("div", { "data-testid": `escalation-${esc.id}` },
-                        React.createElement("div", { style: { display: "flex", justifyContent: "space-between" } },
-                          React.createElement("strong", null, esc.title),
-                          React.createElement(Badge, { variant: SEVERITY_COLORS[esc.severity] as "destructive" | "secondary" | "outline", children: esc.severity })
-                        ),
-                        React.createElement("p", { style: { fontSize: "14px", color: "#6B7280" } }, esc.description),
-                        React.createElement("div", { style: { display: "flex", gap: "4px", marginTop: "4px" } },
-                          React.createElement(Badge, { variant: "outline", children: esc.type }),
-                          React.createElement(Badge, { variant: "secondary", children: esc.status }),
-                          React.createElement("span", { style: { fontSize: "12px", color: "#9CA3AF" } }, `By: ${esc.raisedByName}`)
-                        ),
-                        esc.status === "PENDING"
-                          ? React.createElement("div", { style: { display: "flex", gap: "8px", marginTop: "8px" } },
-                              React.createElement(Button, { title: "Acknowledge", variant: "secondary", size: "sm", onPress: () => handleAcknowledge(esc.id), testID: `ack-${esc.id}` }),
-                              React.createElement(Button, { title: "Resolve", variant: "primary", size: "sm", onPress: () => handleResolve(esc.id), testID: `resolve-${esc.id}` })
-                            )
-                          : null
-                      )
-                    )
-                  )
-                )
-            : React.createElement(React.Fragment, null,
-                React.createElement("div", { style: { marginBottom: "12px" } },
-                  React.createElement(Button, { title: "New Ticket", variant: "primary", onPress: () => setShowNewTicket(true), testID: "new-ticket-btn" })
-                ),
-                showNewTicket
-                  ? React.createElement(Card, null,
-                      React.createElement(CardBody, null,
-                        React.createElement(TextField, { label: "Title", value: ticketForm.title, onChange: (v: string) => setTicketForm((f) => ({ ...f, title: v })), testID: "ticket-title" }),
-                        React.createElement(TextField, { label: "Description", value: ticketForm.description, onChange: (v: string) => setTicketForm((f) => ({ ...f, description: v })), testID: "ticket-desc" }),
-                        React.createElement("div", { style: { display: "flex", gap: "8px", marginTop: "12px" } },
-                          React.createElement(Button, { title: "Submit", onPress: handleCreateTicket, loading: saving, testID: "submit-ticket" }),
-                          React.createElement(Button, { title: "Cancel", variant: "ghost", onPress: () => setShowNewTicket(false) })
-                        )
-                      )
-                    )
-                  : null,
-                tickets.length === 0
-                  ? React.createElement(EmptyState, { title: "No tickets", message: "Create a support ticket" })
-                  : tickets.map((t) =>
-                      React.createElement(Card, { key: t.id },
-                        React.createElement(CardBody, null,
-                          React.createElement("div", { "data-testid": `ticket-${t.id}` },
-                            React.createElement("strong", null, t.title),
-                            React.createElement("p", { style: { fontSize: "14px", color: "#6B7280" } }, t.description),
-                            React.createElement("div", { style: { display: "flex", gap: "4px", marginTop: "4px" } },
-                              React.createElement(Badge, { variant: "secondary", children: t.status }),
-                              React.createElement(Badge, { variant: "outline", children: t.priority }),
-                              React.createElement(Badge, { variant: "outline", children: t.category })
-                            )
-                          )
-                        )
-                      )
-                    )
-              ),
+        {loading ? (
+          <LoadingSpinner size="md" />
+        ) : error ? (
+          <ErrorState title="Error" message={error} onRetry={load} />
+        ) : view === "escalations" ? (
+          escalations.length === 0 ? (
+            <EmptyState title="No escalations" message="All clear" />
+          ) : (
+            escalations.map((esc) => (
+              <Card key={esc.id}>
+                <CardBody>
+                  <View testID={`escalation-${esc.id}`}>
+                    <View style={styles.itemHeader}>
+                      <Text style={styles.boldText}>{esc.title}</Text>
+                      <Badge
+                        variant={SEVERITY_COLORS[esc.severity] as "destructive" | "secondary" | "outline"}
+                      >
+                        {esc.severity}
+                      </Badge>
+                    </View>
+                    <Text style={styles.descriptionText}>{esc.description}</Text>
+                    <View style={styles.badgeRow}>
+                      <Badge variant="outline">{esc.type}</Badge>
+                      <Badge variant="secondary">{esc.status}</Badge>
+                      <Text style={styles.raisedByText}>{`By: ${esc.raisedByName}`}</Text>
+                    </View>
+                    {esc.status === "PENDING" && (
+                      <View style={styles.actionRow}>
+                        <Button
+                          title="Acknowledge"
+                          variant="secondary"
+                          size="sm"
+                          onPress={() => handleAcknowledge(esc.id)}
+                          testID={`ack-${esc.id}`}
+                        />
+                        <Button
+                          title="Resolve"
+                          variant="primary"
+                          size="sm"
+                          onPress={() => handleResolve(esc.id)}
+                          testID={`resolve-${esc.id}`}
+                        />
+                      </View>
+                    )}
+                  </View>
+                </CardBody>
+              </Card>
+            ))
+          )
+        ) : (
+          <>
+            <View style={styles.newTicketContainer}>
+              <Button
+                title="New Ticket"
+                variant="primary"
+                onPress={() => setShowNewTicket(true)}
+                testID="new-ticket-btn"
+              />
+            </View>
+            {showNewTicket && (
+              <Card>
+                <CardBody>
+                  <TextField
+                    label="Title"
+                    value={ticketForm.title}
+                    onChange={(v: string) => setTicketForm((f) => ({ ...f, title: v }))}
+                    testID="ticket-title"
+                  />
+                  <TextField
+                    label="Description"
+                    value={ticketForm.description}
+                    onChange={(v: string) => setTicketForm((f) => ({ ...f, description: v }))}
+                    testID="ticket-desc"
+                  />
+                  <View style={styles.formActions}>
+                    <Button title="Submit" onPress={handleCreateTicket} loading={saving} testID="submit-ticket" />
+                    <Button title="Cancel" variant="ghost" onPress={() => setShowNewTicket(false)} />
+                  </View>
+                </CardBody>
+              </Card>
+            )}
+            {tickets.length === 0 ? (
+              <EmptyState title="No tickets" message="Create a support ticket" />
+            ) : (
+              tickets.map((t) => (
+                <Card key={t.id}>
+                  <CardBody>
+                    <View testID={`ticket-${t.id}`}>
+                      <Text style={styles.boldText}>{t.title}</Text>
+                      <Text style={styles.descriptionText}>{t.description}</Text>
+                      <View style={styles.badgeRow}>
+                        <Badge variant="secondary">{t.status}</Badge>
+                        <Badge variant="outline">{t.priority}</Badge>
+                        <Badge variant="outline">{t.category}</Badge>
+                      </View>
+                    </View>
+                  </CardBody>
+                </Card>
+              ))
+            )}
+          </>
+        )}
 
-      React.createElement("div", { style: { marginTop: "16px" } },
-        React.createElement(Button, { title: "Refresh", variant: "outline", onPress: load, testID: "refresh-escalations" })
-      )
-    )
+        <View style={styles.refreshContainer}>
+          <Button title="Refresh" variant="outline" onPress={load} testID="refresh-escalations" />
+        </View>
+      </ScrollView>
+    </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 16,
+  },
+  toggleRow: {
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 16,
+  },
+  itemHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  boldText: {
+    fontWeight: "700",
+  },
+  descriptionText: {
+    fontSize: 14,
+    color: "#6B7280",
+  },
+  badgeRow: {
+    flexDirection: "row",
+    gap: 4,
+    marginTop: 4,
+  },
+  raisedByText: {
+    fontSize: 12,
+    color: "#9CA3AF",
+  },
+  actionRow: {
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 8,
+  },
+  newTicketContainer: {
+    marginBottom: 12,
+  },
+  formActions: {
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 12,
+  },
+  refreshContainer: {
+    marginTop: 16,
+  },
+});

@@ -5,6 +5,7 @@
  */
 
 import React, { useState, useCallback, useEffect } from "react";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import {
   Screen,
   Header,
@@ -35,64 +36,56 @@ export function MessagingScreen() {
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
 
   if (activeConversationId) {
-    return React.createElement(ConversationView, {
-      conversationId: activeConversationId,
-      currentUserId: auth.user?.sub ?? "",
-      onBack: () => setActiveConversationId(null),
-    });
+    return (
+      <ConversationView
+        conversationId={activeConversationId}
+        currentUserId={auth.user?.sub ?? ""}
+        onBack={() => setActiveConversationId(null)}
+      />
+    );
   }
 
-  return React.createElement(
-    Screen,
-    null,
-    React.createElement(Header, { title: "Messages" }),
-    React.createElement(
-      "div",
-      { "data-testid": "messaging-screen", style: { padding: "16px" } },
-      loading
-        ? React.createElement(LoadingSpinner, { size: "md" })
-        : error
-          ? React.createElement(ErrorState, { title: "Error", message: error, onRetry: refresh })
-          : conversations.length === 0
-            ? React.createElement(EmptyState, { title: "No conversations", message: "Start a new conversation" })
-            : conversations.map((conv: Conversation) =>
-                React.createElement(
-                  Card,
-                  { key: conv.id },
-                  React.createElement(
-                    CardBody,
-                    null,
-                    React.createElement(
-                      "div",
-                      {
-                        "data-testid": `conversation-${conv.id}`,
-                        style: { display: "flex", alignItems: "center", gap: "12px", cursor: "pointer" },
-                        onClick: () => setActiveConversationId(conv.id),
-                      },
-                      React.createElement(Avatar, { name: conv.title ?? "Unknown", size: "md" }),
-                      React.createElement(
-                        "div",
-                        { style: { flex: 1 } },
-                        React.createElement("strong", null, conv.title),
-                        conv.lastMessage
-                          ? React.createElement("p", { style: { fontSize: "14px", color: "#6B7280", margin: "2px 0" } },
-                              conv.lastMessage.content.substring(0, 60)
-                            )
-                          : null,
-                        React.createElement(
-                          "span",
-                          { style: { fontSize: "12px", color: "#9CA3AF" } },
-                          conv.updatedAt ? new Date(conv.updatedAt).toLocaleString() : ""
-                        )
-                      ),
-                      conv.unreadCount > 0
-                        ? React.createElement(Badge, { variant: "primary", children: String(conv.unreadCount) })
-                        : null
-                    )
-                  )
-                )
-              )
-    )
+  return (
+    <Screen>
+      <Header title="Messages" />
+      <ScrollView testID="messaging-screen" style={styles.container}>
+        {loading ? (
+          <LoadingSpinner size="md" />
+        ) : error ? (
+          <ErrorState title="Error" message={error} onRetry={refresh} />
+        ) : conversations.length === 0 ? (
+          <EmptyState title="No conversations" message="Start a new conversation" />
+        ) : (
+          conversations.map((conv: Conversation) => (
+            <Card key={conv.id}>
+              <CardBody>
+                <TouchableOpacity
+                  testID={`conversation-${conv.id}`}
+                  style={styles.conversationRow}
+                  onPress={() => setActiveConversationId(conv.id)}
+                >
+                  <Avatar name={conv.title ?? "Unknown"} size="md" />
+                  <View style={styles.conversationInfo}>
+                    <Text style={styles.bold}>{conv.title}</Text>
+                    {conv.lastMessage ? (
+                      <Text style={styles.lastMessage}>
+                        {conv.lastMessage.content.substring(0, 60)}
+                      </Text>
+                    ) : null}
+                    <Text style={styles.timestamp}>
+                      {conv.updatedAt ? new Date(conv.updatedAt).toLocaleString() : ""}
+                    </Text>
+                  </View>
+                  {conv.unreadCount > 0 ? (
+                    <Badge variant="primary">{String(conv.unreadCount)}</Badge>
+                  ) : null}
+                </TouchableOpacity>
+              </CardBody>
+            </Card>
+          ))
+        )}
+      </ScrollView>
+    </Screen>
   );
 }
 
@@ -126,78 +119,138 @@ function ConversationView({ conversationId, currentUserId, onBack }: Conversatio
     }
   }, [conversationId, newMessage, refresh]);
 
-  return React.createElement(
-    Screen,
-    null,
-    React.createElement(Header, { title: "Conversation" }),
-    React.createElement(
-      "div",
-      { "data-testid": "conversation-view", style: { display: "flex", flexDirection: "column", height: "calc(100vh - 120px)" } },
+  return (
+    <Screen>
+      <Header title="Conversation" />
+      <View testID="conversation-view" style={styles.conversationContainer}>
+        <View style={styles.backRow}>
+          <Button title="Back" variant="ghost" size="sm" onPress={onBack} testID="back-btn" />
+        </View>
 
-      React.createElement(
-        "div",
-        { style: { padding: "8px 16px" } },
-        React.createElement(Button, { title: "Back", variant: "ghost", size: "sm", onPress: onBack, testID: "back-btn" })
-      ),
-
-      // Messages
-      React.createElement(
-        "div",
-        { style: { flex: 1, overflow: "auto", padding: "16px" } },
-        loading
-          ? React.createElement(LoadingSpinner, { size: "sm" })
-          : messages.map((msg: Message) =>
-              React.createElement(
-                "div",
-                {
-                  key: msg.id,
-                  "data-testid": `message-${msg.id}`,
-                  style: {
-                    display: "flex",
-                    justifyContent: msg.senderId === currentUserId ? "flex-end" : "flex-start",
-                    marginBottom: "8px",
-                  },
-                },
-                React.createElement(
-                  "div",
+        {/* Messages */}
+        <ScrollView style={styles.messagesScroll}>
+          {loading ? (
+            <LoadingSpinner size="sm" />
+          ) : (
+            messages.map((msg: Message) => (
+              <View
+                key={msg.id}
+                testID={`message-${msg.id}`}
+                style={[
+                  styles.messageWrapper,
                   {
-                    style: {
-                      backgroundColor: msg.senderId === currentUserId ? "#3B82F6" : "#F3F4F6",
-                      color: msg.senderId === currentUserId ? "#FFFFFF" : "#111827",
-                      padding: "8px 12px",
-                      borderRadius: "12px",
-                      maxWidth: "70%",
-                    },
+                    justifyContent:
+                      msg.senderId === currentUserId ? "flex-end" : "flex-start",
                   },
-                  React.createElement("p", { style: { margin: 0 } }, msg.content),
-                  React.createElement(
-                    "span",
-                    { style: { fontSize: "10px", opacity: 0.7 } },
-                    new Date(msg.sentAt).toLocaleTimeString()
-                  )
-                )
-              )
-            )
-      ),
+                ]}
+              >
+                <View
+                  style={[
+                    styles.messageBubble,
+                    {
+                      backgroundColor:
+                        msg.senderId === currentUserId ? "#3B82F6" : "#F3F4F6",
+                    },
+                  ]}
+                >
+                  <Text
+                    style={{
+                      color: msg.senderId === currentUserId ? "#FFFFFF" : "#111827",
+                    }}
+                  >
+                    {msg.content}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.messageTime,
+                      {
+                        color: msg.senderId === currentUserId ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.4)",
+                      },
+                    ]}
+                  >
+                    {new Date(msg.sentAt).toLocaleTimeString()}
+                  </Text>
+                </View>
+              </View>
+            ))
+          )}
+        </ScrollView>
 
-      // Input
-      React.createElement(
-        "div",
-        { style: { padding: "12px 16px", borderTop: "1px solid #E5E7EB", display: "flex", gap: "8px" } },
-        React.createElement(TextField, {
-          label: "",
-          value: newMessage,
-          onChange: setNewMessage,
-          placeholder: "Type a message...",
-          testID: "message-input",
-        }),
-        React.createElement(Button, {
-          title: "Send",
-          onPress: handleSend,
-          loading: sending,
-          testID: "send-message-btn",
-        })
-      )
-    )
+        {/* Input */}
+        <View style={styles.inputRow}>
+          <TextField
+            label=""
+            value={newMessage}
+            onChange={setNewMessage}
+            placeholder="Type a message..."
+            testID="message-input"
+          />
+          <Button
+            title="Send"
+            onPress={handleSend}
+            loading={sending}
+            testID="send-message-btn"
+          />
+        </View>
+      </View>
+    </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 16,
+  },
+  conversationRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  conversationInfo: {
+    flex: 1,
+  },
+  bold: {
+    fontWeight: "bold",
+  },
+  lastMessage: {
+    fontSize: 14,
+    color: "#6B7280",
+    marginVertical: 2,
+  },
+  timestamp: {
+    fontSize: 12,
+    color: "#9CA3AF",
+  },
+  conversationContainer: {
+    flex: 1,
+  },
+  backRow: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  messagesScroll: {
+    flex: 1,
+    padding: 16,
+  },
+  messageWrapper: {
+    flexDirection: "row",
+    marginBottom: 8,
+  },
+  messageBubble: {
+    padding: 8,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    maxWidth: "70%",
+  },
+  messageTime: {
+    fontSize: 10,
+  },
+  inputRow: {
+    padding: 12,
+    paddingHorizontal: 16,
+    borderTopWidth: 1,
+    borderTopColor: "#E5E7EB",
+    flexDirection: "row",
+    gap: 8,
+  },
+});

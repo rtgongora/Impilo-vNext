@@ -3,6 +3,7 @@
  */
 
 import React from "react";
+import { View, Text, StyleSheet } from "react-native";
 
 export type BadgeVariant = "default" | "primary" | "success" | "warning" | "error" | "info";
 export type BadgeSize = "sm" | "md";
@@ -22,16 +23,29 @@ export function Badge({
   icon,
   testID,
 }: BadgeProps) {
-  return React.createElement(
-    "span",
-    {
-      "data-testid": testID,
-      "data-variant": variant,
-      "data-size": size,
-      role: "status",
-      "aria-label": label,
-    },
-    icon ?? null,
-    label
+  return (
+    <View
+      testID={testID}
+      accessibilityRole="summary"
+      accessibilityLabel={label}
+      style={styles.container}
+    >
+      {icon ?? null}
+      <Text style={size === "sm" ? styles.labelSm : styles.labelMd}>{label}</Text>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  labelSm: {
+    fontSize: 11,
+  },
+  labelMd: {
+    fontSize: 13,
+  },
+});

@@ -3,7 +3,19 @@
  */
 
 import React, { useState, useEffect, useCallback } from "react";
-import { Screen, Header, Card, CardBody, Button, Badge, Avatar, LoadingSpinner, EmptyState, ErrorState } from "@impilo/mobile-design-system";
+import { View, Text, ScrollView, StyleSheet } from "react-native";
+import {
+  Screen,
+  Header,
+  Card,
+  CardBody,
+  Button,
+  Badge,
+  Avatar,
+  LoadingSpinner,
+  EmptyState,
+  ErrorState,
+} from "@impilo/mobile-design-system";
 import { getTeamMembers } from "../../services/supportService";
 import { useAppStore } from "../../stores/appStore";
 import type { TeamMember } from "../../types";
@@ -28,41 +40,91 @@ export function TeamOverviewScreen() {
     }
   }, [facilityId]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+  }, [load]);
 
-  if (loading) return React.createElement(Screen, null, React.createElement(Header, { title: "Team" }), React.createElement(LoadingSpinner, { size: "lg" }));
-  if (error) return React.createElement(Screen, null, React.createElement(Header, { title: "Team" }), React.createElement(ErrorState, { title: "Error", message: error, onRetry: load }));
+  if (loading) {
+    return (
+      <Screen>
+        <Header title="Team" />
+        <LoadingSpinner size="lg" />
+      </Screen>
+    );
+  }
 
-  return React.createElement(
-    Screen, null,
-    React.createElement(Header, { title: "Team Overview" }),
-    React.createElement("div", { "data-testid": "team-overview", style: { padding: "16px" } },
-      members.length === 0
-        ? React.createElement(EmptyState, { title: "No team members", message: "Team data is not available" })
-        : members.map((m) =>
-            React.createElement(Card, { key: m.id },
-              React.createElement(CardBody, null,
-                React.createElement("div", { "data-testid": `team-member-${m.id}`, style: { display: "flex", alignItems: "center", gap: "12px" } },
-                  React.createElement(Avatar, { name: m.name, size: "md" }),
-                  React.createElement("div", { style: { flex: 1 } },
-                    React.createElement("strong", null, m.name),
-                    React.createElement("p", { style: { fontSize: "14px", color: "#6B7280" } }, m.role),
-                    React.createElement("div", { style: { display: "flex", gap: "4px", marginTop: "4px" } },
-                      React.createElement(Badge, {
-                        variant: m.status === "ACTIVE" ? "primary" : m.status === "OFFLINE" ? "destructive" : "secondary",
-                        children: m.status,
-                      }),
-                      React.createElement(Badge, { variant: "outline", children: `${m.activeTasks} active` }),
-                      React.createElement(Badge, { variant: "outline", children: `${m.completedToday} done today` })
-                    )
-                  )
-                )
-              )
-            )
-          ),
-      React.createElement("div", { style: { marginTop: "16px" } },
-        React.createElement(Button, { title: "Refresh", variant: "outline", onPress: load, testID: "refresh-team" })
-      )
-    )
+  if (error) {
+    return (
+      <Screen>
+        <Header title="Team" />
+        <ErrorState title="Error" message={error} onRetry={load} />
+      </Screen>
+    );
+  }
+
+  return (
+    <Screen>
+      <Header title="Team Overview" />
+      <ScrollView testID="team-overview" style={styles.container}>
+        {members.length === 0 ? (
+          <EmptyState title="No team members" message="Team data is not available" />
+        ) : (
+          members.map((m) => (
+            <Card key={m.id}>
+              <CardBody>
+                <View testID={`team-member-${m.id}`} style={styles.memberRow}>
+                  <Avatar name={m.name} size="md" />
+                  <View style={styles.memberDetails}>
+                    <Text style={styles.boldText}>{m.name}</Text>
+                    <Text style={styles.roleText}>{m.role}</Text>
+                    <View style={styles.badgeRow}>
+                      <Badge
+                        variant={m.status === "ACTIVE" ? "primary" : m.status === "OFFLINE" ? "destructive" : "secondary"}
+                      >
+                        {m.status}
+                      </Badge>
+                      <Badge variant="outline">{`${m.activeTasks} active`}</Badge>
+                      <Badge variant="outline">{`${m.completedToday} done today`}</Badge>
+                    </View>
+                  </View>
+                </View>
+              </CardBody>
+            </Card>
+          ))
+        )}
+        <View style={styles.refreshContainer}>
+          <Button title="Refresh" variant="outline" onPress={load} testID="refresh-team" />
+        </View>
+      </ScrollView>
+    </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 16,
+  },
+  memberRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  memberDetails: {
+    flex: 1,
+  },
+  boldText: {
+    fontWeight: "700",
+  },
+  roleText: {
+    fontSize: 14,
+    color: "#6B7280",
+  },
+  badgeRow: {
+    flexDirection: "row",
+    gap: 4,
+    marginTop: 4,
+  },
+  refreshContainer: {
+    marginTop: 16,
+  },
+});

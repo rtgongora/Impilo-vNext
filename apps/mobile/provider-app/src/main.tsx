@@ -1,9 +1,4 @@
-/**
- * Provider App — Entry Point
- */
-
-import React from "react";
+import { registerRootComponent } from "expo";
 import { App } from "./App";
 
-export { App };
-export default App;
+registerRootComponent(App);

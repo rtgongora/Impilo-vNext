@@ -3,6 +3,7 @@
  */
 
 import React from "react";
+import { View, Text, Platform, StyleSheet } from "react-native";
 
 export interface DiagnosisBadgeProps {
   code: string;
@@ -12,23 +13,51 @@ export interface DiagnosisBadgeProps {
 }
 
 export function DiagnosisBadge({ code, description, isPrimary = false, testID }: DiagnosisBadgeProps) {
-  return React.createElement(
-    "div",
-    {
-      "data-testid": testID,
-      "aria-label": `${isPrimary ? "Primary " : ""}Diagnosis: ${code} - ${description}`,
-      style: {
-        display: "inline-flex",
-        alignItems: "center",
-        gap: 6,
-        padding: "4px 10px",
-        borderRadius: 6,
-        backgroundColor: isPrimary ? "#FFF3E0" : "#F5F5F5",
-        border: isPrimary ? "1px solid #FF9800" : "1px solid #E0E0E0",
-      },
-    },
-    React.createElement("span", { style: { fontWeight: 600, fontFamily: "monospace", fontSize: 12 } }, code),
-    React.createElement("span", { style: { fontSize: 13 } }, description),
-    isPrimary ? React.createElement("span", { style: { fontSize: 10, fontWeight: 600, color: "#E65100" } }, "PRIMARY") : null
+  return (
+    <View
+      testID={testID}
+      accessibilityLabel={`${isPrimary ? "Primary " : ""}Diagnosis: ${code} - ${description}`}
+      style={[
+        styles.container,
+        isPrimary ? styles.containerPrimary : styles.containerDefault,
+      ]}
+    >
+      <Text style={styles.code}>{code}</Text>
+      <Text style={styles.description}>{description}</Text>
+      {isPrimary ? <Text style={styles.primaryLabel}>PRIMARY</Text> : null}
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    borderRadius: 6,
+    borderWidth: 1,
+  },
+  containerPrimary: {
+    backgroundColor: "#FFF3E0",
+    borderColor: "#FF9800",
+  },
+  containerDefault: {
+    backgroundColor: "#F5F5F5",
+    borderColor: "#E0E0E0",
+  },
+  code: {
+    fontWeight: "600",
+    fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
+    fontSize: 12,
+  },
+  description: {
+    fontSize: 13,
+  },
+  primaryLabel: {
+    fontSize: 10,
+    fontWeight: "600",
+    color: "#E65100",
+  },
+});

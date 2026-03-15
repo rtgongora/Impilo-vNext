@@ -6,8 +6,8 @@
  */
 
 import React, { useEffect } from "react";
+import { View, ActivityIndicator, Text, StyleSheet } from "react-native";
 import { useAuth } from "@impilo/mobile-auth";
-import { LoadingSpinner } from "@impilo/mobile-design-system";
 import { LoginScreen } from "../screens/LoginScreen";
 import { appStore, useAppStore } from "../stores/appStore";
 import { fetchProfile } from "../services/profileService";
@@ -34,30 +34,38 @@ export function AuthGuard({ children }: AuthGuardProps) {
   }, [auth.isAuthenticated, profile]);
 
   if (auth.isLoading) {
-    return React.createElement(
-      "div",
-      {
-        "data-testid": "auth-loading",
-        style: { display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" },
-      },
-      React.createElement(LoadingSpinner, { size: "lg" })
+    return (
+      <View testID="auth-loading" style={styles.loading}>
+        <ActivityIndicator size="large" color="#059669" />
+      </View>
     );
   }
 
   if (!auth.isAuthenticated) {
-    return React.createElement(LoginScreen, null);
+    return <LoginScreen />;
   }
 
   if (!profile) {
-    return React.createElement(
-      "div",
-      {
-        "data-testid": "profile-loading",
-        style: { display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" },
-      },
-      React.createElement(LoadingSpinner, { size: "lg", message: "Loading your profile..." })
+    return (
+      <View testID="profile-loading" style={styles.loading}>
+        <ActivityIndicator size="large" color="#059669" />
+        <Text style={styles.loadingText}>Loading your profile...</Text>
+      </View>
     );
   }
 
-  return React.createElement(React.Fragment, null, children);
+  return <>{children}</>;
 }
+
+const styles = StyleSheet.create({
+  loading: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: "#6B7280",
+  },
+});

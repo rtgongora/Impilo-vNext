@@ -3,6 +3,7 @@
  */
 
 import React from "react";
+import { View, Text, Pressable, StyleSheet } from "react-native";
 
 export type RxStatus = "ACTIVE" | "COMPLETED" | "CANCELLED" | "DRAFT" | "ON_HOLD";
 
@@ -39,23 +40,78 @@ export function RxCard({
   onPress,
   testID,
 }: RxCardProps) {
-  const tag = onPress ? "button" : "div";
-  return React.createElement(
-    tag,
-    {
-      "data-testid": testID,
-      onClick: onPress,
-      role: onPress ? "button" : "group",
-      "aria-label": `Prescription: ${medicationName} ${dosage} ${frequency}`,
-      style: { borderLeft: `3px solid ${STATUS_COLORS[status]}`, padding: 12, textAlign: "left" as const },
-    },
-    React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center" } },
-      React.createElement("span", { style: { fontWeight: 600, fontSize: 15 } }, medicationName),
-      React.createElement("span", { style: { fontSize: 11, fontWeight: 600, color: STATUS_COLORS[status] } }, status)
-    ),
-    React.createElement("div", { style: { fontSize: 13, color: "#616161" } }, `${dosage} — ${frequency}`),
-    duration ? React.createElement("div", { style: { fontSize: 12, color: "#757575" } }, `Duration: ${duration}`) : null,
-    prescribedBy ? React.createElement("div", { style: { fontSize: 12, color: "#757575" } }, `By: ${prescribedBy}${prescribedDate ? ` on ${prescribedDate}` : ""}`) : null,
-    refillsRemaining !== undefined ? React.createElement("div", { style: { fontSize: 12, color: refillsRemaining === 0 ? "#F44336" : "#4CAF50" } }, `Refills remaining: ${refillsRemaining}`) : null
+  const content = (
+    <View
+      accessibilityLabel={`Prescription: ${medicationName} ${dosage} ${frequency}`}
+      style={[styles.container, { borderLeftColor: STATUS_COLORS[status] }]}
+    >
+      <View style={styles.headerRow}>
+        <Text style={styles.medicationName}>{medicationName}</Text>
+        <Text style={[styles.statusText, { color: STATUS_COLORS[status] }]}>{status}</Text>
+      </View>
+      <Text style={styles.dosageText}>{`${dosage} — ${frequency}`}</Text>
+      {duration ? <Text style={styles.detailText}>{`Duration: ${duration}`}</Text> : null}
+      {prescribedBy ? (
+        <Text style={styles.detailText}>
+          {`By: ${prescribedBy}${prescribedDate ? ` on ${prescribedDate}` : ""}`}
+        </Text>
+      ) : null}
+      {refillsRemaining !== undefined ? (
+        <Text
+          style={[
+            styles.detailText,
+            { color: refillsRemaining === 0 ? "#F44336" : "#4CAF50" },
+          ]}
+        >
+          {`Refills remaining: ${refillsRemaining}`}
+        </Text>
+      ) : null}
+    </View>
+  );
+
+  if (onPress) {
+    return (
+      <Pressable
+        testID={testID}
+        onPress={onPress}
+        accessibilityRole="button"
+      >
+        {content}
+      </Pressable>
+    );
+  }
+
+  return (
+    <View testID={testID} accessibilityRole="summary">
+      {content}
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    borderLeftWidth: 3,
+    padding: 12,
+  },
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  medicationName: {
+    fontWeight: "600",
+    fontSize: 15,
+  },
+  statusText: {
+    fontSize: 11,
+    fontWeight: "600",
+  },
+  dosageText: {
+    fontSize: 13,
+    color: "#616161",
+  },
+  detailText: {
+    fontSize: 12,
+    color: "#757575",
+  },
+});

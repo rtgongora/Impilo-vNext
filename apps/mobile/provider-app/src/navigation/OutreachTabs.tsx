@@ -5,6 +5,7 @@
  */
 
 import React, { useState, useCallback } from "react";
+import { View, StyleSheet } from "react-native";
 import { TabBar } from "@impilo/mobile-design-system";
 import { OutreachDashboardScreen } from "../screens/outreach/OutreachDashboardScreen";
 import { HouseholdListScreen } from "../screens/outreach/HouseholdListScreen";
@@ -30,26 +31,35 @@ export function OutreachTabs() {
   const renderContent = () => {
     switch (activeTab) {
       case "dashboard":
-        return React.createElement(OutreachDashboardScreen, null);
+        return <OutreachDashboardScreen />;
       case "households":
-        return React.createElement(HouseholdListScreen, null);
+        return <HouseholdListScreen />;
       case "screenings":
-        return React.createElement(ScreeningScreen, null);
+        return <ScreeningScreen />;
       case "schedule":
-        return React.createElement(FollowUpScreen, null);
+        return <FollowUpScreen />;
       default:
-        return React.createElement(OutreachDashboardScreen, null);
+        return <OutreachDashboardScreen />;
     }
   };
 
-  return React.createElement(
-    "div",
-    { "data-testid": "outreach-tabs" },
-    React.createElement("main", { style: { flex: 1 } }, renderContent()),
-    React.createElement(TabBar, {
-      items: TABS.map((t) => ({ key: t.key, label: t.label })),
-      activeKey: activeTab,
-      onSelect: handleTabChange,
-    })
+  return (
+    <View testID="outreach-tabs" style={styles.container}>
+      <View style={styles.content}>{renderContent()}</View>
+      <TabBar
+        items={TABS.map((t) => ({ key: t.key, label: t.label }))}
+        activeKey={activeTab}
+        onSelect={handleTabChange}
+      />
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  content: {
+    flex: 1,
+  },
+});

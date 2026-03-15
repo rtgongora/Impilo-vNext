@@ -3,6 +3,7 @@
  */
 
 import React from "react";
+import { View, Text, Pressable, Platform, StyleSheet } from "react-native";
 
 export interface ErrorStateProps {
   title?: string;
@@ -19,27 +20,51 @@ export function ErrorState({
   onRetry,
   testID,
 }: ErrorStateProps) {
-  return React.createElement(
-    "div",
-    {
-      "data-testid": testID,
-      role: "alert",
-      style: {
-        display: "flex",
-        flexDirection: "column" as const,
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 48,
-        textAlign: "center" as const,
-      },
-    },
-    React.createElement("h3", { style: { fontSize: 17, fontWeight: 600, color: "#C62828" } }, title),
-    React.createElement("p", { style: { fontSize: 14, color: "#616161", marginTop: 8 } }, message),
-    correlationId
-      ? React.createElement("p", { style: { fontSize: 11, color: "#9E9E9E", marginTop: 4, fontFamily: "monospace" } }, `Ref: ${correlationId}`)
-      : null,
-    onRetry
-      ? React.createElement("button", { onClick: onRetry, style: { marginTop: 16 } }, "Retry")
-      : null
+  return (
+    <View
+      testID={testID}
+      accessibilityRole="alert"
+      style={styles.container}
+    >
+      <Text style={styles.title}>{title}</Text>
+      <Text style={styles.message}>{message}</Text>
+      {correlationId ? (
+        <Text style={styles.correlationId}>Ref: {correlationId}</Text>
+      ) : null}
+      {onRetry ? (
+        <Pressable onPress={onRetry} style={styles.retryButton}>
+          <Text>Retry</Text>
+        </Pressable>
+      ) : null}
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 48,
+  },
+  title: {
+    fontSize: 17,
+    fontWeight: "600",
+    color: "#C62828",
+    textAlign: "center",
+  },
+  message: {
+    fontSize: 14,
+    color: "#616161",
+    marginTop: 8,
+    textAlign: "center",
+  },
+  correlationId: {
+    fontSize: 11,
+    color: "#9E9E9E",
+    marginTop: 4,
+    fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
+  },
+  retryButton: {
+    marginTop: 16,
+  },
+});

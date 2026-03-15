@@ -3,6 +3,7 @@
  */
 
 import React from "react";
+import { View, Text, Pressable, StyleSheet } from "react-native";
 
 export interface HeaderProps {
   title: string;
@@ -13,33 +14,56 @@ export interface HeaderProps {
 }
 
 export function Header({ title, subtitle, onBack, actions, testID }: HeaderProps) {
-  return React.createElement(
-    "header",
-    {
-      "data-testid": testID,
-      style: {
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        padding: "12px 16px",
-        borderBottom: "1px solid #E0E0E0",
-      },
-    },
-    React.createElement(
-      "div",
-      { style: { display: "flex", alignItems: "center", gap: 12 } },
-      onBack
-        ? React.createElement("button", { onClick: onBack, "aria-label": "Go back" }, "\u2190")
-        : null,
-      React.createElement(
-        "div",
-        null,
-        React.createElement("h1", { style: { fontSize: 17, fontWeight: 600, margin: 0 } }, title),
-        subtitle
-          ? React.createElement("p", { style: { fontSize: 13, color: "#757575", margin: 0 } }, subtitle)
-          : null
-      )
-    ),
-    actions ?? null
+  return (
+    <View testID={testID} style={styles.container}>
+      <View style={styles.leftSection}>
+        {onBack ? (
+          <Pressable
+            onPress={onBack}
+            accessibilityLabel="Go back"
+            accessibilityRole="button"
+            style={styles.backButton}
+          >
+            <Text style={styles.backArrow}>{"\u2190"}</Text>
+          </Pressable>
+        ) : null}
+        <View>
+          <Text style={styles.title}>{title}</Text>
+          {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+        </View>
+      </View>
+      {actions ?? null}
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E0E0E0",
+  },
+  leftSection: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  backButton: {
+    padding: 4,
+  },
+  backArrow: {
+    fontSize: 20,
+  },
+  title: {
+    fontSize: 17,
+    fontWeight: "600",
+  },
+  subtitle: {
+    fontSize: 13,
+    color: "#757575",
+  },
+});

@@ -3,6 +3,7 @@
  */
 
 import React from "react";
+import { View, ScrollView, StyleSheet } from "react-native";
 
 export interface ScreenProps {
   children: React.ReactNode;
@@ -19,18 +20,43 @@ export function Screen({
   backgroundColor,
   testID,
 }: ScreenProps) {
-  return React.createElement(
-    "div",
-    {
-      "data-testid": testID,
-      style: {
-        flex: 1,
-        backgroundColor: backgroundColor ?? "#FFFFFF",
-        padding: padding ? 16 : 0,
-        overflow: scrollable ? "auto" : "hidden",
-        minHeight: "100vh",
-      },
-    },
-    children
+  const containerStyle = [
+    styles.container,
+    { backgroundColor: backgroundColor ?? "#FFFFFF" },
+    padding ? styles.padded : undefined,
+  ];
+
+  if (scrollable) {
+    return (
+      <ScrollView
+        testID={testID}
+        style={styles.container}
+        contentContainerStyle={[
+          { backgroundColor: backgroundColor ?? "#FFFFFF" },
+          padding ? styles.padded : undefined,
+          styles.scrollContent,
+        ]}
+      >
+        {children}
+      </ScrollView>
+    );
+  }
+
+  return (
+    <View testID={testID} style={containerStyle}>
+      {children}
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  padded: {
+    padding: 16,
+  },
+  scrollContent: {
+    flexGrow: 1,
+  },
+});

@@ -3,6 +3,7 @@
  */
 
 import React, { useState, useCallback, useEffect } from "react";
+import { View, StyleSheet } from "react-native";
 import { Card, CardBody, Button, TextField, Select, VitalCard, ErrorState } from "@impilo/mobile-design-system";
 import { recordVital, getVitalsForEncounter } from "../../services/vitalsService";
 import { encounterStore } from "../../stores/encounterStore";
@@ -62,58 +63,63 @@ export function VitalsPanel({ encounterId }: VitalsPanelProps) {
     }
   }, [encounterId, selectedType, value]);
 
-  return React.createElement(
-    "div",
-    { "data-testid": "vitals-panel" },
+  return (
+    <View testID="vitals-panel">
+      {/* Input form */}
+      <Card>
+        <CardBody>
+          <View style={styles.inputRow}>
+            <Select
+              label="Vital Type"
+              value={selectedType}
+              options={VITAL_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
+              onChange={(v: string) => setSelectedType(v as VitalType)}
+              testID="vital-type-select"
+            />
+            <TextField
+              label="Value"
+              value={value}
+              onChange={setValue}
+              placeholder="Enter value"
+              testID="vital-value-input"
+            />
+            <Button
+              title="Record"
+              onPress={handleRecord}
+              loading={saving}
+              testID="record-vital-btn"
+            />
+          </View>
+          {error ? <ErrorState title="Error" message={error} /> : null}
+        </CardBody>
+      </Card>
 
-    // Input form
-    React.createElement(
-      Card,
-      null,
-      React.createElement(
-        CardBody,
-        null,
-        React.createElement(
-          "div",
-          { style: { display: "flex", gap: "8px", alignItems: "flex-end" } },
-          React.createElement(Select, {
-            label: "Vital Type",
-            value: selectedType,
-            options: VITAL_OPTIONS.map((o) => ({ value: o.value, label: o.label })),
-            onChange: (v: string) => setSelectedType(v as VitalType),
-            testID: "vital-type-select",
-          }),
-          React.createElement(TextField, {
-            label: "Value",
-            value,
-            onChange: setValue,
-            placeholder: "Enter value",
-            testID: "vital-value-input",
-          }),
-          React.createElement(Button, {
-            title: "Record",
-            onPress: handleRecord,
-            loading: saving,
-            testID: "record-vital-btn",
-          })
-        ),
-        error ? React.createElement(ErrorState, { title: "Error", message: error }) : null
-      )
-    ),
-
-    // Recorded vitals
-    React.createElement(
-      "div",
-      { style: { marginTop: "12px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" } },
-      vitals.map((v) =>
-        React.createElement(VitalCard, {
-          key: v.id,
-          label: VITAL_OPTIONS.find((o) => o.value === v.type)?.label ?? v.type,
-          value: String(v.value),
-          unit: v.unit,
-          timestamp: v.measuredAt,
-        })
-      )
-    )
+      {/* Recorded vitals */}
+      <View style={styles.vitalsGrid}>
+        {vitals.map((v) => (
+          <VitalCard
+            key={v.id}
+            label={VITAL_OPTIONS.find((o) => o.value === v.type)?.label ?? v.type}
+            value={String(v.value)}
+            unit={v.unit}
+            timestamp={v.measuredAt}
+          />
+        ))}
+      </View>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  inputRow: {
+    flexDirection: "row",
+    gap: 8,
+    alignItems: "flex-end",
+  },
+  vitalsGrid: {
+    marginTop: 12,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+});

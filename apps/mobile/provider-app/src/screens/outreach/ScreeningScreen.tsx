@@ -5,6 +5,7 @@
  */
 
 import React, { useState, useCallback } from "react";
+import { View, Text, ScrollView, StyleSheet } from "react-native";
 import {
   Screen,
   Header,
@@ -101,111 +102,116 @@ export function ScreeningScreen() {
     }
   }, [patientId, vaccineName, doseNumber, batchNumber]);
 
-  return React.createElement(
-    Screen,
-    null,
-    React.createElement(Header, { title: mode === "screening" ? "Screenings" : "Immunizations" }),
-    React.createElement(
-      "div",
-      { "data-testid": "screening-screen", style: { padding: "16px" } },
+  return (
+    <Screen>
+      <Header title={mode === "screening" ? "Screenings" : "Immunizations"} />
+      <ScrollView testID="screening-screen" style={styles.container}>
+        {/* Mode toggle */}
+        <View style={styles.modeToggle}>
+          <Button
+            title="Screening"
+            variant={mode === "screening" ? "primary" : "outline"}
+            onPress={() => setMode("screening")}
+            testID="mode-screening"
+          />
+          <Button
+            title="Immunization"
+            variant={mode === "immunization" ? "primary" : "outline"}
+            onPress={() => setMode("immunization")}
+            testID="mode-immunization"
+          />
+          {pendingCount > 0 && (
+            <Badge variant="secondary">{`${pendingCount} pending sync`}</Badge>
+          )}
+        </View>
 
-      // Mode toggle
-      React.createElement(
-        "div",
-        { style: { display: "flex", gap: "8px", marginBottom: "16px" } },
-        React.createElement(Button, {
-          title: "Screening",
-          variant: mode === "screening" ? "primary" : "outline",
-          onPress: () => setMode("screening"),
-          testID: "mode-screening",
-        }),
-        React.createElement(Button, {
-          title: "Immunization",
-          variant: mode === "immunization" ? "primary" : "outline",
-          onPress: () => setMode("immunization"),
-          testID: "mode-immunization",
-        }),
-        pendingCount > 0
-          ? React.createElement(Badge, { variant: "secondary", children: `${pendingCount} pending sync` })
-          : null
-      ),
+        <Card>
+          <CardBody>
+            <TextField
+              label="Patient ID or CPID"
+              value={patientId}
+              onChange={setPatientId}
+              testID="screening-patient-id"
+            />
 
-      React.createElement(
-        Card,
-        null,
-        React.createElement(
-          CardBody,
-          null,
-          React.createElement(TextField, {
-            label: "Patient ID or CPID",
-            value: patientId,
-            onChange: setPatientId,
-            testID: "screening-patient-id",
-          }),
+            {mode === "screening" ? (
+              <>
+                <Select
+                  label="Screening Type"
+                  value={screeningType}
+                  options={SCREENING_TYPES}
+                  onChange={setScreeningType}
+                  testID="screening-type"
+                />
+                <TextField
+                  label="Result"
+                  value={result}
+                  onChange={setResult}
+                  placeholder="Positive / Negative / Value"
+                  testID="screening-result"
+                />
+                <Button
+                  title="Record Screening"
+                  onPress={handleScreening}
+                  loading={saving}
+                  fullWidth
+                  testID="record-screening-btn"
+                />
+              </>
+            ) : (
+              <>
+                <Select
+                  label="Vaccine"
+                  value={vaccineName}
+                  options={VACCINES}
+                  onChange={setVaccineName}
+                  testID="vaccine-select"
+                />
+                <TextField
+                  label="Dose Number"
+                  value={doseNumber}
+                  onChange={setDoseNumber}
+                  testID="dose-number"
+                />
+                <TextField
+                  label="Batch Number"
+                  value={batchNumber}
+                  onChange={setBatchNumber}
+                  testID="batch-number"
+                />
+                <Button
+                  title="Record Immunization"
+                  onPress={handleImmunization}
+                  loading={saving}
+                  fullWidth
+                  testID="record-immunization-btn"
+                />
+              </>
+            )}
 
-          mode === "screening"
-            ? React.createElement(
-                React.Fragment,
-                null,
-                React.createElement(Select, {
-                  label: "Screening Type",
-                  value: screeningType,
-                  options: SCREENING_TYPES,
-                  onChange: setScreeningType,
-                  testID: "screening-type",
-                }),
-                React.createElement(TextField, {
-                  label: "Result",
-                  value: result,
-                  onChange: setResult,
-                  placeholder: "Positive / Negative / Value",
-                  testID: "screening-result",
-                }),
-                React.createElement(Button, {
-                  title: "Record Screening",
-                  onPress: handleScreening,
-                  loading: saving,
-                  fullWidth: true,
-                  testID: "record-screening-btn",
-                })
-              )
-            : React.createElement(
-                React.Fragment,
-                null,
-                React.createElement(Select, {
-                  label: "Vaccine",
-                  value: vaccineName,
-                  options: VACCINES,
-                  onChange: setVaccineName,
-                  testID: "vaccine-select",
-                }),
-                React.createElement(TextField, {
-                  label: "Dose Number",
-                  value: doseNumber,
-                  onChange: setDoseNumber,
-                  testID: "dose-number",
-                }),
-                React.createElement(TextField, {
-                  label: "Batch Number",
-                  value: batchNumber,
-                  onChange: setBatchNumber,
-                  testID: "batch-number",
-                }),
-                React.createElement(Button, {
-                  title: "Record Immunization",
-                  onPress: handleImmunization,
-                  loading: saving,
-                  fullWidth: true,
-                  testID: "record-immunization-btn",
-                })
-              ),
-
-          error ? React.createElement(ErrorState, { title: "Error", message: error }) : null,
-          successMsg
-            ? React.createElement("div", { style: { marginTop: "8px", color: "#059669", fontWeight: "600" } }, successMsg)
-            : null
-        )
-      )
-    )
+            {error && <ErrorState title="Error" message={error} />}
+            {successMsg && (
+              <Text style={styles.successText}>{successMsg}</Text>
+            )}
+          </CardBody>
+        </Card>
+      </ScrollView>
+    </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 16,
+  },
+  modeToggle: {
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 16,
+  },
+  successText: {
+    marginTop: 8,
+    color: "#059669",
+    fontWeight: "600",
+  },
+});

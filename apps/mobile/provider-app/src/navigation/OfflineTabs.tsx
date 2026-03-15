@@ -5,6 +5,7 @@
  */
 
 import React, { useState, useCallback } from "react";
+import { View, StyleSheet } from "react-native";
 import { TabBar } from "@impilo/mobile-design-system";
 import { OfflineDashboardScreen } from "../screens/offline/OfflineDashboardScreen";
 import { LocalQueueScreen } from "../screens/offline/LocalQueueScreen";
@@ -30,26 +31,35 @@ export function OfflineTabs() {
   const renderContent = () => {
     switch (activeTab) {
       case "status":
-        return React.createElement(OfflineDashboardScreen, null);
+        return <OfflineDashboardScreen />;
       case "queue":
-        return React.createElement(LocalQueueScreen, null);
+        return <LocalQueueScreen />;
       case "conflicts":
-        return React.createElement(ConflictReviewScreen, null);
+        return <ConflictReviewScreen />;
       case "breakglass":
-        return React.createElement(BreakGlassScreen, null);
+        return <BreakGlassScreen />;
       default:
-        return React.createElement(OfflineDashboardScreen, null);
+        return <OfflineDashboardScreen />;
     }
   };
 
-  return React.createElement(
-    "div",
-    { "data-testid": "offline-tabs" },
-    React.createElement("main", { style: { flex: 1 } }, renderContent()),
-    React.createElement(TabBar, {
-      items: TABS.map((t) => ({ key: t.key, label: t.label })),
-      activeKey: activeTab,
-      onSelect: handleTabChange,
-    })
+  return (
+    <View testID="offline-tabs" style={styles.container}>
+      <View style={styles.content}>{renderContent()}</View>
+      <TabBar
+        items={TABS.map((t) => ({ key: t.key, label: t.label }))}
+        activeKey={activeTab}
+        onSelect={handleTabChange}
+      />
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  content: {
+    flex: 1,
+  },
+});

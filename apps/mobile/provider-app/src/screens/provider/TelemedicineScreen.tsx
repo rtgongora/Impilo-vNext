@@ -5,6 +5,7 @@
  */
 
 import React, { useState, useCallback, useEffect } from "react";
+import { View, Text, StyleSheet, ScrollView } from "react-native";
 import {
   Screen,
   Header,
@@ -130,107 +131,105 @@ export function TelemedicineScreen() {
   );
 
   if (activeSession) {
-    return React.createElement(
-      Screen,
-      null,
-      React.createElement(Header, { title: "Telemedicine Session" }),
-      React.createElement(
-        "div",
-        { "data-testid": "telemedicine-active", style: { padding: "16px" } },
-        React.createElement(
-          Card,
-          null,
-          React.createElement(
-            CardBody,
-            null,
-            React.createElement(
-              "div",
-              { style: { textAlign: "center", padding: "48px 0" } },
-              React.createElement(Badge, { variant: "primary", children: "IN PROGRESS" }),
-              React.createElement(
-                "div",
-                {
-                  style: {
-                    width: "100%",
-                    height: "300px",
-                    backgroundColor: "#1F2937",
-                    borderRadius: "12px",
-                    margin: "24px 0",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "#FFFFFF",
-                    fontSize: "18px",
-                  },
-                  "data-testid": "video-container",
-                },
-                "Video Stream Active"
-              ),
-              React.createElement(
-                "div",
-                { style: { display: "flex", gap: "12px", justifyContent: "center" } },
-                React.createElement(Button, {
-                  title: "End Session",
-                  variant: "destructive",
-                  onPress: handleEnd,
-                  testID: "end-session-btn",
-                })
-              )
-            )
-          )
-        )
-      )
+    return (
+      <Screen>
+        <Header title="Telemedicine Session" />
+        <View testID="telemedicine-active" style={styles.container}>
+          <Card>
+            <CardBody>
+              <View style={styles.activeSessionCenter}>
+                <Badge variant="primary">IN PROGRESS</Badge>
+                <View testID="video-container" style={styles.videoContainer}>
+                  <Text style={styles.videoText}>Video Stream Active</Text>
+                </View>
+                <View style={styles.actionRow}>
+                  <Button
+                    title="End Session"
+                    variant="destructive"
+                    onPress={handleEnd}
+                    testID="end-session-btn"
+                  />
+                </View>
+              </View>
+            </CardBody>
+          </Card>
+        </View>
+      </Screen>
     );
   }
 
-  return React.createElement(
-    Screen,
-    null,
-    React.createElement(Header, { title: "Telemedicine" }),
-    React.createElement(
-      "div",
-      { "data-testid": "telemedicine-screen", style: { padding: "16px" } },
-      loading
-        ? React.createElement(LoadingSpinner, { size: "md" })
-        : error
-          ? React.createElement(ErrorState, { title: "Error", message: error, onRetry: loadSessions })
-          : sessions.length === 0
-            ? React.createElement(EmptyState, { title: "No scheduled sessions", message: "Telemedicine sessions will appear here" })
-            : sessions.map((session) =>
-                React.createElement(
-                  Card,
-                  { key: session.id },
-                  React.createElement(
-                    CardBody,
-                    null,
-                    React.createElement(
-                      "div",
-                      {
-                        "data-testid": `session-${session.id}`,
-                        style: { display: "flex", justifyContent: "space-between", alignItems: "center" },
-                      },
-                      React.createElement(
-                        "div",
-                        null,
-                        React.createElement(Badge, { variant: "secondary", children: session.status }),
-                        React.createElement(
-                          "p",
-                          { style: { fontSize: "14px", marginTop: "4px" } },
-                          `Scheduled: ${new Date(session.scheduledAt).toLocaleString()}`
-                        )
-                      ),
-                      session.status === "SCHEDULED" || session.status === "WAITING"
-                        ? React.createElement(Button, {
-                            title: "Join",
-                            variant: "primary",
-                            onPress: () => handleJoin(session),
-                            testID: `join-session-${session.id}`,
-                          })
-                        : null
-                    )
-                  )
-                )
-              )
-    )
+  return (
+    <Screen>
+      <Header title="Telemedicine" />
+      <ScrollView testID="telemedicine-screen" style={styles.container}>
+        {loading ? (
+          <LoadingSpinner size="md" />
+        ) : error ? (
+          <ErrorState title="Error" message={error} onRetry={loadSessions} />
+        ) : sessions.length === 0 ? (
+          <EmptyState title="No scheduled sessions" message="Telemedicine sessions will appear here" />
+        ) : (
+          sessions.map((session) => (
+            <Card key={session.id}>
+              <CardBody>
+                <View testID={`session-${session.id}`} style={styles.sessionRow}>
+                  <View>
+                    <Badge variant="secondary">{session.status}</Badge>
+                    <Text style={styles.scheduledText}>
+                      {`Scheduled: ${new Date(session.scheduledAt).toLocaleString()}`}
+                    </Text>
+                  </View>
+                  {session.status === "SCHEDULED" || session.status === "WAITING" ? (
+                    <Button
+                      title="Join"
+                      variant="primary"
+                      onPress={() => handleJoin(session)}
+                      testID={`join-session-${session.id}`}
+                    />
+                  ) : null}
+                </View>
+              </CardBody>
+            </Card>
+          ))
+        )}
+      </ScrollView>
+    </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 16,
+  },
+  activeSessionCenter: {
+    alignItems: "center",
+    paddingVertical: 48,
+  },
+  videoContainer: {
+    width: "100%",
+    height: 300,
+    backgroundColor: "#1F2937",
+    borderRadius: 12,
+    marginVertical: 24,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  videoText: {
+    color: "#FFFFFF",
+    fontSize: 18,
+  },
+  actionRow: {
+    flexDirection: "row",
+    gap: 12,
+    justifyContent: "center",
+  },
+  sessionRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  scheduledText: {
+    fontSize: 14,
+    marginTop: 4,
+  },
+});

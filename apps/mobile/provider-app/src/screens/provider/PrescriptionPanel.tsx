@@ -3,6 +3,7 @@
  */
 
 import React, { useState, useCallback, useEffect } from "react";
+import { View, StyleSheet } from "react-native";
 import { Card, CardBody, Button, TextField, RxCard, ErrorState } from "@impilo/mobile-design-system";
 import { createPrescription, getPrescriptionsForEncounter } from "../../services/prescriptionService";
 import { encounterStore, useEncounterStore } from "../../stores/encounterStore";
@@ -59,52 +60,55 @@ export function PrescriptionPanel({ encounterId, patientId }: PrescriptionPanelP
     }
   }, [encounterId, patientId, medication, dosage, frequency, duration, quantity, instructions]);
 
-  return React.createElement(
-    "div",
-    { "data-testid": "prescription-panel" },
+  return (
+    <View testID="prescription-panel">
+      <Card>
+        <CardBody>
+          <View style={styles.formGrid}>
+            <TextField label="Medication" value={medication} onChange={setMedication} testID="rx-medication" />
+            <TextField label="Dosage" value={dosage} onChange={setDosage} testID="rx-dosage" />
+            <TextField label="Frequency" value={frequency} onChange={setFrequency} testID="rx-frequency" />
+            <TextField label="Duration" value={duration} onChange={setDuration} testID="rx-duration" />
+            <TextField label="Quantity" value={quantity} onChange={setQuantity} testID="rx-quantity" />
+            <TextField label="Instructions" value={instructions} onChange={setInstructions} testID="rx-instructions" />
+          </View>
+          <View style={styles.buttonContainer}>
+            <Button
+              title="Add Prescription"
+              onPress={handleCreate}
+              loading={saving}
+              testID="add-rx-btn"
+            />
+          </View>
+          {error ? <ErrorState title="Error" message={error} /> : null}
+        </CardBody>
+      </Card>
 
-    React.createElement(
-      Card,
-      null,
-      React.createElement(
-        CardBody,
-        null,
-        React.createElement(
-          "div",
-          { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" } },
-          React.createElement(TextField, { label: "Medication", value: medication, onChange: setMedication, testID: "rx-medication" }),
-          React.createElement(TextField, { label: "Dosage", value: dosage, onChange: setDosage, testID: "rx-dosage" }),
-          React.createElement(TextField, { label: "Frequency", value: frequency, onChange: setFrequency, testID: "rx-frequency" }),
-          React.createElement(TextField, { label: "Duration", value: duration, onChange: setDuration, testID: "rx-duration" }),
-          React.createElement(TextField, { label: "Quantity", value: quantity, onChange: setQuantity, testID: "rx-quantity" }),
-          React.createElement(TextField, { label: "Instructions", value: instructions, onChange: setInstructions, testID: "rx-instructions" })
-        ),
-        React.createElement(
-          "div",
-          { style: { marginTop: "12px" } },
-          React.createElement(Button, {
-            title: "Add Prescription",
-            onPress: handleCreate,
-            loading: saving,
-            testID: "add-rx-btn",
-          })
-        ),
-        error ? React.createElement(ErrorState, { title: "Error", message: error }) : null
-      )
-    ),
-
-    React.createElement(
-      "div",
-      { style: { marginTop: "12px" } },
-      prescriptions.map((rx) =>
-        React.createElement(RxCard, {
-          key: rx.id,
-          medication: rx.medication,
-          dosage: rx.dosage,
-          frequency: rx.frequency,
-          status: rx.status,
-        })
-      )
-    )
+      <View style={styles.prescriptionsList}>
+        {prescriptions.map((rx) => (
+          <RxCard
+            key={rx.id}
+            medication={rx.medication}
+            dosage={rx.dosage}
+            frequency={rx.frequency}
+            status={rx.status}
+          />
+        ))}
+      </View>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  formGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  buttonContainer: {
+    marginTop: 12,
+  },
+  prescriptionsList: {
+    marginTop: 12,
+  },
+});

@@ -2,44 +2,46 @@
  * Citizen App Configuration
  *
  * Centralizes Keycloak, API base URL, and feature toggles.
- * Values are loaded from environment variables at build time.
+ * Uses expo-constants for build-time env vars and expo-secure-store for secure storage.
  */
 
+import Constants from "expo-constants";
+import * as SecureStore from "expo-secure-store";
 import { configureAuth } from "@impilo/mobile-auth";
 import { configureApiClient } from "@impilo/mobile-api-client";
 import { configureOfflineStorage, MemoryStorageAdapter } from "@impilo/mobile-offline";
 import { configureSecureStorage, type SecureStorageAdapter } from "@impilo/mobile-auth";
 
+const extra = Constants.expoConfig?.extra ?? {};
+
 const ENV = {
-  KEYCLOAK_URL: process.env.EXPO_PUBLIC_KEYCLOAK_URL ?? "https://auth.impilo.gov.zw",
-  KEYCLOAK_REALM: process.env.EXPO_PUBLIC_KEYCLOAK_REALM ?? "impilo",
-  KEYCLOAK_CLIENT_ID: process.env.EXPO_PUBLIC_KEYCLOAK_CLIENT_ID ?? "citizen-app",
-  API_BASE_URL: process.env.EXPO_PUBLIC_API_BASE_URL ?? "https://api.impilo.gov.zw",
-  REDIRECT_URI: process.env.EXPO_PUBLIC_REDIRECT_URI ?? "impilo.citizen://callback",
+  KEYCLOAK_URL: extra.keycloakUrl ?? process.env.EXPO_PUBLIC_KEYCLOAK_URL ?? "https://auth.impilo.gov.zw",
+  KEYCLOAK_REALM: extra.keycloakRealm ?? process.env.EXPO_PUBLIC_KEYCLOAK_REALM ?? "impilo",
+  KEYCLOAK_CLIENT_ID: extra.keycloakClientId ?? process.env.EXPO_PUBLIC_KEYCLOAK_CLIENT_ID ?? "citizen-app",
+  API_BASE_URL: extra.apiBaseUrl ?? process.env.EXPO_PUBLIC_API_BASE_URL ?? "https://api.impilo.gov.zw",
+  REDIRECT_URI: extra.redirectUri ?? process.env.EXPO_PUBLIC_REDIRECT_URI ?? "impilo.citizen://callback",
 };
 
-class InMemorySecureStorage implements SecureStorageAdapter {
-  private store = new Map<string, string>();
-
+class ExpoSecureStorage implements SecureStorageAdapter {
   async getItem(key: string): Promise<string | null> {
-    return this.store.get(key) ?? null;
+    return SecureStore.getItemAsync(key);
   }
 
   async setItem(key: string, value: string): Promise<void> {
-    this.store.set(key, value);
+    await SecureStore.setItemAsync(key, value);
   }
 
   async removeItem(key: string): Promise<void> {
-    this.store.delete(key);
+    await SecureStore.deleteItemAsync(key);
   }
 
   async clear(): Promise<void> {
-    this.store.clear();
+    // expo-secure-store does not support bulk clear; managed keys are cleared individually by auth module
   }
 }
 
 export function initializeApp(): void {
-  configureSecureStorage(new InMemorySecureStorage());
+  configureSecureStorage(new ExpoSecureStorage());
 
   configureAuth({
     url: ENV.KEYCLOAK_URL,

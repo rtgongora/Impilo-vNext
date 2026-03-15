@@ -5,6 +5,7 @@
  */
 
 import React from "react";
+import { View, Text, StyleSheet } from "react-native";
 import { Button } from "@impilo/mobile-design-system";
 import { useAppStore, appStore } from "../stores/appStore";
 
@@ -13,40 +14,49 @@ export function GlobalErrorBanner() {
 
   if (!globalError) return null;
 
-  return React.createElement(
-    "div",
-    {
-      "data-testid": "global-error-banner",
-      role: "alert",
-      style: {
-        backgroundColor: "#FEE2E2",
-        borderBottom: "1px solid #FECACA",
-        padding: "12px 16px",
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-      },
-    },
-    React.createElement(
-      "div",
-      null,
-      React.createElement(
-        "strong",
-        { style: { color: "#991B1B" } },
-        globalError.code
-      ),
-      React.createElement(
-        "span",
-        { style: { color: "#991B1B", marginLeft: "8px" } },
-        globalError.message
-      )
-    ),
-    React.createElement(Button, {
-      title: "Dismiss",
-      variant: "ghost",
-      size: "sm",
-      onPress: () => appStore.getState().setGlobalError(null),
-      testID: "dismiss-error",
-    })
+  return (
+    <View
+      testID="global-error-banner"
+      accessibilityRole="alert"
+      style={styles.container}
+    >
+      <View style={styles.messageContainer}>
+        <Text style={styles.code}>{globalError.code}</Text>
+        <Text style={styles.message}>{globalError.message}</Text>
+      </View>
+      <Button
+        title="Dismiss"
+        variant="ghost"
+        size="sm"
+        onPress={() => appStore.getState().setGlobalError(null)}
+        testID="dismiss-error"
+      />
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: "#FEE2E2",
+    borderBottomWidth: 1,
+    borderBottomColor: "#FECACA",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  messageContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  code: {
+    color: "#991B1B",
+    fontWeight: "bold",
+  },
+  message: {
+    color: "#991B1B",
+    marginLeft: 8,
+  },
+});

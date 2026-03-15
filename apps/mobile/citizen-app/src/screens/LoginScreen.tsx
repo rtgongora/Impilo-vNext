@@ -3,6 +3,9 @@
  */
 
 import React, { useState, useCallback } from "react";
+import { View, Text, StyleSheet } from "react-native";
+import * as WebBrowser from "expo-web-browser";
+import * as Linking from "expo-linking";
 import { useAuth } from "@impilo/mobile-auth";
 import { Button, Card, CardBody, LoadingSpinner, ErrorState } from "@impilo/mobile-design-system";
 
@@ -16,73 +19,72 @@ export function LoginScreen() {
     try {
       const { authUrl, state } = await auth.login();
       setPendingState(state);
-      window.location.href = authUrl;
+      const result = await WebBrowser.openAuthSessionAsync(
+        authUrl,
+        Linking.createURL("auth/callback")
+      );
+      if (result.type === "success" && result.url) {
+        const parsed = Linking.parse(result.url);
+        const code = parsed.queryParams?.code as string | undefined;
+        const returnedState = parsed.queryParams?.state as string | undefined;
+        if (code && returnedState) {
+          await auth.handleCallback(code, returnedState, state);
+        }
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
     }
   }, [auth]);
 
-  React.useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get("code");
-    const state = params.get("state");
-
-    if (code && state && pendingState) {
-      auth.handleCallback(code, state, pendingState).catch((err) => {
-        setError(err instanceof Error ? err.message : "Authentication failed");
-      });
-    }
-  }, [auth, pendingState]);
-
-  return React.createElement(
-    "div",
-    {
-      "data-testid": "login-screen",
-      style: {
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        height: "100vh",
-        padding: "24px",
-        backgroundColor: "#F3F4F6",
-      },
-    },
-    React.createElement(
-      "h1",
-      { style: { fontSize: "28px", fontWeight: "700", marginBottom: "8px", color: "#111827" } },
-      "Impilo Health"
-    ),
-    React.createElement(
-      "p",
-      { style: { fontSize: "16px", color: "#6B7280", marginBottom: "32px" } },
-      "Your health, in your hands"
-    ),
-    React.createElement(
-      Card,
-      null,
-      React.createElement(
-        CardBody,
-        null,
-        error
-          ? React.createElement(ErrorState, {
-              title: "Authentication Error",
-              message: error,
-              onRetry: () => setError(null),
-            })
-          : null,
-        auth.isLoading
-          ? React.createElement(LoadingSpinner, { size: "md" })
-          : React.createElement(Button, {
-              title: "Sign in to Impilo",
-              onPress: handleLogin,
-              variant: "primary",
-              size: "lg",
-              fullWidth: true,
-              testID: "login-button",
-              accessibilityLabel: "Sign in to Impilo Citizen App",
-            })
-      )
-    )
+  return (
+    <View testID="login-screen" style={styles.container}>
+      <Text style={styles.title}>Impilo Health</Text>
+      <Text style={styles.subtitle}>Your health, in your hands</Text>
+      <Card>
+        <CardBody>
+          {error ? (
+            <ErrorState
+              title="Authentication Error"
+              message={error}
+              onRetry={() => setError(null)}
+            />
+          ) : null}
+          {auth.isLoading ? (
+            <LoadingSpinner size="md" />
+          ) : (
+            <Button
+              title="Sign in to Impilo"
+              onPress={handleLogin}
+              variant="primary"
+              size="lg"
+              fullWidth
+              testID="login-button"
+              accessibilityLabel="Sign in to Impilo Citizen App"
+            />
+          )}
+        </CardBody>
+      </Card>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 24,
+    backgroundColor: "#F3F4F6",
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: "700",
+    marginBottom: 8,
+    color: "#111827",
+  },
+  subtitle: {
+    fontSize: 16,
+    color: "#6B7280",
+    marginBottom: 32,
+  },
+});

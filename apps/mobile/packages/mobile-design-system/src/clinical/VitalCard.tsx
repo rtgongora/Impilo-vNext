@@ -3,6 +3,7 @@
  */
 
 import React from "react";
+import { View, Text, StyleSheet } from "react-native";
 
 export interface VitalCardProps {
   label: string;
@@ -29,28 +30,49 @@ export function VitalCard({
   icon,
   testID,
 }: VitalCardProps) {
-  return React.createElement(
-    "div",
-    {
-      "data-testid": testID,
-      role: "group",
-      "aria-label": `${label}: ${value} ${unit}`,
-      style: { borderLeft: `3px solid ${STATUS_COLORS[status]}`, padding: 12 },
-    },
-    React.createElement(
-      "div",
-      { style: { display: "flex", alignItems: "center", gap: 8 } },
-      icon ?? null,
-      React.createElement("span", { style: { fontWeight: 600 } }, label)
-    ),
-    React.createElement(
-      "div",
-      { style: { fontSize: 24, fontWeight: 700 } },
-      `${value} `,
-      React.createElement("span", { style: { fontSize: 14, fontWeight: 400 } }, unit)
-    ),
-    timestamp
-      ? React.createElement("div", { style: { fontSize: 12, color: "#757575" } }, timestamp)
-      : null
+  return (
+    <View
+      testID={testID}
+      accessibilityRole="summary"
+      accessibilityLabel={`${label}: ${value} ${unit}`}
+      style={[styles.container, { borderLeftColor: STATUS_COLORS[status] }]}
+    >
+      <View style={styles.headerRow}>
+        {icon ?? null}
+        <Text style={styles.label}>{label}</Text>
+      </View>
+      <Text style={styles.value}>
+        {`${value} `}
+        <Text style={styles.unit}>{unit}</Text>
+      </Text>
+      {timestamp ? <Text style={styles.timestamp}>{timestamp}</Text> : null}
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    borderLeftWidth: 3,
+    padding: 12,
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  label: {
+    fontWeight: "600",
+  },
+  value: {
+    fontSize: 24,
+    fontWeight: "700",
+  },
+  unit: {
+    fontSize: 14,
+    fontWeight: "400",
+  },
+  timestamp: {
+    fontSize: 12,
+    color: "#757575",
+  },
+});

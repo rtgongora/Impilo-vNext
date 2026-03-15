@@ -3,6 +3,7 @@
  */
 
 import React, { useState, useCallback, useEffect } from "react";
+import { View, Text, StyleSheet } from "react-native";
 import { Card, CardBody, Button, TextField, Select, Badge, ErrorState } from "@impilo/mobile-design-system";
 import { createReferral, getReferralsForEncounter } from "../../services/referralService";
 import { encounterStore, useEncounterStore } from "../../stores/encounterStore";
@@ -57,69 +58,78 @@ export function ReferralPanel({ encounterId, patientId }: ReferralPanelProps) {
     }
   }, [encounterId, patientId, facilityId, toFacilityId, specialty, reason, urgency, notes]);
 
-  return React.createElement(
-    "div",
-    { "data-testid": "referral-panel" },
+  return (
+    <View testID="referral-panel">
+      <Card>
+        <CardBody>
+          <View style={styles.formGrid}>
+            <TextField label="To Facility ID" value={toFacilityId} onChange={setToFacilityId} testID="ref-facility" />
+            <TextField label="Specialty" value={specialty} onChange={setSpecialty} testID="ref-specialty" />
+            <TextField label="Reason" value={reason} onChange={setReason} testID="ref-reason" />
+            <Select
+              label="Urgency"
+              value={urgency}
+              options={[
+                { value: "ROUTINE", label: "Routine" },
+                { value: "URGENT", label: "Urgent" },
+                { value: "EMERGENCY", label: "Emergency" },
+              ]}
+              onChange={(v: string) => setUrgency(v as "ROUTINE" | "URGENT" | "EMERGENCY")}
+              testID="ref-urgency"
+            />
+          </View>
+          <TextField label="Notes" value={notes} onChange={setNotes} testID="ref-notes" />
+          <View style={styles.buttonContainer}>
+            <Button title="Create Referral" onPress={handleCreate} loading={saving} testID="create-ref-btn" />
+          </View>
+          {error ? <ErrorState title="Error" message={error} /> : null}
+        </CardBody>
+      </Card>
 
-    React.createElement(
-      Card,
-      null,
-      React.createElement(
-        CardBody,
-        null,
-        React.createElement(
-          "div",
-          { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" } },
-          React.createElement(TextField, { label: "To Facility ID", value: toFacilityId, onChange: setToFacilityId, testID: "ref-facility" }),
-          React.createElement(TextField, { label: "Specialty", value: specialty, onChange: setSpecialty, testID: "ref-specialty" }),
-          React.createElement(TextField, { label: "Reason", value: reason, onChange: setReason, testID: "ref-reason" }),
-          React.createElement(Select, {
-            label: "Urgency",
-            value: urgency,
-            options: [
-              { value: "ROUTINE", label: "Routine" },
-              { value: "URGENT", label: "Urgent" },
-              { value: "EMERGENCY", label: "Emergency" },
-            ],
-            onChange: (v: string) => setUrgency(v as "ROUTINE" | "URGENT" | "EMERGENCY"),
-            testID: "ref-urgency",
-          })
-        ),
-        React.createElement(TextField, { label: "Notes", value: notes, onChange: setNotes, testID: "ref-notes" }),
-        React.createElement(
-          "div",
-          { style: { marginTop: "12px" } },
-          React.createElement(Button, { title: "Create Referral", onPress: handleCreate, loading: saving, testID: "create-ref-btn" })
-        ),
-        error ? React.createElement(ErrorState, { title: "Error", message: error }) : null
-      )
-    ),
-
-    React.createElement(
-      "div",
-      { style: { marginTop: "12px" } },
-      referrals.map((ref) =>
-        React.createElement(
-          Card,
-          { key: ref.id },
-          React.createElement(
-            CardBody,
-            null,
-            React.createElement(
-              "div",
-              { "data-testid": `referral-${ref.id}` },
-              React.createElement("strong", null, `${ref.specialty} → ${ref.toFacilityName}`),
-              React.createElement("p", { style: { fontSize: "14px", color: "#6B7280" } }, ref.reason),
-              React.createElement(
-                "div",
-                { style: { display: "flex", gap: "8px", marginTop: "4px" } },
-                React.createElement(Badge, { variant: ref.urgency === "EMERGENCY" ? "destructive" : "outline", children: ref.urgency }),
-                React.createElement(Badge, { variant: "secondary", children: ref.status })
-              )
-            )
-          )
-        )
-      )
-    )
+      <View style={styles.referralsList}>
+        {referrals.map((ref) => (
+          <Card key={ref.id}>
+            <CardBody>
+              <View testID={`referral-${ref.id}`}>
+                <Text style={styles.bold}>{`${ref.specialty} → ${ref.toFacilityName}`}</Text>
+                <Text style={styles.reason}>{ref.reason}</Text>
+                <View style={styles.badgeRow}>
+                  <Badge variant={ref.urgency === "EMERGENCY" ? "destructive" : "outline"}>
+                    {ref.urgency}
+                  </Badge>
+                  <Badge variant="secondary">{ref.status}</Badge>
+                </View>
+              </View>
+            </CardBody>
+          </Card>
+        ))}
+      </View>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  formGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  buttonContainer: {
+    marginTop: 12,
+  },
+  referralsList: {
+    marginTop: 12,
+  },
+  bold: {
+    fontWeight: "bold",
+  },
+  reason: {
+    fontSize: 14,
+    color: "#6B7280",
+  },
+  badgeRow: {
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 4,
+  },
+});

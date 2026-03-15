@@ -3,6 +3,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from "react";
+import { View, Text, StyleSheet } from "react-native";
 import {
   Card,
   CardHeader,
@@ -75,141 +76,182 @@ export function SettingsSection() {
     }
   }, [auth]);
 
-  if (isLoading) return React.createElement(LoadingSpinner, { size: "md" });
-  if (error) return React.createElement(ErrorState, { title: "Error", message: error.message, onRetry: load });
+  if (isLoading) return <LoadingSpinner size="md" />;
+  if (error) return <ErrorState title="Error" message={error.message} onRetry={load} />;
 
-  return React.createElement(
-    "div",
-    { "data-testid": "settings-section", style: { display: "flex", flexDirection: "column", gap: "16px" } },
+  return (
+    <View testID="settings-section" style={styles.container}>
+      {/* Consent preferences */}
+      <Card>
+        <CardHeader title="Privacy & Consent" />
+        <CardBody>
+          {consents.length === 0 ? (
+            <Text style={styles.emptyText}>No consent preferences configured</Text>
+          ) : (
+            consents.map((consent) => (
+              <View
+                key={consent.id}
+                testID={`consent-${consent.id}`}
+                style={styles.consentRow}
+              >
+                <View>
+                  <Text style={styles.consentCategory}>{consent.category}</Text>
+                  <Text style={styles.consentDescription}>{consent.description}</Text>
+                </View>
+                <Switch
+                  checked={consent.granted}
+                  onChange={(v: boolean) => handleConsentToggle(consent.id, v)}
+                  accessibilityLabel={`Toggle ${consent.category} consent`}
+                />
+              </View>
+            ))
+          )}
+        </CardBody>
+      </Card>
 
-    // Consent preferences
-    React.createElement(
-      Card,
-      null,
-      React.createElement(CardHeader, { title: "Privacy & Consent" }),
-      React.createElement(
-        CardBody,
-        null,
-        consents.length === 0
-          ? React.createElement("p", { style: { color: "#6B7280", fontSize: "14px" } }, "No consent preferences configured")
-          : consents.map((consent) =>
-              React.createElement(
-                "div",
-                {
-                  key: consent.id,
-                  "data-testid": `consent-${consent.id}`,
-                  style: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: "1px solid #F3F4F6" },
-                },
-                React.createElement(
-                  "div",
-                  null,
-                  React.createElement("strong", { style: { fontSize: "14px" } }, consent.category),
-                  React.createElement("p", { style: { fontSize: "13px", color: "#6B7280", margin: "2px 0 0" } }, consent.description)
-                ),
-                React.createElement(Switch, {
-                  checked: consent.granted,
-                  onChange: (v: boolean) => handleConsentToggle(consent.id, v),
-                  accessibilityLabel: `Toggle ${consent.category} consent`,
-                })
-              )
-            )
-      )
-    ),
+      {/* Notification preferences */}
+      <Card>
+        <CardHeader title="Notification Preferences" />
+        <CardBody>
+          {notifPrefs.length === 0 ? (
+            <Text style={styles.emptyText}>No notification preferences available</Text>
+          ) : (
+            notifPrefs.map((pref) => (
+              <View
+                key={pref.category}
+                testID={`notif-pref-${pref.category}`}
+                style={styles.notifPrefRow}
+              >
+                <Text style={styles.notifPrefCategory}>{pref.category}</Text>
+                <View style={styles.notifSwitchRow}>
+                  <View style={styles.notifSwitchItem}>
+                    <Switch
+                      checked={pref.pushEnabled}
+                      onChange={(v: boolean) => handleNotifPrefToggle(pref.category, "pushEnabled", v)}
+                    />
+                    <Text style={styles.notifSwitchLabel}>Push</Text>
+                  </View>
+                  <View style={styles.notifSwitchItem}>
+                    <Switch
+                      checked={pref.inAppEnabled}
+                      onChange={(v: boolean) => handleNotifPrefToggle(pref.category, "inAppEnabled", v)}
+                    />
+                    <Text style={styles.notifSwitchLabel}>In-App</Text>
+                  </View>
+                </View>
+              </View>
+            ))
+          )}
+        </CardBody>
+      </Card>
 
-    // Notification preferences
-    React.createElement(
-      Card,
-      null,
-      React.createElement(CardHeader, { title: "Notification Preferences" }),
-      React.createElement(
-        CardBody,
-        null,
-        notifPrefs.length === 0
-          ? React.createElement("p", { style: { color: "#6B7280", fontSize: "14px" } }, "No notification preferences available")
-          : notifPrefs.map((pref) =>
-              React.createElement(
-                "div",
-                {
-                  key: pref.category,
-                  "data-testid": `notif-pref-${pref.category}`,
-                  style: { padding: "8px 0", borderBottom: "1px solid #F3F4F6" },
-                },
-                React.createElement("strong", { style: { fontSize: "14px", display: "block", marginBottom: "8px" } }, pref.category),
-                React.createElement(
-                  "div",
-                  { style: { display: "flex", gap: "24px" } },
-                  React.createElement(
-                    "label",
-                    { style: { display: "flex", alignItems: "center", gap: "8px", fontSize: "13px" } },
-                    React.createElement(Switch, {
-                      checked: pref.pushEnabled,
-                      onChange: (v: boolean) => handleNotifPrefToggle(pref.category, "pushEnabled", v),
-                    }),
-                    "Push"
-                  ),
-                  React.createElement(
-                    "label",
-                    { style: { display: "flex", alignItems: "center", gap: "8px", fontSize: "13px" } },
-                    React.createElement(Switch, {
-                      checked: pref.inAppEnabled,
-                      onChange: (v: boolean) => handleNotifPrefToggle(pref.category, "inAppEnabled", v),
-                    }),
-                    "In-App"
-                  )
-                )
-              )
-            )
-      )
-    ),
-
-    // Account actions
-    React.createElement(
-      Card,
-      null,
-      React.createElement(CardHeader, { title: "Account" }),
-      React.createElement(
-        CardBody,
-        null,
-        React.createElement(
-          "div",
-          { style: { display: "flex", flexDirection: "column", gap: "12px" } },
-          React.createElement(Button, {
-            title: "Sign Out",
-            variant: "secondary",
-            onPress: () => auth.logout(),
-            testID: "sign-out",
-          }),
-          showDeleteConfirm
-            ? React.createElement(
-                "div",
-                { style: { padding: "12px", backgroundColor: "#FEE2E2", borderRadius: "8px" } },
-                React.createElement("p", { style: { color: "#991B1B", fontSize: "14px", marginBottom: "8px" } },
-                  "This will permanently delete your account and all associated data. This action cannot be undone."
-                ),
-                React.createElement(
-                  "div",
-                  { style: { display: "flex", gap: "8px" } },
-                  React.createElement(Button, {
-                    title: "Confirm Delete",
-                    variant: "primary",
-                    onPress: handleDeleteAccount,
-                    testID: "confirm-delete-account",
-                  }),
-                  React.createElement(Button, {
-                    title: "Cancel",
-                    variant: "ghost",
-                    onPress: () => setShowDeleteConfirm(false),
-                  })
-                )
-              )
-            : React.createElement(Button, {
-                title: "Delete Account",
-                variant: "ghost",
-                onPress: () => setShowDeleteConfirm(true),
-                testID: "delete-account",
-              })
-        )
-      )
-    )
+      {/* Account actions */}
+      <Card>
+        <CardHeader title="Account" />
+        <CardBody>
+          <View style={styles.accountContainer}>
+            <Button
+              title="Sign Out"
+              variant="secondary"
+              onPress={() => auth.logout()}
+              testID="sign-out"
+            />
+            {showDeleteConfirm ? (
+              <View style={styles.deleteConfirmContainer}>
+                <Text style={styles.deleteWarningText}>
+                  This will permanently delete your account and all associated data. This action cannot be undone.
+                </Text>
+                <View style={styles.deleteButtonRow}>
+                  <Button
+                    title="Confirm Delete"
+                    variant="primary"
+                    onPress={handleDeleteAccount}
+                    testID="confirm-delete-account"
+                  />
+                  <Button
+                    title="Cancel"
+                    variant="ghost"
+                    onPress={() => setShowDeleteConfirm(false)}
+                  />
+                </View>
+              </View>
+            ) : (
+              <Button
+                title="Delete Account"
+                variant="ghost"
+                onPress={() => setShowDeleteConfirm(true)}
+                testID="delete-account"
+              />
+            )}
+          </View>
+        </CardBody>
+      </Card>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    gap: 16,
+  },
+  emptyText: {
+    color: "#6B7280",
+    fontSize: 14,
+  },
+  consentRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F3F4F6",
+  },
+  consentCategory: {
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  consentDescription: {
+    fontSize: 13,
+    color: "#6B7280",
+    marginTop: 2,
+  },
+  notifPrefRow: {
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F3F4F6",
+  },
+  notifPrefCategory: {
+    fontSize: 14,
+    fontWeight: "700",
+    marginBottom: 8,
+  },
+  notifSwitchRow: {
+    flexDirection: "row",
+    gap: 24,
+  },
+  notifSwitchItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  notifSwitchLabel: {
+    fontSize: 13,
+  },
+  accountContainer: {
+    gap: 12,
+  },
+  deleteConfirmContainer: {
+    padding: 12,
+    backgroundColor: "#FEE2E2",
+    borderRadius: 8,
+  },
+  deleteWarningText: {
+    color: "#991B1B",
+    fontSize: 14,
+    marginBottom: 8,
+  },
+  deleteButtonRow: {
+    flexDirection: "row",
+    gap: 8,
+  },
+});

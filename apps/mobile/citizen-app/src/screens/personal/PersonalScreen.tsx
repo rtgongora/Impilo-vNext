@@ -5,6 +5,7 @@
  */
 
 import React, { useState } from "react";
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
 import { Screen, Header, TabBar, type TabItem } from "@impilo/mobile-design-system";
 import { ProfileSection } from "./ProfileSection";
 import { AppointmentsSection } from "./AppointmentsSection";
@@ -37,48 +38,75 @@ export function PersonalScreen() {
   const [activeSection, setActiveSection] = useState<PersonalTab>("profile");
   const SectionComponent = SECTIONS[activeSection];
 
-  return React.createElement(
-    Screen,
-    null,
-    React.createElement(Header, { title: "My Health" }),
-    React.createElement(
-      "div",
-      { "data-testid": "personal-screen", style: { display: "flex", flexDirection: "column", height: "100%" } },
-      React.createElement(
-        "div",
-        { style: { overflowX: "auto", borderBottom: "1px solid #E5E7EB", padding: "0 16px" } },
-        React.createElement(
-          "div",
-          { style: { display: "flex", gap: "4px", minWidth: "max-content" } },
-          PERSONAL_TABS.map((tab) =>
-            React.createElement(
-              "button",
-              {
-                key: tab.id,
-                onClick: () => setActiveSection(tab.id as PersonalTab),
-                "data-testid": `personal-tab-${tab.id}`,
-                style: {
-                  padding: "10px 16px",
-                  border: "none",
-                  borderBottom: activeSection === tab.id ? "2px solid #2563EB" : "2px solid transparent",
-                  background: "none",
-                  fontSize: "13px",
-                  fontWeight: activeSection === tab.id ? "600" : "400",
-                  color: activeSection === tab.id ? "#2563EB" : "#6B7280",
-                  cursor: "pointer",
-                  whiteSpace: "nowrap",
-                },
-              },
-              tab.label
-            )
-          )
-        )
-      ),
-      React.createElement(
-        "div",
-        { style: { flex: 1, overflow: "auto", padding: "16px" } },
-        React.createElement(SectionComponent, null)
-      )
-    )
+  return (
+    <Screen>
+      <Header title="My Health" />
+      <View testID="personal-screen" style={styles.container}>
+        <ScrollView horizontal style={styles.tabScrollView} contentContainerStyle={styles.tabScrollContent}>
+          <View style={styles.tabRow}>
+            {PERSONAL_TABS.map((tab) => (
+              <TouchableOpacity
+                key={tab.id}
+                onPress={() => setActiveSection(tab.id as PersonalTab)}
+                testID={`personal-tab-${tab.id}`}
+                style={[
+                  styles.tabButton,
+                  {
+                    borderBottomColor: activeSection === tab.id ? "#2563EB" : "transparent",
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.tabLabel,
+                    {
+                      fontWeight: activeSection === tab.id ? "600" : "400",
+                      color: activeSection === tab.id ? "#2563EB" : "#6B7280",
+                    },
+                  ]}
+                >
+                  {tab.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </ScrollView>
+        <ScrollView style={styles.sectionContainer} contentContainerStyle={styles.sectionContent}>
+          <SectionComponent />
+        </ScrollView>
+      </View>
+    </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  tabScrollView: {
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E7EB",
+    paddingHorizontal: 16,
+  },
+  tabScrollContent: {
+    flexGrow: 1,
+  },
+  tabRow: {
+    flexDirection: "row",
+    gap: 4,
+  },
+  tabButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderBottomWidth: 2,
+  },
+  tabLabel: {
+    fontSize: 13,
+  },
+  sectionContainer: {
+    flex: 1,
+  },
+  sectionContent: {
+    padding: 16,
+  },
+});

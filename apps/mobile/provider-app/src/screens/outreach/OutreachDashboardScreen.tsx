@@ -3,6 +3,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from "react";
+import { View, Text, ScrollView, StyleSheet } from "react-native";
 import {
   Screen,
   Header,
@@ -51,16 +52,20 @@ export function OutreachDashboardScreen() {
   }, [loadData]);
 
   if (loading) {
-    return React.createElement(Screen, null,
-      React.createElement(Header, { title: "Outreach" }),
-      React.createElement(LoadingSpinner, { size: "lg" })
+    return (
+      <Screen>
+        <Header title="Outreach" />
+        <LoadingSpinner size="lg" />
+      </Screen>
     );
   }
 
   if (error) {
-    return React.createElement(Screen, null,
-      React.createElement(Header, { title: "Outreach" }),
-      React.createElement(ErrorState, { title: "Error", message: error, onRetry: loadData })
+    return (
+      <Screen>
+        <Header title="Outreach" />
+        <ErrorState title="Error" message={error} onRetry={loadData} />
+      </Screen>
     );
   }
 
@@ -70,100 +75,147 @@ export function OutreachDashboardScreen() {
   const highRisk = households.filter((h) => h.riskCategory === "HIGH");
   const todayTasks = tasks.filter((t) => t.status === "PENDING" || t.status === "IN_PROGRESS");
 
-  return React.createElement(
-    Screen,
-    null,
-    React.createElement(Header, { title: "Outreach Dashboard" }),
-    React.createElement(
-      "div",
-      { "data-testid": "outreach-dashboard", style: { padding: "16px" } },
+  return (
+    <Screen>
+      <Header title="Outreach Dashboard" />
+      <ScrollView testID="outreach-dashboard" style={styles.container}>
+        {/* Sync status */}
+        {(!isOnline || pendingCount > 0) && (
+          <Card>
+            <CardBody>
+              <View style={styles.syncRow}>
+                <Badge
+                  variant={isOnline ? "secondary" : "destructive"}
+                >
+                  {isOnline ? "Online" : "Offline"}
+                </Badge>
+                {pendingCount > 0 && (
+                  <Text style={styles.syncText}>{`${pendingCount} items pending sync`}</Text>
+                )}
+              </View>
+            </CardBody>
+          </Card>
+        )}
 
-      // Sync status
-      !isOnline || pendingCount > 0
-        ? React.createElement(
-            Card,
-            null,
-            React.createElement(CardBody, null,
-              React.createElement(
-                "div",
-                { style: { display: "flex", justifyContent: "space-between", alignItems: "center" } },
-                React.createElement(Badge, {
-                  variant: isOnline ? "secondary" : "destructive",
-                  children: isOnline ? "Online" : "Offline",
-                }),
-                pendingCount > 0
-                  ? React.createElement("span", { style: { fontSize: "14px" } }, `${pendingCount} items pending sync`)
-                  : null
-              )
-            )
-          )
-        : null,
+        {/* Summary tiles */}
+        <View style={styles.tilesGrid}>
+          <Card>
+            <CardBody>
+              <View style={styles.tileCenter}>
+                <Text style={styles.tileValue}>{String(households.length)}</Text>
+                <Text style={styles.tileLabel}>Households</Text>
+              </View>
+            </CardBody>
+          </Card>
+          <Card>
+            <CardBody>
+              <View style={styles.tileCenter}>
+                <Text style={styles.tileValue}>{String(todayTasks.length)}</Text>
+                <Text style={styles.tileLabel}>Today's Tasks</Text>
+              </View>
+            </CardBody>
+          </Card>
+          <Card>
+            <CardBody>
+              <View style={styles.tileCenter}>
+                <Text
+                  style={[
+                    styles.tileValue,
+                    { color: overdueVisits.length > 0 ? "#DC2626" : "#111827" },
+                  ]}
+                >
+                  {String(overdueVisits.length)}
+                </Text>
+                <Text style={styles.tileLabel}>Overdue Visits</Text>
+              </View>
+            </CardBody>
+          </Card>
+          <Card>
+            <CardBody>
+              <View style={styles.tileCenter}>
+                <Text
+                  style={[
+                    styles.tileValue,
+                    { color: highRisk.length > 0 ? "#F59E0B" : "#111827" },
+                  ]}
+                >
+                  {String(highRisk.length)}
+                </Text>
+                <Text style={styles.tileLabel}>High Risk</Text>
+              </View>
+            </CardBody>
+          </Card>
+        </View>
 
-      // Summary tiles
-      React.createElement(
-        "div",
-        { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginTop: "12px" } },
-        React.createElement(Card, null,
-          React.createElement(CardBody, null,
-            React.createElement("div", { style: { textAlign: "center" } },
-              React.createElement("div", { style: { fontSize: "24px", fontWeight: "700" } }, String(households.length)),
-              React.createElement("div", { style: { fontSize: "12px", color: "#6B7280" } }, "Households")
-            )
-          )
-        ),
-        React.createElement(Card, null,
-          React.createElement(CardBody, null,
-            React.createElement("div", { style: { textAlign: "center" } },
-              React.createElement("div", { style: { fontSize: "24px", fontWeight: "700" } }, String(todayTasks.length)),
-              React.createElement("div", { style: { fontSize: "12px", color: "#6B7280" } }, "Today's Tasks")
-            )
-          )
-        ),
-        React.createElement(Card, null,
-          React.createElement(CardBody, null,
-            React.createElement("div", { style: { textAlign: "center" } },
-              React.createElement("div", {
-                style: { fontSize: "24px", fontWeight: "700", color: overdueVisits.length > 0 ? "#DC2626" : "#111827" },
-              }, String(overdueVisits.length)),
-              React.createElement("div", { style: { fontSize: "12px", color: "#6B7280" } }, "Overdue Visits")
-            )
-          )
-        ),
-        React.createElement(Card, null,
-          React.createElement(CardBody, null,
-            React.createElement("div", { style: { textAlign: "center" } },
-              React.createElement("div", {
-                style: { fontSize: "24px", fontWeight: "700", color: highRisk.length > 0 ? "#F59E0B" : "#111827" },
-              }, String(highRisk.length)),
-              React.createElement("div", { style: { fontSize: "12px", color: "#6B7280" } }, "High Risk")
-            )
-          )
-        )
-      ),
+        {/* Today's schedule */}
+        <CardHeader>Today's Schedule</CardHeader>
+        {todayTasks.length === 0 ? (
+          <Text style={styles.emptySchedule}>No outreach tasks for today</Text>
+        ) : (
+          todayTasks.map((task) => (
+            <Card key={task.id}>
+              <CardBody>
+                <View testID={`outreach-task-${task.id}`}>
+                  <Text style={styles.taskTitle}>{task.title}</Text>
+                  {task.patientName && (
+                    <Text style={styles.taskPatient}>{task.patientName}</Text>
+                  )}
+                  <Badge variant="outline">{task.priority}</Badge>
+                </View>
+              </CardBody>
+            </Card>
+          ))
+        )}
 
-      // Today's schedule
-      React.createElement(CardHeader, { children: "Today's Schedule" }),
-      todayTasks.length === 0
-        ? React.createElement("p", { style: { color: "#6B7280", padding: "8px" } }, "No outreach tasks for today")
-        : todayTasks.map((task) =>
-            React.createElement(
-              Card,
-              { key: task.id },
-              React.createElement(CardBody, null,
-                React.createElement("div", { "data-testid": `outreach-task-${task.id}` },
-                  React.createElement("strong", null, task.title),
-                  task.patientName
-                    ? React.createElement("p", { style: { fontSize: "14px", color: "#6B7280" } }, task.patientName)
-                    : null,
-                  React.createElement(Badge, { variant: "outline", children: task.priority })
-                )
-              )
-            )
-          ),
-
-      React.createElement("div", { style: { marginTop: "16px" } },
-        React.createElement(Button, { title: "Refresh", variant: "outline", onPress: loadData, testID: "refresh-outreach" })
-      )
-    )
+        <View style={styles.refreshContainer}>
+          <Button title="Refresh" variant="outline" onPress={loadData} testID="refresh-outreach" />
+        </View>
+      </ScrollView>
+    </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 16,
+  },
+  syncRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  syncText: {
+    fontSize: 14,
+  },
+  tilesGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 12,
+    marginTop: 12,
+  },
+  tileCenter: {
+    alignItems: "center",
+  },
+  tileValue: {
+    fontSize: 24,
+    fontWeight: "700",
+  },
+  tileLabel: {
+    fontSize: 12,
+    color: "#6B7280",
+  },
+  emptySchedule: {
+    color: "#6B7280",
+    padding: 8,
+  },
+  taskTitle: {
+    fontWeight: "700",
+  },
+  taskPatient: {
+    fontSize: 14,
+    color: "#6B7280",
+  },
+  refreshContainer: {
+    marginTop: 16,
+  },
+});

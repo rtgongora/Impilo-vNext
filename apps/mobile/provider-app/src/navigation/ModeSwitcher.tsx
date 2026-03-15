@@ -6,6 +6,7 @@
  */
 
 import React, { useCallback } from "react";
+import { View, StyleSheet, ScrollView } from "react-native";
 import { useAuth } from "@impilo/mobile-auth";
 import { Button } from "@impilo/mobile-design-system";
 import { appStore, useAppStore } from "../stores/appStore";
@@ -45,29 +46,39 @@ export function ModeSwitcher() {
     appStore.getState().setMode(newMode);
   }, []);
 
-  return React.createElement(
-    "nav",
-    {
-      "data-testid": "mode-switcher",
-      "aria-label": "App mode selector",
-      style: {
-        display: "flex",
-        gap: "8px",
-        padding: "8px 16px",
-        borderBottom: "1px solid #E5E7EB",
-        backgroundColor: "#F9FAFB",
-      },
-    },
-    availableModes.map((m) =>
-      React.createElement(Button, {
-        key: m,
-        title: MODE_LABELS[m],
-        variant: m === mode ? "primary" : "outline",
-        size: "sm",
-        onPress: () => handleModeChange(m),
-        testID: `mode-btn-${m}`,
-        accessibilityLabel: `Switch to ${MODE_LABELS[m]} mode`,
-      })
-    )
+  return (
+    <View testID="mode-switcher" accessibilityLabel="App mode selector" style={styles.container}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        {availableModes.map((m) => (
+          <View key={m} style={styles.buttonWrapper}>
+            <Button
+              title={MODE_LABELS[m]}
+              variant={m === mode ? "primary" : "outline"}
+              size="sm"
+              onPress={() => handleModeChange(m)}
+              testID={`mode-btn-${m}`}
+              accessibilityLabel={`Switch to ${MODE_LABELS[m]} mode`}
+            />
+          </View>
+        ))}
+      </ScrollView>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E7EB",
+    backgroundColor: "#F9FAFB",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+  },
+  scrollContent: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  buttonWrapper: {
+    marginRight: 8,
+  },
+});

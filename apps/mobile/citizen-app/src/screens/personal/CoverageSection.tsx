@@ -3,6 +3,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from "react";
+import { View, Text, StyleSheet } from "react-native";
 import {
   Card,
   CardHeader,
@@ -37,56 +38,73 @@ export function CoverageSection() {
     load();
   }, [load]);
 
-  if (isLoading) return React.createElement(LoadingSpinner, { size: "md" });
-  if (error) return React.createElement(ErrorState, { title: "Error", message: error.message, onRetry: load });
+  if (isLoading) return <LoadingSpinner size="md" />;
+  if (error) return <ErrorState title="Error" message={error.message} onRetry={load} />;
 
   if (coverage.length === 0) {
-    return React.createElement(EmptyState, {
-      title: "No coverage information",
-      message: "Your insurance and coverage details will appear here when available",
-    });
+    return (
+      <EmptyState
+        title="No coverage information"
+        message="Your insurance and coverage details will appear here when available"
+      />
+    );
   }
 
-  return React.createElement(
-    "div",
-    { "data-testid": "coverage-section", style: { display: "flex", flexDirection: "column", gap: "12px" } },
-    React.createElement("h3", { style: { margin: 0 } }, "Coverage & Insurance"),
-    coverage.map((plan) =>
-      React.createElement(
-        Card,
-        { key: plan.id },
-        React.createElement(CardHeader, { title: plan.planName }),
-        React.createElement(
-          CardBody,
-          null,
-          React.createElement(
-            "div",
-            { "data-testid": `coverage-${plan.id}` },
-            React.createElement(
-              "div",
-              { style: { display: "flex", gap: "8px", alignItems: "center", marginBottom: "8px" } },
-              React.createElement(Badge, {
-                variant: plan.status === "ACTIVE" ? "default" : "outline",
-                children: plan.status,
-              }),
-              React.createElement("span", { style: { fontSize: "13px", color: "#6B7280" } }, plan.planType)
-            ),
-            React.createElement("p", { style: { fontSize: "14px", margin: "4px 0" } }, `Member ID: ${plan.memberId}`),
-            React.createElement("p", { style: { fontSize: "14px", margin: "4px 0" } },
-              `Effective: ${new Date(plan.effectiveFrom).toLocaleDateString()}${plan.effectiveTo ? ` - ${new Date(plan.effectiveTo).toLocaleDateString()}` : " (ongoing)"}`
-            ),
-            plan.copay !== undefined
-              ? React.createElement("p", { style: { fontSize: "14px", margin: "4px 0" } }, `Copay: ${plan.currency} ${plan.copay}`)
-              : null,
-            plan.deductible !== undefined
-              ? React.createElement("p", { style: { fontSize: "14px", margin: "4px 0" } }, `Deductible: ${plan.currency} ${plan.deductible}`)
-              : null,
-            plan.outOfPocketMax !== undefined
-              ? React.createElement("p", { style: { fontSize: "14px", margin: "4px 0" } }, `Out-of-pocket max: ${plan.currency} ${plan.outOfPocketMax}`)
-              : null
-          )
-        )
-      )
-    )
+  return (
+    <View testID="coverage-section" style={styles.container}>
+      <Text style={styles.heading}>Coverage & Insurance</Text>
+      {coverage.map((plan) => (
+        <Card key={plan.id}>
+          <CardHeader title={plan.planName} />
+          <CardBody>
+            <View testID={`coverage-${plan.id}`}>
+              <View style={styles.badgeRow}>
+                <Badge variant={plan.status === "ACTIVE" ? "default" : "outline"}>
+                  {plan.status}
+                </Badge>
+                <Text style={styles.planType}>{plan.planType}</Text>
+              </View>
+              <Text style={styles.infoText}>{`Member ID: ${plan.memberId}`}</Text>
+              <Text style={styles.infoText}>
+                {`Effective: ${new Date(plan.effectiveFrom).toLocaleDateString()}${plan.effectiveTo ? ` - ${new Date(plan.effectiveTo).toLocaleDateString()}` : " (ongoing)"}`}
+              </Text>
+              {plan.copay !== undefined ? (
+                <Text style={styles.infoText}>{`Copay: ${plan.currency} ${plan.copay}`}</Text>
+              ) : null}
+              {plan.deductible !== undefined ? (
+                <Text style={styles.infoText}>{`Deductible: ${plan.currency} ${plan.deductible}`}</Text>
+              ) : null}
+              {plan.outOfPocketMax !== undefined ? (
+                <Text style={styles.infoText}>{`Out-of-pocket max: ${plan.currency} ${plan.outOfPocketMax}`}</Text>
+              ) : null}
+            </View>
+          </CardBody>
+        </Card>
+      ))}
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    gap: 12,
+  },
+  heading: {
+    fontSize: 18,
+    fontWeight: "600",
+  },
+  badgeRow: {
+    flexDirection: "row",
+    gap: 8,
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  planType: {
+    fontSize: 13,
+    color: "#6B7280",
+  },
+  infoText: {
+    fontSize: 14,
+    marginVertical: 4,
+  },
+});

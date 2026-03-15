@@ -3,6 +3,7 @@
  */
 
 import React, { useState, useCallback, useEffect } from "react";
+import { View, Text, StyleSheet } from "react-native";
 import { Card, CardBody, Button, TextField, Select, Badge, LabResultCard, ErrorState } from "@impilo/mobile-design-system";
 import { createLabOrder, getLabOrdersForEncounter } from "../../services/labService";
 import { encounterStore, useEncounterStore } from "../../stores/encounterStore";
@@ -58,84 +59,87 @@ export function LabOrderPanel({ encounterId, patientId }: LabOrderPanelProps) {
     }
   }, [encounterId, patientId, testCode, urgency]);
 
-  return React.createElement(
-    "div",
-    { "data-testid": "lab-order-panel" },
+  return (
+    <View testID="lab-order-panel">
+      <Card>
+        <CardBody>
+          <View style={styles.inputRow}>
+            <Select
+              label="Test"
+              value={testCode}
+              options={COMMON_TESTS}
+              onChange={setTestCode}
+              testID="lab-test-select"
+            />
+            <Select
+              label="Urgency"
+              value={urgency}
+              options={[
+                { value: "ROUTINE", label: "Routine" },
+                { value: "URGENT", label: "Urgent" },
+                { value: "STAT", label: "STAT" },
+              ]}
+              onChange={(v: string) => setUrgency(v as "ROUTINE" | "URGENT" | "STAT")}
+              testID="lab-urgency-select"
+            />
+            <Button
+              title="Order"
+              onPress={handleOrder}
+              loading={saving}
+              testID="order-lab-btn"
+            />
+          </View>
+          {error ? <ErrorState title="Error" message={error} /> : null}
+        </CardBody>
+      </Card>
 
-    React.createElement(
-      Card,
-      null,
-      React.createElement(
-        CardBody,
-        null,
-        React.createElement(
-          "div",
-          { style: { display: "flex", gap: "8px", alignItems: "flex-end" } },
-          React.createElement(Select, {
-            label: "Test",
-            value: testCode,
-            options: COMMON_TESTS,
-            onChange: setTestCode,
-            testID: "lab-test-select",
-          }),
-          React.createElement(Select, {
-            label: "Urgency",
-            value: urgency,
-            options: [
-              { value: "ROUTINE", label: "Routine" },
-              { value: "URGENT", label: "Urgent" },
-              { value: "STAT", label: "STAT" },
-            ],
-            onChange: (v: string) => setUrgency(v as "ROUTINE" | "URGENT" | "STAT"),
-            testID: "lab-urgency-select",
-          }),
-          React.createElement(Button, {
-            title: "Order",
-            onPress: handleOrder,
-            loading: saving,
-            testID: "order-lab-btn",
-          })
-        ),
-        error ? React.createElement(ErrorState, { title: "Error", message: error }) : null
-      )
-    ),
-
-    React.createElement(
-      "div",
-      { style: { marginTop: "12px" } },
-      labOrders.map((order) =>
-        React.createElement(
-          Card,
-          { key: order.id },
-          React.createElement(
-            CardBody,
-            null,
-            React.createElement(
-              "div",
-              { "data-testid": `lab-order-${order.id}` },
-              React.createElement(
-                "div",
-                { style: { display: "flex", justifyContent: "space-between" } },
-                React.createElement("strong", null, order.testName),
-                React.createElement(Badge, { variant: order.urgency === "STAT" ? "destructive" : "outline", children: order.urgency })
-              ),
-              React.createElement(Badge, { variant: "secondary", children: order.status }),
-              order.results && order.results.length > 0
-                ? order.results.map((r) =>
-                    React.createElement(LabResultCard, {
-                      key: r.id,
-                      parameter: r.parameter,
-                      value: r.value,
-                      unit: r.unit,
-                      referenceRange: r.referenceRange,
-                      isAbnormal: r.isAbnormal,
-                    })
-                  )
-                : null
-            )
-          )
-        )
-      )
-    )
+      <View style={styles.ordersList}>
+        {labOrders.map((order) => (
+          <Card key={order.id}>
+            <CardBody>
+              <View testID={`lab-order-${order.id}`}>
+                <View style={styles.orderHeader}>
+                  <Text style={styles.bold}>{order.testName}</Text>
+                  <Badge variant={order.urgency === "STAT" ? "destructive" : "outline"}>
+                    {order.urgency}
+                  </Badge>
+                </View>
+                <Badge variant="secondary">{order.status}</Badge>
+                {order.results && order.results.length > 0
+                  ? order.results.map((r) => (
+                      <LabResultCard
+                        key={r.id}
+                        parameter={r.parameter}
+                        value={r.value}
+                        unit={r.unit}
+                        referenceRange={r.referenceRange}
+                        isAbnormal={r.isAbnormal}
+                      />
+                    ))
+                  : null}
+              </View>
+            </CardBody>
+          </Card>
+        ))}
+      </View>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  inputRow: {
+    flexDirection: "row",
+    gap: 8,
+    alignItems: "flex-end",
+  },
+  ordersList: {
+    marginTop: 12,
+  },
+  orderHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  bold: {
+    fontWeight: "bold",
+  },
+});

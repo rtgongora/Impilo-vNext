@@ -3,27 +3,47 @@
  */
 
 import React from "react";
+import { View, Text, StyleSheet } from "react-native";
+import NetInfo from "@react-native-community/netinfo";
 import { useAppStore } from "../stores/appStore";
 
 export function NetworkStatusBar() {
-  const { isOnline } = useAppStore();
+  const { isOnline, setIsOnline } = useAppStore();
+
+  React.useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener((state) => {
+      setIsOnline(!!state.isConnected);
+    });
+    return () => unsubscribe();
+  }, [setIsOnline]);
 
   if (isOnline) return null;
 
-  return React.createElement(
-    "div",
-    {
-      "data-testid": "network-status-bar",
-      role: "status",
-      style: {
-        padding: "8px 16px",
-        backgroundColor: "#FEF3C7",
-        borderBottom: "1px solid #FDE68A",
-        textAlign: "center",
-        fontSize: "13px",
-        color: "#92400E",
-      },
-    },
-    "You are currently offline. Some features may be unavailable."
+  return (
+    <View
+      testID="network-status-bar"
+      accessibilityRole="summary"
+      style={styles.container}
+    >
+      <Text style={styles.text}>
+        You are currently offline. Some features may be unavailable.
+      </Text>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    backgroundColor: "#FEF3C7",
+    borderBottomWidth: 1,
+    borderBottomColor: "#FDE68A",
+    alignItems: "center",
+  },
+  text: {
+    fontSize: 13,
+    color: "#92400E",
+    textAlign: "center",
+  },
+});

@@ -3,6 +3,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from "react";
+import { View, Text, StyleSheet } from "react-native";
 import {
   Card,
   CardBody,
@@ -59,74 +60,108 @@ export function PrescriptionsSection() {
     }
   }, [load]);
 
-  if (isLoading) return React.createElement(LoadingSpinner, { size: "md" });
-  if (error) return React.createElement(ErrorState, { title: "Error", message: error.message, onRetry: load });
+  if (isLoading) return <LoadingSpinner size="md" />;
+  if (error) return <ErrorState title="Error" message={error.message} onRetry={load} />;
 
   if (prescriptions.length === 0) {
-    return React.createElement(EmptyState, {
-      title: "No prescriptions",
-      message: "Your prescriptions will appear here after a visit",
-    });
+    return (
+      <EmptyState
+        title="No prescriptions"
+        message="Your prescriptions will appear here after a visit"
+      />
+    );
   }
 
-  return React.createElement(
-    "div",
-    { "data-testid": "prescriptions-section", style: { display: "flex", flexDirection: "column", gap: "12px" } },
-    React.createElement("h3", { style: { margin: 0 } }, "Prescriptions"),
-    prescriptions.map((rx) =>
-      React.createElement(
-        Card,
-        { key: rx.id },
-        React.createElement(
-          CardBody,
-          null,
-          React.createElement(
-            "div",
-            { "data-testid": `prescription-${rx.id}` },
-            React.createElement(
-              "div",
-              { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-start" } },
-              React.createElement(
-                "div",
-                null,
-                React.createElement(
-                  "div",
-                  { style: { display: "flex", gap: "8px", alignItems: "center", marginBottom: "4px" } },
-                  React.createElement("strong", { style: { fontSize: "15px" } }, rx.medicationName),
-                  React.createElement(Badge, {
-                    variant: STATUS_VARIANT[rx.status] ?? "outline",
-                    children: rx.status,
-                  })
-                ),
-                React.createElement("p", { style: { fontSize: "14px", color: "#374151", margin: "2px 0" } },
-                  `${rx.dosage} \u2022 ${rx.frequency} \u2022 ${rx.duration}`
-                ),
-                React.createElement("p", { style: { fontSize: "13px", color: "#6B7280", margin: "2px 0" } },
-                  `Prescribed by ${rx.prescribedBy} at ${rx.facilityName}`
-                ),
-                React.createElement("p", { style: { fontSize: "13px", color: "#9CA3AF", margin: "2px 0" } },
-                  `Qty: ${rx.quantity} \u2022 Refills remaining: ${rx.refillsRemaining}`
-                ),
-                rx.lastFilledAt
-                  ? React.createElement("p", { style: { fontSize: "12px", color: "#9CA3AF", margin: "2px 0" } },
-                      `Last filled: ${new Date(rx.lastFilledAt).toLocaleDateString()}`
-                    )
-                  : null
-              ),
-              rx.status === "ACTIVE" && rx.refillsRemaining > 0
-                ? React.createElement(Button, {
-                    title: refillInProgress === rx.id ? "Requesting..." : "Request Refill",
-                    variant: "secondary",
-                    size: "sm",
-                    onPress: () => handleRefill(rx.id),
-                    disabled: refillInProgress === rx.id,
-                    testID: `refill-${rx.id}`,
-                  })
-                : null
-            )
-          )
-        )
-      )
-    )
+  return (
+    <View testID="prescriptions-section" style={styles.container}>
+      <Text style={styles.heading}>Prescriptions</Text>
+      {prescriptions.map((rx) => (
+        <Card key={rx.id}>
+          <CardBody>
+            <View testID={`prescription-${rx.id}`}>
+              <View style={styles.prescriptionRow}>
+                <View>
+                  <View style={styles.badgeRow}>
+                    <Text style={styles.medicationName}>{rx.medicationName}</Text>
+                    <Badge variant={STATUS_VARIANT[rx.status] ?? "outline"}>
+                      {rx.status}
+                    </Badge>
+                  </View>
+                  <Text style={styles.dosageText}>
+                    {`${rx.dosage} \u2022 ${rx.frequency} \u2022 ${rx.duration}`}
+                  </Text>
+                  <Text style={styles.prescribedByText}>
+                    {`Prescribed by ${rx.prescribedBy} at ${rx.facilityName}`}
+                  </Text>
+                  <Text style={styles.quantityText}>
+                    {`Qty: ${rx.quantity} \u2022 Refills remaining: ${rx.refillsRemaining}`}
+                  </Text>
+                  {rx.lastFilledAt ? (
+                    <Text style={styles.lastFilledText}>
+                      {`Last filled: ${new Date(rx.lastFilledAt).toLocaleDateString()}`}
+                    </Text>
+                  ) : null}
+                </View>
+                {rx.status === "ACTIVE" && rx.refillsRemaining > 0 ? (
+                  <Button
+                    title={refillInProgress === rx.id ? "Requesting..." : "Request Refill"}
+                    variant="secondary"
+                    size="sm"
+                    onPress={() => handleRefill(rx.id)}
+                    disabled={refillInProgress === rx.id}
+                    testID={`refill-${rx.id}`}
+                  />
+                ) : null}
+              </View>
+            </View>
+          </CardBody>
+        </Card>
+      ))}
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    gap: 12,
+  },
+  heading: {
+    fontSize: 18,
+    fontWeight: "600",
+  },
+  prescriptionRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+  },
+  badgeRow: {
+    flexDirection: "row",
+    gap: 8,
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  medicationName: {
+    fontWeight: "700",
+    fontSize: 15,
+  },
+  dosageText: {
+    fontSize: 14,
+    color: "#374151",
+    marginVertical: 2,
+  },
+  prescribedByText: {
+    fontSize: 13,
+    color: "#6B7280",
+    marginVertical: 2,
+  },
+  quantityText: {
+    fontSize: 13,
+    color: "#9CA3AF",
+    marginVertical: 2,
+  },
+  lastFilledText: {
+    fontSize: 12,
+    color: "#9CA3AF",
+    marginVertical: 2,
+  },
+});

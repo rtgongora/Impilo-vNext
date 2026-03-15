@@ -6,8 +6,8 @@
  */
 
 import React from "react";
+import { View, ActivityIndicator, StyleSheet } from "react-native";
 import { useAuth } from "@impilo/mobile-auth";
-import { LoadingSpinner } from "@impilo/mobile-design-system";
 import { LoginScreen } from "../screens/LoginScreen";
 import { SelectFacilityScreen } from "../screens/SelectFacilityScreen";
 import { useAppStore } from "../stores/appStore";
@@ -21,23 +21,28 @@ export function AuthGuard({ children }: AuthGuardProps) {
   const { facilityId } = useAppStore();
 
   if (auth.isLoading) {
-    return React.createElement(
-      "div",
-      {
-        "data-testid": "auth-loading",
-        style: { display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" },
-      },
-      React.createElement(LoadingSpinner, { size: "lg" })
+    return (
+      <View testID="auth-loading" style={styles.loading}>
+        <ActivityIndicator size="large" color="#1E40AF" />
+      </View>
     );
   }
 
   if (!auth.isAuthenticated) {
-    return React.createElement(LoginScreen, null);
+    return <LoginScreen />;
   }
 
   if (!facilityId) {
-    return React.createElement(SelectFacilityScreen, null);
+    return <SelectFacilityScreen />;
   }
 
-  return React.createElement(React.Fragment, null, children);
+  return <>{children}</>;
 }
+
+const styles = StyleSheet.create({
+  loading: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+});

@@ -3,7 +3,17 @@
  */
 
 import React, { useState, useCallback } from "react";
-import { Screen, Header, Card, CardBody, Button, Badge, EmptyState, ErrorState } from "@impilo/mobile-design-system";
+import { View, Text, ScrollView, StyleSheet } from "react-native";
+import {
+  Screen,
+  Header,
+  Card,
+  CardBody,
+  Button,
+  Badge,
+  EmptyState,
+  ErrorState,
+} from "@impilo/mobile-design-system";
 import { useConflicts } from "@impilo/mobile-offline";
 import type { ConflictItem } from "../../types";
 
@@ -30,67 +40,131 @@ export function ConflictReviewScreen() {
     }
   }, [resolveConflict]);
 
-  return React.createElement(
-    Screen, null,
-    React.createElement(Header, { title: "Conflict Review" }),
-    React.createElement("div", { "data-testid": "conflict-review-screen", style: { padding: "16px" } },
-      error ? React.createElement(ErrorState, { title: "Error", message: error }) : null,
-      conflicts.length === 0
-        ? React.createElement(EmptyState, { title: "No conflicts", message: "All data is synchronized" })
-        : conflicts.map((conflict) =>
-            React.createElement(Card, { key: conflict.id },
-              React.createElement(CardBody, null,
-                React.createElement("div", { "data-testid": `conflict-${conflict.id}` },
-                  React.createElement("div", { style: { display: "flex", justifyContent: "space-between", marginBottom: "8px" } },
-                    React.createElement("strong", null, `${conflict.resourceType} Conflict`),
-                    React.createElement(Badge, { variant: "destructive", children: `${conflict.conflictFields.length} fields` })
-                  ),
-                  React.createElement("p", { style: { fontSize: "12px", color: "#6B7280" } }, `Resource: ${conflict.resourceId}`),
-                  React.createElement("p", { style: { fontSize: "12px", color: "#9CA3AF" } }, `Detected: ${new Date(conflict.detectedAt).toLocaleString()}`),
+  return (
+    <Screen>
+      <Header title="Conflict Review" />
+      <ScrollView testID="conflict-review-screen" style={styles.container}>
+        {error && <ErrorState title="Error" message={error} />}
+        {conflicts.length === 0 ? (
+          <EmptyState title="No conflicts" message="All data is synchronized" />
+        ) : (
+          conflicts.map((conflict) => (
+            <Card key={conflict.id}>
+              <CardBody>
+                <View testID={`conflict-${conflict.id}`}>
+                  <View style={styles.conflictHeader}>
+                    <Text style={styles.boldText}>{`${conflict.resourceType} Conflict`}</Text>
+                    <Badge variant="destructive">{`${conflict.conflictFields.length} fields`}</Badge>
+                  </View>
+                  <Text style={styles.resourceText}>{`Resource: ${conflict.resourceId}`}</Text>
+                  <Text style={styles.metaText}>{`Detected: ${new Date(conflict.detectedAt).toLocaleString()}`}</Text>
 
-                  // Conflict diff
-                  React.createElement("div", { style: { margin: "12px 0" } },
-                    React.createElement("table", { style: { width: "100%", borderCollapse: "collapse", fontSize: "12px" } },
-                      React.createElement("thead", null,
-                        React.createElement("tr", null,
-                          React.createElement("th", { style: { textAlign: "left", padding: "4px", borderBottom: "1px solid #E5E7EB" } }, "Field"),
-                          React.createElement("th", { style: { textAlign: "left", padding: "4px", borderBottom: "1px solid #E5E7EB" } }, "Local"),
-                          React.createElement("th", { style: { textAlign: "left", padding: "4px", borderBottom: "1px solid #E5E7EB" } }, "Server")
-                        )
-                      ),
-                      React.createElement("tbody", null,
-                        conflict.conflictFields.map((field) =>
-                          React.createElement("tr", { key: field },
-                            React.createElement("td", { style: { padding: "4px", fontWeight: "600" } }, field),
-                            React.createElement("td", { style: { padding: "4px", color: "#3B82F6" } }, String(conflict.localVersion[field] ?? "—")),
-                            React.createElement("td", { style: { padding: "4px", color: "#F59E0B" } }, String(conflict.serverVersion[field] ?? "—"))
-                          )
-                        )
-                      )
-                    )
-                  ),
+                  {/* Conflict diff table */}
+                  <View style={styles.diffTable}>
+                    {/* Header row */}
+                    <View style={styles.diffHeaderRow}>
+                      <Text style={[styles.diffHeaderCell, styles.diffFieldCol]}>Field</Text>
+                      <Text style={[styles.diffHeaderCell, styles.diffValueCol]}>Local</Text>
+                      <Text style={[styles.diffHeaderCell, styles.diffValueCol]}>Server</Text>
+                    </View>
+                    {/* Data rows */}
+                    {conflict.conflictFields.map((field) => (
+                      <View key={field} style={styles.diffRow}>
+                        <Text style={[styles.diffCell, styles.diffFieldCol, styles.fieldName]}>{field}</Text>
+                        <Text style={[styles.diffCell, styles.diffValueCol, styles.localValue]}>
+                          {String(conflict.localVersion[field] ?? "—")}
+                        </Text>
+                        <Text style={[styles.diffCell, styles.diffValueCol, styles.serverValue]}>
+                          {String(conflict.serverVersion[field] ?? "—")}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
 
-                  // Resolution buttons
-                  React.createElement("div", { style: { display: "flex", gap: "8px" } },
-                    React.createElement(Button, {
-                      title: "Keep Local",
-                      variant: "primary",
-                      size: "sm",
-                      onPress: () => handleResolve(conflict.id, "LOCAL_WINS"),
-                      testID: `local-wins-${conflict.id}`,
-                    }),
-                    React.createElement(Button, {
-                      title: "Use Server",
-                      variant: "outline",
-                      size: "sm",
-                      onPress: () => handleResolve(conflict.id, "SERVER_WINS"),
-                      testID: `server-wins-${conflict.id}`,
-                    })
-                  )
-                )
-              )
-            )
-          )
-    )
+                  {/* Resolution buttons */}
+                  <View style={styles.resolutionRow}>
+                    <Button
+                      title="Keep Local"
+                      variant="primary"
+                      size="sm"
+                      onPress={() => handleResolve(conflict.id, "LOCAL_WINS")}
+                      testID={`local-wins-${conflict.id}`}
+                    />
+                    <Button
+                      title="Use Server"
+                      variant="outline"
+                      size="sm"
+                      onPress={() => handleResolve(conflict.id, "SERVER_WINS")}
+                      testID={`server-wins-${conflict.id}`}
+                    />
+                  </View>
+                </View>
+              </CardBody>
+            </Card>
+          ))
+        )}
+      </ScrollView>
+    </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 16,
+  },
+  conflictHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
+  boldText: {
+    fontWeight: "700",
+  },
+  resourceText: {
+    fontSize: 12,
+    color: "#6B7280",
+  },
+  metaText: {
+    fontSize: 12,
+    color: "#9CA3AF",
+  },
+  diffTable: {
+    marginVertical: 12,
+  },
+  diffHeaderRow: {
+    flexDirection: "row",
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E7EB",
+  },
+  diffRow: {
+    flexDirection: "row",
+  },
+  diffHeaderCell: {
+    padding: 4,
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  diffCell: {
+    padding: 4,
+    fontSize: 12,
+  },
+  diffFieldCol: {
+    flex: 1,
+  },
+  diffValueCol: {
+    flex: 1,
+  },
+  fieldName: {
+    fontWeight: "600",
+  },
+  localValue: {
+    color: "#3B82F6",
+  },
+  serverValue: {
+    color: "#F59E0B",
+  },
+  resolutionRow: {
+    flexDirection: "row",
+    gap: 8,
+  },
+});

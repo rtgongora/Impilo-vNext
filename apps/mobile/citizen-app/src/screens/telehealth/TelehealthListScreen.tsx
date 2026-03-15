@@ -3,6 +3,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from "react";
+import { View, Text, ScrollView, StyleSheet } from "react-native";
 import {
   Screen,
   Header,
@@ -81,152 +82,182 @@ export function TelehealthListScreen() {
 
   // Active session view
   if (activeSession) {
-    return React.createElement(TelehealthSessionScreen, {
-      session: activeSession,
-      onBack: () => {
-        setActiveSession(null);
-        load();
-      },
-    });
+    return (
+      <TelehealthSessionScreen
+        session={activeSession}
+        onBack={() => {
+          setActiveSession(null);
+          load();
+        }}
+      />
+    );
   }
 
-  return React.createElement(
-    Screen,
-    null,
-    React.createElement(Header, { title: "Telehealth" }),
-    React.createElement(
-      "div",
-      { "data-testid": "telehealth-list-screen", style: { padding: "16px", display: "flex", flexDirection: "column", gap: "16px" } },
+  return (
+    <Screen>
+      <Header title="Telehealth" />
+      <ScrollView testID="telehealth-list-screen" style={styles.scrollView} contentContainerStyle={styles.container}>
+        <View style={styles.headerRow}>
+          <Text style={styles.heading}>Teleconsultations</Text>
+          <Button
+            title={showRequest ? "Cancel" : "Request Teleconsult"}
+            variant={showRequest ? "ghost" : "primary"}
+            size="sm"
+            onPress={() => setShowRequest(!showRequest)}
+            testID="toggle-telehealth-request"
+          />
+        </View>
 
-      React.createElement(
-        "div",
-        { style: { display: "flex", justifyContent: "space-between", alignItems: "center" } },
-        React.createElement("h3", { style: { margin: 0 } }, "Teleconsultations"),
-        React.createElement(Button, {
-          title: showRequest ? "Cancel" : "Request Teleconsult",
-          variant: showRequest ? "ghost" : "primary",
-          size: "sm",
-          onPress: () => setShowRequest(!showRequest),
-          testID: "toggle-telehealth-request",
-        })
-      ),
-
-      // Request form
-      showRequest
-        ? React.createElement(
-            Card,
-            null,
-            React.createElement(CardHeader, { title: "Request Teleconsultation" }),
-            React.createElement(
-              CardBody,
-              null,
-              React.createElement(
-                "div",
-                { style: { display: "flex", flexDirection: "column", gap: "12px" } },
-                React.createElement(TextField, {
-                  label: "Reason for Consultation",
-                  value: reason,
-                  onChange: setReason,
-                  placeholder: "Describe your concern",
-                  testID: "telehealth-reason",
-                }),
-                React.createElement(Select, {
-                  label: "Session Type",
-                  value: sessionType,
-                  onChange: setSessionType,
-                  options: [
+        {/* Request form */}
+        {showRequest ? (
+          <Card>
+            <CardHeader title="Request Teleconsultation" />
+            <CardBody>
+              <View style={styles.formContainer}>
+                <TextField
+                  label="Reason for Consultation"
+                  value={reason}
+                  onChange={setReason}
+                  placeholder="Describe your concern"
+                  testID="telehealth-reason"
+                />
+                <Select
+                  label="Session Type"
+                  value={sessionType}
+                  onChange={setSessionType}
+                  options={[
                     { label: "Video Call", value: "VIDEO" },
                     { label: "Audio Call", value: "AUDIO" },
                     { label: "Chat", value: "CHAT" },
-                  ],
-                  testID: "telehealth-type",
-                }),
-                React.createElement(TextField, {
-                  label: "Preferred Date (optional)",
-                  value: preferredDate,
-                  onChange: setPreferredDate,
-                  placeholder: "YYYY-MM-DD",
-                  testID: "telehealth-date",
-                }),
-                React.createElement(TextField, {
-                  label: "Preferred Provider ID (optional)",
-                  value: providerId,
-                  onChange: setProviderId,
-                  placeholder: "Leave blank for next available",
-                  testID: "telehealth-provider",
-                }),
-                React.createElement(Button, {
-                  title: submitting ? "Submitting..." : "Submit Request",
-                  variant: "primary",
-                  onPress: handleRequest,
-                  disabled: submitting || !reason,
-                  testID: "submit-telehealth-request",
-                })
-              )
-            )
-          )
-        : null,
+                  ]}
+                  testID="telehealth-type"
+                />
+                <TextField
+                  label="Preferred Date (optional)"
+                  value={preferredDate}
+                  onChange={setPreferredDate}
+                  placeholder="YYYY-MM-DD"
+                  testID="telehealth-date"
+                />
+                <TextField
+                  label="Preferred Provider ID (optional)"
+                  value={providerId}
+                  onChange={setProviderId}
+                  placeholder="Leave blank for next available"
+                  testID="telehealth-provider"
+                />
+                <Button
+                  title={submitting ? "Submitting..." : "Submit Request"}
+                  variant="primary"
+                  onPress={handleRequest}
+                  disabled={submitting || !reason}
+                  testID="submit-telehealth-request"
+                />
+              </View>
+            </CardBody>
+          </Card>
+        ) : null}
 
-      error
-        ? React.createElement(ErrorState, { title: "Error", message: error.message, onRetry: load })
-        : null,
+        {error ? (
+          <ErrorState title="Error" message={error.message} onRetry={load} />
+        ) : null}
 
-      // Sessions list
-      isLoading
-        ? React.createElement(LoadingSpinner, { size: "md" })
-        : sessions.length === 0
-          ? React.createElement(EmptyState, {
-              title: "No teleconsultations",
-              message: "Request your first teleconsultation using the button above",
-            })
-          : sessions.map((session) =>
-              React.createElement(
-                Card,
-                { key: session.id },
-                React.createElement(
-                  CardBody,
-                  null,
-                  React.createElement(
-                    "div",
-                    {
-                      "data-testid": `telehealth-session-${session.id}`,
-                      style: { display: "flex", justifyContent: "space-between", alignItems: "flex-start" },
-                    },
-                    React.createElement(
-                      "div",
-                      null,
-                      React.createElement(
-                        "div",
-                        { style: { display: "flex", gap: "8px", alignItems: "center", marginBottom: "4px" } },
-                        React.createElement("strong", null, session.sessionType),
-                        React.createElement(Badge, {
-                          variant: STATUS_COLORS[session.status] ?? "outline",
-                          children: session.status,
-                        })
-                      ),
-                      React.createElement("p", { style: { fontSize: "14px", color: "#374151", margin: "2px 0" } },
-                        `Dr. ${session.providerName}`
-                      ),
-                      React.createElement("p", { style: { fontSize: "13px", color: "#6B7280", margin: "2px 0" } },
-                        `Scheduled: ${new Date(session.scheduledAt).toLocaleString()}`
-                      ),
-                      session.notes
-                        ? React.createElement("p", { style: { fontSize: "13px", color: "#9CA3AF", margin: "2px 0" } }, session.notes)
-                        : null
-                    ),
-                    session.status === "SCHEDULED" || session.status === "IN_PROGRESS"
-                      ? React.createElement(Button, {
-                          title: session.status === "IN_PROGRESS" ? "Rejoin" : "Join",
-                          variant: "primary",
-                          size: "sm",
-                          onPress: () => setActiveSession(session),
-                          testID: `join-session-${session.id}`,
-                        })
-                      : null
-                  )
-                )
-              )
-            )
-    )
+        {/* Sessions list */}
+        {isLoading ? (
+          <LoadingSpinner size="md" />
+        ) : sessions.length === 0 ? (
+          <EmptyState
+            title="No teleconsultations"
+            message="Request your first teleconsultation using the button above"
+          />
+        ) : (
+          sessions.map((session) => (
+            <Card key={session.id}>
+              <CardBody>
+                <View testID={`telehealth-session-${session.id}`} style={styles.sessionRow}>
+                  <View>
+                    <View style={styles.badgeRow}>
+                      <Text style={styles.boldText}>{session.sessionType}</Text>
+                      <Badge variant={STATUS_COLORS[session.status] ?? "outline"}>
+                        {session.status}
+                      </Badge>
+                    </View>
+                    <Text style={styles.providerText}>
+                      {`Dr. ${session.providerName}`}
+                    </Text>
+                    <Text style={styles.scheduledText}>
+                      {`Scheduled: ${new Date(session.scheduledAt).toLocaleString()}`}
+                    </Text>
+                    {session.notes ? (
+                      <Text style={styles.notesText}>{session.notes}</Text>
+                    ) : null}
+                  </View>
+                  {session.status === "SCHEDULED" || session.status === "IN_PROGRESS" ? (
+                    <Button
+                      title={session.status === "IN_PROGRESS" ? "Rejoin" : "Join"}
+                      variant="primary"
+                      size="sm"
+                      onPress={() => setActiveSession(session)}
+                      testID={`join-session-${session.id}`}
+                    />
+                  ) : null}
+                </View>
+              </CardBody>
+            </Card>
+          ))
+        )}
+      </ScrollView>
+    </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  scrollView: {
+    flex: 1,
+  },
+  container: {
+    padding: 16,
+    gap: 16,
+  },
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  heading: {
+    fontSize: 18,
+    fontWeight: "600",
+  },
+  formContainer: {
+    gap: 12,
+  },
+  sessionRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+  },
+  badgeRow: {
+    flexDirection: "row",
+    gap: 8,
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  boldText: {
+    fontWeight: "700",
+  },
+  providerText: {
+    fontSize: 14,
+    color: "#374151",
+    marginVertical: 2,
+  },
+  scheduledText: {
+    fontSize: 13,
+    color: "#6B7280",
+    marginVertical: 2,
+  },
+  notesText: {
+    fontSize: 13,
+    color: "#9CA3AF",
+    marginVertical: 2,
+  },
+});

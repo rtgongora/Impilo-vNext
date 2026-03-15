@@ -3,7 +3,18 @@
  */
 
 import React, { useState, useEffect, useCallback } from "react";
-import { Screen, Header, Card, CardBody, CardHeader, Button, Badge, LoadingSpinner, ErrorState } from "@impilo/mobile-design-system";
+import { View, Text, ScrollView, StyleSheet } from "react-native";
+import {
+  Screen,
+  Header,
+  Card,
+  CardBody,
+  CardHeader,
+  Button,
+  Badge,
+  LoadingSpinner,
+  ErrorState,
+} from "@impilo/mobile-design-system";
 import { getFacilityMetrics } from "../../services/supportService";
 import { useAppStore } from "../../stores/appStore";
 import type { FacilityMetrics } from "../../types";
@@ -28,10 +39,28 @@ export function SupervisorDashboardScreen() {
     }
   }, [facilityId]);
 
-  useEffect(() => { loadMetrics(); }, [loadMetrics]);
+  useEffect(() => {
+    loadMetrics();
+  }, [loadMetrics]);
 
-  if (loading) return React.createElement(Screen, null, React.createElement(Header, { title: "Dashboard" }), React.createElement(LoadingSpinner, { size: "lg" }));
-  if (error) return React.createElement(Screen, null, React.createElement(Header, { title: "Dashboard" }), React.createElement(ErrorState, { title: "Error", message: error, onRetry: loadMetrics }));
+  if (loading) {
+    return (
+      <Screen>
+        <Header title="Dashboard" />
+        <LoadingSpinner size="lg" />
+      </Screen>
+    );
+  }
+
+  if (error) {
+    return (
+      <Screen>
+        <Header title="Dashboard" />
+        <ErrorState title="Error" message={error} onRetry={loadMetrics} />
+      </Screen>
+    );
+  }
+
   if (!metrics) return null;
 
   const tiles = [
@@ -44,26 +73,59 @@ export function SupervisorDashboardScreen() {
     { label: "Stock Alerts", value: metrics.stockAlerts, color: metrics.stockAlerts > 0 ? "#DC2626" : "#6B7280" },
   ];
 
-  return React.createElement(
-    Screen, null,
-    React.createElement(Header, { title: `${metrics.facilityName} — Dashboard` }),
-    React.createElement("div", { "data-testid": "supervisor-dashboard", style: { padding: "16px" } },
-      React.createElement("p", { style: { fontSize: "14px", color: "#6B7280", marginBottom: "12px" } }, `Date: ${metrics.date}`),
-      React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" } },
-        tiles.map((tile) =>
-          React.createElement(Card, { key: tile.label },
-            React.createElement(CardBody, null,
-              React.createElement("div", { style: { textAlign: "center" } },
-                React.createElement("div", { style: { fontSize: "28px", fontWeight: "700", color: tile.color } }, String(tile.value)),
-                React.createElement("div", { style: { fontSize: "12px", color: "#6B7280" } }, tile.label)
-              )
-            )
-          )
-        )
-      ),
-      React.createElement("div", { style: { marginTop: "16px" } },
-        React.createElement(Button, { title: "Refresh", variant: "outline", onPress: loadMetrics, testID: "refresh-metrics" })
-      )
-    )
+  return (
+    <Screen>
+      <Header title={`${metrics.facilityName} — Dashboard`} />
+      <ScrollView testID="supervisor-dashboard" style={styles.container}>
+        <Text style={styles.dateText}>{`Date: ${metrics.date}`}</Text>
+        <View style={styles.tilesGrid}>
+          {tiles.map((tile) => (
+            <Card key={tile.label}>
+              <CardBody>
+                <View style={styles.tileCenter}>
+                  <Text style={[styles.tileValue, { color: tile.color }]}>
+                    {String(tile.value)}
+                  </Text>
+                  <Text style={styles.tileLabel}>{tile.label}</Text>
+                </View>
+              </CardBody>
+            </Card>
+          ))}
+        </View>
+        <View style={styles.refreshContainer}>
+          <Button title="Refresh" variant="outline" onPress={loadMetrics} testID="refresh-metrics" />
+        </View>
+      </ScrollView>
+    </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 16,
+  },
+  dateText: {
+    fontSize: 14,
+    color: "#6B7280",
+    marginBottom: 12,
+  },
+  tilesGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 12,
+  },
+  tileCenter: {
+    alignItems: "center",
+  },
+  tileValue: {
+    fontSize: 28,
+    fontWeight: "700",
+  },
+  tileLabel: {
+    fontSize: 12,
+    color: "#6B7280",
+  },
+  refreshContainer: {
+    marginTop: 16,
+  },
+});

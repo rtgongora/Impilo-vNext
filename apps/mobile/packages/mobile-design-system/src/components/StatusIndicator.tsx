@@ -3,6 +3,7 @@
  */
 
 import React from "react";
+import { View, Text, StyleSheet } from "react-native";
 
 export type IndicatorStatus = "online" | "offline" | "syncing" | "error" | "warning" | "idle";
 
@@ -30,23 +31,30 @@ export function StatusIndicator({
 }: StatusIndicatorProps) {
   const dotSize = size === "sm" ? 8 : size === "md" ? 10 : 14;
 
-  return React.createElement(
-    "div",
-    {
-      "data-testid": testID,
-      role: "status",
-      "aria-label": label ?? status,
-      style: { display: "flex", alignItems: "center", gap: 6 },
-    },
-    React.createElement("span", {
-      style: {
-        width: dotSize,
-        height: dotSize,
-        borderRadius: "50%",
-        backgroundColor: STATUS_COLORS[status],
-        display: "inline-block",
-      },
-    }),
-    label ? React.createElement("span", null, label) : null
+  return (
+    <View
+      testID={testID}
+      accessibilityRole="summary"
+      accessibilityLabel={label ?? status}
+      style={styles.container}
+    >
+      <View
+        style={{
+          width: dotSize,
+          height: dotSize,
+          borderRadius: dotSize / 2,
+          backgroundColor: STATUS_COLORS[status],
+        }}
+      />
+      {label ? <Text>{label}</Text> : null}
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+});

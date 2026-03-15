@@ -3,6 +3,7 @@
  */
 
 import React, { useState, useCallback } from "react";
+import { View, Text, StyleSheet } from "react-native";
 import {
   Card,
   CardHeader,
@@ -40,104 +41,129 @@ export function ProfileSection() {
   }, [phone, email, language]);
 
   if (!profile) {
-    return React.createElement(LoadingSpinner, { size: "md" });
+    return <LoadingSpinner size="md" />;
   }
 
-  return React.createElement(
-    "div",
-    { "data-testid": "profile-section", style: { display: "flex", flexDirection: "column", gap: "16px" } },
+  return (
+    <View testID="profile-section" style={styles.container}>
+      <Card>
+        <CardHeader title="Personal Information" />
+        <CardBody>
+          <View style={styles.profileHeader}>
+            <Avatar
+              name={`${profile.givenName} ${profile.familyName}`}
+              size="xl"
+              src={profile.avatarUrl}
+            />
+            <View>
+              <Text style={styles.profileName}>{`${profile.givenName} ${profile.familyName}`}</Text>
+              <Text style={styles.profileDetail}>{`DOB: ${profile.dateOfBirth}`}</Text>
+              <Text style={styles.profileDetailSmall}>{`Sex: ${profile.sex}`}</Text>
+              {profile.nationalId ? (
+                <Text style={styles.profileDetailSmall}>{`ID: ${profile.nationalId}`}</Text>
+              ) : null}
+            </View>
+          </View>
 
-    // Profile card
-    React.createElement(
-      Card,
-      null,
-      React.createElement(CardHeader, { title: "Personal Information" }),
-      React.createElement(
-        CardBody,
-        null,
-        React.createElement(
-          "div",
-          { style: { display: "flex", alignItems: "center", gap: "16px", marginBottom: "16px" } },
-          React.createElement(Avatar, {
-            name: `${profile.givenName} ${profile.familyName}`,
-            size: "xl",
-            src: profile.avatarUrl,
-          }),
-          React.createElement(
-            "div",
-            null,
-            React.createElement("h3", { style: { margin: 0, fontSize: "18px" } }, `${profile.givenName} ${profile.familyName}`),
-            React.createElement("p", { style: { margin: "4px 0 0", color: "#6B7280", fontSize: "14px" } }, `DOB: ${profile.dateOfBirth}`),
-            React.createElement("p", { style: { margin: "2px 0 0", color: "#6B7280", fontSize: "14px" } }, `Sex: ${profile.sex}`),
-            profile.nationalId
-              ? React.createElement("p", { style: { margin: "2px 0 0", color: "#6B7280", fontSize: "14px" } }, `ID: ${profile.nationalId}`)
-              : null
-          )
-        ),
+          {error ? (
+            <ErrorState title="Error" message={error} onRetry={() => setError(null)} />
+          ) : null}
 
-        error
-          ? React.createElement(ErrorState, { title: "Error", message: error, onRetry: () => setError(null) })
-          : null,
-
-        editing
-          ? React.createElement(
-              "div",
-              { style: { display: "flex", flexDirection: "column", gap: "12px" } },
-              React.createElement(TextField, {
-                label: "Phone",
-                value: phone,
-                onChange: setPhone,
-                placeholder: "+263...",
-                testID: "profile-phone",
-              }),
-              React.createElement(TextField, {
-                label: "Email",
-                value: email,
-                onChange: setEmail,
-                placeholder: "you@example.com",
-                testID: "profile-email",
-              }),
-              React.createElement(TextField, {
-                label: "Preferred Language",
-                value: language,
-                onChange: setLanguage,
-                testID: "profile-language",
-              }),
-              React.createElement(
-                "div",
-                { style: { display: "flex", gap: "8px" } },
-                React.createElement(Button, {
-                  title: saving ? "Saving..." : "Save",
-                  variant: "primary",
-                  onPress: handleSave,
-                  disabled: saving,
-                  testID: "profile-save",
-                }),
-                React.createElement(Button, {
-                  title: "Cancel",
-                  variant: "ghost",
-                  onPress: () => setEditing(false),
-                  testID: "profile-cancel",
-                })
-              )
-            )
-          : React.createElement(
-              "div",
-              { style: { display: "flex", flexDirection: "column", gap: "8px" } },
-              React.createElement("p", { style: { margin: 0, fontSize: "14px" } }, `Phone: ${profile.phone ?? "Not set"}`),
-              React.createElement("p", { style: { margin: 0, fontSize: "14px" } }, `Email: ${profile.email ?? "Not set"}`),
-              React.createElement("p", { style: { margin: 0, fontSize: "14px" } }, `Language: ${profile.preferredLanguage}`),
-              profile.facilityName
-                ? React.createElement("p", { style: { margin: 0, fontSize: "14px" } }, `Primary Facility: ${profile.facilityName}`)
-                : null,
-              React.createElement(Button, {
-                title: "Edit Profile",
-                variant: "secondary",
-                onPress: () => setEditing(true),
-                testID: "profile-edit",
-              })
-            )
-      )
-    )
+          {editing ? (
+            <View style={styles.formContainer}>
+              <TextField
+                label="Phone"
+                value={phone}
+                onChange={setPhone}
+                placeholder="+263..."
+                testID="profile-phone"
+              />
+              <TextField
+                label="Email"
+                value={email}
+                onChange={setEmail}
+                placeholder="you@example.com"
+                testID="profile-email"
+              />
+              <TextField
+                label="Preferred Language"
+                value={language}
+                onChange={setLanguage}
+                testID="profile-language"
+              />
+              <View style={styles.buttonRow}>
+                <Button
+                  title={saving ? "Saving..." : "Save"}
+                  variant="primary"
+                  onPress={handleSave}
+                  disabled={saving}
+                  testID="profile-save"
+                />
+                <Button
+                  title="Cancel"
+                  variant="ghost"
+                  onPress={() => setEditing(false)}
+                  testID="profile-cancel"
+                />
+              </View>
+            </View>
+          ) : (
+            <View style={styles.infoContainer}>
+              <Text style={styles.infoText}>{`Phone: ${profile.phone ?? "Not set"}`}</Text>
+              <Text style={styles.infoText}>{`Email: ${profile.email ?? "Not set"}`}</Text>
+              <Text style={styles.infoText}>{`Language: ${profile.preferredLanguage}`}</Text>
+              {profile.facilityName ? (
+                <Text style={styles.infoText}>{`Primary Facility: ${profile.facilityName}`}</Text>
+              ) : null}
+              <Button
+                title="Edit Profile"
+                variant="secondary"
+                onPress={() => setEditing(true)}
+                testID="profile-edit"
+              />
+            </View>
+          )}
+        </CardBody>
+      </Card>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    gap: 16,
+  },
+  profileHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
+    marginBottom: 16,
+  },
+  profileName: {
+    fontSize: 18,
+    fontWeight: "600",
+  },
+  profileDetail: {
+    marginTop: 4,
+    color: "#6B7280",
+    fontSize: 14,
+  },
+  profileDetailSmall: {
+    marginTop: 2,
+    color: "#6B7280",
+    fontSize: 14,
+  },
+  formContainer: {
+    gap: 12,
+  },
+  buttonRow: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  infoContainer: {
+    gap: 8,
+  },
+  infoText: {
+    fontSize: 14,
+  },
+});

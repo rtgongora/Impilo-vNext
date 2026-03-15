@@ -3,6 +3,7 @@
  */
 
 import React from "react";
+import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
 
 export interface LoadingSpinnerProps {
   size?: "sm" | "md" | "lg";
@@ -11,32 +12,48 @@ export interface LoadingSpinnerProps {
   testID?: string;
 }
 
+const SIZE_MAP: Record<"sm" | "md" | "lg", "small" | "large"> = {
+  sm: "small",
+  md: "small",
+  lg: "large",
+};
+
 export function LoadingSpinner({
   size = "md",
   message,
   fullScreen = false,
   testID,
 }: LoadingSpinnerProps) {
-  return React.createElement(
-    "div",
-    {
-      "data-testid": testID,
-      role: "progressbar",
-      "aria-label": message ?? "Loading",
-      "aria-busy": true,
-      style: {
-        display: "flex",
-        flexDirection: "column" as const,
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 24,
-        ...(fullScreen ? { position: "fixed" as const, inset: 0, zIndex: 50 } : {}),
-      },
-    },
-    React.createElement("div", {
-      "data-size": size,
-      style: { animation: "spin 1s linear infinite" },
-    }, "\u23F3"),
-    message ? React.createElement("p", { style: { marginTop: 12, color: "#757575" } }, message) : null
+  return (
+    <View
+      testID={testID}
+      accessibilityLabel={message ?? "Loading"}
+      accessibilityRole="progressbar"
+      style={[styles.container, fullScreen ? styles.fullScreen : undefined]}
+    >
+      <ActivityIndicator size={SIZE_MAP[size]} />
+      {message ? <Text style={styles.message}>{message}</Text> : null}
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 24,
+  },
+  fullScreen: {
+    flex: 1,
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 50,
+  },
+  message: {
+    marginTop: 12,
+    color: "#757575",
+  },
+});

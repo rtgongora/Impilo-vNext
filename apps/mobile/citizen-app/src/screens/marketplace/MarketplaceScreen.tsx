@@ -3,6 +3,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from "react";
+import { View, Text, ScrollView, StyleSheet } from "react-native";
 import {
   Screen,
   Header,
@@ -125,236 +126,301 @@ export function MarketplaceScreen() {
     }
   }, [loadRequests]);
 
-  return React.createElement(
-    Screen,
-    null,
-    React.createElement(Header, { title: "Health Services" }),
-    React.createElement(
-      "div",
-      { "data-testid": "marketplace-screen", style: { padding: "16px", display: "flex", flexDirection: "column", gap: "16px" } },
+  return (
+    <Screen>
+      <Header title="Health Services" />
+      <ScrollView testID="marketplace-screen" style={styles.scrollView} contentContainerStyle={styles.container}>
+        {/* Tab toggle */}
+        <View style={styles.tabRow}>
+          <Button
+            title="Browse Services"
+            variant={tab === "browse" ? "primary" : "ghost"}
+            onPress={() => setTab("browse")}
+            testID="marketplace-tab-browse"
+          />
+          <Button
+            title="My Requests"
+            variant={tab === "requests" ? "primary" : "ghost"}
+            onPress={() => setTab("requests")}
+            testID="marketplace-tab-requests"
+          />
+        </View>
 
-      // Tab toggle
-      React.createElement(
-        "div",
-        { style: { display: "flex", gap: "8px" } },
-        React.createElement(Button, {
-          title: "Browse Services",
-          variant: tab === "browse" ? "primary" : "ghost",
-          onPress: () => setTab("browse"),
-          testID: "marketplace-tab-browse",
-        }),
-        React.createElement(Button, {
-          title: "My Requests",
-          variant: tab === "requests" ? "primary" : "ghost",
-          onPress: () => setTab("requests"),
-          testID: "marketplace-tab-requests",
-        })
-      ),
+        {error ? (
+          <ErrorState title="Error" message={error.message} onRetry={() => tab === "browse" ? loadServices() : loadRequests()} />
+        ) : null}
 
-      error
-        ? React.createElement(ErrorState, { title: "Error", message: error.message, onRetry: () => tab === "browse" ? loadServices() : loadRequests() })
-        : null,
+        {/* Service booking modal */}
+        {selectedService ? (
+          <Card>
+            <CardHeader title={`Book: ${selectedService.name}`} />
+            <CardBody>
+              <Text style={styles.serviceDescription}>{selectedService.description}</Text>
+              {selectedService.price !== undefined ? (
+                <Text style={styles.servicePrice}>
+                  {`Price: ${selectedService.currency} ${selectedService.price}`}
+                </Text>
+              ) : null}
+              <View style={styles.formContainer}>
+                <TextField
+                  label="Preferred Date"
+                  value={preferredDate}
+                  onChange={setPreferredDate}
+                  placeholder="YYYY-MM-DD"
+                  testID="booking-preferred-date"
+                />
+                <TextField
+                  label="Notes (optional)"
+                  value={notes}
+                  onChange={setNotes}
+                  placeholder="Any special requirements"
+                  testID="booking-notes"
+                />
+                <View style={styles.buttonRow}>
+                  <Button
+                    title={submitting ? "Submitting..." : "Confirm Booking"}
+                    variant="primary"
+                    onPress={handleRequest}
+                    disabled={submitting}
+                    testID="confirm-booking"
+                  />
+                  <Button
+                    title="Cancel"
+                    variant="ghost"
+                    onPress={() => setSelectedService(null)}
+                  />
+                </View>
+              </View>
+            </CardBody>
+          </Card>
+        ) : null}
 
-      // Service booking modal
-      selectedService
-        ? React.createElement(
-            Card,
-            null,
-            React.createElement(CardHeader, { title: `Book: ${selectedService.name}` }),
-            React.createElement(
-              CardBody,
-              null,
-              React.createElement("p", { style: { fontSize: "14px", color: "#374151", marginBottom: "12px" } }, selectedService.description),
-              selectedService.price !== undefined
-                ? React.createElement("p", { style: { fontSize: "14px", fontWeight: "600", marginBottom: "12px" } },
-                    `Price: ${selectedService.currency} ${selectedService.price}`
-                  )
-                : null,
-              React.createElement(
-                "div",
-                { style: { display: "flex", flexDirection: "column", gap: "12px" } },
-                React.createElement(TextField, {
-                  label: "Preferred Date",
-                  value: preferredDate,
-                  onChange: setPreferredDate,
-                  placeholder: "YYYY-MM-DD",
-                  testID: "booking-preferred-date",
-                }),
-                React.createElement(TextField, {
-                  label: "Notes (optional)",
-                  value: notes,
-                  onChange: setNotes,
-                  placeholder: "Any special requirements",
-                  testID: "booking-notes",
-                }),
-                React.createElement(
-                  "div",
-                  { style: { display: "flex", gap: "8px" } },
-                  React.createElement(Button, {
-                    title: submitting ? "Submitting..." : "Confirm Booking",
-                    variant: "primary",
-                    onPress: handleRequest,
-                    disabled: submitting,
-                    testID: "confirm-booking",
-                  }),
-                  React.createElement(Button, {
-                    title: "Cancel",
-                    variant: "ghost",
-                    onPress: () => setSelectedService(null),
-                  })
-                )
-              )
-            )
-          )
-        : null,
+        {/* Browse tab */}
+        {tab === "browse" ? (
+          <>
+            <TextField
+              value={search}
+              onChange={setSearch}
+              placeholder="Search services..."
+              testID="marketplace-search"
+            />
+            <ScrollView horizontal style={styles.categoryScroll} contentContainerStyle={styles.categoryContent}>
+              {CATEGORIES.map((cat) => (
+                <Button
+                  key={cat.value}
+                  title={cat.label}
+                  variant={category === cat.value ? "primary" : "ghost"}
+                  size="sm"
+                  onPress={() => setCategory(cat.value)}
+                  testID={`category-${cat.value || "all"}`}
+                />
+              ))}
+            </ScrollView>
+            {isLoading ? (
+              <LoadingSpinner size="md" />
+            ) : services.length === 0 ? (
+              <EmptyState
+                title="No services found"
+                message="Try adjusting your search or category filter"
+              />
+            ) : (
+              services.map((svc) => (
+                <Card key={svc.id}>
+                  <CardBody>
+                    <View testID={`service-${svc.id}`} style={styles.serviceRow}>
+                      <View style={styles.serviceInfo}>
+                        <Text style={styles.serviceName}>{svc.name}</Text>
+                        <Text style={styles.serviceDescText}>{svc.description}</Text>
+                        <Text style={styles.facilityText}>
+                          {`${svc.facilityName} \u2022 ${svc.category}`}
+                        </Text>
+                        {svc.price !== undefined ? (
+                          <Text style={styles.priceText}>
+                            {`${svc.currency} ${svc.price}`}
+                          </Text>
+                        ) : null}
+                        {svc.rating !== undefined ? (
+                          <Text style={styles.ratingText}>
+                            {`\u2605 ${svc.rating.toFixed(1)}`}
+                          </Text>
+                        ) : null}
+                      </View>
+                      {svc.available ? (
+                        <Button
+                          title="Book"
+                          variant="primary"
+                          size="sm"
+                          onPress={() => setSelectedService(svc)}
+                          testID={`book-${svc.id}`}
+                        />
+                      ) : (
+                        <Badge variant="outline">Unavailable</Badge>
+                      )}
+                    </View>
+                  </CardBody>
+                </Card>
+              ))
+            )}
+          </>
+        ) : null}
 
-      // Browse tab
-      tab === "browse"
-        ? React.createElement(
-            React.Fragment,
-            null,
-            React.createElement(TextField, {
-              value: search,
-              onChange: setSearch,
-              placeholder: "Search services...",
-              testID: "marketplace-search",
-            }),
-            React.createElement(
-              "div",
-              { style: { display: "flex", gap: "8px", overflowX: "auto", paddingBottom: "4px" } },
-              CATEGORIES.map((cat) =>
-                React.createElement(Button, {
-                  key: cat.value,
-                  title: cat.label,
-                  variant: category === cat.value ? "primary" : "ghost",
-                  size: "sm",
-                  onPress: () => setCategory(cat.value),
-                  testID: `category-${cat.value || "all"}`,
-                })
-              )
-            ),
-            isLoading
-              ? React.createElement(LoadingSpinner, { size: "md" })
-              : services.length === 0
-                ? React.createElement(EmptyState, {
-                    title: "No services found",
-                    message: "Try adjusting your search or category filter",
-                  })
-                : services.map((svc) =>
-                    React.createElement(
-                      Card,
-                      { key: svc.id },
-                      React.createElement(
-                        CardBody,
-                        null,
-                        React.createElement(
-                          "div",
-                          {
-                            "data-testid": `service-${svc.id}`,
-                            style: { display: "flex", justifyContent: "space-between", alignItems: "flex-start" },
-                          },
-                          React.createElement(
-                            "div",
-                            { style: { flex: 1 } },
-                            React.createElement("strong", { style: { fontSize: "15px" } }, svc.name),
-                            React.createElement("p", { style: { fontSize: "14px", color: "#374151", margin: "4px 0" } }, svc.description),
-                            React.createElement("p", { style: { fontSize: "13px", color: "#6B7280", margin: "2px 0" } },
-                              `${svc.facilityName} \u2022 ${svc.category}`
-                            ),
-                            svc.price !== undefined
-                              ? React.createElement("p", { style: { fontSize: "14px", fontWeight: "600", margin: "4px 0" } },
-                                  `${svc.currency} ${svc.price}`
-                                )
-                              : null,
-                            svc.rating !== undefined
-                              ? React.createElement("span", { style: { fontSize: "13px", color: "#D97706" } },
-                                  `\u2605 ${svc.rating.toFixed(1)}`
-                                )
-                              : null
-                          ),
-                          svc.available
-                            ? React.createElement(Button, {
-                                title: "Book",
-                                variant: "primary",
-                                size: "sm",
-                                onPress: () => setSelectedService(svc),
-                                testID: `book-${svc.id}`,
-                              })
-                            : React.createElement(Badge, { variant: "outline", children: "Unavailable" })
-                        )
-                      )
-                    )
-                  )
-          )
-        : null,
-
-      // Requests tab
-      tab === "requests"
-        ? React.createElement(
-            React.Fragment,
-            null,
-            isLoading
-              ? React.createElement(LoadingSpinner, { size: "md" })
-              : requests.length === 0
-                ? React.createElement(EmptyState, {
-                    title: "No requests yet",
-                    message: "Browse services and make your first booking",
-                  })
-                : requests.map((req) =>
-                    React.createElement(
-                      Card,
-                      { key: req.id },
-                      React.createElement(
-                        CardBody,
-                        null,
-                        React.createElement(
-                          "div",
-                          {
-                            "data-testid": `request-${req.id}`,
-                            style: { display: "flex", justifyContent: "space-between", alignItems: "flex-start" },
-                          },
-                          React.createElement(
-                            "div",
-                            null,
-                            React.createElement(
-                              "div",
-                              { style: { display: "flex", gap: "8px", alignItems: "center", marginBottom: "4px" } },
-                              React.createElement("strong", null, req.serviceName),
-                              React.createElement(Badge, {
-                                variant: REQUEST_STATUS_COLORS[req.status] ?? "outline",
-                                children: req.status,
-                              })
-                            ),
-                            React.createElement("p", { style: { fontSize: "13px", color: "#6B7280", margin: "2px 0" } }, req.facilityName),
-                            React.createElement("p", { style: { fontSize: "13px", color: "#9CA3AF", margin: "2px 0" } },
-                              `Requested: ${new Date(req.requestedAt).toLocaleDateString()}`
-                            ),
-                            req.scheduledAt
-                              ? React.createElement("p", { style: { fontSize: "13px", color: "#374151", margin: "2px 0" } },
-                                  `Scheduled: ${new Date(req.scheduledAt).toLocaleString()}`
-                                )
-                              : null,
-                            req.trackingNumber
-                              ? React.createElement("p", { style: { fontSize: "12px", color: "#6B7280", margin: "2px 0" } },
-                                  `Tracking: ${req.trackingNumber}`
-                                )
-                              : null
-                          ),
-                          req.status === "PENDING" || req.status === "CONFIRMED"
-                            ? React.createElement(Button, {
-                                title: "Cancel",
-                                variant: "ghost",
-                                size: "sm",
-                                onPress: () => handleCancelRequest(req.id),
-                                testID: `cancel-request-${req.id}`,
-                              })
-                            : null
-                        )
-                      )
-                    )
-                  )
-          )
-        : null
-    )
+        {/* Requests tab */}
+        {tab === "requests" ? (
+          <>
+            {isLoading ? (
+              <LoadingSpinner size="md" />
+            ) : requests.length === 0 ? (
+              <EmptyState
+                title="No requests yet"
+                message="Browse services and make your first booking"
+              />
+            ) : (
+              requests.map((req) => (
+                <Card key={req.id}>
+                  <CardBody>
+                    <View testID={`request-${req.id}`} style={styles.requestRow}>
+                      <View>
+                        <View style={styles.badgeRow}>
+                          <Text style={styles.boldText}>{req.serviceName}</Text>
+                          <Badge variant={REQUEST_STATUS_COLORS[req.status] ?? "outline"}>
+                            {req.status}
+                          </Badge>
+                        </View>
+                        <Text style={styles.secondaryText}>{req.facilityName}</Text>
+                        <Text style={styles.tertiaryText}>
+                          {`Requested: ${new Date(req.requestedAt).toLocaleDateString()}`}
+                        </Text>
+                        {req.scheduledAt ? (
+                          <Text style={styles.scheduledText}>
+                            {`Scheduled: ${new Date(req.scheduledAt).toLocaleString()}`}
+                          </Text>
+                        ) : null}
+                        {req.trackingNumber ? (
+                          <Text style={styles.trackingText}>
+                            {`Tracking: ${req.trackingNumber}`}
+                          </Text>
+                        ) : null}
+                      </View>
+                      {req.status === "PENDING" || req.status === "CONFIRMED" ? (
+                        <Button
+                          title="Cancel"
+                          variant="ghost"
+                          size="sm"
+                          onPress={() => handleCancelRequest(req.id)}
+                          testID={`cancel-request-${req.id}`}
+                        />
+                      ) : null}
+                    </View>
+                  </CardBody>
+                </Card>
+              ))
+            )}
+          </>
+        ) : null}
+      </ScrollView>
+    </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  scrollView: {
+    flex: 1,
+  },
+  container: {
+    padding: 16,
+    gap: 16,
+  },
+  tabRow: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  serviceDescription: {
+    fontSize: 14,
+    color: "#374151",
+    marginBottom: 12,
+  },
+  servicePrice: {
+    fontSize: 14,
+    fontWeight: "600",
+    marginBottom: 12,
+  },
+  formContainer: {
+    gap: 12,
+  },
+  buttonRow: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  categoryScroll: {
+    flexGrow: 0,
+  },
+  categoryContent: {
+    gap: 8,
+    paddingBottom: 4,
+  },
+  serviceRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+  },
+  serviceInfo: {
+    flex: 1,
+  },
+  serviceName: {
+    fontWeight: "700",
+    fontSize: 15,
+  },
+  serviceDescText: {
+    fontSize: 14,
+    color: "#374151",
+    marginVertical: 4,
+  },
+  facilityText: {
+    fontSize: 13,
+    color: "#6B7280",
+    marginVertical: 2,
+  },
+  priceText: {
+    fontSize: 14,
+    fontWeight: "600",
+    marginVertical: 4,
+  },
+  ratingText: {
+    fontSize: 13,
+    color: "#D97706",
+  },
+  requestRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+  },
+  badgeRow: {
+    flexDirection: "row",
+    gap: 8,
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  boldText: {
+    fontWeight: "700",
+  },
+  secondaryText: {
+    fontSize: 13,
+    color: "#6B7280",
+    marginVertical: 2,
+  },
+  tertiaryText: {
+    fontSize: 13,
+    color: "#9CA3AF",
+    marginVertical: 2,
+  },
+  scheduledText: {
+    fontSize: 13,
+    color: "#374151",
+    marginVertical: 2,
+  },
+  trackingText: {
+    fontSize: 12,
+    color: "#6B7280",
+    marginVertical: 2,
+  },
+});

@@ -3,6 +3,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from "react";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import {
   Card,
   CardBody,
@@ -45,95 +46,140 @@ export function ResultsSection() {
     load();
   }, [load]);
 
-  if (isLoading) return React.createElement(LoadingSpinner, { size: "md" });
-  if (error) return React.createElement(ErrorState, { title: "Error", message: error.message, onRetry: load });
+  if (isLoading) return <LoadingSpinner size="md" />;
+  if (error) return <ErrorState title="Error" message={error.message} onRetry={load} />;
 
   if (results.length === 0) {
-    return React.createElement(EmptyState, {
-      title: "No results",
-      message: "Your lab results and reports will appear here",
-    });
+    return (
+      <EmptyState
+        title="No results"
+        message="Your lab results and reports will appear here"
+      />
+    );
   }
 
-  return React.createElement(
-    "div",
-    { "data-testid": "results-section", style: { display: "flex", flexDirection: "column", gap: "12px" } },
-    React.createElement("h3", { style: { margin: 0 } }, "Lab Results & Reports"),
-    results.map((lab) =>
-      React.createElement(
-        Card,
-        { key: lab.id },
-        React.createElement(
-          CardBody,
-          null,
-          React.createElement(
-            "div",
-            {
-              "data-testid": `result-${lab.id}`,
-              style: { cursor: "pointer" },
-              onClick: () => setExpandedId(expandedId === lab.id ? null : lab.id),
-            },
-            React.createElement(
-              "div",
-              { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-start" } },
-              React.createElement(
-                "div",
-                null,
-                React.createElement(
-                  "div",
-                  { style: { display: "flex", gap: "8px", alignItems: "center", marginBottom: "4px" } },
-                  React.createElement("strong", null, lab.testName),
-                  React.createElement(Badge, {
-                    variant: STATUS_VARIANT[lab.status] ?? "outline",
-                    children: lab.status,
-                  })
-                ),
-                React.createElement("p", { style: { fontSize: "13px", color: "#6B7280", margin: "2px 0" } },
-                  `${lab.category} \u2022 ${lab.facilityName}`
-                ),
-                React.createElement("p", { style: { fontSize: "12px", color: "#9CA3AF", margin: "2px 0" } },
-                  `Ordered by ${lab.orderedBy}`
-                )
-              ),
-              React.createElement("span", { style: { fontSize: "12px", color: "#9CA3AF" } },
-                expandedId === lab.id ? "\u25B2" : "\u25BC"
-              )
-            ),
+  return (
+    <View testID="results-section" style={styles.container}>
+      <Text style={styles.heading}>Lab Results & Reports</Text>
+      {results.map((lab) => (
+        <Card key={lab.id}>
+          <CardBody>
+            <TouchableOpacity
+              testID={`result-${lab.id}`}
+              onPress={() => setExpandedId(expandedId === lab.id ? null : lab.id)}
+              activeOpacity={0.7}
+            >
+              <View style={styles.resultRow}>
+                <View>
+                  <View style={styles.badgeRow}>
+                    <Text style={styles.boldText}>{lab.testName}</Text>
+                    <Badge variant={STATUS_VARIANT[lab.status] ?? "outline"}>
+                      {lab.status}
+                    </Badge>
+                  </View>
+                  <Text style={styles.categoryText}>
+                    {`${lab.category} \u2022 ${lab.facilityName}`}
+                  </Text>
+                  <Text style={styles.orderedByText}>
+                    {`Ordered by ${lab.orderedBy}`}
+                  </Text>
+                </View>
+                <Text style={styles.chevronText}>
+                  {expandedId === lab.id ? "\u25B2" : "\u25BC"}
+                </Text>
+              </View>
 
-            expandedId === lab.id
-              ? React.createElement(
-                  "div",
-                  { style: { marginTop: "12px", padding: "12px", backgroundColor: "#F9FAFB", borderRadius: "8px" } },
-                  lab.value
-                    ? React.createElement("p", { style: { margin: "4px 0", fontSize: "14px" } },
-                        `Value: ${lab.value} ${lab.unit ?? ""}`
-                      )
-                    : null,
-                  lab.referenceRange
-                    ? React.createElement("p", { style: { margin: "4px 0", fontSize: "14px", color: "#6B7280" } },
-                        `Reference Range: ${lab.referenceRange}`
-                      )
-                    : null,
-                  lab.interpretation
-                    ? React.createElement("p", { style: { margin: "4px 0", fontSize: "14px" } },
-                        `Interpretation: ${lab.interpretation}`
-                      )
-                    : null,
-                  lab.collectedAt
-                    ? React.createElement("p", { style: { margin: "4px 0", fontSize: "13px", color: "#9CA3AF" } },
-                        `Collected: ${new Date(lab.collectedAt).toLocaleString()}`
-                      )
-                    : null,
-                  lab.resultAt
-                    ? React.createElement("p", { style: { margin: "4px 0", fontSize: "13px", color: "#9CA3AF" } },
-                        `Result: ${new Date(lab.resultAt).toLocaleString()}`
-                      )
-                    : null
-                )
-              : null
-          )
-        )
-      )
-    )
+              {expandedId === lab.id ? (
+                <View style={styles.expandedContainer}>
+                  {lab.value ? (
+                    <Text style={styles.detailText}>
+                      {`Value: ${lab.value} ${lab.unit ?? ""}`}
+                    </Text>
+                  ) : null}
+                  {lab.referenceRange ? (
+                    <Text style={styles.detailTextSecondary}>
+                      {`Reference Range: ${lab.referenceRange}`}
+                    </Text>
+                  ) : null}
+                  {lab.interpretation ? (
+                    <Text style={styles.detailText}>
+                      {`Interpretation: ${lab.interpretation}`}
+                    </Text>
+                  ) : null}
+                  {lab.collectedAt ? (
+                    <Text style={styles.detailTextTertiary}>
+                      {`Collected: ${new Date(lab.collectedAt).toLocaleString()}`}
+                    </Text>
+                  ) : null}
+                  {lab.resultAt ? (
+                    <Text style={styles.detailTextTertiary}>
+                      {`Result: ${new Date(lab.resultAt).toLocaleString()}`}
+                    </Text>
+                  ) : null}
+                </View>
+              ) : null}
+            </TouchableOpacity>
+          </CardBody>
+        </Card>
+      ))}
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    gap: 12,
+  },
+  heading: {
+    fontSize: 18,
+    fontWeight: "600",
+  },
+  resultRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+  },
+  badgeRow: {
+    flexDirection: "row",
+    gap: 8,
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  boldText: {
+    fontWeight: "700",
+  },
+  categoryText: {
+    fontSize: 13,
+    color: "#6B7280",
+    marginVertical: 2,
+  },
+  orderedByText: {
+    fontSize: 12,
+    color: "#9CA3AF",
+    marginVertical: 2,
+  },
+  chevronText: {
+    fontSize: 12,
+    color: "#9CA3AF",
+  },
+  expandedContainer: {
+    marginTop: 12,
+    padding: 12,
+    backgroundColor: "#F9FAFB",
+    borderRadius: 8,
+  },
+  detailText: {
+    marginVertical: 4,
+    fontSize: 14,
+  },
+  detailTextSecondary: {
+    marginVertical: 4,
+    fontSize: 14,
+    color: "#6B7280",
+  },
+  detailTextTertiary: {
+    marginVertical: 4,
+    fontSize: 13,
+    color: "#9CA3AF",
+  },
+});

@@ -3,6 +3,8 @@
  */
 
 import React, { useState, useEffect, useCallback } from "react";
+import { View, Text, ScrollView, Image, TouchableOpacity, StyleSheet } from "react-native";
+import * as Linking from "expo-linking";
 import {
   Screen,
   Header,
@@ -85,143 +87,180 @@ export function SocialFeedScreen() {
     }
   }, []);
 
-  return React.createElement(
-    Screen,
-    null,
-    React.createElement(Header, { title: "Feed" }),
-    React.createElement(
-      "div",
-      { "data-testid": "social-feed-screen", style: { padding: "16px", display: "flex", flexDirection: "column", gap: "16px" } },
+  return (
+    <Screen>
+      <Header title="Feed" />
+      <ScrollView testID="social-feed-screen" style={styles.scrollView} contentContainerStyle={styles.container}>
+        {/* Category filters */}
+        <ScrollView horizontal style={styles.filterScroll} contentContainerStyle={styles.filterContent}>
+          {CATEGORY_FILTERS.map((cat) => (
+            <Button
+              key={cat.value}
+              title={cat.label}
+              variant={filter === cat.value ? "primary" : "ghost"}
+              size="sm"
+              onPress={() => setFilter(cat.value)}
+              testID={`feed-filter-${cat.value || "all"}`}
+            />
+          ))}
+        </ScrollView>
 
-      // Category filters
-      React.createElement(
-        "div",
-        { style: { display: "flex", gap: "8px", overflowX: "auto", paddingBottom: "4px" } },
-        CATEGORY_FILTERS.map((cat) =>
-          React.createElement(Button, {
-            key: cat.value,
-            title: cat.label,
-            variant: filter === cat.value ? "primary" : "ghost",
-            size: "sm",
-            onPress: () => setFilter(cat.value),
-            testID: `feed-filter-${cat.value || "all"}`,
-          })
-        )
-      ),
+        {error ? (
+          <ErrorState title="Error" message={error.message} onRetry={() => load(0, true)} />
+        ) : null}
 
-      error
-        ? React.createElement(ErrorState, { title: "Error", message: error.message, onRetry: () => load(0, true) })
-        : null,
+        {isLoading && items.length === 0 ? (
+          <LoadingSpinner size="md" />
+        ) : items.length === 0 ? (
+          <EmptyState
+            title="No posts yet"
+            message="Check back later for health tips, campaigns, and community updates"
+          />
+        ) : (
+          <>
+            {items.map((item) => (
+              <Card key={item.id}>
+                <CardBody>
+                  <View testID={`feed-item-${item.id}`}>
+                    {/* Header row */}
+                    <View style={styles.feedItemHeader}>
+                      <Badge variant={TYPE_COLORS[item.type]}>
+                        {item.type.replace("_", " ")}
+                      </Badge>
+                      <Text style={styles.dateText}>
+                        {new Date(item.publishedAt).toLocaleDateString()}
+                      </Text>
+                    </View>
 
-      isLoading && items.length === 0
-        ? React.createElement(LoadingSpinner, { size: "md" })
-        : items.length === 0
-          ? React.createElement(EmptyState, {
-              title: "No posts yet",
-              message: "Check back later for health tips, campaigns, and community updates",
-            })
-          : React.createElement(
-              React.Fragment,
-              null,
-              items.map((item) =>
-                React.createElement(
-                  Card,
-                  { key: item.id },
-                  React.createElement(
-                    CardBody,
-                    null,
-                    React.createElement(
-                      "div",
-                      { "data-testid": `feed-item-${item.id}` },
+                    {/* Title */}
+                    <Text style={styles.feedItemTitle}>{item.title}</Text>
 
-                      // Header row
-                      React.createElement(
-                        "div",
-                        { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" } },
-                        React.createElement(Badge, {
-                          variant: TYPE_COLORS[item.type],
-                          children: item.type.replace("_", " "),
-                        }),
-                        React.createElement("span", { style: { fontSize: "12px", color: "#9CA3AF" } },
-                          new Date(item.publishedAt).toLocaleDateString()
-                        )
-                      ),
+                    {/* Image */}
+                    {item.imageUrl ? (
+                      <Image
+                        source={{ uri: item.imageUrl }}
+                        accessibilityLabel={item.title}
+                        style={styles.feedItemImage}
+                        resizeMode="cover"
+                      />
+                    ) : null}
 
-                      // Title
-                      React.createElement("h4", { style: { margin: "0 0 8px", fontSize: "16px" } }, item.title),
+                    {/* Body (truncated or expanded) */}
+                    <TouchableOpacity
+                      onPress={() => setExpandedId(expandedId === item.id ? null : item.id)}
+                      activeOpacity={0.7}
+                    >
+                      <Text
+                        style={styles.feedItemBody}
+                        numberOfLines={expandedId !== item.id ? 3 : undefined}
+                      >
+                        {item.body}
+                      </Text>
+                    </TouchableOpacity>
 
-                      // Image
-                      item.imageUrl
-                        ? React.createElement("img", {
-                            src: item.imageUrl,
-                            alt: item.title,
-                            style: { width: "100%", borderRadius: "8px", marginBottom: "8px", maxHeight: "200px", objectFit: "cover" },
-                          })
-                        : null,
+                    {/* Author */}
+                    {item.author ? (
+                      <Text style={styles.authorText}>{`By ${item.author}`}</Text>
+                    ) : null}
 
-                      // Body (truncated or expanded)
-                      React.createElement(
-                        "p",
-                        {
-                          style: {
-                            fontSize: "14px",
-                            color: "#374151",
-                            margin: "0 0 8px",
-                            lineHeight: "1.5",
-                            ...(expandedId !== item.id ? { overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical" as const } : {}),
-                          },
-                          onClick: () => setExpandedId(expandedId === item.id ? null : item.id),
-                        },
-                        item.body
-                      ),
+                    {/* Actions */}
+                    <View style={styles.actionsRow}>
+                      <Button
+                        title={`${item.liked ? "\u2764\uFE0F" : "\u2661"} ${item.likesCount}`}
+                        variant="ghost"
+                        size="sm"
+                        onPress={() => handleLikeToggle(item)}
+                        testID={`like-${item.id}`}
+                      />
+                      <Text style={styles.commentsText}>
+                        {`${item.commentsCount} comments`}
+                      </Text>
+                      {item.actionUrl ? (
+                        <Button
+                          title="Learn More"
+                          variant="secondary"
+                          size="sm"
+                          onPress={() => { Linking.openURL(item.actionUrl); }}
+                          testID={`action-${item.id}`}
+                        />
+                      ) : null}
+                    </View>
+                  </View>
+                </CardBody>
+              </Card>
+            ))}
 
-                      // Author
-                      item.author
-                        ? React.createElement("p", { style: { fontSize: "13px", color: "#6B7280", margin: "0 0 8px" } },
-                            `By ${item.author}`
-                          )
-                        : null,
-
-                      // Actions
-                      React.createElement(
-                        "div",
-                        { style: { display: "flex", gap: "16px", alignItems: "center" } },
-                        React.createElement(Button, {
-                          title: `${item.liked ? "\u2764\uFE0F" : "\u2661"} ${item.likesCount}`,
-                          variant: "ghost",
-                          size: "sm",
-                          onPress: () => handleLikeToggle(item),
-                          testID: `like-${item.id}`,
-                        }),
-                        React.createElement("span", { style: { fontSize: "13px", color: "#6B7280" } },
-                          `${item.commentsCount} comments`
-                        ),
-                        item.actionUrl
-                          ? React.createElement(Button, {
-                              title: "Learn More",
-                              variant: "secondary",
-                              size: "sm",
-                              onPress: () => { window.open(item.actionUrl, "_blank"); },
-                              testID: `action-${item.id}`,
-                            })
-                          : null
-                      )
-                    )
-                  )
-                )
-              ),
-
-              // Load more
-              hasMore
-                ? React.createElement(Button, {
-                    title: isLoading ? "Loading..." : "Load More",
-                    variant: "ghost",
-                    onPress: () => load(page + 1, false),
-                    disabled: isLoading,
-                    testID: "feed-load-more",
-                  })
-                : null
-            )
-    )
+            {/* Load more */}
+            {hasMore ? (
+              <Button
+                title={isLoading ? "Loading..." : "Load More"}
+                variant="ghost"
+                onPress={() => load(page + 1, false)}
+                disabled={isLoading}
+                testID="feed-load-more"
+              />
+            ) : null}
+          </>
+        )}
+      </ScrollView>
+    </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  scrollView: {
+    flex: 1,
+  },
+  container: {
+    padding: 16,
+    gap: 16,
+  },
+  filterScroll: {
+    flexGrow: 0,
+  },
+  filterContent: {
+    gap: 8,
+    paddingBottom: 4,
+  },
+  feedItemHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  dateText: {
+    fontSize: 12,
+    color: "#9CA3AF",
+  },
+  feedItemTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: 8,
+  },
+  feedItemImage: {
+    width: "100%",
+    height: 200,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  feedItemBody: {
+    fontSize: 14,
+    color: "#374151",
+    lineHeight: 21,
+    marginBottom: 8,
+  },
+  authorText: {
+    fontSize: 13,
+    color: "#6B7280",
+    marginBottom: 8,
+  },
+  actionsRow: {
+    flexDirection: "row",
+    gap: 16,
+    alignItems: "center",
+  },
+  commentsText: {
+    fontSize: 13,
+    color: "#6B7280",
+  },
+});

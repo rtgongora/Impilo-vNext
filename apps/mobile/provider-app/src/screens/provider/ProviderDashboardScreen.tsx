@@ -5,6 +5,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from "react";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import {
   Screen,
   Header,
@@ -62,155 +63,191 @@ export function ProviderDashboardScreen() {
   }, [loadDashboard]);
 
   if (loading) {
-    return React.createElement(Screen, null,
-      React.createElement(Header, { title: "Worklist" }),
-      React.createElement(LoadingSpinner, { size: "lg" })
+    return (
+      <Screen>
+        <Header title="Worklist" />
+        <LoadingSpinner size="lg" />
+      </Screen>
     );
   }
 
   if (error) {
-    return React.createElement(Screen, null,
-      React.createElement(Header, { title: "Worklist" }),
-      React.createElement(ErrorState, { title: "Error", message: error, onRetry: loadDashboard })
+    return (
+      <Screen>
+        <Header title="Worklist" />
+        <ErrorState title="Error" message={error} onRetry={loadDashboard} />
+      </Screen>
     );
   }
 
   const pendingTasks = tasks.filter((t) => t.status === "PENDING" || t.status === "IN_PROGRESS");
   const overdueTasks = tasks.filter((t) => t.status === "OVERDUE");
 
-  return React.createElement(
-    Screen,
-    null,
-    React.createElement(Header, { title: "Worklist" }),
-    React.createElement(
-      "div",
-      { "data-testid": "provider-dashboard", style: { padding: "16px" } },
+  return (
+    <Screen>
+      <Header title="Worklist" />
+      <ScrollView testID="provider-dashboard" style={styles.container}>
+        {/* Summary tiles */}
+        <View style={styles.summaryRow}>
+          <Card>
+            <CardBody>
+              <View style={styles.tileCenter}>
+                <Text style={styles.tileNumber}>{String(pendingTasks.length)}</Text>
+                <Text style={styles.tileLabel}>Pending Tasks</Text>
+              </View>
+            </CardBody>
+          </Card>
+          <Card>
+            <CardBody>
+              <View style={styles.tileCenter}>
+                <Text style={styles.tileNumber}>{String(openEncounters.length)}</Text>
+                <Text style={styles.tileLabel}>Open Visits</Text>
+              </View>
+            </CardBody>
+          </Card>
+          <Card>
+            <CardBody>
+              <View style={styles.tileCenter}>
+                <Text
+                  style={[
+                    styles.tileNumber,
+                    { color: overdueTasks.length > 0 ? "#DC2626" : "#111827" },
+                  ]}
+                >
+                  {String(overdueTasks.length)}
+                </Text>
+                <Text style={styles.tileLabel}>Overdue</Text>
+              </View>
+            </CardBody>
+          </Card>
+        </View>
 
-      // Summary tiles
-      React.createElement(
-        "div",
-        { style: { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", marginBottom: "16px" } },
-        React.createElement(Card, null,
-          React.createElement(CardBody, null,
-            React.createElement("div", { style: { textAlign: "center" } },
-              React.createElement("div", { style: { fontSize: "24px", fontWeight: "700" } }, String(pendingTasks.length)),
-              React.createElement("div", { style: { fontSize: "12px", color: "#6B7280" } }, "Pending Tasks")
-            )
-          )
-        ),
-        React.createElement(Card, null,
-          React.createElement(CardBody, null,
-            React.createElement("div", { style: { textAlign: "center" } },
-              React.createElement("div", { style: { fontSize: "24px", fontWeight: "700" } }, String(openEncounters.length)),
-              React.createElement("div", { style: { fontSize: "12px", color: "#6B7280" } }, "Open Visits")
-            )
-          )
-        ),
-        React.createElement(Card, null,
-          React.createElement(CardBody, null,
-            React.createElement("div", { style: { textAlign: "center" } },
-              React.createElement("div", {
-                style: { fontSize: "24px", fontWeight: "700", color: overdueTasks.length > 0 ? "#DC2626" : "#111827" },
-              }, String(overdueTasks.length)),
-              React.createElement("div", { style: { fontSize: "12px", color: "#6B7280" } }, "Overdue")
-            )
-          )
-        )
-      ),
+        {/* Task list */}
+        <CardHeader>My Tasks</CardHeader>
+        {pendingTasks.length === 0 ? (
+          <EmptyState title="No pending tasks" message="All caught up" />
+        ) : (
+          pendingTasks.map((task) => (
+            <Card key={task.id}>
+              <CardBody>
+                <TouchableOpacity
+                  testID={`task-${task.id}`}
+                  onPress={() => setSelectedTaskId(task.id === selectedTaskId ? null : task.id)}
+                >
+                  <View style={styles.taskHeader}>
+                    <Text style={styles.bold}>{task.title}</Text>
+                    <Badge
+                      variant={PRIORITY_VARIANT[task.priority] as "destructive" | "secondary" | "outline"}
+                    >
+                      {task.priority}
+                    </Badge>
+                  </View>
+                  {task.patientName ? (
+                    <Text style={styles.patientName}>
+                      {`Patient: ${task.patientName}`}
+                    </Text>
+                  ) : null}
+                  <View style={styles.taskMeta}>
+                    <Badge variant="outline">{task.taskType}</Badge>
+                    {task.dueAt ? (
+                      <Text style={styles.dueDate}>
+                        {`Due: ${new Date(task.dueAt).toLocaleDateString()}`}
+                      </Text>
+                    ) : null}
+                  </View>
+                </TouchableOpacity>
+              </CardBody>
+            </Card>
+          ))
+        )}
 
-      // Task list
-      React.createElement(CardHeader, null, "My Tasks"),
-      pendingTasks.length === 0
-        ? React.createElement(EmptyState, { title: "No pending tasks", message: "All caught up" })
-        : pendingTasks.map((task) =>
-            React.createElement(
-              Card,
-              { key: task.id },
-              React.createElement(
-                CardBody,
-                null,
-                React.createElement(
-                  "div",
-                  {
-                    "data-testid": `task-${task.id}`,
-                    style: { cursor: "pointer" },
-                    onClick: () => setSelectedTaskId(task.id === selectedTaskId ? null : task.id),
-                  },
-                  React.createElement(
-                    "div",
-                    { style: { display: "flex", justifyContent: "space-between", alignItems: "center" } },
-                    React.createElement("strong", null, task.title),
-                    React.createElement(Badge, {
-                      variant: PRIORITY_VARIANT[task.priority] as "destructive" | "secondary" | "outline",
-                      children: task.priority,
-                    })
-                  ),
-                  task.patientName
-                    ? React.createElement("p", { style: { fontSize: "14px", color: "#6B7280", margin: "4px 0" } },
-                        `Patient: ${task.patientName}`
-                      )
-                    : null,
-                  React.createElement(
-                    "div",
-                    { style: { display: "flex", gap: "8px", marginTop: "4px" } },
-                    React.createElement(Badge, { variant: "outline", children: task.taskType }),
-                    task.dueAt
-                      ? React.createElement("span", { style: { fontSize: "12px", color: "#9CA3AF" } },
-                          `Due: ${new Date(task.dueAt).toLocaleDateString()}`
-                        )
-                      : null
-                  )
-                )
-              )
-            )
-          ),
+        {/* Open encounters section */}
+        {openEncounters.length > 0 ? (
+          <>
+            <CardHeader>Open Encounters</CardHeader>
+            {openEncounters.map((enc) => (
+              <Card key={enc.id}>
+                <CardBody>
+                  <View testID={`encounter-${enc.id}`}>
+                    <Text style={styles.bold}>{`${enc.encounterType} Visit`}</Text>
+                    <Text style={styles.encounterTime}>
+                      {`Started: ${new Date(enc.startedAt).toLocaleTimeString()}`}
+                    </Text>
+                    {enc.chiefComplaint ? (
+                      <Text style={styles.chiefComplaint}>
+                        {`CC: ${enc.chiefComplaint}`}
+                      </Text>
+                    ) : null}
+                  </View>
+                </CardBody>
+              </Card>
+            ))}
+          </>
+        ) : null}
 
-      // Open encounters section
-      openEncounters.length > 0
-        ? React.createElement(
-            React.Fragment,
-            null,
-            React.createElement(CardHeader, { children: "Open Encounters" }),
-            openEncounters.map((enc) =>
-              React.createElement(
-                Card,
-                { key: enc.id },
-                React.createElement(
-                  CardBody,
-                  null,
-                  React.createElement(
-                    "div",
-                    { "data-testid": `encounter-${enc.id}` },
-                    React.createElement("strong", null, `${enc.encounterType} Visit`),
-                    React.createElement(
-                      "p",
-                      { style: { fontSize: "14px", color: "#6B7280" } },
-                      `Started: ${new Date(enc.startedAt).toLocaleTimeString()}`
-                    ),
-                    enc.chiefComplaint
-                      ? React.createElement(
-                          "p",
-                          { style: { fontSize: "14px" } },
-                          `CC: ${enc.chiefComplaint}`
-                        )
-                      : null
-                  )
-                )
-              )
-            )
-          )
-        : null,
-
-      React.createElement(
-        "div",
-        { style: { marginTop: "16px" } },
-        React.createElement(Button, {
-          title: "Refresh",
-          variant: "outline",
-          onPress: loadDashboard,
-          testID: "refresh-dashboard",
-        })
-      )
-    )
+        <View style={styles.refreshContainer}>
+          <Button
+            title="Refresh"
+            variant="outline"
+            onPress={loadDashboard}
+            testID="refresh-dashboard"
+          />
+        </View>
+      </ScrollView>
+    </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 16,
+  },
+  summaryRow: {
+    flexDirection: "row",
+    gap: 12,
+    marginBottom: 16,
+  },
+  tileCenter: {
+    alignItems: "center",
+  },
+  tileNumber: {
+    fontSize: 24,
+    fontWeight: "700",
+  },
+  tileLabel: {
+    fontSize: 12,
+    color: "#6B7280",
+  },
+  taskHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  bold: {
+    fontWeight: "bold",
+  },
+  patientName: {
+    fontSize: 14,
+    color: "#6B7280",
+    marginVertical: 4,
+  },
+  taskMeta: {
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 4,
+  },
+  dueDate: {
+    fontSize: 12,
+    color: "#9CA3AF",
+  },
+  encounterTime: {
+    fontSize: 14,
+    color: "#6B7280",
+  },
+  chiefComplaint: {
+    fontSize: 14,
+  },
+  refreshContainer: {
+    marginTop: 16,
+  },
+});

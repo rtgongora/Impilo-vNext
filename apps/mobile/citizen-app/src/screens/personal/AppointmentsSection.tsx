@@ -3,6 +3,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from "react";
+import { View, Text, StyleSheet } from "react-native";
 import {
   Card,
   CardHeader,
@@ -78,136 +79,162 @@ export function AppointmentsSection() {
     }
   }, [load]);
 
-  if (isLoading) return React.createElement(LoadingSpinner, { size: "md" });
-  if (error) return React.createElement(ErrorState, { title: "Error", message: error.message, onRetry: load });
+  if (isLoading) return <LoadingSpinner size="md" />;
+  if (error) return <ErrorState title="Error" message={error.message} onRetry={load} />;
 
-  return React.createElement(
-    "div",
-    { "data-testid": "appointments-section", style: { display: "flex", flexDirection: "column", gap: "16px" } },
+  return (
+    <View testID="appointments-section" style={styles.container}>
+      <View style={styles.headerRow}>
+        <Text style={styles.heading}>Appointments</Text>
+        <Button
+          title={showBooking ? "Cancel" : "Book New"}
+          variant={showBooking ? "ghost" : "primary"}
+          size="sm"
+          onPress={() => setShowBooking(!showBooking)}
+          testID="toggle-booking"
+        />
+      </View>
 
-    React.createElement(
-      "div",
-      { style: { display: "flex", justifyContent: "space-between", alignItems: "center" } },
-      React.createElement("h3", { style: { margin: 0 } }, "Appointments"),
-      React.createElement(Button, {
-        title: showBooking ? "Cancel" : "Book New",
-        variant: showBooking ? "ghost" : "primary",
-        size: "sm",
-        onPress: () => setShowBooking(!showBooking),
-        testID: "toggle-booking",
-      })
-    ),
-
-    showBooking
-      ? React.createElement(
-          Card,
-          null,
-          React.createElement(CardHeader, { title: "Request Appointment" }),
-          React.createElement(
-            CardBody,
-            null,
-            React.createElement(
-              "div",
-              { style: { display: "flex", flexDirection: "column", gap: "12px" } },
-              React.createElement(TextField, {
-                label: "Facility ID",
-                value: facilityId,
-                onChange: setFacilityId,
-                placeholder: "Enter facility ID",
-                testID: "booking-facility",
-              }),
-              React.createElement(Select, {
-                label: "Type",
-                value: appointmentType,
-                onChange: setAppointmentType,
-                options: [
+      {showBooking ? (
+        <Card>
+          <CardHeader title="Request Appointment" />
+          <CardBody>
+            <View style={styles.formContainer}>
+              <TextField
+                label="Facility ID"
+                value={facilityId}
+                onChange={setFacilityId}
+                placeholder="Enter facility ID"
+                testID="booking-facility"
+              />
+              <Select
+                label="Type"
+                value={appointmentType}
+                onChange={setAppointmentType}
+                options={[
                   { label: "General Consultation", value: "GENERAL" },
                   { label: "Follow-Up", value: "FOLLOW_UP" },
                   { label: "Specialist Referral", value: "SPECIALIST" },
                   { label: "Lab Work", value: "LAB_WORK" },
                   { label: "Vaccination", value: "VACCINATION" },
-                ],
-                testID: "booking-type",
-              }),
-              React.createElement(TextField, {
-                label: "Preferred Date",
-                value: preferredDate,
-                onChange: setPreferredDate,
-                placeholder: "YYYY-MM-DD",
-                testID: "booking-date",
-              }),
-              React.createElement(TextField, {
-                label: "Reason (optional)",
-                value: reason,
-                onChange: setReason,
-                placeholder: "Brief description",
-                testID: "booking-reason",
-              }),
-              React.createElement(Button, {
-                title: submitting ? "Submitting..." : "Submit Request",
-                variant: "primary",
-                onPress: handleBook,
-                disabled: submitting || !facilityId || !preferredDate,
-                testID: "submit-booking",
-              })
-            )
-          )
-        )
-      : null,
+                ]}
+                testID="booking-type"
+              />
+              <TextField
+                label="Preferred Date"
+                value={preferredDate}
+                onChange={setPreferredDate}
+                placeholder="YYYY-MM-DD"
+                testID="booking-date"
+              />
+              <TextField
+                label="Reason (optional)"
+                value={reason}
+                onChange={setReason}
+                placeholder="Brief description"
+                testID="booking-reason"
+              />
+              <Button
+                title={submitting ? "Submitting..." : "Submit Request"}
+                variant="primary"
+                onPress={handleBook}
+                disabled={submitting || !facilityId || !preferredDate}
+                testID="submit-booking"
+              />
+            </View>
+          </CardBody>
+        </Card>
+      ) : null}
 
-    appointments.length === 0
-      ? React.createElement(EmptyState, {
-          title: "No appointments",
-          message: "Book your first appointment using the button above",
-        })
-      : appointments.map((appt) =>
-          React.createElement(
-            Card,
-            { key: appt.id },
-            React.createElement(
-              CardBody,
-              null,
-              React.createElement(
-                "div",
-                {
-                  "data-testid": `appointment-${appt.id}`,
-                  style: { display: "flex", justifyContent: "space-between", alignItems: "flex-start" },
-                },
-                React.createElement(
-                  "div",
-                  null,
-                  React.createElement(
-                    "div",
-                    { style: { display: "flex", gap: "8px", alignItems: "center", marginBottom: "4px" } },
-                    React.createElement("strong", null, appt.appointmentType),
-                    React.createElement(Badge, {
-                      variant: STATUS_COLORS[appt.status] ?? "outline",
-                      children: appt.status,
-                    })
-                  ),
-                  React.createElement("p", { style: { fontSize: "14px", color: "#374151", margin: "2px 0" } }, appt.facilityName),
-                  appt.providerName
-                    ? React.createElement("p", { style: { fontSize: "13px", color: "#6B7280", margin: "2px 0" } }, `Dr. ${appt.providerName}`)
-                    : null,
-                  React.createElement("p", { style: { fontSize: "13px", color: "#6B7280", margin: "2px 0" } },
-                    new Date(appt.scheduledAt).toLocaleString()
-                  ),
-                  appt.reason
-                    ? React.createElement("p", { style: { fontSize: "13px", color: "#9CA3AF", margin: "2px 0" } }, appt.reason)
-                    : null
-                ),
-                appt.status === "SCHEDULED" || appt.status === "CONFIRMED"
-                  ? React.createElement(Button, {
-                      title: "Cancel",
-                      variant: "ghost",
-                      size: "sm",
-                      onPress: () => handleCancel(appt.id),
-                      testID: `cancel-appointment-${appt.id}`,
-                    })
-                  : null
-              )
-            )
-          )
-        )
+      {appointments.length === 0 ? (
+        <EmptyState
+          title="No appointments"
+          message="Book your first appointment using the button above"
+        />
+      ) : (
+        appointments.map((appt) => (
+          <Card key={appt.id}>
+            <CardBody>
+              <View testID={`appointment-${appt.id}`} style={styles.appointmentRow}>
+                <View>
+                  <View style={styles.badgeRow}>
+                    <Text style={styles.boldText}>{appt.appointmentType}</Text>
+                    <Badge variant={STATUS_COLORS[appt.status] ?? "outline"}>
+                      {appt.status}
+                    </Badge>
+                  </View>
+                  <Text style={styles.facilityText}>{appt.facilityName}</Text>
+                  {appt.providerName ? (
+                    <Text style={styles.secondaryText}>{`Dr. ${appt.providerName}`}</Text>
+                  ) : null}
+                  <Text style={styles.secondaryText}>
+                    {new Date(appt.scheduledAt).toLocaleString()}
+                  </Text>
+                  {appt.reason ? (
+                    <Text style={styles.tertiaryText}>{appt.reason}</Text>
+                  ) : null}
+                </View>
+                {appt.status === "SCHEDULED" || appt.status === "CONFIRMED" ? (
+                  <Button
+                    title="Cancel"
+                    variant="ghost"
+                    size="sm"
+                    onPress={() => handleCancel(appt.id)}
+                    testID={`cancel-appointment-${appt.id}`}
+                  />
+                ) : null}
+              </View>
+            </CardBody>
+          </Card>
+        ))
+      )}
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    gap: 16,
+  },
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  heading: {
+    fontSize: 18,
+    fontWeight: "600",
+  },
+  formContainer: {
+    gap: 12,
+  },
+  appointmentRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+  },
+  badgeRow: {
+    flexDirection: "row",
+    gap: 8,
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  boldText: {
+    fontWeight: "700",
+  },
+  facilityText: {
+    fontSize: 14,
+    color: "#374151",
+    marginVertical: 2,
+  },
+  secondaryText: {
+    fontSize: 13,
+    color: "#6B7280",
+    marginVertical: 2,
+  },
+  tertiaryText: {
+    fontSize: 13,
+    color: "#9CA3AF",
+    marginVertical: 2,
+  },
+});

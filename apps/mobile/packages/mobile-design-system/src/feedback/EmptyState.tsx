@@ -3,6 +3,7 @@
  */
 
 import React from "react";
+import { View, Text, Pressable, StyleSheet } from "react-native";
 
 export interface EmptyStateProps {
   title: string;
@@ -16,29 +17,43 @@ export interface EmptyStateProps {
 }
 
 export function EmptyState({ title, description, icon, action, testID }: EmptyStateProps) {
-  return React.createElement(
-    "div",
-    {
-      "data-testid": testID,
-      role: "status",
-      style: {
-        display: "flex",
-        flexDirection: "column" as const,
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 48,
-        textAlign: "center" as const,
-      },
-    },
-    icon ?? null,
-    React.createElement("h3", { style: { fontSize: 17, fontWeight: 600, marginTop: 16 } }, title),
-    description ? React.createElement("p", { style: { fontSize: 14, color: "#757575", marginTop: 8 } }, description) : null,
-    action
-      ? React.createElement(
-          "button",
-          { onClick: action.onPress, style: { marginTop: 16 } },
-          action.label
-        )
-      : null
+  return (
+    <View
+      testID={testID}
+      accessibilityRole="summary"
+      style={styles.container}
+    >
+      {icon ?? null}
+      <Text style={styles.title}>{title}</Text>
+      {description ? <Text style={styles.description}>{description}</Text> : null}
+      {action ? (
+        <Pressable onPress={action.onPress} style={styles.actionButton}>
+          <Text>{action.label}</Text>
+        </Pressable>
+      ) : null}
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 48,
+  },
+  title: {
+    fontSize: 17,
+    fontWeight: "600",
+    marginTop: 16,
+    textAlign: "center",
+  },
+  description: {
+    fontSize: 14,
+    color: "#757575",
+    marginTop: 8,
+    textAlign: "center",
+  },
+  actionButton: {
+    marginTop: 16,
+  },
+});

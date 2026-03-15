@@ -3,10 +3,11 @@
  *
  * Variants: primary, secondary, outline, ghost, destructive
  * Sizes: sm, md, lg
- * Accessibility: role="button", accessibilityLabel required
+ * Accessibility: accessibilityRole="button", accessibilityLabel required
  */
 
 import React from "react";
+import { Pressable, Text, View, StyleSheet } from "react-native";
 
 export type ButtonVariant = "primary" | "secondary" | "outline" | "ghost" | "destructive";
 export type ButtonSize = "sm" | "md" | "lg";
@@ -40,25 +41,43 @@ export function Button({
 }: ButtonProps) {
   const isDisabled = disabled || loading;
 
-  return React.createElement(
-    "button",
-    {
-      onClick: isDisabled ? undefined : onPress,
-      disabled: isDisabled,
-      "aria-label": accessibilityLabel ?? title,
-      "aria-disabled": isDisabled,
-      "aria-busy": loading,
-      "data-testid": testID,
-      "data-variant": variant,
-      "data-size": size,
-      style: {
-        width: fullWidth ? "100%" : undefined,
-        opacity: isDisabled ? 0.5 : 1,
-        cursor: isDisabled ? "not-allowed" : "pointer",
-      },
-    },
-    icon && iconPosition === "left" ? icon : null,
-    loading ? "Loading..." : title,
-    icon && iconPosition === "right" ? icon : null
+  return (
+    <Pressable
+      onPress={isDisabled ? undefined : onPress}
+      disabled={isDisabled}
+      accessibilityLabel={accessibilityLabel ?? title}
+      accessibilityRole="button"
+      accessibilityState={{ disabled: isDisabled, busy: loading }}
+      testID={testID}
+      style={[
+        styles.base,
+        fullWidth ? styles.fullWidth : undefined,
+        { opacity: isDisabled ? 0.5 : 1 },
+      ]}
+    >
+      <View style={styles.content}>
+        {icon && iconPosition === "left" ? icon : null}
+        <Text style={styles.label}>{loading ? "Loading..." : title}</Text>
+        {icon && iconPosition === "right" ? icon : null}
+      </View>
+    </Pressable>
   );
 }
+
+const styles = StyleSheet.create({
+  base: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  fullWidth: {
+    width: "100%",
+  },
+  content: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  label: {
+    textAlign: "center",
+  },
+});

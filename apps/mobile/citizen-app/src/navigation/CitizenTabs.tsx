@@ -6,6 +6,7 @@
  */
 
 import React from "react";
+import { View, StyleSheet } from "react-native";
 import { TabBar, type TabItem } from "@impilo/mobile-design-system";
 import { useAppStore } from "../stores/appStore";
 import type { CitizenTab } from "../types";
@@ -27,7 +28,7 @@ const TAB_SCREENS: Record<CitizenTab, React.FC> = {
 };
 
 export function CitizenTabs() {
-  const { activeTab, setActiveTab, unreadMessages, unreadNotifications } = useAppStore();
+  const { activeTab, setActiveTab, unreadMessages } = useAppStore();
 
   const tabs: TabItem[] = [
     { id: "home", label: "Home", icon: "home" },
@@ -44,21 +45,25 @@ export function CitizenTabs() {
 
   const ScreenComponent = TAB_SCREENS[activeTab] ?? HomeScreen;
 
-  return React.createElement(
-    "div",
-    {
-      "data-testid": "citizen-tabs",
-      style: { display: "flex", flexDirection: "column", height: "100%" },
-    },
-    React.createElement(
-      "div",
-      { style: { flex: 1, overflow: "auto" } },
-      React.createElement(ScreenComponent, null)
-    ),
-    React.createElement(TabBar, {
-      tabs,
-      activeTab,
-      onTabPress: (id: string) => setActiveTab(id as CitizenTab),
-    })
+  return (
+    <View testID="citizen-tabs" style={styles.container}>
+      <View style={styles.content}>
+        <ScreenComponent />
+      </View>
+      <TabBar
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabPress={(id: string) => setActiveTab(id as CitizenTab)}
+      />
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  content: {
+    flex: 1,
+  },
+});

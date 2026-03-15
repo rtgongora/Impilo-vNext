@@ -6,7 +6,17 @@
  */
 
 import React, { useState, useCallback } from "react";
-import { Screen, Header, Card, CardBody, Button, TextField, Badge, ErrorState } from "@impilo/mobile-design-system";
+import { View, Text, ScrollView, StyleSheet } from "react-native";
+import {
+  Screen,
+  Header,
+  Card,
+  CardBody,
+  Button,
+  TextField,
+  Badge,
+  ErrorState,
+} from "@impilo/mobile-design-system";
 import { useAuth } from "@impilo/mobile-auth";
 import { apiClient } from "@impilo/mobile-api-client";
 import { useAppStore } from "../../stores/appStore";
@@ -77,90 +87,152 @@ export function BreakGlassScreen() {
     ]);
   }, [auth, facilityId, isOnline]);
 
-  return React.createElement(
-    Screen, null,
-    React.createElement(Header, { title: "Emergency Access" }),
-    React.createElement("div", { "data-testid": "break-glass-screen", style: { padding: "16px" } },
+  return (
+    <Screen>
+      <Header title="Emergency Access" />
+      <ScrollView testID="break-glass-screen" style={styles.container}>
+        {/* Warning */}
+        <Card>
+          <CardBody>
+            <View style={styles.warningBox}>
+              <Text style={styles.warningTitle}>Break-Glass Emergency Access</Text>
+              <Text style={styles.warningText}>
+                This mode provides elevated access for life-threatening emergencies.
+                All actions are audit-logged and will be reviewed.
+                Use only when normal access paths are unavailable and patient safety is at risk.
+              </Text>
+            </View>
+          </CardBody>
+        </Card>
 
-      // Warning
-      React.createElement(Card, null,
-        React.createElement(CardBody, null,
-          React.createElement("div", {
-            style: { backgroundColor: "#FEF3C7", padding: "16px", borderRadius: "8px", marginBottom: "12px" },
-          },
-            React.createElement("strong", { style: { color: "#92400E" } }, "Break-Glass Emergency Access"),
-            React.createElement("p", { style: { color: "#92400E", fontSize: "14px", marginTop: "4px" } },
-              "This mode provides elevated access for life-threatening emergencies. " +
-              "All actions are audit-logged and will be reviewed. " +
-              "Use only when normal access paths are unavailable and patient safety is at risk."
-            )
-          )
-        )
-      ),
+        {!activated ? (
+          <Card>
+            <CardBody>
+              <TextField
+                label="Emergency Reason (required)"
+                value={reason}
+                onChange={setReason}
+                placeholder="Describe the emergency situation..."
+                testID="break-glass-reason"
+              />
+              <TextField
+                label="Patient CPID (if known)"
+                value={patientIdentifier}
+                onChange={setPatientIdentifier}
+                placeholder="Optional patient identifier"
+                testID="break-glass-patient"
+              />
+              <View style={styles.activateContainer}>
+                <Button
+                  title="Activate Break-Glass Access"
+                  variant="destructive"
+                  fullWidth
+                  onPress={handleActivate}
+                  loading={activating}
+                  disabled={!reason.trim()}
+                  testID="activate-break-glass-btn"
+                  accessibilityLabel="Activate emergency break-glass access"
+                />
+              </View>
+              {error && <ErrorState title="Error" message={error} />}
+            </CardBody>
+          </Card>
+        ) : (
+          <Card>
+            <CardBody>
+              <View style={styles.activeCenter}>
+                <Badge variant="destructive">BREAK-GLASS ACTIVE</Badge>
+                <Text style={styles.reasonText}>{`Reason: ${reason}`}</Text>
+                <Text style={styles.auditNote}>All actions are being audit-logged</Text>
+                <View style={styles.deactivateContainer}>
+                  <Button
+                    title="Deactivate Break-Glass"
+                    variant="primary"
+                    fullWidth
+                    onPress={handleDeactivate}
+                    testID="deactivate-break-glass-btn"
+                  />
+                </View>
+              </View>
+            </CardBody>
+          </Card>
+        )}
 
-      !activated
-        ? React.createElement(Card, null,
-            React.createElement(CardBody, null,
-              React.createElement(TextField, {
-                label: "Emergency Reason (required)",
-                value: reason,
-                onChange: setReason,
-                placeholder: "Describe the emergency situation...",
-                testID: "break-glass-reason",
-              }),
-              React.createElement(TextField, {
-                label: "Patient CPID (if known)",
-                value: patientIdentifier,
-                onChange: setPatientIdentifier,
-                placeholder: "Optional patient identifier",
-                testID: "break-glass-patient",
-              }),
-              React.createElement("div", { style: { marginTop: "16px" } },
-                React.createElement(Button, {
-                  title: "Activate Break-Glass Access",
-                  variant: "destructive",
-                  fullWidth: true,
-                  onPress: handleActivate,
-                  loading: activating,
-                  disabled: !reason.trim(),
-                  testID: "activate-break-glass-btn",
-                  accessibilityLabel: "Activate emergency break-glass access",
-                })
-              ),
-              error ? React.createElement(ErrorState, { title: "Error", message: error }) : null
-            )
-          )
-        : React.createElement(Card, null,
-            React.createElement(CardBody, null,
-              React.createElement("div", { style: { textAlign: "center", padding: "24px" } },
-                React.createElement(Badge, { variant: "destructive", children: "BREAK-GLASS ACTIVE" }),
-                React.createElement("p", { style: { marginTop: "12px", fontSize: "14px" } }, `Reason: ${reason}`),
-                React.createElement("p", { style: { fontSize: "12px", color: "#6B7280" } }, "All actions are being audit-logged"),
-                React.createElement("div", { style: { marginTop: "24px" } },
-                  React.createElement(Button, {
-                    title: "Deactivate Break-Glass",
-                    variant: "primary",
-                    fullWidth: true,
-                    onPress: handleDeactivate,
-                    testID: "deactivate-break-glass-btn",
-                  })
-                )
-              )
-            )
-          ),
-
-      // Audit log
-      accessLog.length > 0
-        ? React.createElement("div", { style: { marginTop: "16px" } },
-            React.createElement("strong", null, "Session Audit Log"),
-            accessLog.map((entry, i) =>
-              React.createElement("div", { key: i, style: { padding: "8px 0", borderBottom: "1px solid #E5E7EB", fontSize: "12px" } },
-                React.createElement("span", { style: { color: "#9CA3AF" } }, new Date(entry.timestamp).toLocaleTimeString()),
-                React.createElement("span", { style: { marginLeft: "8px" } }, entry.action)
-              )
-            )
-          )
-        : null
-    )
+        {/* Audit log */}
+        {accessLog.length > 0 && (
+          <View style={styles.auditLogContainer}>
+            <Text style={styles.boldText}>Session Audit Log</Text>
+            {accessLog.map((entry, i) => (
+              <View key={i} style={styles.auditEntry}>
+                <Text style={styles.auditTimestamp}>
+                  {new Date(entry.timestamp).toLocaleTimeString()}
+                </Text>
+                <Text style={styles.auditAction}>{entry.action}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+      </ScrollView>
+    </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 16,
+  },
+  warningBox: {
+    backgroundColor: "#FEF3C7",
+    padding: 16,
+    borderRadius: 8,
+    marginBottom: 12,
+  },
+  warningTitle: {
+    fontWeight: "700",
+    color: "#92400E",
+  },
+  warningText: {
+    color: "#92400E",
+    fontSize: 14,
+    marginTop: 4,
+  },
+  activateContainer: {
+    marginTop: 16,
+  },
+  activeCenter: {
+    alignItems: "center",
+    padding: 24,
+  },
+  reasonText: {
+    marginTop: 12,
+    fontSize: 14,
+  },
+  auditNote: {
+    fontSize: 12,
+    color: "#6B7280",
+  },
+  deactivateContainer: {
+    marginTop: 24,
+    width: "100%",
+  },
+  auditLogContainer: {
+    marginTop: 16,
+  },
+  boldText: {
+    fontWeight: "700",
+  },
+  auditEntry: {
+    flexDirection: "row",
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E7EB",
+  },
+  auditTimestamp: {
+    fontSize: 12,
+    color: "#9CA3AF",
+  },
+  auditAction: {
+    fontSize: 12,
+    marginLeft: 8,
+  },
+});

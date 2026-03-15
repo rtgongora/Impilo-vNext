@@ -3,7 +3,8 @@
  */
 
 import React, { useState, useCallback } from "react";
-import { Card, CardBody, Button, TextField, ErrorState } from "@impilo/mobile-design-system";
+import { View, Text, TextInput, StyleSheet } from "react-native";
+import { Card, CardBody, Button, ErrorState } from "@impilo/mobile-design-system";
 import { addEncounterNotes } from "../../services/encounterService";
 import { useEncounterStore } from "../../stores/encounterStore";
 
@@ -32,44 +33,53 @@ export function NotesPanel({ encounterId }: NotesPanelProps) {
     }
   }, [encounterId, notes]);
 
-  return React.createElement(
-    "div",
-    { "data-testid": "notes-panel" },
-    React.createElement(
-      Card,
-      null,
-      React.createElement(
-        CardBody,
-        null,
-        React.createElement("textarea", {
-          value: notes,
-          onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => setNotes(e.target.value),
-          placeholder: "Enter clinical notes...",
-          "data-testid": "notes-textarea",
-          style: {
-            width: "100%",
-            minHeight: "200px",
-            padding: "12px",
-            border: "1px solid #D1D5DB",
-            borderRadius: "8px",
-            fontSize: "14px",
-            fontFamily: "inherit",
-            resize: "vertical",
-          },
-        }),
-        React.createElement(
-          "div",
-          { style: { marginTop: "12px", display: "flex", gap: "8px", alignItems: "center" } },
-          React.createElement(Button, {
-            title: "Save Notes",
-            onPress: handleSave,
-            loading: saving,
-            testID: "save-notes-btn",
-          }),
-          saved ? React.createElement("span", { style: { color: "#059669", fontSize: "14px" } }, "Saved") : null
-        ),
-        error ? React.createElement(ErrorState, { title: "Error", message: error }) : null
-      )
-    )
+  return (
+    <View testID="notes-panel">
+      <Card>
+        <CardBody>
+          <TextInput
+            value={notes}
+            onChangeText={setNotes}
+            placeholder="Enter clinical notes..."
+            testID="notes-textarea"
+            multiline
+            textAlignVertical="top"
+            style={styles.textArea}
+          />
+          <View style={styles.actionRow}>
+            <Button
+              title="Save Notes"
+              onPress={handleSave}
+              loading={saving}
+              testID="save-notes-btn"
+            />
+            {saved ? <Text style={styles.savedText}>Saved</Text> : null}
+          </View>
+          {error ? <ErrorState title="Error" message={error} /> : null}
+        </CardBody>
+      </Card>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  textArea: {
+    width: "100%",
+    minHeight: 200,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: "#D1D5DB",
+    borderRadius: 8,
+    fontSize: 14,
+  },
+  actionRow: {
+    marginTop: 12,
+    flexDirection: "row",
+    gap: 8,
+    alignItems: "center",
+  },
+  savedText: {
+    color: "#059669",
+    fontSize: 14,
+  },
+});

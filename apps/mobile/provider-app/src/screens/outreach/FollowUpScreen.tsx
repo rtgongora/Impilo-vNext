@@ -3,6 +3,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from "react";
+import { View, Text, ScrollView, StyleSheet } from "react-native";
 import {
   Screen,
   Header,
@@ -57,63 +58,82 @@ export function FollowUpScreen() {
     loadSchedule();
   }, [loadSchedule]);
 
-  return React.createElement(
-    Screen,
-    null,
-    React.createElement(Header, { title: "Follow-Up Schedule" }),
-    React.createElement(
-      "div",
-      { "data-testid": "follow-up-screen", style: { padding: "16px" } },
-      loading
-        ? React.createElement(LoadingSpinner, { size: "md" })
-        : error
-          ? React.createElement(ErrorState, { title: "Error", message: error, onRetry: loadSchedule })
-          : schedule.length === 0
-            ? React.createElement(EmptyState, { title: "No follow-ups scheduled", message: "All households are up to date" })
-            : schedule.map(({ household, daysOverdue }) =>
-                React.createElement(
-                  Card,
-                  { key: household.id },
-                  React.createElement(
-                    CardBody,
-                    null,
-                    React.createElement(
-                      "div",
-                      {
-                        "data-testid": `followup-${household.id}`,
-                        style: { display: "flex", justifyContent: "space-between", alignItems: "center" },
-                      },
-                      React.createElement(
-                        "div",
-                        null,
-                        React.createElement("strong", null, household.headOfHousehold),
-                        React.createElement("p", { style: { fontSize: "14px", color: "#6B7280" } }, household.address),
-                        React.createElement(
-                          "div",
-                          { style: { display: "flex", gap: "4px", marginTop: "4px" } },
-                          daysOverdue > 0
-                            ? React.createElement(Badge, { variant: "destructive", children: `${daysOverdue} days overdue` })
-                            : React.createElement(Badge, { variant: "secondary", children: `Due in ${Math.abs(daysOverdue)} days` }),
-                          React.createElement(Badge, {
-                            variant: household.riskCategory === "HIGH" ? "destructive" : "outline",
-                            children: household.riskCategory,
-                          })
-                        )
-                      ),
-                      React.createElement(Button, {
-                        title: "Start Visit",
-                        variant: "primary",
-                        size: "sm",
-                        onPress: () => {},
-                        testID: `start-followup-${household.id}`,
-                      })
-                    )
-                  )
-                )
-              ),
-      React.createElement("div", { style: { marginTop: "16px" } },
-        React.createElement(Button, { title: "Refresh", variant: "outline", onPress: loadSchedule, testID: "refresh-schedule" })
-      )
-    )
+  return (
+    <Screen>
+      <Header title="Follow-Up Schedule" />
+      <ScrollView testID="follow-up-screen" style={styles.container}>
+        {loading ? (
+          <LoadingSpinner size="md" />
+        ) : error ? (
+          <ErrorState title="Error" message={error} onRetry={loadSchedule} />
+        ) : schedule.length === 0 ? (
+          <EmptyState title="No follow-ups scheduled" message="All households are up to date" />
+        ) : (
+          schedule.map(({ household, daysOverdue }) => (
+            <Card key={household.id}>
+              <CardBody>
+                <View testID={`followup-${household.id}`} style={styles.itemRow}>
+                  <View style={styles.itemDetails}>
+                    <Text style={styles.boldText}>{household.headOfHousehold}</Text>
+                    <Text style={styles.addressText}>{household.address}</Text>
+                    <View style={styles.badgeRow}>
+                      {daysOverdue > 0 ? (
+                        <Badge variant="destructive">{`${daysOverdue} days overdue`}</Badge>
+                      ) : (
+                        <Badge variant="secondary">{`Due in ${Math.abs(daysOverdue)} days`}</Badge>
+                      )}
+                      <Badge
+                        variant={household.riskCategory === "HIGH" ? "destructive" : "outline"}
+                      >
+                        {household.riskCategory}
+                      </Badge>
+                    </View>
+                  </View>
+                  <Button
+                    title="Start Visit"
+                    variant="primary"
+                    size="sm"
+                    onPress={() => {}}
+                    testID={`start-followup-${household.id}`}
+                  />
+                </View>
+              </CardBody>
+            </Card>
+          ))
+        )}
+        <View style={styles.refreshContainer}>
+          <Button title="Refresh" variant="outline" onPress={loadSchedule} testID="refresh-schedule" />
+        </View>
+      </ScrollView>
+    </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 16,
+  },
+  itemRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  itemDetails: {
+    flex: 1,
+  },
+  boldText: {
+    fontWeight: "700",
+  },
+  addressText: {
+    fontSize: 14,
+    color: "#6B7280",
+  },
+  badgeRow: {
+    flexDirection: "row",
+    gap: 4,
+    marginTop: 4,
+  },
+  refreshContainer: {
+    marginTop: 16,
+  },
+});

@@ -3,6 +3,7 @@
  */
 
 import React from "react";
+import { View, Text, Image, StyleSheet } from "react-native";
 import { colors } from "../tokens/colors";
 
 export type AvatarSize = "xs" | "sm" | "md" | "lg" | "xl";
@@ -50,38 +51,43 @@ export function Avatar({ name, imageUrl, size = "md", testID }: AvatarProps) {
   const dimension = AVATAR_SIZES[size];
 
   if (imageUrl) {
-    return React.createElement("img", {
-      src: imageUrl,
-      alt: name,
-      "data-testid": testID,
-      style: {
-        width: dimension,
-        height: dimension,
-        borderRadius: "50%",
-        objectFit: "cover",
-      },
-    });
+    return (
+      <Image
+        source={{ uri: imageUrl }}
+        accessibilityLabel={name}
+        testID={testID}
+        style={{
+          width: dimension,
+          height: dimension,
+          borderRadius: dimension / 2,
+        }}
+      />
+    );
   }
 
-  return React.createElement(
-    "div",
-    {
-      "data-testid": testID,
-      "aria-label": name,
-      role: "img",
-      style: {
+  return (
+    <View
+      testID={testID}
+      accessibilityLabel={name}
+      accessibilityRole="image"
+      style={{
         width: dimension,
         height: dimension,
-        borderRadius: "50%",
+        borderRadius: dimension / 2,
         backgroundColor: hashColor(name),
-        display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        color: "#FFFFFF",
-        fontWeight: 600,
-        fontSize: dimension * 0.4,
-      },
-    },
-    getInitials(name)
+      }}
+    >
+      <Text
+        style={{
+          color: "#FFFFFF",
+          fontWeight: "600",
+          fontSize: dimension * 0.4,
+        }}
+      >
+        {getInitials(name)}
+      </Text>
+    </View>
   );
 }

@@ -5,6 +5,7 @@
  */
 
 import React, { useCallback } from "react";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { Screen, Header, Card, CardBody, Badge, LoadingSpinner, EmptyState, ErrorState } from "@impilo/mobile-design-system";
 import { useMyTimeline, type TimelineEvent } from "@impilo/mobile-timeline";
 
@@ -30,63 +31,92 @@ export function ActivityFeedScreen() {
   const { events, loading, error, loadMore, hasMore, refresh } = useMyTimeline();
 
   if (loading && events.length === 0) {
-    return React.createElement(Screen, null,
-      React.createElement(Header, { title: "Activity" }),
-      React.createElement(LoadingSpinner, { size: "md" })
+    return (
+      <Screen>
+        <Header title="Activity" />
+        <LoadingSpinner size="md" />
+      </Screen>
     );
   }
 
   if (error) {
-    return React.createElement(Screen, null,
-      React.createElement(Header, { title: "Activity" }),
-      React.createElement(ErrorState, { title: "Error", message: error, onRetry: refresh })
+    return (
+      <Screen>
+        <Header title="Activity" />
+        <ErrorState title="Error" message={error} onRetry={refresh} />
+      </Screen>
     );
   }
 
-  return React.createElement(
-    Screen,
-    null,
-    React.createElement(Header, { title: "Activity Feed" }),
-    React.createElement(
-      "div",
-      { "data-testid": "activity-feed", style: { padding: "16px" } },
-      events.length === 0
-        ? React.createElement(EmptyState, { title: "No activity", message: "Your work activity will appear here" })
-        : events.map((event: TimelineEvent) =>
-            React.createElement(
-              Card,
-              { key: event.id },
-              React.createElement(
-                CardBody,
-                null,
-                React.createElement(
-                  "div",
-                  { "data-testid": `event-${event.id}` },
-                  React.createElement(
-                    "div",
-                    { style: { display: "flex", justifyContent: "space-between", alignItems: "center" } },
-                    React.createElement(Badge, { variant: "secondary", children: EVENT_TYPE_LABELS[event.type] ?? event.type }),
-                    React.createElement("span", { style: { fontSize: "12px", color: "#9CA3AF" } }, formatTime(event.occurredAt))
-                  ),
-                  React.createElement("p", { style: { marginTop: "4px", fontSize: "14px" } }, event.summary),
-                  event.subjectName
-                    ? React.createElement("p", { style: { fontSize: "12px", color: "#6B7280" } }, event.subjectName)
-                    : null
-                )
-              )
-            )
-          ),
-      hasMore
-        ? React.createElement(
-            "div",
-            { style: { textAlign: "center", marginTop: "16px" } },
-            React.createElement("button", {
-              onClick: loadMore,
-              "data-testid": "load-more",
-              style: { padding: "8px 16px", cursor: "pointer" },
-            }, loading ? "Loading..." : "Load More")
-          )
-        : null
-    )
+  return (
+    <Screen>
+      <Header title="Activity Feed" />
+      <ScrollView testID="activity-feed" style={styles.container}>
+        {events.length === 0 ? (
+          <EmptyState title="No activity" message="Your work activity will appear here" />
+        ) : (
+          events.map((event: TimelineEvent) => (
+            <Card key={event.id}>
+              <CardBody>
+                <View testID={`event-${event.id}`}>
+                  <View style={styles.eventHeader}>
+                    <Badge variant="secondary">
+                      {EVENT_TYPE_LABELS[event.type] ?? event.type}
+                    </Badge>
+                    <Text style={styles.timestamp}>{formatTime(event.occurredAt)}</Text>
+                  </View>
+                  <Text style={styles.summary}>{event.summary}</Text>
+                  {event.subjectName ? (
+                    <Text style={styles.subjectName}>{event.subjectName}</Text>
+                  ) : null}
+                </View>
+              </CardBody>
+            </Card>
+          ))
+        )}
+        {hasMore ? (
+          <View style={styles.loadMoreContainer}>
+            <TouchableOpacity
+              onPress={loadMore}
+              testID="load-more"
+              style={styles.loadMoreButton}
+            >
+              <Text>{loading ? "Loading..." : "Load More"}</Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
+      </ScrollView>
+    </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 16,
+  },
+  eventHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  timestamp: {
+    fontSize: 12,
+    color: "#9CA3AF",
+  },
+  summary: {
+    marginTop: 4,
+    fontSize: 14,
+  },
+  subjectName: {
+    fontSize: 12,
+    color: "#6B7280",
+  },
+  loadMoreContainer: {
+    alignItems: "center",
+    marginTop: 16,
+  },
+  loadMoreButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+  },
+});

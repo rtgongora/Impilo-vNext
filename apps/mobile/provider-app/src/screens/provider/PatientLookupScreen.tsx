@@ -5,6 +5,7 @@
  */
 
 import React, { useState, useCallback } from "react";
+import { View, Text, StyleSheet, ScrollView } from "react-native";
 import {
   Screen,
   Header,
@@ -65,90 +66,102 @@ export function PatientLookupScreen() {
     }
   }, [facilityId]);
 
-  return React.createElement(
-    Screen,
-    null,
-    React.createElement(Header, { title: "Patient Lookup" }),
-    React.createElement(
-      "div",
-      { "data-testid": "patient-lookup-screen", style: { padding: "16px" } },
+  return (
+    <Screen>
+      <Header title="Patient Lookup" />
+      <ScrollView testID="patient-lookup-screen" style={styles.container}>
+        {/* Search bar */}
+        <View style={styles.searchRow}>
+          <TextField
+            label="Search patients"
+            value={query}
+            onChange={setQuery}
+            placeholder="Name, NID, or CPID..."
+            testID="patient-search-input"
+          />
+          <Button
+            title="Search"
+            onPress={handleSearch}
+            loading={loading}
+            testID="patient-search-btn"
+          />
+        </View>
 
-      // Search bar
-      React.createElement(
-        "div",
-        { style: { display: "flex", gap: "8px", marginBottom: "16px" } },
-        React.createElement(TextField, {
-          label: "Search patients",
-          value: query,
-          onChange: setQuery,
-          placeholder: "Name, NID, or CPID...",
-          testID: "patient-search-input",
-        }),
-        React.createElement(Button, {
-          title: "Search",
-          onPress: handleSearch,
-          loading,
-          testID: "patient-search-btn",
-        })
-      ),
-
-      // Results
-      loading
-        ? React.createElement(LoadingSpinner, { size: "md" })
-        : error
-          ? React.createElement(ErrorState, { title: "Search Error", message: error, onRetry: handleSearch })
-          : patients.length === 0 && query
-            ? React.createElement(EmptyState, { title: "No patients found", message: "Try a different search term" })
-            : patients.map((patient) =>
-                React.createElement(
-                  Card,
-                  { key: patient.id },
-                  React.createElement(
-                    CardBody,
-                    null,
-                    React.createElement(
-                      "div",
-                      {
-                        "data-testid": `patient-${patient.id}`,
-                        style: { display: "flex", alignItems: "center", gap: "12px" },
-                      },
-                      React.createElement(Avatar, {
-                        name: `${patient.givenName} ${patient.familyName}`,
-                        size: "md",
-                      }),
-                      React.createElement(
-                        "div",
-                        { style: { flex: 1 } },
-                        React.createElement(
-                          "strong",
-                          null,
-                          `${patient.givenName} ${patient.familyName}`
-                        ),
-                        React.createElement(
-                          "div",
-                          { style: { display: "flex", gap: "8px", marginTop: "4px" } },
-                          React.createElement(Badge, { variant: "outline", children: `NID: ${patient.nationalId}` }),
-                          React.createElement(Badge, { variant: "outline", children: patient.sex }),
-                          React.createElement(Badge, { variant: "outline", children: patient.dateOfBirth })
-                        ),
-                        React.createElement(
-                          "p",
-                          { style: { fontSize: "12px", color: "#9CA3AF", marginTop: "4px" } },
-                          `CPID: ${patient.cpid}`
-                        )
-                      ),
-                      React.createElement(Button, {
-                        title: "Start Visit",
-                        variant: "primary",
-                        size: "sm",
-                        onPress: () => handleStartEncounter(patient),
-                        loading: startingEncounter,
-                        testID: `start-visit-${patient.id}`,
-                      })
-                    )
-                  )
-                )
-              )
-    )
+        {/* Results */}
+        {loading ? (
+          <LoadingSpinner size="md" />
+        ) : error ? (
+          <ErrorState title="Search Error" message={error} onRetry={handleSearch} />
+        ) : patients.length === 0 && query ? (
+          <EmptyState title="No patients found" message="Try a different search term" />
+        ) : (
+          patients.map((patient) => (
+            <Card key={patient.id}>
+              <CardBody>
+                <View testID={`patient-${patient.id}`} style={styles.patientRow}>
+                  <Avatar
+                    name={`${patient.givenName} ${patient.familyName}`}
+                    size="md"
+                  />
+                  <View style={styles.patientInfo}>
+                    <Text style={styles.bold}>
+                      {`${patient.givenName} ${patient.familyName}`}
+                    </Text>
+                    <View style={styles.badgeRow}>
+                      <Badge variant="outline">{`NID: ${patient.nationalId}`}</Badge>
+                      <Badge variant="outline">{patient.sex}</Badge>
+                      <Badge variant="outline">{patient.dateOfBirth}</Badge>
+                    </View>
+                    <Text style={styles.cpid}>
+                      {`CPID: ${patient.cpid}`}
+                    </Text>
+                  </View>
+                  <Button
+                    title="Start Visit"
+                    variant="primary"
+                    size="sm"
+                    onPress={() => handleStartEncounter(patient)}
+                    loading={startingEncounter}
+                    testID={`start-visit-${patient.id}`}
+                  />
+                </View>
+              </CardBody>
+            </Card>
+          ))
+        )}
+      </ScrollView>
+    </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 16,
+  },
+  searchRow: {
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 16,
+  },
+  patientRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  patientInfo: {
+    flex: 1,
+  },
+  bold: {
+    fontWeight: "bold",
+  },
+  badgeRow: {
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 4,
+  },
+  cpid: {
+    fontSize: 12,
+    color: "#9CA3AF",
+    marginTop: 4,
+  },
+});

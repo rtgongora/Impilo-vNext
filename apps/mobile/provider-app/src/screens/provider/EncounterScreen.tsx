@@ -5,6 +5,7 @@
  */
 
 import React, { useState, useCallback } from "react";
+import { View, Text, StyleSheet, ScrollView } from "react-native";
 import {
   Screen,
   Header,
@@ -58,125 +59,142 @@ export function EncounterScreen() {
   }, [activeEncounter, diagnoses]);
 
   if (!activeEncounter) {
-    return React.createElement(
-      Screen,
-      null,
-      React.createElement(Header, { title: "Encounter" }),
-      React.createElement(
-        "div",
-        { style: { padding: "16px", textAlign: "center" } },
-        React.createElement("p", null, "No active encounter. Search for a patient to start a visit.")
-      )
+    return (
+      <Screen>
+        <Header title="Encounter" />
+        <View style={styles.emptyContainer}>
+          <Text>No active encounter. Search for a patient to start a visit.</Text>
+        </View>
+      </Screen>
     );
   }
 
   const renderPanel = () => {
     switch (activeTab) {
       case "vitals":
-        return React.createElement(VitalsPanel, { encounterId: activeEncounter.id });
+        return <VitalsPanel encounterId={activeEncounter.id} />;
       case "diagnosis":
-        return React.createElement(DiagnosisPanel, { encounterId: activeEncounter.id });
+        return <DiagnosisPanel encounterId={activeEncounter.id} />;
       case "rx":
-        return React.createElement(PrescriptionPanel, {
-          encounterId: activeEncounter.id,
-          patientId: activeEncounter.patientId,
-        });
+        return (
+          <PrescriptionPanel
+            encounterId={activeEncounter.id}
+            patientId={activeEncounter.patientId}
+          />
+        );
       case "labs":
-        return React.createElement(LabOrderPanel, {
-          encounterId: activeEncounter.id,
-          patientId: activeEncounter.patientId,
-        });
+        return (
+          <LabOrderPanel
+            encounterId={activeEncounter.id}
+            patientId={activeEncounter.patientId}
+          />
+        );
       case "referrals":
-        return React.createElement(ReferralPanel, {
-          encounterId: activeEncounter.id,
-          patientId: activeEncounter.patientId,
-        });
+        return (
+          <ReferralPanel
+            encounterId={activeEncounter.id}
+            patientId={activeEncounter.patientId}
+          />
+        );
       case "notes":
-        return React.createElement(NotesPanel, { encounterId: activeEncounter.id });
+        return <NotesPanel encounterId={activeEncounter.id} />;
       default:
         return null;
     }
   };
 
-  return React.createElement(
-    Screen,
-    null,
-    React.createElement(Header, { title: `Encounter — ${activeEncounter.encounterType}` }),
-    React.createElement(
-      "div",
-      { "data-testid": "encounter-screen", style: { padding: "16px" } },
+  return (
+    <Screen>
+      <Header title={`Encounter — ${activeEncounter.encounterType}`} />
+      <ScrollView testID="encounter-screen" style={styles.container}>
+        {/* Encounter summary */}
+        <Card>
+          <CardBody>
+            <View style={styles.summaryRow}>
+              <View>
+                <Badge variant="primary">{activeEncounter.status}</Badge>
+                <Text style={styles.startedText}>
+                  {`Started: ${new Date(activeEncounter.startedAt).toLocaleTimeString()}`}
+                </Text>
+              </View>
+              <View style={styles.badgeRow}>
+                <Badge variant="outline">{`${vitals.length} vitals`}</Badge>
+                <Badge variant="outline">{`${diagnoses.length} Dx`}</Badge>
+                <Badge variant="outline">{`${prescriptions.length} Rx`}</Badge>
+                <Badge variant="outline">{`${labOrders.length} labs`}</Badge>
+                <Badge variant="outline">{`${referrals.length} refs`}</Badge>
+              </View>
+            </View>
+            {activeEncounter.chiefComplaint ? (
+              <Text style={styles.chiefComplaint}>
+                {`Chief Complaint: ${activeEncounter.chiefComplaint}`}
+              </Text>
+            ) : null}
+          </CardBody>
+        </Card>
 
-      // Encounter summary
-      React.createElement(
-        Card,
-        null,
-        React.createElement(
-          CardBody,
-          null,
-          React.createElement(
-            "div",
-            { style: { display: "flex", justifyContent: "space-between", alignItems: "center" } },
-            React.createElement(
-              "div",
-              null,
-              React.createElement(Badge, { variant: "primary", children: activeEncounter.status }),
-              React.createElement(
-                "span",
-                { style: { marginLeft: "8px", fontSize: "14px", color: "#6B7280" } },
-                `Started: ${new Date(activeEncounter.startedAt).toLocaleTimeString()}`
-              )
-            ),
-            React.createElement(
-              "div",
-              { style: { display: "flex", gap: "8px" } },
-              React.createElement(Badge, { variant: "outline", children: `${vitals.length} vitals` }),
-              React.createElement(Badge, { variant: "outline", children: `${diagnoses.length} Dx` }),
-              React.createElement(Badge, { variant: "outline", children: `${prescriptions.length} Rx` }),
-              React.createElement(Badge, { variant: "outline", children: `${labOrders.length} labs` }),
-              React.createElement(Badge, { variant: "outline", children: `${referrals.length} refs` })
-            )
-          ),
-          activeEncounter.chiefComplaint
-            ? React.createElement(
-                "p",
-                { style: { marginTop: "8px", fontSize: "14px" } },
-                `Chief Complaint: ${activeEncounter.chiefComplaint}`
-              )
-            : null
-        )
-      ),
+        {/* Encounter tabs */}
+        <View style={styles.tabContainer}>
+          <TabBar
+            items={TABS}
+            activeKey={activeTab}
+            onSelect={setActiveTab}
+          />
+        </View>
 
-      // Encounter tabs
-      React.createElement(
-        "div",
-        { style: { margin: "16px 0" } },
-        React.createElement(TabBar, {
-          items: TABS,
-          activeKey: activeTab,
-          onSelect: setActiveTab,
-        })
-      ),
+        {/* Active panel */}
+        {renderPanel()}
 
-      // Active panel
-      renderPanel(),
-
-      // Close encounter
-      error
-        ? React.createElement(ErrorState, { title: "Error", message: error })
-        : null,
-      React.createElement(
-        "div",
-        { style: { marginTop: "24px", display: "flex", gap: "12px" } },
-        React.createElement(Button, {
-          title: "Close Encounter",
-          variant: "primary",
-          onPress: handleCloseEncounter,
-          loading: closing,
-          disabled: diagnoses.length === 0,
-          testID: "close-encounter-btn",
-          accessibilityLabel: "Close this encounter",
-        })
-      )
-    )
+        {/* Close encounter */}
+        {error ? <ErrorState title="Error" message={error} /> : null}
+        <View style={styles.closeContainer}>
+          <Button
+            title="Close Encounter"
+            variant="primary"
+            onPress={handleCloseEncounter}
+            loading={closing}
+            disabled={diagnoses.length === 0}
+            testID="close-encounter-btn"
+            accessibilityLabel="Close this encounter"
+          />
+        </View>
+      </ScrollView>
+    </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 16,
+  },
+  emptyContainer: {
+    padding: 16,
+    alignItems: "center",
+  },
+  summaryRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  startedText: {
+    marginLeft: 8,
+    fontSize: 14,
+    color: "#6B7280",
+  },
+  badgeRow: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  chiefComplaint: {
+    marginTop: 8,
+    fontSize: 14,
+  },
+  tabContainer: {
+    marginVertical: 16,
+  },
+  closeContainer: {
+    marginTop: 24,
+    flexDirection: "row",
+    gap: 12,
+  },
+});

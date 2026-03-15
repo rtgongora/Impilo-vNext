@@ -3,6 +3,7 @@
  */
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import { View, Text, ScrollView, StyleSheet } from "react-native";
 import {
   Screen,
   Header,
@@ -32,7 +33,7 @@ export function ThreadViewScreen({ conversation, onBack }: ThreadViewScreenProps
   const [sending, setSending] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(0);
-  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const scrollViewRef = useRef<ScrollView | null>(null);
 
   const load = useCallback(async (pageNum: number, replace: boolean) => {
     setIsLoading(true);
@@ -55,7 +56,7 @@ export function ThreadViewScreen({ conversation, onBack }: ThreadViewScreenProps
   }, [load, conversation.id]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    scrollViewRef.current?.scrollToEnd({ animated: true });
   }, [messages]);
 
   const handleSend = useCallback(async () => {
@@ -74,132 +75,161 @@ export function ThreadViewScreen({ conversation, onBack }: ThreadViewScreenProps
 
   const isOwnMessage = (msg: Message) => msg.senderId === profile?.cpid;
 
-  return React.createElement(
-    Screen,
-    null,
-    React.createElement(Header, {
-      title: conversation.subject ?? "Conversation",
-      leftElement: React.createElement(Button, {
-        title: "\u2190 Back",
-        variant: "ghost",
-        size: "sm",
-        onPress: onBack,
-        testID: "thread-back",
-      }),
-    }),
-    React.createElement(
-      "div",
-      {
-        "data-testid": "thread-view-screen",
-        style: { display: "flex", flexDirection: "column", height: "100%", padding: "0" },
-      },
+  return (
+    <Screen>
+      <Header
+        title={conversation.subject ?? "Conversation"}
+        leftElement={
+          <Button
+            title={"\u2190 Back"}
+            variant="ghost"
+            size="sm"
+            onPress={onBack}
+            testID="thread-back"
+          />
+        }
+      />
+      <View testID="thread-view-screen" style={styles.container}>
+        {/* Messages list */}
+        <ScrollView
+          ref={scrollViewRef}
+          style={styles.messagesList}
+          contentContainerStyle={styles.messagesContent}
+        >
+          {hasMore ? (
+            <Button
+              title={isLoading ? "Loading..." : "Load older messages"}
+              variant="ghost"
+              size="sm"
+              onPress={() => load(page + 1, false)}
+              disabled={isLoading}
+              testID="load-older"
+            />
+          ) : null}
 
-      // Messages list
-      React.createElement(
-        "div",
-        {
-          style: {
-            flex: 1,
-            overflow: "auto",
-            padding: "16px",
-            display: "flex",
-            flexDirection: "column",
-            gap: "8px",
-          },
-        },
-        hasMore
-          ? React.createElement(Button, {
-              title: isLoading ? "Loading..." : "Load older messages",
-              variant: "ghost",
-              size: "sm",
-              onPress: () => load(page + 1, false),
-              disabled: isLoading,
-              testID: "load-older",
-            })
-          : null,
+          {error ? (
+            <ErrorState title="Error" message={error.message} onRetry={() => load(0, true)} />
+          ) : null}
 
-        error
-          ? React.createElement(ErrorState, { title: "Error", message: error.message, onRetry: () => load(0, true) })
-          : null,
-
-        isLoading && messages.length === 0
-          ? React.createElement(LoadingSpinner, { size: "md" })
-          : messages.map((msg) =>
-              React.createElement(
-                "div",
-                {
-                  key: msg.id,
-                  "data-testid": `message-${msg.id}`,
-                  style: {
-                    display: "flex",
-                    justifyContent: isOwnMessage(msg) ? "flex-end" : "flex-start",
-                    marginBottom: "4px",
-                  },
-                },
-                React.createElement(
-                  "div",
+          {isLoading && messages.length === 0 ? (
+            <LoadingSpinner size="md" />
+          ) : (
+            messages.map((msg) => (
+              <View
+                key={msg.id}
+                testID={`message-${msg.id}`}
+                style={[
+                  styles.messageRow,
                   {
-                    style: {
-                      maxWidth: "75%",
-                      padding: "10px 14px",
-                      borderRadius: "16px",
-                      backgroundColor: isOwnMessage(msg) ? "#2563EB" : "#F3F4F6",
-                      color: isOwnMessage(msg) ? "white" : "#111827",
-                    },
+                    justifyContent: isOwnMessage(msg) ? "flex-end" : "flex-start",
                   },
-                  !isOwnMessage(msg)
-                    ? React.createElement("p", {
-                        style: { fontSize: "12px", fontWeight: "600", color: "#6B7280", margin: "0 0 4px" },
-                      }, msg.senderName)
-                    : null,
-                  React.createElement("p", { style: { fontSize: "14px", margin: 0, lineHeight: "1.4" } }, msg.body),
-                  React.createElement("span", {
-                    style: {
-                      fontSize: "11px",
-                      color: isOwnMessage(msg) ? "rgba(255,255,255,0.7)" : "#9CA3AF",
-                      display: "block",
-                      textAlign: "right",
-                      marginTop: "4px",
+                ]}
+              >
+                <View
+                  style={[
+                    styles.messageBubble,
+                    {
+                      backgroundColor: isOwnMessage(msg) ? "#2563EB" : "#F3F4F6",
                     },
-                  }, new Date(msg.sentAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }))
-                )
-              )
-            ),
+                  ]}
+                >
+                  {!isOwnMessage(msg) ? (
+                    <Text style={styles.senderName}>{msg.senderName}</Text>
+                  ) : null}
+                  <Text
+                    style={[
+                      styles.messageBody,
+                      { color: isOwnMessage(msg) ? "white" : "#111827" },
+                    ]}
+                  >
+                    {msg.body}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.messageTime,
+                      {
+                        color: isOwnMessage(msg) ? "rgba(255,255,255,0.7)" : "#9CA3AF",
+                      },
+                    ]}
+                  >
+                    {new Date(msg.sentAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  </Text>
+                </View>
+              </View>
+            ))
+          )}
+        </ScrollView>
 
-        React.createElement("div", { ref: messagesEndRef })
-      ),
-
-      // Message input
-      React.createElement(
-        "div",
-        {
-          style: {
-            padding: "12px 16px",
-            borderTop: "1px solid #E5E7EB",
-            display: "flex",
-            gap: "8px",
-            alignItems: "center",
-            backgroundColor: "white",
-          },
-        },
-        React.createElement(
-          "div",
-          { style: { flex: 1 } },
-          React.createElement(TextField, {
-            value: newMessage,
-            onChange: setNewMessage,
-            placeholder: "Type a message...",
-            testID: "message-input",
-          })
-        ),
-        React.createElement(Button, {
-          title: sending ? "..." : "Send",
-          variant: "primary",
-          onPress: handleSend,
-          disabled: sending || !newMessage.trim(),
-          testID: "send-message",
-        })
-      )
-    )
+        {/* Message input */}
+        <View style={styles.inputContainer}>
+          <View style={styles.inputField}>
+            <TextField
+              value={newMessage}
+              onChange={setNewMessage}
+              placeholder="Type a message..."
+              testID="message-input"
+            />
+          </View>
+          <Button
+            title={sending ? "..." : "Send"}
+            variant="primary"
+            onPress={handleSend}
+            disabled={sending || !newMessage.trim()}
+            testID="send-message"
+          />
+        </View>
+      </View>
+    </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  messagesList: {
+    flex: 1,
+  },
+  messagesContent: {
+    padding: 16,
+    gap: 8,
+  },
+  messageRow: {
+    flexDirection: "row",
+    marginBottom: 4,
+  },
+  messageBubble: {
+    maxWidth: "75%",
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 16,
+  },
+  senderName: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#6B7280",
+    marginBottom: 4,
+  },
+  messageBody: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  messageTime: {
+    fontSize: 11,
+    textAlign: "right",
+    marginTop: 4,
+  },
+  inputContainer: {
+    padding: 12,
+    paddingHorizontal: 16,
+    borderTopWidth: 1,
+    borderTopColor: "#E5E7EB",
+    flexDirection: "row",
+    gap: 8,
+    alignItems: "center",
+    backgroundColor: "white",
+  },
+  inputField: {
+    flex: 1,
+  },
+});
