@@ -1,0 +1,26 @@
+{
+  "name": "@impilo/mobile-design-system",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Shared design system for Impilo mobile apps. Design tokens, UI primitives, layout, forms, clinical components, and feedback states.",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "type-check": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "peerDependencies": {
+    "react": "^18.2.0",
+    "react-native": ">=0.73.0"
+  },
+  "devDependencies": {
+    "typescript": "~5.5.4",
+    "vitest": "^2.1.0",
+    "react": "^18.3.1",
+    "@types/react": "^18.3.11"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

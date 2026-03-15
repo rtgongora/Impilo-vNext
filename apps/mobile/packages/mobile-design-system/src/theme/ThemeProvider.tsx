@@ -1,0 +1,137 @@
+/**
+ * Theme Provider — Light/dark mode support with tenant-configurable accent color.
+ *
+ * Wraps the app root and provides theme context to all components.
+ */
+
+import React, { createContext, useContext, useState, useCallback, useMemo } from "react";
+import { colors } from "../tokens/colors";
+
+export type ThemeMode = "light" | "dark" | "system";
+
+export interface Theme {
+  mode: ThemeMode;
+  resolvedMode: "light" | "dark";
+  colors: {
+    background: string;
+    surface: string;
+    surfaceVariant: string;
+    text: string;
+    textSecondary: string;
+    textTertiary: string;
+    border: string;
+    divider: string;
+    primary: string;
+    primaryContainer: string;
+    onPrimary: string;
+    secondary: string;
+    error: string;
+    errorContainer: string;
+    success: string;
+    warning: string;
+    info: string;
+    overlay: string;
+  };
+  accentColor?: string;
+}
+
+const lightTheme: Theme = {
+  mode: "light",
+  resolvedMode: "light",
+  colors: {
+    background: colors.neutral[0],
+    surface: colors.neutral[0],
+    surfaceVariant: colors.neutral[50],
+    text: colors.neutral[900],
+    textSecondary: colors.neutral[600],
+    textTertiary: colors.neutral[500],
+    border: colors.neutral[300],
+    divider: colors.neutral[200],
+    primary: colors.primary[600],
+    primaryContainer: colors.primary[50],
+    onPrimary: colors.neutral[0],
+    secondary: colors.secondary[600],
+    error: colors.error.main,
+    errorContainer: colors.error.light,
+    success: colors.success.main,
+    warning: colors.warning.main,
+    info: colors.info.main,
+    overlay: "rgba(0, 0, 0, 0.5)",
+  },
+};
+
+const darkTheme: Theme = {
+  mode: "dark",
+  resolvedMode: "dark",
+  colors: {
+    background: colors.neutral[900],
+    surface: colors.neutral[800],
+    surfaceVariant: colors.neutral[700],
+    text: colors.neutral[50],
+    textSecondary: colors.neutral[400],
+    textTertiary: colors.neutral[500],
+    border: colors.neutral[600],
+    divider: colors.neutral[700],
+    primary: colors.primary[300],
+    primaryContainer: colors.primary[900],
+    onPrimary: colors.neutral[900],
+    secondary: colors.secondary[300],
+    error: colors.error.light,
+    errorContainer: colors.error.dark,
+    success: colors.success.light,
+    warning: colors.warning.light,
+    info: colors.info.light,
+    overlay: "rgba(0, 0, 0, 0.7)",
+  },
+};
+
+interface ThemeContextValue {
+  theme: Theme;
+  mode: ThemeMode;
+  setMode: (mode: ThemeMode) => void;
+  setAccentColor: (color: string) => void;
+}
+
+const ThemeContext = createContext<ThemeContextValue | null>(null);
+
+export function ThemeProvider({
+  children,
+  defaultMode = "light",
+  accentColor,
+}: {
+  children: React.ReactNode;
+  defaultMode?: ThemeMode;
+  accentColor?: string;
+}) {
+  const [mode, setMode] = useState<ThemeMode>(defaultMode);
+  const [accent, setAccentColor] = useState<string | undefined>(accentColor);
+
+  const resolvedMode = mode === "system" ? "light" : mode; // System detection delegated to native
+
+  const theme = useMemo<Theme>(() => {
+    const base = resolvedMode === "dark" ? darkTheme : lightTheme;
+    if (accent) {
+      return {
+        ...base,
+        accentColor: accent,
+        colors: { ...base.colors, primary: accent },
+      };
+    }
+    return base;
+  }, [resolvedMode, accent]);
+
+  const value = useMemo<ThemeContextValue>(
+    () => ({ theme, mode, setMode, setAccentColor }),
+    [theme, mode]
+  );
+
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
+}
+
+export function useTheme(): ThemeContextValue {
+  const ctx = useContext(ThemeContext);
+  if (!ctx) {
+    throw new Error("useTheme must be used within a ThemeProvider");
+  }
+  return ctx;
+}
