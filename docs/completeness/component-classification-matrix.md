@@ -88,7 +88,7 @@
 | Service | Src | Test | Mig | Helm | Classification | Notes |
 |---------|-----|------|-----|------|---------------|-------|
 | integration-hub | 35 | 4 | 3 | Y | **COMPLETE** | Route management, message dispatch, dead-letter, connectors |
-| notification-service | 38 | 4 | 3 | Y | **COMPLETE** | Multi-channel notifications, templates, receipts |
+| notification-service | 38 | 4 | 3 | Y | **COMPLETE** | Multi-channel notifications, templates, receipts; 6 repos + 4 services |
 | jobs-service | 16 | 2 | 1 | Y | **ADEQUATE** | Job scheduling — functional but thin |
 | offline-sync-service | 18 | 2 | 2 | Y | **ADEQUATE** | Offline sync coordination |
 | offline-edge-service | 32 | 8 | 4 | N | **COMPLETE** | Conflict resolution, review queue, wave15 sync |
@@ -114,11 +114,11 @@
 | workflow-service | 20 | 2 | 2 | N | **ADEQUATE** | Workflow definitions and instances, state transitions |
 | schema-registry-service | 11 | 2 | 1 | N | **ADEQUATE** | Schema versioning |
 | data-ingestion-service | 17 | 2 | 3 | N | **ADEQUATE** | Bronze layer ingestion, dead-letter |
-| data-governance-service | 34 | 2 | 4 | N | **ADEQUATE** | Data governance policies and rules |
+| data-governance-service | 34 | 2 | 4 | N | **ADEQUATE** | Data governance policies and rules; 6 repos + 6 entities |
 | data-access-governance-service | 25 | 8 | 1 | N | **COMPLETE** | DAG access control with comprehensive tests |
 | data-warehouse-service | 19 | 3 | 2 | N | **ADEQUATE** | Gold table management |
 | data-pipeline-service | 24 | 7 | 1 | N | **COMPLETE** | Data pipeline orchestration with tests |
-| surveillance-service | 28 | 6 | 2 | N | **COMPLETE** | Disease surveillance, alerts, counters |
+| surveillance-service | 28 | 6 | 2 | N | **COMPLETE** | Disease surveillance, signal evaluation, case registry; 7 repos |
 | asset-registry-service | 14 | 2 | 3 | N | **ADEQUATE** | Asset lifecycle management |
 | dispatch-service | 18 | 2 | 2 | N | **ADEQUATE** | Dispatch management |
 | iot-ingestion-service | 15 | 2 | 2 | N | **ADEQUATE** | IoT telemetry ingestion |
