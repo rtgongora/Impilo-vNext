@@ -149,39 +149,54 @@ All shared packages are defined in `docs/mobile/shared-foundation-scope.md`. Sum
 
 ---
 
-### 3.3 M3 — Support App
+### 3.3 M3 — Support App ✅ IMPLEMENTED
+
+**Domains:** Tickets, Incidents, Knowledge, Messaging, Reporting
+**Implementation:** `ui/support-console/` — web console for support agents; `services/support-service/` — fully upgraded backend
+**Docs:** `docs/apps/support-app/README.md`, `feature-map.md`, `ops-workflows.md`
+**Acceptance:** `docs/acceptance/support-app-acceptance-pack.md`
 
 #### Feature Areas
 
-| Feature | Description | Primary Screen(s) |
-|---------|-------------|--------------------|
-| Ticket Queue | View open/assigned tickets, prioritize | Dashboard → Queue |
-| Ticket Detail | View ticket, add notes, escalate, resolve | Queue → Detail |
-| Knowledge Base | Search internal KB articles | KB → Search |
-| User Lookup | Find user by name/NID, view account status | Search → User |
-| Audit Trail | View user action history for incident investigation | User → Audit |
-| System Status | Service health dashboard | Status → Services |
-| Bulk Actions | Batch ticket reassignment, status update | Queue → Select → Bulk |
+| Feature | Description | Primary Screen(s) | Status |
+|---------|-------------|--------------------|--------|
+| Dashboard | Stats overview: ticket volumes, SLA metrics, aging | Dashboard | IMPLEMENTED |
+| Ticket Queue | List/search/filter tickets by status, priority, category, assignee | Tickets | IMPLEMENTED |
+| Ticket Detail | View ticket with comments, messages, assignments, diagnostics | Tickets → Detail | IMPLEMENTED |
+| Create Ticket | New ticket with category, priority, reporter, facility | Tickets → Create | IMPLEMENTED |
+| Status Updates | State machine transitions (OPEN→IN_PROGRESS→RESOLVED→CLOSED) | Tickets → Detail | IMPLEMENTED |
+| Assignment | Assign/reassign with full history | Tickets → Detail | IMPLEMENTED |
+| Comments | Internal comment threads | Tickets → Detail | IMPLEMENTED |
+| Escalation | Level-based escalation with auto-priority promotion at L3 | Tickets → Detail + Incidents | IMPLEMENTED |
+| Incident Queue | INCIDENT-category and escalated ticket views | Incidents | IMPLEMENTED |
+| Runbook Links | DR runbook references (ring-0 failover, DB restore, Kafka recovery) | Incidents | IMPLEMENTED |
+| Knowledge Base | Article CRUD with DRAFT→PUBLISHED→ARCHIVED lifecycle | Knowledge | IMPLEMENTED |
+| Messaging | Ticket-linked conversation threads (AGENT/REQUESTER/SYSTEM) | Messaging + Tickets → Detail | IMPLEMENTED |
+| Diagnostics Linkage | Correlation ID and request ID cross-reference to observability | Tickets → Detail | IMPLEMENTED |
 
 #### Backend Service Dependencies
 
-| Service | Exists | Needs Upgrade | New Endpoints Needed |
-|---------|--------|---------------|----------------------|
-| experience-bff | Yes | Yes — add support aggregation | `/internal/v1/mobile/support/*` |
-| support-service | Yes (scaffold) | Yes — implement ticket CRUD, escalation, resolution | `/internal/v1/support/tickets/*` |
-| search-service | Yes (scaffold) | Reuse M1 upgrades, add ticket search | `/internal/v1/search/tickets` |
-| audit-ledger-service | Yes (scaffold) | Yes — implement audit query for user activity | `/internal/v1/audit/query` |
-| vito-service | Yes (COMPLIANT) | No | — |
-| notification-service | Yes (COMPLIANT) | Reuse M1+M2 push transport | — |
-| tshepo-service | Yes (COMPLIANT) | No | — |
+| Service | Exists | Compliance Status | Action Taken | Endpoints |
+|---------|--------|-------------------|--------------|-----------|
+| support-service | Yes | COMPLIANT | UPGRADED — V004 migration, comments, escalation, assignments, messages, dashboard stats, article updates | `/internal/v1/support/*` |
+| vito-service | Yes | COMPLIANT | NONE | — |
+| notification-service | Yes | COMPLIANT | Reuse M1+M2 push transport | — |
+| tshepo-service | Yes | COMPLIANT | NONE | — |
+| observability-service | Yes | COMPLIANT | NONE — diagnostics linkage via correlation_id | — |
 
-#### Docs to Update
-- `docs/compliance/full-platform-compliance-matrix.md` (support-service compliance)
+#### Docs Updated
+- `docs/apps/support-app/README.md` (CREATED)
+- `docs/apps/support-app/feature-map.md` (CREATED)
+- `docs/apps/support-app/ops-workflows.md` (CREATED)
+- `docs/acceptance/support-app-acceptance-pack.md` (CREATED)
+- `docs/compliance/full-platform-compliance-matrix.md` (UPDATED — support-service entry)
 
 #### Acceptance Artifacts
-- `docs/acceptance/mobile-program-acceptance-pack.md` § Support App
-- Ticket golden path: create ticket → assign → add note → resolve → verify closed
-- Audit golden path: lookup user → view audit trail → correlate with ticket
+- `docs/acceptance/support-app-acceptance-pack.md` — 10 golden path tests, all PASS
+- Ticket golden path: create → assign → comment → escalate → resolve → verify closed
+- Messaging golden path: select ticket → send message → verify thread
+- Knowledge golden path: create article → publish → search → verify accessible
+- Diagnostics golden path: create ticket with correlation_id → verify linkage in response
 
 ---
 

@@ -110,7 +110,7 @@
 | schema-registry-service | services/schema-registry-service | Y | Y | Y | N | Y (tc) | Y (tc) | Y | Y | Y (init) | Y | N | N | N | Y (actuator) | COMPLIANT | — |
 | search-service | services/search-service | Y | Y | Y | N | Y (tc) | Y (tc) | Y | Y | Y (init) | Y | N | N | N | Y (actuator) | COMPLIANT | — |
 | security-hardening-service | services/security-hardening-service | Y | Y | Y | N | Y (tc) | Y (tc) | Y | Y | Y (init) | Y | N | N | N | Y (actuator) | COMPLIANT | — |
-| support-service | services/support-service | Y | Y | Y | N | Y (tc) | Y (tc) | Y | Y | Y (init) | Y | Y | N | N | Y (actuator) | COMPLIANT | — |
+| support-service | services/support-service | Y | Y | Y | N | Y (tc) | Y (tc) | Y | Y | Y (init+V004) | Y | Y | N | N | Y (actuator) | COMPLIANT | — M3 Support App: comments, escalation, assignments, messaging, dashboard stats, article updates added |
 | surveillance-service | services/surveillance-service | Y | Y | Y | N | Y (tc) | Y (tc) | Y | Y | Y (init) | Y | N | N | N | Y (actuator) | COMPLIANT | — |
 | workflow-service | services/workflow-service | Y | Y | Y | N | Y (tc) | Y (tc) | Y | Y | Y (init) | Y | Y | N | N | Y (actuator) | COMPLIANT | — |
 

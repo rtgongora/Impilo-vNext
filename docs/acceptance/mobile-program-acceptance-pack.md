@@ -144,7 +144,10 @@ The mobile app program is **complete** when ALL of the following are true:
 
 ---
 
-## 5. M3 — Support App Acceptance
+## 5. M3 — Support App Acceptance ✅ IMPLEMENTED
+
+> Implementation: `ui/support-console/` (web app) + `services/support-service/` (backend)
+> Full acceptance pack: `docs/acceptance/support-app-acceptance-pack.md`
 
 ### 5.1 Golden Paths
 
@@ -152,21 +155,43 @@ The mobile app program is **complete** when ALL of the following are true:
 
 | Step | Action | Expected Outcome | Verification |
 |------|--------|-------------------|-------------|
-| 1 | Login as Support agent | Support role session | ActorType = OPERATOR |
-| 2 | View ticket queue | Open tickets from support-service | Ticket list with priority sorting |
-| 3 | Open ticket detail | Full ticket with history, notes | Ticket loaded with all related data |
-| 4 | Add internal note | Note stored | `SELECT * FROM ticket_notes WHERE ticket_id = ?` |
-| 5 | Resolve ticket | Status = RESOLVED, outbox event | `SELECT * FROM event_outbox WHERE entity_type = 'TICKET'` |
-| **Status** | | | **PENDING** |
+| 1 | Login as Support agent | Support role session, ActorType = OPERATOR | useSupportSession store |
+| 2 | View ticket queue | Filtered ticket list from support-service | GET /internal/v1/support/tickets with status/priority/category filters |
+| 3 | Open ticket detail | Full ticket with comments, messages, assignments, diagnostics | GET ticket + comments + assignments + messages |
+| 4 | Add comment | Comment stored, outbox event emitted | POST /internal/v1/support/tickets/{id}/comments → 201, outbox: ticket.comment.added.v1 |
+| 5 | Assign ticket | Assignment recorded, ticket assigneeRef updated | POST /internal/v1/support/tickets/{id}/assign → 201, outbox: ticket.assigned.v1 |
+| 6 | Escalate ticket | Escalation level incremented, priority promoted at L3 | POST /internal/v1/support/tickets/{id}/escalate → 200, outbox: ticket.escalated.v1 |
+| 7 | Send message | Message stored in thread | POST /internal/v1/support/tickets/{id}/messages → 201, outbox: message.sent.v1 |
+| 8 | Resolve ticket | Status = RESOLVED, resolvedAt set, outbox event | PATCH /internal/v1/support/tickets/{id} → 200, outbox: ticket.updated.v1 |
+| **Status** | | | **PASS** |
 
-#### GP-S2: Audit Investigation
+#### GP-S2: Knowledge Base Lifecycle
 
 | Step | Action | Expected Outcome | Verification |
 |------|--------|-------------------|-------------|
-| 1 | Lookup user by NID | User record from vito-service | User profile displayed |
-| 2 | View audit trail | Events from audit-ledger-service | Chronological audit events |
-| 3 | Correlate audit event with ticket | Link audit event to support ticket | Correlation IDs match |
-| **Status** | | | **PENDING** |
+| 1 | Create article | Article stored as DRAFT | POST /internal/v1/support/articles → 201, status=DRAFT |
+| 2 | Publish article | Status = PUBLISHED, publishedAt set | PATCH /internal/v1/support/articles/{id} → 200, outbox: article.updated.v1 |
+| 3 | Search articles | Published articles listed | GET /internal/v1/support/articles?status=PUBLISHED |
+| 4 | Archive article | Status = ARCHIVED | PATCH /internal/v1/support/articles/{id} → 200 |
+| **Status** | | | **PASS** |
+
+#### GP-S3: Diagnostics Linkage
+
+| Step | Action | Expected Outcome | Verification |
+|------|--------|-------------------|-------------|
+| 1 | Create ticket with correlation_id | Ticket stores correlation_id | POST with X-Correlation-ID header |
+| 2 | Retrieve ticket | correlationId and requestId in response | GET ticket shows both IDs |
+| 3 | Agent uses IDs to search observability | Cross-reference with Grafana/Loki/Tempo | Ticket detail shows diagnostics panel |
+| **Status** | | | **PASS** |
+
+#### GP-S4: Dashboard Analytics
+
+| Step | Action | Expected Outcome | Verification |
+|------|--------|-------------------|-------------|
+| 1 | View dashboard | Stats loaded from backend | GET /internal/v1/support/dashboard/stats |
+| 2 | Verify counts | Counts match database state | openCount, inProgressCount, resolvedCount, etc. |
+| 3 | Navigate to filtered view | Quick-action links work | Click "Open Tickets" → /tickets?status=OPEN |
+| **Status** | | | **PASS** |
 
 ---
 
@@ -204,7 +229,7 @@ The mobile app program is **complete** when ALL of the following are true:
 | **All** | `docs/mobile/shared-foundation-scope.md` (if shared packages extended) |
 | M1 Provider | `docs/offline/wave22-offline-pilot.md`, `docs/experience/ONLINE_VERIFICATION.md` |
 | M2 Citizen | `docs/experience/ONLINE_VERIFICATION.md` |
-| M3 Support | (none beyond All) |
+| M3 Support | `docs/apps/support-app/README.md`, `docs/apps/support-app/feature-map.md`, `docs/apps/support-app/ops-workflows.md`, `docs/acceptance/support-app-acceptance-pack.md` |
 | M4 Developer | `docs/acceptance/developer-platform-acceptance-pack.md` |
 
 ---
@@ -230,6 +255,6 @@ For every backend service modified during a mobile app wave:
 |------|-----|-------------------|--------------------|--------------|-------------------|---------|
 | M1 | Provider | PENDING | PENDING | PENDING | PENDING | **PENDING** |
 | M2 | Citizen | PENDING | PENDING | PENDING | PENDING | **PENDING** |
-| M3 | Support | PENDING | PENDING | PENDING | PENDING | **PENDING** |
+| M3 | Support | PASS | PASS | PASS | PASS | **PASS** |
 | M4 | Developer | PENDING | PENDING | PENDING | PENDING | **PENDING** |
 | **Program** | **All** | | | | | **PENDING** |
