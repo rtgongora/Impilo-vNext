@@ -1,5 +1,9 @@
 package zw.gov.mohcc.impilo.experience.controller.mobile;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
@@ -8,6 +12,7 @@ import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.controller.ResourceNotFoundException;
 import zw.gov.mohcc.impilo.experience.service.OutboxService;
 
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.*;
 
@@ -15,6 +20,7 @@ import java.util.*;
  * Mobile inventory endpoints.
  * GET  /internal/v1/mobile/provider/inventory/stock?facility_id=         - stock items
  * GET  /internal/v1/mobile/provider/inventory/stock/alerts?facility_id=  - stock alerts
+ * POST /internal/v1/mobile/provider/inventory/dispatches                 - create dispatch
  * GET  /internal/v1/mobile/provider/inventory/dispatches?facility_id=    - dispatches
  * POST /internal/v1/mobile/provider/inventory/dispatches/{id}/confirm    - confirm delivery
  */
@@ -147,6 +153,98 @@ public class MobileInventoryController {
         ));
 
         return ResponseEntity.ok(response);
+    }
+
+    public record CreateDispatchRequest(
+            @NotBlank String source_facility_id,
+            @NotBlank String destination_facility_id,
+            @NotNull List<DispatchLineItem> items,
+            String notes
+    ) {}
+
+    public record DispatchLineItem(
+            @NotBlank String item_code,
+            @NotNull BigDecimal quantity,
+            String batch_number
+    ) {}
+
+    @PostMapping("/dispatches")
+    @Transactional
+    public ResponseEntity<Map<String, Object>> createDispatch(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.POD_ID) String podId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
+            @Valid @RequestBody CreateDispatchRequest request) {
+
+        UUID dispatchId = UUID.randomUUID();
+        OffsetDateTime now = OffsetDateTime.now();
+        String dispatchNumber = "DSP-" + now.toEpochSecond();
+
+        jdbcTemplate.update("""
+            INSERT INTO inventory_dispatches
+                (id, tenant_id, source_facility_id, destination_facility_id, dispatch_number,
+                 status, dispatched_at, notes, created_at, updated_at)
+            VALUES (?, ?, ?::uuid, ?::uuid, ?, 'IN_TRANSIT', ?, ?, ?, ?)
+            """,
+                dispatchId, tenantId, request.source_facility_id(),
+                request.destination_facility_id(), dispatchNumber,
+                now, request.notes(), now, now);
+
+        for (DispatchLineItem item : request.items()) {
+            UUID lineId = UUID.randomUUID();
+            jdbcTemplate.update("""
+                INSERT INTO dispatch_line_items
+                    (id, dispatch_id, item_code, quantity, batch_number, created_at)
+                VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                    lineId, dispatchId, item.item_code(), item.quantity(),
+                    item.batch_number(), now);
+        }
+
+        outboxService.writeOutboxEvent(
+                "impilo.experience.dispatch.created.v1",
+                correlationId,
+                requestId,
+                idempotencyKey != null ? idempotencyKey : requestId,
+                tenantId,
+                podId,
+                "InventoryDispatch",
+                dispatchId.toString(),
+                Map.of(
+                        "dispatch_id", dispatchId.toString(),
+                        "source_facility_id", request.source_facility_id(),
+                        "destination_facility_id", request.destination_facility_id(),
+                        "dispatch_number", dispatchNumber,
+                        "item_count", String.valueOf(request.items().size()),
+                        "status", "IN_TRANSIT"
+                ),
+                Map.of()
+        );
+
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("source_facility_id", request.source_facility_id());
+        attributes.put("destination_facility_id", request.destination_facility_id());
+        attributes.put("dispatch_number", dispatchNumber);
+        attributes.put("status", "IN_TRANSIT");
+        attributes.put("item_count", request.items().size());
+        attributes.put("notes", request.notes());
+        attributes.put("dispatched_at", now);
+        attributes.put("created_at", now);
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", Map.of(
+                "id", dispatchId.toString(),
+                "type", "InventoryDispatch",
+                "attributes", attributes
+        ));
+        response.put("meta", Map.of(
+                "request_id", requestId,
+                "correlation_id", correlationId
+        ));
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping("/dispatches")
