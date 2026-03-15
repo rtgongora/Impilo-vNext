@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.companion.error.ErrorEnvelopeWriter;
 import zw.gov.mohcc.impilo.federation.identity.PodIdentityVerifier;
+import zw.gov.mohcc.impilo.federation.identity.PodRevocationChecker;
 import zw.gov.mohcc.impilo.federation.identity.PodVerificationResult;
 
 import java.io.IOException;
@@ -20,6 +21,7 @@ import java.util.UUID;
  *
  * <p>For each matching request:
  * <ol>
+ *   <li>Checks revocation cache — revoked pods are blocked immediately (403 POD_REVOKED)</li>
  *   <li>Extracts X-Pod-ID header and Authorization Bearer token</li>
  *   <li>Delegates to {@link PodIdentityVerifier} for mTLS/JWT verification</li>
  *   <li>Validates that X-Pod-ID matches the pod_id in the JWT claims</li>
@@ -32,11 +34,19 @@ import java.util.UUID;
 public class FederationIdentityFilter implements Filter {
 
     public static final String ERROR_CODE = "FEDERATION_IDENTITY_INVALID";
+    public static final String POD_REVOKED_CODE = "POD_REVOKED";
 
     private final PodIdentityVerifier podIdentityVerifier;
+    private final PodRevocationChecker revocationChecker;
 
     public FederationIdentityFilter(PodIdentityVerifier podIdentityVerifier) {
+        this(podIdentityVerifier, null);
+    }
+
+    public FederationIdentityFilter(PodIdentityVerifier podIdentityVerifier,
+                                     PodRevocationChecker revocationChecker) {
         this.podIdentityVerifier = podIdentityVerifier;
+        this.revocationChecker = revocationChecker;
     }
 
     @Override
@@ -75,6 +85,16 @@ public class FederationIdentityFilter implements Filter {
         // National pod bypasses federation identity verification
         if ("national".equalsIgnoreCase(podId)) {
             chain.doFilter(request, response);
+            return;
+        }
+
+        // Check revocation cache — revoked pods are blocked before any JWT work
+        if (revocationChecker != null && revocationChecker.isRevoked(podId)) {
+            ErrorEnvelopeWriter.write(httpRes, 403,
+                    POD_REVOKED_CODE,
+                    "Pod '" + podId + "' has been revoked",
+                    Map.of("pod_id", podId),
+                    requestId, correlationId);
             return;
         }
 

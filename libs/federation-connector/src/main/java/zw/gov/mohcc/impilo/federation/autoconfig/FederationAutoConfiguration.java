@@ -12,6 +12,9 @@ import zw.gov.mohcc.impilo.federation.filter.FederationIdentityFilter;
 import zw.gov.mohcc.impilo.federation.identity.DefaultPodIdentityVerifier;
 import zw.gov.mohcc.impilo.federation.identity.JwtAudienceVerifier;
 import zw.gov.mohcc.impilo.federation.identity.PodIdentityVerifier;
+import zw.gov.mohcc.impilo.federation.identity.PodRevocationChecker;
+
+import org.springframework.beans.factory.ObjectProvider;
 
 /**
  * Spring Boot auto-configuration for the Federation Connector.
@@ -64,9 +67,11 @@ public class FederationAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(name = "federationIdentityFilter")
     public FilterRegistrationBean<FederationIdentityFilter> federationIdentityFilter(
-            PodIdentityVerifier podIdentityVerifier) {
+            PodIdentityVerifier podIdentityVerifier,
+            ObjectProvider<PodRevocationChecker> revocationCheckerProvider) {
         FilterRegistrationBean<FederationIdentityFilter> reg = new FilterRegistrationBean<>();
-        reg.setFilter(new FederationIdentityFilter(podIdentityVerifier));
+        PodRevocationChecker checker = revocationCheckerProvider.getIfAvailable();
+        reg.setFilter(new FederationIdentityFilter(podIdentityVerifier, checker));
         reg.addUrlPatterns(FEDERATION_URL_PATTERNS);
         reg.setOrder(9); // Before V11HeaderFilter (10)
         reg.setName("federationIdentityFilter");

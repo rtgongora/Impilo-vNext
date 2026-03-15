@@ -42,7 +42,7 @@ class FederationGuardLegacySafetyTest {
         FederationNotAuthorizedException ex = assertThrows(
                 FederationNotAuthorizedException.class,
                 () -> guard.requireNationalPodForMerge("pod-harare"));
-        assertEquals("FEDERATION_NOT_AUTHORIZED", ex.getMessage());
+        assertEquals("FEDERATION_AUTHORITY_VIOLATION", ex.getMessage());
         assertEquals("pod-harare", ex.getPodId());
     }
 
