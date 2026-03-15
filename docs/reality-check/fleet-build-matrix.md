@@ -26,14 +26,17 @@ The platform has **67 backend services** in a Maven reactor, **12 shared librari
 | offline-sdk | Java | Yes (standalone) | Jackson |
 | shared-kernel | JS/TS | npm package | TypeScript |
 
-**Build Order**: libs must be built BEFORE the services reactor. They are standalone POMs, NOT included in the services/pom.xml reactor.
+**Build Order**: The `services/pom.xml` reactor includes all libs via `../libs/` relative path modules. A single `mvn` invocation builds everything in dependency order.
+
+- **TIER 1 libs** (tshepo-contracts, tech-companion, etc.) use `services/pom.xml` as parent
+- **TIER 0 libs** (shared-kernel-java, security-baseline, contract-tests, offline-sdk) have standalone POMs but are still included as reactor modules
 
 ### Tier 2: Backend Services (services/ Maven Reactor)
 
 - **Parent POM**: `services/pom.xml` (impilo-parent, Spring Boot 3.3.6)
-- **Modules**: 67 services + shared-core in reactor
+- **Modules**: 78 total (66 services + shared-core + 12 libs via `../libs/` paths)
 - **Build command**: `cd services && mvn -B clean compile -DskipTests -T 1C --fail-at-end`
-- **Dependencies on libs**: Services reference libs via `${project.version}` → libs must be `mvn install`'d first
+- **Maven auto-computes build order** from dependency graph; libs build first automatically
 
 ### Tier 3: UI Workspace (ui/)
 
@@ -70,7 +73,7 @@ See: `scripts/reality-check/build-fleet.sh`
 | Check | Status | Impact | Mitigation |
 |---|---|---|---|
 | No root-level build orchestrator | GAP | No single command builds entire fleet | Created `scripts/reality-check/build-fleet.sh` |
-| Libs not in reactor | DESIGN | Must `mvn install` libs before services | Documented in build-fleet.sh |
+| TIER 0 libs have standalone POMs | DESIGN | Version mismatch risk if updated independently | Included in reactor via `../libs/` module refs |
 | 38/67 services missing Dockerfiles | GAP | Cannot containerize full fleet | See list below |
 | Docker build compose only builds Maven + Experience UI | GAP | Doesn't build all UIs or mobile | `docker-compose.build.yml` is limited |
 
