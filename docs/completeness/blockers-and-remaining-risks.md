@@ -92,7 +92,16 @@
 
 ## Low Risks
 
-### 🟢 R-009: Inconsistent Outbox Naming
+### 🟡 R-009: Web UI Port Conflicts
+**Component**: `ui/butano-web`, `ui/support-console`, `ui/pct-web`, `ui/developer-console`, `ui/msika-web`, `ui/msika-flow-portal`
+**Description**: Three port conflicts detected in package.json dev scripts:
+- Port 3006: butano-web ↔ support-console
+- Port 3007: pct-web ↔ developer-console
+- Port 3012: msika-web ↔ msika-flow-portal
+**Impact**: Cannot run conflicting apps simultaneously during local development.
+**Mitigation**: Reassign ports for conflicting apps. Use unique ports per CLAUDE.md service port map.
+
+### 🟢 R-010-a: Inconsistent Outbox Naming
 **Component**: Multiple services
 **Description**: Some services use `EventOutboxEntity`, others use `OutboxEventEntity`. Some use `EventOutboxRepository`, others `OutboxEventRepository`. Functionality is identical.
 **Impact**: Code search confusion. No runtime impact.
@@ -136,5 +145,5 @@
 |----------|-------|--------|
 | 🔴 BLOCKER | 2 | Documented, requires team action |
 | 🟠 HIGH RISK | 4 | Documented, should address before GA |
-| 🟡 MEDIUM RISK | 4 | Documented, address in next wave |
+| 🟡 MEDIUM RISK | 5 | Documented, address in next wave |
 | 🟢 LOW RISK | 4 | Documented, defer as needed |

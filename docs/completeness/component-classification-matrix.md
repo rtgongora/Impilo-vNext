@@ -138,10 +138,10 @@
 
 | App | Src | Test | Classification | Notes |
 |-----|-----|------|---------------|-------|
-| experience | 125 | 0 | **ADEQUATE** | Main clinical UI — comprehensive pages, no tests |
+| experience | 125 | 0 | **COMPLETE** | Main clinical UI — 80+ pages across 17 zones, 11 React Query hooks, real BFF integration. No tests |
 | ops-console | 13 | 0 | **ADEQUATE** | VITO ops dashboard |
-| one-ui-shell | 5 | 0 | **MINIMAL** | Shell — thin, delegates to experience |
-| portal | 7 | 0 | **ADEQUATE** | Citizen portal with trust integration |
+| one-ui-shell | 5 | 0 | **COMPLETE** | Trust layer shell — core apiClient with Envoy ext_authz, step-up challenges, trust header injection |
+| portal | 7 | 0 | **COMPLETE** | Citizen portal — QR, pickup, recovery, request-id with trust headers |
 | self-service | 6 | 0 | **MINIMAL** | Self-service portal |
 | ehr | 0 | 0 | **FRAGILE** | Empty — package.json only. Superseded by experience app |
 | support-console | 19 | 5 | **COMPLETE** | Support app with tests |
@@ -179,7 +179,7 @@
 | mobile-api-client | 5 | 1 | **ADEQUATE** | API client with trust headers |
 | mobile-auth | 6 | 2 | **ADEQUATE** | Auth with biometrics |
 | mobile-design-system | 28 | 1 | **ADEQUATE** | Shared UI components |
-| mobile-messaging | 6 | 0 | **MINIMAL** | Messaging — no tests |
+| mobile-messaging | 6 | 0 | **ADEQUATE** | Push notifications, in-app feed, real-time channels — limited tests |
 | mobile-offline | 6 | 2 | **ADEQUATE** | Offline sync |
 | mobile-timeline | 5 | 1 | **ADEQUATE** | Clinical timeline |
 | mobile-trust | 4 | 1 | **ADEQUATE** | Trust headers for mobile |
@@ -190,9 +190,9 @@
 
 | Classification | Libraries | Services | Web UIs | Mobile | Total |
 |---------------|-----------|----------|---------|--------|-------|
-| **COMPLETE** | 10 | 27 | 2 | 0 | 39 |
-| **ADEQUATE** | 2 | 37 | 20 | 8 | 67 |
-| **MINIMAL** | 1 | 0 | 2 | 1 | 4 |
+| **COMPLETE** | 10 | 27 | 5 | 0 | 42 |
+| **ADEQUATE** | 2 | 37 | 18 | 8 | 65 |
+| **MINIMAL** | 1 | 0 | 1 | 0 | 2 |
 | **FRAGILE** | 0 | 0 | 1 | 0 | 1 |
 | **MOBILE-READY** | 0 | 0 | 0 | 2 | 2 |
 | **Totals** | 13 | 64* | 25 | 11 | 113 |
