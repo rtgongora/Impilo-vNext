@@ -1,0 +1,35 @@
+{
+  "name": "@impilo/citizen-app",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Impilo Citizen App — Personal health, social feed, marketplace, messaging, and telehealth for citizens/patients.",
+  "main": "src/main.tsx",
+  "types": "src/main.tsx",
+  "scripts": {
+    "type-check": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "dev": "expo start",
+    "build": "expo export"
+  },
+  "dependencies": {
+    "@impilo/mobile-trust": "workspace:*",
+    "@impilo/mobile-auth": "workspace:*",
+    "@impilo/mobile-api-client": "workspace:*",
+    "@impilo/mobile-messaging": "workspace:*",
+    "@impilo/mobile-timeline": "workspace:*",
+    "@impilo/mobile-offline": "workspace:*",
+    "@impilo/mobile-design-system": "workspace:*",
+    "react": "^18.3.1",
+    "zustand": "^4.5.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.11",
+    "typescript": "~5.5.4",
+    "vitest": "^2.1.0",
+    "@testing-library/react": "^16.0.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
