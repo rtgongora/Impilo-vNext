@@ -48,11 +48,11 @@
 **Impact**: No regression safety for UI changes.
 **Mitigation**: Add at least render/smoke tests for critical pages (login, dashboard, encounter).
 
-### 🟠 R-003: 39 Services Without Helm Charts
-**Component**: Ring 1 and Ring 2 services
-**Description**: 28 of 67 services have Helm charts. The remaining 39 lack deployment manifests.
-**Impact**: Cannot deploy these services to Kubernetes without manual manifest creation.
-**Mitigation**: Create a shared library Helm chart with per-service values.
+### 🟠 R-003: 39 Services Without Helm Charts + Existing Charts Missing Templates
+**Component**: Ring 1 and Ring 2 services; helm/ directory
+**Description**: 28 of 67 services have Helm chart references. The remaining 39 lack deployment manifests. Additionally, the 12 Helm charts in `helm/` have `Chart.yaml` and `values.yaml` but **no `/templates/` directories** — meaning no Deployment, Service, ConfigMap, Ingress, or RBAC templates exist. These charts cannot be deployed as-is.
+**Impact**: Cannot deploy any service to Kubernetes without creating template scaffolding.
+**Mitigation**: Create a shared library Helm chart with common templates and per-service values overrides.
 
 ### 🟠 R-004: TODO.md Is Significantly Outdated
 **Component**: `TODO.md`
@@ -104,11 +104,17 @@
 **Impact**: Script false positive only. Library works correctly.
 **Mitigation**: Acceptable pattern for shared UI libraries. Script accounts for this.
 
-### 🟢 R-011: OpenAPI Specs Missing for Most Services
+### 🟢 R-011: OpenAPI Specs Incomplete
 **Component**: `contracts/openapi/`
-**Description**: Only VITO has a comprehensive OpenAPI spec. Other services lack formal API contracts.
-**Impact**: No generated client SDKs or API documentation.
-**Mitigation**: Generate OpenAPI specs from Spring controllers using springdoc-openapi.
+**Description**: 16 OpenAPI specs exist (VITO, BUTANO, OROS, PCT, Pharmacy, Inventory, MSIKA, MSIKA-Flow, MUSheX, ZIBO, Costa, Card-Print, Document-Store, Credential-Verification, Landela-Adapter, Share-Slip). However, TSHEPO sub-services (authz, identity, consent, audit, keys, offline) and experience-bff lack dedicated OpenAPI contracts.
+**Impact**: TSHEPO and BFF API surfaces not formally documented.
+**Mitigation**: Generate remaining specs from Spring controllers using springdoc-openapi.
+
+### 🟢 R-012: K8s Namespace Definitions Are Stubs
+**Component**: `infra/k8s/namespaces/`
+**Description**: 6 namespace YAMLs exist (trust, registry, clinical, finance, ops, ui) but contain only apiVersion/kind/metadata — no workload definitions, network policies, RBAC, or ingress resources.
+**Impact**: K8s deployment requires significant additional manifests.
+**Mitigation**: This is expected for early-stage platform. Helm charts + CI/CD pipeline will generate these.
 
 ---
 
@@ -131,4 +137,4 @@
 | 🔴 BLOCKER | 2 | Documented, requires team action |
 | 🟠 HIGH RISK | 4 | Documented, should address before GA |
 | 🟡 MEDIUM RISK | 4 | Documented, address in next wave |
-| 🟢 LOW RISK | 3 | Documented, defer as needed |
+| 🟢 LOW RISK | 4 | Documented, defer as needed |

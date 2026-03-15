@@ -69,8 +69,9 @@ Created 5 CI-friendly scripts in `scripts/completeness/`:
 2. **README coverage**: Only 15 of 67 services have READMEs (22%)
 3. **Web UI test desert**: Only 2 of 24 web UIs have any tests (support-console, developer-console)
 4. **Empty `ui/ehr`**: Package.json only — superseded by `ui/experience`
-5. **Helm chart inconsistency**: Only 28 of 67 services have Helm charts. Ring 0 services added during later waves may lack charts
+5. **Helm chart gaps**: 28 of 67 services reference Helm charts, but the 12 charts in `helm/` lack `/templates/` directories — no Deployment/Service/Ingress templates. Cannot deploy to K8s as-is
 6. **TODO.md outdated**: Many items marked as pending are actually implemented
+7. **16 OpenAPI contracts exist** but TSHEPO sub-services and experience-bff lack dedicated specs
 
 ### 3.3 Risk Areas
 
