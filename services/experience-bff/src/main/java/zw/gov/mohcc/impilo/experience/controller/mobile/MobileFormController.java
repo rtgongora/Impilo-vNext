@@ -138,6 +138,97 @@ public class MobileFormController {
         return ResponseEntity.ok(response);
     }
 
+    public record SubmitFormByIdRequest(
+            @NotBlank String encounter_id,
+            @NotBlank String patient_id,
+            @NotBlank String submitted_by,
+            @NotNull Map<String, Object> form_data
+    ) {}
+
+    @PostMapping("/{id}/submit")
+    @Transactional
+    public ResponseEntity<Map<String, Object>> submitFormById(
+            @PathVariable UUID id,
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.POD_ID) String podId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
+            @Valid @RequestBody SubmitFormByIdRequest request) {
+
+        // Verify form schema exists
+        List<Map<String, Object>> schemaRows = jdbcTemplate.queryForList("""
+            SELECT id FROM form_schemas
+            WHERE id = ? AND (tenant_id = ? OR tenant_id IS NULL) AND status = 'ACTIVE'
+            """, id, tenantId);
+
+        if (schemaRows.isEmpty()) {
+            throw new ResourceNotFoundException("Active form schema not found: " + id);
+        }
+
+        UUID submissionId = UUID.randomUUID();
+        OffsetDateTime now = OffsetDateTime.now();
+
+        String formDataJson;
+        try {
+            formDataJson = objectMapper.writeValueAsString(request.form_data());
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to serialize form data", e);
+        }
+
+        jdbcTemplate.update("""
+            INSERT INTO form_submissions
+                (id, tenant_id, form_id, encounter_id, patient_id, submitted_by,
+                 form_data, status, submitted_at, created_at, updated_at)
+            VALUES (?, ?, ?, ?::uuid, ?::uuid, ?, ?::jsonb, 'SUBMITTED', ?, ?, ?)
+            """,
+                submissionId, tenantId, id, request.encounter_id(),
+                request.patient_id(), request.submitted_by(),
+                formDataJson, now, now, now);
+
+        outboxService.writeOutboxEvent(
+                "impilo.experience.form.submitted.v1",
+                correlationId,
+                requestId,
+                idempotencyKey != null ? idempotencyKey : requestId,
+                tenantId,
+                podId,
+                "FormSubmission",
+                submissionId.toString(),
+                Map.of(
+                        "submission_id", submissionId.toString(),
+                        "form_id", id.toString(),
+                        "encounter_id", request.encounter_id(),
+                        "patient_id", request.patient_id(),
+                        "status", "SUBMITTED"
+                ),
+                Map.of()
+        );
+
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("form_id", id.toString());
+        attributes.put("encounter_id", request.encounter_id());
+        attributes.put("patient_id", request.patient_id());
+        attributes.put("submitted_by", request.submitted_by());
+        attributes.put("form_data", request.form_data());
+        attributes.put("status", "SUBMITTED");
+        attributes.put("submitted_at", now);
+        attributes.put("created_at", now);
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", Map.of(
+                "id", submissionId.toString(),
+                "type", "FormSubmission",
+                "attributes", attributes
+        ));
+        response.put("meta", Map.of(
+                "request_id", requestId,
+                "correlation_id", correlationId
+        ));
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
     @PostMapping("/submissions")
     @Transactional
     public ResponseEntity<Map<String, Object>> submitForm(
