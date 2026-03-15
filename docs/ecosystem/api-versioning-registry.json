@@ -87,6 +87,11 @@
         "DELETE /internal/v1/developer/keys/{id}",
         "PUT /internal/v1/developer/clients/{id}/sandbox",
         "PUT /internal/v1/developer/clients/{id}/deprecation-posture",
+        "POST /internal/v1/developer/clients/{id}/certify",
+        "GET /internal/v1/developer/clients/{id}/certifications",
+        "GET /internal/v1/developer/certifications/{id}",
+        "GET /internal/v1/developer/clients/{id}/federation-readiness",
+        "GET /internal/v1/developer/dashboard/stats",
         "GET /internal/v1/developer/discovery"
       ]
     },
@@ -103,7 +108,8 @@
         "GET /internal/v1/schemas/subjects",
         "GET /internal/v1/schemas/subjects/{subject}",
         "GET /internal/v1/schemas/subjects/{subject}/versions/{version}",
-        "POST /internal/v1/schemas/compatibility"
+        "POST /internal/v1/schemas/compatibility",
+        "GET /internal/v1/schemas/catalog"
       ]
     },
     {
@@ -177,6 +183,14 @@
       "version": 1,
       "status": "CURRENT",
       "introduced": "2026-01-15",
+      "deprecated_at": null,
+      "sunset_at": null
+    },
+    {
+      "event_type": "impilo.developer-portal.certification.completed.v1",
+      "version": 1,
+      "status": "CURRENT",
+      "introduced": "2026-03-15",
       "deprecated_at": null,
       "sunset_at": null
     },

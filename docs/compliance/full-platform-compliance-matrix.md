@@ -99,7 +99,7 @@
 | data-ingestion-service | services/data-ingestion-service | Y | Y | Y | N | Y (tc) | Y (tc) | Y | Y | Y (init) | Y | N | N | N | Y (actuator) | COMPLIANT | — |
 | data-pipeline-service | services/data-pipeline-service | Y | Y | Y | N | Y (tc) | Y (tc) | Y | Y | Y (init) | Y | N | N | N | Y (actuator) | COMPLIANT | — |
 | data-warehouse-service | services/data-warehouse-service | Y | Y | Y | Y | Y (tc) | Y (tc) | Y | Y | Y (init) | Y | N | N | N | Y (actuator) | COMPLIANT | — |
-| developer-portal-service | services/developer-portal-service | Y | Y | Y | N | Y (tc) | Y (tc) | Y | Y | Y (init) | Y | N | N | N | Y (actuator) | COMPLIANT | — |
+| developer-portal-service | services/developer-portal-service | Y | Y | Y | N | Y (tc) | Y (tc) | Y | Y | Y (init+V002) | Y | N | N | N | Y (actuator) | COMPLIANT | — Developer Partner App: certification, federation readiness, dashboard stats, catalog endpoints added |
 | forms-service | services/forms-service | Y | Y | Y | N | Y (tc) | Y (tc) | Y | Y | Y (init) | Y | N | N | N | Y (actuator) | COMPLIANT | — |
 | iot-ingestion-service | services/iot-ingestion-service | Y | Y | Y | N | Y (tc) | Y (tc) | Y | Y | Y (init) | Y | N | N | N | Y (actuator) | COMPLIANT | — |
 | ndr-service | services/ndr-service | Y | Y | Y | N | Y (tc) | Y (tc) | Y | Y | Y (init) | Y | N | N | N | Y (actuator) | COMPLIANT | — |
@@ -107,7 +107,7 @@
 | observability-service | services/observability-service | Y | Y | Y | N | Y (tc) | Y (tc) | Y | Y | Y (init) | Y | N | N | N | Y (actuator) | COMPLIANT | — |
 | reporting-service | services/reporting-service | Y | Y | Y | N | Y (tc) | Y (tc) | Y | Y | Y (init) | Y | N | N | N | Y (actuator) | COMPLIANT | — |
 | rules-service | services/rules-service | Y | Y | Y | N | Y (tc) | Y (tc) | Y | Y | Y (init) | Y | N | N | N | Y (actuator) | COMPLIANT | — |
-| schema-registry-service | services/schema-registry-service | Y | Y | Y | N | Y (tc) | Y (tc) | Y | Y | Y (init) | Y | N | N | N | Y (actuator) | COMPLIANT | — |
+| schema-registry-service | services/schema-registry-service | Y | Y | Y | N | Y (tc) | Y (tc) | Y | Y | Y (init) | Y | N | N | N | Y (actuator) | COMPLIANT | — Developer Partner App: catalog endpoint added |
 | search-service | services/search-service | Y | Y | Y | N | Y (tc) | Y (tc) | Y | Y | Y (init) | Y | N | N | N | Y (actuator) | COMPLIANT | — |
 | security-hardening-service | services/security-hardening-service | Y | Y | Y | N | Y (tc) | Y (tc) | Y | Y | Y (init) | Y | N | N | N | Y (actuator) | COMPLIANT | — |
 | support-service | services/support-service | Y | Y | Y | N | Y (tc) | Y (tc) | Y | Y | Y (init+V004) | Y | Y | N | N | Y (actuator) | COMPLIANT | — M3 Support App: comments, escalation, assignments, messaging, dashboard stats, article updates added |

@@ -6,6 +6,8 @@
 
 This kit provides everything a third-party partner needs to integrate with the Impilo vNext health information platform. It covers client registration, API key management, contract validation, sandbox testing, and production certification.
 
+> **Developer Console**: Partners can also use the web-based Developer Console (`ui/developer-console`, port 3007) for a visual interface to all operations described below. See `docs/apps/developer-partner-app/README.md` for details.
+
 ## Architecture Context
 
 ```
