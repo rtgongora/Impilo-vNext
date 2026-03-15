@@ -32,6 +32,22 @@ public class ArticleController {
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(article));
     }
 
+    @PatchMapping("/internal/v1/support/articles/{article_id}")
+    public ResponseEntity<?> updateArticle(@PathVariable("article_id") UUID articleId,
+                                            @RequestBody UpdateArticleRequest request,
+                                            jakarta.servlet.http.HttpServletRequest httpRequest) {
+        RequestContext ctx = RequestContextHolder.require();
+        String idempotencyKey = httpRequest.getHeader(CompanionHeaders.IDEMPOTENCY_KEY);
+        try {
+            KnowledgeArticleEntity article = supportService.updateArticle(articleId,
+                    UUID.fromString(ctx.tenantId()), ctx.podId(), ctx.correlationId(), idempotencyKey, request);
+            return ResponseEntity.ok(toResponse(article));
+        } catch (SupportService.NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ErrorEnvelope.of("NOT_FOUND", e.getMessage(), ctx.requestId(), ctx.correlationId()));
+        }
+    }
+
     @GetMapping("/internal/v1/support/articles/{article_id}")
     public ResponseEntity<?> getArticle(@PathVariable("article_id") UUID articleId) {
         RequestContext ctx = RequestContextHolder.require();

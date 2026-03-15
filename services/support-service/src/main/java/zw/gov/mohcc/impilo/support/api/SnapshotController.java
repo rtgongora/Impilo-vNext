@@ -53,6 +53,7 @@ public class SnapshotController {
         return new TicketResponse(t.getTicketId(), t.getTenantId(), t.getTitle(), t.getDescription(),
                 t.getCategory(), t.getPriority(), t.getStatus(), t.getReporterRef(), t.getAssigneeRef(),
                 t.getFacilityRef(), t.getResolution(), t.getRequestId(), t.getCorrelationId(),
+                t.getEscalationLevel(), t.getEscalatedAt(), t.getEscalatedBy(), t.getSlaBreachedAt(),
                 t.getVersion(), t.getCreatedAt(), t.getUpdatedAt(), t.getResolvedAt());
     }
 

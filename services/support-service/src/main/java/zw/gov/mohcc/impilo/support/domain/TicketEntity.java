@@ -24,6 +24,10 @@ public class TicketEntity {
     @Column(name = "created_at", nullable = false) private OffsetDateTime createdAt;
     @Column(name = "updated_at", nullable = false) private OffsetDateTime updatedAt;
     @Column(name = "resolved_at") private OffsetDateTime resolvedAt;
+    @Column(name = "escalation_level", nullable = false) private int escalationLevel = 0;
+    @Column(name = "escalated_at") private OffsetDateTime escalatedAt;
+    @Column(name = "escalated_by") private String escalatedBy;
+    @Column(name = "sla_breached_at") private OffsetDateTime slaBreachedAt;
     @Column(nullable = false) private int version = 1;
 
     protected TicketEntity() {}
@@ -63,6 +67,14 @@ public class TicketEntity {
     public void setUpdatedAt(OffsetDateTime v) { this.updatedAt = v; }
     public OffsetDateTime getResolvedAt() { return resolvedAt; }
     public void setResolvedAt(OffsetDateTime v) { this.resolvedAt = v; }
+    public int getEscalationLevel() { return escalationLevel; }
+    public void setEscalationLevel(int v) { this.escalationLevel = v; }
+    public OffsetDateTime getEscalatedAt() { return escalatedAt; }
+    public void setEscalatedAt(OffsetDateTime v) { this.escalatedAt = v; }
+    public String getEscalatedBy() { return escalatedBy; }
+    public void setEscalatedBy(String v) { this.escalatedBy = v; }
+    public OffsetDateTime getSlaBreachedAt() { return slaBreachedAt; }
+    public void setSlaBreachedAt(OffsetDateTime v) { this.slaBreachedAt = v; }
     public int getVersion() { return version; }
     public void setVersion(int v) { this.version = v; }
 }

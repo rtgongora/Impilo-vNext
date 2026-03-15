@@ -24,15 +24,25 @@ public class SupportService {
     private final TicketRepository ticketRepository;
     private final ArticleRepository articleRepository;
     private final OutboxEventRepository outboxRepository;
+    private final CommentRepository commentRepository;
+    private final AssignmentRepository assignmentRepository;
+    private final SupportMessageRepository messageRepository;
     private final ObjectMapper objectMapper;
 
     public SupportService(TicketRepository ticketRepository, ArticleRepository articleRepository,
-                           OutboxEventRepository outboxRepository, ObjectMapper objectMapper) {
+                           OutboxEventRepository outboxRepository, CommentRepository commentRepository,
+                           AssignmentRepository assignmentRepository, SupportMessageRepository messageRepository,
+                           ObjectMapper objectMapper) {
         this.ticketRepository = ticketRepository;
         this.articleRepository = articleRepository;
         this.outboxRepository = outboxRepository;
+        this.commentRepository = commentRepository;
+        this.assignmentRepository = assignmentRepository;
+        this.messageRepository = messageRepository;
         this.objectMapper = objectMapper;
     }
+
+    // ── Tickets ──────────────────────────────────────────────────────────
 
     @Transactional
     public TicketEntity createTicket(UUID tenantId, String podId, String correlationId,
@@ -91,14 +101,149 @@ public class SupportService {
     public Optional<TicketEntity> getTicket(UUID ticketId) { return ticketRepository.findById(ticketId); }
 
     @Transactional(readOnly = true)
-    public Page<TicketEntity> listTickets(UUID tenantId, String status, String priority, int page, int size) {
-        return ticketRepository.findFiltered(tenantId, status, priority, PageRequest.of(page, size));
+    public Page<TicketEntity> listTickets(UUID tenantId, String status, String priority,
+                                           String category, String assigneeRef, int page, int size) {
+        return ticketRepository.findFiltered(tenantId, status, priority, category, assigneeRef,
+                PageRequest.of(page, size));
     }
 
     @Transactional(readOnly = true)
     public Page<TicketEntity> getTicketSnapshot(OffsetDateTime asOf, int page, int size) {
         return ticketRepository.findSnapshotAsOf(asOf, PageRequest.of(page, size));
     }
+
+    // ── Escalation ───────────────────────────────────────────────────────
+
+    @Transactional
+    public TicketEntity escalateTicket(UUID ticketId, UUID tenantId, String podId, String correlationId,
+                                        String idempotencyKey, String escalatedBy, int targetLevel) {
+        TicketEntity ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new NotFoundException("Ticket not found: " + ticketId));
+
+        ticket.setEscalationLevel(targetLevel);
+        ticket.setEscalatedAt(OffsetDateTime.now());
+        ticket.setEscalatedBy(escalatedBy);
+        if (targetLevel >= 3) {
+            ticket.setPriority("CRITICAL");
+        }
+        ticket.setVersion(ticket.getVersion() + 1);
+        ticket.setUpdatedAt(OffsetDateTime.now());
+        ticketRepository.save(ticket);
+
+        Map<String, Object> payload = buildTicketState(ticket);
+        payload.put("escalation_level", targetLevel);
+        payload.put("escalated_by", escalatedBy);
+        appendOutboxEvent("impilo.support.ticket.escalated.v1", "Ticket", ticketId.toString(),
+                tenantId, podId, correlationId, idempotencyKey, payload, ticketId.toString(), "Ticket");
+
+        log.info("Escalated ticket [ticketId={}, level={}]", ticketId, targetLevel);
+        return ticket;
+    }
+
+    // ── Comments ─────────────────────────────────────────────────────────
+
+    @Transactional
+    public CommentEntity addComment(UUID ticketId, UUID tenantId, String podId, String correlationId,
+                                     String idempotencyKey, String authorRef, String body) {
+        if (!ticketRepository.existsById(ticketId)) {
+            throw new NotFoundException("Ticket not found: " + ticketId);
+        }
+        UUID commentId = UUID.randomUUID();
+        CommentEntity comment = new CommentEntity(commentId, ticketId, tenantId, authorRef, body);
+        commentRepository.save(comment);
+
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("comment_id", commentId.toString());
+        payload.put("ticket_id", ticketId.toString());
+        payload.put("author_ref", authorRef);
+        payload.put("body", body);
+        appendOutboxEvent("impilo.support.ticket.comment.added.v1", "Ticket", ticketId.toString(),
+                tenantId, podId, correlationId, idempotencyKey, payload, ticketId.toString(), "Ticket");
+
+        log.info("Added comment [commentId={}, ticketId={}]", commentId, ticketId);
+        return comment;
+    }
+
+    @Transactional(readOnly = true)
+    public Page<CommentEntity> listComments(UUID ticketId, int page, int size) {
+        return commentRepository.findByTicketId(ticketId, PageRequest.of(page, size));
+    }
+
+    // ── Assignments ──────────────────────────────────────────────────────
+
+    @Transactional
+    public AssignmentEntity assignTicket(UUID ticketId, UUID tenantId, String podId, String correlationId,
+                                          String idempotencyKey, String assigneeRef, String assignedBy) {
+        TicketEntity ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new NotFoundException("Ticket not found: " + ticketId));
+
+        // Close previous assignment
+        List<AssignmentEntity> previous = assignmentRepository.findByTicketIdOrderByAssignedAtDesc(ticketId);
+        if (!previous.isEmpty()) {
+            AssignmentEntity prev = previous.get(0);
+            if (prev.getUnassignedAt() == null) {
+                prev.setUnassignedAt(OffsetDateTime.now());
+                assignmentRepository.save(prev);
+            }
+        }
+
+        UUID assignmentId = UUID.randomUUID();
+        AssignmentEntity assignment = new AssignmentEntity(assignmentId, ticketId, tenantId, assigneeRef, assignedBy);
+        assignmentRepository.save(assignment);
+
+        ticket.setAssigneeRef(assigneeRef);
+        ticket.setVersion(ticket.getVersion() + 1);
+        ticket.setUpdatedAt(OffsetDateTime.now());
+        ticketRepository.save(ticket);
+
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("assignment_id", assignmentId.toString());
+        payload.put("ticket_id", ticketId.toString());
+        payload.put("assignee_ref", assigneeRef);
+        payload.put("assigned_by", assignedBy);
+        appendOutboxEvent("impilo.support.ticket.assigned.v1", "Ticket", ticketId.toString(),
+                tenantId, podId, correlationId, idempotencyKey, payload, ticketId.toString(), "Ticket");
+
+        log.info("Assigned ticket [ticketId={}, assigneeRef={}]", ticketId, assigneeRef);
+        return assignment;
+    }
+
+    @Transactional(readOnly = true)
+    public Page<AssignmentEntity> listAssignments(UUID ticketId, int page, int size) {
+        return assignmentRepository.findByTicketId(ticketId, PageRequest.of(page, size));
+    }
+
+    // ── Messages ─────────────────────────────────────────────────────────
+
+    @Transactional
+    public SupportMessageEntity sendMessage(UUID ticketId, UUID tenantId, String podId, String correlationId,
+                                             String idempotencyKey, String senderRef, String senderType, String body) {
+        if (!ticketRepository.existsById(ticketId)) {
+            throw new NotFoundException("Ticket not found: " + ticketId);
+        }
+        UUID messageId = UUID.randomUUID();
+        SupportMessageEntity message = new SupportMessageEntity(messageId, ticketId, tenantId, senderRef, senderType, body);
+        messageRepository.save(message);
+
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("message_id", messageId.toString());
+        payload.put("ticket_id", ticketId.toString());
+        payload.put("sender_ref", senderRef);
+        payload.put("sender_type", senderType);
+        payload.put("body", body);
+        appendOutboxEvent("impilo.support.message.sent.v1", "Ticket", ticketId.toString(),
+                tenantId, podId, correlationId, idempotencyKey, payload, ticketId.toString(), "Ticket");
+
+        log.info("Sent message [messageId={}, ticketId={}]", messageId, ticketId);
+        return message;
+    }
+
+    @Transactional(readOnly = true)
+    public Page<SupportMessageEntity> listMessages(UUID ticketId, int page, int size) {
+        return messageRepository.findByTicketId(ticketId, PageRequest.of(page, size));
+    }
+
+    // ── Articles ─────────────────────────────────────────────────────────
 
     @Transactional
     public KnowledgeArticleEntity createArticle(UUID tenantId, String podId, String correlationId,
@@ -118,6 +263,35 @@ public class SupportService {
         return article;
     }
 
+    @Transactional
+    public KnowledgeArticleEntity updateArticle(UUID articleId, UUID tenantId, String podId,
+                                                  String correlationId, String idempotencyKey,
+                                                  UpdateArticleRequest request) {
+        KnowledgeArticleEntity article = articleRepository.findById(articleId)
+                .orElseThrow(() -> new NotFoundException("Article not found: " + articleId));
+
+        if (request.title() != null) article.setTitle(request.title());
+        if (request.body() != null) article.setBody(request.body());
+        if (request.category() != null) article.setCategory(request.category());
+        if (request.tags() != null) article.setTags(request.tags());
+        if (request.status() != null) {
+            article.setStatus(request.status());
+            if ("PUBLISHED".equals(request.status()) && article.getPublishedAt() == null) {
+                article.setPublishedAt(OffsetDateTime.now());
+            }
+        }
+        article.setVersion(article.getVersion() + 1);
+        article.setUpdatedAt(OffsetDateTime.now());
+        articleRepository.save(article);
+
+        Map<String, Object> payload = buildArticleState(article);
+        appendOutboxEvent("impilo.support.article.updated.v1", "Article", articleId.toString(),
+                tenantId, podId, correlationId, idempotencyKey, payload, articleId.toString(), "Article");
+
+        log.info("Updated article [articleId={}, title={}]", articleId, article.getTitle());
+        return article;
+    }
+
     @Transactional(readOnly = true)
     public Optional<KnowledgeArticleEntity> getArticle(UUID articleId) { return articleRepository.findById(articleId); }
 
@@ -130,6 +304,25 @@ public class SupportService {
     public Page<KnowledgeArticleEntity> getArticleSnapshot(OffsetDateTime asOf, int page, int size) {
         return articleRepository.findSnapshotAsOf(asOf, PageRequest.of(page, size));
     }
+
+    // ── Dashboard ────────────────────────────────────────────────────────
+
+    @Transactional(readOnly = true)
+    public DashboardStatsResponse getDashboardStats(UUID tenantId) {
+        long openCount = ticketRepository.countByTenantIdAndStatus(tenantId, "OPEN");
+        long inProgressCount = ticketRepository.countByTenantIdAndStatus(tenantId, "IN_PROGRESS");
+        long resolvedCount = ticketRepository.countByTenantIdAndStatus(tenantId, "RESOLVED");
+        long closedCount = ticketRepository.countByTenantIdAndStatus(tenantId, "CLOSED");
+        long criticalCount = ticketRepository.countByTenantIdAndPriority(tenantId, "CRITICAL");
+        long highCount = ticketRepository.countByTenantIdAndPriority(tenantId, "HIGH");
+        long escalatedCount = ticketRepository.countByTenantIdAndEscalationLevelGreaterThan(tenantId, 0);
+        double avgResolutionHrs = ticketRepository.avgResolutionHours(tenantId);
+
+        return new DashboardStatsResponse(openCount, inProgressCount, resolvedCount, closedCount,
+                criticalCount, highCount, escalatedCount, avgResolutionHrs);
+    }
+
+    // ── Outbox helper ────────────────────────────────────────────────────
 
     private void appendOutboxEvent(String eventType, String aggregateType, String aggregateId,
                                     UUID tenantId, String podId, String correlationId,
