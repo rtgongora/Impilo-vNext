@@ -4,7 +4,9 @@
 > Standard: vNext V3 + Tech Companion Spec 2.0
 > Posture: App-Led Vertical Slices — no mocks, no stubs, no TODOs
 > **Status: Shared foundation packages IMPLEMENTED under `apps/mobile/packages/`**
+> **Status: M1 Provider App IMPLEMENTED under `apps/mobile/provider-app/`**
 > See: `docs/mobile/shared-foundations/README.md`, `docs/acceptance/mobile-shared-foundations-acceptance-pack.md`
+> See: `docs/mobile/provider-app/README.md`, `docs/acceptance/provider-app-acceptance-pack.md`
 
 ---
 
@@ -39,9 +41,12 @@ All shared packages are defined in `docs/mobile/shared-foundation-scope.md`. Sum
 
 ## 3. Per-App Vertical Slice Scope
 
-### 3.1 M1 — Provider App
+### 3.1 M1 — Provider App ✅ IMPLEMENTED
 
 **Modes:** Provider, Outreach, Supervisor, Offline Edge
+**Implementation:** `apps/mobile/provider-app/` — 50+ source files, 12 test files, 15 BFF controllers
+**Docs:** `docs/mobile/provider-app/README.md`, `feature-map.md`, `mode-matrix.md`, `offline-behavior.md`
+**Acceptance:** `docs/acceptance/provider-app-acceptance-pack.md`
 
 #### Feature Areas
 
@@ -234,7 +239,7 @@ All shared packages are defined in `docs/mobile/shared-foundation-scope.md`. Sum
 
 | Wave | Start Condition | Key Deliverables |
 |------|-----------------|------------------|
-| M1 | Shared foundation packages created | Provider App + 14 backend upgrades + offline sync protocol |
+| M1 | Shared foundation packages created | ✅ Provider App + 15 BFF controllers + offline sync + 12 test files + 4 doc files + acceptance pack |
 | M2 | M1 shared foundation stable | Citizen App + channels/telehealth/marketplace upgrades |
 | M3 | M1+M2 shared foundation stable | Support App + support-service + audit query |
 | M4 | M1–M3 shared foundation stable | Developer App + developer-portal-service |

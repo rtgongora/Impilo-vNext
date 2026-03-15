@@ -86,7 +86,7 @@
 
 | service_name | module_path | has_pom | has_code | has_internal_v1 | has_external_v1 | four_header_enforcement | idempotency_on_commands | golden_contract_test | outbox_present | outbox_v11_columns_present | event_envelope_emission | snapshot_endpoint_present | federation_authority_enforced | consistency_class_declared | health_endpoint_present | status | blockers |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| experience-bff | services/experience-bff | Y | Y | Y | N | Y (tc) | Y (tc) | Y | Y | Y (init) | Y | N | N | N | Y (actuator) | COMPLIANT | — |
+| experience-bff | services/experience-bff | Y | Y | Y | N | Y (tc) | Y (tc) | Y | Y | Y (init) | Y | N | N | N | Y (actuator) | COMPLIANT | — ✅ 15 mobile provider BFF controllers added |
 
 ## Platform Services (Cross-Cutting)
 

@@ -25,7 +25,7 @@
 
 | Feature Area | Backend Service | Service Exists | Compliance Status | Action Required | Specific Work | Docs to Update | Acceptance Artifact |
 |---|---|---|---|---|---|---|---|
-| Mobile BFF Aggregation | experience-bff | Yes (scaffold) | N/A (no code) | NEW | Implement mobile provider aggregation routes (`/internal/v1/mobile/provider/*`); v1.1 header enforcement; outbox; idempotency | compliance-matrix | mobile-acceptance § Provider |
+| Mobile BFF Aggregation | experience-bff | Yes | COMPLIANT | DONE | ✅ 15 mobile provider controllers implemented (`/internal/v1/mobile/provider/*`); v1.1 header enforcement; outbox; idempotency | compliance-matrix | provider-app-acceptance-pack |
 | Patient Lookup | vito-service | Yes | COMPLIANT | NONE | — | — | — |
 | Patient Lookup | search-service | Yes (scaffold) | N/A | NEW | Implement patient search with fuzzy matching, NID lookup, QR decode | compliance-matrix | mobile-acceptance § Provider |
 | Facility Context | indawo-service | Yes | COMPLIANT | NONE | — | — | — |
