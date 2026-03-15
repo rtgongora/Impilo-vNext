@@ -12,7 +12,9 @@ import zw.gov.mohcc.impilo.companion.error.ErrorEnvelope;
 import zw.gov.mohcc.impilo.devportal.api.dto.IssueKeyRequest;
 import zw.gov.mohcc.impilo.devportal.api.dto.RegisterClientRequest;
 import zw.gov.mohcc.impilo.devportal.api.dto.RotateKeyRequest;
+import zw.gov.mohcc.impilo.devportal.api.dto.RunCertificationRequest;
 import zw.gov.mohcc.impilo.devportal.core.DeveloperPortalService;
+import zw.gov.mohcc.impilo.devportal.domain.CertificationEntity;
 import zw.gov.mohcc.impilo.devportal.domain.ClientEntity;
 
 import java.util.*;
@@ -143,6 +145,64 @@ public class DeveloperPortalController {
         }
     }
 
+    // ── Certification ──
+
+    @PostMapping("/internal/v1/developer/clients/{client_id}/certify")
+    public ResponseEntity<?> runCertification(@PathVariable("client_id") UUID clientId,
+                                                @Valid @RequestBody RunCertificationRequest request,
+                                                jakarta.servlet.http.HttpServletRequest httpRequest) {
+        RequestContext ctx = RequestContextHolder.require();
+        String idempotencyKey = httpRequest.getHeader(CompanionHeaders.IDEMPOTENCY_KEY);
+        Map<String, Object> result = portalService.runCertification(
+                clientId, UUID.fromString(ctx.tenantId()), ctx.correlationId(), idempotencyKey,
+                request.triggeredBy());
+        return ResponseEntity.status(HttpStatus.CREATED).body(result);
+    }
+
+    @GetMapping("/internal/v1/developer/clients/{client_id}/certifications")
+    public ResponseEntity<?> listCertifications(@PathVariable("client_id") UUID clientId) {
+        RequestContextHolder.require();
+        List<CertificationEntity> certs = portalService.listCertifications(clientId);
+        List<Map<String, Object>> items = certs.stream().map(this::toCertificationResponse).toList();
+        return ResponseEntity.ok(Map.of("items", items, "count", items.size()));
+    }
+
+    @GetMapping("/internal/v1/developer/certifications/{cert_id}")
+    public ResponseEntity<?> getCertification(@PathVariable("cert_id") UUID certId) {
+        RequestContext ctx = RequestContextHolder.require();
+        return portalService.getCertification(certId)
+                .map(c -> {
+                    Map<String, Object> r = toCertificationResponse(c);
+                    r.put("report", c.getReportJson());
+                    return ResponseEntity.ok((Object) r);
+                })
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(ErrorEnvelope.of("NOT_FOUND", "Certification not found",
+                                ctx.requestId(), ctx.correlationId())));
+    }
+
+    // ── Federation Readiness ──
+
+    @GetMapping("/internal/v1/developer/clients/{client_id}/federation-readiness")
+    public ResponseEntity<?> federationReadiness(@PathVariable("client_id") UUID clientId) {
+        RequestContextHolder.require();
+        try {
+            Map<String, Object> result = portalService.checkFederationReadiness(clientId);
+            return ResponseEntity.ok(result);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    // ── Dashboard ──
+
+    @GetMapping("/internal/v1/developer/dashboard/stats")
+    public ResponseEntity<?> dashboardStats() {
+        RequestContext ctx = RequestContextHolder.require();
+        Map<String, Object> stats = portalService.getDashboardStats(UUID.fromString(ctx.tenantId()));
+        return ResponseEntity.ok(stats);
+    }
+
     // ── Discovery ──
 
     @GetMapping("/internal/v1/developer/discovery")
@@ -161,9 +221,29 @@ public class DeveloperPortalController {
                         Map.of("method", "DELETE", "path", "/internal/v1/developer/keys/{id}", "description", "Revoke API key"),
                         Map.of("method", "PUT", "path", "/internal/v1/developer/clients/{id}/sandbox", "description", "Configure sandbox"),
                         Map.of("method", "PUT", "path", "/internal/v1/developer/clients/{id}/deprecation-posture", "description", "Set deprecation posture"),
+                        Map.of("method", "POST", "path", "/internal/v1/developer/clients/{id}/certify", "description", "Run certification checks"),
+                        Map.of("method", "GET", "path", "/internal/v1/developer/clients/{id}/certifications", "description", "List certification history"),
+                        Map.of("method", "GET", "path", "/internal/v1/developer/certifications/{id}", "description", "Get certification result"),
+                        Map.of("method", "GET", "path", "/internal/v1/developer/clients/{id}/federation-readiness", "description", "Check federation readiness"),
+                        Map.of("method", "GET", "path", "/internal/v1/developer/dashboard/stats", "description", "Dashboard statistics"),
                         Map.of("method", "GET", "path", "/internal/v1/developer/discovery", "description", "API discovery metadata")
                 )
         ));
+    }
+
+    private Map<String, Object> toCertificationResponse(CertificationEntity c) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("certification_id", c.getId());
+        m.put("client_id", c.getClientId());
+        m.put("status", c.getStatus());
+        m.put("result", c.getResult());
+        m.put("checks_total", c.getChecksTotal());
+        m.put("checks_passed", c.getChecksPassed());
+        m.put("checks_failed", c.getChecksFailed());
+        m.put("triggered_by", c.getTriggeredBy());
+        m.put("started_at", c.getStartedAt() != null ? c.getStartedAt().toString() : null);
+        m.put("completed_at", c.getCompletedAt() != null ? c.getCompletedAt().toString() : null);
+        return m;
     }
 
     private Map<String, Object> toClientResponse(ClientEntity c) {

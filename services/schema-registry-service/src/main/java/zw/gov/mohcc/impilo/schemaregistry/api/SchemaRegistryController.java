@@ -105,4 +105,39 @@ public class SchemaRegistryController {
         response.put("violations", result.violations());
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/internal/v1/schemas/catalog")
+    public ResponseEntity<?> catalog() {
+        RequestContextHolder.require();
+        List<SubjectEntity> subjects = registryService.listSubjects();
+        List<Map<String, Object>> items = subjects.stream().map(s -> {
+            var latest = registryService.getLatestVersion(s.getId());
+            var allVersions = registryService.listVersions(s.getId());
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("subject", s.getSubjectName());
+            m.put("compatibility", s.getCompatibility());
+            m.put("description", s.getDescription());
+            m.put("version_count", allVersions.size());
+            latest.ifPresent(v -> {
+                m.put("latest_version", v.getVersion());
+                m.put("latest_fingerprint", v.getFingerprint());
+                m.put("latest_created_at", v.getCreatedAt().toString());
+            });
+            // Derive type from subject name convention: impilo.{service}.{entity}.{action}.v{N}
+            String name = s.getSubjectName();
+            if (name.contains(".")) {
+                String[] parts = name.split("\\.");
+                m.put("service", parts.length > 1 ? parts[1] : "unknown");
+                m.put("entity", parts.length > 2 ? parts[2] : "unknown");
+                m.put("action", parts.length > 3 ? parts[3] : "unknown");
+            }
+            return m;
+        }).toList();
+        return ResponseEntity.ok(Map.of(
+                "items", items,
+                "count", items.size(),
+                "catalog_type", "event_schema",
+                "generated_at", java.time.OffsetDateTime.now().toString()
+        ));
+    }
 }

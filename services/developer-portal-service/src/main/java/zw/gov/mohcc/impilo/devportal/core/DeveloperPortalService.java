@@ -7,9 +7,11 @@ import zw.gov.mohcc.impilo.devportal.api.dto.IssueKeyRequest;
 import zw.gov.mohcc.impilo.devportal.api.dto.RegisterClientRequest;
 import zw.gov.mohcc.impilo.devportal.api.dto.RotateKeyRequest;
 import zw.gov.mohcc.impilo.devportal.domain.ApiKeyEntity;
+import zw.gov.mohcc.impilo.devportal.domain.CertificationEntity;
 import zw.gov.mohcc.impilo.devportal.domain.ClientEntity;
 import zw.gov.mohcc.impilo.devportal.domain.OutboxEventEntity;
 import zw.gov.mohcc.impilo.devportal.repository.ApiKeyRepository;
+import zw.gov.mohcc.impilo.devportal.repository.CertificationRepository;
 import zw.gov.mohcc.impilo.devportal.repository.ClientRepository;
 import zw.gov.mohcc.impilo.devportal.repository.OutboxEventRepository;
 
@@ -27,13 +29,16 @@ public class DeveloperPortalService {
 
     private final ClientRepository clientRepo;
     private final ApiKeyRepository keyRepo;
+    private final CertificationRepository certRepo;
     private final OutboxEventRepository outboxRepo;
     private final ObjectMapper objectMapper;
 
     public DeveloperPortalService(ClientRepository clientRepo, ApiKeyRepository keyRepo,
+                                   CertificationRepository certRepo,
                                    OutboxEventRepository outboxRepo, ObjectMapper objectMapper) {
         this.clientRepo = clientRepo;
         this.keyRepo = keyRepo;
+        this.certRepo = certRepo;
         this.outboxRepo = outboxRepo;
         this.objectMapper = objectMapper;
     }
@@ -208,6 +213,190 @@ public class DeveloperPortalService {
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("key_id", key.getId());
         response.put("status", "REVOKED");
+        return response;
+    }
+
+    // ── Certification ──
+
+    @Transactional
+    public Map<String, Object> runCertification(UUID clientId, UUID tenantId, String correlationId,
+                                                  String idempotencyKey, String triggeredBy) {
+        ClientEntity client = clientRepo.findById(clientId)
+                .orElseThrow(() -> new IllegalArgumentException("Client not found: " + clientId));
+
+        List<Map<String, Object>> checks = new ArrayList<>();
+        int passed = 0;
+        int failed = 0;
+
+        // Check 1: Client has at least one active API key
+        List<ApiKeyEntity> activeKeys = keyRepo.findByClientId(clientId).stream()
+                .filter(k -> "ACTIVE".equals(k.getStatus())).toList();
+        boolean hasActiveKey = !activeKeys.isEmpty();
+        checks.add(Map.of("check", "active_api_key", "passed", hasActiveKey,
+                "detail", hasActiveKey ? "Client has " + activeKeys.size() + " active key(s)" : "No active API keys found"));
+        if (hasActiveKey) passed++; else failed++;
+
+        // Check 2: Contact email provided
+        boolean hasEmail = client.getContactEmail() != null && !client.getContactEmail().isBlank();
+        checks.add(Map.of("check", "contact_email", "passed", hasEmail,
+                "detail", hasEmail ? "Contact email configured" : "Contact email missing"));
+        if (hasEmail) passed++; else failed++;
+
+        // Check 3: Client is active
+        boolean isActive = "ACTIVE".equals(client.getStatus());
+        checks.add(Map.of("check", "client_active", "passed", isActive,
+                "detail", isActive ? "Client status is ACTIVE" : "Client status is " + client.getStatus()));
+        if (isActive) passed++; else failed++;
+
+        // Check 4: Deprecation posture set (not NONE)
+        boolean hasDeprecationPosture = !"NONE".equals(client.getDeprecationPosture());
+        checks.add(Map.of("check", "deprecation_posture_configured", "passed", hasDeprecationPosture,
+                "detail", hasDeprecationPosture ? "Deprecation posture: " + client.getDeprecationPosture() : "Deprecation posture not configured (NONE)"));
+        if (hasDeprecationPosture) passed++; else failed++;
+
+        // Check 5: Sandbox tested (sandbox was enabled at some point)
+        boolean sandboxTested = client.isSandboxEnabled() || client.getSandboxConfig() != null;
+        checks.add(Map.of("check", "sandbox_tested", "passed", sandboxTested,
+                "detail", sandboxTested ? "Sandbox environment used" : "Sandbox never activated"));
+        if (sandboxTested) passed++; else failed++;
+
+        // Check 6: API key has scopes defined
+        boolean hasScopedKey = activeKeys.stream().anyMatch(k -> k.getLabel() != null && !k.getLabel().isBlank());
+        checks.add(Map.of("check", "key_labelled", "passed", hasScopedKey,
+                "detail", hasScopedKey ? "API keys have labels" : "API keys missing labels"));
+        if (hasScopedKey) passed++; else failed++;
+
+        // Check 7: Key age < 90 days
+        boolean keyFresh = activeKeys.stream().allMatch(k ->
+                k.getCreatedAt().isAfter(OffsetDateTime.now().minusDays(90)));
+        checks.add(Map.of("check", "key_freshness", "passed", keyFresh,
+                "detail", keyFresh ? "All keys issued within 90 days" : "Some keys older than 90 days"));
+        if (keyFresh) passed++; else failed++;
+
+        int total = checks.size();
+        String result = failed == 0 ? "PASS" : "FAIL";
+
+        CertificationEntity cert = new CertificationEntity();
+        cert.setClientId(clientId);
+        cert.setTenantId(tenantId);
+        cert.setStatus("COMPLETED");
+        cert.setResult(result);
+        cert.setChecksTotal(total);
+        cert.setChecksPassed(passed);
+        cert.setChecksFailed(failed);
+        cert.setTriggeredBy(triggeredBy);
+        cert.setCompletedAt(OffsetDateTime.now());
+        try {
+            cert.setReportJson(objectMapper.writeValueAsString(Map.of("checks", checks)));
+        } catch (Exception ignored) {}
+        cert = certRepo.save(cert);
+
+        emitOutboxEvent("Certification", cert.getId().toString(),
+                "impilo.developer-portal.certification.completed.v1",
+                tenantId, correlationId, idempotencyKey,
+                cert.getId().toString(), "Certification",
+                Map.of("certification_id", cert.getId().toString(),
+                        "client_id", clientId.toString(),
+                        "result", result,
+                        "passed", passed, "failed", failed, "total", total));
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("certification_id", cert.getId());
+        response.put("client_id", clientId);
+        response.put("status", cert.getStatus());
+        response.put("result", result);
+        response.put("checks_total", total);
+        response.put("checks_passed", passed);
+        response.put("checks_failed", failed);
+        response.put("checks", checks);
+        response.put("started_at", cert.getStartedAt().toString());
+        response.put("completed_at", cert.getCompletedAt().toString());
+        return response;
+    }
+
+    public List<CertificationEntity> listCertifications(UUID clientId) {
+        return certRepo.findByClientIdOrderByCreatedAtDesc(clientId);
+    }
+
+    public Optional<CertificationEntity> getCertification(UUID certId) {
+        return certRepo.findById(certId);
+    }
+
+    // ── Federation Readiness ──
+
+    public Map<String, Object> checkFederationReadiness(UUID clientId) {
+        ClientEntity client = clientRepo.findById(clientId)
+                .orElseThrow(() -> new IllegalArgumentException("Client not found: " + clientId));
+
+        List<ApiKeyEntity> activeKeys = keyRepo.findByClientId(clientId).stream()
+                .filter(k -> "ACTIVE".equals(k.getStatus())).toList();
+        List<CertificationEntity> certs = certRepo.findByClientIdOrderByCreatedAtDesc(clientId);
+        boolean hasCertPass = certs.stream().anyMatch(c -> "PASS".equals(c.getResult()));
+
+        List<Map<String, Object>> items = new ArrayList<>();
+        boolean readyAll = true;
+
+        // Item 1: Client registered
+        items.add(Map.of("item", "client_registered", "ready", true, "detail", "Client registered: " + client.getClientName()));
+
+        // Item 2: Active API key
+        boolean hasKey = !activeKeys.isEmpty();
+        items.add(Map.of("item", "api_key_active", "ready", hasKey, "detail", hasKey ? activeKeys.size() + " active key(s)" : "No active keys"));
+        readyAll = readyAll && hasKey;
+
+        // Item 3: Certification passed
+        items.add(Map.of("item", "certification_passed", "ready", hasCertPass, "detail", hasCertPass ? "Last pass: " + certs.stream().filter(c -> "PASS".equals(c.getResult())).findFirst().map(c -> c.getCompletedAt().toString()).orElse("unknown") : "No certification passed"));
+        readyAll = readyAll && hasCertPass;
+
+        // Item 4: Sandbox tested
+        boolean sandboxReady = client.isSandboxEnabled();
+        items.add(Map.of("item", "sandbox_tested", "ready", sandboxReady, "detail", sandboxReady ? "Sandbox enabled" : "Sandbox not enabled"));
+        readyAll = readyAll && sandboxReady;
+
+        // Item 5: Deprecation posture
+        boolean postureSet = !"NONE".equals(client.getDeprecationPosture());
+        items.add(Map.of("item", "deprecation_posture_set", "ready", postureSet, "detail", "Posture: " + client.getDeprecationPosture()));
+        readyAll = readyAll && postureSet;
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("client_id", clientId);
+        response.put("client_name", client.getClientName());
+        response.put("overall_ready", readyAll);
+        response.put("checklist", items);
+        response.put("checked_at", OffsetDateTime.now().toString());
+        return response;
+    }
+
+    // ── Dashboard Stats ──
+
+    public Map<String, Object> getDashboardStats(UUID tenantId) {
+        List<ClientEntity> clients = clientRepo.findByTenantId(tenantId);
+        long activeClients = clients.stream().filter(c -> "ACTIVE".equals(c.getStatus())).count();
+        long sandboxClients = clients.stream().filter(ClientEntity::isSandboxEnabled).count();
+
+        List<ApiKeyEntity> allKeys = new ArrayList<>();
+        for (ClientEntity c : clients) {
+            allKeys.addAll(keyRepo.findByClientId(c.getId()));
+        }
+        long activeKeys = allKeys.stream().filter(k -> "ACTIVE".equals(k.getStatus())).count();
+        long revokedKeys = allKeys.stream().filter(k -> "REVOKED".equals(k.getStatus())).count();
+        long rotatedKeys = allKeys.stream().filter(k -> "ROTATED".equals(k.getStatus())).count();
+
+        List<CertificationEntity> allCerts = certRepo.findByTenantIdOrderByCreatedAtDesc(tenantId);
+        long certsPassed = allCerts.stream().filter(c -> "PASS".equals(c.getResult())).count();
+        long certsFailed = allCerts.stream().filter(c -> "FAIL".equals(c.getResult())).count();
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("total_clients", clients.size());
+        response.put("active_clients", activeClients);
+        response.put("sandbox_clients", sandboxClients);
+        response.put("total_keys", allKeys.size());
+        response.put("active_keys", activeKeys);
+        response.put("revoked_keys", revokedKeys);
+        response.put("rotated_keys", rotatedKeys);
+        response.put("total_certifications", allCerts.size());
+        response.put("certifications_passed", certsPassed);
+        response.put("certifications_failed", certsFailed);
         return response;
     }
 
