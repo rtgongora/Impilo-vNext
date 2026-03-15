@@ -98,6 +98,51 @@ public class DeveloperPortalController {
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 
+    // ── Sandbox Configuration ──
+
+    @PutMapping("/internal/v1/developer/clients/{client_id}/sandbox")
+    public ResponseEntity<?> configureSandbox(@PathVariable("client_id") UUID clientId,
+                                                @RequestBody Map<String, Object> request) {
+        RequestContext ctx = RequestContextHolder.require();
+        String sandboxConfig;
+        try {
+            sandboxConfig = objectMapper.writeValueAsString(request.get("config"));
+        } catch (Exception e) {
+            sandboxConfig = "{}";
+        }
+        Map<String, Object> result = portalService.configureSandbox(
+                clientId, UUID.fromString(ctx.tenantId()), ctx.correlationId(), sandboxConfig);
+        return ResponseEntity.ok(result);
+    }
+
+    // ── Deprecation Posture ──
+
+    @PutMapping("/internal/v1/developer/clients/{client_id}/deprecation-posture")
+    public ResponseEntity<?> updateDeprecationPosture(@PathVariable("client_id") UUID clientId,
+                                                        @RequestBody Map<String, String> request) {
+        RequestContextHolder.require();
+        try {
+            Map<String, Object> result = portalService.updateDeprecationPosture(clientId, request.get("posture"));
+            return ResponseEntity.ok(result);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    // ── Key Revocation ──
+
+    @DeleteMapping("/internal/v1/developer/keys/{key_id}")
+    public ResponseEntity<?> revokeKey(@PathVariable("key_id") UUID keyId) {
+        RequestContextHolder.require();
+        try {
+            Map<String, Object> result = portalService.revokeApiKey(keyId);
+            return ResponseEntity.ok(result);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+
     // ── Discovery ──
 
     @GetMapping("/internal/v1/developer/discovery")
@@ -107,10 +152,16 @@ public class DeveloperPortalController {
                 "service", "developer-portal-service",
                 "version", "1.0.0",
                 "endpoints", List.of(
-                        Map.of("method", "POST", "path", "/internal/v1/developer/clients", "description", "Register a client"),
-                        Map.of("method", "GET", "path", "/internal/v1/developer/clients", "description", "List clients"),
+                        Map.of("method", "POST", "path", "/internal/v1/developer/clients", "description", "Register a partner client"),
+                        Map.of("method", "GET", "path", "/internal/v1/developer/clients", "description", "List registered clients"),
+                        Map.of("method", "GET", "path", "/internal/v1/developer/clients/{id}", "description", "Get client details"),
                         Map.of("method", "POST", "path", "/internal/v1/developer/clients/{id}/keys", "description", "Issue API key"),
-                        Map.of("method", "POST", "path", "/internal/v1/developer/keys/{id}/rotate", "description", "Rotate API key")
+                        Map.of("method", "GET", "path", "/internal/v1/developer/clients/{id}/keys", "description", "List client API keys"),
+                        Map.of("method", "POST", "path", "/internal/v1/developer/keys/{id}/rotate", "description", "Rotate API key"),
+                        Map.of("method", "DELETE", "path", "/internal/v1/developer/keys/{id}", "description", "Revoke API key"),
+                        Map.of("method", "PUT", "path", "/internal/v1/developer/clients/{id}/sandbox", "description", "Configure sandbox"),
+                        Map.of("method", "PUT", "path", "/internal/v1/developer/clients/{id}/deprecation-posture", "description", "Set deprecation posture"),
+                        Map.of("method", "GET", "path", "/internal/v1/developer/discovery", "description", "API discovery metadata")
                 )
         ));
     }

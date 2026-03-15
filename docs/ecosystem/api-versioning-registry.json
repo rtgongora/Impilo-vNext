@@ -1,0 +1,232 @@
+{
+  "_description": "Impilo vNext API Versioning Registry — machine-readable source of truth for all API versions, deprecation windows, and sunset dates. Used by verify-deprecation-window.sh to enforce policy.",
+  "_updated": "2026-03-15",
+  "_policy_ref": "docs/ecosystem/versioning-and-deprecation-policy.md",
+  "versioning_rules": {
+    "path_convention": "/internal/v{N}/{service}/{resource}",
+    "min_deprecation_window_days": 90,
+    "max_concurrent_versions": 2,
+    "sunset_grace_period_days": 30,
+    "deprecation_header": "Sunset",
+    "deprecation_link_header": "Deprecation"
+  },
+  "api_versions": [
+    {
+      "service": "tshepo-service",
+      "path_prefix": "/internal/v1/",
+      "version": 1,
+      "status": "CURRENT",
+      "introduced": "2025-06-01",
+      "deprecated_at": null,
+      "sunset_at": null,
+      "endpoints": [
+        "POST /internal/v1/authorize",
+        "POST /internal/v1/identity/cpid/resolve",
+        "POST /internal/v1/identity/mappings"
+      ]
+    },
+    {
+      "service": "vito-service",
+      "path_prefix": "/internal/v1/",
+      "version": 1,
+      "status": "CURRENT",
+      "introduced": "2025-06-01",
+      "deprecated_at": null,
+      "sunset_at": null,
+      "endpoints": [
+        "POST /internal/v1/patients",
+        "GET /internal/v1/patients/{cpid}",
+        "PUT /internal/v1/patients/{cpid}"
+      ]
+    },
+    {
+      "service": "butano-service",
+      "path_prefix": "/fhir/",
+      "version": 1,
+      "status": "CURRENT",
+      "introduced": "2025-06-01",
+      "deprecated_at": null,
+      "sunset_at": null,
+      "note": "FHIR R4 — versioned via FHIR CapabilityStatement, not path prefix",
+      "endpoints": [
+        "POST /fhir/Observation",
+        "GET /fhir/Observation",
+        "POST /fhir/Encounter",
+        "GET /fhir/Patient/{cpid}"
+      ]
+    },
+    {
+      "service": "pct-service",
+      "path_prefix": "/internal/v1/",
+      "version": 1,
+      "status": "CURRENT",
+      "introduced": "2025-09-01",
+      "deprecated_at": null,
+      "sunset_at": null,
+      "endpoints": [
+        "POST /internal/v1/journeys",
+        "POST /internal/v1/encounters",
+        "POST /internal/v1/queues/{id}/items"
+      ]
+    },
+    {
+      "service": "developer-portal-service",
+      "path_prefix": "/internal/v1/developer/",
+      "version": 1,
+      "status": "CURRENT",
+      "introduced": "2026-01-15",
+      "deprecated_at": null,
+      "sunset_at": null,
+      "endpoints": [
+        "POST /internal/v1/developer/clients",
+        "GET /internal/v1/developer/clients",
+        "GET /internal/v1/developer/clients/{id}",
+        "POST /internal/v1/developer/clients/{id}/keys",
+        "GET /internal/v1/developer/clients/{id}/keys",
+        "POST /internal/v1/developer/keys/{id}/rotate",
+        "DELETE /internal/v1/developer/keys/{id}",
+        "PUT /internal/v1/developer/clients/{id}/sandbox",
+        "PUT /internal/v1/developer/clients/{id}/deprecation-posture",
+        "GET /internal/v1/developer/discovery"
+      ]
+    },
+    {
+      "service": "schema-registry-service",
+      "path_prefix": "/internal/v1/schemas/",
+      "version": 1,
+      "status": "CURRENT",
+      "introduced": "2026-01-15",
+      "deprecated_at": null,
+      "sunset_at": null,
+      "endpoints": [
+        "POST /internal/v1/schemas",
+        "GET /internal/v1/schemas/subjects",
+        "GET /internal/v1/schemas/subjects/{subject}",
+        "GET /internal/v1/schemas/subjects/{subject}/versions/{version}",
+        "POST /internal/v1/schemas/compatibility"
+      ]
+    },
+    {
+      "service": "offline-edge-service",
+      "path_prefix": "/internal/v1/offline/",
+      "version": 1,
+      "status": "CURRENT",
+      "introduced": "2026-02-01",
+      "deprecated_at": null,
+      "sunset_at": null,
+      "endpoints": [
+        "POST /internal/v1/offline/entitlements",
+        "POST /internal/v1/offline/vitals",
+        "POST /internal/v1/offline/actions",
+        "POST /internal/v1/offline/sync",
+        "POST /internal/v1/offline/replay/{id}",
+        "GET /internal/v1/offline/conflicts",
+        "POST /internal/v1/offline/conflicts/{id}/resolve",
+        "POST /internal/v1/offline/break-glass",
+        "POST /internal/v1/offline/break-glass/{id}/review"
+      ]
+    },
+    {
+      "service": "notification-service",
+      "path_prefix": "/internal/v1/notify/",
+      "version": 1,
+      "status": "CURRENT",
+      "introduced": "2025-11-01",
+      "deprecated_at": null,
+      "sunset_at": null,
+      "endpoints": [
+        "POST /internal/v1/notify/send",
+        "POST /internal/v1/notify/templates",
+        "GET /internal/v1/notify/templates"
+      ]
+    },
+    {
+      "service": "federation-service",
+      "path_prefix": "/internal/v1/federation/",
+      "version": 1,
+      "status": "CURRENT",
+      "introduced": "2026-03-01",
+      "deprecated_at": null,
+      "sunset_at": null,
+      "endpoints": [
+        "POST /internal/v1/federation/pods/register",
+        "GET /internal/v1/federation/pods",
+        "POST /internal/v1/federation/pods/{id}/revoke"
+      ]
+    }
+  ],
+  "event_versions": [
+    {
+      "event_type": "impilo.developer-portal.client.registered.v1",
+      "version": 1,
+      "status": "CURRENT",
+      "introduced": "2026-01-15",
+      "deprecated_at": null,
+      "sunset_at": null
+    },
+    {
+      "event_type": "impilo.developer-portal.apikey.issued.v1",
+      "version": 1,
+      "status": "CURRENT",
+      "introduced": "2026-01-15",
+      "deprecated_at": null,
+      "sunset_at": null
+    },
+    {
+      "event_type": "impilo.developer-portal.apikey.rotated.v1",
+      "version": 1,
+      "status": "CURRENT",
+      "introduced": "2026-01-15",
+      "deprecated_at": null,
+      "sunset_at": null
+    },
+    {
+      "event_type": "impilo.schema-registry.schema.registered.v1",
+      "version": 1,
+      "status": "CURRENT",
+      "introduced": "2026-01-15",
+      "deprecated_at": null,
+      "sunset_at": null
+    },
+    {
+      "event_type": "impilo.offline.vital.captured.v1",
+      "version": 1,
+      "status": "CURRENT",
+      "introduced": "2026-02-01",
+      "deprecated_at": null,
+      "sunset_at": null
+    },
+    {
+      "event_type": "impilo.offline.action.synced.v1",
+      "version": 1,
+      "status": "CURRENT",
+      "introduced": "2026-02-01",
+      "deprecated_at": null,
+      "sunset_at": null
+    },
+    {
+      "event_type": "impilo.offline.break_glass.activated.v1",
+      "version": 1,
+      "status": "CURRENT",
+      "introduced": "2026-03-15",
+      "deprecated_at": null,
+      "sunset_at": null
+    },
+    {
+      "event_type": "impilo.offline.break_glass.reviewed.v1",
+      "version": 1,
+      "status": "CURRENT",
+      "introduced": "2026-03-15",
+      "deprecated_at": null,
+      "sunset_at": null
+    },
+    {
+      "event_type": "impilo.notify.receipt.recorded.v1",
+      "version": 1,
+      "status": "CURRENT",
+      "introduced": "2025-11-01",
+      "deprecated_at": null,
+      "sunset_at": null
+    }
+  ]
+}

@@ -159,6 +159,58 @@ public class DeveloperPortalService {
         return keyRepo.findByClientId(clientId);
     }
 
+    @Transactional
+    public Map<String, Object> configureSandbox(UUID clientId, UUID tenantId, String correlationId,
+                                                  String sandboxConfig) {
+        ClientEntity client = clientRepo.findById(clientId)
+                .orElseThrow(() -> new IllegalArgumentException("Client not found: " + clientId));
+
+        client.setSandboxEnabled(true);
+        client.setSandboxConfig(sandboxConfig);
+        client.setUpdatedAt(OffsetDateTime.now());
+        client = clientRepo.save(client);
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("client_id", client.getId());
+        response.put("sandbox_enabled", true);
+        response.put("sandbox_config", sandboxConfig);
+        response.put("updated_at", client.getUpdatedAt().toString());
+        return response;
+    }
+
+    @Transactional
+    public Map<String, Object> updateDeprecationPosture(UUID clientId, String posture) {
+        if (!Set.of("NONE", "WARN", "BLOCK").contains(posture)) {
+            throw new IllegalArgumentException("Invalid deprecation posture: " + posture
+                    + ". Must be one of: NONE, WARN, BLOCK");
+        }
+        ClientEntity client = clientRepo.findById(clientId)
+                .orElseThrow(() -> new IllegalArgumentException("Client not found: " + clientId));
+
+        client.setDeprecationPosture(posture);
+        client.setUpdatedAt(OffsetDateTime.now());
+        client = clientRepo.save(client);
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("client_id", client.getId());
+        response.put("deprecation_posture", posture);
+        response.put("updated_at", client.getUpdatedAt().toString());
+        return response;
+    }
+
+    @Transactional
+    public Map<String, Object> revokeApiKey(UUID keyId) {
+        ApiKeyEntity key = keyRepo.findById(keyId)
+                .orElseThrow(() -> new IllegalArgumentException("API key not found: " + keyId));
+        key.setStatus("REVOKED");
+        keyRepo.save(key);
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("key_id", key.getId());
+        response.put("status", "REVOKED");
+        return response;
+    }
+
     private void emitOutboxEvent(String aggregateType, String aggregateId, String eventType,
                                   UUID tenantId, String correlationId, String idempotencyKey,
                                   String subjectId, String subjectType,
