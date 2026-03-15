@@ -17,7 +17,8 @@
     "oros-web",
     "pharmacy-web",
     "inventory-web",
-    "support-console"
+    "support-console",
+    "developer-console"
   ],
   "scripts": {
     "dev:shell": "npm -w one-ui-shell run dev",
@@ -33,6 +34,7 @@
     "dev:pharmacy": "npm -w pharmacy-web run dev",
     "dev:inventory": "npm -w inventory-web run dev",
     "dev:support": "npm -w support-console run dev",
+    "dev:developer": "npm -w developer-console run dev",
     "build": "turbo run build",
     "lint": "turbo run lint",
     "type-check": "turbo run type-check"
