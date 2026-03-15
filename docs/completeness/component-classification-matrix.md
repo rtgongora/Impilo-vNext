@@ -61,7 +61,7 @@
 | msika-service | 70 | 5 | 3 | Y | **COMPLETE** | Product/tariff registry with FTS |
 | msika-flow-service | 90 | 8 | 1 | Y | **COMPLETE** | Procurement/supply chain workflow |
 | product-registry-service | 14 | 2 | 2 | Y | **ADEQUATE** | Product catalog CRUD — thin but functional |
-| indawo-service | 20 | 2 | 2 | N | **ADEQUATE** | Geographic/site registry |
+| indawo-service | 20 | 2 | 2 | N | **ADEQUATE** | Geographic/site registry — Kafka/actuator config fixed in this audit |
 | ubomi-service | 18 | 1 | 1 | Y | **ADEQUATE** | CRVS birth/death notifications — has services but only GoldenContractIT |
 
 ## D. Ring 0 — Clinical Execution Services

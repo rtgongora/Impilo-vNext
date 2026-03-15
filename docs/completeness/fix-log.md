@@ -25,7 +25,17 @@
 - `docs/completeness/fix-log.md` — This file
 - `docs/completeness/blockers-and-remaining-risks.md` — Outstanding blockers
 
-### 3. Created Completeness Audit Acceptance Pack
+### 3. Fixed INDAWO Service Missing Configuration
+**Category**: Service / Configuration
+**File modified**: `services/indawo-service/src/main/resources/application.yml`
+**What was missing**:
+- Kafka bootstrap config (service writes to outbox but had no Kafka producer config)
+- Spring Security OAuth2 resource server config
+- Management/actuator endpoint exposure (health, info, prometheus, metrics)
+- Ops instrumentation config (outbox-table reference)
+**Impact**: INDAWO upgraded from FRAGILE to ADEQUATE — can now publish outbox events and expose health endpoints
+
+### 4. Created Completeness Audit Acceptance Pack
 **Category**: Acceptance
 **Files created**:
 - `docs/acceptance/completeness-audit-acceptance-pack.md` — Formal acceptance evidence
