@@ -18,7 +18,7 @@ import java.util.*;
  * POST /internal/v1/mobile/provider/telemedicine/sessions/{id}/end    - end session
  */
 @RestController
-@RequestMapping("/internal/v1/mobile/provider/telemedicine/sessions")
+@RequestMapping("/internal/v1/mobile/provider/telemedicine")
 public class MobileTelemedicineController {
 
     private final JdbcTemplate jdbcTemplate;
@@ -29,7 +29,7 @@ public class MobileTelemedicineController {
         this.outboxService = outboxService;
     }
 
-    @GetMapping
+    @GetMapping("/sessions")
     public ResponseEntity<Map<String, Object>> listSessions(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
@@ -95,7 +95,7 @@ public class MobileTelemedicineController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/{id}/join")
+    @PostMapping("/sessions/{id}/join")
     @Transactional
     public ResponseEntity<Map<String, Object>> joinSession(
             @PathVariable UUID id,
@@ -152,7 +152,7 @@ public class MobileTelemedicineController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/{id}/end")
+    @PostMapping("/sessions/{id}/end")
     @Transactional
     public ResponseEntity<Map<String, Object>> endSession(
             @PathVariable UUID id,
