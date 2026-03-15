@@ -69,8 +69,10 @@ Establish that Ring 0 services (TSHEPO, VITO, VARAPI, TUSO, ZIBO) are production
 | 17 | Runbook: Outbox Backlog | `docs/production-readiness/runbooks/outbox-backlog.md` |
 | 18 | Runbook: Dependency Failure | `docs/production-readiness/runbooks/dependency-failure.md` |
 | 19 | Wave 19 Acceptance Pack | `docs/acceptance/wave19-production-readiness-pack.md` |
+| 20 | Security Posture Checklist | `docs/production-readiness/security-posture-checklist.md` |
+| 21 | Production Readiness Verifier | `scripts/production-readiness/verify-readiness.sh` |
 
-**Total: 19 artifacts across 4 sub-waves.**
+**Total: 21 artifacts across 4 sub-waves.**
 
 ---
 
@@ -197,3 +199,4 @@ Establish that Ring 0 services (TSHEPO, VITO, VARAPI, TUSO, ZIBO) are production
 | Date | Author | Change |
 |------|--------|--------|
 | 2026-03-15 | Wave 19D | Initial Wave 19 acceptance pack |
+| 2026-03-15 | Wave 19D | Added security posture checklist, verify-readiness.sh, extended Ring 0 SLOs |

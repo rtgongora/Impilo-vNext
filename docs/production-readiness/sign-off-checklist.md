@@ -1,7 +1,7 @@
 # Wave 19 — Production Readiness Sign-Off Checklist
 
 > Date: 2026-03-15
-> Scope: Ring 0 services (TSHEPO, VITO, VARAPI, TUSO, ZIBO)
+> Scope: Ring 0 services (TSHEPO, VITO, VARAPI, TUSO, ZIBO) + extended Ring 0 (MSIKA, BUTANO, MUSHEX)
 > Branch: `claude/review-project-manifest-jb5O0`
 
 ---
@@ -90,6 +90,21 @@ Each item must be marked PASS, FAIL, or N/A by the reviewer. Items marked FAIL m
 
 ---
 
+## 6b. Security Posture (Infrastructure)
+
+| # | Criterion | Priority | Status | Evidence / Gap |
+|---|-----------|:--------:|:------:|---------------|
+| 6b.1 | mTLS posture verified (Envoy → service) | HIGH | PASS | `security-posture-checklist.md` §1 — M-2 |
+| 6b.2 | PostgreSQL `sslmode=verify-full` in production Helm | HIGH | DEFERRED | M-3 — not yet in Helm values |
+| 6b.3 | Redis TLS enabled in production Helm | MEDIUM | DEFERRED | M-4 — not yet in Helm values |
+| 6b.4 | Kafka SSL listener in production Helm | MEDIUM | DEFERRED | M-5 — not yet in Helm values |
+| 6b.5 | Secrets rotation plan documented | HIGH | PASS | `security-posture-checklist.md` §2 |
+| 6b.6 | SecretProvider adopted across Ring 0 | HIGH | CONDITIONAL | 5/5 primary + MSIKA pass; BUTANO, MUSHEX need verification |
+| 6b.7 | RBAC trust headers enforced on all endpoints | CRITICAL | PASS | `security-posture-checklist.md` §3 — R-1 through R-7 |
+| 6b.8 | Extended Ring 0 SLO/SLI definitions | HIGH | PASS | `ring0-slo-sli-spec.md` §3.6–§3.8 — MSIKA, BUTANO, MUSHEX |
+
+---
+
 ## 7. Deployment
 
 | # | Criterion | Priority | Status | Evidence / Gap |
@@ -127,12 +142,13 @@ Each item must be marked PASS, FAIL, or N/A by the reviewer. Items marked FAIL m
 | Load & Performance | 6 | 5 | 0 | 0 | 1 |
 | Resilience & Isolation | 5 | 3 | 0 | 0 | 2 |
 | Security | 6 | 4 | 0 | 2 | 0 |
+| Security Posture (Infra) | 8 | 4 | 1 | 0 | 3 |
 | Deployment | 6 | 3 | 0 | 3 | 0 |
 | Operational Readiness | 7 | 7 | 0 | 0 | 0 |
-| **TOTAL** | **49** | **37** | **3** | **5** | **4** |
+| **TOTAL** | **57** | **41** | **4** | **5** | **7** |
 
-**Pass rate (excluding deferred):** 37/45 = 82%
-**Pass + conditional rate:** 40/45 = 89%
+**Pass rate (excluding deferred):** 41/50 = 82%
+**Pass + conditional rate:** 45/50 = 90%
 
 ### Blocking Items (FAIL on CRITICAL priority)
 
@@ -170,3 +186,4 @@ Each item must be marked PASS, FAIL, or N/A by the reviewer. Items marked FAIL m
 | Date | Author | Change |
 |------|--------|--------|
 | 2026-03-15 | Wave 19D | Initial sign-off checklist |
+| 2026-03-15 | Wave 19D | Added security posture (infrastructure) section, extended Ring 0 scope |

@@ -1,7 +1,7 @@
 # Ring 0 — SLI/SLO Specification
 
 > Date: 2026-03-15
-> Scope: Ring 0 services (TSHEPO, VITO, VARAPI, TUSO, ZIBO) and TSHEPO sub-services
+> Scope: Ring 0 services (TSHEPO, VITO, VARAPI, TUSO, ZIBO), extended Ring 0 (MSIKA, BUTANO, MUSHEX), and TSHEPO sub-services
 > Wave: 19B
 > Branch: `claude/review-project-manifest-jb5O0`
 > Prerequisite: [Wave 19A Baseline Inventory](wave19a-baseline-inventory.md), [Wave 19A Gap Register](wave19a-gap-register.md)
@@ -137,7 +137,58 @@ impilo_ops_outbox_lag{application="vito-service"} > 20
 
 ---
 
-### 3.6 TSHEPO Sub-Services
+### 3.6 MSIKA (Clinical Execution — Clinical Engine)
+
+**Role:** Core clinical workflow engine. Manages encounters, clinical notes, prescriptions, lab orders, and referrals. Referenced by EHR UI and clinical decision support.
+
+| SLI Category | SLI Definition | Metric / Query | SLO Target |
+|-------------|----------------|----------------|------------|
+| **Availability** | Proportion of non-5xx responses | `1 - (sum(rate(http_server_requests_seconds_count{application="msika-service", status=~"5.."}[5m])) / sum(rate(http_server_requests_seconds_count{application="msika-service"}[5m])))` | >= 99.9% |
+| **Latency (p50)** | Median clinical operation | `histogram_quantile(0.50, sum(rate(http_server_requests_seconds_bucket{application="msika-service"}[5m])) by (le))` | <= 40 ms |
+| **Latency (p95)** | 95th percentile response time | `histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{application="msika-service"}[5m])) by (le))` | <= 120 ms |
+| **Latency (p99)** | 99th percentile response time | `histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket{application="msika-service"}[5m])) by (le))` | <= 350 ms |
+| **Outbox Lag** | Count of unpublished events in `msika.event_outbox` | `impilo_ops_outbox_lag{application="msika-service"}` | <= 100 |
+
+**Rationale:** MSIKA handles active clinical encounters. Its latency targets are slightly more relaxed than TUSO (read-heavy terminology lookups) because clinical write operations involve more complex domain logic and transactional boundaries.
+
+---
+
+### 3.7 BUTANO (Clinical Execution — FHIR Shared Health Record)
+
+**Role:** HAPI FHIR-based Shared Health Record. Stores clinical resources (Encounters, Observations, Conditions) keyed by CPID (no PII). Referenced by clinical summaries, continuity of care, and data exchange.
+
+| SLI Category | SLI Definition | Metric / Query | SLO Target |
+|-------------|----------------|----------------|------------|
+| **Availability** | Proportion of non-5xx responses | `1 - (sum(rate(http_server_requests_seconds_count{application="butano-service", status=~"5.."}[5m])) / sum(rate(http_server_requests_seconds_count{application="butano-service"}[5m])))` | >= 99.9% |
+| **Latency (p50)** | Median FHIR resource read | `histogram_quantile(0.50, sum(rate(http_server_requests_seconds_bucket{application="butano-service"}[5m])) by (le))` | <= 50 ms |
+| **Latency (p95)** | 95th percentile response time | `histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{application="butano-service"}[5m])) by (le))` | <= 200 ms |
+| **Latency (p99)** | 99th percentile response time | `histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket{application="butano-service"}[5m])) by (le))` | <= 500 ms |
+| **Freshness** | FHIR resource currency after clinical write | Time between MSIKA event publication and BUTANO resource update | <= 30 s |
+| **Outbox Lag** | Count of unpublished events in `butano.event_outbox` | `impilo_ops_outbox_lag{application="butano-service"}` | <= 100 |
+
+**Rationale:** BUTANO wraps HAPI FHIR, which has inherently higher latency due to FHIR resource parsing, validation, and search indexing. The 200 ms p95 target accounts for FHIR Bundle operations and `$everything` queries. Freshness tracks how quickly clinical data written via MSIKA appears in the SHR.
+
+**BUTANO instrumentation note:** BUTANO is a HAPI FHIR wrapper. If HAPI's default Micrometer integration does not expose `http_server_requests_seconds_*`, SLIs must be measured via Envoy upstream metrics or a custom filter. Verify metric availability during staging deployment.
+
+---
+
+### 3.8 MUSHEX (Finance — Payer & Claims Engine)
+
+**Role:** Manages payer contracts, claims adjudication, and reimbursement workflows. Referenced during encounter finalization for coverage validation and post-encounter for claims submission.
+
+| SLI Category | SLI Definition | Metric / Query | SLO Target |
+|-------------|----------------|----------------|------------|
+| **Availability** | Proportion of non-5xx responses | `1 - (sum(rate(http_server_requests_seconds_count{application="mushex-service", status=~"5.."}[5m])) / sum(rate(http_server_requests_seconds_count{application="mushex-service"}[5m])))` | >= 99.9% |
+| **Latency (p50)** | Median claims/payer operation | `histogram_quantile(0.50, sum(rate(http_server_requests_seconds_bucket{application="mushex-service"}[5m])) by (le))` | <= 40 ms |
+| **Latency (p95)** | 95th percentile response time | `histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{application="mushex-service"}[5m])) by (le))` | <= 150 ms |
+| **Latency (p99)** | 99th percentile response time | `histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket{application="mushex-service"}[5m])) by (le))` | <= 400 ms |
+| **Outbox Lag** | Count of unpublished events in `mushex.event_outbox` | `impilo_ops_outbox_lag{application="mushex-service"}` | <= 100 |
+
+**Rationale:** MUSHEX handles financial workflows that are critical for revenue cycle but are not on the immediate clinical care path. Latency targets are moderate — claims adjudication can involve external payer lookups. The 99.9% availability SLO matches other Ring 0 services; financial operations must not silently fail.
+
+---
+
+### 3.9 TSHEPO Sub-Services
 
 The 6 TSHEPO sub-services form the internal decomposition of the Trust Plane. They share the same SLO tier as TSHEPO itself because they are on the authorization critical path.
 
@@ -170,36 +221,36 @@ The following Prometheus recording rules pre-compute SLI values for efficient SL
 - record: impilo:ring0:availability:ratio_rate5m
   expr: |
     1 - (
-      sum by (application) (rate(http_server_requests_seconds_count{application=~"tshepo-service|vito-service|varapi-service|tuso-service|zibo-service", status=~"5.."}[5m]))
+      sum by (application) (rate(http_server_requests_seconds_count{application=~"tshepo-service|vito-service|varapi-service|tuso-service|zibo-service|msika-service|butano-service|mushex-service", status=~"5.."}[5m]))
       /
-      sum by (application) (rate(http_server_requests_seconds_count{application=~"tshepo-service|vito-service|varapi-service|tuso-service|zibo-service"}[5m]))
+      sum by (application) (rate(http_server_requests_seconds_count{application=~"tshepo-service|vito-service|varapi-service|tuso-service|zibo-service|msika-service|butano-service|mushex-service"}[5m]))
     )
 
 # 30m window for burn-rate alerting
 - record: impilo:ring0:availability:ratio_rate30m
   expr: |
     1 - (
-      sum by (application) (rate(http_server_requests_seconds_count{application=~"tshepo-service|vito-service|varapi-service|tuso-service|zibo-service", status=~"5.."}[30m]))
+      sum by (application) (rate(http_server_requests_seconds_count{application=~"tshepo-service|vito-service|varapi-service|tuso-service|zibo-service|msika-service|butano-service|mushex-service", status=~"5.."}[30m]))
       /
-      sum by (application) (rate(http_server_requests_seconds_count{application=~"tshepo-service|vito-service|varapi-service|tuso-service|zibo-service"}[30m]))
+      sum by (application) (rate(http_server_requests_seconds_count{application=~"tshepo-service|vito-service|varapi-service|tuso-service|zibo-service|msika-service|butano-service|mushex-service"}[30m]))
     )
 
 # 2h window for slow-burn alerting
 - record: impilo:ring0:availability:ratio_rate2h
   expr: |
     1 - (
-      sum by (application) (rate(http_server_requests_seconds_count{application=~"tshepo-service|vito-service|varapi-service|tuso-service|zibo-service", status=~"5.."}[2h]))
+      sum by (application) (rate(http_server_requests_seconds_count{application=~"tshepo-service|vito-service|varapi-service|tuso-service|zibo-service|msika-service|butano-service|mushex-service", status=~"5.."}[2h]))
       /
-      sum by (application) (rate(http_server_requests_seconds_count{application=~"tshepo-service|vito-service|varapi-service|tuso-service|zibo-service"}[2h]))
+      sum by (application) (rate(http_server_requests_seconds_count{application=~"tshepo-service|vito-service|varapi-service|tuso-service|zibo-service|msika-service|butano-service|mushex-service"}[2h]))
     )
 
 # 6h window for slow-burn alerting
 - record: impilo:ring0:availability:ratio_rate6h
   expr: |
     1 - (
-      sum by (application) (rate(http_server_requests_seconds_count{application=~"tshepo-service|vito-service|varapi-service|tuso-service|zibo-service", status=~"5.."}[6h]))
+      sum by (application) (rate(http_server_requests_seconds_count{application=~"tshepo-service|vito-service|varapi-service|tuso-service|zibo-service|msika-service|butano-service|mushex-service", status=~"5.."}[6h]))
       /
-      sum by (application) (rate(http_server_requests_seconds_count{application=~"tshepo-service|vito-service|varapi-service|tuso-service|zibo-service"}[6h]))
+      sum by (application) (rate(http_server_requests_seconds_count{application=~"tshepo-service|vito-service|varapi-service|tuso-service|zibo-service|msika-service|butano-service|mushex-service"}[6h]))
     )
 ```
 
@@ -210,14 +261,14 @@ The following Prometheus recording rules pre-compute SLI values for efficient SL
 - record: impilo:ring0:latency:p95_rate5m
   expr: |
     histogram_quantile(0.95,
-      sum by (le, application) (rate(http_server_requests_seconds_bucket{application=~"tshepo-service|vito-service|varapi-service|tuso-service|zibo-service"}[5m]))
+      sum by (le, application) (rate(http_server_requests_seconds_bucket{application=~"tshepo-service|vito-service|varapi-service|tuso-service|zibo-service|msika-service|butano-service|mushex-service"}[5m]))
     )
 
 # p99 latency per service (5m rate)
 - record: impilo:ring0:latency:p99_rate5m
   expr: |
     histogram_quantile(0.99,
-      sum by (le, application) (rate(http_server_requests_seconds_bucket{application=~"tshepo-service|vito-service|varapi-service|tuso-service|zibo-service"}[5m]))
+      sum by (le, application) (rate(http_server_requests_seconds_bucket{application=~"tshepo-service|vito-service|varapi-service|tuso-service|zibo-service|msika-service|butano-service|mushex-service"}[5m]))
     )
 ```
 
@@ -226,7 +277,7 @@ The following Prometheus recording rules pre-compute SLI values for efficient SL
 ```yaml
 - record: impilo:ring0:outbox_lag:current
   expr: |
-    impilo_ops_outbox_lag{application=~"tshepo-service|vito-service|varapi-service|tuso-service|zibo-service"}
+    impilo_ops_outbox_lag{application=~"tshepo-service|vito-service|varapi-service|tuso-service|zibo-service|msika-service|butano-service|mushex-service"}
 ```
 
 ---
@@ -240,6 +291,9 @@ The following Prometheus recording rules pre-compute SLI values for efficient SL
 | VARAPI | 99.9% | ~43 min | 80 ms | 250 ms | 100 events | 30 s |
 | TUSO | 99.9% | ~43 min | 50 ms | 150 ms | 100 events | 24 h |
 | ZIBO | 99.9% | ~43 min | 100 ms | 300 ms | 100 events | 24 h |
+| MSIKA | 99.9% | ~43 min | 120 ms | 350 ms | 100 events | N/A |
+| BUTANO | 99.9% | ~43 min | 200 ms | 500 ms | 100 events | 30 s |
+| MUSHEX | 99.9% | ~43 min | 150 ms | 400 ms | 100 events | N/A |
 
 ---
 
@@ -262,3 +316,4 @@ The following Prometheus recording rules pre-compute SLI values for efficient SL
 | Date | Author | Change |
 |------|--------|--------|
 | 2026-03-15 | Wave 19B | Initial SLI/SLO specification for Ring 0 |
+| 2026-03-15 | Wave 19D | Added extended Ring 0 services (MSIKA, BUTANO, MUSHEX) |

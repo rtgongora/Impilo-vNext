@@ -1,7 +1,7 @@
 # Wave 19 — Production Readiness Report
 
 > Date: 2026-03-15
-> Scope: Ring 0 services (TSHEPO, VITO, VARAPI, TUSO, ZIBO)
+> Scope: Ring 0 services (TSHEPO, VITO, VARAPI, TUSO, ZIBO) + extended Ring 0 (MSIKA, BUTANO, MUSHEX)
 > Branch: `claude/review-project-manifest-jb5O0`
 > Classification: **CONDITIONAL PASS — Ring 0 services are production-ready with documented exceptions**
 
@@ -106,6 +106,8 @@ Plus 3 pre-existing runbooks:
 | SecretProvider | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 **Finding:** All 5 primary Ring 0 services have Wave 14 security baseline. TSHEPO sub-services lack SecurityBaselineConfig (G-17, CRITICAL).
+
+**Security posture deep-dive:** A comprehensive security posture checklist covering mTLS verification, secrets rotation plan, and RBAC/PAM review is available at `docs/production-readiness/security-posture-checklist.md`. Summary: 8/21 items pass, 13 deferred to staging/pre-production, 0 failures. Infrastructure-level hardening (mTLS enforcement, secrets rotation execution) requires staging environment.
 
 ### 2.7 Deployment Readiness
 
@@ -238,6 +240,8 @@ BUTANO (HAPI FHIR) uses CPID only; PII stays in VITO. This is enforced by the VI
 | Runbook: Outbox Backlog | `docs/production-readiness/runbooks/outbox-backlog.md` | 19D |
 | Runbook: Dependency Failure | `docs/production-readiness/runbooks/dependency-failure.md` | 19D |
 | Wave 19C Acceptance Pack | `docs/acceptance/wave19c-load-baseline-acceptance-pack.md` | 19C |
+| Security Posture Checklist | `docs/production-readiness/security-posture-checklist.md` | 19D |
+| Production Readiness Verifier | `scripts/production-readiness/verify-readiness.sh` | 19D |
 | Wave 19 Acceptance Pack | `docs/acceptance/wave19-production-readiness-pack.md` | 19D |
 
 ---
@@ -247,3 +251,4 @@ BUTANO (HAPI FHIR) uses CPID only; PII stays in VITO. This is enforced by the VI
 | Date | Author | Change |
 |------|--------|--------|
 | 2026-03-15 | Wave 19D | Initial production readiness report |
+| 2026-03-15 | Wave 19D | Added security posture checklist reference, extended Ring 0 scope (MSIKA, BUTANO, MUSHEX) |
