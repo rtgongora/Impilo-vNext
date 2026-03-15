@@ -29,11 +29,11 @@
 | shared-kernel (TS) | 6 | 4 | npm | **COMPLETE** | TypeScript equivalent — audit, consistency, events, schema |
 | tshepo-contracts | 13 | 4 | Maven | **COMPLETE** | Trust headers, authz contracts, protobuf definitions |
 | tshepo-sdk | 5 | 4 | Maven | **COMPLETE** | TrustContext, filter, header propagation, authz client |
-| security-baseline | 12 | 4 | Maven | **ADEQUATE** | Security auto-config, CORS, rate limiting, CSP |
-| ops-instrumentation | 8 | 1 | Maven | **MINIMAL** | Observability wiring — only 1 test |
-| federation-connector | 9 | 4 | Maven | **ADEQUATE** | Federation handshake, relay, certificate exchange |
+| security-baseline | 16 | 4 | Maven | **COMPLETE** | Rate limiting (token-bucket), input sanitization, secrets provider (Vault+Env), admin audit |
+| ops-instrumentation | 9 | 1 | Maven | **ADEQUATE** | MDC filter, golden-signals metrics, outbox lag probe, OTEL propagation — only 1 test |
+| federation-connector | 13 | 4 | Maven | **COMPLETE** | Pod identity verification (mTLS+JWT), revocation checking, spine client, conflict handler |
 | contract-tests | 4 | 4 | Maven | **COMPLETE** | Event envelope + schema compatibility validators |
-| offline-sdk | 5 | 2 | Maven | **ADEQUATE** | Offline capability token, conflict resolver |
+| offline-sdk | 7 | 2 | Maven | **COMPLETE** | JWS entitlement verification (Ed25519+RS256), offline queue format |
 | services/shared-core | 12 | 0 | Maven | **ADEQUATE** | Shared core (Argon2id, HMAC, ApiResponse, TrustContext) — no dedicated tests but tested via consuming services |
 
 ---
@@ -190,9 +190,9 @@
 
 | Classification | Libraries | Services | Web UIs | Mobile | Total |
 |---------------|-----------|----------|---------|--------|-------|
-| **COMPLETE** | 7 | 27 | 2 | 0 | 36 |
-| **ADEQUATE** | 4 | 37 | 20 | 8 | 69 |
-| **MINIMAL** | 2 | 0 | 2 | 1 | 5 |
+| **COMPLETE** | 10 | 27 | 2 | 0 | 39 |
+| **ADEQUATE** | 2 | 37 | 20 | 8 | 67 |
+| **MINIMAL** | 1 | 0 | 2 | 1 | 4 |
 | **FRAGILE** | 0 | 0 | 1 | 0 | 1 |
 | **MOBILE-READY** | 0 | 0 | 0 | 2 | 2 |
 | **Totals** | 13 | 64* | 25 | 11 | 113 |
