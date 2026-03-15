@@ -2,6 +2,7 @@ package zw.gov.mohcc.impilo.experience.controller.mobile;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -10,26 +11,40 @@ import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.service.OutboxService;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.time.OffsetDateTime;
 import java.util.*;
 
 /**
- * Mobile offline and break-glass endpoints.
- * GET  /internal/v1/mobile/provider/entitlement/verify?cpid=  - entitlement check
- * POST /internal/v1/mobile/provider/break-glass/activate      - activate break-glass
- * POST /internal/v1/mobile/provider/break-glass/deactivate    - deactivate break-glass
+ * Mobile offline-support endpoints.
+ * POST /internal/v1/mobile/provider/offline/entitlement/verify      - verify patient entitlement
+ * POST /internal/v1/mobile/provider/offline/break-glass/activate    - activate break-glass
+ * POST /internal/v1/mobile/provider/offline/break-glass/deactivate  - deactivate break-glass
+ * GET  /internal/v1/mobile/provider/offline/sync/snapshot           - get sync snapshot
+ * POST /internal/v1/mobile/provider/offline/sync/reconcile          - reconcile sync data
  */
 @RestController
-@RequestMapping("/internal/v1/mobile/provider")
+@RequestMapping("/internal/v1/mobile/provider/offline")
 public class MobileOfflineController {
 
     private final JdbcTemplate jdbcTemplate;
     private final OutboxService outboxService;
+    private final ObjectMapper objectMapper;
 
-    public MobileOfflineController(JdbcTemplate jdbcTemplate, OutboxService outboxService) {
+    public MobileOfflineController(JdbcTemplate jdbcTemplate, OutboxService outboxService,
+                                   ObjectMapper objectMapper) {
         this.jdbcTemplate = jdbcTemplate;
         this.outboxService = outboxService;
+        this.objectMapper = objectMapper;
     }
+
+    public record VerifyEntitlementRequest(
+            @NotBlank String cpid,
+            String facility_id,
+            String service_type
+    ) {}
 
     public record ActivateBreakGlassRequest(
             @NotBlank String activated_by,
@@ -44,25 +59,31 @@ public class MobileOfflineController {
             String notes
     ) {}
 
-    @GetMapping("/entitlement/verify")
+    public record ReconcileRequest(
+            @NotNull List<Map<String, Object>> records,
+            @NotBlank String facility_id,
+            String sync_token
+    ) {}
+
+    @PostMapping("/entitlement/verify")
     public ResponseEntity<Map<String, Object>> verifyEntitlement(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
-            @RequestParam(name = "cpid") String cpid) {
+            @Valid @RequestBody VerifyEntitlementRequest request) {
 
         List<Map<String, Object>> patientRows = jdbcTemplate.queryForList("""
             SELECT id, cpid, given_name, family_name, date_of_birth, sex, status,
                    facility_id, created_at
             FROM patients
             WHERE tenant_id = ? AND cpid = ?
-            """, tenantId, cpid);
+            """, tenantId, request.cpid());
 
         if (patientRows.isEmpty()) {
             Map<String, Object> response = new LinkedHashMap<>();
             response.put("data", Map.of(
                     "entitled", false,
-                    "cpid", cpid,
+                    "cpid", request.cpid(),
                     "reason", "Patient not found"
             ));
             response.put("meta", Map.of(
@@ -88,7 +109,7 @@ public class MobileOfflineController {
 
         Map<String, Object> entitlementData = new LinkedHashMap<>();
         entitlementData.put("entitled", isActive && hasEntitlement);
-        entitlementData.put("cpid", cpid);
+        entitlementData.put("cpid", request.cpid());
         entitlementData.put("patient_id", patient.get("id").toString());
         entitlementData.put("patient_status", patient.get("status"));
         entitlementData.put("given_name", patient.get("given_name"));
@@ -261,6 +282,145 @@ public class MobileOfflineController {
         response.put("data", Map.of(
                 "id", sessionId.toString(),
                 "type", "BreakGlassSession",
+                "attributes", attributes
+        ));
+        response.put("meta", Map.of(
+                "request_id", requestId,
+                "correlation_id", correlationId
+        ));
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/sync/snapshot")
+    public ResponseEntity<Map<String, Object>> getSyncSnapshot(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestParam(name = "facility_id") String facilityId,
+            @RequestParam(required = false, name = "since") String since) {
+
+        List<Map<String, Object>> rows;
+        if (since != null) {
+            OffsetDateTime sinceTime = OffsetDateTime.parse(since);
+            rows = jdbcTemplate.queryForList("""
+                SELECT id, entity_type, entity_id, entity_data, version, updated_at
+                FROM sync_snapshots
+                WHERE tenant_id = ? AND facility_id = ?::uuid AND updated_at > ?
+                ORDER BY updated_at ASC
+                """, tenantId, facilityId, sinceTime);
+        } else {
+            rows = jdbcTemplate.queryForList("""
+                SELECT id, entity_type, entity_id, entity_data, version, updated_at
+                FROM sync_snapshots
+                WHERE tenant_id = ? AND facility_id = ?::uuid
+                ORDER BY updated_at ASC
+                """, tenantId, facilityId);
+        }
+
+        String syncToken = UUID.randomUUID().toString();
+
+        List<Map<String, Object>> data = rows.stream().map(row -> {
+            Map<String, Object> attributes = new LinkedHashMap<>();
+            attributes.put("entity_type", row.get("entity_type"));
+            attributes.put("entity_id", row.get("entity_id"));
+            attributes.put("entity_data", row.get("entity_data"));
+            attributes.put("version", row.get("version"));
+            attributes.put("updated_at", row.get("updated_at"));
+
+            Map<String, Object> resource = new LinkedHashMap<>();
+            resource.put("id", row.get("id").toString());
+            resource.put("type", "SyncRecord");
+            resource.put("attributes", attributes);
+            return resource;
+        }).toList();
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", data);
+        response.put("meta", Map.of(
+                "request_id", requestId,
+                "correlation_id", correlationId,
+                "sync_token", syncToken,
+                "record_count", data.size()
+        ));
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/sync/reconcile")
+    @Transactional
+    public ResponseEntity<Map<String, Object>> reconcileSync(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.POD_ID) String podId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
+            @Valid @RequestBody ReconcileRequest request) {
+
+        OffsetDateTime now = OffsetDateTime.now();
+        UUID reconciliationId = UUID.randomUUID();
+        int accepted = 0;
+        int rejected = 0;
+        List<Map<String, Object>> results = new ArrayList<>();
+
+        for (Map<String, Object> record : request.records()) {
+            try {
+                UUID recordId = UUID.randomUUID();
+                String recordJson = objectMapper.writeValueAsString(record);
+                jdbcTemplate.update("""
+                    INSERT INTO sync_reconciliations
+                        (id, tenant_id, reconciliation_id, facility_id, entity_type, entity_id,
+                         entity_data, sync_token, status, created_at)
+                    VALUES (?, ?, ?, ?::uuid, ?, ?, ?::jsonb, ?, 'ACCEPTED', ?)
+                    """,
+                        recordId, tenantId, reconciliationId, request.facility_id(),
+                        record.get("entity_type"), record.get("entity_id"),
+                        recordJson, request.sync_token(), now);
+                accepted++;
+                results.add(Map.of(
+                        "entity_id", record.getOrDefault("entity_id", ""),
+                        "status", "ACCEPTED"
+                ));
+            } catch (Exception e) {
+                rejected++;
+                results.add(Map.of(
+                        "entity_id", record.getOrDefault("entity_id", ""),
+                        "status", "REJECTED",
+                        "reason", e.getMessage() != null ? e.getMessage() : "Unknown error"
+                ));
+            }
+        }
+
+        outboxService.writeOutboxEvent(
+                "impilo.experience.sync.reconciled.v1",
+                correlationId,
+                requestId,
+                idempotencyKey != null ? idempotencyKey : requestId,
+                tenantId,
+                podId,
+                "SyncReconciliation",
+                reconciliationId.toString(),
+                Map.of(
+                        "reconciliation_id", reconciliationId.toString(),
+                        "facility_id", request.facility_id(),
+                        "accepted", String.valueOf(accepted),
+                        "rejected", String.valueOf(rejected)
+                ),
+                Map.of()
+        );
+
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("facility_id", request.facility_id());
+        attributes.put("accepted", accepted);
+        attributes.put("rejected", rejected);
+        attributes.put("total", request.records().size());
+        attributes.put("results", results);
+        attributes.put("reconciled_at", now);
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", Map.of(
+                "id", reconciliationId.toString(),
+                "type", "SyncReconciliation",
                 "attributes", attributes
         ));
         response.put("meta", Map.of(
