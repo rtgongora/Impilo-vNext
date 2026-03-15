@@ -2,6 +2,7 @@ package zw.gov.mohcc.impilo.experience.controller.mobile;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -15,14 +16,11 @@ import java.util.*;
 
 /**
  * Mobile messaging endpoints.
- * Routes delegated to channels-service and notification-service via outbox events.
- *
- * POST /internal/v1/mobile/provider/messaging/send           - send message
- * GET  /internal/v1/mobile/provider/messaging/threads        - list message threads
- * GET  /internal/v1/mobile/provider/messaging/threads/{id}   - get thread messages
- * POST /internal/v1/mobile/provider/messaging/notifications/register - register push token
- * GET  /internal/v1/mobile/provider/messaging/notifications  - list notifications
- * POST /internal/v1/mobile/provider/messaging/notifications/read     - mark as read
+ * GET  /internal/v1/mobile/provider/messaging/conversations                       - list conversations
+ * GET  /internal/v1/mobile/provider/messaging/conversations/{id}/messages         - get messages
+ * POST /internal/v1/mobile/provider/messaging/conversations/{id}/messages         - send message
+ * POST /internal/v1/mobile/provider/messaging/conversations                       - create conversation
+ * POST /internal/v1/mobile/provider/messaging/conversations/{id}/read             - mark read
  */
 @RestController
 @RequestMapping("/internal/v1/mobile/provider/messaging")
@@ -36,29 +34,116 @@ public class MobileMessagingController {
         this.outboxService = outboxService;
     }
 
-    public record SendMessageRequest(
-            @NotBlank String sender_id,
-            @NotBlank String recipient_id,
-            @NotBlank String channel,
-            @NotBlank String content,
-            String thread_id,
-            String subject,
-            String priority
+    public record CreateConversationRequest(
+            @NotBlank String subject,
+            @NotNull List<String> participant_ids,
+            String conversation_type,
+            String facility_id
     ) {}
 
-    public record RegisterPushTokenRequest(
-            @NotBlank String user_id,
-            @NotBlank String device_token,
-            @NotBlank String platform
+    public record SendMessageRequest(
+            @NotBlank String sender_id,
+            @NotBlank String content,
+            String message_type
     ) {}
 
     public record MarkReadRequest(
-            @NotBlank List<String> notification_ids
+            @NotBlank String participant_id
     ) {}
 
-    @PostMapping("/send")
+    @GetMapping("/conversations")
+    public ResponseEntity<Map<String, Object>> listConversations(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestParam(name = "participant_id") String participantId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+
+        int limit = Math.min(size, 100);
+        int offset = page * limit;
+
+        List<Map<String, Object>> rows = jdbcTemplate.queryForList("""
+            SELECT c.id, c.subject, c.conversation_type, c.facility_id, c.status,
+                   c.last_message_at, c.created_at, c.updated_at
+            FROM conversations c
+            INNER JOIN conversation_participants cp ON cp.conversation_id = c.id
+            WHERE c.tenant_id = ? AND cp.participant_id = ?
+            ORDER BY c.last_message_at DESC NULLS LAST
+            LIMIT ? OFFSET ?
+            """, tenantId, participantId, limit, offset);
+
+        Long total = jdbcTemplate.queryForObject("""
+            SELECT count(*) FROM conversations c
+            INNER JOIN conversation_participants cp ON cp.conversation_id = c.id
+            WHERE c.tenant_id = ? AND cp.participant_id = ?
+            """, Long.class, tenantId, participantId);
+
+        List<Map<String, Object>> data = rows.stream().map(this::toConversationResource).toList();
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", data);
+        response.put("meta", Map.of(
+                "request_id", requestId,
+                "correlation_id", correlationId,
+                "page", Map.of(
+                        "number", page,
+                        "size", limit,
+                        "total_elements", total != null ? total : 0L,
+                        "total_pages", total != null ? (int) Math.ceil((double) total / limit) : 0
+                )
+        ));
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/conversations/{id}/messages")
+    public ResponseEntity<Map<String, Object>> getMessages(
+            @PathVariable UUID id,
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "50") int size) {
+
+        int limit = Math.min(size, 100);
+        int offset = page * limit;
+
+        List<Map<String, Object>> rows = jdbcTemplate.queryForList("""
+            SELECT id, conversation_id, sender_id, content, message_type,
+                   sent_at, created_at
+            FROM messages
+            WHERE conversation_id = ? AND tenant_id = ?
+            ORDER BY sent_at ASC
+            LIMIT ? OFFSET ?
+            """, id, tenantId, limit, offset);
+
+        Long total = jdbcTemplate.queryForObject("""
+            SELECT count(*) FROM messages WHERE conversation_id = ? AND tenant_id = ?
+            """, Long.class, id, tenantId);
+
+        List<Map<String, Object>> data = rows.stream().map(this::toMessageResource).toList();
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", data);
+        response.put("meta", Map.of(
+                "request_id", requestId,
+                "correlation_id", correlationId,
+                "page", Map.of(
+                        "number", page,
+                        "size", limit,
+                        "total_elements", total != null ? total : 0L,
+                        "total_pages", total != null ? (int) Math.ceil((double) total / limit) : 0
+                )
+        ));
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/conversations/{id}/messages")
     @Transactional
     public ResponseEntity<Map<String, Object>> sendMessage(
+            @PathVariable UUID id,
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.POD_ID) String podId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
@@ -68,35 +153,20 @@ public class MobileMessagingController {
 
         UUID messageId = UUID.randomUUID();
         OffsetDateTime now = OffsetDateTime.now();
-        String priority = request.priority() != null ? request.priority() : "NORMAL";
-
-        String threadId = request.thread_id();
-        if (threadId == null) {
-            threadId = UUID.randomUUID().toString();
-            jdbcTemplate.update("""
-                INSERT INTO message_threads
-                    (id, tenant_id, subject, participant_ids, last_message_at, created_at, updated_at)
-                VALUES (?::uuid, ?, ?, ARRAY[?, ?], ?, ?, ?)
-                """,
-                    threadId, tenantId, request.subject(),
-                    request.sender_id(), request.recipient_id(),
-                    now, now, now);
-        } else {
-            jdbcTemplate.update("""
-                UPDATE message_threads SET last_message_at = ?, updated_at = ?
-                WHERE id = ?::uuid AND tenant_id = ?
-                """, now, now, threadId, tenantId);
-        }
+        String messageType = request.message_type() != null ? request.message_type() : "TEXT";
 
         jdbcTemplate.update("""
             INSERT INTO messages
-                (id, tenant_id, thread_id, sender_id, recipient_id, channel, content,
-                 priority, status, sent_at, created_at, updated_at)
-            VALUES (?, ?, ?::uuid, ?, ?, ?, ?, ?, 'SENT', ?, ?, ?)
+                (id, tenant_id, conversation_id, sender_id, content, message_type, sent_at, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """,
-                messageId, tenantId, threadId, request.sender_id(), request.recipient_id(),
-                request.channel(), request.content(), priority,
-                now, now, now);
+                messageId, tenantId, id, request.sender_id(), request.content(),
+                messageType, now, now);
+
+        jdbcTemplate.update("""
+            UPDATE conversations SET last_message_at = ?, updated_at = ?
+            WHERE id = ? AND tenant_id = ?
+            """, now, now, id, tenantId);
 
         outboxService.writeOutboxEvent(
                 "impilo.experience.message.sent.v1",
@@ -109,23 +179,18 @@ public class MobileMessagingController {
                 messageId.toString(),
                 Map.of(
                         "message_id", messageId.toString(),
-                        "thread_id", threadId,
+                        "conversation_id", id.toString(),
                         "sender_id", request.sender_id(),
-                        "recipient_id", request.recipient_id(),
-                        "channel", request.channel(),
-                        "priority", priority
+                        "message_type", messageType
                 ),
                 Map.of()
         );
 
         Map<String, Object> attributes = new LinkedHashMap<>();
-        attributes.put("thread_id", threadId);
+        attributes.put("conversation_id", id.toString());
         attributes.put("sender_id", request.sender_id());
-        attributes.put("recipient_id", request.recipient_id());
-        attributes.put("channel", request.channel());
         attributes.put("content", request.content());
-        attributes.put("priority", priority);
-        attributes.put("status", "SENT");
+        attributes.put("message_type", messageType);
         attributes.put("sent_at", now);
         attributes.put("created_at", now);
 
@@ -143,180 +208,67 @@ public class MobileMessagingController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @GetMapping("/threads")
-    public ResponseEntity<Map<String, Object>> listThreads(
-            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
-            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
-            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
-            @RequestParam(name = "user_id") String userId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-
-        int limit = Math.min(size, 100);
-        int offset = page * limit;
-
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList("""
-            SELECT t.id, t.subject, t.participant_ids, t.last_message_at, t.created_at, t.updated_at,
-                   (SELECT count(*) FROM messages m WHERE m.thread_id = t.id
-                    AND m.recipient_id = ? AND m.read_at IS NULL) AS unread_count,
-                   (SELECT m.content FROM messages m WHERE m.thread_id = t.id
-                    ORDER BY m.sent_at DESC LIMIT 1) AS last_message
-            FROM message_threads t
-            WHERE t.tenant_id = ? AND ? = ANY(t.participant_ids)
-            ORDER BY t.last_message_at DESC
-            LIMIT ? OFFSET ?
-            """, userId, tenantId, userId, limit, offset);
-
-        Long total = jdbcTemplate.queryForObject("""
-            SELECT count(*) FROM message_threads
-            WHERE tenant_id = ? AND ? = ANY(participant_ids)
-            """, Long.class, tenantId, userId);
-
-        List<Map<String, Object>> data = rows.stream().map(row -> {
-            Map<String, Object> attributes = new LinkedHashMap<>();
-            attributes.put("subject", row.get("subject"));
-            attributes.put("participant_ids", row.get("participant_ids"));
-            attributes.put("last_message", row.get("last_message"));
-            attributes.put("unread_count", row.get("unread_count"));
-            attributes.put("last_message_at", row.get("last_message_at"));
-            attributes.put("created_at", row.get("created_at"));
-            attributes.put("updated_at", row.get("updated_at"));
-
-            Map<String, Object> resource = new LinkedHashMap<>();
-            resource.put("id", row.get("id").toString());
-            resource.put("type", "MessageThread");
-            resource.put("attributes", attributes);
-            return resource;
-        }).toList();
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", data);
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId,
-                "page", Map.of(
-                        "number", page,
-                        "size", limit,
-                        "total_elements", total != null ? total : 0L,
-                        "total_pages", total != null ? (int) Math.ceil((double) total / limit) : 0
-                )
-        ));
-
-        return ResponseEntity.ok(response);
-    }
-
-    @GetMapping("/threads/{id}")
-    public ResponseEntity<Map<String, Object>> getThreadMessages(
-            @PathVariable UUID id,
-            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
-            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
-            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "50") int size) {
-
-        int limit = Math.min(size, 100);
-        int offset = page * limit;
-
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList("""
-            SELECT id, thread_id, sender_id, recipient_id, channel, content,
-                   priority, status, sent_at, read_at, created_at, updated_at
-            FROM messages
-            WHERE thread_id = ? AND tenant_id = ?
-            ORDER BY sent_at ASC
-            LIMIT ? OFFSET ?
-            """, id, tenantId, limit, offset);
-
-        Long total = jdbcTemplate.queryForObject("""
-            SELECT count(*) FROM messages WHERE thread_id = ? AND tenant_id = ?
-            """, Long.class, id, tenantId);
-
-        List<Map<String, Object>> data = rows.stream().map(row -> {
-            Map<String, Object> attributes = new LinkedHashMap<>();
-            attributes.put("thread_id", row.get("thread_id"));
-            attributes.put("sender_id", row.get("sender_id"));
-            attributes.put("recipient_id", row.get("recipient_id"));
-            attributes.put("channel", row.get("channel"));
-            attributes.put("content", row.get("content"));
-            attributes.put("priority", row.get("priority"));
-            attributes.put("status", row.get("status"));
-            attributes.put("sent_at", row.get("sent_at"));
-            attributes.put("read_at", row.get("read_at"));
-            attributes.put("created_at", row.get("created_at"));
-            attributes.put("updated_at", row.get("updated_at"));
-
-            Map<String, Object> resource = new LinkedHashMap<>();
-            resource.put("id", row.get("id").toString());
-            resource.put("type", "Message");
-            resource.put("attributes", attributes);
-            return resource;
-        }).toList();
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", data);
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId,
-                "page", Map.of(
-                        "number", page,
-                        "size", limit,
-                        "total_elements", total != null ? total : 0L,
-                        "total_pages", total != null ? (int) Math.ceil((double) total / limit) : 0
-                )
-        ));
-
-        return ResponseEntity.ok(response);
-    }
-
-    @PostMapping("/notifications/register")
+    @PostMapping("/conversations")
     @Transactional
-    public ResponseEntity<Map<String, Object>> registerPushToken(
+    public ResponseEntity<Map<String, Object>> createConversation(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.POD_ID) String podId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
-            @Valid @RequestBody RegisterPushTokenRequest request) {
+            @Valid @RequestBody CreateConversationRequest request) {
 
-        UUID tokenId = UUID.randomUUID();
+        UUID conversationId = UUID.randomUUID();
         OffsetDateTime now = OffsetDateTime.now();
+        String conversationType = request.conversation_type() != null ? request.conversation_type() : "DIRECT";
 
         jdbcTemplate.update("""
-            INSERT INTO push_tokens
-                (id, tenant_id, user_id, device_token, platform, status, registered_at, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, 'ACTIVE', ?, ?, ?)
-            ON CONFLICT (tenant_id, user_id, device_token)
-            DO UPDATE SET platform = EXCLUDED.platform, status = 'ACTIVE', updated_at = EXCLUDED.updated_at
+            INSERT INTO conversations
+                (id, tenant_id, subject, conversation_type, facility_id, status, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?::uuid, 'ACTIVE', ?, ?)
             """,
-                tokenId, tenantId, request.user_id(), request.device_token(),
-                request.platform(), now, now, now);
+                conversationId, tenantId, request.subject(), conversationType,
+                request.facility_id(), now, now);
+
+        for (String participantId : request.participant_ids()) {
+            UUID cpId = UUID.randomUUID();
+            jdbcTemplate.update("""
+                INSERT INTO conversation_participants
+                    (id, conversation_id, participant_id, joined_at)
+                VALUES (?, ?, ?, ?)
+                """, cpId, conversationId, participantId, now);
+        }
 
         outboxService.writeOutboxEvent(
-                "impilo.experience.push_token.registered.v1",
+                "impilo.experience.conversation.created.v1",
                 correlationId,
                 requestId,
                 idempotencyKey != null ? idempotencyKey : requestId,
                 tenantId,
                 podId,
-                "PushToken",
-                tokenId.toString(),
+                "Conversation",
+                conversationId.toString(),
                 Map.of(
-                        "user_id", request.user_id(),
-                        "platform", request.platform(),
-                        "status", "ACTIVE"
+                        "conversation_id", conversationId.toString(),
+                        "subject", request.subject(),
+                        "conversation_type", conversationType,
+                        "participant_count", String.valueOf(request.participant_ids().size())
                 ),
                 Map.of()
         );
 
         Map<String, Object> attributes = new LinkedHashMap<>();
-        attributes.put("user_id", request.user_id());
-        attributes.put("platform", request.platform());
+        attributes.put("subject", request.subject());
+        attributes.put("conversation_type", conversationType);
+        attributes.put("facility_id", request.facility_id());
         attributes.put("status", "ACTIVE");
-        attributes.put("registered_at", now);
+        attributes.put("participant_ids", request.participant_ids());
+        attributes.put("created_at", now);
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", Map.of(
-                "id", tokenId.toString(),
-                "type", "PushToken",
+                "id", conversationId.toString(),
+                "type", "Conversation",
                 "attributes", attributes
         ));
         response.put("meta", Map.of(
@@ -327,103 +279,51 @@ public class MobileMessagingController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @GetMapping("/notifications")
-    public ResponseEntity<Map<String, Object>> listNotifications(
-            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
-            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
-            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
-            @RequestParam(name = "user_id") String userId,
-            @RequestParam(required = false, name = "unread_only") Boolean unreadOnly,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-
-        int limit = Math.min(size, 100);
-        int offset = page * limit;
-
-        List<Map<String, Object>> rows;
-        Long total;
-
-        if (Boolean.TRUE.equals(unreadOnly)) {
-            rows = jdbcTemplate.queryForList("""
-                SELECT id, user_id, title, body, category, action_url, read_at, created_at
-                FROM notifications
-                WHERE tenant_id = ? AND user_id = ? AND read_at IS NULL
-                ORDER BY created_at DESC
-                LIMIT ? OFFSET ?
-                """, tenantId, userId, limit, offset);
-            total = jdbcTemplate.queryForObject("""
-                SELECT count(*) FROM notifications
-                WHERE tenant_id = ? AND user_id = ? AND read_at IS NULL
-                """, Long.class, tenantId, userId);
-        } else {
-            rows = jdbcTemplate.queryForList("""
-                SELECT id, user_id, title, body, category, action_url, read_at, created_at
-                FROM notifications
-                WHERE tenant_id = ? AND user_id = ?
-                ORDER BY created_at DESC
-                LIMIT ? OFFSET ?
-                """, tenantId, userId, limit, offset);
-            total = jdbcTemplate.queryForObject("""
-                SELECT count(*) FROM notifications WHERE tenant_id = ? AND user_id = ?
-                """, Long.class, tenantId, userId);
-        }
-
-        List<Map<String, Object>> data = rows.stream().map(row -> {
-            Map<String, Object> attributes = new LinkedHashMap<>();
-            attributes.put("user_id", row.get("user_id"));
-            attributes.put("title", row.get("title"));
-            attributes.put("body", row.get("body"));
-            attributes.put("category", row.get("category"));
-            attributes.put("action_url", row.get("action_url"));
-            attributes.put("read_at", row.get("read_at"));
-            attributes.put("created_at", row.get("created_at"));
-
-            Map<String, Object> resource = new LinkedHashMap<>();
-            resource.put("id", row.get("id").toString());
-            resource.put("type", "Notification");
-            resource.put("attributes", attributes);
-            return resource;
-        }).toList();
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", data);
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId,
-                "page", Map.of(
-                        "number", page,
-                        "size", limit,
-                        "total_elements", total != null ? total : 0L,
-                        "total_pages", total != null ? (int) Math.ceil((double) total / limit) : 0
-                )
-        ));
-
-        return ResponseEntity.ok(response);
-    }
-
-    @PostMapping("/notifications/read")
+    @PostMapping("/conversations/{id}/read")
     @Transactional
-    public ResponseEntity<Map<String, Object>> markNotificationsRead(
+    public ResponseEntity<Map<String, Object>> markRead(
+            @PathVariable UUID id,
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.POD_ID) String podId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @Valid @RequestBody MarkReadRequest request) {
 
         OffsetDateTime now = OffsetDateTime.now();
-        int totalMarked = 0;
 
-        for (String notificationId : request.notification_ids()) {
-            int updated = jdbcTemplate.update("""
-                UPDATE notifications SET read_at = ?, updated_at = ?
-                WHERE id = ?::uuid AND tenant_id = ? AND read_at IS NULL
-                """, now, now, notificationId, tenantId);
-            totalMarked += updated;
-        }
+        jdbcTemplate.update("""
+            UPDATE conversation_participants
+            SET last_read_at = ?
+            WHERE conversation_id = ? AND participant_id = ?
+            """, now, id, request.participant_id());
+
+        outboxService.writeOutboxEvent(
+                "impilo.experience.conversation.read.v1",
+                correlationId,
+                requestId,
+                idempotencyKey != null ? idempotencyKey : requestId,
+                tenantId,
+                podId,
+                "Conversation",
+                id.toString(),
+                Map.of(
+                        "conversation_id", id.toString(),
+                        "participant_id", request.participant_id()
+                ),
+                Map.of()
+        );
+
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("conversation_id", id.toString());
+        attributes.put("participant_id", request.participant_id());
+        attributes.put("last_read_at", now);
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", Map.of(
-                "marked_read", totalMarked,
-                "requested", request.notification_ids().size()
+                "id", id.toString(),
+                "type", "ConversationReadReceipt",
+                "attributes", attributes
         ));
         response.put("meta", Map.of(
                 "request_id", requestId,
@@ -431,5 +331,38 @@ public class MobileMessagingController {
         ));
 
         return ResponseEntity.ok(response);
+    }
+
+    private Map<String, Object> toConversationResource(Map<String, Object> row) {
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("subject", row.get("subject"));
+        attributes.put("conversation_type", row.get("conversation_type"));
+        attributes.put("facility_id", row.get("facility_id"));
+        attributes.put("status", row.get("status"));
+        attributes.put("last_message_at", row.get("last_message_at"));
+        attributes.put("created_at", row.get("created_at"));
+        attributes.put("updated_at", row.get("updated_at"));
+
+        Map<String, Object> resource = new LinkedHashMap<>();
+        resource.put("id", row.get("id").toString());
+        resource.put("type", "Conversation");
+        resource.put("attributes", attributes);
+        return resource;
+    }
+
+    private Map<String, Object> toMessageResource(Map<String, Object> row) {
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("conversation_id", row.get("conversation_id"));
+        attributes.put("sender_id", row.get("sender_id"));
+        attributes.put("content", row.get("content"));
+        attributes.put("message_type", row.get("message_type"));
+        attributes.put("sent_at", row.get("sent_at"));
+        attributes.put("created_at", row.get("created_at"));
+
+        Map<String, Object> resource = new LinkedHashMap<>();
+        resource.put("id", row.get("id").toString());
+        resource.put("type", "Message");
+        resource.put("attributes", attributes);
+        return resource;
     }
 }
