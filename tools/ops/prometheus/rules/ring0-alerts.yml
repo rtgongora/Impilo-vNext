@@ -1,0 +1,492 @@
+# Ring 0 SLO Recording Rules and Alert Rules
+# Wave 19B — Impilo vNext
+# Generated: 2026-03-15
+#
+# Services covered:
+#   TSHEPO (tshepo-service:8081) — Trust & Governance
+#   VITO   (vito-service:8082)   — Registry Spine / Patient Identity
+#   VARAPI (varapi-service:8083) — Registry Spine / Provider & Facility
+#   TUSO   (tuso-service:8084)   — Registry Spine / Terminology
+#   ZIBO   (zibo-service:8085)   — Clinical Execution / Billing
+#
+# Metric sources:
+#   - http_server_requests_seconds_count  (Spring Boot Actuator)
+#   - http_server_requests_seconds_bucket (Spring Boot Actuator histogram)
+#   - impilo_ops_outbox_lag               (ops-instrumentation library)
+#   - impilo_ops_http_latency_bucket      (ops-instrumentation golden signals)
+#   - impilo_ops_http_errors              (ops-instrumentation golden signals)
+#   - hikaricp_connections_active/max      (HikariCP pool)
+#   - jvm_memory_used_bytes/max_bytes      (JVM memory)
+#   - up                                   (Prometheus scrape health)
+
+groups:
+  # ============================================================
+  # RECORDING RULES — pre-compute SLI ratios for burn-rate alerts
+  # ============================================================
+  - name: impilo_ring0_slo_recording
+    interval: 15s
+    rules:
+      # --- Availability: error ratio at multiple windows ---
+
+      - record: impilo:ring0:errors:ratio_rate5m
+        expr: |
+          sum by (application) (rate(http_server_requests_seconds_count{application=~"tshepo-service|vito-service|varapi-service|tuso-service|zibo-service", status=~"5.."}[5m]))
+          /
+          sum by (application) (rate(http_server_requests_seconds_count{application=~"tshepo-service|vito-service|varapi-service|tuso-service|zibo-service"}[5m]))
+
+      - record: impilo:ring0:errors:ratio_rate30m
+        expr: |
+          sum by (application) (rate(http_server_requests_seconds_count{application=~"tshepo-service|vito-service|varapi-service|tuso-service|zibo-service", status=~"5.."}[30m]))
+          /
+          sum by (application) (rate(http_server_requests_seconds_count{application=~"tshepo-service|vito-service|varapi-service|tuso-service|zibo-service"}[30m]))
+
+      - record: impilo:ring0:errors:ratio_rate1h
+        expr: |
+          sum by (application) (rate(http_server_requests_seconds_count{application=~"tshepo-service|vito-service|varapi-service|tuso-service|zibo-service", status=~"5.."}[1h]))
+          /
+          sum by (application) (rate(http_server_requests_seconds_count{application=~"tshepo-service|vito-service|varapi-service|tuso-service|zibo-service"}[1h]))
+
+      - record: impilo:ring0:errors:ratio_rate2h
+        expr: |
+          sum by (application) (rate(http_server_requests_seconds_count{application=~"tshepo-service|vito-service|varapi-service|tuso-service|zibo-service", status=~"5.."}[2h]))
+          /
+          sum by (application) (rate(http_server_requests_seconds_count{application=~"tshepo-service|vito-service|varapi-service|tuso-service|zibo-service"}[2h]))
+
+      - record: impilo:ring0:errors:ratio_rate6h
+        expr: |
+          sum by (application) (rate(http_server_requests_seconds_count{application=~"tshepo-service|vito-service|varapi-service|tuso-service|zibo-service", status=~"5.."}[6h]))
+          /
+          sum by (application) (rate(http_server_requests_seconds_count{application=~"tshepo-service|vito-service|varapi-service|tuso-service|zibo-service"}[6h]))
+
+      - record: impilo:ring0:errors:ratio_rate1d
+        expr: |
+          sum by (application) (rate(http_server_requests_seconds_count{application=~"tshepo-service|vito-service|varapi-service|tuso-service|zibo-service", status=~"5.."}[1d]))
+          /
+          sum by (application) (rate(http_server_requests_seconds_count{application=~"tshepo-service|vito-service|varapi-service|tuso-service|zibo-service"}[1d]))
+
+      - record: impilo:ring0:errors:ratio_rate3d
+        expr: |
+          sum by (application) (rate(http_server_requests_seconds_count{application=~"tshepo-service|vito-service|varapi-service|tuso-service|zibo-service", status=~"5.."}[3d]))
+          /
+          sum by (application) (rate(http_server_requests_seconds_count{application=~"tshepo-service|vito-service|varapi-service|tuso-service|zibo-service"}[3d]))
+
+      # --- Latency percentiles ---
+
+      - record: impilo:ring0:latency:p50_5m
+        expr: |
+          histogram_quantile(0.50,
+            sum by (le, application) (rate(http_server_requests_seconds_bucket{application=~"tshepo-service|vito-service|varapi-service|tuso-service|zibo-service"}[5m]))
+          )
+
+      - record: impilo:ring0:latency:p95_5m
+        expr: |
+          histogram_quantile(0.95,
+            sum by (le, application) (rate(http_server_requests_seconds_bucket{application=~"tshepo-service|vito-service|varapi-service|tuso-service|zibo-service"}[5m]))
+          )
+
+      - record: impilo:ring0:latency:p99_5m
+        expr: |
+          histogram_quantile(0.99,
+            sum by (le, application) (rate(http_server_requests_seconds_bucket{application=~"tshepo-service|vito-service|varapi-service|tuso-service|zibo-service"}[5m]))
+          )
+
+      # --- Request rate ---
+
+      - record: impilo:ring0:request_rate:rate5m
+        expr: |
+          sum by (application) (rate(http_server_requests_seconds_count{application=~"tshepo-service|vito-service|varapi-service|tuso-service|zibo-service"}[5m]))
+
+      # --- Saturation ---
+
+      - record: impilo:ring0:db_pool:utilization
+        expr: |
+          hikaricp_connections_active{application=~"tshepo-service|vito-service|varapi-service|tuso-service|zibo-service"}
+          /
+          hikaricp_connections_max{application=~"tshepo-service|vito-service|varapi-service|tuso-service|zibo-service"}
+
+      - record: impilo:ring0:heap:utilization
+        expr: |
+          jvm_memory_used_bytes{area="heap", application=~"tshepo-service|vito-service|varapi-service|tuso-service|zibo-service"}
+          /
+          jvm_memory_max_bytes{area="heap", application=~"tshepo-service|vito-service|varapi-service|tuso-service|zibo-service"}
+
+  # ============================================================
+  # ALERT RULES — Availability (burn-rate, multi-window)
+  # ============================================================
+  - name: impilo_ring0_availability_alerts
+    rules:
+      # --- Tier 1: CRITICAL — 14.4× burn rate (1h/5m windows) ---
+      # For services with 99.9% SLO (budget = 0.001)
+      - alert: Ring0AvailabilityBurnCritical
+        expr: |
+          (
+            impilo:ring0:errors:ratio_rate5m{application=~"vito-service|varapi-service|tuso-service|zibo-service"} > (14.4 * 0.001)
+            and
+            impilo:ring0:errors:ratio_rate1h{application=~"vito-service|varapi-service|tuso-service|zibo-service"} > (14.4 * 0.001)
+          )
+        for: 2m
+        labels:
+          severity: critical
+          tier: "1"
+          plane: ring0
+        annotations:
+          summary: "{{ $labels.application }} burning error budget at 14.4x rate"
+          description: "{{ $labels.application }} 5m error ratio is {{ $value | humanizePercentage }} (threshold: 1.44%). Budget will be exhausted in ~2 hours at this rate."
+          runbook_url: "docs/runbooks/high-burn-rate.md"
+          dashboard_url: "grafana/d/ring0-golden-signals"
+
+      # TSHEPO has a tighter SLO (99.95%, budget = 0.0005)
+      - alert: TshepoAvailabilityBurnCritical
+        expr: |
+          (
+            impilo:ring0:errors:ratio_rate5m{application="tshepo-service"} > (14.4 * 0.0005)
+            and
+            impilo:ring0:errors:ratio_rate1h{application="tshepo-service"} > (14.4 * 0.0005)
+          )
+        for: 2m
+        labels:
+          severity: critical
+          tier: "1"
+          plane: trust
+        annotations:
+          summary: "TSHEPO (Trust Gateway) burning error budget at 14.4x rate"
+          description: "TSHEPO 5m error ratio is {{ $value | humanizePercentage }} (threshold: 0.72%). This is a platform-wide critical incident — all requests flow through TSHEPO."
+          runbook_url: "docs/runbooks/high-burn-rate.md"
+          dashboard_url: "grafana/d/ring0-golden-signals"
+
+      # --- Tier 2: WARNING (page) — 6× burn rate (6h/30m windows) ---
+      - alert: Ring0AvailabilityBurnWarningPage
+        expr: |
+          (
+            impilo:ring0:errors:ratio_rate30m{application=~"vito-service|varapi-service|tuso-service|zibo-service"} > (6 * 0.001)
+            and
+            impilo:ring0:errors:ratio_rate6h{application=~"vito-service|varapi-service|tuso-service|zibo-service"} > (6 * 0.001)
+          )
+        for: 5m
+        labels:
+          severity: warning
+          tier: "2"
+          plane: ring0
+        annotations:
+          summary: "{{ $labels.application }} burning error budget at 6x rate"
+          description: "{{ $labels.application }} 30m error ratio is {{ $value | humanizePercentage }} (threshold: 0.6%). Budget will be exhausted in ~5 hours."
+          runbook_url: "docs/runbooks/high-burn-rate.md"
+
+      - alert: TshepoAvailabilityBurnWarningPage
+        expr: |
+          (
+            impilo:ring0:errors:ratio_rate30m{application="tshepo-service"} > (6 * 0.0005)
+            and
+            impilo:ring0:errors:ratio_rate6h{application="tshepo-service"} > (6 * 0.0005)
+          )
+        for: 5m
+        labels:
+          severity: warning
+          tier: "2"
+          plane: trust
+        annotations:
+          summary: "TSHEPO burning error budget at 6x rate"
+          description: "TSHEPO 30m error ratio is {{ $value | humanizePercentage }}. Investigate within 30 minutes."
+          runbook_url: "docs/runbooks/high-burn-rate.md"
+
+      # --- Tier 3: WARNING (ticket) — 3× burn rate (1d/2h windows) ---
+      - alert: Ring0AvailabilityBurnWarningTicket
+        expr: |
+          (
+            impilo:ring0:errors:ratio_rate2h{application=~"tshepo-service|vito-service|varapi-service|tuso-service|zibo-service"} > (3 * 0.001)
+            and
+            impilo:ring0:errors:ratio_rate1d{application=~"tshepo-service|vito-service|varapi-service|tuso-service|zibo-service"} > (3 * 0.001)
+          )
+        for: 10m
+        labels:
+          severity: warning
+          tier: "3"
+          plane: ring0
+        annotations:
+          summary: "{{ $labels.application }} sustained 3x error budget burn"
+          description: "{{ $labels.application }} has elevated errors over the past day. Create a ticket and investigate within 4 hours."
+          runbook_url: "docs/runbooks/high-burn-rate.md"
+
+      # --- Tier 4: INFO — 1× burn rate (3d/6h windows) ---
+      - alert: Ring0AvailabilityBurnInfo
+        expr: |
+          (
+            impilo:ring0:errors:ratio_rate6h{application=~"tshepo-service|vito-service|varapi-service|tuso-service|zibo-service"} > (1 * 0.001)
+            and
+            impilo:ring0:errors:ratio_rate3d{application=~"tshepo-service|vito-service|varapi-service|tuso-service|zibo-service"} > (1 * 0.001)
+          )
+        for: 30m
+        labels:
+          severity: info
+          tier: "4"
+          plane: ring0
+        annotations:
+          summary: "{{ $labels.application }} steady error budget consumption"
+          description: "{{ $labels.application }} is consuming error budget at a steady rate. Review in weekly SLO meeting."
+
+  # ============================================================
+  # ALERT RULES — Latency
+  # ============================================================
+  - name: impilo_ring0_latency_alerts
+    rules:
+      # --- TSHEPO latency (strictest: p95 <= 50ms, p99 <= 150ms) ---
+      - alert: TshepoLatencyP95High
+        expr: |
+          impilo:ring0:latency:p95_5m{application="tshepo-service"} > 0.050
+        for: 5m
+        labels:
+          severity: warning
+          plane: trust
+        annotations:
+          summary: "TSHEPO p95 latency {{ $value | humanizeDuration }} exceeds 50ms SLO"
+          description: "ext_authz decision latency is elevated. Check PolicyEngine performance, Keycloak token introspection, Redis session cache."
+          runbook_url: "docs/runbooks/latency-breach.md"
+
+      - alert: TshepoLatencyP99Critical
+        expr: |
+          impilo:ring0:latency:p99_5m{application="tshepo-service"} > 0.150
+        for: 3m
+        labels:
+          severity: critical
+          plane: trust
+        annotations:
+          summary: "TSHEPO p99 latency {{ $value | humanizeDuration }} exceeds 150ms SLO"
+          description: "TSHEPO tail latency is critically high. Every API call is affected. Immediate investigation required."
+          runbook_url: "docs/runbooks/latency-breach.md"
+
+      # --- VITO latency (p95 <= 100ms, p99 <= 300ms) ---
+      - alert: VitoLatencyP95High
+        expr: |
+          impilo:ring0:latency:p95_5m{application="vito-service"} > 0.100
+        for: 5m
+        labels:
+          severity: warning
+          plane: registry
+        annotations:
+          summary: "VITO p95 latency {{ $value | humanizeDuration }} exceeds 100ms SLO"
+          description: "MPI lookup latency elevated. Check DB query performance, HikariCP pool, Redis cache hit rate."
+          runbook_url: "docs/runbooks/latency-breach.md"
+
+      - alert: VitoLatencyP99Critical
+        expr: |
+          impilo:ring0:latency:p99_5m{application="vito-service"} > 0.300
+        for: 3m
+        labels:
+          severity: critical
+          plane: registry
+        annotations:
+          summary: "VITO p99 latency {{ $value | humanizeDuration }} exceeds 300ms SLO"
+          description: "Patient identity resolution critically slow. Clinical workflows may be blocked."
+          runbook_url: "docs/runbooks/latency-breach.md"
+
+      # --- VARAPI latency (p95 <= 80ms, p99 <= 250ms) ---
+      - alert: VarapiLatencyP95High
+        expr: |
+          impilo:ring0:latency:p95_5m{application="varapi-service"} > 0.080
+        for: 5m
+        labels:
+          severity: warning
+          plane: registry
+        annotations:
+          summary: "VARAPI p95 latency {{ $value | humanizeDuration }} exceeds 80ms SLO"
+          description: "Provider/facility registry lookup latency elevated. Check index health and query plans."
+          runbook_url: "docs/runbooks/latency-breach.md"
+
+      - alert: VarapiLatencyP99Critical
+        expr: |
+          impilo:ring0:latency:p99_5m{application="varapi-service"} > 0.250
+        for: 3m
+        labels:
+          severity: critical
+          plane: registry
+        annotations:
+          summary: "VARAPI p99 latency {{ $value | humanizeDuration }} exceeds 250ms SLO"
+          description: "Provider resolution critically slow. Clinical form submissions may be delayed."
+          runbook_url: "docs/runbooks/latency-breach.md"
+
+      # --- TUSO latency (p95 <= 50ms, p99 <= 150ms) ---
+      - alert: TusoLatencyP95High
+        expr: |
+          impilo:ring0:latency:p95_5m{application="tuso-service"} > 0.050
+        for: 5m
+        labels:
+          severity: warning
+          plane: registry
+        annotations:
+          summary: "TUSO p95 latency {{ $value | humanizeDuration }} exceeds 50ms SLO"
+          description: "Terminology lookup latency elevated. Check codeset cache, DB table size, query plans."
+          runbook_url: "docs/runbooks/latency-breach.md"
+
+      - alert: TusoLatencyP99Critical
+        expr: |
+          impilo:ring0:latency:p99_5m{application="tuso-service"} > 0.150
+        for: 3m
+        labels:
+          severity: critical
+          plane: registry
+        annotations:
+          summary: "TUSO p99 latency {{ $value | humanizeDuration }} exceeds 150ms SLO"
+          description: "Terminology resolution critically slow. ICD-10/LOINC lookups blocking clinical form entry."
+          runbook_url: "docs/runbooks/latency-breach.md"
+
+      # --- ZIBO latency (p95 <= 100ms, p99 <= 300ms) ---
+      - alert: ZiboLatencyP95High
+        expr: |
+          impilo:ring0:latency:p95_5m{application="zibo-service"} > 0.100
+        for: 5m
+        labels:
+          severity: warning
+          plane: clinical
+        annotations:
+          summary: "ZIBO p95 latency {{ $value | humanizeDuration }} exceeds 100ms SLO"
+          description: "Tariff/billing lookup latency elevated. Check tariff table queries and calculation complexity."
+          runbook_url: "docs/runbooks/latency-breach.md"
+
+      - alert: ZiboLatencyP99Critical
+        expr: |
+          impilo:ring0:latency:p99_5m{application="zibo-service"} > 0.300
+        for: 3m
+        labels:
+          severity: critical
+          plane: clinical
+        annotations:
+          summary: "ZIBO p99 latency {{ $value | humanizeDuration }} exceeds 300ms SLO"
+          description: "Billing resolution critically slow. Encounter finalization may be delayed."
+          runbook_url: "docs/runbooks/latency-breach.md"
+
+  # ============================================================
+  # ALERT RULES — Outbox Lag
+  # ============================================================
+  - name: impilo_ring0_outbox_alerts
+    rules:
+      # TSHEPO has tighter outbox thresholds (trust-plane criticality)
+      - alert: TshepoOutboxLagWarning
+        expr: |
+          impilo_ops_outbox_lag{application="tshepo-service"} > 50
+        for: 5m
+        labels:
+          severity: warning
+          plane: trust
+        annotations:
+          summary: "TSHEPO outbox lag at {{ $value }} events (threshold: 50)"
+          description: "Trust events accumulating in outbox. Check Kafka broker connectivity and outbox publisher thread."
+          runbook_url: "docs/runbooks/outbox-lag.md"
+
+      - alert: TshepoOutboxLagCritical
+        expr: |
+          impilo_ops_outbox_lag{application="tshepo-service"} > 200
+        for: 3m
+        labels:
+          severity: critical
+          plane: trust
+        annotations:
+          summary: "TSHEPO outbox lag CRITICAL at {{ $value }} events (threshold: 200)"
+          description: "Trust audit events not propagating. Audit chain integrity may be compromised. Kafka likely unreachable."
+          runbook_url: "docs/runbooks/outbox-lag.md"
+
+      # Other Ring 0 services: standard outbox thresholds
+      - alert: Ring0OutboxLagWarning
+        expr: |
+          impilo_ops_outbox_lag{application=~"vito-service|varapi-service|tuso-service|zibo-service"} > 100
+        for: 5m
+        labels:
+          severity: warning
+          plane: ring0
+        annotations:
+          summary: "{{ $labels.application }} outbox lag at {{ $value }} events (threshold: 100)"
+          description: "Events accumulating in outbox. Check Kafka connectivity and outbox publisher thread."
+          runbook_url: "docs/runbooks/outbox-lag.md"
+
+      - alert: Ring0OutboxLagCritical
+        expr: |
+          impilo_ops_outbox_lag{application=~"vito-service|varapi-service|tuso-service|zibo-service"} > 500
+        for: 3m
+        labels:
+          severity: critical
+          plane: ring0
+        annotations:
+          summary: "{{ $labels.application }} outbox lag CRITICAL at {{ $value }} events (threshold: 500)"
+          description: "Kafka likely unreachable or publisher crashed. Manual event replay may be needed."
+          runbook_url: "docs/runbooks/outbox-lag.md"
+
+  # ============================================================
+  # ALERT RULES — Service Health
+  # ============================================================
+  - name: impilo_ring0_health_alerts
+    rules:
+      - alert: Ring0ServiceDown
+        expr: |
+          up{job=~"tshepo|vito|varapi|tuso|zibo"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          plane: ring0
+        annotations:
+          summary: "{{ $labels.job }} is DOWN — not responding to Prometheus scrape"
+          description: "Service at {{ $labels.instance }} is unreachable. Check if pod is running, review container logs, check liveness probe."
+          runbook_url: "docs/runbooks/service-unhealthy.md"
+
+      - alert: Ring0ServiceFlapping
+        expr: |
+          changes(up{job=~"tshepo|vito|varapi|tuso|zibo"}[10m]) > 3
+        for: 5m
+        labels:
+          severity: warning
+          plane: ring0
+        annotations:
+          summary: "{{ $labels.job }} is flapping ({{ $value }} state changes in 10m)"
+          description: "Service is repeatedly restarting. Check for OOMKilled, liveness probe misconfiguration, missing startup dependencies."
+          runbook_url: "docs/runbooks/service-unhealthy.md"
+
+  # ============================================================
+  # ALERT RULES — Saturation
+  # ============================================================
+  - name: impilo_ring0_saturation_alerts
+    rules:
+      - alert: Ring0DbPoolSaturation
+        expr: |
+          impilo:ring0:db_pool:utilization > 0.80
+        for: 5m
+        labels:
+          severity: warning
+          plane: ring0
+        annotations:
+          summary: "{{ $labels.application }} DB connection pool at {{ $value | humanizePercentage }}"
+          description: "HikariCP pool nearing exhaustion. Check for long-running queries, connection leaks, or insufficient pool sizing."
+          runbook_url: "docs/runbooks/service-unhealthy.md"
+
+      - alert: Ring0DbPoolCritical
+        expr: |
+          impilo:ring0:db_pool:utilization > 0.95
+        for: 2m
+        labels:
+          severity: critical
+          plane: ring0
+        annotations:
+          summary: "{{ $labels.application }} DB connection pool CRITICAL at {{ $value | humanizePercentage }}"
+          description: "Connection pool nearly exhausted. Requests will start failing imminently. Investigate immediately."
+          runbook_url: "docs/runbooks/service-unhealthy.md"
+
+      - alert: Ring0HeapPressure
+        expr: |
+          impilo:ring0:heap:utilization > 0.85
+        for: 10m
+        labels:
+          severity: warning
+          plane: ring0
+        annotations:
+          summary: "{{ $labels.application }} JVM heap at {{ $value | humanizePercentage }}"
+          description: "Heap consistently above 85%. Check for memory leaks, excessive caching, or GC pressure."
+          runbook_url: "docs/runbooks/service-unhealthy.md"
+
+      - alert: Ring0HeapCritical
+        expr: |
+          impilo:ring0:heap:utilization > 0.95
+        for: 5m
+        labels:
+          severity: critical
+          plane: ring0
+        annotations:
+          summary: "{{ $labels.application }} JVM heap CRITICAL at {{ $value | humanizePercentage }}"
+          description: "OOM imminent. Trigger heap dump and investigate. Consider rolling restart if memory leak confirmed."
+          runbook_url: "docs/runbooks/service-unhealthy.md"

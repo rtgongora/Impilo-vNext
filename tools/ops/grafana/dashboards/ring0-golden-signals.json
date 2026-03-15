@@ -1,0 +1,570 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_PROMETHEUS",
+      "label": "Prometheus",
+      "description": "Prometheus datasource for Impilo metrics",
+      "type": "datasource",
+      "pluginId": "prometheus",
+      "pluginName": "Prometheus"
+    }
+  ],
+  "__requires": [
+    { "type": "grafana", "id": "grafana", "name": "Grafana", "version": "10.4.0" },
+    { "type": "datasource", "id": "prometheus", "name": "Prometheus", "version": "1.0.0" },
+    { "type": "panel", "id": "timeseries", "name": "Time series", "version": "" },
+    { "type": "panel", "id": "gauge", "name": "Gauge", "version": "" },
+    { "type": "panel", "id": "stat", "name": "Stat", "version": "" },
+    { "type": "panel", "id": "alertlist", "name": "Alert list", "version": "" },
+    { "type": "panel", "id": "table", "name": "Table", "version": "" }
+  ],
+  "id": null,
+  "uid": "ring0-golden-signals",
+  "title": "Ring 0 — Golden Signals & SLO Compliance",
+  "description": "Wave 19B: SLO compliance, error budgets, golden signals, and saturation for Ring 0 services (TSHEPO, VITO, VARAPI, TUSO, ZIBO)",
+  "tags": ["ring0", "slo", "golden-signals", "impilo", "wave19b"],
+  "style": "dark",
+  "timezone": "browser",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "links": [],
+  "liveNow": false,
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "time": { "from": "now-1h", "to": "now" },
+  "timepicker": {
+    "refresh_intervals": ["5s", "10s", "30s", "1m", "5m"],
+    "time_options": ["5m", "15m", "1h", "6h", "12h", "24h", "7d", "30d"]
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "datasource",
+        "type": "datasource",
+        "query": "prometheus",
+        "current": { "selected": false, "text": "Prometheus", "value": "Prometheus" },
+        "hide": 0,
+        "includeAll": false,
+        "multi": false
+      },
+      {
+        "name": "service",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "${datasource}" },
+        "query": "label_values(http_server_requests_seconds_count{application=~\"tshepo-service|vito-service|varapi-service|tuso-service|zibo-service\"}, application)",
+        "refresh": 2,
+        "regex": "",
+        "sort": 1,
+        "includeAll": true,
+        "multi": true,
+        "current": { "selected": true, "text": "All", "value": "$__all" },
+        "hide": 0
+      }
+    ]
+  },
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "SLO Compliance — Availability (30d rolling)",
+      "description": "Current availability vs SLO target. Green >= SLO, Yellow within 0.05% of SLO, Red < SLO.",
+      "type": "gauge",
+      "gridPos": { "h": 6, "w": 12, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0.99,
+          "max": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "red", "value": 0.995 },
+              { "color": "yellow", "value": 0.999 },
+              { "color": "green", "value": 0.9995 }
+            ]
+          },
+          "decimals": 4
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "orientation": "auto",
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "1 - (\n  sum by (application) (increase(http_server_requests_seconds_count{application=~\"$service\", status=~\"5..\"}[30d]))\n  /\n  sum by (application) (increase(http_server_requests_seconds_count{application=~\"$service\"}[30d]))\n)",
+          "legendFormat": "{{ application }}",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Error Budget Remaining (30d)",
+      "description": "Remaining error budget in minutes for each Ring 0 service. Based on 30-day rolling window.",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "m",
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "red", "value": 0 },
+              { "color": "orange", "value": 5 },
+              { "color": "yellow", "value": 15 },
+              { "color": "green", "value": 30 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(\n  0.001 - (\n    sum by (application) (increase(http_server_requests_seconds_count{application=~\"$service\", status=~\"5..\"}[30d]))\n    /\n    sum by (application) (increase(http_server_requests_seconds_count{application=~\"$service\"}[30d]))\n  )\n) * 30 * 24 * 60",
+          "legendFormat": "{{ application }}",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Burn Rate (current)",
+      "description": "Current error budget burn rate. 1.0 = steady consumption, >6 = warning, >14.4 = critical.",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "fillOpacity": 10,
+            "pointSize": 5,
+            "showPoints": "never",
+            "thresholdsStyle": { "mode": "line" }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 6 },
+              { "color": "red", "value": 14.4 }
+            ]
+          },
+          "decimals": 2
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull", "max"] },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(\n  impilo:ring0:errors:ratio_rate5m{application=~\"$service\"}\n  /\n  0.001\n)",
+          "legendFormat": "{{ application }}"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Latency — p50 / p95 / p99",
+      "description": "Request latency percentiles per service with SLO threshold lines.",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "fillOpacity": 5,
+            "pointSize": 5,
+            "showPoints": "never"
+          },
+          "decimals": 3
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull", "max"] },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "refId": "p50",
+          "expr": "impilo:ring0:latency:p50_5m{application=~\"$service\"}",
+          "legendFormat": "{{ application }} p50"
+        },
+        {
+          "refId": "p95",
+          "expr": "impilo:ring0:latency:p95_5m{application=~\"$service\"}",
+          "legendFormat": "{{ application }} p95"
+        },
+        {
+          "refId": "p99",
+          "expr": "impilo:ring0:latency:p99_5m{application=~\"$service\"}",
+          "legendFormat": "{{ application }} p99"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Request Rate (RPS)",
+      "description": "Requests per second per Ring 0 service.",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 14 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "fillOpacity": 15,
+            "pointSize": 5,
+            "showPoints": "never",
+            "stacking": { "mode": "none" }
+          },
+          "decimals": 1
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull", "mean", "max"] },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "impilo:ring0:request_rate:rate5m{application=~\"$service\"}",
+          "legendFormat": "{{ application }}"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Error Rate (5xx %)",
+      "description": "5xx error rate as percentage of total requests per service.",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 14 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "fillOpacity": 10,
+            "pointSize": 5,
+            "showPoints": "never",
+            "thresholdsStyle": { "mode": "line" }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.001 },
+              { "color": "red", "value": 0.01 }
+            ]
+          },
+          "decimals": 4
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull", "max"] },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "impilo:ring0:errors:ratio_rate5m{application=~\"$service\"}",
+          "legendFormat": "{{ application }}"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Outbox Event Lag",
+      "description": "Unpublished event count in outbox per service. Threshold lines at 100 (warning) and 500 (critical).",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 22 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "fillOpacity": 10,
+            "pointSize": 5,
+            "showPoints": "never",
+            "thresholdsStyle": { "mode": "line+area" }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 100 },
+              { "color": "red", "value": 500 }
+            ]
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull", "max"] },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "impilo_ops_outbox_lag{application=~\"$service\"}",
+          "legendFormat": "{{ application }}"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "DB Connection Pool Utilization",
+      "description": "HikariCP active connections as percentage of max pool size. Warning at 80%, critical at 95%.",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 22 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "fillOpacity": 10,
+            "pointSize": 5,
+            "showPoints": "never",
+            "thresholdsStyle": { "mode": "line+area" }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.8 },
+              { "color": "red", "value": 0.95 }
+            ]
+          },
+          "decimals": 1
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull", "max"] },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "impilo:ring0:db_pool:utilization{application=~\"$service\"}",
+          "legendFormat": "{{ application }}"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "JVM Heap Usage",
+      "description": "JVM heap memory utilization per service. Warning at 85%, critical at 95%.",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 30 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "fillOpacity": 10,
+            "pointSize": 5,
+            "showPoints": "never",
+            "thresholdsStyle": { "mode": "line+area" }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.85 },
+              { "color": "red", "value": 0.95 }
+            ]
+          },
+          "decimals": 1
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull", "max"] },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "impilo:ring0:heap:utilization{application=~\"$service\"}",
+          "legendFormat": "{{ application }}"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "Active Alerts — Ring 0",
+      "description": "Currently firing alerts for Ring 0 services.",
+      "type": "alertlist",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 30 },
+      "options": {
+        "alertName": "Ring0|Tshepo|Vito|Varapi|Tuso|Zibo",
+        "showOptions": "current",
+        "sortOrder": 1,
+        "stateFilter": {
+          "alerting": true,
+          "execution_error": true,
+          "no_data": true,
+          "ok": false,
+          "paused": false,
+          "pending": true
+        },
+        "maxItems": 20,
+        "folderId": null
+      }
+    },
+    {
+      "id": 11,
+      "title": "SLO Summary Table",
+      "description": "Summary of all Ring 0 SLO targets and current values.",
+      "type": "table",
+      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 38 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "align": "auto", "displayMode": "auto" }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Availability" },
+            "properties": [
+              { "id": "unit", "value": "percentunit" },
+              { "id": "decimals", "value": 4 },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    { "color": "red", "value": null },
+                    { "color": "yellow", "value": 0.999 },
+                    { "color": "green", "value": 0.9995 }
+                  ]
+                }
+              },
+              { "id": "custom.displayMode", "value": "color-background" }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "p95 Latency" },
+            "properties": [
+              { "id": "unit", "value": "s" },
+              { "id": "decimals", "value": 3 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "p99 Latency" },
+            "properties": [
+              { "id": "unit", "value": "s" },
+              { "id": "decimals", "value": 3 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Outbox Lag" },
+            "properties": [
+              { "id": "unit", "value": "short" },
+              { "id": "decimals", "value": 0 }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [{ "displayName": "Service", "desc": false }]
+      },
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        }
+      ],
+      "targets": [
+        {
+          "refId": "availability",
+          "expr": "1 - impilo:ring0:errors:ratio_rate5m{application=~\"$service\"}",
+          "legendFormat": "{{ application }}",
+          "instant": true,
+          "format": "table"
+        },
+        {
+          "refId": "p95",
+          "expr": "impilo:ring0:latency:p95_5m{application=~\"$service\"}",
+          "legendFormat": "{{ application }}",
+          "instant": true,
+          "format": "table"
+        },
+        {
+          "refId": "p99",
+          "expr": "impilo:ring0:latency:p99_5m{application=~\"$service\"}",
+          "legendFormat": "{{ application }}",
+          "instant": true,
+          "format": "table"
+        },
+        {
+          "refId": "outbox",
+          "expr": "impilo_ops_outbox_lag{application=~\"$service\"}",
+          "legendFormat": "{{ application }}",
+          "instant": true,
+          "format": "table"
+        }
+      ]
+    }
+  ],
+  "version": 1
+}
