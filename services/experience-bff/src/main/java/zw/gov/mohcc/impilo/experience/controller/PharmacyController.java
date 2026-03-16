@@ -13,11 +13,13 @@ import zw.gov.mohcc.impilo.experience.domain.Prescription;
 import zw.gov.mohcc.impilo.experience.repository.PrescriptionRepository;
 import zw.gov.mohcc.impilo.experience.service.OutboxService;
 
+import java.time.OffsetDateTime;
 import java.util.*;
 
 /**
  * Pharmacy endpoints.
- * GET  /internal/v1/pharmacy/prescriptions — list prescriptions with status filter, pagination.
+ * GET  /internal/v1/pharmacy/prescriptions — list prescriptions with status/patient filter, pagination.
+ * POST /internal/v1/pharmacy/prescriptions — create a prescription.
  * POST /internal/v1/pharmacy/dispense — dispense a prescription.
  */
 @RestController
@@ -26,12 +28,27 @@ public class PharmacyController {
 
     private final PrescriptionRepository prescriptionRepository;
     private final OutboxService outboxService;
+    private final org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
 
     public PharmacyController(PrescriptionRepository prescriptionRepository,
-                              OutboxService outboxService) {
+                              OutboxService outboxService,
+                              org.springframework.jdbc.core.JdbcTemplate jdbcTemplate) {
         this.prescriptionRepository = prescriptionRepository;
         this.outboxService = outboxService;
+        this.jdbcTemplate = jdbcTemplate;
     }
+
+    public record CreatePrescriptionRequest(
+            @NotBlank String patient_id,
+            @NotBlank String facility_id,
+            String encounter_id,
+            @NotBlank String medication_name,
+            String dosage,
+            String frequency,
+            String duration,
+            Integer quantity,
+            @NotBlank String prescribed_by
+    ) {}
 
     public record DispenseRequest(
             @NotBlank String prescription_id,
@@ -45,9 +62,19 @@ public class PharmacyController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String status) {
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false, name = "patient_id") String patientId) {
 
         PageRequest pageable = PageRequest.of(page, Math.min(size, 100), Sort.by("createdAt").descending());
+
+        if (patientId != null) {
+            List<Prescription> patientRx = prescriptionRepository.findByTenantIdAndPatientId(tenantId, UUID.fromString(patientId));
+            List<Map<String, Object>> data = patientRx.stream().map(this::toResource).toList();
+            Map<String, Object> response = new LinkedHashMap<>();
+            response.put("data", data);
+            response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
+            return ResponseEntity.ok(response);
+        }
 
         Page<Prescription> result;
         if (status != null) {
@@ -74,6 +101,68 @@ public class PharmacyController {
         ));
 
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/prescriptions")
+    @Transactional
+    public ResponseEntity<Map<String, Object>> createPrescription(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.POD_ID) String podId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
+            @Valid @RequestBody CreatePrescriptionRequest request) {
+
+        UUID rxId = UUID.randomUUID();
+        OffsetDateTime now = OffsetDateTime.now();
+
+        jdbcTemplate.update("""
+            INSERT INTO prescriptions
+                (id, tenant_id, facility_id, patient_id, encounter_id, medication_name,
+                 dosage, frequency, duration, quantity, status, prescribed_by, created_at, updated_at)
+            VALUES (?, ?, ?::uuid, ?::uuid, ?::uuid, ?, ?, ?, ?, ?, 'PENDING', ?, ?, ?)
+            """,
+                rxId, tenantId, request.facility_id(), request.patient_id(),
+                request.encounter_id(), request.medication_name(),
+                request.dosage(), request.frequency(), request.duration(), request.quantity(),
+                request.prescribed_by(), now, now);
+
+        outboxService.writeOutboxEvent(
+                "impilo.experience.pharmacy.prescribed.v1",
+                correlationId,
+                requestId,
+                idempotencyKey != null ? idempotencyKey : requestId,
+                tenantId,
+                podId,
+                "Prescription",
+                rxId.toString(),
+                Map.of(
+                        "prescription_id", rxId.toString(),
+                        "patient_id", request.patient_id(),
+                        "medication_name", request.medication_name(),
+                        "status", "PENDING"
+                ),
+                Map.of()
+        );
+
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("patient_id", request.patient_id());
+        attributes.put("facility_id", request.facility_id());
+        attributes.put("encounter_id", request.encounter_id());
+        attributes.put("medication_name", request.medication_name());
+        attributes.put("dosage", request.dosage());
+        attributes.put("frequency", request.frequency());
+        attributes.put("duration", request.duration());
+        attributes.put("quantity", request.quantity());
+        attributes.put("status", "PENDING");
+        attributes.put("prescribed_by", request.prescribed_by());
+        attributes.put("created_at", now);
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", Map.of("id", rxId.toString(), "type", "Prescription", "attributes", attributes));
+        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
+
+        return ResponseEntity.status(org.springframework.http.HttpStatus.CREATED).body(response);
     }
 
     @PostMapping("/dispense")

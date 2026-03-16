@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Encounter — Active encounter page with vitals, notes, and close button.
+ * Encounter — Active encounter page with vitals capture, notes, orders, referrals, and close.
  * Route: /ehr/[patientId]/encounter/[encounterId] | pageTitle: "Encounter"
  */
 
@@ -18,11 +18,16 @@ import {
   CheckCircle2,
   AlertCircle,
   User,
+  ClipboardList,
+  Pill,
+  ArrowUpRight,
+  Save,
 } from "lucide-react";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { useEncounter, useCloseEncounter } from "@/hooks/queries/useEncounters";
 import { usePatient } from "@/hooks/queries/usePatients";
+import { apiClient } from "@/lib/api-client";
 
 export default function EncounterPage() {
   const params = useParams<{ patientId: string; encounterId: string }>();
@@ -36,22 +41,93 @@ export default function EncounterPage() {
   const encounter = encounterData?.data;
   const patient = patientData?.data;
 
-  // Local vitals form state
+  // Vitals form state
   const [systolic, setSystolic] = useState("");
   const [diastolic, setDiastolic] = useState("");
   const [heartRate, setHeartRate] = useState("");
   const [temperature, setTemperature] = useState("");
   const [respiratoryRate, setRespiratoryRate] = useState("");
   const [oxygenSat, setOxygenSat] = useState("");
+  const [weight, setWeight] = useState("");
+  const [height, setHeight] = useState("");
+  const [painScore, setPainScore] = useState("");
+  const [vitalsSaving, setVitalsSaving] = useState(false);
+  const [vitalsSaved, setVitalsSaved] = useState(false);
+  const [vitalsError, setVitalsError] = useState<string | null>(null);
 
   // Notes state
-  const [notes, setNotes] = useState("");
+  const [noteType, setNoteType] = useState("PROGRESS");
+  const [subjective, setSubjective] = useState("");
+  const [objective, setObjective] = useState("");
+  const [assessment, setAssessment] = useState("");
+  const [plan, setPlan] = useState("");
+  const [noteBody, setNoteBody] = useState("");
+  const [noteSaving, setNoteSaving] = useState(false);
+  const [noteSaved, setNoteSaved] = useState(false);
+  const [noteError, setNoteError] = useState<string | null>(null);
 
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
 
   const isActive =
     encounter?.attributes.status === "ACTIVE" ||
     encounter?.attributes.status === "IN_PROGRESS";
+
+  async function handleSaveVitals() {
+    setVitalsSaving(true);
+    setVitalsError(null);
+    setVitalsSaved(false);
+    try {
+      await apiClient.post("/internal/v1/vitals", {
+        patient_id: patientId,
+        encounter_id: encounterId,
+        recorded_by: "current-user",
+        systolic: systolic ? Number(systolic) : null,
+        diastolic: diastolic ? Number(diastolic) : null,
+        heart_rate: heartRate ? Number(heartRate) : null,
+        temperature: temperature ? Number(temperature) : null,
+        respiratory_rate: respiratoryRate ? Number(respiratoryRate) : null,
+        oxygen_saturation: oxygenSat ? Number(oxygenSat) : null,
+        weight: weight ? Number(weight) : null,
+        height: height ? Number(height) : null,
+        pain_score: painScore ? Number(painScore) : null,
+      });
+      setVitalsSaved(true);
+    } catch {
+      setVitalsError("Failed to save vitals. Please try again.");
+    } finally {
+      setVitalsSaving(false);
+    }
+  }
+
+  async function handleSaveNote() {
+    setNoteSaving(true);
+    setNoteError(null);
+    setNoteSaved(false);
+    try {
+      await apiClient.post("/internal/v1/clinical-notes", {
+        patient_id: patientId,
+        encounter_id: encounterId,
+        note_type: noteType,
+        subjective: subjective || null,
+        objective: objective || null,
+        assessment: assessment || null,
+        plan: plan || null,
+        body: noteBody || null,
+        author_id: "current-user",
+        author_name: "Current User",
+      });
+      setNoteSaved(true);
+      setSubjective("");
+      setObjective("");
+      setAssessment("");
+      setPlan("");
+      setNoteBody("");
+    } catch {
+      setNoteError("Failed to save note. Please try again.");
+    } finally {
+      setNoteSaving(false);
+    }
+  }
 
   function handleClose() {
     closeEncounter.mutate(
@@ -130,113 +206,159 @@ export default function EncounterPage() {
                     )}
                   </div>
                 </div>
+                {/* Quick action links */}
+                {isActive && (
+                  <div className="flex gap-2">
+                    <Link
+                      href={`/ehr/${patientId}/orders`}
+                      className="px-3 py-1.5 bg-purple-50 text-purple-700 text-xs font-medium rounded-lg hover:bg-purple-100 transition-colors flex items-center gap-1"
+                    >
+                      <ClipboardList className="w-3 h-3" /> Orders
+                    </Link>
+                    <Link
+                      href={`/ehr/${patientId}/medications`}
+                      className="px-3 py-1.5 bg-green-50 text-green-700 text-xs font-medium rounded-lg hover:bg-green-100 transition-colors flex items-center gap-1"
+                    >
+                      <Pill className="w-3 h-3" /> Rx
+                    </Link>
+                    <Link
+                      href={`/ehr/${patientId}/referrals`}
+                      className="px-3 py-1.5 bg-orange-50 text-orange-700 text-xs font-medium rounded-lg hover:bg-orange-100 transition-colors flex items-center gap-1"
+                    >
+                      <ArrowUpRight className="w-3 h-3" /> Referral
+                    </Link>
+                  </div>
+                )}
               </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Vitals Entry */}
               <div className="bg-white rounded-lg border border-gray-200 p-5">
-                <div className="flex items-center gap-2 mb-4">
-                  <Activity className="w-5 h-5 text-red-500" />
-                  <h3 className="font-medium text-gray-900">Vitals</h3>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <Activity className="w-5 h-5 text-red-500" />
+                    <h3 className="font-medium text-gray-900">Vitals</h3>
+                  </div>
+                  {vitalsSaved && (
+                    <span className="text-xs text-green-600 flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3" /> Saved
+                    </span>
+                  )}
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
-                      Systolic (mmHg)
-                    </label>
-                    <input
-                      type="number"
-                      value={systolic}
-                      onChange={(e) => setSystolic(e.target.value)}
-                      placeholder="120"
-                      disabled={!isActive}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400"
-                    />
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Systolic (mmHg)</label>
+                    <input type="number" value={systolic} onChange={(e) => setSystolic(e.target.value)} placeholder="120" disabled={!isActive}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400" />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
-                      Diastolic (mmHg)
-                    </label>
-                    <input
-                      type="number"
-                      value={diastolic}
-                      onChange={(e) => setDiastolic(e.target.value)}
-                      placeholder="80"
-                      disabled={!isActive}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400"
-                    />
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Diastolic (mmHg)</label>
+                    <input type="number" value={diastolic} onChange={(e) => setDiastolic(e.target.value)} placeholder="80" disabled={!isActive}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400" />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
-                      Heart Rate (bpm)
-                    </label>
-                    <input
-                      type="number"
-                      value={heartRate}
-                      onChange={(e) => setHeartRate(e.target.value)}
-                      placeholder="72"
-                      disabled={!isActive}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400"
-                    />
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Heart Rate (bpm)</label>
+                    <input type="number" value={heartRate} onChange={(e) => setHeartRate(e.target.value)} placeholder="72" disabled={!isActive}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400" />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
-                      Temperature (C)
-                    </label>
-                    <input
-                      type="number"
-                      step="0.1"
-                      value={temperature}
-                      onChange={(e) => setTemperature(e.target.value)}
-                      placeholder="36.5"
-                      disabled={!isActive}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400"
-                    />
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Temperature (°C)</label>
+                    <input type="number" step="0.1" value={temperature} onChange={(e) => setTemperature(e.target.value)} placeholder="36.5" disabled={!isActive}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400" />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
-                      Resp. Rate (/min)
-                    </label>
-                    <input
-                      type="number"
-                      value={respiratoryRate}
-                      onChange={(e) => setRespiratoryRate(e.target.value)}
-                      placeholder="16"
-                      disabled={!isActive}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400"
-                    />
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Resp. Rate (/min)</label>
+                    <input type="number" value={respiratoryRate} onChange={(e) => setRespiratoryRate(e.target.value)} placeholder="16" disabled={!isActive}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400" />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
-                      SpO2 (%)
-                    </label>
-                    <input
-                      type="number"
-                      value={oxygenSat}
-                      onChange={(e) => setOxygenSat(e.target.value)}
-                      placeholder="98"
-                      disabled={!isActive}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400"
-                    />
+                    <label className="block text-xs font-medium text-gray-600 mb-1">SpO2 (%)</label>
+                    <input type="number" value={oxygenSat} onChange={(e) => setOxygenSat(e.target.value)} placeholder="98" disabled={!isActive}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Weight (kg)</label>
+                    <input type="number" step="0.1" value={weight} onChange={(e) => setWeight(e.target.value)} placeholder="70" disabled={!isActive}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Height (cm)</label>
+                    <input type="number" step="0.1" value={height} onChange={(e) => setHeight(e.target.value)} placeholder="170" disabled={!isActive}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400" />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Pain Score (0-10)</label>
+                    <input type="number" min="0" max="10" value={painScore} onChange={(e) => setPainScore(e.target.value)} placeholder="0" disabled={!isActive}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400" />
                   </div>
                 </div>
+                {vitalsError && <p className="mt-2 text-xs text-red-600">{vitalsError}</p>}
+                {isActive && (
+                  <button onClick={handleSaveVitals} disabled={vitalsSaving}
+                    className="mt-4 w-full py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors">
+                    {vitalsSaving ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</> : <><Save className="w-4 h-4" /> Save Vitals</>}
+                  </button>
+                )}
               </div>
 
               {/* Clinical Notes */}
               <div className="bg-white rounded-lg border border-gray-200 p-5">
-                <div className="flex items-center gap-2 mb-4">
-                  <FileText className="w-5 h-5 text-indigo-500" />
-                  <h3 className="font-medium text-gray-900">Clinical Notes</h3>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-5 h-5 text-indigo-500" />
+                    <h3 className="font-medium text-gray-900">Clinical Notes</h3>
+                  </div>
+                  {noteSaved && (
+                    <span className="text-xs text-green-600 flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3" /> Saved
+                    </span>
+                  )}
                 </div>
-                <textarea
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  disabled={!isActive}
-                  placeholder="Enter clinical notes for this encounter..."
-                  rows={8}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none disabled:bg-gray-50 disabled:text-gray-400"
-                />
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Note Type</label>
+                    <select value={noteType} onChange={(e) => setNoteType(e.target.value)} disabled={!isActive}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50">
+                      <option value="PROGRESS">Progress Note</option>
+                      <option value="ASSESSMENT">Assessment</option>
+                      <option value="DISCHARGE">Discharge Summary</option>
+                      <option value="CONSULTATION">Consultation</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Subjective</label>
+                    <textarea value={subjective} onChange={(e) => setSubjective(e.target.value)} disabled={!isActive} rows={2} placeholder="Patient's reported symptoms..."
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none disabled:bg-gray-50" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Objective</label>
+                    <textarea value={objective} onChange={(e) => setObjective(e.target.value)} disabled={!isActive} rows={2} placeholder="Clinical findings..."
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none disabled:bg-gray-50" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Assessment</label>
+                    <textarea value={assessment} onChange={(e) => setAssessment(e.target.value)} disabled={!isActive} rows={2} placeholder="Clinical assessment..."
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none disabled:bg-gray-50" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Plan</label>
+                    <textarea value={plan} onChange={(e) => setPlan(e.target.value)} disabled={!isActive} rows={2} placeholder="Treatment plan..."
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none disabled:bg-gray-50" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Additional Notes</label>
+                    <textarea value={noteBody} onChange={(e) => setNoteBody(e.target.value)} disabled={!isActive} rows={3} placeholder="Any additional notes..."
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none disabled:bg-gray-50" />
+                  </div>
+                </div>
+                {noteError && <p className="mt-2 text-xs text-red-600">{noteError}</p>}
+                {isActive && (
+                  <button onClick={handleSaveNote} disabled={noteSaving}
+                    className="mt-4 w-full py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors">
+                    {noteSaving ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</> : <><Save className="w-4 h-4" /> Save Note</>}
+                  </button>
+                )}
               </div>
             </div>
 
@@ -254,38 +376,24 @@ export default function EncounterPage() {
                 ) : (
                   <div className="space-y-3">
                     <p className="text-sm text-gray-700 text-center">
-                      Are you sure you want to close this encounter? This action cannot be
-                      undone.
+                      Are you sure you want to close this encounter? This action cannot be undone.
                     </p>
                     <div className="flex gap-3">
-                      <button
-                        onClick={() => setShowCloseConfirm(false)}
-                        className="flex-1 py-2.5 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors"
-                      >
+                      <button onClick={() => setShowCloseConfirm(false)}
+                        className="flex-1 py-2.5 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors">
                         Cancel
                       </button>
-                      <button
-                        onClick={handleClose}
-                        disabled={closeEncounter.isPending}
-                        className="flex-1 py-2.5 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
-                      >
+                      <button onClick={handleClose} disabled={closeEncounter.isPending}
+                        className="flex-1 py-2.5 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors">
                         {closeEncounter.isPending ? (
-                          <>
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                            Closing...
-                          </>
+                          <><Loader2 className="w-4 h-4 animate-spin" /> Closing...</>
                         ) : (
-                          <>
-                            <CheckCircle2 className="w-4 h-4" />
-                            Confirm Close
-                          </>
+                          <><CheckCircle2 className="w-4 h-4" /> Confirm Close</>
                         )}
                       </button>
                     </div>
                     {closeEncounter.isError && (
-                      <p className="text-sm text-red-600 text-center">
-                        Failed to close encounter. Please try again.
-                      </p>
+                      <p className="text-sm text-red-600 text-center">Failed to close encounter. Please try again.</p>
                     )}
                   </div>
                 )}
