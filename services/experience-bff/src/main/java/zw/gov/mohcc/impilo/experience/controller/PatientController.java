@@ -9,20 +9,65 @@ import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.domain.Patient;
 import zw.gov.mohcc.impilo.experience.repository.PatientRepository;
 
+import org.springframework.jdbc.core.JdbcTemplate;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+
 import java.util.*;
 
 /**
- * GET /internal/v1/patients — list patients with search, status, pagination.
- * GET /internal/v1/patients/{id} — get single patient by ID.
+ * GET  /internal/v1/patients — list patients with search, status, pagination.
+ * GET  /internal/v1/patients/{id} — get single patient by ID.
+ * POST /internal/v1/patients — register a new patient.
  */
 @RestController
 @RequestMapping("/internal/v1/patients")
 public class PatientController {
 
     private final PatientRepository patientRepository;
+    private final JdbcTemplate jdbcTemplate;
 
-    public PatientController(PatientRepository patientRepository) {
+    public PatientController(PatientRepository patientRepository, JdbcTemplate jdbcTemplate) {
         this.patientRepository = patientRepository;
+        this.jdbcTemplate = jdbcTemplate;
+    }
+
+    public record CreatePatientRequest(
+            @NotBlank String given_name,
+            @NotBlank String family_name,
+            String date_of_birth,
+            String sex,
+            String national_id,
+            String phone,
+            @NotBlank String facility_id
+    ) {}
+
+    @PostMapping
+    public ResponseEntity<Map<String, Object>> createPatient(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @Valid @RequestBody CreatePatientRequest req) {
+
+        UUID id = UUID.randomUUID();
+        String cpid = "CP-" + id.toString().substring(0, 8).toUpperCase();
+
+        jdbcTemplate.update("""
+                INSERT INTO patients (id, tenant_id, cpid, given_name, family_name, date_of_birth,
+                    sex, national_id, phone, facility_id, status, created_at, updated_at)
+                VALUES (?::uuid, ?, ?, ?, ?, ?::date, ?, ?, ?, ?, 'ACTIVE', NOW(), NOW())
+                """,
+                id.toString(), tenantId, cpid,
+                req.given_name(), req.family_name(), req.date_of_birth(),
+                req.sex(), req.national_id(), req.phone(), req.facility_id());
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", Map.of("id", id.toString(), "type", "Patient",
+                "attributes", Map.of("cpid", cpid, "given_name", req.given_name(),
+                        "family_name", req.family_name(), "status", "ACTIVE")));
+        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
+
+        return ResponseEntity.status(201).body(response);
     }
 
     @GetMapping
