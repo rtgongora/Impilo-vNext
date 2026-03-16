@@ -2,21 +2,32 @@ package zw.gov.mohcc.impilo.notification.provider;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
+/**
+ * Local-development email provider that logs messages instead of sending them.
+ * <p>
+ * Activated by default when {@code notification.email.provider} is not set to "smtp".
+ * In production, use {@link SmtpEmailProvider} with proper SMTP configuration.
+ */
 @Component
+@ConditionalOnProperty(name = "notification.email.provider", havingValue = "log", matchIfMissing = true)
 public class EmailStubProvider implements NotificationProvider {
 
     private static final Logger log = LoggerFactory.getLogger(EmailStubProvider.class);
 
     @Override
     public String name() {
-        return "email_stub";
+        return "email_log";
     }
 
     @Override
     public void send(String channel, String to, String subject, String body) {
-        log.info("[EMAIL_STUB] Simulating EMAIL to={} subject={} body_length={}", to, subject,
+        log.info("[EMAIL_DEV] to={} subject={} body_length={}", to, subject,
                 body != null ? body.length() : 0);
+        if (log.isDebugEnabled() && body != null) {
+            log.debug("[EMAIL_DEV] body:\n{}", body);
+        }
     }
 }
