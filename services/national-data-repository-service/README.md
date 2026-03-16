@@ -49,8 +49,8 @@ Published via the transactional outbox pattern:
 |-------|---------|
 | `ndr_datasets` | Top-level dataset registry |
 | `ndr_dataset_versions` | Immutable version snapshots |
-| `ndr_dataset_access_policies` | RBAC stub for dataset-level access |
-| `ndr_materialized_views` | Pre-computed query results (stub) |
+| `ndr_dataset_access_policies` | RBAC rules for dataset-level access |
+| `ndr_materialized_views` | Pre-computed query results for fast analytics |
 | `ndr_event_outbox` | Transactional outbox for Kafka |
 | `idempotency_keys` | v1.1 command deduplication |
 

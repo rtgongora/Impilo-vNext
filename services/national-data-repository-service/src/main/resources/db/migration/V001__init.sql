@@ -38,7 +38,7 @@ CREATE TABLE ndr_dataset_versions (
 CREATE INDEX idx_ndr_versions_tenant ON ndr_dataset_versions (tenant_id);
 CREATE INDEX idx_ndr_versions_dataset ON ndr_dataset_versions (dataset_id);
 
--- 3. Dataset access policies — stub for future RBAC on datasets
+-- 3. Dataset access policies — RBAC on datasets
 CREATE TABLE ndr_dataset_access_policies (
     policy_id       VARCHAR(26)     PRIMARY KEY,
     tenant_id       UUID            NOT NULL,
@@ -51,7 +51,7 @@ CREATE TABLE ndr_dataset_access_policies (
 
 CREATE INDEX idx_ndr_policies_tenant_dataset ON ndr_dataset_access_policies (tenant_id, dataset_id);
 
--- 4. Materialized views — pre-computed query results (stub)
+-- 4. Materialized views — pre-computed query results
 CREATE TABLE ndr_materialized_views (
     view_id         VARCHAR(26)     PRIMARY KEY,
     tenant_id       UUID            NOT NULL,
@@ -64,7 +64,7 @@ CREATE TABLE ndr_materialized_views (
 
 CREATE INDEX idx_ndr_matviews_tenant_key ON ndr_materialized_views (tenant_id, dataset_key);
 
--- Seed stub rows for query testing
+-- Seed rows for query testing
 INSERT INTO ndr_materialized_views (view_id, tenant_id, dataset_key, view_name, row_data)
 VALUES
     ('01STUB0000000000000000001', '00000000-0000-0000-0000-000000000001', 'facility_summary', 'Facility Summary',

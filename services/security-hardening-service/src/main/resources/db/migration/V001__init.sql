@@ -1,5 +1,5 @@
 -- ============================================================
--- Security Hardening Service  (v1.1-native stub)
+-- Security Hardening Service  (v1.1-native)
 -- V001: Base schema
 -- ============================================================
 

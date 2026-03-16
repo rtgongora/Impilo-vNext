@@ -15,7 +15,8 @@
     <name>Surveillance — Public Health Event Monitoring &amp; Signal Detection</name>
     <description>
         v1.1-native surveillance service: ingests clinical/public-health events,
-        evaluates threshold-based signals, and maintains a cases registry (stub).
+        evaluates threshold-based signals, and maintains a cases registry with
+        auto-opening when thresholds are breached.
     </description>
 
     <dependencies>

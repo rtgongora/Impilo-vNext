@@ -46,7 +46,7 @@ CREATE INDEX idx_rpt_runs_tenant ON rpt_report_runs (tenant_id);
 CREATE INDEX idx_rpt_runs_def ON rpt_report_runs (definition_id);
 CREATE INDEX idx_rpt_runs_status ON rpt_report_runs (tenant_id, status);
 
--- 3. Report schedules — stub scheduled job entries
+-- 3. Report schedules — scheduled report job entries
 CREATE TABLE rpt_report_schedules (
     id              BIGSERIAL       PRIMARY KEY,
     schedule_id     UUID            NOT NULL UNIQUE DEFAULT gen_random_uuid(),

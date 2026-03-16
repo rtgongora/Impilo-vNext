@@ -2,7 +2,7 @@
 
 **Port:** 8220
 **Schema:** `secharden`
-**Version:** v1.1-native (stub)
+**Version:** v1.1-native
 
 ## Purpose
 

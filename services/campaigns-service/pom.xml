@@ -15,8 +15,8 @@
     <name>Campaigns — Public Health Campaign Management &amp; Outreach</name>
     <description>
         v1.1-native campaigns service: manages campaign definitions with
-        target groups and messages, handles enrollments (stub), and emits
-        campaign lifecycle events.
+        target groups and messages, handles enrollments and dispatches
+        deliveries via the outbox pattern for notification-service.
     </description>
 
     <dependencies>

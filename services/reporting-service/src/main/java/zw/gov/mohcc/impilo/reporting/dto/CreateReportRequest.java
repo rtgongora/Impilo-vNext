@@ -9,7 +9,7 @@ import jakarta.validation.constraints.Pattern;
  * @param reportKey      unique human-readable key (lowercase, hyphens, underscores)
  * @param name           display name
  * @param description    optional description
- * @param queryTemplate  query template (stub SQL or NDR query)
+ * @param queryTemplate  query template (SQL SELECT statement)
  * @param parameters     optional JSON parameter schema
  * @param outputFormat   JSON or CSV (defaults to JSON)
  */

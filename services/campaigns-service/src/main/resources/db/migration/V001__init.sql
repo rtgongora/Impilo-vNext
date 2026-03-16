@@ -30,7 +30,7 @@ CREATE INDEX idx_campaigns_status ON camp.campaigns (tenant_id, status);
 CREATE INDEX idx_campaigns_type ON camp.campaigns (tenant_id, campaign_type);
 
 -- ----------------------------------------------------------
--- 2. enrollments — campaign participant enrollments (stub)
+-- 2. enrollments — campaign participant enrollments
 -- ----------------------------------------------------------
 CREATE TABLE camp.enrollments (
     id              BIGSERIAL       PRIMARY KEY,
@@ -49,7 +49,7 @@ CREATE INDEX idx_enrollments_campaign ON camp.enrollments (campaign_id);
 CREATE INDEX idx_enrollments_participant ON camp.enrollments (tenant_id, participant_id);
 
 -- ----------------------------------------------------------
--- 3. deliveries — message delivery tracking (stub)
+-- 3. deliveries — message delivery tracking
 -- ----------------------------------------------------------
 CREATE TABLE camp.deliveries (
     id              BIGSERIAL       PRIMARY KEY,

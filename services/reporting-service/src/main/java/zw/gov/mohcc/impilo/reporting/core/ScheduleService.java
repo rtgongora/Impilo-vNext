@@ -14,6 +14,12 @@ import zw.gov.mohcc.impilo.reporting.persistence.entity.ReportScheduleEntity;
 import zw.gov.mohcc.impilo.reporting.persistence.repository.EventOutboxRepository;
 import zw.gov.mohcc.impilo.reporting.persistence.repository.ReportScheduleRepository;
 
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.support.CronExpression;
+
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,22 +32,26 @@ public class ScheduleService {
 
     private final ReportScheduleRepository scheduleRepository;
     private final ReportDefinitionService definitionService;
+    private final ReportRunService reportRunService;
     private final EventOutboxRepository outboxRepository;
     private final ObjectMapper objectMapper;
 
     public ScheduleService(ReportScheduleRepository scheduleRepository,
                            ReportDefinitionService definitionService,
+                           ReportRunService reportRunService,
                            EventOutboxRepository outboxRepository,
                            ObjectMapper objectMapper) {
         this.scheduleRepository = scheduleRepository;
         this.definitionService = definitionService;
+        this.reportRunService = reportRunService;
         this.outboxRepository = outboxRepository;
         this.objectMapper = objectMapper;
     }
 
     /**
-     * Creates a schedule entry for a report. This is a stub — no real
-     * scheduler is wired; the entry is persisted for future implementation.
+     * Creates a schedule entry for a report. The schedule is persisted and
+     * the next run time is computed from the cron expression. The scheduler
+     * polls active schedules every 60 seconds via {@link #pollSchedules()}.
      */
     @Transactional
     public ReportScheduleEntity createSchedule(UUID tenantId, String reportKey,
@@ -56,6 +66,7 @@ public class ScheduleService {
         schedule.setParameters(request.parameters() != null ? request.parameters() : "{}");
         schedule.setOutputFormat(ReportDefinitionService.parseExportFormat(request.outputFormat()));
         schedule.setStatus(ScheduleStatus.ACTIVE);
+        schedule.setNextRunAt(computeNextRun(request.cronExpression()));
         schedule.setCreatedBy(actorId);
         schedule = scheduleRepository.save(schedule);
 
@@ -91,6 +102,56 @@ public class ScheduleService {
                 entity.getCreatedBy(),
                 entity.getCreatedAt()
         );
+    }
+
+    /**
+     * Polls active schedules every 60 seconds and triggers report runs
+     * for any schedule whose next_run_at is in the past.
+     */
+    @Scheduled(fixedDelay = 60_000, initialDelay = 30_000)
+    @Transactional
+    public void pollSchedules() {
+        OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
+        List<ReportScheduleEntity> due = scheduleRepository.findDueSchedules(now);
+
+        if (due.isEmpty()) {
+            return;
+        }
+
+        log.info("Scheduler poll found {} due schedules", due.size());
+
+        for (ReportScheduleEntity schedule : due) {
+            try {
+                String reportKey = schedule.getDefinition().getReportKey();
+                UUID tenantId = schedule.getTenantId();
+
+                reportRunService.runReport(tenantId, reportKey, "SCHEDULER",
+                        new zw.gov.mohcc.impilo.reporting.dto.RunReportRequest(
+                                schedule.getParameters(),
+                                schedule.getOutputFormat().name()));
+
+                schedule.setLastRunAt(now);
+                schedule.setNextRunAt(computeNextRun(schedule.getCronExpression()));
+                scheduleRepository.save(schedule);
+
+                log.info("Scheduled report executed: key={}, scheduleId={}, nextRun={}",
+                        reportKey, schedule.getScheduleId(), schedule.getNextRunAt());
+            } catch (Exception e) {
+                log.error("Failed to execute scheduled report: scheduleId={}, error={}",
+                        schedule.getScheduleId(), e.getMessage());
+            }
+        }
+    }
+
+    private OffsetDateTime computeNextRun(String cronExpression) {
+        try {
+            CronExpression cron = CronExpression.parse(cronExpression);
+            LocalDateTime next = cron.next(LocalDateTime.now(ZoneOffset.UTC));
+            return next != null ? next.atOffset(ZoneOffset.UTC) : null;
+        } catch (Exception e) {
+            log.warn("Invalid cron expression '{}': {}", cronExpression, e.getMessage());
+            return null;
+        }
     }
 
     private void writeOutbox(String aggregateType, String aggregateId,

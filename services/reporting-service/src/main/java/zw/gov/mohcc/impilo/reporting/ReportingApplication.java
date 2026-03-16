@@ -10,8 +10,9 @@ import zw.gov.mohcc.impilo.reporting.config.ReportingProperties;
  * Entry point for the Reporting service.
  *
  * <p>Report definition registry and run engine providing on-demand and
- * scheduled report generation with JSON/CSV export formats. Reads
- * aggregate data from NDR or local stub tables.</p>
+ * scheduled report generation with JSON/CSV export formats. Executes
+ * parameterized SQL queries against the reporting database with
+ * tenant isolation and DML/DDL safety guards.</p>
  */
 @SpringBootApplication
 @EnableScheduling

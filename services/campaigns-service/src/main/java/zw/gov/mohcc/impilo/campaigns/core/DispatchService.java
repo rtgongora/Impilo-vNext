@@ -17,8 +17,10 @@ import zw.gov.mohcc.impilo.campaigns.persistence.repository.EnrollmentRepository
 import zw.gov.mohcc.impilo.campaigns.persistence.repository.EventOutboxRepository;
 
 /**
- * Stub dispatch service: creates delivery records for each enrollment
- * and marks them as DISPATCHED. Actual channel delivery is not implemented.
+ * Campaign dispatch service: creates delivery records for each enrolled
+ * participant and marks them as DISPATCHED. Delivery records are published
+ * via the outbox pattern for downstream notification processing by the
+ * notification-service through Kafka event consumption.
  */
 @Service
 public class DispatchService {

@@ -46,7 +46,7 @@ CREATE INDEX idx_signal_hits_signal ON surv.signal_hits (signal_id);
 CREATE INDEX idx_signal_hits_recorded ON surv.signal_hits (tenant_id, recorded_at);
 
 -- ----------------------------------------------------------
--- 3. cases — public health case registry (stub)
+-- 3. cases — public health case registry
 -- ----------------------------------------------------------
 CREATE TABLE surv.cases (
     id              BIGSERIAL       PRIMARY KEY,

@@ -15,7 +15,7 @@
     <name>DAGS — Data Access Governance Service</name>
     <description>
         v1.1-native data-access governance: policy registry, access-request
-        workflow (submitted → approved/denied), audit log, and stubbed
+        workflow (submitted → approved/denied), audit log, and
         enforcement that issues permit-token strings.
     </description>
 

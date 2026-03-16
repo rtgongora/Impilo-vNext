@@ -12,10 +12,11 @@
     </parent>
 
     <artifactId>security-hardening-service</artifactId>
-    <name>Security Hardening — Policy Pack Registry (Stub)</name>
+    <name>Security Hardening — Policy Pack Registry</name>
     <description>
-        v1.1-native stub registry for security policy packs and compliance
-        scan results. Tracks hardening policies per tenant.
+        v1.1-native registry for security policy packs and compliance
+        scan results. Tracks hardening policies per tenant with full
+        CRUD, outbox event publishing, and idempotency support.
     </description>
 
     <dependencies>

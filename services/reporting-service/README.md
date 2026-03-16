@@ -5,8 +5,8 @@ Report definition registry and run engine for the Impilo platform.
 ## Overview
 
 The Reporting service provides on-demand and scheduled report generation with JSON/CSV export formats.
-It reads aggregate data from NDR (National Data Repository) or local stub tables and produces
-formatted output for analytics and operational reporting.
+It executes parameterized SQL queries against the reporting database with tenant isolation,
+DML/DDL safety guards, and automatic row limits.
 
 ## Port
 
@@ -21,9 +21,9 @@ All endpoints are under `/internal/v1/reports`.
 | Method | Path                          | Description                    |
 |--------|-------------------------------|--------------------------------|
 | POST   | `/internal/v1/reports`        | Create a report definition     |
-| POST   | `/internal/v1/reports/{key}/run`       | Run a report (stub execution)  |
+| POST   | `/internal/v1/reports/{key}/run`       | Run a report                   |
 | GET    | `/internal/v1/reports/{key}/runs`      | List runs for a report         |
-| POST   | `/internal/v1/reports/{key}/schedules` | Create a schedule entry (stub) |
+| POST   | `/internal/v1/reports/{key}/schedules` | Create a scheduled report      |
 
 ## v1.1 Compliance
 
@@ -32,6 +32,24 @@ This service is **v1.1-native**. The tech-companion library auto-configures:
 - **Header enforcement**: `X-Tenant-ID`, `X-Pod-ID`, `X-Request-ID`, `X-Correlation-ID` required on all `/internal/v1/**` endpoints
 - **Idempotency**: `Idempotency-Key` header required on POST/PUT/PATCH commands
 - **Timeout enforcement**: `X-Client-Timeout-MS` header respected
+
+## Report Execution
+
+The report engine:
+1. Validates the query template (rejects DML/DDL)
+2. Binds runtime parameters via `NamedParameterJdbcTemplate` (prevents SQL injection)
+3. Injects `tenant_id` as a mandatory parameter for data isolation
+4. Applies a row limit (10,000 max) to prevent resource exhaustion
+5. Formats output as JSON or CSV
+
+## Scheduled Reports
+
+Schedules use Spring `@Scheduled` polling (60-second interval) with cron expressions.
+The scheduler:
+1. Queries active schedules whose `next_run_at` has passed
+2. Triggers report execution via `ReportRunService`
+3. Computes the next run time from the cron expression
+4. Updates `last_run_at` and `next_run_at`
 
 ## Database
 
@@ -63,8 +81,8 @@ mvn -pl reporting-service test
 Tests include:
 - `ReportingGoldenContractIT` — v1.1 compliance (header enforcement, idempotency, error envelope)
 - `ReportDefinitionServiceTest` — definition creation, duplicate key rejection, format parsing
-- `ReportRunServiceTest` — run execution, format override, stub output, outbox events
-- `ScheduleServiceTest` — schedule creation, parameters, format handling
+- `ReportRunServiceTest` — run execution, format override, output validation, outbox events
+- `ScheduleServiceTest` — schedule creation, cron parsing, parameters, format handling
 - `OutboxPublisherTest` — topic routing, batch publishing, error handling
 - `ReportControllerTest` — controller unit tests (HTTP status codes, error handling)
 - `ReportControllerIT` — full integration tests (MockMvc + H2)

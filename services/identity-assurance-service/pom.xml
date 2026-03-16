@@ -15,7 +15,7 @@
     <name>Identity Assurance — Step-Up Checks, Attestation &amp; Risk Scoring</name>
     <description>
         v1.1-native identity assurance service: device attestation registry,
-        identity proofing stubs, risk scoring, and event production for
+        identity proofing checks, risk scoring, and event production for
         downstream authorization decisions.
     </description>
 

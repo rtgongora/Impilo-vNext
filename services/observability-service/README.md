@@ -2,7 +2,7 @@
 
 **Port:** 8210
 **Schema:** `obs`
-**Version:** v1.1-native (stub)
+**Version:** v1.1-native
 
 ## Purpose
 

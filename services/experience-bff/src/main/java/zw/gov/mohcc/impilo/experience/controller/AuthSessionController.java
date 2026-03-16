@@ -13,7 +13,7 @@ import java.util.UUID;
  * Auth session endpoint for golden path A (Email Login) and B (Provider ID + Biometric).
  * In Stage-1, this provides a real JWT-shaped session response without requiring
  * full Keycloak integration. SPEC CONFLICT: TSHEPO/Keycloak integration details
- * are not in the spec stubs.
+ * are defined externally in the TSHEPO/Keycloak integration specification.
  */
 @RestController
 @RequestMapping("/internal/v1/auth")

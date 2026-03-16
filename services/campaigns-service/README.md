@@ -1,8 +1,8 @@
 # Campaigns Service
 
 v1.1-native public health campaign management service. Manages campaign
-definitions with target groups and messages, handles participant enrollments
-(stub), dispatches campaign deliveries (stub), and emits campaign lifecycle events.
+definitions with target groups and messages, handles participant enrollments,
+dispatches campaign deliveries, and emits campaign lifecycle events.
 
 ## Port
 
@@ -17,7 +17,7 @@ definitions with target groups and messages, handles participant enrollments
 | POST | `/internal/v1/campaigns` | Create a campaign |
 | GET | `/internal/v1/campaigns` | List campaigns for the tenant |
 | POST | `/internal/v1/campaigns/{id}/enroll` | Enroll a participant |
-| POST | `/internal/v1/campaigns/{id}/dispatch` | Dispatch campaign (stub) |
+| POST | `/internal/v1/campaigns/{id}/dispatch` | Dispatch campaign deliveries |
 
 ## Kafka Events (via outbox)
 
@@ -30,8 +30,8 @@ definitions with target groups and messages, handles participant enrollments
 ## Database Schema (`camp`)
 
 - `campaigns` — campaign definitions (type, target group, message template, channel, dates)
-- `enrollments` — participant enrollments (stub)
-- `deliveries` — message delivery tracking (stub, created on dispatch)
+- `enrollments` — participant enrollments
+- `deliveries` — message delivery tracking (created per enrollment on dispatch)
 - `event_outbox` — transactional outbox for Kafka
 - `idempotency_keys` — request deduplication
 
@@ -42,7 +42,8 @@ DRAFT ──▶ (create)
     │
     ├── enroll participants
     │
-    └── dispatch ──▶ creates delivery per enrollment (stub)
+    └── dispatch ──▶ creates delivery per enrollment
+                      → outbox event triggers notification-service
 ```
 
 ## Running Locally

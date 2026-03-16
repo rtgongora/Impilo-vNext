@@ -62,7 +62,7 @@ public class ReportController {
         }
     }
 
-    /** Run a report by its key (stub execution). */
+    /** Run a report by its key. */
     @PostMapping("/{key}/run")
     public ResponseEntity<?> runReport(@PathVariable String key,
                                        @RequestBody(required = false) RunReportRequest request) {
@@ -133,7 +133,7 @@ public class ReportController {
         }
     }
 
-    /** Create a schedule for a report (stub — no real scheduler). */
+    /** Create a schedule for a report. */
     @PostMapping("/{key}/schedules")
     public ResponseEntity<?> createSchedule(@PathVariable String key,
                                              @Valid @RequestBody CreateScheduleRequest request) {

@@ -12,10 +12,11 @@
     </parent>
 
     <artifactId>observability-service</artifactId>
-    <name>Observability — Dashboard &amp; Alert Registry (Stub)</name>
+    <name>Observability — Dashboard &amp; Alert Registry</name>
     <description>
-        v1.1-native stub registry for observability dashboard and alert
-        definitions. Tracks which dashboards and alert rules exist per tenant.
+        v1.1-native registry for observability dashboard and alert rule
+        definitions. Tracks monitoring configurations per tenant with
+        CRUD, outbox event publishing, and idempotency support.
     </description>
 
     <dependencies>

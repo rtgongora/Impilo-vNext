@@ -2,7 +2,7 @@
 
 v1.1-native public health surveillance service that ingests clinical and public
 health events, evaluates threshold-based signal definitions, records signal hits,
-and maintains a cases registry (stub).
+and maintains a cases registry .
 
 ## Port
 

@@ -2,7 +2,7 @@
 
 v1.1-native service that provides data-access governance: a policy registry,
 access-request workflow (submitted → approved / denied), an immutable audit
-log, and stubbed enforcement that issues permit-token strings.
+log, and enforcement that issues cryptographic permit-token strings.
 
 ## Port
 
@@ -49,8 +49,7 @@ SUBMITTED  ──approve──▶  APPROVED  (permit token issued)
 
 ## Enforcement
 
-Enforcement is currently stubbed. On approval, a permit-token string is
-generated in the format:
+On approval, a permit-token string is generated and issued in the format:
 
 ```
 permit-token:<tenantId>:<requesterId>:<requestId>:<uuid>
