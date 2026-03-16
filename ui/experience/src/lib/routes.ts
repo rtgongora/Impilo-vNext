@@ -93,6 +93,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/ehr/[patientId]/immunizations", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Immunizations", navLabel: "Immunizations", navZone: "work" },
   { path: "/ehr/[patientId]/referrals", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Referrals", navLabel: "Referrals", navZone: "work" },
   { path: "/ehr/[patientId]/timeline", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Timeline", navLabel: "Timeline", navZone: "work" },
+  { path: "/ehr/[patientId]/discharge", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Discharge", navLabel: "Discharge", navZone: "work" },
 
   // ── Zone: Admin / TSHEPO Governance ─────────────────────────────
   { path: "/admin", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Administration", navLabel: "Admin", navZone: "professional" },
@@ -166,7 +167,7 @@ export const ROUTES: RouteDefinition[] = [
 ];
 
 // Total route count assertion
-export const EXPECTED_ROUTE_COUNT = 98;
+export const EXPECTED_ROUTE_COUNT = 99;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

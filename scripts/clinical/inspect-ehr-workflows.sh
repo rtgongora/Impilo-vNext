@@ -129,10 +129,14 @@ echo ""
 
 # 10. Discharge / Encounter Close
 echo "10. Discharge / Encounter Close"
-check "UI: close encounter button" grep -q "Close Encounter" "$REPO_ROOT/ui/experience/src/app/ehr/[patientId]/encounter/[encounterId]/page.tsx"
-check "Hook: useCloseEncounter exists" grep -q "useCloseEncounter" "$REPO_ROOT/ui/experience/src/hooks/queries/useEncounters.ts"
-check "BFF: close endpoint" grep -q "close" "$REPO_ROOT/services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/EncounterController.java"
-check "BFF: encounter.closed event" grep -q "encounter.closed" "$REPO_ROOT/services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/EncounterController.java"
+check "UI: discharge page exists" test -f "$REPO_ROOT/ui/experience/src/app/ehr/[patientId]/discharge/page.tsx"
+check "Hook: useDischarge exists" test -f "$REPO_ROOT/ui/experience/src/hooks/queries/useDischarge.ts"
+check "BFF: discharge endpoint" grep -q "discharge" "$REPO_ROOT/services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/EncounterController.java"
+check "BFF: encounter.discharged event" grep -q "encounter.discharged" "$REPO_ROOT/services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/EncounterController.java"
+check "DB: discharge columns" test -f "$REPO_ROOT/services/experience-bff/src/main/resources/db/migration/V8__encounter_discharge_columns.sql"
+check "Mobile: DischargeScreen exists" test -f "$REPO_ROOT/apps/mobile/provider-app/src/screens/provider/DischargeScreen.tsx"
+check "Mobile BFF: MobileDischargeController" test -f "$REPO_ROOT/services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/mobile/MobileDischargeController.java"
+check "UI: discharge link in encounter page" grep -q "Discharge" "$REPO_ROOT/ui/experience/src/app/ehr/[patientId]/encounter/[encounterId]/page.tsx"
 echo ""
 
 # 11. Role / Capability Restrictions

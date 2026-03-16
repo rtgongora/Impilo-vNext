@@ -227,6 +227,12 @@ export default function EncounterPage() {
                     >
                       <ArrowUpRight className="w-3 h-3" /> Referral
                     </Link>
+                    <Link
+                      href={`/ehr/${patientId}/discharge?encounterId=${encounterId}`}
+                      className="px-3 py-1.5 bg-red-50 text-red-700 text-xs font-medium rounded-lg hover:bg-red-100 transition-colors flex items-center gap-1"
+                    >
+                      <XCircle className="w-3 h-3" /> Discharge
+                    </Link>
                   </div>
                 )}
               </div>

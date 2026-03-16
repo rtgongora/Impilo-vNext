@@ -5,7 +5,7 @@
 
 ## Summary
 
-**48/48 checks PASS — CITIZEN PARITY ACHIEVED**
+**51/51 checks PASS — CITIZEN PARITY ACHIEVED**
 
 The Citizen App carries full My Life functionality across all required domains.
 
@@ -120,6 +120,14 @@ The Citizen App carries full My Life functionality across all required domains.
 | Notifications screen | PASS |
 | Messaging package | PASS |
 
+### Consent Management (3/3)
+
+| Check | Status |
+|---|---|
+| Consent screen | PASS |
+| Consent service | PASS |
+| BFF: CitizenConsentController | PASS |
+
 ### Shared Foundations (4/4)
 
 | Check | Status |
@@ -144,6 +152,14 @@ The Citizen App carries full My Life functionality across all required domains.
 11. **V7__reminders_table.sql** — New migration for reminders table.
 12. **Reminder.java** — New domain entity.
 13. **PersonalScreen.tsx** — Updated tabs to include Records, Reminders, Timeline.
+
+### Closure Wave 2 Fixes
+
+14. **ConsentScreen.tsx** — Was missing. Created with consent preference toggles for data sharing categories.
+15. **consentService.ts** — Was missing. Created with getConsents + updateConsent API integration.
+16. **CitizenConsentController** — Was missing. Created with GET/PUT citizen consent endpoints.
+17. **consent_preferences table** — Created in V8 migration with tenant/patient/type unique constraint.
+18. **PersonalScreen.tsx** — Updated to include Consent tab.
 
 ## Verification Script
 

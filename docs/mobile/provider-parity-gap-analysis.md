@@ -5,7 +5,7 @@
 
 ## Summary
 
-**46/46 checks PASS — PROVIDER PARITY ACHIEVED**
+**49/49 checks PASS — PROVIDER PARITY ACHIEVED**
 
 The Provider App carries full Work + Professional functionality across all required domains.
 
@@ -106,6 +106,14 @@ The Provider App carries full Work + Professional functionality across all requi
 | Team overview screen | PASS | `provider-app/src/screens/supervisor/TeamOverviewScreen.tsx` |
 | BFF: MobileSupervisorController | PASS | `experience-bff/.../controller/mobile/MobileSupervisorController.java` |
 
+### My Work — Discharge Workflow
+
+| Check | Status | File |
+|---|---|---|
+| Discharge screen | PASS | `provider-app/src/screens/provider/DischargeScreen.tsx` |
+| Discharge service | PASS | `provider-app/src/services/dischargeService.ts` |
+| BFF: MobileDischargeController | PASS | `experience-bff/.../controller/mobile/MobileDischargeController.java` |
+
 ### Shared Foundations
 
 | Check | Status | File |
@@ -128,6 +136,12 @@ The Provider App carries full Work + Professional functionality across all requi
 7. **MobileNoticesController** — Was missing. Created with GET provider notices.
 8. **MobileResultsController** — Was missing. Created with GET results + POST acknowledge.
 9. **ProviderTabs** — Updated to include Results and Profile tabs.
+
+### Closure Wave 2 Fixes
+
+10. **DischargeScreen** — Was missing. Created with discharge form (type, diagnosis, treatment summary, follow-up, medications, instructions).
+11. **dischargeService** — Was missing. Created with submitDischarge + getDischargeStatus.
+12. **MobileDischargeController** — Was missing. Created with POST discharge + GET status endpoints.
 
 ## Verification Script
 

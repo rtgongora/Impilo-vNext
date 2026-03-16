@@ -5,7 +5,8 @@
 
 ## Summary
 
-24 files changed, ~3,984 lines added to achieve full mobile parity for both Provider App and Citizen App.
+**Closure Wave 1**: 24 files changed, ~3,984 lines added to achieve full mobile parity for both Provider App and Citizen App.
+**Closure Wave 2**: 8 additional files changed, ~1,200 lines added for discharge workflow and consent management.
 
 ## Provider App Fixes (Phase 2)
 
@@ -78,3 +79,57 @@
 | File | Change |
 |---|---|
 | `PersonalScreen.tsx` | Added Records, Reminders, Timeline tabs to personal hub |
+
+## Closure Wave 2 Additions
+
+### Provider App — Discharge Workflow
+
+#### New Screens
+
+| File | Description |
+|---|---|
+| `DischargeScreen.tsx` | Discharge form with type picker, diagnosis, treatment summary, follow-up, medications, patient instructions |
+
+#### New Services
+
+| File | Description |
+|---|---|
+| `dischargeService.ts` | submitDischarge + getDischargeStatus using mobile-api-client with trust headers |
+
+#### New BFF Controllers
+
+| Controller | Endpoints |
+|---|---|
+| `MobileDischargeController.java` | POST /mobile/v1/provider/discharge, GET /mobile/v1/provider/discharge/{encounterId} |
+
+### Citizen App — Consent Management
+
+#### New Screens
+
+| File | Description |
+|---|---|
+| `ConsentScreen.tsx` | Consent preference toggles for data sharing categories (treatment, research, analytics, third-party) |
+
+#### New Services
+
+| File | Description |
+|---|---|
+| `consentService.ts` | getConsents + updateConsent using mobile-api-client |
+
+#### New BFF Controllers
+
+| Controller | Endpoints |
+|---|---|
+| `CitizenConsentController.java` | GET /mobile/v1/citizen/consents, PUT /mobile/v1/citizen/consents |
+
+#### New Domain
+
+| File | Description |
+|---|---|
+| `V8__encounter_discharge_columns.sql` | consent_preferences table with tenant/patient/type unique constraint |
+
+#### Navigation Updates
+
+| File | Change |
+|---|---|
+| `PersonalScreen.tsx` | Added Consent tab to personal hub |

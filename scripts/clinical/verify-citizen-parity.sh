@@ -110,6 +110,12 @@ check "Notifications screen" test -f "$APP/src/screens/NotificationsScreen.tsx"
 check "Messaging package" test -d "$REPO_ROOT/apps/mobile/packages/mobile-messaging"
 echo ""
 
+echo "=== Consent Management ==="
+check "Consent screen" test -f "$APP/src/screens/personal/ConsentScreen.tsx"
+check "Consent service" test -f "$APP/src/services/consentService.ts"
+check "BFF: CitizenConsentController" test -f "$BFF/CitizenConsentController.java"
+echo ""
+
 echo "=== Shared Foundations ==="
 check "Auth package" test -d "$REPO_ROOT/apps/mobile/packages/mobile-auth"
 check "Trust headers" test -d "$REPO_ROOT/apps/mobile/packages/mobile-trust"

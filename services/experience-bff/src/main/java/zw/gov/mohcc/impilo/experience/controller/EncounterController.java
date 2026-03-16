@@ -52,6 +52,16 @@ public class EncounterController {
             String diagnosis
     ) {}
 
+    public record DischargeEncounterRequest(
+            @NotBlank String discharge_type,
+            String discharge_diagnosis,
+            String treatment_summary,
+            String follow_up_instructions,
+            String medications_at_discharge,
+            String patient_instructions,
+            String discharged_by
+    ) {}
+
     @GetMapping
     public ResponseEntity<Map<String, Object>> listEncounters(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
@@ -218,6 +228,58 @@ public class EncounterController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/{id}/discharge")
+    @Transactional
+    public ResponseEntity<Map<String, Object>> dischargeEncounter(
+            @PathVariable UUID id,
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.POD_ID) String podId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
+            @Valid @RequestBody DischargeEncounterRequest request) {
+
+        Encounter encounter = encounterRepository.findByIdAndTenantId(id, tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException("Encounter not found: " + id));
+
+        encounter.discharge(
+                request.discharge_type(),
+                request.discharge_diagnosis(),
+                request.treatment_summary(),
+                request.follow_up_instructions(),
+                request.medications_at_discharge(),
+                request.patient_instructions(),
+                request.discharged_by()
+        );
+        encounterRepository.save(encounter);
+
+        outboxService.writeOutboxEvent(
+                "impilo.experience.encounter.discharged.v1",
+                correlationId,
+                requestId,
+                idempotencyKey != null ? idempotencyKey : requestId,
+                tenantId,
+                podId,
+                "Encounter",
+                id.toString(),
+                Map.of(
+                        "encounter_id", id.toString(),
+                        "discharge_type", request.discharge_type(),
+                        "status", "DISCHARGED"
+                ),
+                Map.of()
+        );
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", toResource(encounter));
+        response.put("meta", Map.of(
+                "request_id", requestId,
+                "correlation_id", correlationId
+        ));
+
+        return ResponseEntity.ok(response);
+    }
+
     private Map<String, Object> toResource(Encounter e) {
         Map<String, Object> attributes = new LinkedHashMap<>();
         attributes.put("facility_id", e.getFacilityId());
@@ -231,6 +293,14 @@ public class EncounterController {
         attributes.put("vitals", e.getVitals());
         attributes.put("started_at", e.getStartedAt());
         attributes.put("ended_at", e.getEndedAt());
+        attributes.put("discharge_type", e.getDischargeType());
+        attributes.put("discharge_diagnosis", e.getDischargeDiagnosis());
+        attributes.put("treatment_summary", e.getTreatmentSummary());
+        attributes.put("follow_up_instructions", e.getFollowUpInstructions());
+        attributes.put("medications_at_discharge", e.getMedicationsAtDischarge());
+        attributes.put("patient_instructions", e.getPatientInstructions());
+        attributes.put("discharged_by", e.getDischargedBy());
+        attributes.put("discharged_at", e.getDischargedAt());
         attributes.put("created_at", e.getCreatedAt());
         attributes.put("updated_at", e.getUpdatedAt());
 

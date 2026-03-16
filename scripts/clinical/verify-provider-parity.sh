@@ -100,6 +100,12 @@ check "Team overview screen" test -f "$APP/src/screens/supervisor/TeamOverviewSc
 check "BFF: MobileSupervisorController" test -f "$BFF/MobileSupervisorController.java"
 echo ""
 
+echo "=== My Work — Discharge Workflow ==="
+check "Discharge screen" test -f "$APP/src/screens/provider/DischargeScreen.tsx"
+check "Discharge service" test -f "$APP/src/services/dischargeService.ts"
+check "BFF: MobileDischargeController" test -f "$BFF/MobileDischargeController.java"
+echo ""
+
 echo "=== Shared Foundations ==="
 check "Auth package" test -d "$REPO_ROOT/apps/mobile/packages/mobile-auth"
 check "Trust headers" test -d "$REPO_ROOT/apps/mobile/packages/mobile-trust"

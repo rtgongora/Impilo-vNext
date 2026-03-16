@@ -5,7 +5,7 @@
 
 ## Summary
 
-All 13 EHR clinical workflows have been inspected end-to-end. **60/61 checks pass** after closure wave implementation.
+All 13 EHR clinical workflows have been inspected end-to-end. **65/65 checks pass** after closure wave 2 implementation.
 
 ## Workflow Results
 
@@ -20,12 +20,12 @@ All 13 EHR clinical workflows have been inspected end-to-end. **60/61 checks pas
 | 7 | Results Viewing / Reconciliation | PASS | 4/4 | UI page, mobile screen, BFF controller, citizen section |
 | 8 | Medication / Dispense Flow | PASS | 6/6 | UI page, controller, create+dispense endpoints, mobile+citizen |
 | 9 | Referrals / Follow-up | PASS | 4/4 | UI page, hook, controller, mobile panel |
-| 10 | Discharge / Encounter Close | PASS | 4/4 | Close button, hook, endpoint, event |
+| 10 | Discharge / Encounter Close | PASS | 8/8 | Dedicated discharge page, discharge hook, BFF discharge endpoint, discharge event, DB migration, mobile discharge screen, mobile BFF controller, encounter page link |
 | 11 | Role / Capability Restrictions | PASS | 4/4 | SecurityConfig, TSHEPO, mobile AuthGuard, UI AuthGuardProvider |
 | 12 | Eventing / Outbox Side-Effects | PASS | 4/4 | event_outbox table, OutboxService used, encounter+vitals events |
 | 13 | Offline / Replay Path | PASS | 5/5 | sync engine, offline store, break-glass, conflict review, idempotency |
 
-**Total: 61/61 PASS**
+**Total: 65/65 PASS**
 
 ## Gaps Found During Discovery (Pre-Closure)
 
@@ -40,6 +40,16 @@ All 13 EHR clinical workflows have been inspected end-to-end. **60/61 checks pas
 4. **Missing Prescription Creation** — PharmacyController only had GET (list) and POST /dispense but no POST /prescriptions. Added create prescription endpoint.
 
 5. **Missing Patient Registration** — PatientController only had GET endpoints. Added POST endpoint for patient creation.
+
+### Closure Wave 2 Gaps (Fixed)
+
+6. **Missing Discharge Workflow Page** — No dedicated `/ehr/[patientId]/discharge` page existed. Encounter close was the only exit path with no formal discharge summary. Created dedicated discharge page with form (discharge type, diagnosis, treatment summary, follow-up, medications, patient instructions), TanStack Query mutation hook, and BFF endpoint `POST /internal/v1/encounters/{id}/discharge`.
+
+7. **Missing Discharge Database Columns** — Encounters table had no discharge-specific columns. Created V8 migration adding `discharge_type`, `discharge_diagnosis`, `treatment_summary`, `follow_up_instructions`, `medications_at_discharge`, `patient_instructions`, `discharged_by`, `discharged_at`.
+
+8. **Missing Mobile Discharge Controller** — No mobile BFF endpoint for discharge from Provider App. Created `MobileDischargeController` with POST and GET endpoints.
+
+9. **Missing Citizen Consent Management** — No consent preference management for citizen app. Created `consent_preferences` table and `CitizenConsentController` with GET/PUT endpoints.
 
 ### Minor Gaps (Acceptable)
 

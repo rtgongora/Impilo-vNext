@@ -5,7 +5,8 @@
 
 ## Summary
 
-54 files changed, ~8,300 lines added to close all 13 EHR clinical workflows end-to-end.
+**Closure Wave 1**: 54 files changed, ~8,300 lines added to close all 13 EHR clinical workflows end-to-end.
+**Closure Wave 2**: 12 additional files changed, ~1,800 lines added for discharge workflow, consent management, and mobile parity.
 
 ## Changes by Category
 
@@ -87,3 +88,48 @@ All extend `JpaRepository` with tenant-scoped and patient-scoped queries.
 |---|---|
 | `summary/page.tsx` | Patient summary aggregating conditions, allergies, meds, encounters |
 | `history/page.tsx` | Medical history with past encounters, resolved conditions, immunizations |
+
+### Closure Wave 2 Additions
+
+#### Database Migration
+| File | Description |
+|---|---|
+| `V8__encounter_discharge_columns.sql` | 8 discharge columns on encounters + consent_preferences table |
+
+#### Domain Entity Enhancement
+| Entity | Change |
+|---|---|
+| `Encounter.java` | Added `discharge()` method + 8 discharge fields + getters |
+
+#### BFF Controllers (2 new + 1 enhanced)
+| Controller | Endpoints | Events |
+|---|---|---|
+| `EncounterController` (enhanced) | Added `POST /encounters/{id}/discharge` | `encounter.discharged` |
+| `MobileDischargeController` (new) | `POST`, `GET /mobile/provider/discharge` | `encounter.discharged` |
+| `CitizenConsentController` (new) | `GET`, `PUT /mobile/citizen/consents` | `consent.updated` |
+
+#### TanStack Query Hook (1 new)
+| Hook | Mutations |
+|---|---|
+| `useDischarge.ts` | `useDischargeEncounter()` |
+
+#### EHR UI Pages (1 new)
+| Page | Description |
+|---|---|
+| `discharge/page.tsx` | Full discharge workflow: type, diagnosis, treatment summary, follow-up, medications, instructions |
+
+#### Route Registry
+- Added `/ehr/[patientId]/discharge` route (total now 99)
+- Added discharge link in encounter page
+
+#### Mobile Screens (2 new)
+| Screen | App | Description |
+|---|---|---|
+| `DischargeScreen.tsx` | Provider | Discharge form with type picker and summary fields |
+| `ConsentScreen.tsx` | Citizen | Consent preference toggles for data sharing categories |
+
+#### Mobile Services (2 new)
+| Service | App | Description |
+|---|---|---|
+| `dischargeService.ts` | Provider | submitDischarge + getDischargeStatus |
+| `consentService.ts` | Citizen | getConsents + updateConsent |

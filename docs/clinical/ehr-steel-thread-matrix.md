@@ -7,7 +7,7 @@
 
 Each steel thread traces: **UI Route → Hook → BFF Controller → Domain Entity → DB Migration**
 
-**Result: 12/12 steel threads COMPLETE**
+**Result: 13/13 steel threads COMPLETE**
 
 ## Matrix
 
@@ -25,6 +25,7 @@ Each steel thread traces: **UI Route → Hook → BFF Controller → Domain Enti
 | Pharmacy / Prescriptions | `ehr/[patientId]/medications/page.tsx` | `usePharmacy.ts` | `PharmacyController.java` | `Prescription.java` | `CREATE TABLE prescriptions` |
 | Clinical Timeline | `ehr/[patientId]/timeline/page.tsx` | `useTimeline.ts` | `ClinicalTimelineController.java` | `ClinicalTimelineEntry.java` | `CREATE TABLE clinical_timeline` |
 | Clinical Documents | `ehr/[patientId]/documents/page.tsx` | `useClinicalDocuments.ts` | `ClinicalDocumentsController.java` | `ClinicalDocument.java` | `CREATE TABLE clinical_documents` |
+| Discharge Workflow | `ehr/[patientId]/discharge/page.tsx` | `useDischarge.ts` | `EncounterController.java` (discharge endpoint) | `Encounter.java` (discharge method) | `V8: ALTER TABLE encounters ADD discharge columns` |
 
 ## Layer Locations
 
@@ -32,7 +33,7 @@ Each steel thread traces: **UI Route → Hook → BFF Controller → Domain Enti
 - **Hooks**: `ui/experience/src/hooks/queries/use*.ts`
 - **Controllers**: `services/experience-bff/src/main/java/.../controller/*.java`
 - **Domain**: `services/experience-bff/src/main/java/.../domain/*.java`
-- **Migrations**: `services/experience-bff/src/main/resources/db/migration/V6__clinical_domain_tables.sql`
+- **Migrations**: `services/experience-bff/src/main/resources/db/migration/V6__clinical_domain_tables.sql`, `V8__encounter_discharge_columns.sql`
 
 ## Verification Script
 
