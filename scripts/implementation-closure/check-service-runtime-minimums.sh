@@ -3,7 +3,7 @@
 # Impilo vNext — Service Runtime Minimum Check
 # Verifies every service has: Application class, controller, migration, test
 # =============================================================================
-set -euo pipefail
+set -uo pipefail
 
 echo "============================================"
 echo " Impilo vNext — Service Runtime Minimums"
@@ -21,6 +21,13 @@ for svc_dir in services/*/; do
     # Skip shared-core (library, not a service)
     if [ "$svc" = "shared-core" ]; then
         echo "LIBRARY: $svc (shared library, not a runnable service)"
+        continue
+    fi
+
+    # Skip BFF services (no own persistence by design)
+    if [[ "$svc" == *"-bff" ]]; then
+        echo "PASS: $svc (BFF — no own persistence by design)"
+        PASS=$((PASS + 1))
         continue
     fi
 

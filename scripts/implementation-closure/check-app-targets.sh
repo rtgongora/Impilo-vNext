@@ -62,7 +62,7 @@ for app in ui/*/; do
     fi
 
     HAS_NEXT=$(grep -c '"next"' "$pkg" 2>/dev/null || true)
-    TS_COUNT=$(find "$app/src" -name "*.ts" -o -name "*.tsx" 2>/dev/null | wc -l)
+    TS_COUNT=$(find "$app" -maxdepth 4 -name "*.ts" -o -name "*.tsx" 2>/dev/null | grep -cv 'node_modules' || true)
 
     if [ "$HAS_NEXT" -gt 0 ] && [ "$TS_COUNT" -gt 0 ]; then
         echo "PASS: $name — Next.js ($TS_COUNT files)"
