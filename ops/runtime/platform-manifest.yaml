@@ -1,0 +1,1218 @@
+# =============================================================================
+# Impilo vNext — Canonical Platform Runtime Manifest
+# =============================================================================
+#
+# This is the single source of truth for all runnable platform components.
+# Every service, infrastructure dependency, edge component, and UI app
+# is declared here with its startup layer, dependencies, healthcheck,
+# and bootstrap requirements.
+#
+# Layers (startup order):
+#   0 — infra      : Databases, caches, message brokers, object storage
+#   1 — shared      : Identity provider, FHIR server, PACS, schema registry
+#   2 — edge        : API gateway (Envoy), policy engine (OPA)
+#   3 — ring0       : Trust & governance core (TSHEPO decomposition)
+#   4 — ring1       : Core registries (VITO, VARAPI, TUSO, ZIBO)
+#   5 — ring2       : Clinical, pharmacy, supply chain, finance
+#   6 — operations  : Integration hub, workflow, notifications, jobs
+#   7 — apps        : BFF, UIs, consoles, portals
+#   8 — observability: Prometheus, Grafana, OTel, Jaeger (optional layer)
+#
+# Shutdown order is reverse of startup order (layer 8 → 0).
+#
+# Profiles:
+#   dev-lite    : infra + shared + edge + ring0 + ring1 + 1 UI
+#   dev-full    : all layers 0–7
+#   integration : all layers 0–7 + observability
+#   pilot       : all layers 0–8 (production-like)
+# =============================================================================
+
+version: "1.0"
+generated: "2026-03-16"
+
+# =============================================================================
+# LAYER 0 — Infrastructure
+# =============================================================================
+components:
+
+  - name: postgres
+    type: infra
+    layer: 0
+    description: "PostgreSQL 16 — shared database engine, per-service databases"
+    module_path: null
+    image: postgres:16-alpine
+    build_target: null
+    port: 5432
+    dependencies: []
+    env_files: [".env"]
+    env_vars:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+    healthcheck:
+      type: command
+      command: "pg_isready -U ${POSTGRES_USER:-impilo}"
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    readiness_timeout: 30s
+    bootstrap_steps:
+      - "scripts/seed/init-databases.sql (auto-executed on first start via docker-entrypoint-initdb.d)"
+    shutdown_priority: 99
+    profiles: [dev-lite, dev-full, integration, pilot]
+    notes: "Init SQL creates all per-service databases. Data persisted in pg_data volume."
+
+  - name: redis
+    type: infra
+    layer: 0
+    description: "Redis 7 — caching, rate limiting, session store"
+    module_path: null
+    image: redis:7-alpine
+    build_target: null
+    port: 6379
+    dependencies: []
+    env_files: []
+    env_vars: []
+    healthcheck:
+      type: command
+      command: "redis-cli ping"
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    readiness_timeout: 15s
+    bootstrap_steps: []
+    shutdown_priority: 98
+    profiles: [dev-lite, dev-full, integration, pilot]
+    notes: "No persistence configured for dev. Production should enable AOF."
+
+  - name: kafka
+    type: infra
+    layer: 0
+    description: "Apache Kafka 3.7 (KRaft mode) — event bus"
+    module_path: null
+    image: apache/kafka:3.7.1
+    build_target: null
+    port: 9092
+    dependencies: []
+    env_files: []
+    env_vars:
+      - KAFKA_NODE_ID
+      - KAFKA_PROCESS_ROLES
+      - CLUSTER_ID
+    healthcheck:
+      type: command
+      command: "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+    readiness_timeout: 60s
+    bootstrap_steps:
+      - "scripts/bootstrap/bootstrap-topics.sh — creates all platform Kafka topics"
+    shutdown_priority: 97
+    profiles: [dev-lite, dev-full, integration, pilot]
+    notes: "KRaft mode — no ZooKeeper required. Single-node for dev."
+
+  - name: minio
+    type: infra
+    layer: 0
+    description: "MinIO — S3-compatible object storage for documents"
+    module_path: null
+    image: minio/minio:latest
+    build_target: null
+    ports: [9000, 9001]
+    dependencies: []
+    env_files: [".env"]
+    env_vars:
+      - MINIO_ACCESS_KEY
+      - MINIO_SECRET_KEY
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:9000/minio/health/live"
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    readiness_timeout: 20s
+    bootstrap_steps: []
+    shutdown_priority: 96
+    profiles: [dev-lite, dev-full, integration, pilot]
+    notes: "Console on port 9001. Data persisted in minio_data volume."
+
+  # ===========================================================================
+  # LAYER 1 — Shared Platform Services
+  # ===========================================================================
+
+  - name: keycloak
+    type: shared
+    layer: 1
+    description: "Keycloak 25.x — identity provider, realm management"
+    module_path: null
+    image: quay.io/keycloak/keycloak:25.0
+    build_target: null
+    port: 8080
+    dependencies: [postgres]
+    env_files: [".env"]
+    env_vars:
+      - KEYCLOAK_ADMIN
+      - KEYCLOAK_ADMIN_PASSWORD
+      - KC_DB_URL
+      - KC_DB_USERNAME
+      - KC_DB_PASSWORD
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:8080/health/ready"
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+    readiness_timeout: 120s
+    bootstrap_steps:
+      - "Auto-imports tools/auth/impilo-realm.json on start (--import-realm)"
+      - "scripts/bootstrap/bootstrap-auth.sh — verifies realm, users, clients, obtains test token"
+    shutdown_priority: 90
+    profiles: [dev-lite, dev-full, integration, pilot]
+    notes: "Uses start-dev mode locally. Realm JSON defines roles, test users, clients."
+
+  - name: hapi-fhir
+    type: shared
+    layer: 1
+    description: "HAPI FHIR R4 — BUTANO shared health record (CPID only, no PII)"
+    module_path: null
+    image: hapiproject/hapi:v7.4.0
+    build_target: null
+    port: 8090
+    dependencies: [postgres]
+    env_files: [".env"]
+    env_vars:
+      - spring.datasource.url
+      - spring.datasource.username
+      - spring.datasource.password
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:8080/fhir/metadata"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    readiness_timeout: 90s
+    bootstrap_steps: []
+    shutdown_priority: 89
+    profiles: [dev-lite, dev-full, integration, pilot]
+    notes: "Internal port 8080 mapped to host 8090. FHIR R4 compliant."
+
+  - name: orthanc
+    type: shared
+    layer: 1
+    description: "Orthanc PACS — DICOM imaging server"
+    module_path: null
+    image: orthancteam/orthanc:24.8.1
+    build_target: null
+    ports: [8042, 4242]
+    dependencies: []
+    env_files: []
+    env_vars: []
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:8042/system"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    readiness_timeout: 30s
+    bootstrap_steps: []
+    shutdown_priority: 88
+    profiles: [dev-full, integration, pilot]
+    notes: "DICOM on 4242, REST API on 8042. Not needed for dev-lite."
+
+  # ===========================================================================
+  # LAYER 2 — Edge (Gateway + Policy)
+  # ===========================================================================
+
+  - name: opa
+    type: edge
+    layer: 2
+    description: "Open Policy Agent — gateway policy enforcement"
+    module_path: tools/ops/gateway/opa
+    image: openpolicyagent/opa:0.68.0
+    build_target: null
+    port: 8181
+    dependencies: []
+    env_files: []
+    env_vars: []
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:8181/health"
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    readiness_timeout: 15s
+    bootstrap_steps: []
+    shutdown_priority: 85
+    profiles: [dev-lite, dev-full, integration, pilot]
+    notes: "Policies loaded from tools/ops/gateway/opa. Enforces v1.1 header contract."
+
+  - name: envoy
+    type: edge
+    layer: 2
+    description: "Envoy 1.31 — API gateway with ext_authz to OPA"
+    module_path: infra/envoy
+    image: envoyproxy/envoy:v1.31-latest
+    build_target: null
+    ports: [10000, 9901]
+    dependencies: [opa]
+    env_files: []
+    env_vars: []
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:9901/ready"
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    readiness_timeout: 30s
+    bootstrap_steps: []
+    shutdown_priority: 84
+    profiles: [dev-lite, dev-full, integration, pilot]
+    notes: "Public traffic on 10000, admin on 9901. Config: infra/envoy/envoy-runtime.yaml"
+
+  # ===========================================================================
+  # LAYER 3 — Ring 0: Trust & Governance
+  # ===========================================================================
+
+  - name: tshepo
+    type: ring0
+    layer: 3
+    description: "TSHEPO — Trust & governance service (ext_authz, RBAC/ABAC, audit)"
+    module_path: services/tshepo-service
+    image: null
+    build_target: "services/tshepo-service (Maven + Dockerfile)"
+    port: 8081
+    dependencies: [postgres, redis, kafka, keycloak]
+    env_files: [".env"]
+    env_vars:
+      - POSTGRES_HOST
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - REDIS_HOST
+      - KAFKA_BOOTSTRAP_SERVERS
+      - KEYCLOAK_URL
+      - KEYCLOAK_REALM
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:8081/actuator/health"
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 45s
+    readiness_timeout: 120s
+    bootstrap_steps: []
+    shutdown_priority: 10
+    profiles: [dev-lite, dev-full, integration, pilot]
+    notes: "Monolith TSHEPO — handles authorize endpoint. TSHEPO decomposition services below are for future."
+    database: tshepo
+    kafka_topics: [platform.audit.events]
+
+  - name: tshepo-authz
+    type: ring0
+    layer: 3
+    description: "TSHEPO Authz — authorization microservice (decomposed)"
+    module_path: services/tshepo-authz-service
+    build_target: "services/tshepo-authz-service (Maven + Dockerfile)"
+    port: 8081
+    dependencies: [postgres, redis, kafka, keycloak]
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:8081/actuator/health"
+    readiness_timeout: 90s
+    shutdown_priority: 10
+    profiles: [dev-full, integration, pilot]
+    database: tshepo_authz
+    kafka_topics: [tshepo.audit.events]
+    notes: "Port conflict with monolith tshepo — run one or the other, not both."
+
+  - name: tshepo-identity
+    type: ring0
+    layer: 3
+    description: "TSHEPO Identity — identity lifecycle service"
+    module_path: services/tshepo-identity-service
+    build_target: "services/tshepo-identity-service (Maven + Dockerfile)"
+    port: 8181
+    dependencies: [postgres, redis, kafka, keycloak]
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:8181/actuator/health"
+    readiness_timeout: 90s
+    shutdown_priority: 10
+    profiles: [dev-full, integration, pilot]
+    database: tshepo_identity
+    kafka_topics: [platform.identity.events]
+    notes: "Port 8181 conflicts with OPA in some configurations. Use SERVER_PORT override."
+
+  - name: tshepo-consent
+    type: ring0
+    layer: 3
+    description: "TSHEPO Consent — consent management service"
+    module_path: services/tshepo-consent-service
+    build_target: "services/tshepo-consent-service (Maven + Dockerfile)"
+    port: 8182
+    dependencies: [postgres, redis, kafka]
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:8182/actuator/health"
+    readiness_timeout: 90s
+    shutdown_priority: 10
+    profiles: [dev-full, integration, pilot]
+    database: tshepo_consent
+    kafka_topics: [platform.consent.events]
+
+  - name: tshepo-audit
+    type: ring0
+    layer: 3
+    description: "TSHEPO Audit — audit trail service"
+    module_path: services/tshepo-audit-service
+    build_target: "services/tshepo-audit-service (Maven + Dockerfile)"
+    port: 8183
+    dependencies: [postgres, redis, kafka]
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:8183/actuator/health"
+    readiness_timeout: 90s
+    shutdown_priority: 10
+    profiles: [dev-full, integration, pilot]
+    database: tshepo_audit
+
+  - name: tshepo-keys
+    type: ring0
+    layer: 3
+    description: "TSHEPO Keys — cryptographic key management"
+    module_path: services/tshepo-keys-service
+    build_target: "services/tshepo-keys-service (Maven + Dockerfile)"
+    port: 8184
+    dependencies: [postgres, redis, kafka]
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:8184/actuator/health"
+    readiness_timeout: 90s
+    shutdown_priority: 10
+    profiles: [dev-full, integration, pilot]
+    database: tshepo_keys
+    kafka_topics: [platform.keys.events]
+
+  - name: tshepo-offline
+    type: ring0
+    layer: 3
+    description: "TSHEPO Offline — offline trust token service"
+    module_path: services/tshepo-offline-service
+    build_target: "services/tshepo-offline-service (Maven + Dockerfile)"
+    port: 8185
+    dependencies: [postgres, redis, kafka]
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:8185/actuator/health"
+    readiness_timeout: 90s
+    shutdown_priority: 10
+    profiles: [dev-full, integration, pilot]
+    database: tshepo_offline
+    kafka_topics: [platform.offline.events]
+
+  # ===========================================================================
+  # LAYER 4 — Ring 1: Core Registries
+  # ===========================================================================
+
+  - name: vito
+    type: ring1
+    layer: 4
+    description: "VITO — Client/Patient Registry (PII store)"
+    module_path: services/vito-service
+    build_target: "services/vito-service (Maven + Dockerfile)"
+    port: 8082
+    dependencies: [postgres, redis, kafka, keycloak]
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:8082/actuator/health"
+    readiness_timeout: 120s
+    shutdown_priority: 20
+    profiles: [dev-lite, dev-full, integration, pilot]
+    database: vito
+    notes: "PII stays here. SHR (BUTANO) uses CPID only."
+
+  - name: varapi
+    type: ring1
+    layer: 4
+    description: "VARAPI — Provider Registry"
+    module_path: services/varapi-service
+    build_target: "services/varapi-service (Maven + Dockerfile)"
+    port: 8083
+    dependencies: [postgres, redis, kafka, keycloak]
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:8083/actuator/health"
+    readiness_timeout: 120s
+    shutdown_priority: 20
+    profiles: [dev-lite, dev-full, integration, pilot]
+    database: varapi
+
+  - name: tuso
+    type: ring1
+    layer: 4
+    description: "TUSO — Facility Registry"
+    module_path: services/tuso-service
+    build_target: "services/tuso-service (Maven + Dockerfile)"
+    port: 8084
+    dependencies: [postgres, redis, kafka, keycloak]
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:8084/actuator/health"
+    readiness_timeout: 120s
+    shutdown_priority: 20
+    profiles: [dev-lite, dev-full, integration, pilot]
+    database: tuso
+
+  - name: zibo
+    type: ring1
+    layer: 4
+    description: "ZIBO — Terminology service"
+    module_path: services/zibo-service
+    build_target: "services/zibo-service (Maven + Dockerfile)"
+    port: 8085
+    dependencies: [postgres, redis, kafka, keycloak]
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:8085/actuator/health"
+    readiness_timeout: 120s
+    shutdown_priority: 20
+    profiles: [dev-lite, dev-full, integration, pilot]
+    database: zibo
+
+  - name: indawo
+    type: ring1
+    layer: 4
+    description: "INDAWO — Location/geography service"
+    module_path: services/indawo-service
+    build_target: "services/indawo-service (Maven)"
+    port: 8150
+    dependencies: [postgres, kafka]
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:8150/actuator/health"
+    readiness_timeout: 90s
+    shutdown_priority: 20
+    profiles: [dev-full, integration, pilot]
+    database: impilo_indawo
+
+  # ===========================================================================
+  # LAYER 5 — Ring 2: Clinical, Pharmacy, Supply Chain, Finance
+  # ===========================================================================
+
+  - name: pct
+    type: ring2
+    layer: 5
+    description: "PCT — Patient Care Tracker"
+    module_path: services/pct-service
+    build_target: "services/pct-service (Maven + Dockerfile)"
+    port: 8088
+    dependencies: [postgres, redis, kafka, keycloak, vito, tuso]
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:8088/actuator/health"
+    readiness_timeout: 120s
+    shutdown_priority: 30
+    profiles: [dev-lite, dev-full, integration, pilot]
+    database: pct
+
+  - name: oros
+    type: ring2
+    layer: 5
+    description: "OROS — Orders & Results"
+    module_path: services/oros-service
+    build_target: "services/oros-service (Maven + Dockerfile)"
+    port: 8089
+    dependencies: [postgres, redis, kafka, keycloak, vito]
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:8089/actuator/health"
+    readiness_timeout: 120s
+    shutdown_priority: 30
+    profiles: [dev-lite, dev-full, integration, pilot]
+    database: oros
+
+  - name: ubomi
+    type: ring2
+    layer: 5
+    description: "UBOMI — Clinical encounters/visits"
+    module_path: services/ubomi-service
+    build_target: "services/ubomi-service (Maven + Dockerfile)"
+    port: 8087
+    dependencies: [postgres, redis, kafka, keycloak, vito, tuso]
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:8087/actuator/health"
+    readiness_timeout: 120s
+    shutdown_priority: 30
+    profiles: [dev-full, integration, pilot]
+    database: ubomi
+
+  - name: pharmacy
+    type: ring2
+    layer: 5
+    description: "Pharmacy service — dispensing, stock"
+    module_path: services/pharmacy-service
+    build_target: "services/pharmacy-service (Maven + Dockerfile)"
+    port: 8097
+    dependencies: [postgres, redis, kafka, keycloak]
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:8097/actuator/health"
+    readiness_timeout: 90s
+    shutdown_priority: 30
+    profiles: [dev-full, integration, pilot]
+    database: pharmacy
+
+  - name: inventory
+    type: ring2
+    layer: 5
+    description: "Inventory service — supply chain management"
+    module_path: services/inventory-service
+    build_target: "services/inventory-service (Maven + Dockerfile)"
+    port: 8098
+    dependencies: [postgres, redis, kafka, keycloak]
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:8098/actuator/health"
+    readiness_timeout: 90s
+    shutdown_priority: 30
+    profiles: [dev-full, integration, pilot]
+    database: inventory
+
+  - name: msika
+    type: ring2
+    layer: 5
+    description: "MSIKA — procurement/catalog service"
+    module_path: services/msika-service
+    build_target: "services/msika-service (Maven + Dockerfile)"
+    port: 8086
+    dependencies: [postgres, redis, kafka, keycloak]
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:8086/actuator/health"
+    readiness_timeout: 90s
+    shutdown_priority: 30
+    profiles: [dev-full, integration, pilot]
+    database: msika
+
+  - name: msika-flow
+    type: ring2
+    layer: 5
+    description: "MSIKA Flow — procurement workflow"
+    module_path: services/msika-flow-service
+    build_target: "services/msika-flow-service (Maven + Dockerfile)"
+    port: 8100
+    dependencies: [postgres, redis, kafka, keycloak, msika]
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:8100/actuator/health"
+    readiness_timeout: 90s
+    shutdown_priority: 30
+    profiles: [dev-full, integration, pilot]
+    database: msika_flow
+
+  - name: mushex
+    type: ring2
+    layer: 5
+    description: "MUSHEX — financial/reimbursement engine"
+    module_path: services/mushex-service
+    build_target: "services/mushex-service (Maven + Dockerfile)"
+    port: 8087
+    dependencies: [postgres, redis, kafka, keycloak]
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:8087/actuator/health"
+    readiness_timeout: 90s
+    shutdown_priority: 30
+    profiles: [dev-full, integration, pilot]
+    database: mushex
+    notes: "Port 8087 shared with ubomi — use SERVER_PORT override for one."
+
+  - name: costing-engine
+    type: ring2
+    layer: 5
+    description: "Costing engine — cost allocation and billing"
+    module_path: services/costing-engine-service
+    build_target: "services/costing-engine-service (Maven + Dockerfile)"
+    port: 8101
+    dependencies: [postgres, redis, kafka, keycloak]
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:8101/actuator/health"
+    readiness_timeout: 90s
+    shutdown_priority: 30
+    profiles: [dev-full, integration, pilot]
+    database: costing
+
+  - name: coverage
+    type: ring2
+    layer: 5
+    description: "Coverage service — insurance/coverage verification"
+    module_path: services/coverage-service
+    build_target: "services/coverage-service (Maven)"
+    port: 8140
+    dependencies: [postgres, kafka]
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:8140/actuator/health"
+    readiness_timeout: 90s
+    shutdown_priority: 30
+    profiles: [dev-full, integration, pilot]
+    database: impilo_coverage
+
+  - name: inpatient
+    type: ring2
+    layer: 5
+    description: "Inpatient service — ward management, admissions"
+    module_path: services/inpatient-service
+    build_target: "services/inpatient-service (Maven + Dockerfile)"
+    port: 8093
+    dependencies: [postgres, redis, kafka, keycloak, vito, tuso]
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:8093/actuator/health"
+    readiness_timeout: 90s
+    shutdown_priority: 30
+    profiles: [dev-full, integration, pilot]
+    database: inpatient
+
+  - name: butano
+    type: ring2
+    layer: 5
+    description: "BUTANO service — SHR abstraction over HAPI FHIR"
+    module_path: services/butano-service
+    build_target: "services/butano-service (Maven + Dockerfile)"
+    port: 8090
+    dependencies: [postgres, redis, kafka, hapi-fhir]
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:8090/actuator/health"
+    readiness_timeout: 90s
+    shutdown_priority: 30
+    profiles: [dev-full, integration, pilot]
+    database: butano
+    notes: "Port 8090 overlaps with hapi-fhir host mapping. Use SERVER_PORT override."
+
+  - name: document-service
+    type: ring2
+    layer: 5
+    description: "Document service — document storage and retrieval"
+    module_path: services/document-service
+    build_target: "services/document-service (Maven + Dockerfile)"
+    port: 8093
+    dependencies: [postgres, redis, kafka, minio]
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:8093/actuator/health"
+    readiness_timeout: 90s
+    shutdown_priority: 30
+    profiles: [dev-full, integration, pilot]
+    database: document_service
+
+  - name: landela-adapter
+    type: ring2
+    layer: 5
+    description: "Landela adapter — credential document integration"
+    module_path: services/landela-adapter-service
+    build_target: "services/landela-adapter-service (Maven + Dockerfile)"
+    port: 8092
+    dependencies: [postgres, redis, kafka]
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:8092/actuator/health"
+    readiness_timeout: 90s
+    shutdown_priority: 30
+    profiles: [dev-full, integration, pilot]
+    database: landela_adapter
+
+  - name: credential-verification
+    type: ring2
+    layer: 5
+    description: "Credential verification service"
+    module_path: services/credential-verification-service
+    build_target: "services/credential-verification-service (Maven + Dockerfile)"
+    port: 8094
+    dependencies: [postgres, kafka]
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:8094/actuator/health"
+    readiness_timeout: 90s
+    shutdown_priority: 30
+    profiles: [dev-full, integration, pilot]
+    database: credential_verification
+
+  - name: share-slip
+    type: ring2
+    layer: 5
+    description: "Share slip service — patient data sharing"
+    module_path: services/share-slip-service
+    build_target: "services/share-slip-service (Maven + Dockerfile)"
+    port: 8095
+    dependencies: [postgres, redis, kafka]
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:8095/actuator/health"
+    readiness_timeout: 90s
+    shutdown_priority: 30
+    profiles: [dev-full, integration, pilot]
+    database: share_slip
+
+  # ===========================================================================
+  # LAYER 6 — Operations: Integration, Workflow, Notifications, Jobs
+  # ===========================================================================
+
+  - name: integration-hub
+    type: operations
+    layer: 6
+    description: "Integration Hub — external system connectors, routing"
+    module_path: services/integration-hub
+    build_target: "services/integration-hub (Maven)"
+    port: 8110
+    dependencies: [postgres, kafka]
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:8110/actuator/health"
+    readiness_timeout: 90s
+    shutdown_priority: 40
+    profiles: [dev-full, integration, pilot]
+    database: integration_hub
+
+  - name: notification-service
+    type: operations
+    layer: 6
+    description: "Notification service — SMS, email, push"
+    module_path: services/notification-service
+    build_target: "services/notification-service (Maven)"
+    port: 8111
+    dependencies: [postgres, kafka]
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:8111/actuator/health"
+    readiness_timeout: 90s
+    shutdown_priority: 40
+    profiles: [dev-full, integration, pilot]
+    database: notification
+
+  - name: jobs-service
+    type: operations
+    layer: 6
+    description: "Jobs service — background task scheduling"
+    module_path: services/jobs-service
+    build_target: "services/jobs-service (Maven + Dockerfile)"
+    port: 8094
+    dependencies: [postgres, kafka]
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:8094/actuator/health"
+    readiness_timeout: 90s
+    shutdown_priority: 40
+    profiles: [dev-full, integration, pilot]
+    database: jobs
+    notes: "Port 8094 shared with credential-verification — use SERVER_PORT override for one."
+
+  - name: workflow-service
+    type: operations
+    layer: 6
+    description: "Workflow service — process orchestration"
+    module_path: services/workflow-service
+    build_target: "services/workflow-service (Maven)"
+    port: 8140
+    dependencies: [postgres, kafka]
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:8140/actuator/health"
+    readiness_timeout: 90s
+    shutdown_priority: 40
+    profiles: [dev-full, integration, pilot]
+    database: impilo_workflow
+
+  - name: channels-service
+    type: operations
+    layer: 6
+    description: "Channels service — multi-channel messaging"
+    module_path: services/channels-service
+    build_target: "services/channels-service (Maven)"
+    port: 8130
+    dependencies: [postgres, kafka]
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:8130/actuator/health"
+    readiness_timeout: 90s
+    shutdown_priority: 40
+    profiles: [dev-full, integration, pilot]
+    database: impilo_channels
+
+  - name: forms-service
+    type: operations
+    layer: 6
+    description: "Forms service — dynamic form definitions"
+    module_path: services/forms-service
+    build_target: "services/forms-service (Maven)"
+    port: 8131
+    dependencies: [postgres, kafka]
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:8131/actuator/health"
+    readiness_timeout: 90s
+    shutdown_priority: 40
+    profiles: [dev-full, integration, pilot]
+    database: impilo_forms
+
+  - name: search-service
+    type: operations
+    layer: 6
+    description: "Search service — unified search"
+    module_path: services/search-service
+    build_target: "services/search-service (Maven)"
+    port: 8120
+    dependencies: [postgres, kafka]
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:8120/actuator/health"
+    readiness_timeout: 90s
+    shutdown_priority: 40
+    profiles: [dev-full, integration, pilot]
+    database: impilo_search
+
+  - name: dispatch-service
+    type: operations
+    layer: 6
+    description: "Dispatch service — task dispatching"
+    module_path: services/dispatch-service
+    build_target: "services/dispatch-service (Maven)"
+    port: 8320
+    dependencies: [postgres, kafka]
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:8320/actuator/health"
+    readiness_timeout: 90s
+    shutdown_priority: 40
+    profiles: [dev-full, integration, pilot]
+    database: impilo_dispatch
+
+  - name: rules-service
+    type: operations
+    layer: 6
+    description: "Rules service — business rules engine"
+    module_path: services/rules-service
+    build_target: "services/rules-service (Maven)"
+    port: 8135
+    dependencies: [postgres, kafka]
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:8135/actuator/health"
+    readiness_timeout: 90s
+    shutdown_priority: 40
+    profiles: [dev-full, integration, pilot]
+    database: impilo_rules
+
+  - name: support-service
+    type: operations
+    layer: 6
+    description: "Support service — ticketing, escalation"
+    module_path: services/support-service
+    build_target: "services/support-service (Maven)"
+    port: 8340
+    dependencies: [postgres, kafka]
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:8340/actuator/health"
+    readiness_timeout: 90s
+    shutdown_priority: 40
+    profiles: [dev-full, integration, pilot]
+    database: impilo_support
+
+  - name: developer-portal-service
+    type: operations
+    layer: 6
+    description: "Developer portal — API docs, partner onboarding"
+    module_path: services/developer-portal-service
+    build_target: "services/developer-portal-service (Maven)"
+    port: 8370
+    dependencies: [postgres, kafka]
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:8370/actuator/health"
+    readiness_timeout: 90s
+    shutdown_priority: 40
+    profiles: [dev-full, integration, pilot]
+    database: impilo_dev_portal
+
+  - name: reporting-service
+    type: operations
+    layer: 6
+    description: "Reporting service — report generation"
+    module_path: services/reporting-service
+    build_target: "services/reporting-service (Maven + Dockerfile)"
+    port: 8200
+    dependencies: [postgres, kafka]
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:8200/actuator/health"
+    readiness_timeout: 90s
+    shutdown_priority: 40
+    profiles: [dev-full, integration, pilot]
+    database: reporting
+
+  - name: data-warehouse-service
+    type: operations
+    layer: 6
+    description: "Data warehouse service — analytics"
+    module_path: services/data-warehouse-service
+    build_target: "services/data-warehouse-service (Maven)"
+    port: 8230
+    dependencies: [postgres, kafka]
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:8230/actuator/health"
+    readiness_timeout: 90s
+    shutdown_priority: 40
+    profiles: [integration, pilot]
+    database: impilo_data_warehouse
+
+  - name: data-governance-service
+    type: operations
+    layer: 6
+    description: "Data governance service"
+    module_path: services/data-governance-service
+    build_target: "services/data-governance-service (Maven)"
+    port: 8220
+    dependencies: [postgres, kafka]
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:8220/actuator/health"
+    readiness_timeout: 90s
+    shutdown_priority: 40
+    profiles: [integration, pilot]
+    database: impilo_data_governance
+
+  - name: surveillance-service
+    type: operations
+    layer: 6
+    description: "Surveillance service — disease surveillance"
+    module_path: services/surveillance-service
+    build_target: "services/surveillance-service (Maven)"
+    port: 8180
+    dependencies: [postgres, kafka]
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:8180/actuator/health"
+    readiness_timeout: 90s
+    shutdown_priority: 40
+    profiles: [integration, pilot]
+    database: surv
+
+  - name: campaigns-service
+    type: operations
+    layer: 6
+    description: "Campaigns service — health campaigns"
+    module_path: services/campaigns-service
+    build_target: "services/campaigns-service (Maven)"
+    port: 8190
+    dependencies: [postgres, kafka]
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:8190/actuator/health"
+    readiness_timeout: 90s
+    shutdown_priority: 40
+    profiles: [integration, pilot]
+    database: camp
+
+  - name: audit-ledger-service
+    type: operations
+    layer: 6
+    description: "Audit ledger — immutable audit log"
+    module_path: services/audit-ledger-service
+    build_target: "services/audit-ledger-service (Maven)"
+    port: 8350
+    dependencies: [postgres, kafka]
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:8350/actuator/health"
+    readiness_timeout: 90s
+    shutdown_priority: 40
+    profiles: [integration, pilot]
+    database: impilo_audit_ledger
+
+  - name: offline-sync-service
+    type: operations
+    layer: 6
+    description: "Offline sync service — data synchronization for edge"
+    module_path: services/offline-sync-service
+    build_target: "services/offline-sync-service (Maven + Dockerfile)"
+    port: 8095
+    dependencies: [postgres, kafka]
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:8095/actuator/health"
+    readiness_timeout: 90s
+    shutdown_priority: 40
+    profiles: [integration, pilot]
+    database: offline_sync
+
+  # ===========================================================================
+  # LAYER 7 — Applications: BFF, UIs, Consoles
+  # ===========================================================================
+
+  - name: experience-bff
+    type: app
+    layer: 7
+    description: "Experience BFF — backend-for-frontend aggregation"
+    module_path: services/experience-bff
+    build_target: "services/experience-bff (Maven + Dockerfile)"
+    port: 8160
+    dependencies: [postgres, tshepo, vito, tuso, varapi]
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:8160/actuator/health"
+    readiness_timeout: 90s
+    shutdown_priority: 50
+    profiles: [dev-lite, dev-full, integration, pilot]
+    database: experience_bff
+
+  - name: experience-ui
+    type: app
+    layer: 7
+    description: "Experience UI — unified Next.js frontend"
+    module_path: ui/experience
+    build_target: "ui/experience (npm + Dockerfile)"
+    port: 3020
+    dependencies: [experience-bff]
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:3020"
+    readiness_timeout: 60s
+    shutdown_priority: 50
+    profiles: [dev-lite, dev-full, integration, pilot]
+
+  # Additional UI apps (not all have Dockerfiles — listed for completeness)
+  - name: one-ui-shell
+    type: app
+    layer: 7
+    description: "One UI Shell — unified navigation shell"
+    module_path: ui/one-ui-shell
+    port: 3000
+    dependencies: [envoy]
+    profiles: [dev-full, integration, pilot]
+    shutdown_priority: 50
+
+  - name: ops-console
+    type: app
+    layer: 7
+    description: "Operations console"
+    module_path: ui/ops-console
+    port: 3001
+    dependencies: [envoy]
+    profiles: [dev-full, integration, pilot]
+    shutdown_priority: 50
+
+  - name: ehr-ui
+    type: app
+    layer: 7
+    description: "EHR — electronic health record UI"
+    module_path: ui/ehr
+    port: 3002
+    dependencies: [envoy, pct, oros, vito]
+    profiles: [dev-full, integration, pilot]
+    shutdown_priority: 50
+
+  - name: support-console
+    type: app
+    layer: 7
+    description: "Support console — helpdesk/ticketing UI"
+    module_path: ui/support-console
+    port: 3005
+    dependencies: [support-service]
+    profiles: [dev-full, integration, pilot]
+    shutdown_priority: 50
+
+  - name: developer-console
+    type: app
+    layer: 7
+    description: "Developer console — API management UI"
+    module_path: ui/developer-console
+    port: 3006
+    dependencies: [developer-portal-service]
+    profiles: [dev-full, integration, pilot]
+    shutdown_priority: 50
+
+  # ===========================================================================
+  # LAYER 8 — Observability (Optional)
+  # ===========================================================================
+
+  - name: prometheus
+    type: observability
+    layer: 8
+    description: "Prometheus — metrics collection"
+    image: prom/prometheus:v2.51.2
+    port: 9090
+    dependencies: []
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:9090/-/healthy"
+    readiness_timeout: 30s
+    shutdown_priority: 60
+    profiles: [integration, pilot]
+    notes: "Config: tools/ops/observability/prometheus/prometheus.yml"
+
+  - name: grafana
+    type: observability
+    layer: 8
+    description: "Grafana — dashboards and visualization"
+    image: grafana/grafana:10.4.2
+    port: 3100
+    dependencies: [prometheus]
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:3000/api/health"
+    readiness_timeout: 30s
+    shutdown_priority: 60
+    profiles: [integration, pilot]
+    notes: "Default credentials: admin/admin. Host port 3100 maps to container 3000."
+
+  - name: otel-collector
+    type: observability
+    layer: 8
+    description: "OpenTelemetry Collector — trace/metric pipeline"
+    image: otel/opentelemetry-collector-contrib:0.98.0
+    ports: [4317, 4318]
+    dependencies: []
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:13133/"
+    readiness_timeout: 20s
+    shutdown_priority: 60
+    profiles: [integration, pilot]
+
+  - name: jaeger
+    type: observability
+    layer: 8
+    description: "Jaeger — distributed tracing UI"
+    image: jaegertracing/all-in-one:1.56
+    port: 16686
+    dependencies: [otel-collector]
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:14269/"
+    readiness_timeout: 20s
+    shutdown_priority: 60
+    profiles: [integration, pilot]
+
+# =============================================================================
+# SPEC CONFLICT NOTES (port overlaps)
+# =============================================================================
+# The following port conflicts exist in application.yml defaults:
+#   - tshepo-service (8081) vs tshepo-authz-service (8081): Use monolith OR decomposed, not both
+#   - tshepo-identity (8181) vs OPA (8181): Override SERVER_PORT when running both
+#   - ubomi (8087) vs mushex (8087): Override SERVER_PORT for one
+#   - jobs (8094) vs credential-verification (8094): Override SERVER_PORT for one
+#   - document-service (8093) vs inpatient (8093): Override SERVER_PORT for one
+#   - inventory (8098) vs inventory-elmis-adapter (8098): Override SERVER_PORT for one
+#   - coverage (8140) vs data-pipeline (8140) vs workflow (8140): Override SERVER_PORT
+#   - butano-service (8090) vs hapi-fhir host mapping (8090): Container networking resolves this
+#
+# In Docker Compose, these conflicts are resolved via container networking
+# (each service gets its own network namespace). For bare-metal dev, use SERVER_PORT overrides.
+# =============================================================================
