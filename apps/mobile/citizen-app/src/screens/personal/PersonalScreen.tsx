@@ -13,14 +13,20 @@ import { PrescriptionsSection } from "./PrescriptionsSection";
 import { ResultsSection } from "./ResultsSection";
 import { CoverageSection } from "./CoverageSection";
 import { SettingsSection } from "./SettingsSection";
+import { RecordsScreen } from "./RecordsScreen";
+import { RemindersScreen } from "./RemindersScreen";
+import { HealthTimelineScreen } from "./HealthTimelineScreen";
 
-type PersonalTab = "profile" | "appointments" | "prescriptions" | "results" | "coverage" | "settings";
+type PersonalTab = "profile" | "appointments" | "prescriptions" | "results" | "records" | "reminders" | "timeline" | "coverage" | "settings";
 
 const PERSONAL_TABS: TabItem[] = [
   { id: "profile", label: "Profile", icon: "user" },
   { id: "appointments", label: "Appointments", icon: "calendar" },
   { id: "prescriptions", label: "Rx", icon: "pill" },
   { id: "results", label: "Results", icon: "clipboard" },
+  { id: "records", label: "Records", icon: "file-text" },
+  { id: "reminders", label: "Reminders", icon: "bell" },
+  { id: "timeline", label: "Timeline", icon: "clock" },
   { id: "coverage", label: "Coverage", icon: "shield" },
   { id: "settings", label: "Settings", icon: "settings" },
 ];
@@ -30,6 +36,9 @@ const SECTIONS: Record<PersonalTab, React.FC> = {
   appointments: AppointmentsSection,
   prescriptions: PrescriptionsSection,
   results: ResultsSection,
+  records: RecordsScreen,
+  reminders: RemindersScreen,
+  timeline: HealthTimelineScreen,
   coverage: CoverageSection,
   settings: SettingsSection,
 };

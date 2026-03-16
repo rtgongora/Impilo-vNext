@@ -171,3 +171,56 @@ export type TelehealthStatus =
   | "IN_PROGRESS"
   | "COMPLETED"
   | "CANCELLED";
+
+/* ── Medical Records ── */
+
+export type RecordType = "LAB_REPORT" | "CLINICAL_NOTE" | "DISCHARGE_SUMMARY" | "IMAGING";
+
+export interface MedicalRecord {
+  id: string;
+  title: string;
+  type: RecordType;
+  date: string;
+  provider: string;
+  facilityName: string;
+  summary?: string;
+  documentUrl?: string;
+  createdAt: string;
+}
+
+/* ── Reminders ── */
+
+export type ReminderType = "MEDICATION" | "APPOINTMENT" | "LAB_CHECK" | "FOLLOW_UP";
+export type Recurrence = "ONCE" | "DAILY" | "WEEKLY";
+
+export interface Reminder {
+  id: string;
+  title: string;
+  type: ReminderType;
+  description?: string;
+  dateTime: string;
+  recurrence: Recurrence;
+  enabled: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/* ── Health Timeline ── */
+
+export type TimelineEntryType =
+  | "ENCOUNTER"
+  | "LAB_RESULT"
+  | "PRESCRIPTION"
+  | "APPOINTMENT"
+  | "IMMUNIZATION";
+
+export interface TimelineEntry {
+  id: string;
+  type: TimelineEntryType;
+  title: string;
+  description?: string;
+  date: string;
+  facilityName?: string;
+  provider?: string;
+  metadata?: Record<string, unknown>;
+}

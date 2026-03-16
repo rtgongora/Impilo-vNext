@@ -1,7 +1,7 @@
 /**
  * ProviderTabs — Tab navigator for Provider mode.
  *
- * Tabs: Dashboard (Worklist), Patients, Activity, Notifications
+ * Tabs: Dashboard (Worklist), Patients, Results, Activity, Professional
  */
 
 import React, { useState, useCallback } from "react";
@@ -10,14 +10,16 @@ import { TabBar } from "@impilo/mobile-design-system";
 import { ProviderDashboardScreen } from "../screens/provider/ProviderDashboardScreen";
 import { PatientLookupScreen } from "../screens/provider/PatientLookupScreen";
 import { ActivityFeedScreen } from "../screens/provider/ActivityFeedScreen";
-import { NotificationsScreen } from "../screens/NotificationsScreen";
+import { ResultsViewScreen } from "../screens/provider/ResultsViewScreen";
+import { ProfessionalProfileScreen } from "../screens/provider/ProfessionalProfileScreen";
 import { useAppStore } from "../stores/appStore";
 
 const TABS = [
   { key: "dashboard", label: "Worklist", icon: "clipboard" },
   { key: "patients", label: "Patients", icon: "users" },
+  { key: "results", label: "Results", icon: "flask" },
   { key: "activity", label: "Activity", icon: "activity" },
-  { key: "notifications", label: "Alerts", icon: "bell" },
+  { key: "professional", label: "Profile", icon: "user" },
 ] as const;
 
 type TabKey = (typeof TABS)[number]["key"];
@@ -36,10 +38,12 @@ export function ProviderTabs() {
         return <ProviderDashboardScreen />;
       case "patients":
         return <PatientLookupScreen />;
+      case "results":
+        return <ResultsViewScreen />;
       case "activity":
         return <ActivityFeedScreen />;
-      case "notifications":
-        return <NotificationsScreen />;
+      case "professional":
+        return <ProfessionalProfileScreen />;
       default:
         return <ProviderDashboardScreen />;
     }
