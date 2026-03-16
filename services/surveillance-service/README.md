@@ -31,7 +31,7 @@ and maintains a cases registry .
 
 - `signals` — threshold-based trigger definitions (event type, condition field, threshold, window)
 - `signal_hits` — recorded trigger occurrences when ingested events match signals
-- `cases` — public health case registry (stub, auto-opened when threshold = 1)
+- `cases` — public health case registry (auto-opened when threshold = 1)
 - `event_outbox` — transactional outbox for Kafka
 - `idempotency_keys` — request deduplication
 
