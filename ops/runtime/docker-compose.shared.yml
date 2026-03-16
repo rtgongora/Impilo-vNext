@@ -1,0 +1,81 @@
+# =============================================================================
+# Impilo vNext — Layer 1: Shared Platform Services
+# =============================================================================
+# Keycloak 25.x, HAPI FHIR R4, Orthanc PACS
+#
+# Depends on: docker-compose.infra.yml (postgres must be healthy)
+# Usage: docker compose -f ops/runtime/docker-compose.infra.yml \
+#                       -f ops/runtime/docker-compose.shared.yml up -d
+# =============================================================================
+
+services:
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:25.0
+    container_name: impilo-keycloak
+    command: start-dev --import-realm
+    environment:
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: ${POSTGRES_USER:-impilo}
+      KC_DB_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+    volumes:
+      - ../../tools/auth/impilo-realm.json:/opt/keycloak/data/import/impilo-realm.json:ro
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/8080 && echo -e 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\n\\r\\n' >&3 && cat <&3 | grep -q '200\\|UP' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+    networks:
+      - impilo
+
+  hapi-fhir:
+    image: hapiproject/hapi:v7.4.0
+    container_name: impilo-hapi-fhir
+    environment:
+      spring.datasource.url: jdbc:postgresql://postgres:5432/butano
+      spring.datasource.username: ${POSTGRES_USER:-impilo}
+      spring.datasource.password: ${POSTGRES_PASSWORD:-changeme}
+      spring.datasource.driverClassName: org.postgresql.Driver
+      spring.jpa.properties.hibernate.dialect: org.hibernate.dialect.PostgreSQLDialect
+      hapi.fhir.fhir_version: R4
+    ports:
+      - "8090:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/fhir/metadata > /dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - impilo
+
+  orthanc:
+    image: orthancteam/orthanc:24.8.1
+    container_name: impilo-orthanc
+    ports:
+      - "8042:8042"
+      - "4242:4242"
+    volumes:
+      - orthanc_data:/var/lib/orthanc/db
+    networks:
+      - impilo
+
+volumes:
+  orthanc_data:
+
+networks:
+  impilo:
+    external: true
+    name: impilo-network

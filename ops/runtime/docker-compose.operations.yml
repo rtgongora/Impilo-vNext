@@ -1,0 +1,309 @@
+# =============================================================================
+# Impilo vNext — Layer 5+6: Clinical Services + Operations
+# =============================================================================
+# Ring 2: PCT, OROS, Ubomi, Pharmacy, Inventory, Msika, Mushex, etc.
+# Operations: Integration Hub, Notifications, Jobs, Reporting, etc.
+#
+# Depends on: infra, shared, kernel
+# =============================================================================
+
+x-service-defaults: &service-defaults
+  restart: unless-stopped
+  networks:
+    - impilo
+
+x-java-env: &java-env
+  POSTGRES_HOST: postgres
+  POSTGRES_PORT: 5432
+  POSTGRES_USER: ${POSTGRES_USER:-impilo}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+  REDIS_HOST: redis
+  REDIS_PORT: 6379
+  KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+  KEYCLOAK_URL: http://keycloak:8080
+  KEYCLOAK_REALM: ${KEYCLOAK_REALM:-impilo}
+  SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "${SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI:-}"
+  SPRING_AUTOCONFIGURE_EXCLUDE: "${SPRING_AUTOCONFIGURE_EXCLUDE:-org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration}"
+
+x-java-depends: &java-depends
+  postgres:
+    condition: service_healthy
+  redis:
+    condition: service_healthy
+  kafka:
+    condition: service_healthy
+
+x-java-healthcheck: &java-healthcheck
+  interval: 10s
+  timeout: 5s
+  retries: 15
+  start_period: 45s
+
+services:
+
+  # ===========================================================================
+  # Ring 2 — Clinical Core
+  # ===========================================================================
+
+  pct:
+    <<: *service-defaults
+    build:
+      context: ../../services/pct-service
+      dockerfile: Dockerfile
+    container_name: impilo-pct
+    environment:
+      <<: *java-env
+    ports:
+      - "8088:8088"
+    depends_on:
+      <<: *java-depends
+    healthcheck:
+      <<: *java-healthcheck
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8088/actuator/health || exit 1"]
+
+  oros:
+    <<: *service-defaults
+    build:
+      context: ../../services/oros-service
+      dockerfile: Dockerfile
+    container_name: impilo-oros
+    environment:
+      <<: *java-env
+    ports:
+      - "8089:8089"
+    depends_on:
+      <<: *java-depends
+    healthcheck:
+      <<: *java-healthcheck
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8089/actuator/health || exit 1"]
+
+  ubomi:
+    <<: *service-defaults
+    build:
+      context: ../../services/ubomi-service
+      dockerfile: Dockerfile
+    container_name: impilo-ubomi
+    environment:
+      <<: *java-env
+    ports:
+      - "8087:8087"
+    depends_on:
+      <<: *java-depends
+    healthcheck:
+      <<: *java-healthcheck
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8087/actuator/health || exit 1"]
+
+  pharmacy:
+    <<: *service-defaults
+    build:
+      context: ../../services/pharmacy-service
+      dockerfile: Dockerfile
+    container_name: impilo-pharmacy
+    environment:
+      <<: *java-env
+    ports:
+      - "8097:8097"
+    depends_on:
+      <<: *java-depends
+    healthcheck:
+      <<: *java-healthcheck
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8097/actuator/health || exit 1"]
+
+  inventory:
+    <<: *service-defaults
+    build:
+      context: ../../services/inventory-service
+      dockerfile: Dockerfile
+    container_name: impilo-inventory
+    environment:
+      <<: *java-env
+    ports:
+      - "8098:8098"
+    depends_on:
+      <<: *java-depends
+    healthcheck:
+      <<: *java-healthcheck
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8098/actuator/health || exit 1"]
+
+  msika:
+    <<: *service-defaults
+    build:
+      context: ../../services/msika-service
+      dockerfile: Dockerfile
+    container_name: impilo-msika
+    environment:
+      <<: *java-env
+    ports:
+      - "8086:8086"
+    depends_on:
+      <<: *java-depends
+    healthcheck:
+      <<: *java-healthcheck
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8086/actuator/health || exit 1"]
+
+  msika-flow:
+    <<: *service-defaults
+    build:
+      context: ../../services/msika-flow-service
+      dockerfile: Dockerfile
+    container_name: impilo-msika-flow
+    environment:
+      <<: *java-env
+    ports:
+      - "8100:8100"
+    depends_on:
+      <<: *java-depends
+    healthcheck:
+      <<: *java-healthcheck
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8100/actuator/health || exit 1"]
+
+  mushex:
+    <<: *service-defaults
+    build:
+      context: ../../services/mushex-service
+      dockerfile: Dockerfile
+    container_name: impilo-mushex
+    environment:
+      <<: *java-env
+      SERVER_PORT: 8102
+    ports:
+      - "8102:8102"
+    depends_on:
+      <<: *java-depends
+    healthcheck:
+      <<: *java-healthcheck
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8102/actuator/health || exit 1"]
+
+  costing-engine:
+    <<: *service-defaults
+    build:
+      context: ../../services/costing-engine-service
+      dockerfile: Dockerfile
+    container_name: impilo-costing-engine
+    environment:
+      <<: *java-env
+    ports:
+      - "8101:8101"
+    depends_on:
+      <<: *java-depends
+    healthcheck:
+      <<: *java-healthcheck
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8101/actuator/health || exit 1"]
+
+  document-service:
+    <<: *service-defaults
+    build:
+      context: ../../services/document-service
+      dockerfile: Dockerfile
+    container_name: impilo-document-service
+    environment:
+      <<: *java-env
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
+    ports:
+      - "8093:8093"
+    depends_on:
+      <<: *java-depends
+    healthcheck:
+      <<: *java-healthcheck
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8093/actuator/health || exit 1"]
+
+  landela-adapter:
+    <<: *service-defaults
+    build:
+      context: ../../services/landela-adapter-service
+      dockerfile: Dockerfile
+    container_name: impilo-landela-adapter
+    environment:
+      <<: *java-env
+    ports:
+      - "8092:8092"
+    depends_on:
+      <<: *java-depends
+    healthcheck:
+      <<: *java-healthcheck
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8092/actuator/health || exit 1"]
+
+  credential-verification:
+    <<: *service-defaults
+    build:
+      context: ../../services/credential-verification-service
+      dockerfile: Dockerfile
+    container_name: impilo-credential-verification
+    environment:
+      <<: *java-env
+    ports:
+      - "8094:8094"
+    depends_on:
+      <<: *java-depends
+    healthcheck:
+      <<: *java-healthcheck
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8094/actuator/health || exit 1"]
+
+  share-slip:
+    <<: *service-defaults
+    build:
+      context: ../../services/share-slip-service
+      dockerfile: Dockerfile
+    container_name: impilo-share-slip
+    environment:
+      <<: *java-env
+    ports:
+      - "8095:8095"
+    depends_on:
+      <<: *java-depends
+    healthcheck:
+      <<: *java-healthcheck
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8095/actuator/health || exit 1"]
+
+  reporting:
+    <<: *service-defaults
+    build:
+      context: ../../services/reporting-service
+      dockerfile: Dockerfile
+    container_name: impilo-reporting
+    environment:
+      <<: *java-env
+      SERVER_PORT: 8200
+    ports:
+      - "8200:8200"
+    depends_on:
+      <<: *java-depends
+    healthcheck:
+      <<: *java-healthcheck
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8200/actuator/health || exit 1"]
+
+  # ===========================================================================
+  # Operations Layer
+  # ===========================================================================
+
+  experience-bff:
+    <<: *service-defaults
+    build:
+      context: ../../services/experience-bff
+      dockerfile: Dockerfile
+    container_name: impilo-experience-bff
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: experience_bff
+      DB_USER: ${POSTGRES_USER:-impilo}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      SPRING_PROFILES_ACTIVE: default
+    ports:
+      - "8160:8160"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      <<: *java-healthcheck
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8160/actuator/health || exit 1"]
+      start_period: 30s
+
+networks:
+  impilo:
+    external: true
+    name: impilo-network

@@ -1,0 +1,36 @@
+# =============================================================================
+# Impilo vNext — Layer 7: Applications (UIs)
+# =============================================================================
+# Experience UI (Next.js), and references to other UIs.
+#
+# Depends on: operations (experience-bff), edge (envoy)
+# =============================================================================
+
+services:
+
+  experience-ui:
+    build:
+      context: ../../ui/experience
+      dockerfile: Dockerfile
+    container_name: impilo-experience-ui
+    environment:
+      NEXT_PUBLIC_BFF_URL: http://experience-bff:8160
+      NEXT_PUBLIC_GATEWAY_URL: http://envoy:10000
+    ports:
+      - "3020:3020"
+    depends_on:
+      experience-bff:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3020 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+    networks:
+      - impilo
+
+networks:
+  impilo:
+    external: true
+    name: impilo-network

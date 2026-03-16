@@ -1,0 +1,55 @@
+# =============================================================================
+# Impilo vNext — Layer 2: Edge (Gateway + Policy)
+# =============================================================================
+# OPA (Open Policy Agent) + Envoy 1.31 API Gateway
+#
+# Depends on: docker-compose.infra.yml
+# Usage: included via platformctl.sh
+# =============================================================================
+
+services:
+
+  opa:
+    image: openpolicyagent/opa:0.68.0
+    container_name: impilo-opa
+    command:
+      - "run"
+      - "--server"
+      - "--addr=0.0.0.0:8181"
+      - "--set=decision_logs.console=true"
+      - "/policies"
+    volumes:
+      - ../../tools/ops/gateway/opa:/policies:ro
+    ports:
+      - "8181:8181"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8181/health || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - impilo
+
+  envoy:
+    image: envoyproxy/envoy:v1.31-latest
+    container_name: impilo-envoy
+    volumes:
+      - ../../infra/envoy/envoy-runtime.yaml:/etc/envoy/envoy.yaml:ro
+    ports:
+      - "10000:10000"
+      - "9901:9901"
+    depends_on:
+      opa:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:9901/ready || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - impilo
+
+networks:
+  impilo:
+    external: true
+    name: impilo-network
