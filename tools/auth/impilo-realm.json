@@ -264,6 +264,33 @@
   ],
   "clients": [
     {
+      "clientId": "experience-ui",
+      "name": "Impilo Experience UI",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "http://localhost:3020/*",
+        "http://197.221.242.150:3020/*",
+        "http://197.221.242.150/*"
+      ],
+      "webOrigins": [
+        "http://localhost:3020",
+        "http://197.221.242.150:3020",
+        "http://197.221.242.150"
+      ],
+      "protocol": "openid-connect",
+      "fullScopeAllowed": true,
+      "defaultClientScopes": [
+        "openid",
+        "profile",
+        "email",
+        "impilo-tenant"
+      ]
+    },
+    {
       "clientId": "one-ui-shell",
       "name": "Impilo One UI Shell",
       "enabled": true,
@@ -272,10 +299,12 @@
       "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": false,
       "redirectUris": [
-        "http://localhost:3000/*"
+        "http://localhost:3000/*",
+        "http://197.221.242.150:3000/*"
       ],
       "webOrigins": [
-        "http://localhost:3000"
+        "http://localhost:3000",
+        "http://197.221.242.150:3000"
       ],
       "protocol": "openid-connect"
     },
@@ -320,10 +349,12 @@
       "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": false,
       "redirectUris": [
-        "http://localhost:3003/*"
+        "http://localhost:3003/*",
+        "http://197.221.242.150:3003/*"
       ],
       "webOrigins": [
-        "http://localhost:3003"
+        "http://localhost:3003",
+        "http://197.221.242.150:3003"
       ],
       "protocol": "openid-connect"
     },
