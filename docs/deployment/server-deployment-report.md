@@ -102,13 +102,29 @@ cd ~ && git clone <repo-url> Impilo-vNext || cd ~/Impilo-vNext && git pull
 cd ~/Impilo-vNext
 git checkout claude/review-project-manifest-jb5O0
 
-# Full automated deployment
+# Option A: Using server-deploy.sh (standalone, installs prereqs)
 ./scripts/server-deploy.sh full
 
-# Or step by step:
+# Option B: Using platformctl.sh (canonical orchestration, requires Docker pre-installed)
+./scripts/runtime/platformctl.sh build
+./scripts/runtime/platformctl.sh up server
+./scripts/runtime/platformctl.sh bootstrap
+./scripts/runtime/platformctl.sh verify server
+./scripts/runtime/platformctl.sh smoke
+
+# Step by step with server-deploy.sh:
 ./scripts/server-deploy.sh discover
 ./scripts/server-deploy.sh prereqs
 ./scripts/server-deploy.sh build
 ./scripts/server-deploy.sh up
 ./scripts/server-deploy.sh health
 ```
+
+### Deployment Profiles
+
+| Profile | Script | Services |
+|---------|--------|----------|
+| `server` | `platformctl.sh up server` | Core platform (infra + edge + Ring 0-1 + PCT/OROS + BFF/UI) |
+| `lite` | `platformctl.sh up lite` | Same as server but with dev credentials |
+| `full` | `platformctl.sh up full` | All 68+ services |
+| `integration` | `platformctl.sh up integration` | Full + observability (Prometheus, Grafana, Jaeger) |

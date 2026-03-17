@@ -67,6 +67,7 @@ get_compose_files() {
     case "${profile}" in
         lite)        echo "${COMPOSE_LITE}" ;;
         full)        echo "${COMPOSE_FULL}" ;;
+        server)      echo "${COMPOSE_LITE}" ;;
         integration) echo "${COMPOSE_INTEGRATION}" ;;
         pilot)       echo "${COMPOSE_PILOT}" ;;
         legacy)      echo "${COMPOSE_LEGACY}" ;;
@@ -81,6 +82,8 @@ get_env_file() {
         env_file="${ENV_DIR}/dev-lite.env"
     elif [[ "${profile}" == "full" ]]; then
         env_file="${ENV_DIR}/dev-full.env"
+    elif [[ "${profile}" == "server" ]]; then
+        env_file="${ENV_DIR}/server.env"
     fi
     echo "${env_file}"
 }
