@@ -1,6 +1,6 @@
 # Impilo vNext — Open Blockers
 
-**Date**: 2026-03-17
+**Date**: 2026-03-18 (updated from 2026-03-17)
 
 ---
 
@@ -8,13 +8,22 @@
 
 **Severity**: ❌ BLOCKING
 **Impact**: Cannot execute deployment remotely
+**Retry Status**: Re-verified 2026-03-18 — **STILL BLOCKED** (identical behavior)
 
-**Description**: The sandbox environment's network proxy blocks all outbound TCP connections to `197.221.242.150`. Both SSH (port 7557) and all other ports time out or receive `Host not allowed` from the proxy.
+**Description**: The Claude Code sandbox environment's egress proxy (`21.0.0.77:15004`) blocks all outbound connections to `197.221.242.150`. HTTP requests receive `403 host_not_allowed`; SSH connections time out on ports 22 and 7557.
+
+**2026-03-18 Retry Results**:
+- 6/6 external endpoints (ports 13020–13025): `HTTP 403, x-deny-reason: host_not_allowed`
+- SSH port 22: Connection timed out
+- SSH port 7557: Connection timed out
+- The "network block resolved" report from engineers likely addressed server-side networking, not the Claude Code egress proxy
 
 **Resolution**: Deploy directly from the server by:
 1. SSH into `197.221.242.150:7557` as `rgongora` from a machine with direct network access
 2. Clone/pull the repo on the server
 3. Run `./scripts/server-deploy.sh full`
+
+**Alternative**: Request Anthropic add `197.221.242.150` to the Claude Code egress proxy allowlist
 
 ---
 
