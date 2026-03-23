@@ -94,7 +94,6 @@ public class TriageService {
         record.setVitals(vitalsJson);
         record.setNotes(notes);
         record.setTriagedBy(ctx.actorId());
-        record.setCreatedAt(OffsetDateTime.now());
 
         record = triageRepository.save(record);
 

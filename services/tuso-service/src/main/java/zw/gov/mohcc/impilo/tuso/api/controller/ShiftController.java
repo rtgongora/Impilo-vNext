@@ -18,17 +18,13 @@ import zw.gov.mohcc.impilo.shared.response.ApiResponse;
 import zw.gov.mohcc.impilo.tuso.api.dto.ShiftResponse;
 import zw.gov.mohcc.impilo.tuso.api.dto.StartShiftOptionsResponse;
 import zw.gov.mohcc.impilo.tuso.api.dto.StartShiftRequest;
+import zw.gov.mohcc.impilo.tuso.core.WorkspaceEligibilityEngine;
 import zw.gov.mohcc.impilo.tuso.core.WorkspaceService;
+import zw.gov.mohcc.impilo.tuso.persistence.entity.ShiftEntity;
 
+import java.util.List;
 import java.util.Set;
 
-/**
- * Internal REST API for shift management within facilities.
- *
- * A shift represents a provider's active working session within a specific
- * workspace. Before starting a shift, the provider can query eligible
- * workspaces based on their role and cadre.
- */
 @RestController
 @RequestMapping("/v1/internal/facilities/{facilityId}")
 public class ShiftController {
@@ -56,7 +52,18 @@ public class ShiftController {
                 roles != null ? roles : Set.of(),
                 privileges != null ? privileges : Set.of());
 
-        var response = workspaceService.getStartShiftOptions(facilityId, providerInfo);
+        List<WorkspaceEligibilityEngine.EligibilityResult> results =
+                workspaceService.getStartShiftOptions(facilityId, providerInfo);
+
+        StartShiftOptionsResponse response = new StartShiftOptionsResponse(
+                results.stream()
+                        .map(r -> new StartShiftOptionsResponse.EligibleWorkspace(
+                                r.workspace().getId(),
+                                r.workspace().getName(),
+                                r.workspace().getWorkspaceType(),
+                                r.eligible(),
+                                r.ineligibilityReasons()))
+                        .toList());
 
         return ResponseEntity.ok(ApiResponse.ok(response, ctx.correlationId().toString()));
     }
@@ -71,8 +78,22 @@ public class ShiftController {
                 facilityId, request.workspaceId(), request.providerId(),
                 request.providerType(), ctx.correlationId());
 
-        var response = workspaceService.startShift(
+        ShiftEntity shift = workspaceService.startShift(
                 facilityId, request.workspaceId(), request.providerId(), request.providerType());
+
+        ShiftResponse response = new ShiftResponse(
+                shift.getId(),
+                shift.getTenantId(),
+                shift.getFacility().getId(),
+                shift.getWorkspace().getId(),
+                shift.getWorkspace().getName(),
+                shift.getProviderId(),
+                shift.getProviderType(),
+                shift.getStartedAt(),
+                shift.getEndedAt(),
+                shift.getStatus(),
+                shift.getMetadata(),
+                shift.getCreatedAt());
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok(response, ctx.correlationId().toString()));

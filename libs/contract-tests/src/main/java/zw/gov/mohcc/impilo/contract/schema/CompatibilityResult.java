@@ -14,11 +14,11 @@ public record CompatibilityResult(boolean compatible, List<String> violations) {
         violations = violations != null ? List.copyOf(violations) : List.of();
     }
 
-    public static CompatibilityResult compatible() {
+    public static CompatibilityResult ofCompatible() {
         return new CompatibilityResult(true, List.of());
     }
 
-    public static CompatibilityResult incompatible(List<String> violations) {
+    public static CompatibilityResult ofIncompatible(List<String> violations) {
         return new CompatibilityResult(false, violations);
     }
 

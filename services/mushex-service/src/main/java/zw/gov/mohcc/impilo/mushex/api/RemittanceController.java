@@ -28,7 +28,7 @@ public class RemittanceController {
         var ctx = TrustContextHolder.require();
         String correlationId = ctx.correlationId().toString();
 
-        RemittanceTokenEntity result = remittanceService.claimRemittance(request.token(), request.otp());
+        RemittanceTokenEntity result = remittanceService.claimSlip(request.token(), request.otp(), null);
 
         return ResponseEntity.ok(ApiResponse.ok(result, correlationId));
     }

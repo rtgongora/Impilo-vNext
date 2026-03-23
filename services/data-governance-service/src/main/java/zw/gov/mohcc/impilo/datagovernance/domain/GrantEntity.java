@@ -43,7 +43,7 @@ public class GrantEntity {
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt = OffsetDateTime.now();
 
-    protected GrantEntity() {}
+    public GrantEntity() {}
 
     public GrantEntity(UUID tenantId, UUID datasetId, String principalId,
                        String purposeOfUse, OffsetDateTime expiresAt) {

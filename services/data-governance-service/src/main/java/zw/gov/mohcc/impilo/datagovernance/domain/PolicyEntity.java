@@ -40,7 +40,7 @@ public class PolicyEntity {
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt = OffsetDateTime.now();
 
-    protected PolicyEntity() {}
+    public PolicyEntity() {}
 
     public PolicyEntity(UUID tenantId, String name, int version, String description, String rulesJson) {
         this.tenantId = tenantId;

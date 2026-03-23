@@ -48,14 +48,18 @@ public class IngestController {
                             ctx.requestId(), ctx.correlationId()));
         }
 
+        UUID correlationId = null;
+        try {
+            if (ctx.correlationId() != null) correlationId = UUID.fromString(ctx.correlationId());
+        } catch (IllegalArgumentException ignored) {}
+
         IngestService.IngestResult result = ingestService.ingest(
                 UUID.fromString(ctx.tenantId()),
-                ctx.podId(),
-                ctx.correlationId(),
+                ctx.principal() != null ? ctx.principal().getName() : ctx.podId(),
+                correlationId,
                 request.eventType(),
                 request.payload(),
-                request.facilityId(),
-                idempotencyKey);
+                request.facilityId());
 
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(result);
     }

@@ -240,6 +240,23 @@ public class CpdService {
         return evidence;
     }
 
+    @Transactional
+    public CpdEvidenceEntity uploadEvidence(String providerPublicId,
+                                             zw.gov.mohcc.impilo.varapi.api.dto.UploadEvidenceRequest request) {
+        ProviderEntity provider = providerRepository.findByProviderPublicId(providerPublicId)
+                .orElseThrow(() -> new IllegalArgumentException("Provider not found: " + providerPublicId));
+        List<CpdCycleEntity> cycles = cycleRepository.findByProviderIdAndStatus(provider.getId(), "IN_PROGRESS");
+        if (cycles.isEmpty()) {
+            throw new IllegalStateException("No active CPD cycle for provider: " + providerPublicId);
+        }
+        List<CpdEventEntity> events = eventRepository.findByCycleId(cycles.get(0).getId());
+        if (events.isEmpty()) {
+            throw new IllegalStateException("No CPD events for active cycle of provider: " + providerPublicId);
+        }
+        Long eventId = events.get(events.size() - 1).getId();
+        return uploadEvidence(eventId, request.documentId(), request.evidenceType(), request.notes());
+    }
+
     /**
      * Get a summary of a provider's current CPD status.
      *

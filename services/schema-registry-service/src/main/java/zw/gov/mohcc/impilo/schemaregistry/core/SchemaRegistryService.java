@@ -121,13 +121,13 @@ public class SchemaRegistryService {
     public CompatibilityResult checkCompatibility(String subjectName, String proposedSchema) {
         Optional<SubjectEntity> subjectOpt = subjectRepo.findBySubjectName(subjectName);
         if (subjectOpt.isEmpty()) {
-            return CompatibilityResult.compatible(); // No existing schema = always compatible
+            return CompatibilityResult.ofCompatible(); // No existing schema = always compatible
         }
 
         Optional<SchemaVersionEntity> latestOpt =
                 versionRepo.findFirstBySubjectIdOrderByVersionDesc(subjectOpt.get().getId());
         if (latestOpt.isEmpty()) {
-            return CompatibilityResult.compatible();
+            return CompatibilityResult.ofCompatible();
         }
 
         return SchemaCompatibilityValidator.checkBackwardCompatibility(

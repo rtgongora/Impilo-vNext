@@ -50,6 +50,13 @@ public class ReportRunService {
         this.objectMapper = objectMapper;
     }
 
+    public ReportRunService(ReportRunRepository runRepository,
+                            ReportDefinitionService definitionService,
+                            EventOutboxRepository outboxRepository,
+                            ObjectMapper objectMapper) {
+        this(runRepository, definitionService, outboxRepository, null, objectMapper);
+    }
+
     /**
      * Runs a report synchronously by executing the stored query template
      * against the database with the supplied parameters.
@@ -128,6 +135,26 @@ public class ReportRunService {
                 entity.getCreatedBy(),
                 entity.getCreatedAt()
         );
+    }
+
+    /**
+     * Returns stub/placeholder output for a report definition without executing the SQL query.
+     * Used in tests and sandbox environments.
+     */
+    public String executeStub(ReportDefinitionEntity definition, String parametersJson, ExportFormat format) {
+        if (format == ExportFormat.CSV) {
+            return "report_key,name,generated_at,row_count\n"
+                    + definition.getReportKey() + ","
+                    + definition.getName() + ","
+                    + OffsetDateTime.now() + ",0\n";
+        }
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("reportKey", definition.getReportKey());
+        result.put("name", definition.getName());
+        result.put("generatedAt", OffsetDateTime.now().toString());
+        result.put("rowCount", 0);
+        result.put("rows", List.of());
+        return toJson(result);
     }
 
     /**

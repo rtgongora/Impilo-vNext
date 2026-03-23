@@ -69,7 +69,7 @@ public class OutboxEventEntity {
     @Column(name = "published_at")
     private OffsetDateTime publishedAt;
 
-    protected OutboxEventEntity() {}
+    public OutboxEventEntity() {}
 
     @PrePersist
     protected void onCreate() {

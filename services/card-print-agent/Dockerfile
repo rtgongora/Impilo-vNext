@@ -1,22 +1,10 @@
-FROM eclipse-temurin:21-jdk-alpine AS build
-
-WORKDIR /build
-COPY pom.xml .
-COPY src ./src
-COPY ../pom.xml ../pom.xml
-
-RUN --mount=type=cache,target=/root/.m2 \
-    apk add --no-cache maven && \
-    mvn -f pom.xml package -DskipTests -q
-
-FROM eclipse-temurin:21-jre-alpine AS runtime
+FROM eclipse-temurin:21-jre-alpine
 
 RUN addgroup -S impilo && adduser -S impilo -G impilo
 
 WORKDIR /app
-COPY --from=build /build/target/card-print-agent-*.jar app.jar
+COPY target/card-print-agent-*.jar app.jar
 
-# Create default spool output directory
 RUN mkdir -p /tmp/card-print-output && \
     chown -R impilo:impilo /app /tmp/card-print-output
 

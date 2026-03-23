@@ -79,7 +79,21 @@ public class PortalController {
                 ctx.actorId(), ctx.correlationId());
 
         ProviderEntity provider = providerService.findByActorId(ctx.actorId());
-        CpdSummaryResponse response = cpdService.getCpdSummary(provider.getProviderPublicId());
+        String providerPublicId = provider.getProviderPublicId();
+        CpdService.CpdSummary summary = cpdService.getCpdSummary(providerPublicId);
+        CpdSummaryResponse response = summary.currentCycle() != null
+                ? new CpdSummaryResponse(
+                        summary.currentCycle().getId(),
+                        providerPublicId,
+                        summary.currentCycle().getCycleName(),
+                        summary.currentCycle().getStartDate(),
+                        summary.currentCycle().getEndDate(),
+                        summary.requiredPoints(),
+                        summary.earnedPoints(),
+                        summary.currentCycle().getStatus(),
+                        summary.requirementMet())
+                : new CpdSummaryResponse(null, providerPublicId, null, null, null,
+                        summary.requiredPoints(), summary.earnedPoints(), null, summary.requirementMet());
 
         return ResponseEntity.ok(ApiResponse.ok(response, ctx.correlationId().toString()));
     }
@@ -89,8 +103,8 @@ public class PortalController {
             @Valid @RequestBody UploadEvidenceRequest request) {
 
         TrustContext ctx = TrustContextHolder.require();
-        log.info("Portal: uploading CPD evidence [actorId={}, eventType={}] correlationId={}",
-                ctx.actorId(), request.eventType(), ctx.correlationId());
+        log.info("Portal: uploading CPD evidence [actorId={}, evidenceType={}] correlationId={}",
+                ctx.actorId(), request.evidenceType(), ctx.correlationId());
 
         ProviderEntity provider = providerService.findByActorId(ctx.actorId());
         cpdService.uploadEvidence(provider.getProviderPublicId(), request);

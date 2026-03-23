@@ -72,7 +72,7 @@ public class OutboxEventEntity {
     @Column(name = "published_at")
     private OffsetDateTime publishedAt;
 
-    protected OutboxEventEntity() {}
+    public OutboxEventEntity() {}
 
     public Long getId() { return id; }
     public UUID getEventId() { return eventId; }

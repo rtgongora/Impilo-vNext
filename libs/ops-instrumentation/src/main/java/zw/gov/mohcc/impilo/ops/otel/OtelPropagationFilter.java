@@ -58,12 +58,12 @@ public class OtelPropagationFilter implements Filter {
      * Parses W3C traceparent header: {@code version-traceid-spanid-flags}
      * Example: {@code 00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01}
      */
-    static TraceContext parseTraceparent(String traceparent) {
+    public static TraceContext parseTraceparent(String traceparent) {
         if (traceparent == null) return null;
         String[] parts = traceparent.split("-");
         if (parts.length < 4) return null;
         return new TraceContext(parts[1], parts[2]);
     }
 
-    record TraceContext(String traceId, String spanId) {}
+    public record TraceContext(String traceId, String spanId) {}
 }

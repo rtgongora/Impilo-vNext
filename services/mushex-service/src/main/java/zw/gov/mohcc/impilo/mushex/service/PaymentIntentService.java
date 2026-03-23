@@ -142,6 +142,11 @@ public class PaymentIntentService {
         return intentRepository.findBySourceTypeAndSourceId(sourceType, sourceId);
     }
 
+    public String findIntentIdBySource(SourceType sourceType, String sourceId) {
+        List<PaymentIntentEntity> intents = intentRepository.findBySourceTypeAndSourceId(sourceType, sourceId);
+        return intents.isEmpty() ? null : intents.get(0).getIntentId();
+    }
+
     /**
      * Transition the intent to a new status with state machine validation.
      */

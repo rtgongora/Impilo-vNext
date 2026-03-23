@@ -19,14 +19,12 @@ services:
   # Maven Builder — builds ALL backend services in one pass
   # ---------------------------------------------------------------------------
   maven-builder:
-    image: eclipse-temurin:21-jdk-alpine
+    image: maven:3.9-eclipse-temurin-21
     working_dir: /build/services
     entrypoint: ["/bin/sh", "-c"]
     command:
       - |
         set -e
-        echo "=== Installing Maven ==="
-        apk add --no-cache maven bash
         echo "=== Building all services (skip tests for build phase) ==="
         mvn -B clean package -DskipTests \
           -Dmaven.repo.local=/root/.m2/repository \

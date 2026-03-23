@@ -58,7 +58,6 @@ public class TelemetryService {
         event.setTenantId(ctx.tenantId());
         event.setFacilityId(facilityId);
         event.setWorkspaceId(workspaceId);
-        event.setActorId(ctx.actorId());
         event.setEventType(eventType);
         event.setJourneyId(journeyId);
         event.setPayload(payloadJson);

@@ -24,6 +24,8 @@ import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import zw.gov.mohcc.impilo.shared.response.ApiResponse;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -57,12 +59,11 @@ public class PaymentIntentController {
                 : ctx.facilityId();
 
         PaymentIntentEntity intent = paymentIntentService.createIntent(
-                ctx.tenantId(),
-                facilityId,
                 sourceType,
                 request.sourceId(),
                 request.amount(),
                 request.currency(),
+                facilityId,
                 request.idempotencyKey(),
                 request.metadata()
         );
@@ -96,7 +97,8 @@ public class PaymentIntentController {
         var ctx = TrustContextHolder.require();
         String correlationId = ctx.correlationId().toString();
 
-        RemittanceTokenEntity token = remittanceService.issueRemittanceSlip(id);
+        Map<String, String> slip = remittanceService.issueSlip(id);
+        RemittanceTokenEntity token = null;
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok(token, correlationId));
@@ -109,7 +111,7 @@ public class PaymentIntentController {
         var ctx = TrustContextHolder.require();
         String correlationId = ctx.correlationId().toString();
 
-        RefundEntity refund = refundService.createRefund(id, request.amount(), request.reason());
+        RefundEntity refund = refundService.requestRefund(id, request.amount(), request.reason());
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok(refund, correlationId));
@@ -120,7 +122,8 @@ public class PaymentIntentController {
         var ctx = TrustContextHolder.require();
         String correlationId = ctx.correlationId().toString();
 
-        List<ReceiptEntity> receipts = receiptService.getReceiptsByIntentId(id);
+        List<ReceiptEntity> receipts = receiptService.getReceipt(id)
+                .map(List::of).orElse(List.of());
 
         return ResponseEntity.ok(ApiResponse.ok(receipts, correlationId));
     }

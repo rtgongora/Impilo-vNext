@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.vito.core.qr;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.*;
 import com.nimbusds.jose.jwk.*;
+import com.nimbusds.jose.jwk.gen.OctetKeyPairGenerator;
 import com.nimbusds.jwt.*;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;

@@ -16,6 +16,8 @@ import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import zw.gov.mohcc.impilo.shared.response.ApiResponse;
 import zw.gov.mohcc.impilo.shared.response.PagedResponse;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/mushex/v1/ops")
 public class OpsController {
@@ -34,10 +36,12 @@ public class OpsController {
         String correlationId = ctx.correlationId().toString();
 
         Pageable pageable = PageRequest.of(page, size);
-        Page<Object> result = opsService.getPendingReviews(ctx.tenantId(), pageable);
+        Page<?> result = opsService.getPendingReviews(ctx.tenantId(), pageable);
 
+        @SuppressWarnings("unchecked")
+        List<Object> content = (List<Object>) (List<?>) result.getContent();
         PagedResponse<Object> paged = PagedResponse.of(
-                result.getContent(), page, size, result.getTotalElements());
+                content, page, size, result.getTotalElements());
 
         return ResponseEntity.ok(ApiResponse.ok(paged, correlationId));
     }
@@ -49,7 +53,7 @@ public class OpsController {
         var ctx = TrustContextHolder.require();
         String correlationId = ctx.correlationId().toString();
 
-        Object result = opsService.approveReview(id, ctx.actorId(), notes);
+        Object result = opsService.approveReview(id, notes);
 
         return ResponseEntity.ok(ApiResponse.ok(result, correlationId));
     }

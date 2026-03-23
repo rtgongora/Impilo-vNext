@@ -111,7 +111,6 @@ public class TransferService {
         transfer.setTransferType(transferType);
         transfer.setStatus("REQUESTED");
         transfer.setRequestedBy(ctx.actorId());
-        transfer.setCreatedAt(OffsetDateTime.now());
 
         transfer = transferRepository.save(transfer);
 
@@ -189,9 +188,10 @@ public class TransferService {
         }
 
         // Update admission with new location
-        AdmissionEntity admission = admissionRepository.findById(transfer.getAdmissionId())
+        final UUID admissionId = transfer.getAdmissionId();
+        AdmissionEntity admission = admissionRepository.findById(admissionId)
                 .orElseThrow(() -> new IllegalStateException(
-                        "Admission not found for transfer: " + transfer.getAdmissionId()));
+                        "Admission not found for transfer: " + admissionId));
 
         admission.setWardId(transfer.getToWardId());
         admission.setBedId(transfer.getToBedId());
@@ -205,9 +205,10 @@ public class TransferService {
         transfer = transferRepository.save(transfer);
 
         // Transition journey: current state -> TRANSFERRED -> ADMITTED
-        JourneyEntity journey = journeyRepository.findByJourneyId(transfer.getJourneyId())
+        final String journeyId = transfer.getJourneyId();
+        JourneyEntity journey = journeyRepository.findByJourneyId(journeyId)
                 .orElseThrow(() -> new IllegalStateException(
-                        "Journey not found for transfer: " + transfer.getJourneyId()));
+                        "Journey not found for transfer: " + journeyId));
 
         journeyStateMachine.transition(journey, JourneyState.TRANSFERRED);
         journeyStateMachine.transition(journey, JourneyState.ADMITTED);

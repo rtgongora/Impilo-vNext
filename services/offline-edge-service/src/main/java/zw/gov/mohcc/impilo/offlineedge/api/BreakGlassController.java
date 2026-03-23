@@ -46,7 +46,7 @@ public class BreakGlassController {
                             ctx.requestId(), ctx.correlationId()));
         }
 
-        String actorId = body.getOrDefault("actor_id", ctx.userId());
+        String actorId = body.getOrDefault("actor_id", ctx.principal() != null ? ctx.principal().getName() : "unknown");
         String facilityId = body.getOrDefault("facility_id", "unknown");
         String patientRef = body.get("patient_ref");
         String overrideType = body.getOrDefault("override_type", "SCOPE_EXTENSION");
@@ -114,7 +114,7 @@ public class BreakGlassController {
                             ctx.requestId(), ctx.correlationId()));
         }
 
-        String reviewedBy = body.getOrDefault("reviewed_by", ctx.userId());
+        String reviewedBy = body.getOrDefault("reviewed_by", ctx.principal() != null ? ctx.principal().getName() : "unknown");
         String notes = body.get("notes");
 
         try {

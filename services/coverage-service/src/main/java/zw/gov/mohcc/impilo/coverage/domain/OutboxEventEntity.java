@@ -68,7 +68,7 @@ public class OutboxEventEntity {
     @Column(name = "published_at")
     private OffsetDateTime publishedAt;
 
-    protected OutboxEventEntity() {}
+    public OutboxEventEntity() {}
 
     public static OutboxEventEntity create(
             String aggregateType, String aggregateId,

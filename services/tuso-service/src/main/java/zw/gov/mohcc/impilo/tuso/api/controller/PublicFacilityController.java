@@ -72,7 +72,8 @@ public class PublicFacilityController {
                 ctx.tenantId(), query, filters, PageRequest.of(page, size));
         Page<FacilityListResponse.FacilitySummary> resultPage = entityPage.map(this::toFacilitySummary);
 
-        PagedResponse<FacilityListResponse.FacilitySummary> response = PagedResponse.from(resultPage);
+        PagedResponse<FacilityListResponse.FacilitySummary> response = PagedResponse.of(
+                resultPage.getContent(), resultPage.getNumber(), resultPage.getSize(), resultPage.getTotalElements());
 
         return ResponseEntity.ok(ApiResponse.ok(response, ctx.correlationId().toString()));
     }

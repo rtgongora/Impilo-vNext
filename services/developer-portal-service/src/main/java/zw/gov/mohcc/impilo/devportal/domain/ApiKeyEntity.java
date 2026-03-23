@@ -20,6 +20,7 @@ public class ApiKeyEntity {
     @Column(name = "created_at", nullable = false) private OffsetDateTime createdAt = OffsetDateTime.now();
 
     public UUID getId() { return id; }
+    public void setId(UUID v) { this.id = v; }
     public UUID getClientId() { return clientId; }
     public void setClientId(UUID v) { this.clientId = v; }
     public String getKeyPrefix() { return keyPrefix; }
@@ -36,4 +37,5 @@ public class ApiKeyEntity {
     public UUID getRotatedFromId() { return rotatedFromId; }
     public void setRotatedFromId(UUID v) { this.rotatedFromId = v; }
     public OffsetDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(OffsetDateTime v) { this.createdAt = v; }
 }

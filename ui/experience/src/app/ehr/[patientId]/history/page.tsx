@@ -100,7 +100,7 @@ export default function MedicalHistoryPage() {
                     <div key={c.id} className="flex items-center justify-between p-3 rounded-lg border border-gray-100">
                       <div>
                         <p className="text-sm font-medium text-gray-900">{String(c.attributes.condition_name || c.attributes.conditionName)}</p>
-                        {c.attributes.icd_code && <p className="text-xs text-gray-500">ICD: {String(c.attributes.icd_code || c.attributes.icdCode)}</p>}
+                        {!!c.attributes.icd_code && <p className="text-xs text-gray-500">ICD: {String(c.attributes.icd_code || c.attributes.icdCode)}</p>}
                       </div>
                       <span className="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-700">Resolved</span>
                     </div>

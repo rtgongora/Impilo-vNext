@@ -149,7 +149,10 @@ class OfflineVitalsEndpointTest {
                     "DEVICE-EDGE-001",
                     1,
                     "idem-vitals-001",
-                    UUID.randomUUID().toString()
+                    UUID.randomUUID().toString(),
+                    null,
+                    false,
+                    null
             );
 
             Map<String, Object> result = vitalsService.captureVital(entitlement, request);

@@ -74,7 +74,7 @@ public class BreakGlassEventEntity {
     private OffsetDateTime createdAt;
 
     @PrePersist
-    void prePersist() {
+    public void prePersist() {
         if (eventId == null) eventId = UUID.randomUUID();
         if (createdAt == null) createdAt = OffsetDateTime.now();
         if (activatedAt == null) activatedAt = OffsetDateTime.now();

@@ -23,6 +23,7 @@ import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -342,6 +343,14 @@ public class ClaimService {
     public ClaimEntity getClaim(String claimId) {
         return claimRepository.findById(claimId)
                 .orElseThrow(() -> new IllegalArgumentException("Claim not found: " + claimId));
+    }
+
+    public List<ClaimEventEntity> getEventsByClaimId(String claimId) {
+        return claimEventRepository.findByClaimIdOrderByCreatedAtAsc(claimId);
+    }
+
+    public List<ClaimAttachmentEntity> getAttachmentsByClaimId(String claimId) {
+        return attachmentRepository.findByClaimId(claimId);
     }
 
     /**

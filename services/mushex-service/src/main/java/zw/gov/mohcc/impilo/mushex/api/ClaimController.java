@@ -46,10 +46,9 @@ public class ClaimController {
                 : ctx.facilityId();
 
         ClaimEntity claim = claimService.createClaim(
-                ctx.tenantId(),
-                facilityId,
                 request.billId(),
                 request.insurerId(),
+                facilityId,
                 request.totals()
         );
 
@@ -63,8 +62,8 @@ public class ClaimController {
         String correlationId = ctx.correlationId().toString();
 
         ClaimEntity claim = claimService.getClaim(id);
-        List<ClaimEventEntity> events = claimService.getClaimEvents(id);
-        List<ClaimAttachmentEntity> attachments = claimService.getClaimAttachments(id);
+        List<ClaimEventEntity> events = claimService.getEventsByClaimId(id);
+        List<ClaimAttachmentEntity> attachments = claimService.getAttachmentsByClaimId(id);
 
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("claim", claim);
@@ -108,7 +107,7 @@ public class ClaimController {
         var ctx = TrustContextHolder.require();
         String correlationId = ctx.correlationId().toString();
 
-        ClaimEntity claim = claimService.disputeClaim(id, request.reason());
+        ClaimEntity claim = claimService.disputeClaim(id, request.reason(), ctx.actorId());
 
         return ResponseEntity.ok(ApiResponse.ok(claim, correlationId));
     }

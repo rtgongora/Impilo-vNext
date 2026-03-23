@@ -218,9 +218,10 @@ public class DischargeWorkflow {
         dischargeCase = dischargeCaseRepository.save(dischargeCase);
 
         // Transition journey to DISCHARGED
-        JourneyEntity journey = journeyRepository.findByJourneyId(dischargeCase.getJourneyId())
+        final DischargeCaseEntity savedDischargeCase = dischargeCase;
+        JourneyEntity journey = journeyRepository.findByJourneyId(savedDischargeCase.getJourneyId())
                 .orElseThrow(() -> new IllegalStateException(
-                        "Journey not found for discharge case: " + dischargeCase.getJourneyId()));
+                        "Journey not found for discharge case: " + savedDischargeCase.getJourneyId()));
         journeyStateMachine.transition(journey, JourneyState.DISCHARGED);
 
         writeOutbox("DISCHARGE", caseId.toString(), "DISCHARGE_COMPLETED", toJson(Map.of(

@@ -43,6 +43,11 @@ public class DeveloperPortalService {
         this.objectMapper = objectMapper;
     }
 
+    public DeveloperPortalService(ClientRepository clientRepo, ApiKeyRepository keyRepo,
+                                   OutboxEventRepository outboxRepo, ObjectMapper objectMapper) {
+        this(clientRepo, keyRepo, null, outboxRepo, objectMapper);
+    }
+
     @Transactional
     public Map<String, Object> registerClient(UUID tenantId, String correlationId,
                                                String idempotencyKey, RegisterClientRequest request) {

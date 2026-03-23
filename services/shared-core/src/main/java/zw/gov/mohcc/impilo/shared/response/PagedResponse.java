@@ -20,4 +20,6 @@ public record PagedResponse<T>(
         boolean hasNext = page < totalPages - 1;
         return new PagedResponse<>(items, page, size, totalElements, totalPages, hasNext);
     }
+
+
 }

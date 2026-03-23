@@ -66,7 +66,7 @@ class IpsBundleGeneratorTest {
         TrustContext trustContext = new TrustContext(
                 TENANT_ID, "actor-123", "PRACTITIONER", "TREATMENT",
                 "fp-sha256-abc", UUID.randomUUID(), UUID.randomUUID(),
-                UUID.randomUUID(), null, AccessMode.NORMAL
+                UUID.randomUUID(), null, AccessMode.INTERNAL
         );
         TrustContextHolder.set(trustContext);
 

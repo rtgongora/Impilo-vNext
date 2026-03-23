@@ -16,6 +16,8 @@ public interface ProviderRepository extends JpaRepository<ProviderEntity, Long> 
 
     Optional<ProviderEntity> findByProviderPublicId(String providerPublicId);
 
+    Optional<ProviderEntity> findByProviderRef(UUID providerRef);
+
     Page<ProviderEntity> findByTenantIdAndStatus(UUID tenantId, String status, Pageable pageable);
 
     @Query("SELECT p FROM ProviderEntity p WHERE p.tenantId = :tenantId " +

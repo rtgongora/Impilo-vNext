@@ -59,7 +59,7 @@ public final class EventEnvelopeValidator {
         List<String> violations = new ArrayList<>();
 
         if (envelope == null || envelope.isNull()) {
-            return EnvelopeValidationResult.invalid(List.of("envelope is null"));
+            return EnvelopeValidationResult.ofInvalid(List.of("envelope is null"));
         }
 
         // Detect casing convention
@@ -115,9 +115,9 @@ public final class EventEnvelopeValidator {
         }
 
         if (violations.isEmpty()) {
-            return EnvelopeValidationResult.valid();
+            return EnvelopeValidationResult.ofValid();
         }
-        return EnvelopeValidationResult.invalid(violations);
+        return EnvelopeValidationResult.ofInvalid(violations);
     }
 
     /**
@@ -128,7 +128,7 @@ public final class EventEnvelopeValidator {
             JsonNode node = MAPPER.readTree(envelopeJson);
             return validate(node);
         } catch (Exception e) {
-            return EnvelopeValidationResult.invalid(List.of("Failed to parse JSON: " + e.getMessage()));
+            return EnvelopeValidationResult.ofInvalid(List.of("Failed to parse JSON: " + e.getMessage()));
         }
     }
 

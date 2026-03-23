@@ -134,6 +134,8 @@
         <module>tshepo-audit-service</module>
         <module>tshepo-keys-service</module>
         <module>tshepo-offline-service</module>
+        <!-- Security Baseline (must build before shared-core) -->
+        <module>../libs/security-baseline</module>
         <!-- TSHEPO shared libraries (under libs/) -->
         <module>../libs/tshepo-contracts</module>
         <module>../libs/tshepo-sdk</module>
@@ -262,6 +264,13 @@
                 <groupId>com.google.protobuf</groupId>
                 <artifactId>protobuf-java</artifactId>
                 <version>${protobuf.version}</version>
+            </dependency>
+
+            <!-- Security Baseline -->
+            <dependency>
+                <groupId>zw.gov.mohcc.impilo</groupId>
+                <artifactId>security-baseline</artifactId>
+                <version>${project.version}</version>
             </dependency>
 
             <!-- TSHEPO shared libraries -->

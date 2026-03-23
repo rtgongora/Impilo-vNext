@@ -203,9 +203,9 @@ class SchemaCompatibilityValidatorTest {
     @Test
     @DisplayName("CompatibilityResult.summary() describes outcome")
     void summaryMessages() {
-        assertThat(CompatibilityResult.compatible().summary()).isEqualTo("COMPATIBLE");
+        assertThat(CompatibilityResult.ofCompatible().summary()).isEqualTo("COMPATIBLE");
 
-        CompatibilityResult bad = CompatibilityResult.incompatible(List.of("field removed"));
+        CompatibilityResult bad = CompatibilityResult.ofIncompatible(List.of("field removed"));
         assertThat(bad.summary()).startsWith("INCOMPATIBLE:");
     }
 }

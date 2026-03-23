@@ -8,6 +8,9 @@ RUN npm install --legacy-peer-deps
 # Copy source
 COPY . .
 
+# Ensure public dir exists (Next.js requires it even if empty)
+RUN mkdir -p public
+
 # Build
 RUN npm run build
 

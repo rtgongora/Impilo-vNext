@@ -1,19 +1,9 @@
-FROM eclipse-temurin:21-jdk-alpine AS build
-
-WORKDIR /build
-COPY pom.xml .
-COPY ../pom.xml ../pom.xml
-COPY src ./src
-
-RUN --mount=type=cache,target=/root/.m2 \
-    mvn -f pom.xml package -DskipTests -q
-
-FROM eclipse-temurin:21-jre-alpine AS runtime
+FROM eclipse-temurin:21-jre-alpine
 
 RUN addgroup -S impilo && adduser -S impilo -G impilo
 
 WORKDIR /app
-COPY --from=build /build/target/tshepo-audit-service-*.jar app.jar
+COPY target/tshepo-audit-service-*.jar app.jar
 
 RUN chown -R impilo:impilo /app
 USER impilo

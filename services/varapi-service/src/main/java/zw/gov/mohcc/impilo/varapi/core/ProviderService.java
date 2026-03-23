@@ -138,6 +138,17 @@ public class ProviderService {
         return provider;
     }
 
+    @Transactional(readOnly = true)
+    public ProviderEntity findByActorId(String actorId) {
+        try {
+            UUID providerRef = UUID.fromString(actorId);
+            return providerRepository.findByProviderRef(providerRef)
+                    .orElseThrow(() -> new IllegalArgumentException("Provider not found for actorId: " + actorId));
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Provider not found for actorId: " + actorId);
+        }
+    }
+
     /**
      * Retrieve a provider with all associated detail records.
      *

@@ -37,7 +37,17 @@ public class ReconciliationController {
         var ctx = TrustContextHolder.require();
         String correlationId = ctx.correlationId().toString();
 
-        Object result = reconciliationService.importStatement(ctx.tenantId(), lines);
+        List<java.util.Map<String, String>> linesMapped = lines.stream()
+                .map(l -> {
+                    java.util.Map<String, String> m = new java.util.LinkedHashMap<>();
+                    m.put("statementRef", l.statementRef());
+                    m.put("statementDate", l.statementDate() != null ? l.statementDate().toString() : null);
+                    m.put("amount", l.amount() != null ? l.amount().toPlainString() : null);
+                    m.put("currency", l.currency());
+                    m.put("counterparty", l.counterparty());
+                    return m;
+                }).toList();
+        Object result = reconciliationService.importStatement(ctx.tenantId(), linesMapped);
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok(result, correlationId));
@@ -51,10 +61,12 @@ public class ReconciliationController {
         String correlationId = ctx.correlationId().toString();
 
         Pageable pageable = PageRequest.of(page, size);
-        Page<Object> result = reconciliationService.getUnmatched(ctx.tenantId(), pageable);
+        Page<?> result = reconciliationService.getUnmatched(ctx.tenantId(), pageable);
 
+        @SuppressWarnings("unchecked")
+        List<Object> content = (List<Object>) (List<?>) result.getContent();
         PagedResponse<Object> paged = PagedResponse.of(
-                result.getContent(), page, size, result.getTotalElements());
+                content, page, size, result.getTotalElements());
 
         return ResponseEntity.ok(ApiResponse.ok(paged, correlationId));
     }

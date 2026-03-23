@@ -66,7 +66,7 @@ class OfflineVitalsWorkflowTest {
                     .thenAnswer(inv -> inv.getArgument(0));
 
             IssueEntitlementRequest request = new IssueEntitlementRequest(
-                    "actor-1", "facility-abc", "CAPTURE_VITALS", null);
+                    "actor-1", "facility-abc", "CAPTURE_VITALS", null, null, null);
 
             UUID tenantId = UUID.randomUUID();
             EntitlementEntity result = service.issueEntitlement(

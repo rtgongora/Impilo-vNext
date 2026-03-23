@@ -1,5 +1,7 @@
 package zw.gov.mohcc.impilo.cardprint.scheduler;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -19,11 +21,14 @@ public class OutboxPublisher {
 
     private final EventOutboxRepository eventOutboxRepository;
     private final KafkaTemplate<String, String> kafkaTemplate;
+    private final ObjectMapper objectMapper;
 
     public OutboxPublisher(EventOutboxRepository eventOutboxRepository,
-                           KafkaTemplate<String, String> kafkaTemplate) {
+                           KafkaTemplate<String, String> kafkaTemplate,
+                           ObjectMapper objectMapper) {
         this.eventOutboxRepository = eventOutboxRepository;
         this.kafkaTemplate = kafkaTemplate;
+        this.objectMapper = objectMapper;
     }
 
     @Scheduled(fixedDelayString = "${card-print.outbox.poll-interval-ms:3000}")
@@ -37,11 +42,16 @@ public class OutboxPublisher {
         for (EventOutboxEntity event : events) {
             try {
                 String topic = event.getEventType();
-                kafkaTemplate.send(topic, event.getAggregateId(), event.getPayload());
+                String payloadJson = objectMapper.writeValueAsString(event.getPayload());
+                kafkaTemplate.send(topic, event.getAggregateId(), payloadJson);
                 event.setPublishedAt(OffsetDateTime.now());
                 eventOutboxRepository.save(event);
                 log.debug("Published outbox event: id={}, type={}, topic={}",
                         event.getId(), event.getEventType(), topic);
+            } catch (JsonProcessingException e) {
+                log.error("Failed to serialize outbox event payload: id={}, type={}",
+                        event.getId(), event.getEventType(), e);
+                break;
             } catch (Exception e) {
                 log.error("Failed to publish outbox event: id={}, type={}",
                         event.getId(), event.getEventType(), e);

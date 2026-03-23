@@ -248,7 +248,7 @@ public class NdrController {
                                                   String dataset, String queryType,
                                                   HttpServletRequest httpRequest) {
         try {
-            String principalId = ctx.principal() != null ? ctx.principal() : "anonymous";
+            String principalId = ctx.principal() != null ? ctx.principal().getName() : "anonymous";
             DecisionResult decision = governanceClient.decide(
                     principalId, dataset, purposeOfUse,
                     ctx.tenantId(), ctx.podId(), ctx.correlationId());
@@ -287,18 +287,19 @@ public class NdrController {
 
     private void publishAuditOutboxEvent(QueryAuditEntity audit, UUID tenantId, RequestContext ctx) {
         try {
-            String payloadJson = objectMapper.writeValueAsString(Map.of(
-                    "audit_id", audit.getAuditId().toString(),
-                    "tenant_id", tenantId.toString(),
-                    "principal_id", audit.getPrincipalId(),
-                    "dataset", audit.getDataset(),
-                    "purpose_of_use", audit.getPurposeOfUse(),
-                    "decision", audit.getDecision(),
-                    "reason_codes_json", audit.getReasonCodesJson() != null ? audit.getReasonCodesJson() : "",
-                    "policy_version", audit.getPolicyVersion() != null ? audit.getPolicyVersion() : "",
-                    "query_type", audit.getQueryType() != null ? audit.getQueryType() : "",
-                    "correlation_id", audit.getCorrelationId() != null ? audit.getCorrelationId() : "",
-                    "decided_at", audit.getDecidedAt().toString()));
+            java.util.LinkedHashMap<String, Object> auditPayload = new java.util.LinkedHashMap<>();
+            auditPayload.put("audit_id", audit.getAuditId().toString());
+            auditPayload.put("tenant_id", tenantId.toString());
+            auditPayload.put("principal_id", audit.getPrincipalId());
+            auditPayload.put("dataset", audit.getDataset());
+            auditPayload.put("purpose_of_use", audit.getPurposeOfUse());
+            auditPayload.put("decision", audit.getDecision());
+            auditPayload.put("reason_codes_json", audit.getReasonCodesJson() != null ? audit.getReasonCodesJson() : "");
+            auditPayload.put("policy_version", audit.getPolicyVersion() != null ? audit.getPolicyVersion() : "");
+            auditPayload.put("query_type", audit.getQueryType() != null ? audit.getQueryType() : "");
+            auditPayload.put("correlation_id", audit.getCorrelationId() != null ? audit.getCorrelationId() : "");
+            auditPayload.put("decided_at", audit.getDecidedAt().toString());
+            String payloadJson = objectMapper.writeValueAsString(auditPayload);
 
             OutboxEventEntity outbox = new OutboxEventEntity();
             outbox.setAggregateType("query-audit");

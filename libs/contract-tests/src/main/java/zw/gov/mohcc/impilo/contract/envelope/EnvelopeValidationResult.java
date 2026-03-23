@@ -14,11 +14,11 @@ public record EnvelopeValidationResult(boolean valid, List<String> violations) {
         violations = violations != null ? List.copyOf(violations) : List.of();
     }
 
-    public static EnvelopeValidationResult valid() {
+    public static EnvelopeValidationResult ofValid() {
         return new EnvelopeValidationResult(true, List.of());
     }
 
-    public static EnvelopeValidationResult invalid(List<String> violations) {
+    public static EnvelopeValidationResult ofInvalid(List<String> violations) {
         return new EnvelopeValidationResult(false, violations);
     }
 

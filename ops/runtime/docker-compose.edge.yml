@@ -10,7 +10,7 @@
 services:
 
   opa:
-    image: openpolicyagent/opa:0.68.0
+    image: openpolicyagent/opa:0.68.0-debug
     container_name: impilo-opa
     command:
       - "run"

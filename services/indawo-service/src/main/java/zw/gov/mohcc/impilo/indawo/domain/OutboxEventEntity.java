@@ -71,7 +71,7 @@ public class OutboxEventEntity {
     @Column(name = "partition_key", length = 255)
     private String partitionKey;
 
-    protected OutboxEventEntity() {}
+    public OutboxEventEntity() {}
 
     // Getters
     public Long getId() { return id; }

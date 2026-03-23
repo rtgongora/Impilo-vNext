@@ -61,15 +61,19 @@ public class SignalController {
                             ctx.requestId(), ctx.correlationId()));
         }
 
+        UUID correlationId = null;
+        try {
+            if (ctx.correlationId() != null) correlationId = UUID.fromString(ctx.correlationId());
+        } catch (IllegalArgumentException ignored) {}
+
         SignalEntity signal = signalService.createSignal(
                 UUID.fromString(ctx.tenantId()),
-                ctx.podId(),
-                ctx.correlationId(),
+                ctx.principal() != null ? ctx.principal().getName() : ctx.podId(),
+                correlationId,
                 request.name(), request.description(),
                 request.eventType(), request.conditionField(),
                 request.threshold(), request.windowHours(),
-                request.severity(),
-                idempotencyKey);
+                request.severity());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(signal);
     }

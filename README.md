@@ -28,7 +28,7 @@ Six architectural planes:
 
 ```bash
 # 1. Copy environment file
-cp .env.example .env
+cp .env .env
 
 # 2. Start infrastructure
 docker compose up -d

@@ -37,6 +37,21 @@ public class OutboxPublisher extends CompanionOutboxPublisher {
         log.info("MsikaOutboxPublisher initialized with emit-mode={}", effectiveEmitMode());
     }
 
+    public OutboxPublisher(EventOutboxRepository outboxRepository,
+                           KafkaTemplate<String, String> kafkaTemplate) {
+        this(outboxRepository, kafkaTemplate, null);
+    }
+
+    public String resolveTopic(String eventType) {
+        if (eventType == null) return "msika.core.events";
+        return switch (eventType) {
+            case "CATALOG_PUBLISHED", "CATALOG_APPROVED" -> "msika.core.catalog.published";
+            case "ITEM_CREATED", "ITEM_UPDATED", "ITEM_DELETED" -> "msika.core.item.changed";
+            case "MAPPING_APPROVED" -> "msika.core.mapping.approved";
+            default -> "msika.core.events";
+        };
+    }
+
     @Scheduled(fixedDelayString = "${msika.outbox.poll-interval-ms:2000}")
     @Transactional
     public void poll() {

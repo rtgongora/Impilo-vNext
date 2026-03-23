@@ -47,9 +47,9 @@ public final class SchemaCompatibilityValidator {
         checkRequiredFields(existing, proposed, "", violations);
 
         if (violations.isEmpty()) {
-            return CompatibilityResult.compatible();
+            return CompatibilityResult.ofCompatible();
         }
-        return CompatibilityResult.incompatible(violations);
+        return CompatibilityResult.ofIncompatible(violations);
     }
 
     /**
@@ -61,7 +61,7 @@ public final class SchemaCompatibilityValidator {
             JsonNode proposed = MAPPER.readTree(proposedJson);
             return checkBackwardCompatibility(existing, proposed);
         } catch (Exception e) {
-            return CompatibilityResult.incompatible(List.of("Failed to parse schema JSON: " + e.getMessage()));
+            return CompatibilityResult.ofIncompatible(List.of("Failed to parse schema JSON: " + e.getMessage()));
         }
     }
 

@@ -185,9 +185,10 @@ public class AdmissionWorkflow {
         admission = admissionRepository.save(admission);
 
         // Transition journey to ADMITTED
-        JourneyEntity journey = journeyRepository.findByJourneyId(admission.getJourneyId())
+        final AdmissionEntity savedAdmission = admission;
+        JourneyEntity journey = journeyRepository.findByJourneyId(savedAdmission.getJourneyId())
                 .orElseThrow(() -> new IllegalStateException(
-                        "Journey not found for admission: " + admission.getJourneyId()));
+                        "Journey not found for admission: " + savedAdmission.getJourneyId()));
         journeyStateMachine.transition(journey, JourneyState.ADMITTED);
 
         // Outbox event

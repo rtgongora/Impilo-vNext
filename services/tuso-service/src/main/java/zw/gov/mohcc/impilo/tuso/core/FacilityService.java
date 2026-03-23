@@ -30,6 +30,7 @@ import zw.gov.mohcc.impilo.tuso.persistence.repository.WorkspaceRepository;
 import java.time.LocalDate;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -121,7 +122,7 @@ public class FacilityService {
         if (dto.identifiers() != null) {
             for (IdentifierData ident : dto.identifiers()) {
                 FacilityIdentifierEntity identEntity = new FacilityIdentifierEntity();
-                identEntity.setFacilityId(facilityId);
+                identEntity.setFacility(facility);
                 identEntity.setSystem(ident.system());
                 identEntity.setValue(ident.value());
                 identEntity.setActive(true);
@@ -133,7 +134,7 @@ public class FacilityService {
         if (dto.contacts() != null) {
             for (ContactData contact : dto.contacts()) {
                 FacilityContactEntity contactEntity = new FacilityContactEntity();
-                contactEntity.setFacilityId(facilityId);
+                contactEntity.setFacility(facility);
                 contactEntity.setContactType(contact.contactType());
                 contactEntity.setName(contact.name());
                 contactEntity.setPhone(contact.phone());
@@ -147,7 +148,7 @@ public class FacilityService {
         if (dto.geo() != null) {
             GeoData geo = dto.geo();
             FacilityGeoEntity geoEntity = new FacilityGeoEntity();
-            geoEntity.setFacilityId(facilityId);
+            geoEntity.setFacility(facility);
             geoEntity.setAddressLine1(geo.addressLine1());
             geoEntity.setAddressLine2(geo.addressLine2());
             geoEntity.setCity(geo.city());
@@ -165,7 +166,7 @@ public class FacilityService {
         if (dto.capabilities() != null) {
             for (CapabilityData cap : dto.capabilities()) {
                 FacilityCapabilityEntity capEntity = new FacilityCapabilityEntity();
-                capEntity.setFacilityId(facilityId);
+                capEntity.setFacility(facility);
                 capEntity.setTenantId(tenantId);
                 capEntity.setCapabilityCode(cap.capabilityCode());
                 capEntity.setCapabilityType(cap.capabilityType());
@@ -181,7 +182,7 @@ public class FacilityService {
         if (dto.readiness() != null) {
             ReadinessData r = dto.readiness();
             FacilityReadinessEntity readinessEntity = new FacilityReadinessEntity();
-            readinessEntity.setFacilityId(facilityId);
+            readinessEntity.setFacility(facility);
             readinessEntity.setConnectivity(r.connectivity());
             readinessEntity.setPowerSource(r.powerSource());
             readinessEntity.setPowerBackup(r.powerBackup() != null && r.powerBackup());
@@ -446,7 +447,7 @@ public class FacilityService {
     private void recordHistory(Long facilityId, String changeType, String fieldName,
                                 String oldValue, String newValue, String changedBy, String reason) {
         FacilityHistoryEntity history = new FacilityHistoryEntity();
-        history.setFacilityId(facilityId);
+        history.setFacility(facilityRepository.getReferenceById(facilityId));
         history.setChangeType(changeType);
         history.setFieldName(fieldName);
         history.setOldValue(oldValue);
@@ -522,12 +523,12 @@ public class FacilityService {
 
     public record CapabilityData(
             String capabilityCode, String capabilityType, String name,
-            String operatingHours, String metadata
+            Map<String, Object> operatingHours, Map<String, Object> metadata
     ) {}
 
     public record ReadinessData(
             String connectivity, String powerSource, Boolean powerBackup,
-            Integer deviceCount, Boolean ehrReady, String complianceFlags
+            Integer deviceCount, Boolean ehrReady, Map<String, Object> complianceFlags
     ) {}
 
     public record FacilitySearchFilters(

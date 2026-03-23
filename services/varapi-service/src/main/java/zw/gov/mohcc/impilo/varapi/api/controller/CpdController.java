@@ -53,7 +53,9 @@ public class CpdController {
         log.info("Creating CPD cycle [providerPublicId={}, cycleName={}] correlationId={}",
                 providerPublicId, request.cycleName(), ctx.correlationId());
 
-        CpdCycleEntity cycle = cpdService.createCycle(providerPublicId, request);
+        CpdCycleEntity cycle = cpdService.createCycle(providerPublicId,
+                new CpdService.CreateCpdCycleRequest(request.councilId(), request.cycleName(),
+                        request.startDate(), request.endDate(), request.requiredPoints()));
         CpdSummaryResponse response = toCpdSummaryResponse(cycle);
 
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -70,7 +72,10 @@ public class CpdController {
         log.info("Recording CPD event [providerPublicId={}, cycleId={}, type={}] correlationId={}",
                 providerPublicId, cycleId, request.eventType(), ctx.correlationId());
 
-        CpdEventEntity event = cpdService.recordEvent(providerPublicId, cycleId, request);
+        CpdEventEntity event = cpdService.recordEvent(cycleId,
+                new CpdService.RecordCpdEventRequest(request.eventType(), request.title(),
+                        request.description(), request.pointsAwarded(), request.eventDate(),
+                        request.externalRef()));
         CpdEventDto response = toCpdEventDto(event);
 
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -86,7 +91,7 @@ public class CpdController {
         log.info("Verifying CPD event [providerPublicId={}, eventId={}] correlationId={}",
                 providerPublicId, eventId, ctx.correlationId());
 
-        CpdEventEntity event = cpdService.verifyEvent(providerPublicId, eventId);
+        CpdEventEntity event = cpdService.verifyCpdEvent(eventId);
         CpdEventDto response = toCpdEventDto(event);
 
         return ResponseEntity.ok(ApiResponse.ok(response, ctx.correlationId().toString()));
@@ -100,7 +105,11 @@ public class CpdController {
         log.info("Fetching CPD summary [providerPublicId={}] correlationId={}",
                 providerPublicId, ctx.correlationId());
 
-        CpdSummaryResponse response = cpdService.getCpdSummary(providerPublicId);
+        CpdService.CpdSummary summary = cpdService.getCpdSummary(providerPublicId);
+        CpdSummaryResponse response = summary.currentCycle() != null
+                ? toCpdSummaryResponse(summary.currentCycle())
+                : new CpdSummaryResponse(null, providerPublicId, null, null, null,
+                        summary.requiredPoints(), summary.earnedPoints(), null, summary.requirementMet());
 
         return ResponseEntity.ok(ApiResponse.ok(response, ctx.correlationId().toString()));
     }

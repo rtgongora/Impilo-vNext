@@ -45,6 +45,16 @@ err()    { printf "${RED}[ERROR]${NC} %s\n" "$*" >&2; }
 header() { printf "\n${BOLD}═══ %s ═══${NC}\n\n" "$*"; }
 step()   { printf "${BOLD}── %s ──${NC}\n" "$*"; }
 
+# ── Docker Compose command (plugin or standalone) ────────────────────────────
+if docker compose version &>/dev/null 2>&1; then
+    DC="docker compose"
+elif command -v docker-compose &>/dev/null; then
+    DC="docker-compose"
+else
+    printf "${RED}[ERROR]${NC} Neither 'docker compose' nor 'docker-compose' found\n" >&2
+    exit 1
+fi
+
 # ── Compose file lists per profile ───────────────────────────────────────────
 COMPOSE_INFRA="-f ${RUNTIME_DIR}/docker-compose.infra.yml"
 COMPOSE_SHARED="-f ${RUNTIME_DIR}/docker-compose.shared.yml"
@@ -96,7 +106,7 @@ check_prerequisites() {
         missing=true
     fi
 
-    if ! docker compose version &> /dev/null 2>&1; then
+    if ! $DC version &> /dev/null 2>&1; then
         err "docker compose not found — install Docker Compose v2"
         missing=true
     fi
@@ -169,39 +179,39 @@ cmd_up() {
 
     # Phase 2: Infrastructure
     step "Phase 2: Starting infrastructure (Layer 0)"
-    docker compose ${COMPOSE_INFRA} up -d
+    $DC ${COMPOSE_INFRA} up -d
     info "Waiting for infrastructure readiness..."
-    docker compose ${COMPOSE_INFRA} up -d --wait postgres redis kafka
+    $DC ${COMPOSE_INFRA} up -d --wait postgres redis kafka
 
     # Phase 3: Shared services
     step "Phase 3: Starting shared services (Layer 1)"
-    docker compose ${COMPOSE_INFRA} ${COMPOSE_SHARED} up -d keycloak hapi-fhir
+    $DC ${COMPOSE_INFRA} ${COMPOSE_SHARED} up -d keycloak hapi-fhir
     if [[ "${profile}" != "lite" ]]; then
-        docker compose ${COMPOSE_INFRA} ${COMPOSE_SHARED} up -d orthanc 2>/dev/null || true
+        $DC ${COMPOSE_INFRA} ${COMPOSE_SHARED} up -d orthanc 2>/dev/null || true
     fi
 
     # Phase 4: Edge
     step "Phase 4: Starting edge (Layer 2)"
-    docker compose ${COMPOSE_INFRA} ${COMPOSE_SHARED} ${COMPOSE_EDGE} up -d opa envoy
+    $DC ${COMPOSE_INFRA} ${COMPOSE_SHARED} ${COMPOSE_EDGE} up -d opa envoy
 
     # Phase 5: Kernel (Ring 0 + Ring 1)
     step "Phase 5: Starting kernel services (Layers 3+4)"
-    docker compose ${COMPOSE_INFRA} ${COMPOSE_SHARED} ${COMPOSE_EDGE} ${COMPOSE_KERNEL} up -d
+    $DC ${COMPOSE_INFRA} ${COMPOSE_SHARED} ${COMPOSE_EDGE} ${COMPOSE_KERNEL} up -d
 
     # Phase 6: Operations + Apps (for full profiles)
     step "Phase 6: Starting operations + apps (Layers 5-7)"
     if [[ "${profile}" == "lite" ]]; then
         # Lite: only PCT, OROS, BFF, UI
-        docker compose ${compose_files} up -d pct oros experience-bff 2>/dev/null || true
-        docker compose ${compose_files} up -d experience-ui 2>/dev/null || true
+        $DC ${compose_files} up -d pct oros experience-bff 2>/dev/null || true
+        $DC ${compose_files} up -d experience-ui 2>/dev/null || true
     else
-        docker compose ${compose_files} up -d
+        $DC ${compose_files} up -d
     fi
 
     # Phase 7: Observability (for integration/pilot)
     if [[ "${profile}" == "integration" || "${profile}" == "pilot" ]]; then
         step "Phase 7: Starting observability (Layer 8)"
-        docker compose ${compose_files} up -d prometheus grafana otel-collector jaeger 2>/dev/null || true
+        $DC ${compose_files} up -d prometheus grafana otel-collector jaeger 2>/dev/null || true
     fi
 
     # Phase 8: Readiness
@@ -258,28 +268,28 @@ cmd_down() {
 
     # Stop in reverse layer order
     step "Stopping observability (Layer 8)"
-    docker compose ${COMPOSE_OBS} down 2>/dev/null || true
+    $DC ${COMPOSE_OBS} down 2>/dev/null || true
 
     step "Stopping apps (Layer 7)"
-    docker compose ${COMPOSE_APPS} down 2>/dev/null || true
+    $DC ${COMPOSE_APPS} down 2>/dev/null || true
 
     step "Stopping operations (Layer 5-6)"
-    docker compose ${COMPOSE_OPS} down 2>/dev/null || true
+    $DC ${COMPOSE_OPS} down 2>/dev/null || true
 
     step "Stopping kernel (Layer 3-4)"
-    docker compose ${COMPOSE_KERNEL} down 2>/dev/null || true
+    $DC ${COMPOSE_KERNEL} down 2>/dev/null || true
 
     step "Stopping edge (Layer 2)"
-    docker compose ${COMPOSE_EDGE} down 2>/dev/null || true
+    $DC ${COMPOSE_EDGE} down 2>/dev/null || true
 
     step "Stopping shared (Layer 1)"
-    docker compose ${COMPOSE_SHARED} down 2>/dev/null || true
+    $DC ${COMPOSE_SHARED} down 2>/dev/null || true
 
     step "Stopping infrastructure (Layer 0)"
-    docker compose ${COMPOSE_INFRA} down 2>/dev/null || true
+    $DC ${COMPOSE_INFRA} down 2>/dev/null || true
 
     # Also stop legacy compose if running
-    docker compose ${COMPOSE_LEGACY} down 2>/dev/null || true
+    $DC ${COMPOSE_LEGACY} down 2>/dev/null || true
 
     ok "All platform services stopped"
 }
@@ -303,7 +313,7 @@ cmd_status() {
 
         echo ""
         step "${layer_name}"
-        docker compose ${compose_flag} ps --format "table {{.Name}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null || true
+        $DC ${compose_flag} ps --format "table {{.Name}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null || true
     done
 }
 
@@ -319,12 +329,12 @@ cmd_logs() {
     local all_compose="${COMPOSE_FULL}"
 
     if [[ -n "${service}" ]]; then
-        docker compose ${all_compose} logs -f --tail=50 "${service}" 2>/dev/null || \
-            docker compose ${COMPOSE_LEGACY} logs -f --tail=50 "${service}" 2>/dev/null || \
+        $DC ${all_compose} logs -f --tail=50 "${service}" 2>/dev/null || \
+            $DC ${COMPOSE_LEGACY} logs -f --tail=50 "${service}" 2>/dev/null || \
             err "Service '${service}' not found"
     else
-        docker compose ${all_compose} logs -f --tail=20 2>/dev/null || \
-            docker compose ${COMPOSE_LEGACY} logs -f --tail=20 2>/dev/null || true
+        $DC ${all_compose} logs -f --tail=20 2>/dev/null || \
+            $DC ${COMPOSE_LEGACY} logs -f --tail=20 2>/dev/null || true
     fi
 }
 
@@ -365,15 +375,15 @@ cmd_build() {
     mkdir -p "${PROJECT_ROOT}/vendor/node-cache"
 
     step "Phase 1: Maven build (all backend services)"
-    docker compose -f "${PROJECT_ROOT}/docker-compose.build.yml" run --rm maven-builder
+    $DC -f "${PROJECT_ROOT}/docker-compose.build.yml" run --rm maven-builder
 
     step "Phase 2: UI build (Experience)"
-    docker compose -f "${PROJECT_ROOT}/docker-compose.build.yml" run --rm ui-builder
+    $DC -f "${PROJECT_ROOT}/docker-compose.build.yml" run --rm ui-builder
 
     step "Phase 3: Building Docker images"
     local all_compose
     all_compose=$(get_compose_files "full")
-    docker compose ${all_compose} build
+    $DC ${all_compose} build
 
     ok "Build complete"
 }

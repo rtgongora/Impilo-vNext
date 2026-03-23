@@ -48,6 +48,13 @@ public class ScheduleService {
         this.objectMapper = objectMapper;
     }
 
+    public ScheduleService(ReportScheduleRepository scheduleRepository,
+                           ReportDefinitionService definitionService,
+                           EventOutboxRepository outboxRepository,
+                           ObjectMapper objectMapper) {
+        this(scheduleRepository, definitionService, null, outboxRepository, objectMapper);
+    }
+
     /**
      * Creates a schedule entry for a report. The schedule is persisted and
      * the next run time is computed from the cron expression. The scheduler

@@ -193,9 +193,10 @@ public class QueueEngine {
             }
             case IN_SERVICE -> {
                 item.setServiceStartedAt(OffsetDateTime.now());
-                JourneyEntity journey = journeyRepository.findByJourneyId(item.getJourneyId())
+                final String journeyIdInService = item.getJourneyId();
+                JourneyEntity journey = journeyRepository.findByJourneyId(journeyIdInService)
                         .orElseThrow(() -> new IllegalStateException(
-                                "Journey not found for queue item: " + item.getJourneyId()));
+                                "Journey not found for queue item: " + journeyIdInService));
                 journeyStateMachine.transition(journey, JourneyState.IN_SERVICE);
             }
             case COMPLETED -> {
@@ -203,16 +204,18 @@ public class QueueEngine {
             }
             case NO_SHOW -> {
                 item.setCompletedAt(OffsetDateTime.now());
-                JourneyEntity journey = journeyRepository.findByJourneyId(item.getJourneyId())
+                final String journeyIdNoShow = item.getJourneyId();
+                JourneyEntity journey = journeyRepository.findByJourneyId(journeyIdNoShow)
                         .orElseThrow(() -> new IllegalStateException(
-                                "Journey not found for queue item: " + item.getJourneyId()));
+                                "Journey not found for queue item: " + journeyIdNoShow));
                 journeyStateMachine.transition(journey, JourneyState.NO_SHOW);
             }
             case LEFT -> {
                 item.setCompletedAt(OffsetDateTime.now());
-                JourneyEntity journey = journeyRepository.findByJourneyId(item.getJourneyId())
+                final String journeyIdLeft = item.getJourneyId();
+                JourneyEntity journey = journeyRepository.findByJourneyId(journeyIdLeft)
                         .orElseThrow(() -> new IllegalStateException(
-                                "Journey not found for queue item: " + item.getJourneyId()));
+                                "Journey not found for queue item: " + journeyIdLeft));
                 journeyStateMachine.transition(journey, JourneyState.LEFT_WITHOUT_BEING_SEEN);
             }
             default -> { /* WAITING, TRANSFERRED — no special timestamp logic */ }

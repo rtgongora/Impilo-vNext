@@ -47,7 +47,7 @@ public class OutboxPublisher {
         }
     }
 
-    static String routeTopic(String eventType) {
+    public static String routeTopic(String eventType) {
         return switch (eventType) {
             case "INTENT_CREATED" -> "mushex.payment.intent.created";
             case "STATUS_CHANGED" -> "mushex.payment.status.changed";

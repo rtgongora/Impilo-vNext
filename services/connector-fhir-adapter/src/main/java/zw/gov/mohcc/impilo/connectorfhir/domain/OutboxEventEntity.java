@@ -27,7 +27,7 @@ public class OutboxEventEntity {
     @Column(name = "created_at", nullable = false) private OffsetDateTime createdAt = OffsetDateTime.now();
     @Column(name = "published_at") private OffsetDateTime publishedAt;
 
-    protected OutboxEventEntity() {}
+    public OutboxEventEntity() {}
 
     public Long getId() { return id; }
     public UUID getEventId() { return eventId; }

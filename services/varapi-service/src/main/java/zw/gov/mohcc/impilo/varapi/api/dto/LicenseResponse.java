@@ -7,6 +7,7 @@ public record LicenseResponse(
         Long id,
         String providerPublicId,
         Long councilId,
+        String councilName,
         String licenseType,
         String licenseNumber,
         String status,
@@ -15,5 +16,11 @@ public record LicenseResponse(
         String conditions,
         String issuedBy,
         Instant issuedAt,
-        Instant createdAt
+        Instant suspendedAt,
+        String suspensionReason,
+        Instant revokedAt,
+        String revocationReason,
+        Integer version,
+        Instant createdAt,
+        Instant updatedAt
 ) {}

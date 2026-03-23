@@ -135,7 +135,7 @@ public class SettlementService {
         PayoutBatchEntity batch = new PayoutBatchEntity();
         batch.setBatchId(UlidGenerator.generate());
         batch.setSettlementId(settlement.getSettlementId());
-        batch.setAdapterType(AdapterType.BANK_TRANSFER.name());
+        batch.setAdapterType(AdapterType.BANK_TRANSFER);
         batch.setStatus(PayoutStatus.PENDING);
         batch = batchRepository.save(batch);
 

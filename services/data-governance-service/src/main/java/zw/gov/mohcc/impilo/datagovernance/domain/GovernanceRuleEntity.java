@@ -49,7 +49,7 @@ public class GovernanceRuleEntity {
     @Column(name = "updated_at", nullable = false)
     private OffsetDateTime updatedAt = OffsetDateTime.now();
 
-    protected GovernanceRuleEntity() {}
+    public GovernanceRuleEntity() {}
 
     public UUID getRuleId() { return ruleId; }
     public void setRuleId(UUID ruleId) { this.ruleId = ruleId; }

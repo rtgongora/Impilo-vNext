@@ -25,4 +25,7 @@ public interface PaymentIntentRepository extends JpaRepository<PaymentIntentEnti
     long countBySourceTypeAndSourceIdAndStatus(SourceType sourceType, String sourceId, IntentStatus status);
 
     long countByTenantIdAndFacilityIdAndCreatedAtAfter(UUID tenantId, UUID facilityId, OffsetDateTime after);
+
+    List<PaymentIntentEntity> findByTenantIdAndStatusAndCreatedAtBetween(
+            UUID tenantId, IntentStatus status, OffsetDateTime from, OffsetDateTime to);
 }

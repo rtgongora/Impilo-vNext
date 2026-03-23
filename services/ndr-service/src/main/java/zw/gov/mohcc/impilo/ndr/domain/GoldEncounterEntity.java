@@ -40,7 +40,7 @@ public class GoldEncounterEntity {
     @Column(name = "updated_at", nullable = false)
     private OffsetDateTime updatedAt = OffsetDateTime.now();
 
-    protected GoldEncounterEntity() {}
+    public GoldEncounterEntity() {}
 
     public UUID getEncounterId() { return encounterId; }
     public UUID getTenantId() { return tenantId; }
