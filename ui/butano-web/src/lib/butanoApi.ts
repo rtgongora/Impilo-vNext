@@ -116,6 +116,15 @@ export const butanoApi = {
   getReconciliationStatus: (id: string) =>
     apiClient.get<ReconciliationStatus>(`${V1}/internal/reconciliation/${encodeURIComponent(id)}`),
 
+  listReconciliationJobs: (params?: { page?: number; size?: number }) => {
+    const qs = new URLSearchParams();
+    qs.set("page", String(params?.page ?? 0));
+    qs.set("size", String(params?.size ?? 20));
+    return apiClient.get<{ content: ReconciliationStatus[]; totalElements: number; totalPages: number }>(
+      `${V1}/internal/reconciliation?${qs.toString()}`
+    );
+  },
+
   // Ops
   getTenantHealth: () =>
     apiClient.get<TenantInfo[]>(`${V1}/internal/health/tenants`),

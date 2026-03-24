@@ -51,7 +51,61 @@ export interface ValidationResult {
   }>;
 }
 
+export interface CatalogItem {
+  itemId: string;
+  catalogId: string;
+  canonicalCode: string;
+  displayName: string;
+  description: string;
+  kind: string;
+  category: string;
+  price: number;
+  currency: string;
+  available: boolean;
+}
+
+export interface PagedCatalogResponse {
+  content: CatalogItem[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+}
+
+export interface SubstitutionRequest {
+  id: string;
+  orderId: string;
+  originalLineId: string;
+  originalCode: string;
+  originalName: string;
+  proposedCode: string;
+  proposedName: string;
+  reason: string;
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  proposedBy: string;
+  createdAt: string;
+}
+
 export const msikaFlowApi = {
+  // Catalog browse
+  searchCatalog: (params?: { q?: string; kind?: string; page?: number; size?: number }) => {
+    const qs = new URLSearchParams();
+    if (params?.q) qs.set("q", params.q);
+    if (params?.kind) qs.set("kind", params.kind);
+    qs.set("page", String(params?.page ?? 0));
+    qs.set("size", String(params?.size ?? 20));
+    return apiClient.get<PagedCatalogResponse>(`${V1}/catalog/search?${qs.toString()}`);
+  },
+
+  // Substitutions
+  listSubstitutions: (status?: string) => {
+    const qs = status ? `?status=${status}` : "";
+    return apiClient.get<SubstitutionRequest[]>(`${V1}/rx/substitutions${qs}`);
+  },
+
+  rejectSubstitution: (orderId: string, lineId: string, reason?: string) =>
+    apiClient.post<OrderLine>(`${V1}/rx/${encodeURIComponent(orderId)}/substitution/reject`, { lineId, reason }),
+
   // Cart validation
   validateCart: (items: Array<{ msikaCoreCode: string; qty: number }>, channel?: string) =>
     apiClient.post<ValidationResult>(`${V1}/cart/validate`, { items, channel: channel ?? "portal" }),
