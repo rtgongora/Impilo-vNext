@@ -3,9 +3,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { butanoApi, type ReconciliationStatus } from "@/lib/butanoApi";
 
-/**
- * Status badge styling for reconciliation jobs.
- */
 const STATUS_STYLES: Record<string, string> = {
   PENDING: "bg-info/10 text-info",
   IN_PROGRESS: "bg-warning/10 text-warning",
@@ -13,61 +10,32 @@ const STATUS_STYLES: Record<string, string> = {
   FAILED: "bg-danger/10 text-danger",
 };
 
-/**
- * Reconciliation Queue — shows all reconciliation jobs with auto-refresh
- * for in-progress items.
- *
- * NOTE: In production, this would paginate through a list endpoint.
- * For now, the page polls individual known job IDs from local state.
- * The initial list comes from a hypothetical list endpoint; here we
- * use a mock array that gets populated via the trigger page.
- */
 export default function ReconciliationQueuePage() {
   const [jobs, setJobs] = useState<ReconciliationStatus[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
 
-  const loadJobs = useCallback(async () => {
+  const loadJobs = useCallback(async (p = 0) => {
     try {
-      // If we have known job IDs, refresh their statuses
-      if (jobs.length > 0) {
-        const updated = await Promise.all(
-          jobs.map(async (job) => {
-            try {
-              return await butanoApi.getReconciliationStatus(job.id);
-            } catch {
-              return job; // Keep stale data on error
-            }
-          }),
-        );
-        setJobs(updated);
-      }
+      setError(null);
+      const data = await butanoApi.listReconciliationJobs({ page: p, size: 20 });
+      setJobs(data.content);
+      setTotalPages(data.totalPages);
+      setTotalElements(data.totalElements);
+      setPage(p);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to refresh jobs");
+      setError(err instanceof Error ? err.message : "Failed to load reconciliation jobs");
     } finally {
       setLoading(false);
     }
-  }, [jobs]);
-
-  // Load from sessionStorage on mount (jobs added by trigger page)
-  useEffect(() => {
-    try {
-      const stored = sessionStorage.getItem("butano_reconciliation_jobs");
-      if (stored) {
-        setJobs(JSON.parse(stored));
-      }
-    } catch {
-      // Ignore parse errors
-    }
-    setLoading(false);
   }, []);
 
-  // Persist jobs to sessionStorage whenever they change
   useEffect(() => {
-    if (jobs.length > 0) {
-      sessionStorage.setItem("butano_reconciliation_jobs", JSON.stringify(jobs));
-    }
-  }, [jobs]);
+    loadJobs(0);
+  }, [loadJobs]);
 
   // Auto-refresh every 10 seconds if any jobs are in progress
   useEffect(() => {
@@ -76,19 +44,27 @@ export default function ReconciliationQueuePage() {
     );
     if (!hasInProgress) return;
 
-    const interval = setInterval(loadJobs, 10_000);
+    const interval = setInterval(() => loadJobs(page), 10_000);
     return () => clearInterval(interval);
-  }, [jobs, loadJobs]);
+  }, [jobs, loadJobs, page]);
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-8">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-neutral-900">
-          Reconciliation Queue
-        </h1>
-        <p className="text-sm text-neutral-500 mt-1">
-          Monitor CPID reconciliation jobs. In-progress items auto-refresh every 10 seconds.
-        </p>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-semibold text-neutral-900">
+            Reconciliation Queue
+          </h1>
+          <p className="text-sm text-neutral-500 mt-1">
+            Monitor CPID reconciliation jobs. In-progress items auto-refresh every 10 seconds.
+            {totalElements > 0 && (
+              <span className="ml-2 text-neutral-400">({totalElements} total)</span>
+            )}
+          </p>
+        </div>
+        <button onClick={() => loadJobs(page)} className="btn-secondary text-sm">
+          Refresh
+        </button>
       </div>
 
       {error && (
@@ -153,6 +129,26 @@ export default function ReconciliationQueuePage() {
           </tbody>
         </table>
       </div>
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 mt-4">
+          <button
+            onClick={() => loadJobs(page - 1)}
+            disabled={page === 0 || loading}
+            className="btn-secondary text-xs px-3 py-1 disabled:opacity-50"
+          >
+            Previous
+          </button>
+          <span className="text-sm text-neutral-500">Page {page + 1} of {totalPages}</span>
+          <button
+            onClick={() => loadJobs(page + 1)}
+            disabled={page >= totalPages - 1 || loading}
+            className="btn-secondary text-xs px-3 py-1 disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
+      )}
 
       {jobs.some((j) => j.status === "PENDING" || j.status === "IN_PROGRESS") && (
         <p className="text-xs text-neutral-400 mt-3 text-center">
