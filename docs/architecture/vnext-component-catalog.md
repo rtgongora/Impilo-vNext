@@ -186,51 +186,51 @@ All UIs use **Next.js 14.2.x**, **TypeScript 5.5**, **TailwindCSS 3.4**, **Radix
 | 1 | **one-ui-shell** | 3000 | Primary UI shell — 3-zone layout (Work/Pro/Life), trust header injection, module federation host | Envoy Gateway → all services |
 | 2 | **ops-console** | 3001 | Operations console — system administration, monitoring, configuration | TSHEPO, TUSO, all registries |
 | 3 | **portal** | 3003 | Citizen-facing portal — self-service, health records, appointments | VITO, PCT, BUTANO, MUSHEX |
-| 4 | **self-service** | — | Patient self-service kiosk / registration | VITO, TSHEPO, PCT |
+| 4 | **self-service** | 3005 | Patient self-service kiosk / registration | VITO, TSHEPO, PCT |
 
 ### 2.2 Clinical UIs
 
 | # | App | Port | Purpose | Backend Dependencies |
 |---|-----|------|---------|---------------------|
 | 5 | **ehr** | 3002 | Electronic Health Record — clinical workspace | PCT, OROS, BUTANO, VITO, ZIBO |
-| 6 | **pct-web** | — | Patient Care Tracker UI — queues, triage, encounters | PCT service |
-| 7 | **oros-web** | — | Orders & Results UI — worklists, order entry | OROS service |
-| 8 | **pharmacy-web** | — | Pharmacy UI — dispensing, stock, prescriptions | Pharmacy service, OROS |
+| 6 | **pct-web** | 3021 | Patient Care Tracker UI — queues, triage, encounters | PCT service |
+| 7 | **oros-web** | 3009 | Orders & Results UI — worklists, order entry | OROS service |
+| 8 | **pharmacy-web** | 3010 | Pharmacy UI — dispensing, stock, prescriptions | Pharmacy service, OROS |
 
 ### 2.3 Supply & Marketplace UIs
 
 | # | App | Port | Purpose | Backend Dependencies |
 |---|-----|------|---------|---------------------|
-| 9 | **inventory-web** | — | Inventory management UI — stock, requisitions | Inventory service |
-| 10 | **msika-web** | — | Product registry management UI | MSIKA service |
-| 11 | **msika-flow-ops** | — | Marketplace operations (admin) | MSIKA Flow service |
-| 12 | **msika-flow-portal** | — | Marketplace buyer portal | MSIKA Flow service |
-| 13 | **msika-flow-vendor** | — | Marketplace vendor portal | MSIKA Flow service |
+| 9 | **inventory-web** | 3011 | Inventory management UI — stock, requisitions | Inventory service |
+| 10 | **msika-web** | 3012 | Product registry management UI | MSIKA service |
+| 11 | **msika-flow-ops** | 3014 | Marketplace operations (admin) | MSIKA Flow service |
+| 12 | **msika-flow-portal** | 3012 | Marketplace buyer portal — catalog, cart, fulfillment | MSIKA Flow service |
+| 13 | **msika-flow-vendor** | 3013 | Marketplace vendor portal — order fulfillment, logistics | MSIKA Flow service |
 
 ### 2.4 Finance UIs
 
 | # | App | Port | Purpose | Backend Dependencies |
 |---|-----|------|---------|---------------------|
-| 14 | **mushex-finance-console** | — | Finance console — payments, settlement, ledger | MUSHEX service |
-| 15 | **mushex-ops-console** | — | Finance operations — claims processing | MUSHEX service |
-| 16 | **mushex-payer-portal** | — | Payer/insurer portal — claims review, benefits | MUSHEX service, Coverage |
+| 14 | **mushex-finance-console** | 3017 | Finance console — payments, settlement, ledger | MUSHEX service |
+| 15 | **mushex-ops-console** | 3018 | Finance operations — claims processing | MUSHEX service |
+| 16 | **mushex-payer-portal** | 3016 | Payer/insurer portal — claims review, benefits | MUSHEX service, Coverage |
 | 17 | **costa-console** | — | Costing console — tariffs, billing, exemptions | Costing Engine service |
 
 ### 2.5 Governance & Terminology UIs
 
 | # | App | Port | Purpose | Backend Dependencies |
 |---|-----|------|---------|---------------------|
-| 18 | **zibo-web** | — | Terminology management UI — code systems, value sets | ZIBO service |
-| 19 | **butano-web** | — | SHR administration UI — FHIR resource browser | BUTANO / HAPI FHIR |
+| 18 | **zibo-web** | 3008 | Terminology management UI — code systems, value sets, validation | ZIBO service |
+| 19 | **butano-web** | 3006 | SHR administration UI — FHIR bundle browser, IPS, reconciliation | BUTANO / HAPI FHIR |
 
 ### 2.6 Platform & Support UIs
 
 | # | App | Port | Purpose | Backend Dependencies |
 |---|-----|------|---------|---------------------|
-| 20 | **developer-console** | — | Developer portal UI — API keys, sandbox, docs | Developer Portal service |
-| 21 | **support-console** | — | Help desk / support UI — tickets, knowledge base | Support service |
-| 22 | **experience** | 3020 | Experience platform UI — patient engagement | Experience BFF |
-| 23 | **ops-docs** | — | Operations documentation site | Static / Docusaurus |
+| 20 | **developer-console** | 3007 | Developer portal UI — client registration, federation, certification | Developer Portal service |
+| 21 | **support-console** | 3019 | Help desk / support UI — tickets, knowledge base | Support service |
+| 22 | **experience** | 3020 | Unified clinical experience — pharmacy, inventory, EHR workflows | Experience BFF (:8160) |
+| 23 | **ops-docs** | 3004 | Operations documentation & document management console | Landela, CVS, Card Print |
 
 ### 2.7 Shared UI Library
 
@@ -244,17 +244,17 @@ All UIs use **Next.js 14.2.x**, **TypeScript 5.5**, **TailwindCSS 3.4**, **Radix
 
 | # | Library | Language | Purpose | Consumers |
 |---|---------|----------|---------|-----------|
-| 1 | **shared-kernel-java** | Java | Common domain objects, base entities, outbox pattern, trust context filter | All Java backend services |
-| 2 | **shared-kernel** | TypeScript | Shared types, API contracts, utility functions | All UI applications |
-| 3 | **tshepo-contracts** | TypeScript | Trust header contracts, header names, trust types — mirrors `TrustHeaders.java` | UI apps, integration tests |
-| 4 | **tshepo-sdk** | TypeScript | Client SDK for TSHEPO trust services — auth, consent, identity | UI apps, BFF |
-| 5 | **contract-tests** | TypeScript | Pact-style contract test framework for service integration validation | CI/CD pipeline |
-| 6 | **federation-connector** | TypeScript | Federation protocol client — pod-to-pod communication | Federated deployments |
-| 7 | **offline-sdk** | TypeScript | Offline-first SDK — local storage, sync queue, conflict resolution | Offline UIs, edge deployments |
-| 8 | **ops-instrumentation** | TypeScript | OpenTelemetry wrappers, structured logging, metrics helpers | All services/UIs |
-| 9 | **security-baseline** | TypeScript | Security scanning, OWASP checks, CSP headers | CI/CD, all deployments |
-| 10 | **tech-companion** | TypeScript | AI-powered tech companion — clinical decision support | EHR, PCT |
-| 11 | **tech-companion-harness** | TypeScript | Test harness for tech companion | Testing |
+| 1 | **shared-kernel-java** | Java 21 | Manifest v1.1 enforcement — audit ledger, consistency gates, event envelopes, schema validation | All Java backend services |
+| 2 | **shared-kernel** | TypeScript | Compliance primitives for Companion Spec v1.1-canonical | All UI applications |
+| 3 | **tshepo-contracts** | Java (Maven) | Shared DTOs, header constants, enums, protobuf definitions for ext_authz (gRPC 1.65, Protobuf 3.25) | TSHEPO cluster, all services |
+| 4 | **tshepo-sdk** | Java (Maven) | Client SDK for trust context validation, TSHEPO decision endpoint calls, Redis caching | All services, BFF |
+| 5 | **contract-tests** | Java 21 | Schema compatibility & event envelope validation — backward-compatible schema evolution enforcement | CI/CD pipeline |
+| 6 | **federation-connector** | Java (Maven) | Pod-to-spine federation connector with mTLS identity verification, Spring auto-config | Federated deployments |
+| 7 | **offline-sdk** | Java 21 | Offline/edge operations — JWT entitlement verification (Ed25519/RS256), local queue format | Offline Edge, mobile |
+| 8 | **ops-instrumentation** | Java (Maven) | Structured logging MDC, golden-signal metrics, outbox probes, health checks, OpenTelemetry | All services |
+| 9 | **security-baseline** | Java 21 | Input sanitization, token-bucket rate limiting, admin audit emission, secrets provider contract | All services |
+| 10 | **tech-companion** | Java (Maven) | Manifest v1.1 enforcement — RequestContext, header filters, error envelope, idempotency, timeouts | All services |
+| 11 | **tech-companion-harness** | Java (Maven) | Golden contract test suite for v1.1 compliance verification (reusable JUnit 5 test classes) | CI/CD, service tests |
 | 12 | **tech-companion-mock** | TypeScript | Mock server for tech companion development | Development |
 
 ---
@@ -307,7 +307,23 @@ All UIs use **Next.js 14.2.x**, **TypeScript 5.5**, **TailwindCSS 3.4**, **Radix
 | 3001 | ops-console | UI |
 | 3002 | ehr | UI |
 | 3003 | portal | UI |
+| 3004 | ops-docs | UI |
+| 3005 | self-service | UI |
+| 3006 | butano-web | UI |
+| 3007 | developer-console | UI |
+| 3008 | zibo-web | UI |
+| 3009 | oros-web | UI |
+| 3010 | pharmacy-web | UI |
+| 3011 | inventory-web | UI |
+| 3012 | msika-web / msika-flow-portal | UI |
+| 3013 | msika-flow-vendor | UI |
+| 3014 | msika-flow-ops | UI |
+| 3016 | mushex-payer-portal | UI |
+| 3017 | mushex-finance-console | UI |
+| 3018 | mushex-ops-console | UI |
+| 3019 | support-console | UI |
 | 3020 | experience UI | UI |
+| 3021 | pct-web | UI |
 | 4242 | Orthanc DICOM | Infra |
 | 5432 | PostgreSQL | Infra |
 | 6379 | Redis | Infra |
