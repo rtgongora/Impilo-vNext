@@ -74,9 +74,9 @@ Impilo vNext comprises **68 backend services**, **24 UI applications**, and **12
 | 22 | **costing-engine-service** | 8101 | `costing` / `costa_db` | COSTA — billing, tariffs, exemptions, claims packing | TSHEPO, MSIKA, MUSHEX | Implemented |
 | 23 | **pharmacy-service** | 8096 | `pharmacy` | Dispense workflow — stock, FEFO, barcode, pickup proof | TSHEPO, OROS, MUSHEX, MSIKA | Implemented |
 | 24 | **msika-flow-service** | 8100 | `msika_flow` | Health Marketplace — orders, fulfillment, vendor management, booking | TSHEPO, MSIKA, MUSHEX, VARAPI | Implemented |
-| 25 | **inpatient-service** | — | `inpatient` | Bed management, ward allocation | TSHEPO, TUSO, PCT | Skeleton |
-| 26 | **coverage-service** | — | `impilo_coverage` | Insurance/coverage verification, member benefits | TSHEPO, MUSHEX | Implemented |
-| 27 | **indawo-service** | — | `impilo_indawo` | Location/area management for clinical context | TSHEPO, TUSO | Implemented |
+| 25 | **inpatient-service** | 8093 | `inpatient` | Admissions, ward transfers, bed assignments, discharges | TSHEPO, TUSO, PCT | Skeleton |
+| 26 | **coverage-service** | 8140 | `impilo_coverage` | Coverage & eligibility engine, pre-authorization, claims lifecycle | TSHEPO, MUSHEX | Implemented |
+| 27 | **indawo-service** | 8150 | `impilo_indawo` | Location & address registry, geocoding, catchment areas | TSHEPO, TUSO | Implemented |
 
 ---
 
@@ -95,7 +95,7 @@ Impilo vNext comprises **68 backend services**, **24 UI applications**, and **12
 
 | # | Service | Port | Database | Purpose | Status |
 |---|---------|------|----------|---------|--------|
-| 32 | **document-service** | — | `document_service` | MinIO/S3 object storage with AV scan | Implemented |
+| 32 | **document-service** | 8093 | `document_service` | MinIO/S3 document storage, pre-signed URLs, AV scanning | Implemented |
 | 33 | **landela-adapter-service** | 8092 | `landela_adapter` | Document gateway (Landela/MinIO integration) | Implemented |
 | 34 | **credential-verification-service** | 8094 | `credential_verification` | Ed25519 signed PDFs + QR verification | Implemented |
 | 35 | **card-print-agent** | 8091 | `card_print` | Smart card printing agent | Implemented |
@@ -115,12 +115,12 @@ Impilo vNext comprises **68 backend services**, **24 UI applications**, and **12
 
 | # | Service | Port | Database | Purpose | Status |
 |---|---------|------|----------|---------|--------|
-| 42 | **notification-service** | — | `notification` | SMS, email, push notification hub | Skeleton |
-| 43 | **workflow-service** | — | `impilo_workflow` | BPMN/workflow orchestration engine | Skeleton |
-| 44 | **jobs-service** | — | `jobs` | Background job scheduling (cron, batch) | Skeleton |
-| 45 | **dispatch-service** | — | `impilo_dispatch` | Task dispatch and routing | Skeleton |
-| 46 | **rules-service** | — | `impilo_rules` | Business rules engine | Skeleton |
-| 47 | **forms-service** | — | `impilo_forms` | Dynamic form builder and renderer | Skeleton |
+| 42 | **notification-service** | 8111 | `notification` | Multi-channel notification engine (SMS/email/push), template management | Skeleton |
+| 43 | **workflow-service** | 8140 | `impilo_workflow` | Versioned workflow definitions, instance lifecycle, DMN-ish decision surface | Skeleton |
+| 44 | **jobs-service** | 8094 | `jobs` | Job definitions, triggers, execution records, scheduling | Skeleton |
+| 45 | **dispatch-service** | 8320 | `impilo_dispatch` | Supply chain dispatch, delivery tracking, cold-chain compliance | Skeleton |
+| 46 | **rules-service** | 8112 | `impilo_rules` | Lightweight rule evaluation, recursive descent parser, decision logging | Skeleton |
+| 47 | **forms-service** | 8131 | `impilo_forms` | JSON Schema-based form definitions, versioning, payload validation | Skeleton |
 
 #### Data, Analytics & Reporting
 
@@ -132,7 +132,7 @@ Impilo vNext comprises **68 backend services**, **24 UI applications**, and **12
 | 51 | **data-warehouse-service** | 8230 | `impilo_data_warehouse` | Gold dataset materializer — bronze events to analytical datasets | Skeleton |
 | 52 | **data-pipeline-service** | 8140 | `pipeline` | EventEnvelope ingestion, curated pipeline records, watermarks | Skeleton |
 | 53 | **data-ingestion-service** | 8210 | `impilo_data_ingestion` | Facility/external data submission ingestion & routing | Skeleton |
-| 54 | **search-service** | — | `impilo_search` | Full-text search (Elasticsearch/OpenSearch) | Skeleton |
+| 54 | **search-service** | 8132 | `impilo_search` | SQL ILIKE-based entity search & indexing with pagination | Skeleton |
 | 55 | **surveillance-service** | 8180 | `surv` | Disease surveillance (eIDSR) — signal detection, case registry | Skeleton |
 | 56 | **campaigns-service** | 8190 | `camp` | Public health campaign management & outreach | Skeleton |
 
@@ -164,7 +164,7 @@ Impilo vNext comprises **68 backend services**, **24 UI applications**, and **12
 
 | # | Service | Port | Database | Purpose | Status |
 |---|---------|------|----------|---------|--------|
-| 66 | **support-service** | — | `impilo_support` | Help desk, ticketing, knowledge base | Skeleton |
+| 66 | **support-service** | 8340 | `impilo_support` | Help desk, ticketing, incident reports, knowledge articles | Skeleton |
 | 67 | **experience-bff** | 8160 | `experience_bff` | Backend-for-Frontend aggregation layer | Java 21, Spring Boot 3.3 | Implemented |
 
 #### Shared Core
@@ -339,9 +339,10 @@ All UIs use **Next.js 14.2.x**, **TypeScript 5.5**, **TailwindCSS 3.4**, **Radix
 | 8088 | PCT | Ring 1 |
 | 8089 | OROS | Ring 1 |
 | 8090 | HAPI FHIR (BUTANO) | Ring 0 / Infra |
-| 8091 | Card Print Agent | Ring 2 |
+| 8091 | Card Print Agent / BUTANO FHIR | Ring 2 / Ring 0 |
 | 8092 | Landela Adapter / FHIR Gateway | Ring 2 |
-| 8094 | Credential Verification | Ring 2 |
+| 8093 | Inpatient / Document Service | Ring 1 / Ring 2 |
+| 8094 | Credential Verification / Jobs Service | Ring 2 |
 | 8095 | Share Slip / Offline Sync | Ring 2 |
 | 8096 | Pharmacy / PACS Adapter | Ring 1 / Ring 2 |
 | 8097 | Product Registry | Ring 2 |
@@ -350,10 +351,14 @@ All UIs use **Next.js 14.2.x**, **TypeScript 5.5**, **TailwindCSS 3.4**, **Radix
 | 8100 | MSIKA Flow | Ring 1 |
 | 8101 | COSTA (Costing Engine) | Ring 1 |
 | 8110 | Integration Hub | Ring 2 |
+| 8111 | Notification Service | Ring 2 |
+| 8112 | Rules Service | Ring 2 |
 | 8130 | Channels | Ring 2 |
-| 8140 | Data Pipeline | Ring 2 |
-| 8150 | Connector FHIR Adapter / NDR | Ring 2 |
-| 8160 | Experience BFF | Experience |
+| 8131 | Forms Service | Ring 2 |
+| 8132 | Search Service | Ring 2 |
+| 8140 | Data Pipeline / Workflow / Coverage | Ring 2 / Ring 1 |
+| 8150 | Connector FHIR Adapter / NDR / INDAWO | Ring 2 / Ring 1 |
+| 8160 | Experience BFF / Reporting | Experience / Ring 2 |
 | 8170 | Data Access Governance (DAGS) | Ring 2 |
 | 8180 | Surveillance | Ring 2 |
 | 8181 | TSHEPO Identity / OPA | Ring 0 / Infra |
@@ -367,11 +372,14 @@ All UIs use **Next.js 14.2.x**, **TypeScript 5.5**, **TailwindCSS 3.4**, **Radix
 | 8220 | Data Governance / Security Hardening | Ring 2 |
 | 8230 | NDR / Data Warehouse | Ring 2 |
 | 8310 | Asset Registry | Ring 2 |
+| 8320 | Dispatch Service | Ring 2 |
 | 8330 | IoT Ingestion | Ring 2 |
+| 8340 | Support Service | Ring 2 |
 | 8350 | Audit Ledger | Ring 2 |
 | 8360 | Offline Edge | Ring 2 |
 | 8370 | Developer Portal | Ring 0 |
 | 8371 | Schema Registry | Ring 0 |
+| 9090 | TSHEPO Authz (gRPC) | Ring 0 |
 | 9000 | MinIO API | Infra |
 | 9001 | MinIO Console | Infra |
 | 9092 | Kafka | Infra |
