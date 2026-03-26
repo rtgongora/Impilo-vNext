@@ -59,9 +59,9 @@ Impilo vNext comprises **68 backend services**, **24 UI applications**, and **12
 
 | # | Service | Port | Database | Purpose | Tech Stack | Status |
 |---|---------|------|----------|---------|------------|--------|
-| 17 | **schema-registry-service** | — | `impilo_schema_registry` | Event schema governance, compatibility gates, CI validation | Java 21, Spring Boot 3.3, PostgreSQL | Skeleton |
-| 18 | **developer-portal-service** | — | `impilo_dev_portal` | SDKs, sandbox, API keys, documentation, deprecation policy | Java 21, Spring Boot 3.3, PostgreSQL | Skeleton |
-| 19 | **observability-service** | — | `observability` | Prometheus/Grafana/OTel integration, SLO dashboards | Java 21, Spring Boot 3.3, PostgreSQL | Skeleton |
+| 17 | **schema-registry-service** | 8371 | `impilo_schema_registry` | Event schema governance, compatibility gates, CI validation | Java 21, Spring Boot 3.3, PostgreSQL | Skeleton |
+| 18 | **developer-portal-service** | 8370 | `impilo_dev_portal` | Client registration, API key issuance, sandbox, deprecation tracking | Java 21, Spring Boot 3.3, PostgreSQL | Skeleton |
+| 19 | **observability-service** | 8210 | `observability` | Dashboard & alert registry, CRUD, outbox event publishing | Java 21, Spring Boot 3.3, PostgreSQL | Skeleton |
 
 ---
 
@@ -87,9 +87,9 @@ Impilo vNext comprises **68 backend services**, **24 UI applications**, and **12
 | # | Service | Port | Database | Purpose | Status |
 |---|---------|------|----------|---------|--------|
 | 28 | **inventory-service** | 8098 | `inventory` | Supply chain, stock visibility, requisitions, handovers | Implemented |
-| 29 | **inventory-elmis-adapter** | — | `inventory_elmis` | External eLMIS integration bridge | Implemented |
-| 30 | **pharmacy-elmis-adapter** | — | `pharmacy_elmis` | External pharmacy eLMIS integration bridge | Implemented |
-| 31 | **product-registry-service** | — | `product_registry` | Product master data (planned merge into MSIKA) | Implemented |
+| 29 | **inventory-elmis-adapter** | 8098 | `inventory_elmis` | External eLMIS stock sync, receipt forwarding, reconciliation | Implemented |
+| 30 | **pharmacy-elmis-adapter** | 8099 | `pharmacy_elmis` | External pharmacy eLMIS stock sync, order forwarding | Implemented |
+| 31 | **product-registry-service** | 8097 | `product_registry` | Product master data (planned merge into MSIKA) | Implemented |
 
 #### Document & Credential Suite
 
@@ -105,11 +105,11 @@ Impilo vNext comprises **68 backend services**, **24 UI applications**, and **12
 
 | # | Service | Port | Database | Purpose | Status |
 |---|---------|------|----------|---------|--------|
-| 37 | **integration-hub** | — | `integration_hub` | DHIS2, eLMIS, LIMS, iHRIS adapters | Skeleton |
-| 38 | **fhir-gateway-service** | — | `fhir_gateway` | FHIR interoperability gateway | Skeleton |
-| 39 | **connector-fhir-adapter** | — | `impilo_connector_fhir` | FHIR connector/adapter bridge | Skeleton |
-| 40 | **pacs-adapter-service** | — | `pacs` | DICOM/Orthanc PACS integration | Skeleton |
-| 41 | **channels-service** | — | `impilo_channels` | Multi-channel communication (USSD, WhatsApp, etc.) | Skeleton |
+| 37 | **integration-hub** | 8110 | `integration_hub` | DHIS2, eLMIS, LIMS, iHRIS adapters — event routing & dispatch | Skeleton |
+| 38 | **fhir-gateway-service** | 8092 | `fhir_gateway` | FHIR boundary routing & audit gateway | Skeleton |
+| 39 | **connector-fhir-adapter** | 8150 | `impilo_connector_fhir` | FHIR bundle validation, header audit, relay routing | Skeleton |
+| 40 | **pacs-adapter-service** | 8096 | `pacs` | DICOM/Orthanc PACS integration — imaging metadata gateway | Skeleton |
+| 41 | **channels-service** | 8130 | `impilo_channels` | Omnichannel access (USSD, WhatsApp, SMS, IVR), session mgmt | Skeleton |
 
 #### Notifications & Workflow
 
@@ -127,38 +127,38 @@ Impilo vNext comprises **68 backend services**, **24 UI applications**, and **12
 | # | Service | Port | Database | Purpose | Status |
 |---|---------|------|----------|---------|--------|
 | 48 | **reporting-service** | — | `reporting` | BI reports, operational dashboards | Skeleton |
-| 49 | **ndr-service** | — | `ndr` | National Data Repository integration | Skeleton |
-| 50 | **national-data-repository-service** | — | `impilo_ndr` | Extended NDR data pipeline | Skeleton |
-| 51 | **data-warehouse-service** | — | `impilo_data_warehouse` | Data warehouse / OLAP layer | Skeleton |
-| 52 | **data-pipeline-service** | — | `pipeline` | ETL/ELT data pipeline orchestration | Skeleton |
-| 53 | **data-ingestion-service** | — | `impilo_data_ingestion` | Data ingestion from external sources | Skeleton |
+| 49 | **ndr-service** | 8230 | `ndr` | National Data Repository — aggregated de-identified analytics | Skeleton |
+| 50 | **national-data-repository-service** | 8150 | `impilo_ndr` | NDR analytics-ready store — versioned tables, materialized views | Skeleton |
+| 51 | **data-warehouse-service** | 8230 | `impilo_data_warehouse` | Gold dataset materializer — bronze events to analytical datasets | Skeleton |
+| 52 | **data-pipeline-service** | 8140 | `pipeline` | EventEnvelope ingestion, curated pipeline records, watermarks | Skeleton |
+| 53 | **data-ingestion-service** | 8210 | `impilo_data_ingestion` | Facility/external data submission ingestion & routing | Skeleton |
 | 54 | **search-service** | — | `impilo_search` | Full-text search (Elasticsearch/OpenSearch) | Skeleton |
-| 55 | **surveillance-service** | — | `surv` | Disease surveillance (eIDSR) | Skeleton |
-| 56 | **campaigns-service** | — | `camp` | Health campaigns management | Skeleton |
+| 55 | **surveillance-service** | 8180 | `surv` | Disease surveillance (eIDSR) — signal detection, case registry | Skeleton |
+| 56 | **campaigns-service** | 8190 | `camp` | Public health campaign management & outreach | Skeleton |
 
 #### Governance & Security
 
 | # | Service | Port | Database | Purpose | Status |
 |---|---------|------|----------|---------|--------|
-| 57 | **data-governance-service** | — | `impilo_data_governance` | Data quality, lineage, metadata governance | Skeleton |
-| 58 | **data-access-governance-service** | — | `dags` | Research exports, purpose limitation, access controls | Skeleton |
-| 59 | **security-hardening-service** | — | `secharden` | Security baseline enforcement, vulnerability scanning | Skeleton |
-| 60 | **audit-ledger-service** | — | `impilo_audit_ledger` | Extended audit ledger (beyond TSHEPO audit) | Skeleton |
-| 61 | **identity-assurance-service** | — | `impilo_identity_assurance` | Identity proofing, biometric verification | Skeleton |
+| 57 | **data-governance-service** | 8220 | `impilo_data_governance` | Data quality rules, lineage tracking, metadata cataloging | Skeleton |
+| 58 | **data-access-governance-service** | 8170 | `dags` | Policy registry, access-request workflow, permit-token issuance | Skeleton |
+| 59 | **security-hardening-service** | 8220 | `secharden` | Policy pack registry, compliance scan results | Skeleton |
+| 60 | **audit-ledger-service** | 8350 | `impilo_audit_ledger` | Append-only SHA-256 hash-chained audit ledger (no UPDATE/DELETE) | Skeleton |
+| 61 | **identity-assurance-service** | 8200 | `impilo_identity_assurance` | Step-up checks, device attestation, risk scoring | Skeleton |
 
 #### Offline & Edge
 
 | # | Service | Port | Database | Purpose | Status |
 |---|---------|------|----------|---------|--------|
-| 62 | **offline-sync-service** | — | `offline_sync` | Edge data sync framework | Skeleton |
-| 63 | **offline-edge-service** | — | `impilo_offline_edge` | Edge execution runtime | Skeleton |
+| 62 | **offline-sync-service** | 8095 | `offline_sync` | Queued action intake, replay, conflict resolution | Skeleton |
+| 63 | **offline-edge-service** | 8360 | `impilo_offline_edge` | Offline trust controls — event capture, signed entitlements, recon | Skeleton |
 
 #### IoT & Devices
 
 | # | Service | Port | Database | Purpose | Status |
 |---|---------|------|----------|---------|--------|
-| 64 | **iot-ingestion-service** | — | `impilo_iot_ingestion` | IoT device data ingestion | Skeleton |
-| 65 | **asset-registry-service** | — | `impilo_asset_registry` | Medical device / asset tracking | Skeleton |
+| 64 | **iot-ingestion-service** | 8330 | `impilo_iot_ingestion` | Device telemetry ingestion (HTTP + Kafka), backpressure/DLQ | Skeleton |
+| 65 | **asset-registry-service** | 8310 | `impilo_asset_registry` | Medical equipment, cold-chain, vehicle lifecycle tracking | Skeleton |
 
 #### Support
 
@@ -324,21 +324,42 @@ All UIs use **Next.js 14.2.x**, **TypeScript 5.5**, **TailwindCSS 3.4**, **Radix
 | 8089 | OROS | Ring 1 |
 | 8090 | HAPI FHIR (BUTANO) | Ring 0 / Infra |
 | 8091 | Card Print Agent | Ring 2 |
-| 8092 | Landela Adapter | Ring 2 |
+| 8092 | Landela Adapter / FHIR Gateway | Ring 2 |
 | 8094 | Credential Verification | Ring 2 |
-| 8095 | Share Slip | Ring 2 |
-| 8096 | Pharmacy | Ring 1 |
-| 8098 | Inventory | Ring 2 |
+| 8095 | Share Slip / Offline Sync | Ring 2 |
+| 8096 | Pharmacy / PACS Adapter | Ring 1 / Ring 2 |
+| 8097 | Product Registry | Ring 2 |
+| 8098 | Inventory / Inventory eLMIS Adapter | Ring 2 |
+| 8099 | Pharmacy eLMIS Adapter | Ring 2 |
 | 8100 | MSIKA Flow | Ring 1 |
 | 8101 | COSTA (Costing Engine) | Ring 1 |
+| 8110 | Integration Hub | Ring 2 |
+| 8130 | Channels | Ring 2 |
+| 8140 | Data Pipeline | Ring 2 |
+| 8150 | Connector FHIR Adapter / NDR | Ring 2 |
 | 8160 | Experience BFF | Experience |
+| 8170 | Data Access Governance (DAGS) | Ring 2 |
+| 8180 | Surveillance | Ring 2 |
 | 8181 | TSHEPO Identity / OPA | Ring 0 / Infra |
 | 8182 | TSHEPO Consent | Ring 0 |
 | 8183 | TSHEPO Audit | Ring 0 |
 | 8184 | TSHEPO Keys | Ring 0 |
 | 8185 | TSHEPO Offline | Ring 0 |
+| 8190 | Campaigns | Ring 2 |
+| 8200 | Identity Assurance | Ring 2 |
+| 8210 | Data Ingestion / Observability | Ring 2 |
+| 8220 | Data Governance / Security Hardening | Ring 2 |
+| 8230 | NDR / Data Warehouse | Ring 2 |
+| 8310 | Asset Registry | Ring 2 |
+| 8330 | IoT Ingestion | Ring 2 |
+| 8350 | Audit Ledger | Ring 2 |
+| 8360 | Offline Edge | Ring 2 |
+| 8370 | Developer Portal | Ring 0 |
+| 8371 | Schema Registry | Ring 0 |
 | 9000 | MinIO API | Infra |
 | 9001 | MinIO Console | Infra |
 | 9092 | Kafka | Infra |
 | 9901 | Envoy Admin | Infra |
 | 10000 | Envoy Gateway | Infra |
+
+> **Note**: Some port numbers are shared between services that would not run simultaneously in local dev, or represent port conflicts to be resolved in deployment configuration.
