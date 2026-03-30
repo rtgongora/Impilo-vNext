@@ -1,83 +1,36 @@
 "use client";
 
 /**
- * Biometric Verification — Device biometric prompt page.
+ * Biometric Verification — triggers Keycloak OIDC with gold LoA (biometric acr).
  * Route: /auth/login/biometric | pageTitle: "Biometric Verification"
  */
 
 import { useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft,
   Fingerprint,
   Loader2,
-  CheckCircle2,
-  XCircle,
 } from "lucide-react";
 import { AuthLayout } from "@/components/AuthLayout";
-import { useLogin } from "@/hooks/queries/useAuth";
-import { useAuthStore } from "@/hooks/useAuthStore";
-
-type VerifyState = "idle" | "verifying" | "success" | "error";
+import { buildAuthUrl } from "@/lib/oidc";
 
 export default function BiometricLoginPage() {
-  const router = useRouter();
-  const login = useLogin();
-  const setAuth = useAuthStore((s) => s.setAuth);
-
-  const [verifyState, setVerifyState] = useState<VerifyState>("idle");
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleVerify = useCallback(() => {
-    setVerifyState("verifying");
-    setError(null);
-
-    // Simulate biometric verification delay (handled by device)
-    setTimeout(() => {
-      setVerifyState("success");
-
-      login.mutate(
-        {
-          email: "biometric@impilo.local",
-          password: "biometric-token",
-        },
-        {
-          onSuccess: (res) => {
-            const { token, user } = res.data.attributes;
-            setAuth(
-              {
-                id: user.id,
-                email: user.email,
-                displayName: user.displayName,
-                roles: user.roles,
-                actorType: user.actorType as
-                  | "PROVIDER"
-                  | "OPERATOR"
-                  | "CITIZEN"
-                  | "SYSTEM",
-              },
-              token,
-            );
-            router.push("/home");
-          },
-          onError: () => {
-            setVerifyState("error");
-            setError(
-              "Biometric verification failed. Please try again or use another sign-in method.",
-            );
-          },
-        },
-      );
-    }, 2000);
-  }, [login, setAuth, router]);
-
-  const stateStyles: Record<VerifyState, string> = {
-    idle: "border-gray-300 text-gray-400 bg-gray-50",
-    verifying: "border-blue-400 text-blue-500 bg-blue-50 animate-pulse",
-    success: "border-green-400 text-green-500 bg-green-50",
-    error: "border-red-400 text-red-500 bg-red-50",
-  };
+  const handleVerify = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const redirectUri = `${window.location.origin}/auth/callback`;
+      const url = await buildAuthUrl(redirectUri, "urn:mace:incommon:iap:gold");
+      window.location.href = url;
+    } catch {
+      setError("Could not reach the identity provider. Please try again.");
+      setLoading(false);
+    }
+  }, []);
 
   return (
     <AuthLayout>
@@ -95,7 +48,7 @@ export default function BiometricLoginPage() {
         Biometric Verification
       </h2>
       <p className="text-sm text-gray-500 mb-6">
-        Biometric verification is handled by your device
+        You will be redirected to complete biometric verification
       </p>
 
       {error && (
@@ -105,51 +58,36 @@ export default function BiometricLoginPage() {
       )}
 
       <div className="flex flex-col items-center py-6">
-        <div
-          className={`w-32 h-32 rounded-full border-4 flex items-center justify-center transition-all duration-500 ${stateStyles[verifyState]}`}
-        >
-          {verifyState === "success" ? (
-            <CheckCircle2 className="w-16 h-16" />
-          ) : verifyState === "error" ? (
-            <XCircle className="w-16 h-16" />
-          ) : verifyState === "verifying" ? (
-            <Loader2 className="w-16 h-16 animate-spin" />
+        <div className="w-32 h-32 rounded-full border-4 border-gray-300 text-gray-400 bg-gray-50 flex items-center justify-center">
+          {loading ? (
+            <Loader2 className="w-16 h-16 animate-spin text-blue-500" />
           ) : (
             <Fingerprint className="w-16 h-16" />
           )}
         </div>
-
         <p className="mt-4 text-sm text-gray-500 text-center">
-          {verifyState === "idle" &&
-            "Tap the button below to begin biometric verification"}
-          {verifyState === "verifying" && "Verifying biometric..."}
-          {verifyState === "success" && "Verification successful! Redirecting..."}
-          {verifyState === "error" && "Verification failed. Please try again."}
+          {loading
+            ? "Redirecting to identity provider…"
+            : "Tap the button below to begin biometric verification"}
         </p>
-
         <p className="mt-2 text-xs text-gray-400 text-center">
-          Biometric verification is handled by your device hardware
+          Biometric verification is handled by your device hardware via Keycloak
         </p>
       </div>
 
       <button
         type="button"
         onClick={handleVerify}
-        disabled={verifyState === "verifying" || verifyState === "success"}
+        disabled={loading}
         className="w-full py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
       >
-        {verifyState === "verifying" ? (
+        {loading ? (
           <>
             <Loader2 className="w-4 h-4 animate-spin" />
-            Verifying...
-          </>
-        ) : verifyState === "success" ? (
-          <>
-            <CheckCircle2 className="w-4 h-4" />
-            Verified
+            Redirecting…
           </>
         ) : (
-          "Verify"
+          "Verify with Biometrics"
         )}
       </button>
     </AuthLayout>

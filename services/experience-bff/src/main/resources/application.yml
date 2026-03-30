@@ -4,6 +4,11 @@ server:
 spring:
   application:
     name: experience-bff
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:}
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:experience_bff}
     username: ${DB_USER:impilo}

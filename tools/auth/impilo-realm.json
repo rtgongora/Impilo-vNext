@@ -256,7 +256,6 @@
       ]
     }
   ],
-
   "defaultDefaultClientScopes": [
     "openid",
     "profile",
@@ -272,8 +271,12 @@
       "standardFlowEnabled": true,
       "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": false,
-      "redirectUris": ["http://localhost:3000/*"],
-      "webOrigins": ["http://localhost:3000"],
+      "redirectUris": [
+        "http://localhost:3000/*"
+      ],
+      "webOrigins": [
+        "http://localhost:3000"
+      ],
       "protocol": "openid-connect"
     },
     {
@@ -284,8 +287,12 @@
       "standardFlowEnabled": true,
       "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": false,
-      "redirectUris": ["http://localhost:3001/*"],
-      "webOrigins": ["http://localhost:3001"],
+      "redirectUris": [
+        "http://localhost:3001/*"
+      ],
+      "webOrigins": [
+        "http://localhost:3001"
+      ],
       "protocol": "openid-connect"
     },
     {
@@ -296,8 +303,12 @@
       "standardFlowEnabled": true,
       "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": false,
-      "redirectUris": ["http://localhost:3002/*"],
-      "webOrigins": ["http://localhost:3002"],
+      "redirectUris": [
+        "http://localhost:3002/*"
+      ],
+      "webOrigins": [
+        "http://localhost:3002"
+      ],
       "protocol": "openid-connect"
     },
     {
@@ -308,8 +319,12 @@
       "standardFlowEnabled": true,
       "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": false,
-      "redirectUris": ["http://localhost:3003/*"],
-      "webOrigins": ["http://localhost:3003"],
+      "redirectUris": [
+        "http://localhost:3003/*"
+      ],
+      "webOrigins": [
+        "http://localhost:3003"
+      ],
       "protocol": "openid-connect"
     },
     {
@@ -428,9 +443,29 @@
       "secret": "integration-test-secret",
       "directAccessGrantsEnabled": true,
       "protocol": "openid-connect"
+    },
+    {
+      "clientId": "experience-ui",
+      "name": "Impilo Experience UI",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "redirectUris": [
+        "http://localhost:3020/*",
+        "http://localhost:10000/*"
+      ],
+      "webOrigins": [
+        "http://localhost:3020",
+        "http://localhost:10000"
+      ],
+      "protocol": "openid-connect"
     }
   ],
-
   "users": [
     {
       "username": "admin.central",

@@ -287,6 +287,10 @@ static_resources:
                         - match: { prefix: "/v1/internal/health/tenants" }
                           route: { cluster: butano_service }
 
+                        # ── Experience BFF ──
+                        - match: { prefix: "/bff/" }
+                          route: { cluster: experience_bff, prefix_rewrite: "/" }
+
                 http_filters:
                   - name: envoy.filters.http.ext_authz
                     typed_config:
@@ -651,3 +655,14 @@ static_resources:
                     socket_address:
                       address: host.docker.internal
                       port_value: 8087
+
+    # ── Experience BFF ──
+    - name: experience_bff
+      type: STRICT_DNS
+      load_assignment:
+        cluster_name: experience_bff
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: host.docker.internal, port_value: 8160 }
