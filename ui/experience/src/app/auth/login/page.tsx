@@ -25,8 +25,9 @@ export default function LoginPage() {
       const redirectUri = `${window.location.origin}/auth/callback`;
       const url = await buildAuthUrl(redirectUri, acrValues);
       window.location.href = url;
-    } catch {
-      setError("Could not reach the identity provider. Please try again.");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setError(`Could not reach the identity provider: ${msg}`);
       setLoading(null);
     }
   }
