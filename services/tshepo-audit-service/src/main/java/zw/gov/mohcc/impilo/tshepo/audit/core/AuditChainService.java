@@ -97,6 +97,7 @@ public class AuditChainService {
         event.setPurposeOfUse(request.purposeOfUse());
         event.setFacilityId(request.facilityId());
         event.setCorrelationId(request.correlationId());
+        event.setPolicyVersion(request.policyVersion());
         event.setDetail(serializeDetail(request.detail()));
         event.setPreviousHash(previousHash);
         event.setEntryHash(entryHash);

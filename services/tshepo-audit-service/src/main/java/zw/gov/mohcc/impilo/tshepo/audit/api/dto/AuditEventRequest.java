@@ -53,6 +53,9 @@ public record AuditEventRequest(
         @NotNull(message = "correlationId is required")
         UUID correlationId,
 
+        @Size(max = 32)
+        String policyVersion,
+
         Map<String, Object> detail
 ) {
     /**

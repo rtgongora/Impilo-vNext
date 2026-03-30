@@ -19,6 +19,7 @@ public record TrustContext(
         UUID facilityId,
         UUID workspaceId,
         String shiftId,
+        String podId,
         AccessMode mode
 ) {
     /** Header names — must match TrustHeaders.java in tshepo-service and contracts.ts in UI */
@@ -31,5 +32,6 @@ public record TrustContext(
     public static final String H_FACILITY_ID        = "x-facility-id";
     public static final String H_WORKSPACE_ID       = "x-workspace-id";
     public static final String H_SHIFT_ID           = "x-shift-id";
+    public static final String H_POD_ID             = "x-pod-id";
     public static final String H_ACCESS_MODE        = "x-access-mode";
 }

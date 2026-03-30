@@ -20,6 +20,7 @@ public record AuditEventResponse(
         String purposeOfUse,
         UUID facilityId,
         UUID correlationId,
+        String policyVersion,
         String detail,
         String previousHash,
         String entryHash,

@@ -25,6 +25,7 @@ public class AuthzProperties {
     private String keysServiceUrl = "http://localhost:8087";
     private ESignet esignet = new ESignet();
     private Cache cache = new Cache();
+    private String policyVersion = "1.0";
 
     // ── Inner configuration classes ────────────────────────────────────
 
@@ -119,4 +120,6 @@ public class AuthzProperties {
     public void setEsignet(ESignet esignet) { this.esignet = esignet; }
     public Cache getCache() { return cache; }
     public void setCache(Cache cache) { this.cache = cache; }
+    public String getPolicyVersion() { return policyVersion; }
+    public void setPolicyVersion(String policyVersion) { this.policyVersion = policyVersion; }
 }

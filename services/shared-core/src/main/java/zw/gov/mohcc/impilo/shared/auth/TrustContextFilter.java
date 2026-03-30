@@ -48,6 +48,9 @@ public class TrustContextFilter extends OncePerRequestFilter {
             mode = AccessMode.EXTERNAL;
         }
 
+        String rawPodId = request.getHeader(TrustContext.H_POD_ID);
+        String podId = (rawPodId != null && !rawPodId.isBlank()) ? rawPodId.trim() : "national";
+
         return new TrustContext(
                 parseUuid(request.getHeader(TrustContext.H_TENANT_ID)),
                 request.getHeader(TrustContext.H_ACTOR_ID),
@@ -58,6 +61,7 @@ public class TrustContextFilter extends OncePerRequestFilter {
                 parseUuid(request.getHeader(TrustContext.H_FACILITY_ID)),
                 parseUuid(request.getHeader(TrustContext.H_WORKSPACE_ID)),
                 request.getHeader(TrustContext.H_SHIFT_ID),
+                podId,
                 mode
         );
     }

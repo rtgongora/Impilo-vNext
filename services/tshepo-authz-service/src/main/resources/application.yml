@@ -16,7 +16,7 @@ spring:
       connection-timeout: 3000
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: none
     open-in-view: false
     properties:
       hibernate:
@@ -38,11 +38,14 @@ spring:
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       acks: all
       retries: 3
+      enable-idempotence: true
+      properties:
+        max.in.flight.requests.per.connection: 1
   security:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:impilo}
+          issuer-uri: ""
 
 # ── gRPC server ────────────────────────────────────────────────────────────
 grpc:
@@ -89,7 +92,7 @@ tshepo:
     # eSignet OIDC (optional, for citizen auth)
     esignet:
       enabled: ${ESIGNET_ENABLED:false}
-      issuer-uri: ${ESIGNET_ISSUER_URI:http://localhost:8088}
+      issuer-uri: ""
       introspection-uri: ${ESIGNET_INTROSPECTION_URI:http://localhost:8088/oauth/introspect}
       client-id: ${ESIGNET_CLIENT_ID:impilo}
       client-secret: ${ESIGNET_CLIENT_SECRET:changeme}
@@ -98,6 +101,8 @@ tshepo:
       policy-rules-ttl-seconds: 300
       device-profile-ttl-seconds: 600
       session-ttl-seconds: 1800
+    # Policy version (increment on every policy set change)
+    policy-version: ${POLICY_VERSION:1.0}
 
 # ── Actuator ───────────────────────────────────────────────────────────────
 management:

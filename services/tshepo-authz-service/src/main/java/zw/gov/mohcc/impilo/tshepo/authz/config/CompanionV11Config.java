@@ -39,6 +39,12 @@ public class CompanionV11Config {
         registry.register(ActionRegistryEntry.classA("/v1/step-up/verify", "POST", "STEP_UP_VERIFY", true));
         registry.register(ActionRegistryEntry.classC("/v1/step-up/status/{id}", "GET", "STEP_UP_STATUS"));
 
+        // Federation control (internal)
+        registry.register(ActionRegistryEntry.classA("/internal/v1/federation/pods", "POST", "FEDERATION_POD_REGISTER", true));
+        registry.register(ActionRegistryEntry.classC("/internal/v1/federation/pods", "GET", "FEDERATION_POD_LIST"));
+        registry.register(ActionRegistryEntry.classA("/internal/v1/federation/pods/{podId}/authority", "PUT", "FEDERATION_POD_AUTHORITY_UPDATE", true));
+        registry.register(ActionRegistryEntry.classC("/internal/v1/federation/pods/{podId}/obligations", "GET", "FEDERATION_POD_OBLIGATIONS_GET"));
+
         return registry;
     }
 }

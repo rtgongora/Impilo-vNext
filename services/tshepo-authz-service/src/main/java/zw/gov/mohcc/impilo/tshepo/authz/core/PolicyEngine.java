@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.tshepo.authz.config.AuthzProperties;
 import zw.gov.mohcc.impilo.tshepo.authz.dto.AuthzInternalRequest;
+import zw.gov.mohcc.impilo.tshepo.authz.dto.DecisionEvidenceDto;
 import zw.gov.mohcc.impilo.tshepo.authz.persistence.entity.PolicyDecisionLogEntity;
 import zw.gov.mohcc.impilo.tshepo.authz.persistence.entity.PolicyRuleEntity;
 import zw.gov.mohcc.impilo.tshepo.authz.persistence.repository.PolicyDecisionLogRepository;
@@ -71,6 +72,7 @@ public class PolicyEngine {
     private final BreakGlassService breakGlassService;
     private final PolicyDecisionLogRepository decisionLogRepository;
     private final AuditPublisher auditPublisher;
+    private final DecisionEvidencePublisher decisionEvidencePublisher;
     private final AuthzProperties properties;
     private final ObjectMapper objectMapper;
 
@@ -81,6 +83,7 @@ public class PolicyEngine {
                         BreakGlassService breakGlassService,
                         PolicyDecisionLogRepository decisionLogRepository,
                         AuditPublisher auditPublisher,
+                        DecisionEvidencePublisher decisionEvidencePublisher,
                         AuthzProperties properties,
                         ObjectMapper objectMapper) {
         this.riskScoring = riskScoring;
@@ -90,6 +93,7 @@ public class PolicyEngine {
         this.breakGlassService = breakGlassService;
         this.decisionLogRepository = decisionLogRepository;
         this.auditPublisher = auditPublisher;
+        this.decisionEvidencePublisher = decisionEvidencePublisher;
         this.properties = properties;
         this.objectMapper = objectMapper;
     }
@@ -509,16 +513,21 @@ public class PolicyEngine {
 
     private AuthzResponse allowAndLog(AuthzInternalRequest request, Obligations obligations,
                                        Map<String, String> headers, int riskScore, long startTime) {
+        String policyVersion = properties.getPolicyVersion();
         persistDecision(request, "ALLOW", riskScore, null, null, obligations, startTime);
-        auditPublisher.queueAuditEvent(request, "ALLOW", riskScore, null);
+        auditPublisher.queueAuditEvent(request, "ALLOW", riskScore, null, policyVersion);
+        decisionEvidencePublisher.publish(buildEvidence(request, "ALLOW", List.of(), policyVersion, startTime));
 
         return AuthzResponse.allow(obligations, riskScore, headers);
     }
 
     private AuthzResponse denyAndLog(AuthzInternalRequest request, String errorCode,
                                       String errorMessage, int riskScore, long startTime) {
+        String policyVersion = properties.getPolicyVersion();
         persistDecision(request, "DENY", riskScore, errorCode, null, null, startTime);
-        auditPublisher.queueAuditEvent(request, "DENY", riskScore, errorCode);
+        auditPublisher.queueAuditEvent(request, "DENY", riskScore, errorCode, policyVersion);
+        decisionEvidencePublisher.publish(buildEvidence(request, "DENY",
+                errorCode != null ? List.of(errorCode) : List.of(), policyVersion, startTime));
 
         log.warn("DENY: actor={}, action={}, resource={}, reason={}, correlation={}",
                 request.actorId(), request.action(), request.resourceType(),
@@ -530,9 +539,12 @@ public class PolicyEngine {
     private AuthzResponse stepUpAndLog(AuthzInternalRequest request, int riskScore, long startTime) {
         List<String> methods = properties.getStepUpMethods();
         String methodsStr = String.join(",", methods);
+        String policyVersion = properties.getPolicyVersion();
 
         persistDecision(request, "STEP_UP_REQUIRED", riskScore, null, methodsStr, null, startTime);
-        auditPublisher.queueAuditEvent(request, "STEP_UP_REQUIRED", riskScore, null);
+        auditPublisher.queueAuditEvent(request, "STEP_UP_REQUIRED", riskScore, null, policyVersion);
+        decisionEvidencePublisher.publish(buildEvidence(request, "STEP_UP_REQUIRED",
+                List.of("STEP_UP_REQUIRED"), policyVersion, startTime));
 
         log.info("STEP_UP: actor={}, methods={}, correlation={}",
                 request.actorId(), methods, request.correlationId());
@@ -569,6 +581,40 @@ public class PolicyEngine {
         }
 
         decisionLogRepository.save(entry);
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    // DecisionEvidence builder
+    // ════════════════════════════════════════════════════════════════════
+
+    private DecisionEvidenceDto buildEvidence(AuthzInternalRequest request, String decision,
+                                               List<String> reasonCodes, String policyVersion,
+                                               long startNano) {
+        long elapsedMs = (System.nanoTime() - startNano) / 1_000_000;
+        String patientRef = CLINICAL_RESOURCE_TYPES.contains(request.resourceType())
+                ? request.resourceId()
+                : null;
+        return new DecisionEvidenceDto(
+                request.actorId(),
+                request.actorType(),
+                patientRef,
+                request.action(),
+                deriveConsistencyClass(request.action()),
+                decision,
+                reasonCodes,
+                policyVersion,
+                elapsedMs
+        );
+    }
+
+    private String deriveConsistencyClass(String action) {
+        if (action == null) return "C";
+        String verb = action.contains(":") ? action.substring(0, action.indexOf(':')) : action;
+        return switch (verb.toUpperCase()) {
+            case "DELETE", "MERGE", "BULK", "EXPORT", "RECOVERY" -> "A";
+            case "POST", "PUT", "PATCH" -> "B";
+            default -> "C";
+        };
     }
 
     // ════════════════════════════════════════════════════════════════════

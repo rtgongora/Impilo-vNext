@@ -51,10 +51,12 @@ public class AuditPublisher {
     /**
      * Create an outbox entry for an authorization decision.
      * This must be called within the same transaction as the decision log persist.
+     *
+     * @param policyVersion the version of the policy set that produced this decision
      */
     @Transactional
     public void queueAuditEvent(AuthzInternalRequest request, String verdict,
-                                 int riskScore, String denyReason) {
+                                 int riskScore, String denyReason, String policyVersion) {
         Map<String, Object> payload = new HashMap<>();
         payload.put("eventType", "AUTHZ_DECISION");
         payload.put("tenantId", request.tenantId() != null ? request.tenantId().toString() : null);
@@ -68,6 +70,7 @@ public class AuditPublisher {
         payload.put("verdict", verdict);
         payload.put("riskScore", riskScore);
         payload.put("denyReason", denyReason);
+        payload.put("policyVersion", policyVersion);
         payload.put("facilityId", request.facilityId() != null ? request.facilityId().toString() : null);
         payload.put("workspaceId", request.workspaceId() != null ? request.workspaceId().toString() : null);
         payload.put("deviceFingerprint", request.deviceFingerprint());

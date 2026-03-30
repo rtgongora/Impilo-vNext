@@ -75,6 +75,9 @@ public class AuditEventEntity {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
+    @Column(name = "policy_version", length = 32, updatable = false)
+    private String policyVersion;
+
     public AuditEventEntity() {
         // JPA requires default constructor
     }
@@ -223,5 +226,13 @@ public class AuditEventEntity {
 
     public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getPolicyVersion() {
+        return policyVersion;
+    }
+
+    public void setPolicyVersion(String policyVersion) {
+        this.policyVersion = policyVersion;
     }
 }

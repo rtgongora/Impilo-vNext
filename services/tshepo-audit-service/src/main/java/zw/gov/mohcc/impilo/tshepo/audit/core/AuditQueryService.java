@@ -130,6 +130,7 @@ public class AuditQueryService {
                 entity.getPurposeOfUse(),
                 entity.getFacilityId(),
                 entity.getCorrelationId(),
+                entity.getPolicyVersion(),
                 entity.getDetail(),
                 entity.getPreviousHash(),
                 entity.getEntryHash(),
