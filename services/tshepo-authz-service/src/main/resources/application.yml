@@ -45,7 +45,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ""
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:}
 
 # ── gRPC server ────────────────────────────────────────────────────────────
 grpc:
