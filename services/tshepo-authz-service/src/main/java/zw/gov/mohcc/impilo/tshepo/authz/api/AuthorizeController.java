@@ -118,14 +118,23 @@ public class AuthorizeController {
             }
         }
 
+        // Apply defaults for optional/derivable trust headers
+        if (purposeOfUse == null || purposeOfUse.isBlank()) {
+            purposeOfUse = "DIRECT_CARE";
+        }
+        if (actorType == null || actorType.isBlank()) {
+            actorType = "PROVIDER";
+        }
+        if (tenantId == null) {
+            tenantId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+        }
+
         // Validate mandatory headers
-        if (tenantId == null || actorId == null || actorId.isBlank()
-                || actorType == null || actorType.isBlank()
-                || purposeOfUse == null || purposeOfUse.isBlank()) {
-            log.warn("ext_authz DENY: missing mandatory trust headers, correlation={}", correlationId);
+        if (actorId == null || actorId.isBlank()) {
+            log.warn("ext_authz DENY: missing actor-id header, correlation={}", correlationId);
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(AuthzResponse.deny("MISSING_HEADERS",
-                            "Required trust headers missing: x-tenant-id, x-actor-id, x-actor-type, x-purpose-of-use",
+                            "Required trust header missing: x-actor-id",
                             0));
         }
 

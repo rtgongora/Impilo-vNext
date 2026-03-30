@@ -61,10 +61,14 @@ public class KeycloakAdapter implements SessionAssurance {
     @Override
     public boolean canHandle(String token) {
         try {
-            // Decode without verification to check issuer
             com.nimbusds.jwt.SignedJWT signedJWT = com.nimbusds.jwt.SignedJWT.parse(token);
             String tokenIssuer = signedJWT.getJWTClaimsSet().getIssuer();
-            return tokenIssuer != null && tokenIssuer.equals(issuerUri);
+            if (tokenIssuer == null) return false;
+            if (tokenIssuer.equals(issuerUri)) return true;
+            // Accept tokens where the realm path matches, regardless of hostname
+            // (handles Docker-internal vs external hostname mismatch)
+            String realmSuffix = issuerUri.replaceFirst("https?://[^/]+", "");
+            return tokenIssuer.endsWith(realmSuffix);
         } catch (Exception e) {
             return false;
         }

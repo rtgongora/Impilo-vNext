@@ -33,14 +33,29 @@ export interface ApiError {
   };
 }
 
+function getAuthUser(): { id: string; actorType: string } | null {
+  if (typeof window !== "undefined") {
+    const raw = sessionStorage.getItem("exp:auth_user");
+    if (raw) {
+      try { return JSON.parse(raw); } catch { /* ignore */ }
+    }
+  }
+  return null;
+}
+
 function getV11Headers(): Record<string, string> {
+  const user = getAuthUser();
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     "X-Tenant-ID": getTenantId(),
     "X-Pod-ID": getPodId(),
     "X-Request-ID": crypto.randomUUID(),
     "X-Correlation-ID": getCorrelationId(),
+    "X-Purpose-Of-Use": "DIRECT_CARE",
   };
+
+  if (user?.id) headers["X-Actor-ID"] = user.id;
+  if (user?.actorType) headers["X-Actor-Type"] = user.actorType;
 
   const token = getAuthToken();
   if (token) {
