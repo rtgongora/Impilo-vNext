@@ -75,10 +75,11 @@ export default function WalkInPage() {
       await apiClient.post<ApiResponse<QueueEntryResource>>(
         "/internal/v1/queue/entries",
         {
-          patientId,
-          facilityId: facility.id,
-          priority: 3,
-          queueType: "WALK_IN",
+          patient_id: patientId,
+          facility_id: facility.id,
+          queue_type: "WALK_IN",
+          priority: "NORMAL",
+          reason: "Walk-in registration",
         },
       );
 
