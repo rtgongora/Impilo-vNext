@@ -1,0 +1,55 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: tshepo-service-policy
+  namespace: impilo-trust
+spec:
+  podSelector:
+    matchLabels:
+      app: tshepo-service
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: impilo-gateway
+      podSelector:
+        matchLabels:
+          app: envoy
+    - namespaceSelector:
+        matchLabels:
+          plane: trust-governance
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: impilo-infra
+      podSelector:
+        matchLabels:
+          app: postgres
+    - namespaceSelector:
+        matchLabels:
+          name: impilo-infra
+      podSelector:
+        matchLabels:
+          app: redis
+    - namespaceSelector:
+        matchLabels:
+          name: impilo-infra
+      podSelector:
+        matchLabels:
+          app: kafka
+    - namespaceSelector:
+        matchLabels:
+          name: impilo-infra
+      podSelector:
+        matchLabels:
+          app: vault
+    - namespaceSelector:
+        matchLabels:
+          name: impilo-infra
+      podSelector:
+        matchLabels:
+          app: keycloak

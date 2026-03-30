@@ -1,0 +1,118 @@
+[
+  {
+    "tenant_id": "00000000-0000-0000-0000-000000000000",
+    "fhir_type": "CODE_SYSTEM",
+    "canonical_url": "http://snomed.info/sct",
+    "version": "20240101",
+    "name": "SNOMED_CT",
+    "title": "SNOMED CT International",
+    "status": "ACTIVE",
+    "content_json": {
+      "resourceType": "CodeSystem",
+      "url": "http://snomed.info/sct",
+      "name": "SNOMED_CT",
+      "title": "SNOMED CT International",
+      "status": "active",
+      "content": "fragment",
+      "concept": [
+        {"code": "38341003", "display": "Hypertension"},
+        {"code": "44054006", "display": "Type 2 diabetes mellitus"},
+        {"code": "73211009", "display": "Diabetes mellitus"},
+        {"code": "49436004", "display": "Atrial fibrillation"},
+        {"code": "59621000", "display": "Essential hypertension"},
+        {"code": "195967001", "display": "Asthma"},
+        {"code": "13645005", "display": "Chronic obstructive lung disease"},
+        {"code": "22298006", "display": "Myocardial infarction"},
+        {"code": "422504002", "display": "Ischemic stroke"},
+        {"code": "233604007", "display": "Pneumonia"}
+      ]
+    },
+    "created_by": "seed-service"
+  },
+  {
+    "tenant_id": "00000000-0000-0000-0000-000000000000",
+    "fhir_type": "CODE_SYSTEM",
+    "canonical_url": "http://hl7.org/fhir/sid/icd-10",
+    "version": "2019",
+    "name": "ICD10",
+    "title": "ICD-10-WHO",
+    "status": "ACTIVE",
+    "content_json": {
+      "resourceType": "CodeSystem",
+      "url": "http://hl7.org/fhir/sid/icd-10",
+      "name": "ICD10",
+      "title": "ICD-10-WHO",
+      "status": "active",
+      "content": "fragment",
+      "concept": [
+        {"code": "I10", "display": "Essential (primary) hypertension"},
+        {"code": "E11", "display": "Type 2 diabetes mellitus"},
+        {"code": "J45", "display": "Asthma"},
+        {"code": "I21", "display": "Acute myocardial infarction"},
+        {"code": "I63", "display": "Cerebral infarction"},
+        {"code": "J18", "display": "Pneumonia, unspecified organism"},
+        {"code": "U07.1", "display": "COVID-19, virus identified"},
+        {"code": "N39.0", "display": "Urinary tract infection, site not specified"},
+        {"code": "M54.5", "display": "Low back pain"},
+        {"code": "R50.9", "display": "Fever, unspecified"}
+      ]
+    },
+    "created_by": "seed-service"
+  },
+  {
+    "tenant_id": "00000000-0000-0000-0000-000000000000",
+    "fhir_type": "VALUE_SET",
+    "canonical_url": "http://zw.gov.mohcc/vs/chronic-diseases",
+    "version": "1.0.0",
+    "name": "ChronicDiseasesVS",
+    "title": "Chronic Diseases ValueSet",
+    "status": "ACTIVE",
+    "content_json": {
+      "resourceType": "ValueSet",
+      "url": "http://zw.gov.mohcc/vs/chronic-diseases",
+      "name": "ChronicDiseasesVS",
+      "title": "Chronic Diseases ValueSet",
+      "status": "active",
+      "compose": {
+        "include": [
+          {
+            "system": "http://snomed.info/sct",
+            "concept": [
+              {"code": "38341003", "display": "Hypertension"},
+              {"code": "44054006", "display": "Type 2 diabetes mellitus"}
+            ]
+          }
+        ]
+      }
+    },
+    "created_by": "seed-service"
+  },
+  {
+    "tenant_id": "00000000-0000-0000-0000-000000000000",
+    "fhir_type": "VALUE_SET",
+    "canonical_url": "http://zw.gov.mohcc/vs/acute-conditions",
+    "version": "1.0.0",
+    "name": "AcuteConditionsVS",
+    "title": "Acute Conditions ValueSet",
+    "status": "ACTIVE",
+    "content_json": {
+      "resourceType": "ValueSet",
+      "url": "http://zw.gov.mohcc/vs/acute-conditions",
+      "name": "AcuteConditionsVS",
+      "title": "Acute Conditions ValueSet",
+      "status": "active",
+      "compose": {
+        "include": [
+          {
+            "system": "http://hl7.org/fhir/sid/icd-10",
+            "concept": [
+              {"code": "J18", "display": "Pneumonia, unspecified organism"},
+              {"code": "U07.1", "display": "COVID-19, virus identified"}
+            ]
+          }
+        ]
+      }
+    },
+    "created_by": "seed-service"
+  }
+]

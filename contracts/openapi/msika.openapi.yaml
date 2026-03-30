@@ -1,0 +1,1062 @@
+# =============================================================================
+# MSIKA — Products & Services Catalog API (OpenAPI 3.0)
+# Manages product catalogs, service catalog items, tariffs, and snapshots
+# for downstream billing and ordering services within Impilo.
+# =============================================================================
+openapi: "3.0.3"
+
+info:
+  title: MSIKA — Products & Services Catalog
+  version: "1.0.0"
+  description: |
+    MSIKA is the authoritative catalog service for healthcare products, services,
+    and tariffs. It provides catalog lifecycle management, tariff administration,
+    and cursor-paginated snapshots for Ring 0 consumers.
+
+    **Consistency classes**
+    * Class A — destructive/high-trust mutations (require PDP decision header)
+    * Class B — creation / registration mutations
+    * Class C — reads and snapshots
+  contact:
+    name: Impilo Platform Team
+  license:
+    name: Proprietary
+
+servers:
+  - url: http://localhost:8086
+    description: Local development
+  - url: https://{tenant}.impilo.health/api
+    description: Production (per-tenant)
+    variables:
+      tenant:
+        default: demo
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Catalogs
+    description: Catalog creation and lifecycle management
+  - name: Products
+    description: Product registration and snapshots
+  - name: Services
+    description: Service catalog item management
+  - name: Tariffs
+    description: Tariff administration
+  - name: Snapshots
+    description: Cursor-paginated bulk snapshots for Ring 0 consumers
+
+# ============================================================================
+# PATHS
+# ============================================================================
+paths:
+
+  # ---- Catalogs ------------------------------------------------------------
+
+  /v1/catalogs:
+    post:
+      operationId: createCatalog
+      tags: [Catalogs]
+      summary: Create a new catalog (Class B)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCatalogRequest"
+      responses:
+        "201":
+          description: Catalog created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseCatalogResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          $ref: "#/components/responses/Conflict"
+    get:
+      operationId: listCatalogs
+      tags: [Catalogs]
+      summary: List catalogs for a tenant (Class C)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - name: tenantId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: "#/components/parameters/PageNumber"
+        - $ref: "#/components/parameters/PageSize"
+      responses:
+        "200":
+          description: Paged catalog list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponsePagedCatalogSummary"
+
+  /v1/catalogs/{catalogId}:
+    get:
+      operationId: getCatalog
+      tags: [Catalogs]
+      summary: Get catalog by ID (Class C)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/CatalogId"
+      responses:
+        "200":
+          description: Catalog detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseCatalogResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /v1/catalogs/{catalogId}/submit-review:
+    post:
+      operationId: submitCatalogForReview
+      tags: [Catalogs]
+      summary: Submit catalog for review (Class B)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/CatalogId"
+      responses:
+        "200":
+          description: Catalog submitted for review
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseCatalogResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /v1/catalogs/{catalogId}/approve:
+    post:
+      operationId: approveCatalog
+      tags: [Catalogs]
+      summary: Approve a catalog (Class A)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/Decision"
+        - $ref: "#/components/parameters/CatalogId"
+      responses:
+        "200":
+          description: Catalog approved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseCatalogResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /v1/catalogs/{catalogId}/publish:
+    post:
+      operationId: publishCatalog
+      tags: [Catalogs]
+      summary: Publish a catalog (Class A)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/Decision"
+        - $ref: "#/components/parameters/CatalogId"
+      responses:
+        "200":
+          description: Catalog published
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseCatalogResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /v1/catalogs/{catalogId}/rollback/{version}:
+    post:
+      operationId: rollbackCatalog
+      tags: [Catalogs]
+      summary: Rollback catalog to a previous version (Class A)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/Decision"
+        - $ref: "#/components/parameters/CatalogId"
+        - name: version
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Catalog rolled back
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseCatalogResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # ---- Products ------------------------------------------------------------
+
+  /internal/v1/products:
+    post:
+      operationId: createProduct
+      tags: [Products]
+      summary: Create a product (Class B)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProductRequest"
+      responses:
+        "201":
+          description: Product created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseProductResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /internal/v1/products/snapshot:
+    get:
+      operationId: productSnapshot
+      tags: [Products]
+      summary: Cursor-paginated product snapshot (Class C)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: cursor
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+            maximum: 500
+      responses:
+        "200":
+          description: Product snapshot page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SnapshotResponse"
+
+  # ---- Service Catalogs ----------------------------------------------------
+
+  /internal/v1/service-catalogs/items:
+    post:
+      operationId: createServiceItem
+      tags: [Services]
+      summary: Create a service catalog item (Class B)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateServiceItemRequest"
+      responses:
+        "201":
+          description: Service item created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseServiceItemResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /internal/v1/service-catalogs/snapshot:
+    get:
+      operationId: serviceCatalogSnapshot
+      tags: [Services]
+      summary: Cursor-paginated service catalog snapshot (Class C)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: cursor
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+            maximum: 500
+      responses:
+        "200":
+          description: Service catalog snapshot page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SnapshotResponse"
+
+  # ---- Tariffs -------------------------------------------------------------
+
+  /internal/v1/tariffs:
+    post:
+      operationId: createTariff
+      tags: [Tariffs]
+      summary: Create a tariff (Class B)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTariffRequest"
+      responses:
+        "201":
+          description: Tariff created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseTariffResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          $ref: "#/components/responses/Conflict"
+    get:
+      operationId: listTariffs
+      tags: [Tariffs]
+      summary: List tariffs (paged) (Class C)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/PageNumber"
+        - $ref: "#/components/parameters/PageSize"
+      responses:
+        "200":
+          description: Paged tariff list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponsePagedTariffResponse"
+
+  /internal/v1/tariffs/{tariffId}:
+    get:
+      operationId: getTariff
+      tags: [Tariffs]
+      summary: Get tariff by ID (Class C)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/TariffId"
+      responses:
+        "200":
+          description: Tariff detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseTariffResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      operationId: updateTariff
+      tags: [Tariffs]
+      summary: Update a tariff (Class A)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/Decision"
+        - $ref: "#/components/parameters/TariffId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTariffRequest"
+      responses:
+        "200":
+          description: Tariff updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseTariffResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # ---- Snapshots -----------------------------------------------------------
+
+  /internal/v1/snapshots/catalogs:
+    get:
+      operationId: catalogSnapshot
+      tags: [Snapshots]
+      summary: Cursor-paginated catalog snapshot (Class C)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: cursor
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+            maximum: 500
+      responses:
+        "200":
+          description: Catalog snapshot page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SnapshotResponse"
+
+  /internal/v1/snapshots/catalogs/emit:
+    post:
+      operationId: emitCatalogSnapshot
+      tags: [Snapshots]
+      summary: Trigger a full catalog snapshot emit to Kafka (Class A)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/Decision"
+      responses:
+        "200":
+          description: Snapshot emit queued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SnapshotEmitResponse"
+
+# ============================================================================
+# COMPONENTS
+# ============================================================================
+components:
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Keycloak-issued access token (forwarded by Envoy)
+
+  parameters:
+    TenantId:
+      name: X-Tenant-Id
+      in: header
+      required: true
+      description: Tenant identifier — injected by Envoy after TSHEPO authorisation
+      schema:
+        type: string
+    CorrelationId:
+      name: X-Correlation-Id
+      in: header
+      required: true
+      description: End-to-end correlation ID for distributed tracing
+      schema:
+        type: string
+        format: uuid
+    ActorId:
+      name: X-Actor-Id
+      in: header
+      required: true
+      description: Authenticated actor (user or service) identifier
+      schema:
+        type: string
+    ActorType:
+      name: X-Actor-Type
+      in: header
+      required: true
+      description: Type of actor making the request
+      schema:
+        type: string
+        enum: [CITIZEN, PROVIDER, ADMIN, SYSTEM, SERVICE]
+    PurposeOfUse:
+      name: X-Purpose-Of-Use
+      in: header
+      required: true
+      description: Why this request is being made
+      schema:
+        type: string
+    DeviceFingerprint:
+      name: X-Device-Fingerprint
+      in: header
+      required: true
+      description: Device identity hash
+      schema:
+        type: string
+    FacilityId:
+      name: X-Facility-Id
+      in: header
+      required: false
+      description: Facility scope (contextual)
+      schema:
+        type: string
+        format: uuid
+    WorkspaceId:
+      name: X-Workspace-Id
+      in: header
+      required: false
+      description: Workspace scope (contextual)
+      schema:
+        type: string
+        format: uuid
+    ShiftId:
+      name: X-Shift-Id
+      in: header
+      required: false
+      description: Duty shift scope (contextual)
+      schema:
+        type: string
+        format: uuid
+    Decision:
+      name: X-Decision
+      in: header
+      required: false
+      description: PDP decision header — ALLOW, DENY, STEP_UP_REQUIRED (Class A endpoints require ALLOW)
+      schema:
+        type: string
+        enum: [ALLOW, DENY, STEP_UP_REQUIRED]
+    Obligations:
+      name: X-Obligations
+      in: header
+      required: false
+      description: JSON obligations blob from TSHEPO
+      schema:
+        type: string
+    PageNumber:
+      name: page
+      in: query
+      schema:
+        type: integer
+        default: 0
+    PageSize:
+      name: size
+      in: query
+      schema:
+        type: integer
+        default: 20
+        maximum: 100
+    CatalogId:
+      name: catalogId
+      in: path
+      required: true
+      description: Catalog identifier (UUID)
+      schema:
+        type: string
+        format: uuid
+    TariffId:
+      name: tariffId
+      in: path
+      required: true
+      description: Tariff identifier
+      schema:
+        type: integer
+        format: int64
+
+  responses:
+    BadRequest:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Conflict:
+      description: Duplicate resource
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Unauthorized:
+      description: Missing or invalid trust headers
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Forbidden:
+      description: PDP denied the request (X-Decision=DENY)
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+  schemas:
+
+    # ---- Requests ----------------------------------------------------------
+
+    CreateCatalogRequest:
+      type: object
+      required: [name, catalogType]
+      properties:
+        name:
+          type: string
+        catalogType:
+          type: string
+        description:
+          type: string
+        effectiveFrom:
+          type: string
+          format: date
+        effectiveTo:
+          type: string
+          format: date
+        metadata:
+          type: object
+          additionalProperties: true
+
+    CreateProductRequest:
+      type: object
+      required: [productCode, name, productType]
+      properties:
+        productCode:
+          type: string
+        name:
+          type: string
+        productType:
+          type: string
+        description:
+          type: string
+        unit:
+          type: string
+        basePrice:
+          type: number
+          format: double
+        currency:
+          type: string
+        catalogId:
+          type: string
+          format: uuid
+        metadata:
+          type: object
+          additionalProperties: true
+
+    CreateServiceItemRequest:
+      type: object
+      required: [serviceCode, name, serviceType]
+      properties:
+        serviceCode:
+          type: string
+        name:
+          type: string
+        serviceType:
+          type: string
+        description:
+          type: string
+        basePrice:
+          type: number
+          format: double
+        currency:
+          type: string
+        catalogId:
+          type: string
+          format: uuid
+        metadata:
+          type: object
+          additionalProperties: true
+
+    CreateTariffRequest:
+      type: object
+      required: [tariffCode, name, effectiveFrom]
+      properties:
+        tariffCode:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        effectiveFrom:
+          type: string
+          format: date
+        effectiveTo:
+          type: string
+          format: date
+        currency:
+          type: string
+        tariffType:
+          type: string
+
+    UpdateTariffRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        effectiveTo:
+          type: string
+          format: date
+
+    # ---- Response wrappers -------------------------------------------------
+
+    ApiResponseCatalogResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        correlationId:
+          type: string
+          format: uuid
+        data:
+          $ref: "#/components/schemas/CatalogResponse"
+
+    ApiResponsePagedCatalogSummary:
+      type: object
+      properties:
+        success:
+          type: boolean
+        correlationId:
+          type: string
+          format: uuid
+        data:
+          $ref: "#/components/schemas/PagedCatalogSummary"
+
+    ApiResponseProductResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        correlationId:
+          type: string
+          format: uuid
+        data:
+          $ref: "#/components/schemas/ProductResponse"
+
+    ApiResponseServiceItemResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        correlationId:
+          type: string
+          format: uuid
+        data:
+          $ref: "#/components/schemas/ServiceItemResponse"
+
+    ApiResponseTariffResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        correlationId:
+          type: string
+          format: uuid
+        data:
+          $ref: "#/components/schemas/TariffResponse"
+
+    ApiResponsePagedTariffResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        correlationId:
+          type: string
+          format: uuid
+        data:
+          $ref: "#/components/schemas/PagedTariffResponse"
+
+    # ---- Domain objects ----------------------------------------------------
+
+    CatalogResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        catalogType:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [DRAFT, IN_REVIEW, APPROVED, PUBLISHED, ARCHIVED]
+        version:
+          type: integer
+        effectiveFrom:
+          type: string
+          format: date
+        effectiveTo:
+          type: string
+          format: date
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CatalogSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        catalogType:
+          type: string
+        status:
+          type: string
+        version:
+          type: integer
+        effectiveFrom:
+          type: string
+          format: date
+
+    PagedCatalogSummary:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/CatalogSummary"
+        page:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+          format: int64
+
+    ProductResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        productCode:
+          type: string
+        name:
+          type: string
+        productType:
+          type: string
+        description:
+          type: string
+        unit:
+          type: string
+        basePrice:
+          type: number
+          format: double
+        currency:
+          type: string
+        catalogId:
+          type: string
+          format: uuid
+        status:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    ServiceItemResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        serviceCode:
+          type: string
+        name:
+          type: string
+        serviceType:
+          type: string
+        description:
+          type: string
+        basePrice:
+          type: number
+          format: double
+        currency:
+          type: string
+        catalogId:
+          type: string
+          format: uuid
+        status:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    TariffResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        tariffCode:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        effectiveFrom:
+          type: string
+          format: date
+        effectiveTo:
+          type: string
+          format: date
+        currency:
+          type: string
+        tariffType:
+          type: string
+        status:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    PagedTariffResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/TariffResponse"
+        page:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+          format: int64
+
+    SnapshotResponse:
+      type: object
+      properties:
+        as_of:
+          type: string
+          format: date-time
+        cursor:
+          type: integer
+        limit:
+          type: integer
+        has_more:
+          type: boolean
+        total:
+          type: integer
+        items:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+
+    SnapshotEmitResponse:
+      type: object
+      properties:
+        jobId:
+          type: string
+          format: uuid
+        status:
+          type: string
+        triggeredAt:
+          type: string
+          format: date-time
+
+    GenericResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        referenceId:
+          type: string
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          default: false
+        correlationId:
+          type: string
+          format: uuid
+        errorCode:
+          type: string
+        message:
+          type: string
+        details:
+          type: array
+          items:
+            type: string

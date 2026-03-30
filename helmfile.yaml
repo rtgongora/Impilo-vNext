@@ -1,0 +1,376 @@
+environments:
+  local:
+    values:
+      - infra/helm-values/local.yaml
+  staging:
+    values:
+      - infra/helm-values/staging.yaml
+  production:
+    values:
+      - infra/helm-values/production.yaml
+
+---
+
+helmDefaults:
+  wait: true
+  timeout: 300
+  cleanupOnFail: true
+  createNamespace: true
+
+releases:
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Trust & Governance Plane — impilo-trust
+  # ─────────────────────────────────────────────────────────────────────────────
+
+  - name: tshepo-authz
+    namespace: impilo-trust
+    chart: ./helm/tshepo-authz
+    labels:
+      plane: trust-governance
+      tier: authz
+
+  - name: tshepo-identity
+    namespace: impilo-trust
+    chart: ./helm/tshepo-identity
+    labels:
+      plane: trust-governance
+      tier: identity
+
+  - name: tshepo-consent
+    namespace: impilo-trust
+    chart: ./helm/tshepo-consent
+    labels:
+      plane: trust-governance
+      tier: consent
+    needs:
+      - impilo-trust/tshepo-authz
+
+  - name: tshepo-audit
+    namespace: impilo-trust
+    chart: ./helm/tshepo-audit
+    labels:
+      plane: trust-governance
+      tier: audit
+
+  - name: tshepo-keys
+    namespace: impilo-trust
+    chart: ./helm/tshepo-keys
+    labels:
+      plane: trust-governance
+      tier: keys
+
+  - name: tshepo-offline
+    namespace: impilo-trust
+    chart: ./helm/tshepo-offline
+    labels:
+      plane: trust-governance
+      tier: offline
+    needs:
+      - impilo-trust/tshepo-authz
+      - impilo-trust/tshepo-keys
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Registry Spine Plane — impilo-registry
+  # ─────────────────────────────────────────────────────────────────────────────
+
+  - name: vito
+    namespace: impilo-registry
+    chart: ./services/vito-service/helm/vito
+    labels:
+      plane: registry-spine
+      service: vito
+    needs:
+      - impilo-trust/tshepo-authz
+
+  - name: varapi
+    namespace: impilo-registry
+    chart: ./services/varapi-service/helm/varapi
+    labels:
+      plane: registry-spine
+      service: varapi
+    needs:
+      - impilo-trust/tshepo-authz
+
+  - name: tuso
+    namespace: impilo-registry
+    chart: ./services/tuso-service/helm/tuso
+    labels:
+      plane: registry-spine
+      service: tuso
+    needs:
+      - impilo-trust/tshepo-authz
+
+  - name: zibo
+    namespace: impilo-registry
+    chart: ./services/zibo-service/helm/zibo
+    labels:
+      plane: registry-spine
+      service: zibo
+    needs:
+      - impilo-trust/tshepo-authz
+
+  - name: card-print-agent
+    namespace: impilo-registry
+    chart: ./services/card-print-agent/helm/card-print-agent
+    labels:
+      plane: registry-spine
+      service: card-print-agent
+    needs:
+      - impilo-registry/vito
+
+  - name: credential-verification
+    namespace: impilo-registry
+    chart: ./helm/credential-verification
+    labels:
+      plane: registry-spine
+      service: credential-verification
+    needs:
+      - impilo-registry/vito
+      - impilo-registry/varapi
+
+  - name: share-slip
+    namespace: impilo-registry
+    chart: ./helm/share-slip
+    labels:
+      plane: registry-spine
+      service: share-slip
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Clinical Execution Plane — impilo-clinical
+  # ─────────────────────────────────────────────────────────────────────────────
+
+  - name: butano-fhir
+    namespace: impilo-clinical
+    chart: ./services/butano-fhir/helm/butano
+    labels:
+      plane: clinical-execution
+      service: butano-fhir
+    needs:
+      - impilo-registry/vito
+      - impilo-trust/tshepo-authz
+
+  - name: fhir-gateway
+    namespace: impilo-clinical
+    chart: ./services/fhir-gateway-service/helm/fhir-gateway
+    labels:
+      plane: clinical-execution
+      service: fhir-gateway
+    needs:
+      - impilo-clinical/butano-fhir
+
+  - name: pct
+    namespace: impilo-clinical
+    chart: ./services/pct-service/helm/pct
+    labels:
+      plane: clinical-execution
+      service: pct
+    needs:
+      - impilo-trust/tshepo-authz
+      - impilo-registry/vito
+
+  - name: oros
+    namespace: impilo-clinical
+    chart: ./services/oros-service/helm/oros
+    labels:
+      plane: clinical-execution
+      service: oros
+    needs:
+      - impilo-trust/tshepo-authz
+      - impilo-registry/vito
+      - impilo-clinical/pct
+
+  - name: pharmacy
+    namespace: impilo-clinical
+    chart: ./services/pharmacy-service/helm/pharmacy
+    labels:
+      plane: clinical-execution
+      service: pharmacy
+    needs:
+      - impilo-trust/tshepo-authz
+      - impilo-clinical/oros
+
+  - name: inpatient
+    namespace: impilo-clinical
+    chart: ./services/inpatient-service/helm/inpatient
+    labels:
+      plane: clinical-execution
+      service: inpatient
+    needs:
+      - impilo-trust/tshepo-authz
+      - impilo-registry/vito
+      - impilo-clinical/pct
+
+  - name: pacs-adapter
+    namespace: impilo-clinical
+    chart: ./services/pacs-adapter-service/helm/pacs-adapter
+    labels:
+      plane: clinical-execution
+      service: pacs-adapter
+    needs:
+      - impilo-clinical/oros
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Finance Plane — impilo-finance
+  # ─────────────────────────────────────────────────────────────────────────────
+
+  - name: mushex
+    namespace: impilo-finance
+    chart: ./services/mushex-service/helm/mushex
+    labels:
+      plane: finance
+      service: mushex
+    needs:
+      - impilo-trust/tshepo-authz
+      - impilo-registry/vito
+
+  - name: costing
+    namespace: impilo-finance
+    chart: ./services/costing-engine-service/helm/costing
+    labels:
+      plane: finance
+      service: costing
+    needs:
+      - impilo-trust/tshepo-authz
+
+  - name: msika
+    namespace: impilo-finance
+    chart: ./services/msika-service/helm/msika
+    labels:
+      plane: finance
+      service: msika
+    needs:
+      - impilo-trust/tshepo-authz
+      - impilo-finance/mushex
+
+  - name: msika-flow
+    namespace: impilo-finance
+    chart: ./services/msika-flow-service/helm/msika-flow
+    labels:
+      plane: finance
+      service: msika-flow
+    needs:
+      - impilo-finance/msika
+
+  - name: ubomi
+    namespace: impilo-finance
+    chart: ./services/ubomi-service/helm/ubomi
+    labels:
+      plane: finance
+      service: ubomi
+    needs:
+      - impilo-trust/tshepo-authz
+      - impilo-finance/mushex
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Integration / Ops Plane — impilo-ops
+  # ─────────────────────────────────────────────────────────────────────────────
+
+  - name: inventory
+    namespace: impilo-ops
+    chart: ./services/inventory-service/helm/inventory
+    labels:
+      plane: integration-ops
+      service: inventory
+    needs:
+      - impilo-trust/tshepo-authz
+      - impilo-registry/tuso
+
+  - name: product-registry
+    namespace: impilo-ops
+    chart: ./services/product-registry-service/helm/product-registry
+    labels:
+      plane: integration-ops
+      service: product-registry
+    needs:
+      - impilo-trust/tshepo-authz
+
+  - name: inventory-elmis-adapter
+    namespace: impilo-ops
+    chart: ./services/inventory-elmis-adapter/helm/inventory-elmis-adapter
+    labels:
+      plane: integration-ops
+      service: inventory-elmis-adapter
+    needs:
+      - impilo-ops/inventory
+
+  - name: pharmacy-elmis-adapter
+    namespace: impilo-ops
+    chart: ./services/pharmacy-elmis-adapter/helm/pharmacy-elmis-adapter
+    labels:
+      plane: integration-ops
+      service: pharmacy-elmis-adapter
+    needs:
+      - impilo-clinical/pharmacy
+
+  - name: document
+    namespace: impilo-ops
+    chart: ./services/document-service/helm/document
+    labels:
+      plane: integration-ops
+      service: document
+    needs:
+      - impilo-trust/tshepo-authz
+
+  - name: document-store
+    namespace: impilo-ops
+    chart: ./helm/document-store
+    labels:
+      plane: integration-ops
+      service: document-store
+    needs:
+      - impilo-ops/document
+
+  - name: notification
+    namespace: impilo-ops
+    chart: ./services/notification-service/helm/notification
+    labels:
+      plane: integration-ops
+      service: notification
+    needs:
+      - impilo-trust/tshepo-authz
+
+  - name: jobs
+    namespace: impilo-ops
+    chart: ./services/jobs-service/helm/jobs
+    labels:
+      plane: integration-ops
+      service: jobs
+    needs:
+      - impilo-trust/tshepo-authz
+
+  - name: integration-hub
+    namespace: impilo-ops
+    chart: ./services/integration-hub/helm/integration-hub
+    labels:
+      plane: integration-ops
+      service: integration-hub
+    needs:
+      - impilo-trust/tshepo-authz
+      - impilo-registry/vito
+
+  - name: offline-sync
+    namespace: impilo-ops
+    chart: ./services/offline-sync-service/helm/offline-sync
+    labels:
+      plane: integration-ops
+      service: offline-sync
+    needs:
+      - impilo-trust/tshepo-authz
+      - impilo-trust/tshepo-offline
+
+  - name: landela-adapter
+    namespace: impilo-ops
+    chart: ./helm/landela-adapter
+    labels:
+      plane: integration-ops
+      service: landela-adapter
+    needs:
+      - impilo-trust/tshepo-authz
+
+  - name: butano
+    namespace: impilo-ops
+    chart: ./helm/butano
+    labels:
+      plane: integration-ops
+      service: butano

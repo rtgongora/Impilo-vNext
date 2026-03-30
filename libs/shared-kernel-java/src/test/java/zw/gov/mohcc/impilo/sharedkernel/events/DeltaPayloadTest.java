@@ -50,4 +50,29 @@ class DeltaPayloadTest {
         assertThrows(UnsupportedOperationException.class,
                 () -> delta.changedFields().add("c"));
     }
+
+    @Test
+    void ofFactoryMethodCreatesUpdate() {
+        Map<String, Object> before = Map.of("status", "OLD");
+        Map<String, Object> after = Map.of("status", "NEW");
+        List<String> fields = List.of("status");
+
+        DeltaPayload delta = DeltaPayload.of(before, after, fields);
+
+        assertEquals("UPDATE", delta.op());
+        assertEquals(before, delta.before());
+        assertEquals(after, delta.after());
+        assertEquals(fields, delta.changedFields());
+    }
+
+    @Test
+    void toMapReturnsCorrectKeys() {
+        DeltaPayload delta = new DeltaPayload("UPDATE", Map.of("a", 1), Map.of("a", 2), List.of("a"));
+        Map<String, Object> map = delta.toMap();
+
+        assertEquals("UPDATE", map.get("op"));
+        assertEquals(Map.of("a", 1), map.get("before"));
+        assertEquals(Map.of("a", 2), map.get("after"));
+        assertEquals(List.of("a"), map.get("changed_fields"));
+    }
 }

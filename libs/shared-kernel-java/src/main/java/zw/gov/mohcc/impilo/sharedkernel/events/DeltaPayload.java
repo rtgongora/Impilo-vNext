@@ -35,4 +35,17 @@ public record DeltaPayload(
         before = before != null ? Map.copyOf(before) : null;
         after = after != null ? Map.copyOf(after) : null;
     }
+
+    public static DeltaPayload of(Map<String, Object> before, Map<String, Object> after, List<String> changedFields) {
+        return new DeltaPayload("UPDATE", before, after, changedFields);
+    }
+
+    public Map<String, Object> toMap() {
+        Map<String, Object> map = new java.util.HashMap<>();
+        map.put("op", op);
+        map.put("before", before);
+        map.put("after", after);
+        map.put("changed_fields", changedFields);
+        return map;
+    }
 }

@@ -1,0 +1,37 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: finance-plane-policy
+  namespace: impilo-finance
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: impilo-gateway
+    - namespaceSelector:
+        matchLabels:
+          plane: trust-governance
+    - namespaceSelector:
+        matchLabels:
+          plane: registry-spine
+    - namespaceSelector:
+        matchLabels:
+          plane: clinical-execution
+    - podSelector: {}
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: impilo-infra
+    - namespaceSelector:
+        matchLabels:
+          plane: trust-governance
+    - namespaceSelector:
+        matchLabels:
+          plane: registry-spine
+    - podSelector: {}

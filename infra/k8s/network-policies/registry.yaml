@@ -1,0 +1,34 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: registry-spine-policy
+  namespace: impilo-registry
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: impilo-gateway
+    - namespaceSelector:
+        matchLabels:
+          plane: trust-governance
+    - namespaceSelector:
+        matchLabels:
+          plane: clinical-execution
+    - namespaceSelector:
+        matchLabels:
+          plane: finance
+    - podSelector: {}
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: impilo-infra
+    - namespaceSelector:
+        matchLabels:
+          plane: trust-governance
+    - podSelector: {}

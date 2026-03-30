@@ -216,4 +216,23 @@ class CompanionOutboxPublisherTest {
         TestPublisher pub = new TestPublisher(null);
         assertEquals(EmitMode.DUAL, pub.effectiveEmitMode());
     }
+
+    @Test
+    void v11PayloadCanContainDelta() throws Exception {
+        TestPublisher pub = new TestPublisher("V1_1_ONLY");
+        TestOutboxRow row = createRow(1L, "WIDGET", "w-1");
+        row.payloadJson = "{\"delta\":{\"op\":\"UPDATE\",\"changed_fields\":[\"name\"]},\"full\":{\"name\":\"test\"}}";
+        pub.rows.add(row);
+
+        pub.publishPendingEvents();
+
+        String json = pub.sentValues.get(0);
+        var mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        var envelope = mapper.readTree(json);
+        var payload = envelope.get("payload");
+
+        assertNotNull(payload.get("delta"));
+        assertEquals("UPDATE", payload.get("delta").get("op").asText());
+        assertEquals("test", payload.get("full").get("name").asText());
+    }
 }

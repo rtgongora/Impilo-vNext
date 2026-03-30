@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: tshepo-keys-service
+  cloud:
+    vault:
+      enabled: ${VAULT_ENABLED:true}
+      host: ${VAULT_HOST:localhost}
+      port: ${VAULT_PORT:8200}
+      scheme: http
+      authentication: TOKEN
+      token: ${VAULT_TOKEN:impilo-dev-root}
+      kv:
+        enabled: true
+        backend: secret
+        default-context: tshepo-keys-service
+      fail-fast: ${VAULT_FAIL_FAST:false}

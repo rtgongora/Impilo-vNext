@@ -1,0 +1,99 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+  prometheus:
+    config:
+      scrape_configs:
+        - job_name: otel-collector
+          static_configs:
+            - targets: ['localhost:8888']
+
+processors:
+  batch:
+    timeout: 5s
+    send_batch_size: 1024
+
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 512
+    spike_limit_mib: 128
+
+  resource:
+    attributes:
+      - key: platform
+        value: impilo-vnext
+        action: insert
+      - key: deployment.environment
+        from_attribute: ENVIRONMENT
+        action: insert
+
+  resourcedetection:
+    detectors: [env, docker]
+    timeout: 5s
+
+  attributes/trust-headers:
+    actions:
+      - key: x-correlation-id
+        from_attribute: http.request.header.x-correlation-id
+        action: insert
+      - key: x-tenant-id
+        from_attribute: http.request.header.x-tenant-id
+        action: insert
+
+exporters:
+  otlp/jaeger:
+    endpoint: jaeger:4317
+    tls:
+      insecure: true
+
+  prometheusremotewrite:
+    endpoint: http://prometheus:9090/api/v1/write
+    tls:
+      insecure: true
+
+  loki:
+    endpoint: http://loki:3100/loki/api/v1/push
+    default_labels_enabled:
+      exporter: true
+      job: true
+      instance: true
+      level: true
+    labels:
+      attributes:
+        plane: ""
+        service.name: ""
+        x-tenant-id: ""
+
+  debug:
+    verbosity: basic
+
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13133
+  pprof:
+    endpoint: 0.0.0.0:1777
+  zpages:
+    endpoint: 0.0.0.0:55679
+
+service:
+  extensions: [health_check, pprof, zpages]
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, resource, resourcedetection, attributes/trust-headers, batch]
+      exporters: [otlp/jaeger]
+
+    metrics:
+      receivers: [otlp, prometheus]
+      processors: [memory_limiter, resource, resourcedetection, batch]
+      exporters: [prometheusremotewrite]
+
+    logs:
+      receivers: [otlp]
+      processors: [memory_limiter, resource, resourcedetection, batch]
+      exporters: [loki]
