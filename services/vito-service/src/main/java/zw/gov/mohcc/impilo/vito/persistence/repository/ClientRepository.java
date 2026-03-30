@@ -10,6 +10,7 @@ import zw.gov.mohcc.impilo.vito.persistence.entity.ClientEntity;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -21,6 +22,14 @@ public interface ClientRepository extends JpaRepository<ClientEntity, Long> {
     Page<ClientEntity> findByTenantIdAndStatus(UUID tenantId, IdentityStatus status, Pageable pageable);
 
     Page<ClientEntity> findByTenantId(UUID tenantId, Pageable pageable);
+
+    @Query("SELECT c FROM ClientEntity c WHERE c.tenantId = :tenantId " +
+           "AND (:cursor IS NULL OR c.healthId > :cursor) " +
+           "ORDER BY c.healthId ASC")
+    List<ClientEntity> getSnapshot(
+            @Param("tenantId") UUID tenantId,
+            @Param("cursor") UUID cursor,
+            Pageable pageable);
 
     boolean existsByTenantIdAndHealthId(UUID tenantId, UUID healthId);
 

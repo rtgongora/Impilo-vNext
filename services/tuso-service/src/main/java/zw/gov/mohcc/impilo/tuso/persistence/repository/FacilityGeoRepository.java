@@ -9,5 +9,5 @@ import java.util.Optional;
 @Repository
 public interface FacilityGeoRepository extends JpaRepository<FacilityGeoEntity, Long> {
 
-    Optional<FacilityGeoEntity> findByFacilityId(Long facilityId);
+    Optional<FacilityGeoEntity> findByFacility_Id(Long facilityId);
 }

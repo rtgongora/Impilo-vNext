@@ -127,7 +127,7 @@ public class ConfigService {
         log.debug("Getting config history for facility {} tenant {}", facilityId, tenantId);
 
         return configVersionRepository
-                .findByFacilityIdOrderByVersionDesc(facilityId, PageRequest.of(0, 50))
+                .findByFacility_IdOrderByVersionDesc(facilityId, PageRequest.of(0, 50))
                 .getContent()
                 .stream()
                 .map(this::toResponse)
@@ -156,7 +156,7 @@ public class ConfigService {
 
         // Find the target version
         var allVersions = configVersionRepository
-                .findByFacilityIdOrderByVersionDesc(facilityId, PageRequest.of(0, 1000));
+                .findByFacility_IdOrderByVersionDesc(facilityId, PageRequest.of(0, 1000));
         FacilityConfigVersionEntity targetVersionEntity = allVersions.getContent().stream()
                 .filter(v -> v.getVersion() == targetVersion)
                 .findFirst()

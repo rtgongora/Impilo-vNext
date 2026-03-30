@@ -87,6 +87,13 @@
             <artifactId>nimbus-jose-jwt</artifactId>
         </dependency>
 
+        <!-- Tink (required by nimbus-jose-jwt for Ed25519) -->
+        <dependency>
+            <groupId>com.google.crypto.tink</groupId>
+            <artifactId>tink</artifactId>
+            <version>1.14.1</version>
+        </dependency>
+
         <!-- Apache PDFBox (Apache 2.0 — Emergency Capsule + Pickup Slip PDFs) -->
         <dependency>
             <groupId>org.apache.pdfbox</groupId>

@@ -85,4 +85,14 @@ public class TusoOutboxPublisher extends CompanionOutboxPublisher {
             default -> "tuso.events";
         };
     }
+
+    @Override
+    protected String resolveV11Topic(OutboxRow row) {
+        return switch (row.aggregateType()) {
+            case "FACILITY" -> "kernel.tuso.facility";
+            case "SERVICE_AREA" -> "kernel.tuso.service_area";
+            case "RESOURCE" -> "kernel.tuso.resource";
+            default -> "kernel.tuso.events";
+        };
+    }
 }

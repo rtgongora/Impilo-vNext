@@ -57,7 +57,7 @@ public class BookingConflictDetector {
         // Find all non-cancelled bookings that overlap: existing.start < newEnd AND existing.end > newStart
         // Convert OffsetDateTime to Instant for repository query (entity uses Instant internally)
         List<BookingEntity> overlapping = bookingRepository
-                .findByResourceIdAndStartTimeLessThanAndEndTimeGreaterThanAndStatusNot(
+                .findByResource_IdAndStartTimeLessThanAndEndTimeGreaterThanAndStatusNot(
                         resourceId, endTime.toInstant(), startTime.toInstant(), "CANCELLED");
 
         // Exclude the specified booking if provided (for reschedule scenarios)

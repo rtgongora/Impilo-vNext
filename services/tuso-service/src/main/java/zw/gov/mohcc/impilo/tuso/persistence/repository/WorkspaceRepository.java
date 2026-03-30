@@ -11,7 +11,7 @@ import java.util.UUID;
 @Repository
 public interface WorkspaceRepository extends JpaRepository<WorkspaceEntity, UUID> {
 
-    List<WorkspaceEntity> findByFacilityIdAndActiveTrue(Long facilityId);
+    List<WorkspaceEntity> findByFacility_IdAndActiveTrue(Long facilityId);
 
     Optional<WorkspaceEntity> findByIdAndTenantId(UUID id, UUID tenantId);
 

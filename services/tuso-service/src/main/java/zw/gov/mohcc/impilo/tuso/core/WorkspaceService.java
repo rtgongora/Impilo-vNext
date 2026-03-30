@@ -216,7 +216,7 @@ public class WorkspaceService {
      */
     @Transactional(readOnly = true)
     public List<WorkspaceEntity> listWorkspaces(Long facilityId) {
-        return workspaceRepository.findByFacilityIdAndActiveTrue(facilityId);
+        return workspaceRepository.findByFacility_IdAndActiveTrue(facilityId);
     }
 
     /**
@@ -295,7 +295,7 @@ public class WorkspaceService {
     @Transactional(readOnly = true)
     public List<WorkspaceEligibilityEngine.EligibilityResult> getStartShiftOptions(
             Long facilityId, ProviderEligibilityInfo providerInfo) {
-        List<WorkspaceEntity> workspaces = workspaceRepository.findByFacilityIdAndActiveTrue(facilityId);
+        List<WorkspaceEntity> workspaces = workspaceRepository.findByFacility_IdAndActiveTrue(facilityId);
 
         List<List<WorkspaceRuleEntity>> rulesPerWorkspace = new ArrayList<>();
         for (WorkspaceEntity ws : workspaces) {

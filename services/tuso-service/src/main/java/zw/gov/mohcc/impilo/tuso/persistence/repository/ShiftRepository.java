@@ -15,7 +15,7 @@ import java.util.UUID;
 @Repository
 public interface ShiftRepository extends JpaRepository<ShiftEntity, UUID> {
 
-    List<ShiftEntity> findByFacilityIdAndStatus(Long facilityId, String status);
+    List<ShiftEntity> findByFacility_IdAndStatus(Long facilityId, String status);
 
     @Query("SELECT s FROM ShiftEntity s WHERE s.tenantId = :tenantId " +
            "AND s.providerId = :providerId AND s.status = 'ACTIVE'")
@@ -23,7 +23,7 @@ public interface ShiftRepository extends JpaRepository<ShiftEntity, UUID> {
             @Param("tenantId") UUID tenantId,
             @Param("providerId") String providerId);
 
-    Page<ShiftEntity> findByFacilityIdOrderByStartedAtDesc(Long facilityId, Pageable pageable);
+    Page<ShiftEntity> findByFacility_IdOrderByStartedAtDesc(Long facilityId, Pageable pageable);
 
     Page<ShiftEntity> findByTenantIdAndProviderIdOrderByStartedAtDesc(
             UUID tenantId, String providerId, Pageable pageable);

@@ -9,5 +9,5 @@ import java.util.Optional;
 @Repository
 public interface FacilityReadinessRepository extends JpaRepository<FacilityReadinessEntity, Long> {
 
-    Optional<FacilityReadinessEntity> findByFacilityId(Long facilityId);
+    Optional<FacilityReadinessEntity> findByFacility_Id(Long facilityId);
 }

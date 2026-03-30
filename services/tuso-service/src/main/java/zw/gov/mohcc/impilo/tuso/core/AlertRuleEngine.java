@@ -37,23 +37,15 @@ public class AlertRuleEngine {
     private final TusoProperties tusoProperties;
     private final OccupancySnapshotRepository occupancyRepository;
 
+    @org.springframework.beans.factory.annotation.Autowired
     public AlertRuleEngine(AlertRepository alertRepository,
                            EventOutboxRepository outboxRepository,
-                           TusoProperties tusoProperties) {
+                           TusoProperties tusoProperties,
+                           org.springframework.beans.factory.ObjectProvider<OccupancySnapshotRepository> occupancyRepositoryProvider) {
         this.alertRepository = alertRepository;
         this.outboxRepository = outboxRepository;
         this.tusoProperties = tusoProperties;
-        this.occupancyRepository = null;
-    }
-
-    public AlertRuleEngine(TusoProperties tusoProperties,
-                           AlertRepository alertRepository,
-                           OccupancySnapshotRepository occupancyRepository,
-                           EventOutboxRepository outboxRepository) {
-        this.tusoProperties = tusoProperties;
-        this.alertRepository = alertRepository;
-        this.occupancyRepository = occupancyRepository;
-        this.outboxRepository = outboxRepository;
+        this.occupancyRepository = occupancyRepositoryProvider.getIfAvailable();
     }
 
     public List<AlertEntity> evaluate(Long facilityId, UUID tenantId, List<TelemetryEventEntity> events) {
@@ -119,7 +111,7 @@ public class AlertRuleEngine {
                                                              String title, String description,
                                                              String metricType, BigDecimal metricValue,
                                                              BigDecimal threshold) {
-        var existing = alertRepository.findByFacilityIdAndAlertTypeAndStatus(facilityId, alertType, "OPEN");
+        var existing = alertRepository.findByFacility_IdAndAlertTypeAndStatus(facilityId, alertType, "OPEN");
         if (existing.isPresent()) {
             log.debug("Skipping duplicate alert {} for facility {}", alertType, facilityId);
             return java.util.Optional.empty();
@@ -221,7 +213,7 @@ public class AlertRuleEngine {
                                             String metricType, BigDecimal metricValue,
                                             BigDecimal threshold) {
         // Check for existing open alert of same type for this facility
-        var existing = alertRepository.findByFacilityIdAndAlertTypeAndStatus(facility.getId(), alertType, "OPEN");
+        var existing = alertRepository.findByFacility_IdAndAlertTypeAndStatus(facility.getId(), alertType, "OPEN");
         if (existing.isPresent()) {
             log.debug("Skipping duplicate alert {} for facility {}", alertType, facility.getId());
             return;

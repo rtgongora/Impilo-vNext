@@ -175,21 +175,21 @@ public class ControlTowerService {
 
         // Recent telemetry (last 10 events)
         Page<TelemetryEventEntity> recentEvents = telemetryRepository
-                .findByFacilityIdOrderByRecordedAtDesc(facilityId, PageRequest.of(0, 10));
+                .findByFacility_IdOrderByRecordedAtDesc(facilityId, PageRequest.of(0, 10));
         List<FacilitySummaryResponse.RecentTelemetry> recentTelemetry = recentEvents.getContent().stream()
                 .map(e -> new FacilitySummaryResponse.RecentTelemetry(
                         e.getSource(), e.getMetricType(), e.getMetricValue(), e.getUnit(), e.getRecordedAt()))
                 .toList();
 
         // Active alert count
-        int alertCount = (int) alertRepository.findByFacilityIdAndStatusOrderByCreatedAtDesc(
+        int alertCount = (int) alertRepository.findByFacility_IdAndStatusOrderByCreatedAtDesc(
                 facilityId, "OPEN", PageRequest.of(0, 1)).getTotalElements();
 
         // Workspace count
-        int workspaceCount = workspaceRepository.findByFacilityIdAndActiveTrue(facilityId).size();
+        int workspaceCount = workspaceRepository.findByFacility_IdAndActiveTrue(facilityId).size();
 
         // Active shift count
-        int shiftCount = shiftRepository.findByFacilityIdAndStatus(facilityId, "ACTIVE").size();
+        int shiftCount = shiftRepository.findByFacility_IdAndStatus(facilityId, "ACTIVE").size();
 
         return new FacilitySummaryResponse(
                 facilityId,
@@ -213,10 +213,10 @@ public class ControlTowerService {
         Page<AlertEntity> alerts;
 
         if (facilityId != null && status != null) {
-            alerts = alertRepository.findByFacilityIdAndStatusOrderByCreatedAtDesc(
+            alerts = alertRepository.findByFacility_IdAndStatusOrderByCreatedAtDesc(
                     facilityId, status, PageRequest.of(0, 100));
         } else if (facilityId != null) {
-            alerts = alertRepository.findByFacilityIdAndStatusOrderByCreatedAtDesc(
+            alerts = alertRepository.findByFacility_IdAndStatusOrderByCreatedAtDesc(
                     facilityId, "OPEN", PageRequest.of(0, 100));
         } else if (status != null && "OPEN".equals(status)) {
             alerts = alertRepository.findOpenAlerts(tenantId, PageRequest.of(0, 100));

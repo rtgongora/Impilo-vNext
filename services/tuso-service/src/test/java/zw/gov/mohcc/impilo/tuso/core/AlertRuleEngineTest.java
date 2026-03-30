@@ -46,6 +46,9 @@ class AlertRuleEngineTest {
     @Mock
     private EventOutboxRepository outboxRepository;
 
+    @Mock
+    private org.springframework.beans.factory.ObjectProvider<OccupancySnapshotRepository> occupancyRepositoryProvider;
+
     private TusoProperties tusoProperties;
     private AlertRuleEngine engine;
 
@@ -62,14 +65,16 @@ class AlertRuleEngineTest {
         thresholds.setLowBedOccupancyPct(20);
         tusoProperties.setAlerts(thresholds);
 
-        engine = new AlertRuleEngine(tusoProperties, alertRepository, occupancyRepository, outboxRepository);
+        when(occupancyRepositoryProvider.getIfAvailable()).thenReturn(occupancyRepository);
+
+        engine = new AlertRuleEngine(alertRepository, outboxRepository, tusoProperties, occupancyRepositoryProvider);
     }
 
     @Test
     void evaluate_queueWaitAboveThreshold_raisesAlert() {
         TelemetryEventEntity event = createTelemetryEvent("QUEUE_WAIT", new BigDecimal("90"));
 
-        when(alertRepository.findByFacilityIdAndAlertTypeAndStatus(eq(FACILITY_ID), eq("QUEUE_WAIT"), eq("OPEN")))
+        when(alertRepository.findByFacility_IdAndAlertTypeAndStatus(eq(FACILITY_ID), eq("QUEUE_WAIT"), eq("OPEN")))
                 .thenReturn(Optional.empty());
         when(alertRepository.save(any(AlertEntity.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
@@ -109,7 +114,7 @@ class AlertRuleEngineTest {
 
         when(occupancyRepository.findTopByFacilityIdOrderBySnapshotTimeDesc(FACILITY_ID))
                 .thenReturn(Optional.of(snapshot));
-        when(alertRepository.findByFacilityIdAndAlertTypeAndStatus(
+        when(alertRepository.findByFacility_IdAndAlertTypeAndStatus(
                 eq(FACILITY_ID), eq("HIGH_BED_OCCUPANCY"), eq("OPEN")))
                 .thenReturn(Optional.empty());
         when(alertRepository.save(any(AlertEntity.class)))
@@ -132,7 +137,7 @@ class AlertRuleEngineTest {
         existingOpen.setAlertType("QUEUE_WAIT");
         existingOpen.setStatus("OPEN");
 
-        when(alertRepository.findByFacilityIdAndAlertTypeAndStatus(eq(FACILITY_ID), eq("QUEUE_WAIT"), eq("OPEN")))
+        when(alertRepository.findByFacility_IdAndAlertTypeAndStatus(eq(FACILITY_ID), eq("QUEUE_WAIT"), eq("OPEN")))
                 .thenReturn(Optional.of(existingOpen));
         when(occupancyRepository.findTopByFacilityIdOrderBySnapshotTimeDesc(FACILITY_ID))
                 .thenReturn(Optional.empty());
@@ -153,7 +158,7 @@ class AlertRuleEngineTest {
 
         when(occupancyRepository.findTopByFacilityIdOrderBySnapshotTimeDesc(FACILITY_ID))
                 .thenReturn(Optional.of(snapshot));
-        when(alertRepository.findByFacilityIdAndAlertTypeAndStatus(any(), any(), eq("OPEN")))
+        when(alertRepository.findByFacility_IdAndAlertTypeAndStatus(any(), any(), eq("OPEN")))
                 .thenReturn(Optional.empty());
         when(alertRepository.save(any(AlertEntity.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));

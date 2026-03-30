@@ -16,7 +16,7 @@ import java.util.*;
  * Provides temporal, cursor-based snapshots of the client registry.
  */
 @RestController
-@RequestMapping("/internal/v1/snapshots")
+@RequestMapping("/internal/v1")
 public class SnapshotController {
 
     private final ClientRepository clientRepository;
@@ -25,7 +25,7 @@ public class SnapshotController {
         this.clientRepository = clientRepository;
     }
 
-    @GetMapping("/clients")
+    @GetMapping("/snapshots/clients")
     public ResponseEntity<Map<String, Object>> clientSnapshot(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestHeader("X-Pod-ID") String podId,
@@ -54,7 +54,37 @@ public class SnapshotController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/clients/emit")
+    @GetMapping("/clients/snapshot")
+    public ResponseEntity<Map<String, Object>> clientsSnapshot(
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @RequestParam(required = false) UUID cursor,
+            @RequestParam(defaultValue = "100") int limit) {
+
+        int effectiveLimit = Math.min(Math.max(limit, 1), 500);
+        List<ClientEntity> entities = clientRepository.getSnapshot(
+                UUID.fromString(tenantId),
+                cursor,
+                PageRequest.of(0, effectiveLimit + 1));
+
+        boolean hasMore = entities.size() > effectiveLimit;
+        List<ClientEntity> snapshotItems = hasMore ? entities.subList(0, effectiveLimit) : entities;
+        UUID nextCursor = hasMore ? snapshotItems.get(snapshotItems.size() - 1).getHealthId() : null;
+
+        List<Map<String, Object>> items = snapshotItems.stream()
+                .map(this::toSnapshotItem)
+                .toList();
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("as_of", OffsetDateTime.now().toString());
+        response.put("items", items);
+        response.put("next_cursor", nextCursor != null ? nextCursor.toString() : null);
+        response.put("has_more", hasMore);
+        response.put("limit", effectiveLimit);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/snapshots/clients/emit")
     public ResponseEntity<Map<String, Object>> emitClientSnapshot(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestHeader("X-Pod-ID") String podId,

@@ -162,9 +162,9 @@ public class ResourceService {
     @Transactional(readOnly = true)
     public List<ResourceEntity> listResources(Long facilityId, String resourceType) {
         if (resourceType != null && !resourceType.isBlank()) {
-            return resourceRepository.findByFacilityIdAndResourceTypeAndActiveTrue(facilityId, resourceType);
+            return resourceRepository.findByFacility_IdAndResourceTypeAndActiveTrue(facilityId, resourceType);
         }
-        return resourceRepository.findByFacilityIdAndActiveTrue(facilityId);
+        return resourceRepository.findByFacility_IdAndActiveTrue(facilityId);
     }
 
     /**
@@ -227,7 +227,7 @@ public class ResourceService {
                 continue;
             }
 
-            List<ResourceCalendarEntity> calendars = calendarRepository.findByResourceIdAndActiveTrue(resource.getId());
+            List<ResourceCalendarEntity> calendars = calendarRepository.findByResource_IdAndActiveTrue(resource.getId());
 
             for (ResourceCalendarEntity calendar : calendars) {
                 if (calendar.getDayOfWeek() != dayOfWeek) {
@@ -250,7 +250,7 @@ public class ResourceService {
                 Instant dayEnd = date.plusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC);
 
                 List<BookingEntity> existingBookings = bookingRepository
-                        .findByResourceIdAndStartTimeLessThanAndEndTimeGreaterThanAndStatusNot(
+                        .findByResource_IdAndStartTimeLessThanAndEndTimeGreaterThanAndStatusNot(
                                 resource.getId(), dayEnd, dayStart, "CANCELLED");
 
                 for (AvailableSlot slot : calendarSlots) {

@@ -1,5 +1,8 @@
 package zw.gov.mohcc.impilo.tuso.core;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -8,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
+import zw.gov.mohcc.impilo.sharedkernel.events.DeltaPayload;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.EventOutboxEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityCapabilityEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityContactEntity;
@@ -55,6 +59,7 @@ public class FacilityService {
     private final FacilityHistoryRepository historyRepository;
     private final WorkspaceRepository workspaceRepository;
     private final EventOutboxRepository outboxRepository;
+    private final ObjectMapper objectMapper;
 
     public FacilityService(FacilityRepository facilityRepository,
                            FacilityIdentifierRepository identifierRepository,
@@ -64,7 +69,8 @@ public class FacilityService {
                            FacilityReadinessRepository readinessRepository,
                            FacilityHistoryRepository historyRepository,
                            WorkspaceRepository workspaceRepository,
-                           EventOutboxRepository outboxRepository) {
+                           EventOutboxRepository outboxRepository,
+                           ObjectMapper objectMapper) {
         this.facilityRepository = facilityRepository;
         this.identifierRepository = identifierRepository;
         this.contactRepository = contactRepository;
@@ -74,6 +80,7 @@ public class FacilityService {
         this.historyRepository = historyRepository;
         this.workspaceRepository = workspaceRepository;
         this.outboxRepository = outboxRepository;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -226,60 +233,83 @@ public class FacilityService {
             throw new SecurityException("Tenant isolation violation: facility belongs to different tenant");
         }
 
+        // Capture BEFORE state
+        Map<String, Object> before = facilityToMap(facility);
+        List<String> changedFields = new java.util.ArrayList<>();
+
         log.info("Updating facility {} for tenant {}", id, tenantId);
 
         // Track changes for history
         if (dto.name() != null && !dto.name().equals(facility.getName())) {
             recordHistory(id, "UPDATE", "name", facility.getName(), dto.name(), actorId, null);
             facility.setName(dto.name());
+            changedFields.add("name");
         }
         if (dto.facilityType() != null && !dto.facilityType().equals(facility.getFacilityType())) {
             recordHistory(id, "UPDATE", "facility_type", facility.getFacilityType(), dto.facilityType(), actorId, null);
             facility.setFacilityType(dto.facilityType());
+            changedFields.add("facility_type");
         }
         if (dto.province() != null && !dto.province().equals(facility.getProvince())) {
             recordHistory(id, "UPDATE", "province", facility.getProvince(), dto.province(), actorId, null);
             facility.setProvince(dto.province());
+            changedFields.add("province");
         }
         if (dto.district() != null && !dto.district().equals(facility.getDistrict())) {
             recordHistory(id, "UPDATE", "district", facility.getDistrict(), dto.district(), actorId, null);
             facility.setDistrict(dto.district());
+            changedFields.add("district");
         }
         if (dto.operationalStatus() != null && !dto.operationalStatus().equals(facility.getOperationalStatus())) {
             recordHistory(id, "UPDATE", "operational_status", facility.getOperationalStatus(), dto.operationalStatus(), actorId, null);
             facility.setOperationalStatus(dto.operationalStatus());
+            changedFields.add("operational_status");
         }
         if (dto.ownership() != null && !dto.ownership().equals(facility.getOwnership())) {
             recordHistory(id, "UPDATE", "ownership", facility.getOwnership(), dto.ownership(), actorId, null);
             facility.setOwnership(dto.ownership());
+            changedFields.add("ownership");
         }
         if (dto.level() != null && !dto.level().equals(facility.getLevel())) {
             recordHistory(id, "UPDATE", "level", facility.getLevel(), dto.level(), actorId, null);
             facility.setLevel(dto.level());
+            changedFields.add("level");
         }
         if (dto.description() != null && !dto.description().equals(facility.getDescription())) {
             recordHistory(id, "UPDATE", "description", facility.getDescription(), dto.description(), actorId, null);
             facility.setDescription(dto.description());
+            changedFields.add("description");
         }
         if (dto.latitude() != null && !dto.latitude().equals(facility.getLatitude())) {
             recordHistory(id, "UPDATE", "latitude",
                     facility.getLatitude() != null ? facility.getLatitude().toString() : null,
                     dto.latitude().toString(), actorId, null);
             facility.setLatitude(dto.latitude());
+            changedFields.add("latitude");
         }
         if (dto.longitude() != null && !dto.longitude().equals(facility.getLongitude())) {
             recordHistory(id, "UPDATE", "longitude",
                     facility.getLongitude() != null ? facility.getLongitude().toString() : null,
                     dto.longitude().toString(), actorId, null);
             facility.setLongitude(dto.longitude());
+            changedFields.add("longitude");
         }
 
         facility.setVersion(facility.getVersion() + 1);
         facility.setUpdatedBy(actorId);
         facility = facilityRepository.save(facility);
 
-        publishEvent("FACILITY", id.toString(), "tuso.facility.updated",
-                buildFacilityPayload(facility, "UPDATED"));
+        // Capture AFTER state
+        Map<String, Object> after = facilityToMap(facility);
+
+        if (!changedFields.isEmpty()) {
+            DeltaPayload delta = DeltaPayload.of(before, after, changedFields);
+            publishEvent("FACILITY", id.toString(), "tuso.facility.updated",
+                    Map.of("delta", delta.toMap(), "full", after));
+        } else {
+            publishEvent("FACILITY", id.toString(), "tuso.facility.updated",
+                    buildFacilityPayload(facility, "UPDATED"));
+        }
 
         log.info("Facility {} updated to version {}", id, facility.getVersion());
         return facility;
@@ -296,11 +326,11 @@ public class FacilityService {
         FacilityEntity facility = facilityRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Facility not found: " + id));
 
-        List<FacilityIdentifierEntity> identifiers = identifierRepository.findByFacilityId(id);
-        List<FacilityContactEntity> contacts = contactRepository.findByFacilityId(id);
-        FacilityGeoEntity geo = geoRepository.findByFacilityId(id).orElse(null);
-        List<FacilityCapabilityEntity> capabilities = capabilityRepository.findByFacilityIdAndActiveTrue(id);
-        FacilityReadinessEntity readiness = readinessRepository.findByFacilityId(id).orElse(null);
+        List<FacilityIdentifierEntity> identifiers = identifierRepository.findByFacility_Id(id);
+        List<FacilityContactEntity> contacts = contactRepository.findByFacility_Id(id);
+        FacilityGeoEntity geo = geoRepository.findByFacility_Id(id).orElse(null);
+        List<FacilityCapabilityEntity> capabilities = capabilityRepository.findByFacility_IdAndActiveTrue(id);
+        FacilityReadinessEntity readiness = readinessRepository.findByFacility_Id(id).orElse(null);
 
         return new FacilityDetail(facility, identifiers, contacts, geo, capabilities, readiness);
     }
@@ -361,6 +391,9 @@ public class FacilityService {
 
         log.info("Closing facility {} for tenant {}, reason: {}", id, tenantId, reason);
 
+        // Capture BEFORE state
+        Map<String, Object> before = facilityToMap(facility);
+
         String oldStatus = facility.getStatus();
         facility.setStatus("CLOSED");
         facility.setClosedDate(LocalDate.now());
@@ -369,10 +402,14 @@ public class FacilityService {
         facility.setUpdatedBy(actorId);
         facility = facilityRepository.save(facility);
 
+        // Capture AFTER state
+        Map<String, Object> after = facilityToMap(facility);
+
         recordHistory(id, "CLOSE", "status", oldStatus, "CLOSED", actorId, reason);
 
+        DeltaPayload delta = DeltaPayload.of(before, after, List.of("status", "closed_date", "close_reason"));
         publishEvent("FACILITY", id.toString(), "tuso.facility.closed",
-                buildFacilityPayload(facility, "CLOSED"));
+                Map.of("delta", delta.toMap(), "full", after));
 
         log.info("Facility {} closed successfully", id);
         return facility;
@@ -411,8 +448,11 @@ public class FacilityService {
 
         log.info("Merging facility {} into {} for tenant {}", sourceId, targetId, tenantId);
 
+        // Capture BEFORE state for source
+        Map<String, Object> before = facilityToMap(source);
+
         // Transfer active workspaces from source to target
-        List<WorkspaceEntity> workspaces = workspaceRepository.findByFacilityIdAndActiveTrue(sourceId);
+        List<WorkspaceEntity> workspaces = workspaceRepository.findByFacility_IdAndActiveTrue(sourceId);
         for (WorkspaceEntity ws : workspaces) {
             ws.setFacility(target);
             ws.setUpdatedBy(actorId);
@@ -428,15 +468,22 @@ public class FacilityService {
         source.setUpdatedBy(actorId);
         source = facilityRepository.save(source);
 
+        // Capture AFTER state for source
+        Map<String, Object> after = facilityToMap(source);
+
         recordHistory(sourceId, "MERGE", "status", oldStatus, "MERGED", actorId,
                 "Merged into facility " + targetId);
         recordHistory(targetId, "MERGE_RECEIVE", null, null, null, actorId,
                 "Received merge from facility " + sourceId);
 
+        DeltaPayload delta = new DeltaPayload("MERGE", before, after, List.of("status", "merged_into_id"));
         publishEvent("FACILITY", sourceId.toString(), "tuso.facility.merged",
-                String.format("{\"sourceId\":%d,\"targetId\":%d,\"tenantId\":\"%s\",\"action\":\"MERGED\"," +
-                        "\"workspacesTransferred\":%d,\"actorId\":\"%s\"}",
-                        sourceId, targetId, tenantId, workspaces.size(), actorId));
+                Map.of(
+                        "delta", delta.toMap(),
+                        "full", after,
+                        "targetId", targetId,
+                        "workspacesTransferred", workspaces.size()
+                ));
 
         log.info("Facility {} merged into {} successfully", sourceId, targetId);
         return source;
@@ -465,6 +512,39 @@ public class FacilityService {
         event.setEventType(eventType);
         event.setPayload(payload);
         outboxRepository.save(event);
+    }
+
+    private void publishEvent(String aggregateType, String aggregateId,
+                               String eventType, Map<String, Object> payloadMap) {
+        try {
+            String json = objectMapper.registerModule(new JavaTimeModule()).writeValueAsString(payloadMap);
+            publishEvent(aggregateType, aggregateId, eventType, json);
+        } catch (JsonProcessingException e) {
+            log.error("Failed to serialize event payload for {}/{}", aggregateType, aggregateId, e);
+            throw new RuntimeException("Event serialization failed", e);
+        }
+    }
+
+    private Map<String, Object> facilityToMap(FacilityEntity f) {
+        Map<String, Object> map = new java.util.HashMap<>();
+        map.put("id", f.getId());
+        map.put("tenant_id", f.getTenantId());
+        map.put("facility_code", f.getFacilityCode());
+        map.put("name", f.getName());
+        map.put("facility_type", f.getFacilityType());
+        map.put("province", f.getProvince());
+        map.put("district", f.getDistrict());
+        map.put("latitude", f.getLatitude());
+        map.put("longitude", f.getLongitude());
+        map.put("status", f.getStatus());
+        map.put("gofr_id", f.getGofrId());
+        map.put("ownership", f.getOwnership());
+        map.put("level", f.getLevel());
+        map.put("operational_status", f.getOperationalStatus());
+        map.put("description", f.getDescription());
+        map.put("opened_date", f.getOpenedDate());
+        map.put("version", f.getVersion());
+        return map;
     }
 
     private String buildFacilityPayload(FacilityEntity facility, String action) {

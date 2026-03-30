@@ -9,8 +9,8 @@ import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityHistoryEntity;
 @Repository
 public interface FacilityHistoryRepository extends JpaRepository<FacilityHistoryEntity, Long> {
 
-    Page<FacilityHistoryEntity> findByFacilityIdOrderByChangedAtDesc(Long facilityId, Pageable pageable);
+    Page<FacilityHistoryEntity> findByFacility_IdOrderByChangedAtDesc(Long facilityId, Pageable pageable);
 
-    Page<FacilityHistoryEntity> findByFacilityIdAndChangeTypeOrderByChangedAtDesc(
+    Page<FacilityHistoryEntity> findByFacility_IdAndChangeTypeOrderByChangedAtDesc(
             Long facilityId, String changeType, Pageable pageable);
 }

@@ -18,5 +18,5 @@ public interface FacilityConfigVersionRepository extends JpaRepository<FacilityC
            "ORDER BY fcv.version DESC LIMIT 1")
     Optional<FacilityConfigVersionEntity> findLatestActive(@Param("facilityId") Long facilityId);
 
-    Page<FacilityConfigVersionEntity> findByFacilityIdOrderByVersionDesc(Long facilityId, Pageable pageable);
+    Page<FacilityConfigVersionEntity> findByFacility_IdOrderByVersionDesc(Long facilityId, Pageable pageable);
 }

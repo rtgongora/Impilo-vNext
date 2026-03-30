@@ -19,9 +19,9 @@ public interface OccupancySnapshotRepository extends JpaRepository<OccupancySnap
            "ORDER BY os.snapshotTime DESC LIMIT 1")
     OccupancySnapshotEntity findLatestByFacility(@Param("facilityId") Long facilityId);
 
-    Page<OccupancySnapshotEntity> findByFacilityIdOrderBySnapshotTimeDesc(Long facilityId, Pageable pageable);
+    Page<OccupancySnapshotEntity> findByFacility_IdOrderBySnapshotTimeDesc(Long facilityId, Pageable pageable);
 
-    List<OccupancySnapshotEntity> findByFacilityIdAndWardOrderBySnapshotTimeDesc(Long facilityId, String ward);
+    List<OccupancySnapshotEntity> findByFacility_IdAndWardOrderBySnapshotTimeDesc(Long facilityId, String ward);
 
     Optional<OccupancySnapshotEntity> findTopByFacilityIdOrderBySnapshotTimeDesc(Long facilityId);
 }

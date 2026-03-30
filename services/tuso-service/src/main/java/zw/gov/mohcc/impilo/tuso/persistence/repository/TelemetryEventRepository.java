@@ -12,11 +12,11 @@ import java.util.UUID;
 @Repository
 public interface TelemetryEventRepository extends JpaRepository<TelemetryEventEntity, Long> {
 
-    Page<TelemetryEventEntity> findByFacilityIdAndSourceOrderByRecordedAtDesc(
+    Page<TelemetryEventEntity> findByFacility_IdAndSourceOrderByRecordedAtDesc(
             Long facilityId, String source, Pageable pageable);
 
     Page<TelemetryEventEntity> findByTenantIdAndMetricTypeAndRecordedAtBetweenOrderByRecordedAtDesc(
             UUID tenantId, String metricType, Instant from, Instant to, Pageable pageable);
 
-    Page<TelemetryEventEntity> findByFacilityIdOrderByRecordedAtDesc(Long facilityId, Pageable pageable);
+    Page<TelemetryEventEntity> findByFacility_IdOrderByRecordedAtDesc(Long facilityId, Pageable pageable);
 }

@@ -101,16 +101,16 @@ public final class VitoEventMapper {
 
     public static String resolveV11Topic(String aggregateType) {
         return switch (aggregateType) {
-            case "CLIENT" -> "impilo.vito.identity";
-            case "ALIAS" -> "impilo.vito.alias";
-            case "SMART_CARD" -> "impilo.vito.cards";
-            case "WALLET" -> "impilo.vito.wallet";
-            case "ISSUANCE" -> "impilo.vito.issuance";
-            case "MERGE", "DEDUP" -> "impilo.vito.dedup";
-            case "PROVISIONAL" -> "impilo.vito.offline";
-            case "PICKUP" -> "impilo.vito.pickup";
-            case "PRINT_JOB" -> "impilo.vito.print";
-            default -> "impilo.vito.events";
+            case "CLIENT" -> "kernel.vito.identity";
+            case "ALIAS" -> "kernel.vito.alias";
+            case "SMART_CARD" -> "kernel.vito.cards";
+            case "WALLET" -> "kernel.vito.wallet";
+            case "ISSUANCE" -> "kernel.vito.issuance";
+            case "MERGE", "DEDUP" -> "kernel.vito.dedup";
+            case "PROVISIONAL" -> "kernel.vito.offline";
+            case "PICKUP" -> "kernel.vito.pickup";
+            case "PRINT_JOB" -> "kernel.vito.print";
+            default -> "kernel.vito.events";
         };
     }
 

@@ -10,7 +10,7 @@ import java.util.UUID;
 @Repository
 public interface ResourceCalendarRepository extends JpaRepository<ResourceCalendarEntity, Long> {
 
-    List<ResourceCalendarEntity> findByResourceIdAndActiveTrue(UUID resourceId);
+    List<ResourceCalendarEntity> findByResource_IdAndActiveTrue(UUID resourceId);
 
-    List<ResourceCalendarEntity> findByResourceIdAndDayOfWeekAndActiveTrue(UUID resourceId, Integer dayOfWeek);
+    List<ResourceCalendarEntity> findByResource_IdAndDayOfWeekAndActiveTrue(UUID resourceId, Integer dayOfWeek);
 }

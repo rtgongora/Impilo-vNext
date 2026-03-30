@@ -26,12 +26,12 @@ public interface BookingRepository extends JpaRepository<BookingEntity, UUID> {
     Page<BookingEntity> findByFacilityIdAndStartTimeBetweenOrderByStartTimeAsc(
             Long facilityId, Instant from, Instant to, Pageable pageable);
 
-    Page<BookingEntity> findByResourceIdAndStatusNotOrderByStartTimeAsc(
+    Page<BookingEntity> findByResource_IdAndStatusNotOrderByStartTimeAsc(
             UUID resourceId, String excludedStatus, Pageable pageable);
 
-    List<BookingEntity> findByResourceIdAndStartTimeLessThanAndEndTimeGreaterThan(
+    List<BookingEntity> findByResource_IdAndStartTimeLessThanAndEndTimeGreaterThan(
             UUID resourceId, Instant endTime, Instant startTime);
 
-    List<BookingEntity> findByResourceIdAndStartTimeLessThanAndEndTimeGreaterThanAndStatusNot(
+    List<BookingEntity> findByResource_IdAndStartTimeLessThanAndEndTimeGreaterThanAndStatusNot(
             UUID resourceId, Instant endTime, Instant startTime, String excludedStatus);
 }

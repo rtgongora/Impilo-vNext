@@ -9,7 +9,7 @@ import java.util.List;
 @Repository
 public interface FacilityContactRepository extends JpaRepository<FacilityContactEntity, Long> {
 
-    List<FacilityContactEntity> findByFacilityId(Long facilityId);
+    List<FacilityContactEntity> findByFacility_Id(Long facilityId);
 
-    List<FacilityContactEntity> findByFacilityIdAndContactType(Long facilityId, String contactType);
+    List<FacilityContactEntity> findByFacility_IdAndContactType(Long facilityId, String contactType);
 }

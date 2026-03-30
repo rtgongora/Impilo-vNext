@@ -9,9 +9,9 @@ import java.util.List;
 @Repository
 public interface FacilityCapabilityRepository extends JpaRepository<FacilityCapabilityEntity, Long> {
 
-    List<FacilityCapabilityEntity> findByFacilityIdAndActiveTrue(Long facilityId);
+    List<FacilityCapabilityEntity> findByFacility_IdAndActiveTrue(Long facilityId);
 
-    List<FacilityCapabilityEntity> findByFacilityIdAndCapabilityType(Long facilityId, String capabilityType);
+    List<FacilityCapabilityEntity> findByFacility_IdAndCapabilityType(Long facilityId, String capabilityType);
 
     List<FacilityCapabilityEntity> findByCapabilityCodeAndCapabilityType(String capabilityCode, String capabilityType);
 }

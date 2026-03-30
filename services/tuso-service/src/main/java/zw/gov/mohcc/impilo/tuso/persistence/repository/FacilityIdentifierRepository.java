@@ -10,9 +10,9 @@ import java.util.Optional;
 @Repository
 public interface FacilityIdentifierRepository extends JpaRepository<FacilityIdentifierEntity, Long> {
 
-    List<FacilityIdentifierEntity> findByFacilityId(Long facilityId);
+    List<FacilityIdentifierEntity> findByFacility_Id(Long facilityId);
 
     Optional<FacilityIdentifierEntity> findBySystemAndValue(String system, String value);
 
-    List<FacilityIdentifierEntity> findByFacilityIdAndActiveTrue(Long facilityId);
+    List<FacilityIdentifierEntity> findByFacility_IdAndActiveTrue(Long facilityId);
 }

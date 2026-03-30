@@ -1,9 +1,15 @@
 package zw.gov.mohcc.impilo.vito.core.merge;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import zw.gov.mohcc.impilo.sharedkernel.events.DeltaPayload;
 import zw.gov.mohcc.impilo.vito.core.FederationAuthorityGuard;
 import zw.gov.mohcc.impilo.vito.core.IdentityStatus;
 import zw.gov.mohcc.impilo.vito.persistence.entity.*;
@@ -19,6 +25,8 @@ import java.util.*;
 @Service
 public class MergeService {
 
+    private static final Logger log = LoggerFactory.getLogger(MergeService.class);
+
     private final MergeHistoryRepository mergeRepo;
     private final ClientRepository clientRepo;
     private final IdentityAliasRepository aliasRepo;
@@ -26,11 +34,13 @@ public class MergeService {
     private final DedupActionRepository dedupActionRepo;
     private final EventOutboxRepository outboxRepo;
     private final FederationAuthorityGuard federationGuard;
+    private final ObjectMapper objectMapper;
 
     public MergeService(MergeHistoryRepository mergeRepo, ClientRepository clientRepo,
                          IdentityAliasRepository aliasRepo, DedupCaseRepository dedupCaseRepo,
                          DedupActionRepository dedupActionRepo, EventOutboxRepository outboxRepo,
-                         FederationAuthorityGuard federationGuard) {
+                         FederationAuthorityGuard federationGuard,
+                         ObjectMapper objectMapper) {
         this.mergeRepo = mergeRepo;
         this.clientRepo = clientRepo;
         this.aliasRepo = aliasRepo;
@@ -38,6 +48,7 @@ public class MergeService {
         this.dedupActionRepo = dedupActionRepo;
         this.outboxRepo = outboxRepo;
         this.federationGuard = federationGuard;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -63,8 +74,10 @@ public class MergeService {
         }
 
         // Mark merged client as MERGED
+        Map<String, Object> before = clientToMap(merged);
         merged.setStatus(IdentityStatus.MERGED);
         clientRepo.save(merged);
+        Map<String, Object> after = clientToMap(merged);
 
         // Transfer active aliases from merged to survivor (use actual healthIds, not CRIDs)
         List<IdentityAliasEntity> mergedAliases = aliasRepo.findByTenantIdAndHealthIdAndStatus(
@@ -107,8 +120,15 @@ public class MergeService {
             dedupActionRepo.save(action);
         }
 
+        DeltaPayload delta = new DeltaPayload("MERGE", before, after, List.of("status"));
         publishEvent("MERGE", history.getId().toString(), "vito.merge.executed",
-                "{\"tenantId\":\"" + tenantId + "\",\"survivor\":\"" + survivorCrid + "\",\"merged\":\"" + mergedCrid + "\"}");
+                Map.of(
+                        "delta", delta.toMap(),
+                        "full", after,
+                        "tenantId", tenantId,
+                        "survivor", survivorCrid,
+                        "merged", mergedCrid
+                ));
 
         return history;
     }
@@ -133,8 +153,10 @@ public class MergeService {
         // Restore merged client (lookup by CRID)
         ClientEntity merged = clientRepo.findByTenantIdAndCrid(tenantId, history.getMergedCrid())
                 .orElseThrow();
+        Map<String, Object> before = clientToMap(merged);
         merged.setStatus(IdentityStatus.ACTIVE);
         clientRepo.save(merged);
+        Map<String, Object> after = clientToMap(merged);
 
         // Transfer aliases back (re-associate aliases that originally belonged to merged)
         // Note: This is a best-effort reversal; some aliases may have been modified since merge
@@ -147,8 +169,15 @@ public class MergeService {
         history.setReversedBy(actorId);
         history = mergeRepo.save(history);
 
+        DeltaPayload delta = new DeltaPayload("UPDATE", before, after, List.of("status"));
         publishEvent("MERGE", history.getId().toString(), "vito.merge.reversed",
-                "{\"tenantId\":\"" + tenantId + "\",\"survivor\":\"" + history.getSurvivorCrid() + "\",\"merged\":\"" + history.getMergedCrid() + "\"}");
+                Map.of(
+                        "delta", delta.toMap(),
+                        "full", after,
+                        "tenantId", tenantId,
+                        "survivor", history.getSurvivorCrid(),
+                        "merged", history.getMergedCrid()
+                ));
 
         return history;
     }
@@ -202,6 +231,31 @@ public class MergeService {
         }
 
         outboxRepo.save(event);
+    }
+
+    private void publishEvent(String aggregateType, String aggregateId,
+                               String eventType, Map<String, Object> payloadMap) {
+        try {
+            String json = objectMapper.registerModule(new JavaTimeModule()).writeValueAsString(payloadMap);
+            publishEvent(aggregateType, aggregateId, eventType, json);
+        } catch (JsonProcessingException e) {
+            log.error("Failed to serialize event payload for {}/{}", aggregateType, aggregateId, e);
+            throw new RuntimeException("Event serialization failed", e);
+        }
+    }
+
+    private Map<String, Object> clientToMap(ClientEntity c) {
+        Map<String, Object> map = new java.util.HashMap<>();
+        map.put("id", c.getId());
+        map.put("health_id", c.getHealthId());
+        map.put("tenant_id", c.getTenantId());
+        map.put("given_name", c.getGivenName());
+        map.put("family_name", c.getFamilyName());
+        map.put("date_of_birth", c.getDateOfBirth());
+        map.put("sex", c.getSex());
+        map.put("status", c.getStatus() != null ? c.getStatus().name() : null);
+        map.put("crid", c.getCrid());
+        return map;
     }
 
     /**

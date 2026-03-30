@@ -149,7 +149,7 @@ public class BookingService {
     @Transactional(readOnly = true)
     public List<BookingEntity> listBookings(UUID resourceId, OffsetDateTime from, OffsetDateTime to) {
         log.debug("Listing bookings for resource {} from {} to {}", resourceId, from, to);
-        return bookingRepository.findByResourceIdAndStartTimeLessThanAndEndTimeGreaterThan(
+        return bookingRepository.findByResource_IdAndStartTimeLessThanAndEndTimeGreaterThan(
                 resourceId, to.toInstant(), from.toInstant());
     }
 
