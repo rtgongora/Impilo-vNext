@@ -9,6 +9,7 @@ import zw.gov.mohcc.impilo.experience.repository.WorkspaceRepository;
 import zw.gov.mohcc.impilo.experience.service.OutboxService;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -26,6 +27,43 @@ public class WorkspaceController {
     public WorkspaceController(WorkspaceRepository workspaceRepository, OutboxService outboxService) {
         this.workspaceRepository = workspaceRepository;
         this.outboxService = outboxService;
+    }
+
+    @GetMapping
+    public ResponseEntity<Map<String, Object>> listWorkspaces(
+            @RequestParam("facility_id") UUID facilityId,
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+
+        List<Workspace> workspaces = workspaceRepository
+                .findByFacilityIdAndTenantIdOrderByNameAsc(facilityId, tenantId);
+
+        List<Map<String, Object>> dataList = workspaces.stream().map(ws -> {
+            Map<String, Object> attrs = new LinkedHashMap<>();
+            attrs.put("name", ws.getName());
+            attrs.put("workspaceType", ws.getWorkspaceType());
+            attrs.put("facilityId", ws.getFacilityId().toString());
+            attrs.put("status", ws.getStatus());
+            attrs.put("config", ws.getConfig());
+            attrs.put("created_at", ws.getCreatedAt());
+            attrs.put("updated_at", ws.getUpdatedAt());
+            return (Map<String, Object>) Map.of(
+                    "id", ws.getId().toString(),
+                    "type", "workspace",
+                    "attributes", attrs
+            );
+        }).toList();
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", dataList);
+        response.put("meta", Map.of(
+                "request_id", requestId,
+                "correlation_id", correlationId,
+                "total", dataList.size()
+        ));
+
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/{id}/activate")
