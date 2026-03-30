@@ -1,25 +1,24 @@
 # =============================================================================
-# COSTA — Costing Engine Service API (OpenAPI 3.0)
+# COSTA — Costing & Billing Service API (OpenAPI 3.0)
+# Manages bill drafting, line item costing, approval workflows, invoice
+# issuance, payment intents, refunds, estimates, tariff imports, and
+# billing rulesets within Impilo.
 # =============================================================================
 openapi: "3.0.3"
 
 info:
-  title: "COSTA — Costing Engine Service API"
+  title: COSTA — Costing & Billing Service
   version: "1.0.0"
   description: |
-    COSTA manages the complete costing, billing, and payment lifecycle for the
-    Impilo platform:
+    COSTA is the financial billing engine for Impilo. It manages the complete
+    bill lifecycle from draft creation through line costing, approval, invoice
+    issuance, payment collection, and refunds. It also provides cost estimation,
+    tariff management, and billing ruleset administration.
 
-    * **Estimates** — Pre-encounter cost estimation with party splitting
-    * **Bills** — Full lifecycle: draft → accumulate → approve → finalize
-    * **Tariffs** — National tariff schedule management and CSV import
-    * **Rulesets** — JSON-based charging rules with versioned publishing
-    * **Audit** — Complete bill audit trail with all linked entities
-
-    Five cost methods: Micro-costing, ABC, Tariff, Standard (with variance), Stock Average.
-    Exemption engine splits across patient, insurer, subsidy, and write-off parties.
-
-    All endpoints require TSHEPO trust headers injected by Envoy ext_authz.
+    **Consistency classes**
+    * Class A — destructive/high-trust mutations (require PDP decision header)
+    * Class B — creation / registration mutations
+    * Class C — reads and snapshots
   contact:
     name: Impilo Platform Team
   license:
@@ -27,9 +26,7 @@ info:
 
 servers:
   - url: http://localhost:8101
-    description: Local development (direct)
-  - url: http://localhost:10000
-    description: Local development (via Envoy gateway)
+    description: Local development
   - url: https://{tenant}.impilo.health/api
     description: Production (per-tenant)
     variables:
@@ -40,109 +37,116 @@ security:
   - bearerAuth: []
 
 tags:
-  - name: Estimate
-    description: Pre-encounter cost estimation
-  - name: Bill
-    description: Bill lifecycle management (draft, approve, finalize, pay, refund)
-  - name: Tariff
-    description: National tariff schedule management
-  - name: Ruleset
-    description: Charging ruleset configuration and publishing
-  - name: Audit
-    description: Bill audit trail and compliance
+  - name: Bills
+    description: Bill lifecycle management
+  - name: Estimates
+    description: Cost estimation
+  - name: Tariffs
+    description: Tariff management and import
+  - name: Rulesets
+    description: Billing ruleset management
 
+# ============================================================================
+# PATHS
+# ============================================================================
 paths:
-  /costa/v1/estimate:
-    post:
-      operationId: createEstimate
-      tags: [Estimate]
-      summary: Create a cost estimate
-      description: |
-        Computes a pre-encounter cost estimate for one or more line items.
-        Applies cost engines, charging rules, and exemption/insurance splitting.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/EstimateRequest"
-      responses:
-        "200":
-          description: Estimate computed
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiResponse_EstimateResult"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
+
+  # ---- Bills ---------------------------------------------------------------
 
   /costa/v1/bills/draft:
     post:
-      operationId: createBillDraft
-      tags: [Bill]
-      summary: Create a new bill draft
+      operationId: draftBill
+      tags: [Bills]
+      summary: Create a draft bill (Class B)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/BillDraftRequest"
+              $ref: "#/components/schemas/DraftBillRequest"
       responses:
         "201":
           description: Draft bill created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse_BillHeader"
+                $ref: "#/components/schemas/ApiResponseBillResponse"
         "400":
           $ref: "#/components/responses/BadRequest"
 
   /costa/v1/bills/{id}:
     get:
       operationId: getBill
-      tags: [Bill]
-      summary: Get bill with lines and parties
+      tags: [Bills]
+      summary: Get bill with lines and parties (Class C)
       parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
         - $ref: "#/components/parameters/BillId"
       responses:
         "200":
-          description: Bill detail
+          description: Bill detail with lines and parties
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse_BillDetail"
+                $ref: "#/components/schemas/ApiResponseBillResponse"
         "404":
           $ref: "#/components/responses/NotFound"
 
   /costa/v1/bills/{id}/lines:
     post:
-      operationId: postBillLine
-      tags: [Bill]
-      summary: Post a charge line to a bill
+      operationId: addBillLine
+      tags: [Bills]
+      summary: Add a line item to a bill (Class B)
       parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
         - $ref: "#/components/parameters/BillId"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/PostLineRequest"
+              $ref: "#/components/schemas/AddBillLineRequest"
       responses:
         "201":
-          description: Line posted
+          description: Bill line added
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse_BillLine"
+                $ref: "#/components/schemas/ApiResponseBillResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /costa/v1/bills/{id}/recompute:
     post:
       operationId: recomputeBill
-      tags: [Bill]
-      summary: Recompute bill totals from current lines
+      tags: [Bills]
+      summary: Recompute bill totals (Class B)
       parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
         - $ref: "#/components/parameters/BillId"
       responses:
         "200":
@@ -150,14 +154,22 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse_BillHeader"
+                $ref: "#/components/schemas/ApiResponseBillResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /costa/v1/bills/{id}/submit-approval:
     post:
-      operationId: submitBillApproval
-      tags: [Bill]
-      summary: Submit bill for approval
+      operationId: submitBillForApproval
+      tags: [Bills]
+      summary: Submit bill for approval (Class B)
       parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
         - $ref: "#/components/parameters/BillId"
       responses:
         "200":
@@ -165,35 +177,53 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse_BillHeader"
+                $ref: "#/components/schemas/ApiResponseBillResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /costa/v1/bills/{id}/approve:
     post:
       operationId: approveBill
-      tags: [Bill]
-      summary: Approve a bill
+      tags: [Bills]
+      summary: Approve a bill (Class A)
       parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/Decision"
         - $ref: "#/components/parameters/BillId"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ApprovalRequest"
+              $ref: "#/components/schemas/ApproveBillRequest"
       responses:
         "200":
           description: Bill approved
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse_BillHeader"
+                $ref: "#/components/schemas/ApiResponseBillResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /costa/v1/bills/{id}/finalize:
     post:
       operationId: finalizeBill
-      tags: [Bill]
-      summary: Finalize a bill (lock from further edits)
+      tags: [Bills]
+      summary: Finalize a bill (Class A)
       parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/Decision"
         - $ref: "#/components/parameters/BillId"
       responses:
         "200":
@@ -201,50 +231,77 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse_BillHeader"
+                $ref: "#/components/schemas/ApiResponseBillResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /costa/v1/bills/{id}/issue-invoice:
     post:
       operationId: issueInvoice
-      tags: [Bill]
-      summary: Issue an invoice for the finalized bill
+      tags: [Bills]
+      summary: Issue an invoice for a bill (Class A)
       parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/Decision"
         - $ref: "#/components/parameters/BillId"
       responses:
-        "201":
+        "200":
           description: Invoice issued
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse_Invoice"
+                $ref: "#/components/schemas/ApiResponseBillResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /costa/v1/bills/{id}/create-payment-intent:
     post:
       operationId: createPaymentIntent
-      tags: [Bill]
-      summary: Create a payment intent (MUSHEX integration)
+      tags: [Bills]
+      summary: Create a payment intent for a bill (Class A)
       parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/Decision"
         - $ref: "#/components/parameters/BillId"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/PaymentIntentRequest"
+              $ref: "#/components/schemas/CreatePaymentIntentRequest"
       responses:
         "201":
           description: Payment intent created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse_Payment"
+                $ref: "#/components/schemas/ApiResponsePaymentIntentResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /costa/v1/bills/{id}/refund:
     post:
       operationId: refundBill
-      tags: [Bill]
-      summary: Create a refund against a bill
+      tags: [Bills]
+      summary: Issue a refund on a bill (Class A)
       parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/Decision"
         - $ref: "#/components/parameters/BillId"
       requestBody:
         required: true
@@ -253,90 +310,136 @@ paths:
             schema:
               $ref: "#/components/schemas/RefundRequest"
       responses:
-        "201":
-          description: Refund created
+        "200":
+          description: Refund processed
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse_Refund"
+                $ref: "#/components/schemas/ApiResponseBillResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # ---- Estimates -----------------------------------------------------------
+
+  /costa/v1/estimate:
+    post:
+      operationId: estimateCost
+      tags: [Estimates]
+      summary: Estimate cost for a set of items (Class C)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CostEstimateRequest"
+      responses:
+        "200":
+          description: Cost estimate
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseCostEstimate"
+
+  # ---- Tariffs -------------------------------------------------------------
 
   /costa/v1/tariffs:
     get:
-      operationId: listTariffs
-      tags: [Tariff]
-      summary: List tariffs for the current tenant
+      operationId: listCostaTariffs
+      tags: [Tariffs]
+      summary: List tariffs (paged) (Class C)
       parameters:
-        - name: page
-          in: query
-          schema:
-            type: integer
-            default: 0
-        - name: size
-          in: query
-          schema:
-            type: integer
-            default: 50
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/PageNumber"
+        - $ref: "#/components/parameters/PageSize"
       responses:
         "200":
-          description: Paginated tariff list
+          description: Paged tariff list
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse_PagedTariff"
+                $ref: "#/components/schemas/ApiResponsePagedCostaTariff"
 
   /costa/v1/tariffs/import:
     post:
-      operationId: importTariffCsv
-      tags: [Tariff]
-      summary: Import tariffs from a CSV file
+      operationId: importTariffs
+      tags: [Tariffs]
+      summary: Import tariffs from a file (Class A)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/Decision"
       requestBody:
         required: true
         content:
           multipart/form-data:
             schema:
               type: object
+              required: [file]
               properties:
                 file:
                   type: string
                   format: binary
       responses:
-        "200":
-          description: Tariffs imported
+        "202":
+          description: Tariff import accepted
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse_TariffList"
+                $ref: "#/components/schemas/ApiResponseGeneric"
+
+  # ---- Rulesets ------------------------------------------------------------
 
   /costa/v1/rulesets:
     get:
       operationId: listRulesets
-      tags: [Ruleset]
-      summary: List charging rulesets for the current tenant
+      tags: [Rulesets]
+      summary: List billing rulesets (paged) (Class C)
       parameters:
-        - name: page
-          in: query
-          schema:
-            type: integer
-            default: 0
-        - name: size
-          in: query
-          schema:
-            type: integer
-            default: 50
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/PageNumber"
+        - $ref: "#/components/parameters/PageSize"
       responses:
         "200":
-          description: Paginated ruleset list
+          description: Paged ruleset list
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse_PagedRuleset"
+                $ref: "#/components/schemas/ApiResponsePagedRuleset"
 
   /costa/v1/rulesets/{id}/publish:
     post:
       operationId: publishRuleset
-      tags: [Ruleset]
-      summary: Publish a charging ruleset (archives previous version)
+      tags: [Rulesets]
+      summary: Publish a billing ruleset (Class A)
       parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/Decision"
         - name: id
           in: path
           required: true
@@ -349,130 +452,181 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse_Ruleset"
-
-  /costa/v1/audit/bill/{id}:
-    get:
-      operationId: auditBill
-      tags: [Audit]
-      summary: Get complete bill audit trail
-      description: |
-        Returns the full audit trail for a bill including all lines, parties,
-        approvals, payments, refunds, claims, and invoice.
-      parameters:
-        - $ref: "#/components/parameters/BillId"
-      responses:
-        "200":
-          description: Complete audit trail
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiResponse_AuditTrail"
+                $ref: "#/components/schemas/ApiResponseRuleset"
         "404":
           $ref: "#/components/responses/NotFound"
 
+# ============================================================================
+# COMPONENTS
+# ============================================================================
 components:
+
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
+      description: Keycloak-issued access token (forwarded by Envoy)
 
   parameters:
+    TenantId:
+      name: X-Tenant-Id
+      in: header
+      required: true
+      description: Tenant identifier — injected by Envoy after TSHEPO authorisation
+      schema:
+        type: string
+    CorrelationId:
+      name: X-Correlation-Id
+      in: header
+      required: true
+      description: End-to-end correlation ID for distributed tracing
+      schema:
+        type: string
+        format: uuid
+    ActorId:
+      name: X-Actor-Id
+      in: header
+      required: true
+      description: Authenticated actor (user or service) identifier
+      schema:
+        type: string
+    ActorType:
+      name: X-Actor-Type
+      in: header
+      required: true
+      description: Type of actor making the request
+      schema:
+        type: string
+        enum: [CITIZEN, PROVIDER, ADMIN, SYSTEM, SERVICE]
+    PurposeOfUse:
+      name: X-Purpose-Of-Use
+      in: header
+      required: true
+      description: Why this request is being made
+      schema:
+        type: string
+    DeviceFingerprint:
+      name: X-Device-Fingerprint
+      in: header
+      required: true
+      description: Device identity hash
+      schema:
+        type: string
+    FacilityId:
+      name: X-Facility-Id
+      in: header
+      required: false
+      description: Facility scope (contextual)
+      schema:
+        type: string
+        format: uuid
+    WorkspaceId:
+      name: X-Workspace-Id
+      in: header
+      required: false
+      description: Workspace scope (contextual)
+      schema:
+        type: string
+        format: uuid
+    ShiftId:
+      name: X-Shift-Id
+      in: header
+      required: false
+      description: Duty shift scope (contextual)
+      schema:
+        type: string
+        format: uuid
+    Decision:
+      name: X-Decision
+      in: header
+      required: false
+      description: PDP decision header — ALLOW, DENY, STEP_UP_REQUIRED (Class A endpoints require ALLOW)
+      schema:
+        type: string
+        enum: [ALLOW, DENY, STEP_UP_REQUIRED]
+    Obligations:
+      name: X-Obligations
+      in: header
+      required: false
+      description: JSON obligations blob from TSHEPO
+      schema:
+        type: string
+    PageNumber:
+      name: page
+      in: query
+      schema:
+        type: integer
+        default: 0
+    PageSize:
+      name: size
+      in: query
+      schema:
+        type: integer
+        default: 20
+        maximum: 100
     BillId:
       name: id
       in: path
       required: true
-      description: ULID bill identifier
+      description: Bill identifier
       schema:
-        type: string
-        pattern: "^[0-9A-HJKMNP-TV-Z]{26}$"
+        type: integer
+        format: int64
 
   responses:
     BadRequest:
-      description: Invalid request
+      description: Validation error
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/ApiError"
-    Unauthorized:
-      description: Missing or invalid authentication
+            $ref: "#/components/schemas/ErrorResponse"
     NotFound:
       description: Resource not found
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/ApiError"
+            $ref: "#/components/schemas/ErrorResponse"
+    Conflict:
+      description: Duplicate resource
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Unauthorized:
+      description: Missing or invalid trust headers
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Forbidden:
+      description: PDP denied the request (X-Decision=DENY)
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
 
   schemas:
-    ApiError:
-      type: object
-      properties:
-        success:
-          type: boolean
-          example: false
-        error:
-          type: object
-          properties:
-            code:
-              type: string
-            message:
-              type: string
-            status:
-              type: integer
 
-    EstimateRequest:
-      type: object
-      required: [items]
-      properties:
-        items:
-          type: array
-          items:
-            $ref: "#/components/schemas/EstimateLineInput"
-        exemptionCategory:
-          type: string
-          enum: [CHILD, ELDERLY, MATERNITY, CHRONIC, DISABLED, VETERAN, HEALTHCARE_WORKER, INDIGENT, EMERGENCY, GOVERNMENT, OTHER]
-        insurancePlanId:
-          type: integer
-          format: int64
-        context:
-          type: object
-          additionalProperties: true
+    # ---- Requests ----------------------------------------------------------
 
-    EstimateLineInput:
+    DraftBillRequest:
       type: object
-      required: [msikaCode, kind, qty]
-      properties:
-        msikaCode:
-          type: string
-        description:
-          type: string
-        kind:
-          type: string
-          enum: [SERVICE, PRODUCT, FEE, BEDDAY, PROCEDURE, THEATRE, IMPLANT, NURSING, OVERHEAD, TRANSPORT, PER_DIEM, COLD_CHAIN, DELIVERY, BUNDLE]
-        qty:
-          type: number
-        costMethod:
-          type: string
-          enum: [MICRO, ABC, TARIFF, STANDARD, STOCK_AVERAGE]
-        extras:
-          type: object
-          additionalProperties: true
-
-    BillDraftRequest:
-      type: object
+      required: [encounterId, billType]
       properties:
         encounterId:
-          type: string
+          type: integer
+          format: int64
         msikaOrderId:
           type: string
+          format: uuid
         billType:
           type: string
-          enum: [ENCOUNTER, INPATIENT, OUTREACH, MSIKA_ORDER, INSURANCE_CLAIM]
+          enum: [OUTPATIENT, INPATIENT, EMERGENCY, PHARMACY, LAB, RADIOLOGY]
 
-    PostLineRequest:
+    AddBillLineRequest:
       type: object
-      required: [msikaCode, kind, qty]
+      required: [msikaCode, description, kind, qty, costMethod]
       properties:
         msikaCode:
           type: string
@@ -480,12 +634,13 @@ components:
           type: string
         kind:
           type: string
-          enum: [SERVICE, PRODUCT, FEE, BEDDAY, PROCEDURE, THEATRE, IMPLANT, NURSING, OVERHEAD, TRANSPORT, PER_DIEM, COLD_CHAIN, DELIVERY, BUNDLE]
+          enum: [SERVICE, PRODUCT, PROCEDURE, CONSULTATION, FEE]
         qty:
           type: number
+          format: double
         costMethod:
           type: string
-          enum: [MICRO, ABC, TARIFF, STANDARD, STOCK_AVERAGE]
+          enum: [TARIFF, COST_PLUS, FIXED, ZERO_RATED]
         sourceEvent:
           type: string
         sourceRef:
@@ -494,21 +649,22 @@ components:
           type: object
           additionalProperties: true
 
-    ApprovalRequest:
+    ApproveBillRequest:
       type: object
       properties:
         note:
           type: string
 
-    PaymentIntentRequest:
+    CreatePaymentIntentRequest:
       type: object
       required: [paymentType, amount]
       properties:
         paymentType:
           type: string
-          enum: [CASH, MOBILE_MONEY, CARD, BANK_TRANSFER, INSURANCE_CLAIM, VOUCHER]
+          enum: [CASH, CARD, MOBILE_MONEY, INSURANCE, VOUCHER]
         amount:
           type: number
+          format: double
 
     RefundRequest:
       type: object
@@ -516,39 +672,171 @@ components:
       properties:
         amount:
           type: number
+          format: double
         reason:
           type: string
         reasonCode:
           type: string
         refundType:
           type: string
+          enum: [FULL, PARTIAL, CREDIT_NOTE]
 
-    BillHeader:
+    CostEstimateRequest:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/EstimateItem"
+        exemptionCategory:
+          type: string
+        insurancePlanId:
+          type: string
+          format: uuid
+        context:
+          type: object
+          additionalProperties: true
+
+    EstimateItem:
+      type: object
+      required: [msikaCode, qty]
+      properties:
+        msikaCode:
+          type: string
+        qty:
+          type: number
+          format: double
+
+    # ---- Response wrappers -------------------------------------------------
+
+    ApiResponseBillResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        correlationId:
+          type: string
+          format: uuid
+        data:
+          $ref: "#/components/schemas/BillResponse"
+
+    ApiResponsePaymentIntentResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        correlationId:
+          type: string
+          format: uuid
+        data:
+          $ref: "#/components/schemas/PaymentIntentResponse"
+
+    ApiResponseCostEstimate:
+      type: object
+      properties:
+        success:
+          type: boolean
+        correlationId:
+          type: string
+          format: uuid
+        data:
+          $ref: "#/components/schemas/CostEstimate"
+
+    ApiResponsePagedCostaTariff:
+      type: object
+      properties:
+        success:
+          type: boolean
+        correlationId:
+          type: string
+          format: uuid
+        data:
+          $ref: "#/components/schemas/PagedCostaTariff"
+
+    ApiResponseGeneric:
+      type: object
+      properties:
+        success:
+          type: boolean
+        correlationId:
+          type: string
+          format: uuid
+        data:
+          $ref: "#/components/schemas/GenericResponse"
+
+    ApiResponsePagedRuleset:
+      type: object
+      properties:
+        success:
+          type: boolean
+        correlationId:
+          type: string
+          format: uuid
+        data:
+          $ref: "#/components/schemas/PagedRuleset"
+
+    ApiResponseRuleset:
+      type: object
+      properties:
+        success:
+          type: boolean
+        correlationId:
+          type: string
+          format: uuid
+        data:
+          $ref: "#/components/schemas/Ruleset"
+
+    # ---- Domain objects ----------------------------------------------------
+
+    BillResponse:
       type: object
       properties:
         id:
+          type: integer
+          format: int64
+        billRef:
           type: string
-        tenantId:
-          type: string
-          format: uuid
-        facilityId:
-          type: string
-          format: uuid
         encounterId:
+          type: integer
+          format: int64
+        msikaOrderId:
+          type: string
+          format: uuid
+        billType:
           type: string
         status:
           type: string
-          enum: [DRAFT, ACCUMULATING, PENDING_APPROVAL, APPROVED, FINALIZED, INVOICED, PAID, PARTIALLY_PAID, REFUNDED, VOIDED]
-        billType:
-          type: string
+          enum: [DRAFT, PENDING_APPROVAL, APPROVED, FINALIZED, INVOICED, PAID, PARTIALLY_PAID, REFUNDED, CANCELLED]
+        grossAmount:
+          type: number
+          format: double
+        discountAmount:
+          type: number
+          format: double
+        netAmount:
+          type: number
+          format: double
         currency:
           type: string
-        totalCharge:
-          type: number
-        totalDiscount:
-          type: number
-        totalNet:
-          type: number
+        lines:
+          type: array
+          items:
+            $ref: "#/components/schemas/BillLine"
+        parties:
+          type: array
+          items:
+            $ref: "#/components/schemas/BillParty"
+        approvedBy:
+          type: string
+        approvalNote:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
 
     BillLine:
       type: object
@@ -556,8 +844,6 @@ components:
         id:
           type: integer
           format: int64
-        billId:
-          type: string
         msikaCode:
           type: string
         description:
@@ -566,82 +852,115 @@ components:
           type: string
         qty:
           type: number
-        unitCost:
+          format: double
+        unitPrice:
           type: number
-        chargeAmount:
+          format: double
+        lineTotal:
           type: number
-        netAmount:
-          type: number
-        voided:
-          type: boolean
+          format: double
+        costMethod:
+          type: string
+        sourceEvent:
+          type: string
+        sourceRef:
+          type: string
 
-    Invoice:
+    BillParty:
+      type: object
+      properties:
+        partyType:
+          type: string
+          enum: [PATIENT, INSURER, EMPLOYER, GUARANTOR]
+        partyId:
+          type: string
+        shareAmount:
+          type: number
+          format: double
+        sharePercent:
+          type: number
+          format: double
+
+    PaymentIntentResponse:
       type: object
       properties:
         id:
           type: integer
           format: int64
         billId:
-          type: string
-        invoiceNumber:
-          type: string
-        totalDue:
-          type: number
-        currency:
-          type: string
-
-    Payment:
-      type: object
-      properties:
-        id:
           type: integer
           format: int64
-        billId:
-          type: string
         paymentType:
           type: string
         amount:
           type: number
+          format: double
+        currency:
+          type: string
         status:
           type: string
+          enum: [PENDING, PROCESSING, SUCCEEDED, FAILED, CANCELLED]
+        gatewayRef:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
 
-    Refund:
+    CostEstimate:
       type: object
       properties:
-        id:
-          type: integer
-          format: int64
-        billId:
-          type: string
-        amount:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/EstimatedItem"
+        grossTotal:
           type: number
-        reason:
+          format: double
+        discountTotal:
+          type: number
+          format: double
+        netTotal:
+          type: number
+          format: double
+        currency:
           type: string
-        status:
+        exemptionApplied:
+          type: boolean
+        estimatedAt:
           type: string
+          format: date-time
 
-    Tariff:
+    EstimatedItem:
       type: object
       properties:
-        id:
-          type: integer
-          format: int64
-        tenantId:
-          type: string
-          format: uuid
-        tariffCode:
-          type: string
         msikaCode:
           type: string
         description:
           type: string
-        price:
+        qty:
           type: number
+          format: double
+        unitPrice:
+          type: number
+          format: double
+        lineTotal:
+          type: number
+          format: double
+
+    CostaTariff:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        msikaCode:
+          type: string
+        description:
+          type: string
+        unitPrice:
+          type: number
+          format: double
         currency:
-          type: string
-        facilityCategory:
-          type: string
-        patientCategory:
           type: string
         effectiveFrom:
           type: string
@@ -649,6 +968,24 @@ components:
         effectiveTo:
           type: string
           format: date
+        status:
+          type: string
+          enum: [ACTIVE, RETIRED]
+
+    PagedCostaTariff:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/CostaTariff"
+        page:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+          format: int64
 
     Ruleset:
       type: object
@@ -656,217 +993,85 @@ components:
         id:
           type: integer
           format: int64
-        tenantId:
-          type: string
-          format: uuid
         name:
           type: string
-        version:
-          type: integer
+        description:
+          type: string
         status:
           type: string
           enum: [DRAFT, PUBLISHED, ARCHIVED]
-        rules:
-          type: string
-          description: JSON array of rule definitions
         effectiveFrom:
           type: string
           format: date
-
-    # -- Wrapped response types --
-    ApiResponse_EstimateResult:
-      type: object
-      properties:
-        success:
-          type: boolean
-        data:
-          type: object
-          description: Estimate result with lines, totals, and party split
-        correlationId:
-          type: string
-
-    ApiResponse_BillHeader:
-      type: object
-      properties:
-        success:
-          type: boolean
-        data:
-          $ref: "#/components/schemas/BillHeader"
-        correlationId:
-          type: string
-
-    ApiResponse_BillDetail:
-      type: object
-      properties:
-        success:
-          type: boolean
-        data:
-          type: object
-          properties:
-            bill:
-              $ref: "#/components/schemas/BillHeader"
-            lines:
-              type: array
-              items:
-                $ref: "#/components/schemas/BillLine"
-            parties:
-              type: array
-              items:
-                type: object
-        correlationId:
-          type: string
-
-    ApiResponse_BillLine:
-      type: object
-      properties:
-        success:
-          type: boolean
-        data:
-          $ref: "#/components/schemas/BillLine"
-        correlationId:
-          type: string
-
-    ApiResponse_Invoice:
-      type: object
-      properties:
-        success:
-          type: boolean
-        data:
-          $ref: "#/components/schemas/Invoice"
-        correlationId:
-          type: string
-
-    ApiResponse_Payment:
-      type: object
-      properties:
-        success:
-          type: boolean
-        data:
-          $ref: "#/components/schemas/Payment"
-        correlationId:
-          type: string
-
-    ApiResponse_Refund:
-      type: object
-      properties:
-        success:
-          type: boolean
-        data:
-          $ref: "#/components/schemas/Refund"
-        correlationId:
-          type: string
-
-    ApiResponse_PagedTariff:
-      type: object
-      properties:
-        success:
-          type: boolean
-        data:
-          type: object
-          properties:
-            items:
-              type: array
-              items:
-                $ref: "#/components/schemas/Tariff"
-            page:
-              type: integer
-            size:
-              type: integer
-            totalElements:
-              type: integer
-            totalPages:
-              type: integer
-            hasNext:
-              type: boolean
-        correlationId:
-          type: string
-
-    ApiResponse_TariffList:
-      type: object
-      properties:
-        success:
-          type: boolean
-        data:
+        rules:
           type: array
           items:
-            $ref: "#/components/schemas/Tariff"
-        correlationId:
+            type: object
+            additionalProperties: true
+        createdAt:
+          type: string
+          format: date-time
+        publishedAt:
+          type: string
+          format: date-time
+
+    PagedRuleset:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/Ruleset"
+        page:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+          format: int64
+
+    SnapshotResponse:
+      type: object
+      properties:
+        as_of:
+          type: string
+          format: date-time
+        cursor:
+          type: integer
+        limit:
+          type: integer
+        has_more:
+          type: boolean
+        total:
+          type: integer
+        items:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+
+    GenericResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        referenceId:
           type: string
 
-    ApiResponse_PagedRuleset:
+    ErrorResponse:
       type: object
       properties:
         success:
           type: boolean
-        data:
-          type: object
-          properties:
-            items:
-              type: array
-              items:
-                $ref: "#/components/schemas/Ruleset"
-            page:
-              type: integer
-            size:
-              type: integer
-            totalElements:
-              type: integer
-            totalPages:
-              type: integer
-            hasNext:
-              type: boolean
+          default: false
         correlationId:
           type: string
-
-    ApiResponse_Ruleset:
-      type: object
-      properties:
-        success:
-          type: boolean
-        data:
-          $ref: "#/components/schemas/Ruleset"
-        correlationId:
+          format: uuid
+        errorCode:
           type: string
-
-    ApiResponse_AuditTrail:
-      type: object
-      properties:
-        success:
-          type: boolean
-        data:
-          type: object
-          properties:
-            bill:
-              $ref: "#/components/schemas/BillHeader"
-            lines:
-              type: array
-              items:
-                $ref: "#/components/schemas/BillLine"
-            lines_count:
-              type: integer
-            voided_lines:
-              type: integer
-            parties:
-              type: array
-              items:
-                type: object
-            approvals:
-              type: array
-              items:
-                type: object
-            payments:
-              type: array
-              items:
-                $ref: "#/components/schemas/Payment"
-            refunds:
-              type: array
-              items:
-                $ref: "#/components/schemas/Refund"
-            claims:
-              type: array
-              items:
-                type: object
-            invoice:
-              $ref: "#/components/schemas/Invoice"
-        correlationId:
+        message:
           type: string
+        details:
+          type: array
+          items:
+            type: string

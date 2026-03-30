@@ -1,30 +1,22 @@
 # =============================================================================
-# ZIBO -- Terminology, Definitions & Classification API (OpenAPI 3.0)
-#
-# Comprehensive terminology governance: artifact management, pack distribution,
-# code mapping, validation, assignment policies, and governance analytics.
-#
-# All endpoints require a valid Bearer JWT and TSHEPO trust headers
-# (X-Tenant-Id, X-Actor-Id, X-Correlation-Id, etc.) injected by
-# Envoy ext_authz.
+# ZIBO — Terminology Service API (OpenAPI 3.0)
+# Manages FHIR-aligned code systems, value sets, concept maps, and provides
+# real-time and async validation for clinical coding within Impilo.
 # =============================================================================
 openapi: "3.0.3"
 
 info:
-  title: "ZIBO -- Terminology, Definitions & Classification API"
+  title: ZIBO — Terminology Service
   version: "1.0.0"
   description: |
-    ZIBO manages the complete terminology lifecycle for the Impilo platform:
+    ZIBO is the FHIR-aligned terminology service for Impilo. It manages code
+    systems, value sets, and concept maps, and provides synchronous and
+    asynchronous validation of clinical codes and resources.
 
-    * **Artifacts** -- FHIR terminology resource CRUD, versioning, and lifecycle
-    * **Packs** -- Grouping artifacts into distributable terminology packs
-    * **Validation** -- Coding validation, resource validation, and batch jobs
-    * **Mapping** -- Code translation across terminology systems via ConceptMaps
-    * **Assignments** -- Pack-to-scope binding with policy enforcement modes
-    * **Import/Export** -- FHIR Bundle and CSV import, pack export
-    * **Governance** -- Validation logs, top failures, and compliance stats
-
-    All endpoints require TSHEPO trust headers injected by Envoy ext_authz.
+    **Consistency classes**
+    * Class A — destructive/high-trust mutations (require PDP decision header)
+    * Class B — creation / registration mutations
+    * Class C — reads and snapshots
   contact:
     name: Impilo Platform Team
   license:
@@ -39,603 +31,349 @@ servers:
       tenant:
         default: demo
 
-# ---------------------------------------------------------------------------
-# Security
-# ---------------------------------------------------------------------------
 security:
   - bearerAuth: []
 
 tags:
-  - name: Artifact
-    description: Terminology artifact lifecycle management
-  - name: Pack
-    description: Terminology pack creation and distribution
-  - name: Validate
-    description: Coding and resource validation
-  - name: Map
-    description: Code translation and mapping
-  - name: Assignment
-    description: Pack-to-scope assignment and policy enforcement
-  - name: Import
-    description: Bulk import of terminology resources
-  - name: Export
-    description: Export packs and artifacts as FHIR Bundles
-  - name: Governance
-    description: Validation logs, failure analytics, and compliance stats
+  - name: CodeSystems
+    description: FHIR code system management
+  - name: ValueSets
+    description: FHIR value set management
+  - name: ConceptMaps
+    description: FHIR concept map management
+  - name: Validation
+    description: Clinical code and resource validation
 
-# ===========================================================================
-# Paths
-# ===========================================================================
+# ============================================================================
+# PATHS
+# ============================================================================
 paths:
-  # -------------------------------------------------------------------------
-  # Artifacts
-  # -------------------------------------------------------------------------
-  /v1/artifacts:
-    get:
-      operationId: listArtifacts
-      summary: List terminology artifacts
-      description: |
-        Returns a paginated list of terminology artifacts filtered by type,
-        status, or search query. Results are sorted by updatedAt descending.
-      tags: [Artifact]
-      parameters:
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
-        - $ref: '#/components/parameters/X-Actor-Type'
-        - $ref: '#/components/parameters/X-Purpose-Of-Use'
-        - name: fhirType
-          in: query
-          schema:
-            $ref: '#/components/schemas/FhirType'
-        - name: status
-          in: query
-          schema:
-            $ref: '#/components/schemas/ArtifactStatus'
-        - name: q
-          in: query
-          description: Free-text search across name, title, and canonicalUrl
-          schema:
-            type: string
-        - $ref: '#/components/parameters/PageParam'
-        - $ref: '#/components/parameters/SizeParam'
-      responses:
-        "200":
-          description: List of artifacts
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ArtifactListResponse'
-        "401":
-          $ref: '#/components/responses/Unauthorized'
-        "403":
-          $ref: '#/components/responses/Forbidden'
 
+  # ---- Code Systems --------------------------------------------------------
+
+  /internal/v1/code-systems:
     post:
-      operationId: createArtifact
-      summary: Create a new terminology artifact
-      description: |
-        Creates a new artifact in DRAFT status. The content field should contain
-        the FHIR resource JSON, XML, or CSV data depending on sourceFormat.
-      tags: [Artifact]
+      operationId: createCodeSystem
+      tags: [CodeSystems]
+      summary: Create a code system (Class B)
       parameters:
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
-        - $ref: '#/components/parameters/X-Actor-Type'
-        - $ref: '#/components/parameters/X-Purpose-Of-Use'
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ArtifactCreateRequest'
+              $ref: "#/components/schemas/CreateCodeSystemRequest"
       responses:
         "201":
-          description: Artifact created
+          description: Code system created
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ArtifactResponse'
+                $ref: "#/components/schemas/ApiResponseCodeSystemResponse"
         "400":
-          $ref: '#/components/responses/BadRequest'
-        "401":
-          $ref: '#/components/responses/Unauthorized'
+          $ref: "#/components/responses/BadRequest"
         "409":
-          $ref: '#/components/responses/Conflict'
+          $ref: "#/components/responses/Conflict"
 
-  /v1/artifacts/{artifactId}:
+  /internal/v1/code-systems/{id}/validate:
     get:
-      operationId: getArtifact
-      summary: Get artifact by ID
-      tags: [Artifact]
+      operationId: validateCode
+      tags: [CodeSystems]
+      summary: Validate a code against a code system (Class C)
       parameters:
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/ArtifactIdPath'
-      responses:
-        "200":
-          description: Artifact detail
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ArtifactResponse'
-        "404":
-          $ref: '#/components/responses/NotFound'
-
-    put:
-      operationId: updateArtifact
-      summary: Update artifact metadata or content
-      description: |
-        Updates a DRAFT artifact. Only title, description, publisher, and
-        content fields can be modified. Published artifacts cannot be updated.
-      tags: [Artifact]
-      parameters:
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
-        - $ref: '#/components/parameters/ArtifactIdPath'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ArtifactUpdateRequest'
-      responses:
-        "200":
-          description: Artifact updated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ArtifactResponse'
-        "400":
-          $ref: '#/components/responses/BadRequest'
-        "404":
-          $ref: '#/components/responses/NotFound'
-        "409":
-          $ref: '#/components/responses/Conflict'
-
-    delete:
-      operationId: deleteArtifact
-      summary: Delete a DRAFT artifact
-      description: Only DRAFT artifacts can be deleted. Published artifacts must be retired.
-      tags: [Artifact]
-      parameters:
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
-        - $ref: '#/components/parameters/ArtifactIdPath'
-      responses:
-        "200":
-          description: Artifact deleted
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessResponse'
-        "404":
-          $ref: '#/components/responses/NotFound'
-        "409":
-          $ref: '#/components/responses/Conflict'
-
-  /v1/artifacts/{artifactId}/publish:
-    post:
-      operationId: publishArtifact
-      summary: Publish a DRAFT artifact
-      description: Transitions artifact from DRAFT to ACTIVE status.
-      tags: [Artifact]
-      parameters:
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
-        - $ref: '#/components/parameters/ArtifactIdPath'
-      responses:
-        "200":
-          description: Artifact published
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ArtifactResponse'
-        "404":
-          $ref: '#/components/responses/NotFound'
-        "409":
-          $ref: '#/components/responses/Conflict'
-
-  /v1/artifacts/{artifactId}/deprecate:
-    post:
-      operationId: deprecateArtifact
-      summary: Deprecate an ACTIVE artifact
-      description: |
-        Marks an ACTIVE artifact as DEPRECATED. Deprecated artifacts are still
-        usable but should be replaced by newer versions.
-      tags: [Artifact]
-      parameters:
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
-        - $ref: '#/components/parameters/ArtifactIdPath'
-      responses:
-        "200":
-          description: Artifact deprecated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ArtifactResponse'
-        "404":
-          $ref: '#/components/responses/NotFound'
-        "409":
-          $ref: '#/components/responses/Conflict'
-
-  /v1/artifacts/{artifactId}/retire:
-    post:
-      operationId: retireArtifact
-      summary: Retire an artifact
-      description: |
-        Permanently retires an ACTIVE or DEPRECATED artifact. Retired artifacts
-        cannot be used for validation or mapping.
-      tags: [Artifact]
-      parameters:
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
-        - $ref: '#/components/parameters/ArtifactIdPath'
-      responses:
-        "200":
-          description: Artifact retired
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ArtifactResponse'
-        "404":
-          $ref: '#/components/responses/NotFound'
-        "409":
-          $ref: '#/components/responses/Conflict'
-
-  /v1/artifacts/{artifactId}/versions:
-    get:
-      operationId: getArtifactVersions
-      summary: List all versions of an artifact
-      description: Returns version history for the artifact identified by canonicalUrl.
-      tags: [Artifact]
-      parameters:
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/ArtifactIdPath'
-      responses:
-        "200":
-          description: Artifact version list
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ArtifactVersionListResponse'
-        "404":
-          $ref: '#/components/responses/NotFound'
-
-  /v1/artifacts/resolve:
-    get:
-      operationId: resolveArtifact
-      summary: Resolve artifact by canonical URL
-      description: |
-        Resolves an artifact by its canonical URL and optional version.
-        If no version is specified, the latest ACTIVE version is returned.
-      tags: [Artifact]
-      parameters:
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - name: url
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/CodeSystemId"
+        - name: code
           in: query
           required: true
-          description: Canonical URL of the artifact
           schema:
             type: string
-            format: uri
-        - name: version
+        - name: display
           in: query
-          description: Specific version to resolve
+          required: false
           schema:
             type: string
-      responses:
-        "200":
-          description: Resolved artifact
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ArtifactResponse'
-        "404":
-          $ref: '#/components/responses/NotFound'
-
-  # -------------------------------------------------------------------------
-  # Packs
-  # -------------------------------------------------------------------------
-  /v1/packs:
-    get:
-      operationId: listPacks
-      summary: List terminology packs
-      tags: [Pack]
-      parameters:
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - name: status
-          in: query
-          schema:
-            $ref: '#/components/schemas/PackStatus'
-        - $ref: '#/components/parameters/PageParam'
-        - $ref: '#/components/parameters/SizeParam'
-      responses:
-        "200":
-          description: List of packs
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PackListResponse'
-        "401":
-          $ref: '#/components/responses/Unauthorized'
-
-    post:
-      operationId: createPack
-      summary: Create a new terminology pack
-      tags: [Pack]
-      parameters:
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PackCreateRequest'
-      responses:
-        "201":
-          description: Pack created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PackResponse'
-        "400":
-          $ref: '#/components/responses/BadRequest'
-        "409":
-          $ref: '#/components/responses/Conflict'
-
-  /v1/packs/{packId}:
-    get:
-      operationId: getPack
-      summary: Get pack by ID
-      tags: [Pack]
-      parameters:
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/PackIdPath'
-      responses:
-        "200":
-          description: Pack detail
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PackResponse'
-        "404":
-          $ref: '#/components/responses/NotFound'
-
-  /v1/packs/{packId}/artifacts:
-    get:
-      operationId: getPackArtifacts
-      summary: List artifacts in a pack
-      tags: [Pack]
-      parameters:
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/PackIdPath'
-      responses:
-        "200":
-          description: Artifacts in pack
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PackArtifactListResponse'
-        "404":
-          $ref: '#/components/responses/NotFound'
-
-    post:
-      operationId: addArtifactToPack
-      summary: Add an artifact to a pack
-      description: Adds an existing artifact to a DRAFT pack.
-      tags: [Pack]
-      parameters:
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
-        - $ref: '#/components/parameters/PackIdPath'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [artifactId]
-              properties:
-                artifactId:
-                  type: string
-                  format: uuid
-      responses:
-        "200":
-          description: Artifact added
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PackResponse'
-        "400":
-          $ref: '#/components/responses/BadRequest'
-        "404":
-          $ref: '#/components/responses/NotFound'
-        "409":
-          $ref: '#/components/responses/Conflict'
-
-  /v1/packs/{packId}/artifacts/{artifactId}:
-    delete:
-      operationId: removeArtifactFromPack
-      summary: Remove an artifact from a pack
-      description: Removes an artifact from a DRAFT pack.
-      tags: [Pack]
-      parameters:
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
-        - $ref: '#/components/parameters/PackIdPath'
-        - $ref: '#/components/parameters/ArtifactIdPath'
-      responses:
-        "200":
-          description: Artifact removed
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PackResponse'
-        "404":
-          $ref: '#/components/responses/NotFound'
-        "409":
-          $ref: '#/components/responses/Conflict'
-
-  /v1/packs/{packId}/publish:
-    post:
-      operationId: publishPack
-      summary: Publish a DRAFT pack
-      description: |
-        Transitions pack from DRAFT to ACTIVE. All contained artifacts must
-        be in ACTIVE status for the pack to be published.
-      tags: [Pack]
-      parameters:
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
-        - $ref: '#/components/parameters/PackIdPath'
-      responses:
-        "200":
-          description: Pack published
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PackResponse'
-        "404":
-          $ref: '#/components/responses/NotFound'
-        "409":
-          $ref: '#/components/responses/Conflict'
-
-  /v1/packs/{packId}/deprecate:
-    post:
-      operationId: deprecatePack
-      summary: Deprecate an ACTIVE pack
-      tags: [Pack]
-      parameters:
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
-        - $ref: '#/components/parameters/PackIdPath'
-      responses:
-        "200":
-          description: Pack deprecated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PackResponse'
-        "404":
-          $ref: '#/components/responses/NotFound'
-        "409":
-          $ref: '#/components/responses/Conflict'
-
-  # -------------------------------------------------------------------------
-  # Validation
-  # -------------------------------------------------------------------------
-  /v1/validate/coding:
-    post:
-      operationId: validateCoding
-      summary: Validate a single coding
-      description: |
-        Validates that a code exists in the specified code system and
-        optionally belongs to a value set.
-      tags: [Validate]
-      parameters:
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
-        - $ref: '#/components/parameters/X-Actor-Type'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ValidateCodingRequest'
       responses:
         "200":
           description: Validation result
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ValidateCodingResponse'
+                $ref: "#/components/schemas/ApiResponseCodeValidationResult"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /internal/v1/code-systems/snapshot:
+    get:
+      operationId: codeSystemSnapshot
+      tags: [CodeSystems]
+      summary: Cursor-paginated code system snapshot (Class C)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: cursor
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+            maximum: 500
+      responses:
+        "200":
+          description: Code system snapshot page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SnapshotResponse"
+
+  # ---- Value Sets ----------------------------------------------------------
+
+  /internal/v1/value-sets:
+    post:
+      operationId: createValueSet
+      tags: [ValueSets]
+      summary: Create a value set (Class B)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateValueSetRequest"
+      responses:
+        "201":
+          description: Value set created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseValueSetResponse"
         "400":
-          $ref: '#/components/responses/BadRequest'
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /internal/v1/value-sets/snapshot:
+    get:
+      operationId: valueSetSnapshot
+      tags: [ValueSets]
+      summary: Cursor-paginated value set snapshot (Class C)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: cursor
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+            maximum: 500
+      responses:
+        "200":
+          description: Value set snapshot page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SnapshotResponse"
+
+  # ---- Concept Maps --------------------------------------------------------
+
+  /internal/v1/concept-maps:
+    post:
+      operationId: createConceptMap
+      tags: [ConceptMaps]
+      summary: Create a concept map (Class B)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateConceptMapRequest"
+      responses:
+        "201":
+          description: Concept map created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseConceptMapResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /internal/v1/concept-maps/{id}:
+    get:
+      operationId: getConceptMap
+      tags: [ConceptMaps]
+      summary: Get a concept map by ID (Class C)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/ConceptMapId"
+      responses:
+        "200":
+          description: Concept map detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseConceptMapResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /internal/v1/concept-maps/snapshot:
+    get:
+      operationId: conceptMapSnapshot
+      tags: [ConceptMaps]
+      summary: Cursor-paginated concept map snapshot (Class C)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: cursor
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+            maximum: 500
+      responses:
+        "200":
+          description: Concept map snapshot page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SnapshotResponse"
+
+  # ---- Validation ----------------------------------------------------------
+
+  /v1/validate/coding:
+    post:
+      operationId: validateCoding
+      tags: [Validation]
+      summary: Validate a coding (system + code + display) (Class C)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ValidateCodingRequest"
+      responses:
+        "200":
+          description: Coding validation result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseValidationResult"
 
   /v1/validate/resource:
     post:
       operationId: validateResource
-      summary: Validate a FHIR resource
-      description: |
-        Validates a FHIR resource against its base definition and optionally
-        a specified profile. Returns structured validation issues.
-      tags: [Validate]
+      tags: [Validation]
+      summary: Validate a FHIR resource JSON (Class C)
       parameters:
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ValidateResourceRequest'
+              $ref: "#/components/schemas/ValidateResourceRequest"
       responses:
         "200":
-          description: Validation result
+          description: Resource validation result
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ValidateResourceResponse'
-        "400":
-          $ref: '#/components/responses/BadRequest'
+                $ref: "#/components/schemas/ApiResponseValidationResult"
 
   /v1/validate/job:
     post:
       operationId: submitValidationJob
-      summary: Submit a batch validation job
-      description: |
-        Submits a batch of FHIR resources for asynchronous validation.
-        Returns a job ID that can be polled for progress and results.
-      tags: [Validate]
+      tags: [Validation]
+      summary: Submit an async validation job (Class C)
       parameters:
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ValidationJobSubmitRequest'
+              $ref: "#/components/schemas/ValidationJobRequest"
       responses:
         "202":
-          description: Job accepted
+          description: Validation job accepted
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ValidationJobResponse'
-        "400":
-          $ref: '#/components/responses/BadRequest'
+                $ref: "#/components/schemas/ApiResponseValidationJob"
 
   /v1/validate/job/{jobId}:
     get:
-      operationId: getValidationJob
-      summary: Get validation job status and results
-      tags: [Validate]
+      operationId: getValidationJobResult
+      tags: [Validation]
+      summary: Get async validation job result (Class C)
       parameters:
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
         - name: jobId
           in: path
           required: true
@@ -644,616 +382,548 @@ paths:
             format: uuid
       responses:
         "200":
-          description: Job status
+          description: Validation job result
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ValidationJobResponse'
+                $ref: "#/components/schemas/ApiResponseValidationJob"
         "404":
-          $ref: '#/components/responses/NotFound'
+          $ref: "#/components/responses/NotFound"
 
-  # -------------------------------------------------------------------------
-  # Mapping
-  # -------------------------------------------------------------------------
-  /v1/map:
-    post:
-      operationId: mapCode
-      summary: Map a code to target system(s)
-      description: |
-        Translates a source code to one or more target codes using available
-        ConceptMap artifacts. Returns all matching mappings with equivalence.
-      tags: [Map]
-      parameters:
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/MapRequest'
-      responses:
-        "200":
-          description: Mapping results
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MapResultListResponse'
-        "400":
-          $ref: '#/components/responses/BadRequest'
-
-  /v1/map/sources:
-    get:
-      operationId: getMapSources
-      summary: List available mapping source systems
-      description: |
-        Returns a list of source terminology systems that have ConceptMap
-        artifacts available for mapping.
-      tags: [Map]
-      parameters:
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - name: sourceSystem
-          in: query
-          description: Filter by source system URL
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Available mapping sources
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MapSourceListResponse'
-
-  /v1/map/rebuild:
-    post:
-      operationId: rebuildMapIndex
-      summary: Rebuild the mapping index
-      description: |
-        Triggers a full rebuild of the in-memory mapping index from all
-        ACTIVE ConceptMap artifacts. Use after bulk imports.
-      tags: [Map]
-      parameters:
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
-      responses:
-        "200":
-          description: Rebuild initiated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessResponse'
-        "401":
-          $ref: '#/components/responses/Unauthorized'
-        "403":
-          $ref: '#/components/responses/Forbidden'
-
-  # -------------------------------------------------------------------------
-  # Assignments
-  # -------------------------------------------------------------------------
-  /v1/assignments:
-    get:
-      operationId: listAssignments
-      summary: List pack assignments
-      tags: [Assignment]
-      parameters:
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - name: scope
-          in: query
-          description: Filter by scope identifier
-          schema:
-            type: string
-        - name: scopeType
-          in: query
-          schema:
-            $ref: '#/components/schemas/ScopeType'
-        - name: active
-          in: query
-          description: Filter by active status
-          schema:
-            type: boolean
-        - $ref: '#/components/parameters/PageParam'
-        - $ref: '#/components/parameters/SizeParam'
-      responses:
-        "200":
-          description: List of assignments
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AssignmentListResponse'
-        "401":
-          $ref: '#/components/responses/Unauthorized'
-
-    post:
-      operationId: assignPack
-      summary: Assign a pack to a scope
-      description: |
-        Creates a new assignment binding a terminology pack to a scope
-        (facility, workspace, service, or tenant) with a policy enforcement mode.
-      tags: [Assignment]
-      parameters:
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AssignRequest'
-      responses:
-        "201":
-          description: Assignment created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AssignmentResponse'
-        "400":
-          $ref: '#/components/responses/BadRequest'
-        "409":
-          $ref: '#/components/responses/Conflict'
-
-  /v1/assignments/{assignmentId}:
-    delete:
-      operationId: unassignPack
-      summary: Remove a pack assignment
-      tags: [Assignment]
-      parameters:
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
-        - name: assignmentId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        "200":
-          description: Assignment removed
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessResponse'
-        "404":
-          $ref: '#/components/responses/NotFound'
-
-  # -------------------------------------------------------------------------
-  # Import
-  # -------------------------------------------------------------------------
-  /v1/import/fhir-bundle:
-    post:
-      operationId: importFhirBundle
-      summary: Import artifacts from a FHIR Bundle
-      description: |
-        Imports terminology resources (CodeSystem, ValueSet, ConceptMap, etc.)
-        from a FHIR Bundle. Each resource in the bundle is created as a new
-        artifact in DRAFT status.
-      tags: [Import]
-      parameters:
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              description: FHIR Bundle resource (resourceType = Bundle)
-      responses:
-        "200":
-          description: Import result
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ImportResultResponse'
-        "400":
-          $ref: '#/components/responses/BadRequest'
-
-  /v1/import/csv:
-    post:
-      operationId: importCsv
-      summary: Import a terminology artifact from CSV
-      description: |
-        Creates a single artifact from CSV data. The CSV must follow the
-        expected column format for the specified FHIR type.
-      tags: [Import]
-      parameters:
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CsvImportRequest'
-      responses:
-        "200":
-          description: Import result
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ImportResultResponse'
-        "400":
-          $ref: '#/components/responses/BadRequest'
-
-  # -------------------------------------------------------------------------
-  # Export
-  # -------------------------------------------------------------------------
-  /v1/export/packs/{packId}/bundle:
-    get:
-      operationId: exportPackBundle
-      summary: Export a pack as a FHIR Bundle
-      description: |
-        Exports all artifacts in a pack as a FHIR Bundle (type = collection).
-        Only ACTIVE packs can be exported.
-      tags: [Export]
-      parameters:
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/PackIdPath'
-      responses:
-        "200":
-          description: FHIR Bundle
-          content:
-            application/json:
-              schema:
-                type: object
-                description: FHIR Bundle resource
-        "404":
-          $ref: '#/components/responses/NotFound'
-        "409":
-          $ref: '#/components/responses/Conflict'
-
-  /v1/export/artifacts/{artifactId}:
-    get:
-      operationId: exportArtifact
-      summary: Export a single artifact as FHIR resource
-      tags: [Export]
-      parameters:
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/ArtifactIdPath'
-      responses:
-        "200":
-          description: FHIR resource
-          content:
-            application/json:
-              schema:
-                type: object
-                description: FHIR terminology resource
-        "404":
-          $ref: '#/components/responses/NotFound'
-
-  # -------------------------------------------------------------------------
-  # Governance
-  # -------------------------------------------------------------------------
-  /v1/governance/validation-logs:
-    get:
-      operationId: getValidationLogs
-      summary: List validation log entries
-      description: |
-        Returns validation events recorded by the governance engine. Filter by
-        severity, source service, or resource type.
-      tags: [Governance]
-      parameters:
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - name: severity
-          in: query
-          schema:
-            $ref: '#/components/schemas/ValidationSeverity'
-        - name: sourceService
-          in: query
-          description: Filter by originating service name
-          schema:
-            type: string
-        - name: resourceType
-          in: query
-          description: Filter by FHIR resource type
-          schema:
-            type: string
-        - name: from
-          in: query
-          description: Start of time range (ISO 8601)
-          schema:
-            type: string
-            format: date-time
-        - name: to
-          in: query
-          description: End of time range (ISO 8601)
-          schema:
-            type: string
-            format: date-time
-        - $ref: '#/components/parameters/PageParam'
-        - $ref: '#/components/parameters/SizeParam'
-      responses:
-        "200":
-          description: Validation log entries
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ValidationLogListResponse'
-        "401":
-          $ref: '#/components/responses/Unauthorized'
-
-  /v1/governance/top-failures:
-    get:
-      operationId: getTopFailures
-      summary: Get top terminology validation failures
-      description: |
-        Returns the most frequent validation failures aggregated by
-        system + code. Useful for identifying systemic terminology gaps.
-      tags: [Governance]
-      parameters:
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - name: limit
-          in: query
-          description: Max number of failures to return (default 20)
-          schema:
-            type: integer
-            default: 20
-        - name: from
-          in: query
-          schema:
-            type: string
-            format: date-time
-        - name: to
-          in: query
-          schema:
-            type: string
-            format: date-time
-      responses:
-        "200":
-          description: Top failures
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TopFailureListResponse'
-
-  /v1/governance/stats:
-    get:
-      operationId: getGovernanceStats
-      summary: Get governance statistics
-      description: |
-        Returns aggregate validation statistics including total validations,
-        error rates, and per-service breakdowns for the specified time period.
-      tags: [Governance]
-      parameters:
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - name: from
-          in: query
-          description: Start of reporting period (ISO 8601)
-          schema:
-            type: string
-            format: date-time
-        - name: to
-          in: query
-          description: End of reporting period (ISO 8601)
-          schema:
-            type: string
-            format: date-time
-      responses:
-        "200":
-          description: Governance statistics
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GovernanceStatsResponse'
-
-# ===========================================================================
-# Components
-# ===========================================================================
+# ============================================================================
+# COMPONENTS
+# ============================================================================
 components:
-  # -------------------------------------------------------------------------
-  # Security Schemes
-  # -------------------------------------------------------------------------
+
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
+      description: Keycloak-issued access token (forwarded by Envoy)
 
-  # -------------------------------------------------------------------------
-  # Parameters
-  # -------------------------------------------------------------------------
   parameters:
-    X-Tenant-Id:
+    TenantId:
       name: X-Tenant-Id
       in: header
       required: true
-      description: Tenant identifier (injected by Envoy ext_authz)
+      description: Tenant identifier — injected by Envoy after TSHEPO authorisation
       schema:
         type: string
-
-    X-Correlation-Id:
+    CorrelationId:
       name: X-Correlation-Id
       in: header
       required: true
-      description: Request correlation ID for distributed tracing
+      description: End-to-end correlation ID for distributed tracing
       schema:
         type: string
         format: uuid
-
-    X-Actor-Id:
+    ActorId:
       name: X-Actor-Id
       in: header
       required: true
-      description: Authenticated actor identifier
+      description: Authenticated actor (user or service) identifier
       schema:
         type: string
-
-    X-Actor-Type:
+    ActorType:
       name: X-Actor-Type
       in: header
-      description: Actor type (CLINICIAN, ADMIN, SYSTEM, etc.)
+      required: true
+      description: Type of actor making the request
       schema:
         type: string
-        enum: [CLINICIAN, ADMIN, SYSTEM, SERVICE, PATIENT]
-
-    X-Purpose-Of-Use:
+        enum: [CITIZEN, PROVIDER, ADMIN, SYSTEM, SERVICE]
+    PurposeOfUse:
       name: X-Purpose-Of-Use
       in: header
-      description: Purpose of use for the request
+      required: true
+      description: Why this request is being made
       schema:
         type: string
-        enum: [TREATMENT, ADMIN, PAYMENT, RESEARCH, PUBLIC_HEALTH, OPERATIONS]
-
-    ArtifactIdPath:
-      name: artifactId
-      in: path
+    DeviceFingerprint:
+      name: X-Device-Fingerprint
+      in: header
       required: true
-      description: Artifact UUID
+      description: Device identity hash
+      schema:
+        type: string
+    FacilityId:
+      name: X-Facility-Id
+      in: header
+      required: false
+      description: Facility scope (contextual)
       schema:
         type: string
         format: uuid
-
-    PackIdPath:
-      name: packId
-      in: path
-      required: true
-      description: Pack UUID
+    WorkspaceId:
+      name: X-Workspace-Id
+      in: header
+      required: false
+      description: Workspace scope (contextual)
       schema:
         type: string
         format: uuid
-
-    PageParam:
+    ShiftId:
+      name: X-Shift-Id
+      in: header
+      required: false
+      description: Duty shift scope (contextual)
+      schema:
+        type: string
+        format: uuid
+    Decision:
+      name: X-Decision
+      in: header
+      required: false
+      description: PDP decision header — ALLOW, DENY, STEP_UP_REQUIRED (Class A endpoints require ALLOW)
+      schema:
+        type: string
+        enum: [ALLOW, DENY, STEP_UP_REQUIRED]
+    Obligations:
+      name: X-Obligations
+      in: header
+      required: false
+      description: JSON obligations blob from TSHEPO
+      schema:
+        type: string
+    PageNumber:
       name: page
       in: query
-      description: Page number (0-based)
       schema:
         type: integer
         default: 0
-        minimum: 0
-
-    SizeParam:
+    PageSize:
       name: size
       in: query
-      description: Page size
       schema:
         type: integer
         default: 20
-        minimum: 1
         maximum: 100
+    CodeSystemId:
+      name: id
+      in: path
+      required: true
+      description: Code system identifier
+      schema:
+        type: integer
+        format: int64
+    ConceptMapId:
+      name: id
+      in: path
+      required: true
+      description: Concept map identifier
+      schema:
+        type: integer
+        format: int64
 
-  # -------------------------------------------------------------------------
-  # Responses
-  # -------------------------------------------------------------------------
   responses:
     BadRequest:
-      description: Invalid request
+      description: Validation error
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ErrorResponse'
-
-    Unauthorized:
-      description: Missing or invalid authentication
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponse'
-
-    Forbidden:
-      description: Insufficient permissions
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponse'
-
+            $ref: "#/components/schemas/ErrorResponse"
     NotFound:
       description: Resource not found
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ErrorResponse'
-
+            $ref: "#/components/schemas/ErrorResponse"
     Conflict:
-      description: State conflict (e.g., trying to publish an already active artifact)
+      description: Duplicate resource
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ErrorResponse'
+            $ref: "#/components/schemas/ErrorResponse"
+    Unauthorized:
+      description: Missing or invalid trust headers
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Forbidden:
+      description: PDP denied the request (X-Decision=DENY)
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
 
-  # -------------------------------------------------------------------------
-  # Schemas
-  # -------------------------------------------------------------------------
   schemas:
-    # -- Enums --
-    FhirType:
-      type: string
-      enum:
-        - CodeSystem
-        - ValueSet
-        - ConceptMap
-        - NamingSystem
-        - StructureDefinition
-        - SearchParameter
-        - OperationDefinition
-        - CapabilityStatement
-        - ImplementationGuide
-        - Questionnaire
 
-    ArtifactStatus:
-      type: string
-      enum: [DRAFT, ACTIVE, DEPRECATED, RETIRED]
+    # ---- Requests ----------------------------------------------------------
 
-    PackStatus:
-      type: string
-      enum: [DRAFT, ACTIVE, DEPRECATED, RETIRED]
-
-    SourceFormat:
-      type: string
-      enum: [FHIR_JSON, FHIR_XML, CSV, CUSTOM]
-
-    ValidationSeverity:
-      type: string
-      enum: [ERROR, WARNING, INFO]
-
-    PolicyMode:
-      type: string
-      enum: [ENFORCE, WARN, AUDIT]
-
-    ScopeType:
-      type: string
-      enum: [FACILITY, WORKSPACE, SERVICE, TENANT]
-
-    MapEquivalence:
-      type: string
-      enum: [equivalent, wider, narrower, inexact, unmatched, disjoint]
-
-    ValidationJobStatus:
-      type: string
-      enum: [PENDING, RUNNING, COMPLETED, FAILED]
-
-    # -- API Envelope --
-    ApiResponse:
+    CreateCodeSystemRequest:
       type: object
-      required: [success, timestamp]
+      required: [canonicalUrl, version, name, title, contentJson]
+      properties:
+        canonicalUrl:
+          type: string
+        version:
+          type: string
+        name:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        contentJson:
+          type: string
+        publisher:
+          type: string
+
+    CreateValueSetRequest:
+      type: object
+      required: [canonicalUrl, version, name, title]
+      properties:
+        canonicalUrl:
+          type: string
+        version:
+          type: string
+        name:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        contentJson:
+          type: string
+        publisher:
+          type: string
+
+    CreateConceptMapRequest:
+      type: object
+      required: [canonicalUrl, version, name, title, sourceUri, targetUri]
+      properties:
+        canonicalUrl:
+          type: string
+        version:
+          type: string
+        name:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        sourceUri:
+          type: string
+        targetUri:
+          type: string
+        contentJson:
+          type: string
+        publisher:
+          type: string
+
+    ValidateCodingRequest:
+      type: object
+      required: [system, code]
+      properties:
+        system:
+          type: string
+        code:
+          type: string
+        display:
+          type: string
+        mode:
+          type: string
+          enum: [STRICT, LENIENT]
+        facilityId:
+          type: string
+          format: uuid
+
+    ValidateResourceRequest:
+      type: object
+      required: [resourceJson]
+      properties:
+        resourceJson:
+          type: string
+        mode:
+          type: string
+          enum: [STRICT, LENIENT]
+        facilityId:
+          type: string
+          format: uuid
+
+    ValidationJobRequest:
+      type: object
+      required: [resourceJson]
+      properties:
+        resourceJson:
+          type: string
+        mode:
+          type: string
+          enum: [STRICT, LENIENT]
+        facilityId:
+          type: string
+          format: uuid
+        callbackUrl:
+          type: string
+
+    # ---- Response wrappers -------------------------------------------------
+
+    ApiResponseCodeSystemResponse:
+      type: object
       properties:
         success:
           type: boolean
-        timestamp:
-          type: string
-          format: date-time
         correlationId:
           type: string
           format: uuid
-        error:
-          $ref: '#/components/schemas/ApiError'
+        data:
+          $ref: "#/components/schemas/CodeSystemResponse"
 
-    ApiError:
+    ApiResponseValueSetResponse:
       type: object
       properties:
+        success:
+          type: boolean
+        correlationId:
+          type: string
+          format: uuid
+        data:
+          $ref: "#/components/schemas/ValueSetResponse"
+
+    ApiResponseConceptMapResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        correlationId:
+          type: string
+          format: uuid
+        data:
+          $ref: "#/components/schemas/ConceptMapResponse"
+
+    ApiResponseCodeValidationResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+        correlationId:
+          type: string
+          format: uuid
+        data:
+          $ref: "#/components/schemas/CodeValidationResult"
+
+    ApiResponseValidationResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+        correlationId:
+          type: string
+          format: uuid
+        data:
+          $ref: "#/components/schemas/ValidationResult"
+
+    ApiResponseValidationJob:
+      type: object
+      properties:
+        success:
+          type: boolean
+        correlationId:
+          type: string
+          format: uuid
+        data:
+          $ref: "#/components/schemas/ValidationJob"
+
+    # ---- Domain objects ----------------------------------------------------
+
+    CodeSystemResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        canonicalUrl:
+          type: string
+        version:
+          type: string
+        name:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        publisher:
+          type: string
+        status:
+          type: string
+          enum: [ACTIVE, RETIRED, DRAFT]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ValueSetResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        canonicalUrl:
+          type: string
+        version:
+          type: string
+        name:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        publisher:
+          type: string
+        status:
+          type: string
+          enum: [ACTIVE, RETIRED, DRAFT]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ConceptMapResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        canonicalUrl:
+          type: string
+        version:
+          type: string
+        name:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        sourceUri:
+          type: string
+        targetUri:
+          type: string
+        publisher:
+          type: string
+        status:
+          type: string
+          enum: [ACTIVE, RETIRED, DRAFT]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CodeValidationResult:
+      type: object
+      properties:
+        valid:
+          type: boolean
         code:
+          type: string
+        display:
+          type: string
+        system:
+          type: string
+        message:
+          type: string
+
+    ValidationResult:
+      type: object
+      properties:
+        valid:
+          type: boolean
+        issues:
+          type: array
+          items:
+            $ref: "#/components/schemas/ValidationIssue"
+        checkedAt:
+          type: string
+          format: date-time
+
+    ValidationIssue:
+      type: object
+      properties:
+        severity:
+          type: string
+          enum: [ERROR, WARNING, INFORMATION]
+        code:
+          type: string
+        location:
+          type: string
+        message:
+          type: string
+
+    ValidationJob:
+      type: object
+      properties:
+        jobId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [PENDING, RUNNING, COMPLETED, FAILED]
+        submittedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+        result:
+          $ref: "#/components/schemas/ValidationResult"
+
+    SnapshotResponse:
+      type: object
+      properties:
+        as_of:
+          type: string
+          format: date-time
+        cursor:
+          type: integer
+        limit:
+          type: integer
+        has_more:
+          type: boolean
+        total:
+          type: integer
+        items:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+
+    SnapshotEmitResponse:
+      type: object
+      properties:
+        jobId:
+          type: string
+          format: uuid
+        status:
+          type: string
+        triggeredAt:
+          type: string
+          format: date-time
+
+    GenericResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        referenceId:
+          type: string
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          default: false
+        correlationId:
+          type: string
+          format: uuid
+        errorCode:
           type: string
         message:
           type: string
@@ -1261,787 +931,3 @@ components:
           type: array
           items:
             type: string
-
-    SuccessResponse:
-      allOf:
-        - $ref: '#/components/schemas/ApiResponse'
-        - type: object
-          properties:
-            data:
-              type: object
-              nullable: true
-
-    ErrorResponse:
-      allOf:
-        - $ref: '#/components/schemas/ApiResponse'
-        - type: object
-          properties:
-            success:
-              type: boolean
-              example: false
-
-    # -- Artifact --
-    Artifact:
-      type: object
-      required:
-        - id
-        - tenantId
-        - fhirType
-        - canonicalUrl
-        - name
-        - title
-        - version
-        - status
-        - sourceFormat
-        - contentHash
-        - createdAt
-        - updatedAt
-      properties:
-        id:
-          type: string
-          format: uuid
-        tenantId:
-          type: string
-        fhirType:
-          $ref: '#/components/schemas/FhirType'
-        canonicalUrl:
-          type: string
-          format: uri
-        name:
-          type: string
-          description: Machine-readable name
-        title:
-          type: string
-          description: Human-readable title
-        version:
-          type: string
-          description: Semantic version
-        status:
-          $ref: '#/components/schemas/ArtifactStatus'
-        publisher:
-          type: string
-          nullable: true
-        description:
-          type: string
-          nullable: true
-        conceptCount:
-          type: integer
-          nullable: true
-          description: Number of concepts (for CodeSystem/ValueSet)
-        sourceFormat:
-          $ref: '#/components/schemas/SourceFormat'
-        contentHash:
-          type: string
-          description: SHA-256 hash of content for deduplication
-        createdAt:
-          type: string
-          format: date-time
-        updatedAt:
-          type: string
-          format: date-time
-        publishedAt:
-          type: string
-          format: date-time
-          nullable: true
-        deprecatedAt:
-          type: string
-          format: date-time
-          nullable: true
-
-    ArtifactCreateRequest:
-      type: object
-      required: [fhirType, canonicalUrl, name, title, version, content, sourceFormat]
-      properties:
-        fhirType:
-          $ref: '#/components/schemas/FhirType'
-        canonicalUrl:
-          type: string
-          format: uri
-        name:
-          type: string
-          minLength: 1
-          maxLength: 255
-        title:
-          type: string
-          minLength: 1
-          maxLength: 500
-        version:
-          type: string
-          minLength: 1
-          maxLength: 50
-        publisher:
-          type: string
-          maxLength: 255
-        description:
-          type: string
-          maxLength: 2000
-        content:
-          type: string
-          description: Resource content (FHIR JSON, XML, or CSV)
-        sourceFormat:
-          $ref: '#/components/schemas/SourceFormat'
-
-    ArtifactUpdateRequest:
-      type: object
-      properties:
-        title:
-          type: string
-          maxLength: 500
-        description:
-          type: string
-          maxLength: 2000
-        publisher:
-          type: string
-          maxLength: 255
-        content:
-          type: string
-          description: Updated resource content
-
-    ArtifactVersion:
-      type: object
-      required: [version, status, createdAt]
-      properties:
-        version:
-          type: string
-        status:
-          $ref: '#/components/schemas/ArtifactStatus'
-        publishedAt:
-          type: string
-          format: date-time
-          nullable: true
-        createdAt:
-          type: string
-          format: date-time
-
-    ArtifactResponse:
-      allOf:
-        - $ref: '#/components/schemas/ApiResponse'
-        - type: object
-          properties:
-            data:
-              $ref: '#/components/schemas/Artifact'
-
-    ArtifactListResponse:
-      allOf:
-        - $ref: '#/components/schemas/ApiResponse'
-        - type: object
-          properties:
-            data:
-              type: array
-              items:
-                $ref: '#/components/schemas/Artifact'
-
-    ArtifactVersionListResponse:
-      allOf:
-        - $ref: '#/components/schemas/ApiResponse'
-        - type: object
-          properties:
-            data:
-              type: array
-              items:
-                $ref: '#/components/schemas/ArtifactVersion'
-
-    # -- Pack --
-    Pack:
-      type: object
-      required:
-        - id
-        - tenantId
-        - name
-        - version
-        - status
-        - artifactCount
-        - createdAt
-        - updatedAt
-      properties:
-        id:
-          type: string
-          format: uuid
-        tenantId:
-          type: string
-        name:
-          type: string
-        version:
-          type: string
-        description:
-          type: string
-          nullable: true
-        status:
-          $ref: '#/components/schemas/PackStatus'
-        artifactCount:
-          type: integer
-        createdAt:
-          type: string
-          format: date-time
-        updatedAt:
-          type: string
-          format: date-time
-        publishedAt:
-          type: string
-          format: date-time
-          nullable: true
-
-    PackCreateRequest:
-      type: object
-      required: [name, version]
-      properties:
-        name:
-          type: string
-          minLength: 1
-          maxLength: 255
-        version:
-          type: string
-          minLength: 1
-          maxLength: 50
-        description:
-          type: string
-          maxLength: 2000
-
-    PackArtifact:
-      type: object
-      required: [artifactId, canonicalUrl, fhirType, name, version, status]
-      properties:
-        artifactId:
-          type: string
-          format: uuid
-        canonicalUrl:
-          type: string
-          format: uri
-        fhirType:
-          $ref: '#/components/schemas/FhirType'
-        name:
-          type: string
-        version:
-          type: string
-        status:
-          $ref: '#/components/schemas/ArtifactStatus'
-
-    PackResponse:
-      allOf:
-        - $ref: '#/components/schemas/ApiResponse'
-        - type: object
-          properties:
-            data:
-              $ref: '#/components/schemas/Pack'
-
-    PackListResponse:
-      allOf:
-        - $ref: '#/components/schemas/ApiResponse'
-        - type: object
-          properties:
-            data:
-              type: array
-              items:
-                $ref: '#/components/schemas/Pack'
-
-    PackArtifactListResponse:
-      allOf:
-        - $ref: '#/components/schemas/ApiResponse'
-        - type: object
-          properties:
-            data:
-              type: array
-              items:
-                $ref: '#/components/schemas/PackArtifact'
-
-    # -- Validation --
-    ValidateCodingRequest:
-      type: object
-      required: [system, code]
-      properties:
-        system:
-          type: string
-          format: uri
-          description: Code system URL
-        code:
-          type: string
-          description: Code value
-        display:
-          type: string
-          description: Expected display text (optional verification)
-        valueSetUrl:
-          type: string
-          format: uri
-          description: ValueSet to validate membership against
-
-    ValidateCodingResult:
-      type: object
-      required: [valid, severity, message, system, code]
-      properties:
-        valid:
-          type: boolean
-        severity:
-          $ref: '#/components/schemas/ValidationSeverity'
-        message:
-          type: string
-        system:
-          type: string
-        code:
-          type: string
-        display:
-          type: string
-          nullable: true
-        valueSetUrl:
-          type: string
-          nullable: true
-
-    ValidateCodingResponse:
-      allOf:
-        - $ref: '#/components/schemas/ApiResponse'
-        - type: object
-          properties:
-            data:
-              $ref: '#/components/schemas/ValidateCodingResult'
-
-    ValidateResourceRequest:
-      type: object
-      required: [resourceType, resource]
-      properties:
-        resourceType:
-          type: string
-          description: FHIR resource type name
-        resource:
-          type: string
-          description: JSON-serialized FHIR resource
-        profileUrl:
-          type: string
-          format: uri
-          description: StructureDefinition URL to validate against
-
-    ValidationIssue:
-      type: object
-      required: [severity, code, diagnostics]
-      properties:
-        severity:
-          $ref: '#/components/schemas/ValidationSeverity'
-        code:
-          type: string
-          description: Issue type code
-        diagnostics:
-          type: string
-          description: Human-readable diagnostic message
-        location:
-          type: string
-          nullable: true
-          description: FHIRPath expression to the issue location
-
-    ValidateResourceResult:
-      type: object
-      required: [valid, issueCount, issues]
-      properties:
-        valid:
-          type: boolean
-        issueCount:
-          type: integer
-        issues:
-          type: array
-          items:
-            $ref: '#/components/schemas/ValidationIssue'
-
-    ValidateResourceResponse:
-      allOf:
-        - $ref: '#/components/schemas/ApiResponse'
-        - type: object
-          properties:
-            data:
-              $ref: '#/components/schemas/ValidateResourceResult'
-
-    ValidationJobSubmitRequest:
-      type: object
-      required: [resources]
-      properties:
-        resources:
-          type: array
-          items:
-            type: string
-          description: JSON-serialized FHIR resources to validate
-          minItems: 1
-          maxItems: 1000
-        profileUrl:
-          type: string
-          format: uri
-          description: StructureDefinition URL to validate against
-
-    ValidationJob:
-      type: object
-      required:
-        - id
-        - tenantId
-        - status
-        - totalResources
-        - processedResources
-        - errorCount
-        - warningCount
-        - submittedAt
-      properties:
-        id:
-          type: string
-          format: uuid
-        tenantId:
-          type: string
-        status:
-          $ref: '#/components/schemas/ValidationJobStatus'
-        totalResources:
-          type: integer
-        processedResources:
-          type: integer
-        errorCount:
-          type: integer
-        warningCount:
-          type: integer
-        submittedAt:
-          type: string
-          format: date-time
-        completedAt:
-          type: string
-          format: date-time
-          nullable: true
-
-    ValidationJobResponse:
-      allOf:
-        - $ref: '#/components/schemas/ApiResponse'
-        - type: object
-          properties:
-            data:
-              $ref: '#/components/schemas/ValidationJob'
-
-    # -- Mapping --
-    MapRequest:
-      type: object
-      required: [sourceSystem, sourceCode]
-      properties:
-        sourceSystem:
-          type: string
-          format: uri
-          description: Source terminology system URL
-        sourceCode:
-          type: string
-          description: Source code to translate
-        targetSystem:
-          type: string
-          format: uri
-          description: Optional target system to restrict results
-
-    MapResult:
-      type: object
-      required:
-        - sourceSystem
-        - sourceCode
-        - targetSystem
-        - targetCode
-        - equivalence
-        - conceptMapUrl
-        - conceptMapVersion
-      properties:
-        sourceSystem:
-          type: string
-        sourceCode:
-          type: string
-        sourceDisplay:
-          type: string
-          nullable: true
-        targetSystem:
-          type: string
-        targetCode:
-          type: string
-        targetDisplay:
-          type: string
-          nullable: true
-        equivalence:
-          $ref: '#/components/schemas/MapEquivalence'
-        conceptMapUrl:
-          type: string
-          format: uri
-        conceptMapVersion:
-          type: string
-
-    MapSource:
-      type: object
-      required: [system, display, conceptMapCount]
-      properties:
-        system:
-          type: string
-          format: uri
-        display:
-          type: string
-        conceptMapCount:
-          type: integer
-
-    MapResultListResponse:
-      allOf:
-        - $ref: '#/components/schemas/ApiResponse'
-        - type: object
-          properties:
-            data:
-              type: array
-              items:
-                $ref: '#/components/schemas/MapResult'
-
-    MapSourceListResponse:
-      allOf:
-        - $ref: '#/components/schemas/ApiResponse'
-        - type: object
-          properties:
-            data:
-              type: array
-              items:
-                $ref: '#/components/schemas/MapSource'
-
-    # -- Assignment --
-    Assignment:
-      type: object
-      required:
-        - id
-        - tenantId
-        - packId
-        - packName
-        - scope
-        - scopeType
-        - policyMode
-        - active
-        - assignedAt
-        - assignedBy
-      properties:
-        id:
-          type: string
-          format: uuid
-        tenantId:
-          type: string
-        packId:
-          type: string
-          format: uuid
-        packName:
-          type: string
-        scope:
-          type: string
-          description: Scope identifier (facility ID, workspace ID, service name, or tenant ID)
-        scopeType:
-          $ref: '#/components/schemas/ScopeType'
-        policyMode:
-          $ref: '#/components/schemas/PolicyMode'
-        active:
-          type: boolean
-        assignedAt:
-          type: string
-          format: date-time
-        assignedBy:
-          type: string
-          description: Actor who created the assignment
-
-    AssignRequest:
-      type: object
-      required: [packId, scope, scopeType, policyMode]
-      properties:
-        packId:
-          type: string
-          format: uuid
-        scope:
-          type: string
-          minLength: 1
-          maxLength: 255
-        scopeType:
-          $ref: '#/components/schemas/ScopeType'
-        policyMode:
-          $ref: '#/components/schemas/PolicyMode'
-
-    AssignmentResponse:
-      allOf:
-        - $ref: '#/components/schemas/ApiResponse'
-        - type: object
-          properties:
-            data:
-              $ref: '#/components/schemas/Assignment'
-
-    AssignmentListResponse:
-      allOf:
-        - $ref: '#/components/schemas/ApiResponse'
-        - type: object
-          properties:
-            data:
-              type: array
-              items:
-                $ref: '#/components/schemas/Assignment'
-
-    # -- Import --
-    ImportResult:
-      type: object
-      required: [imported, skipped, errors]
-      properties:
-        imported:
-          type: integer
-          description: Number of successfully imported artifacts
-        skipped:
-          type: integer
-          description: Number of skipped entries (e.g., duplicates)
-        errors:
-          type: array
-          items:
-            type: string
-          description: Error messages for failed entries
-
-    ImportResultResponse:
-      allOf:
-        - $ref: '#/components/schemas/ApiResponse'
-        - type: object
-          properties:
-            data:
-              $ref: '#/components/schemas/ImportResult'
-
-    CsvImportRequest:
-      type: object
-      required: [fhirType, csvContent, canonicalUrl, name, version]
-      properties:
-        fhirType:
-          $ref: '#/components/schemas/FhirType'
-        csvContent:
-          type: string
-          description: Raw CSV content
-        canonicalUrl:
-          type: string
-          format: uri
-        name:
-          type: string
-          minLength: 1
-          maxLength: 255
-        version:
-          type: string
-          minLength: 1
-          maxLength: 50
-
-    # -- Governance --
-    ValidationLog:
-      type: object
-      required:
-        - id
-        - tenantId
-        - timestamp
-        - sourceService
-        - resourceType
-        - severity
-        - code
-        - diagnostics
-      properties:
-        id:
-          type: string
-          format: uuid
-        tenantId:
-          type: string
-        timestamp:
-          type: string
-          format: date-time
-        sourceService:
-          type: string
-          description: Service that triggered the validation
-        resourceType:
-          type: string
-          description: FHIR resource type being validated
-        severity:
-          $ref: '#/components/schemas/ValidationSeverity'
-        code:
-          type: string
-          description: Validation issue code
-        diagnostics:
-          type: string
-          description: Human-readable diagnostic message
-        system:
-          type: string
-          nullable: true
-          description: Terminology system URL (if coding-related)
-        valueCode:
-          type: string
-          nullable: true
-          description: Code value (if coding-related)
-
-    TopFailure:
-      type: object
-      required: [system, code, count, lastSeen, severity]
-      properties:
-        system:
-          type: string
-        code:
-          type: string
-        display:
-          type: string
-          nullable: true
-        count:
-          type: integer
-          description: Total occurrence count
-        lastSeen:
-          type: string
-          format: date-time
-        severity:
-          $ref: '#/components/schemas/ValidationSeverity'
-
-    ServiceErrorCount:
-      type: object
-      required: [service, errorCount, warningCount]
-      properties:
-        service:
-          type: string
-        errorCount:
-          type: integer
-        warningCount:
-          type: integer
-
-    GovernanceStats:
-      type: object
-      required:
-        - totalValidations
-        - errorCount
-        - warningCount
-        - infoCount
-        - errorRate
-        - topOffendingServices
-        - periodStart
-        - periodEnd
-      properties:
-        totalValidations:
-          type: integer
-        errorCount:
-          type: integer
-        warningCount:
-          type: integer
-        infoCount:
-          type: integer
-        errorRate:
-          type: number
-          format: double
-          description: Error rate as a decimal (0.0 to 1.0)
-        topOffendingServices:
-          type: array
-          items:
-            $ref: '#/components/schemas/ServiceErrorCount'
-        periodStart:
-          type: string
-          format: date-time
-        periodEnd:
-          type: string
-          format: date-time
-
-    ValidationLogListResponse:
-      allOf:
-        - $ref: '#/components/schemas/ApiResponse'
-        - type: object
-          properties:
-            data:
-              type: array
-              items:
-                $ref: '#/components/schemas/ValidationLog'
-
-    TopFailureListResponse:
-      allOf:
-        - $ref: '#/components/schemas/ApiResponse'
-        - type: object
-          properties:
-            data:
-              type: array
-              items:
-                $ref: '#/components/schemas/TopFailure'
-
-    GovernanceStatsResponse:
-      allOf:
-        - $ref: '#/components/schemas/ApiResponse'
-        - type: object
-          properties:
-            data:
-              $ref: '#/components/schemas/GovernanceStats'

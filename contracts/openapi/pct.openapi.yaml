@@ -1,33 +1,22 @@
 # =============================================================================
-# PCT -- Patient Care Tracker API (OpenAPI 3.0)
-#
-# Comprehensive patient journey management: work sessions, triage, queuing,
-# encounters, admissions, discharge, death registration, and operational
-# control tower analytics.
-#
-# All endpoints require a valid Bearer JWT and TSHEPO trust headers
-# (X-Tenant-Id, X-Actor-Id, X-Correlation-Id, etc.) injected by
-# Envoy ext_authz.
+# PCT — Care Tracking Service API (OpenAPI 3.0)
+# Manages patient journeys, clinical encounters, discharge workflows, and
+# queue management for care delivery within Impilo.
 # =============================================================================
 openapi: "3.0.3"
 
 info:
-  title: "PCT \u2014 Patient Care Tracker API"
+  title: PCT — Care Tracking Service
   version: "1.0.0"
   description: |
-    PCT manages the complete patient journey through a facility:
+    PCT orchestrates the patient care journey from arrival through discharge.
+    It manages journey lifecycle, clinical encounters, structured discharge
+    workflows, and real-time queue management across facilities.
 
-    * **Work Sessions** -- Clinician shift start/end and context tracking
-    * **Journeys** -- Patient arrival, triage, routing, and lifecycle
-    * **Queues** -- Queue management, call-next, and status tracking
-    * **Encounters** -- Clinical encounter start/complete
-    * **Admissions** -- Inpatient admission, bed assignment, transfer
-    * **Discharge** -- Discharge workflow with blocker tracking
-    * **Death** -- Death registration and UBOMI notification
-    * **Control Tower** -- Real-time facility operations analytics
-    * **Tasks** -- Task management across workspaces and journeys
-
-    All endpoints require TSHEPO trust headers injected by Envoy ext_authz.
+    **Consistency classes**
+    * Class A — destructive/high-trust mutations (require PDP decision header)
+    * Class B — creation / registration mutations
+    * Class C — reads and snapshots
   contact:
     name: Impilo Platform Team
   license:
@@ -42,1335 +31,503 @@ servers:
       tenant:
         default: demo
 
-# ---------------------------------------------------------------------------
-# Security
-# ---------------------------------------------------------------------------
 security:
   - bearerAuth: []
 
 tags:
-  - name: Work
-    description: Clinician work session management
-  - name: Journey
-    description: Patient journey lifecycle
-  - name: Triage
-    description: Patient triage assessment
-  - name: Queue
-    description: Queue management and call-next
-  - name: QueueItem
-    description: Individual queue item status management
-  - name: Encounter
-    description: Clinical encounter tracking
-  - name: Admission
-    description: Inpatient admission workflow
+  - name: Journeys
+    description: Patient journey lifecycle management
+  - name: Encounters
+    description: Clinical encounter management
   - name: Discharge
-    description: Discharge workflow and blocker management
-  - name: Death
-    description: Death registration and UBOMI integration
-  - name: ControlTower
-    description: Facility-level operational analytics
-  - name: Task
-    description: Task management
-  - name: Patient
-    description: Patient-centric views
+    description: Discharge workflow management
+  - name: Queues
+    description: Clinical queue and worklist management
 
-# ===========================================================================
-# Paths
-# ===========================================================================
+# ============================================================================
+# PATHS
+# ============================================================================
 paths:
-  # -------------------------------------------------------------------------
-  # Work Sessions
-  # -------------------------------------------------------------------------
-  /v1/work/start:
-    post:
-      operationId: startShift
-      summary: Start a clinician work shift
-      description: |
-        Creates a new active work session for the authenticated clinician
-        at the specified facility and workspace.
-      tags: [Work]
-      parameters:
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
-        - $ref: '#/components/parameters/X-Actor-Type'
-        - $ref: '#/components/parameters/X-Purpose-Of-Use'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/WorkStartRequest'
-      responses:
-        '200':
-          description: Shift started successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponseWorkSession'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '409':
-          description: Active shift already exists
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
 
-  /v1/work/end:
-    post:
-      operationId: endShift
-      summary: End the current work shift
-      tags: [Work]
-      parameters:
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
-        - $ref: '#/components/parameters/X-Actor-Type'
-        - $ref: '#/components/parameters/X-Purpose-Of-Use'
-        - $ref: '#/components/parameters/X-Shift-Id'
-      responses:
-        '200':
-          description: Shift ended successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponseWorkSession'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          description: No active shift found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+  # ---- Journeys ------------------------------------------------------------
 
-  /v1/work/context:
-    get:
-      operationId: getWorkContext
-      summary: Get current work context
-      description: |
-        Returns the current work context including active shift details,
-        facility, and workspace information.
-      tags: [Work]
-      parameters:
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
-        - $ref: '#/components/parameters/X-Actor-Type'
-        - $ref: '#/components/parameters/X-Purpose-Of-Use'
-      responses:
-        '200':
-          description: Current work context
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponseWorkContext'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-
-  # -------------------------------------------------------------------------
-  # Journeys
-  # -------------------------------------------------------------------------
   /v1/journeys/start:
     post:
       operationId: startJourney
-      summary: Start a new patient journey
-      description: |
-        Creates a new journey for a patient arriving at the facility.
-        The journey tracks the patient through triage, queuing, encounters,
-        admission, and discharge/death.
-      tags: [Journey]
+      tags: [Journeys]
+      summary: Start a new patient journey (Class B)
       parameters:
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
-        - $ref: '#/components/parameters/X-Actor-Type'
-        - $ref: '#/components/parameters/X-Purpose-Of-Use'
-        - $ref: '#/components/parameters/X-Facility-Id'
-        - $ref: '#/components/parameters/X-Shift-Id'
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/JourneyStartRequest'
+              $ref: "#/components/schemas/StartJourneyRequest"
       responses:
-        '201':
-          description: Journey created
+        "201":
+          description: Journey started
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponseJourney'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-
-  /v1/journeys/{id}:
-    get:
-      operationId: getJourney
-      summary: Get journey by ID
-      tags: [Journey]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          description: Journey ID
-          schema:
-            type: string
-            format: uuid
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
-        - $ref: '#/components/parameters/X-Actor-Type'
-        - $ref: '#/components/parameters/X-Purpose-Of-Use'
-      responses:
-        '200':
-          description: Journey details
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponseJourney'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                $ref: "#/components/schemas/ApiResponseJourneyResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
 
   /v1/journeys/{id}/triage:
     post:
-      operationId: recordTriage
-      summary: Record triage assessment for a journey
-      description: |
-        Records the triage assessment including acuity level, vitals,
-        and notes. Transitions the journey to TRIAGED state.
-      tags: [Triage]
+      operationId: triageJourney
+      tags: [Journeys]
+      summary: Record triage assessment for a journey (Class B)
       parameters:
-        - name: id
-          in: path
-          required: true
-          description: Journey ID
-          schema:
-            type: string
-            format: uuid
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
-        - $ref: '#/components/parameters/X-Actor-Type'
-        - $ref: '#/components/parameters/X-Purpose-Of-Use'
-        - $ref: '#/components/parameters/X-Shift-Id'
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/JourneyId"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TriageRequest'
+              $ref: "#/components/schemas/TriageRequest"
       responses:
-        '200':
+        "200":
           description: Triage recorded
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponseJourney'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                $ref: "#/components/schemas/ApiResponseJourneyResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /v1/journeys/{id}/route:
     post:
-      operationId: routePatient
-      summary: Route a triaged patient to a service queue
-      description: |
-        Routes the patient to the specified queue. Assigns a token number
-        and transitions the journey to QUEUED state.
-      tags: [Journey]
+      operationId: routeJourney
+      tags: [Journeys]
+      summary: Route a journey to a target queue (Class B)
       parameters:
-        - name: id
-          in: path
-          required: true
-          description: Journey ID
-          schema:
-            type: string
-            format: uuid
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
-        - $ref: '#/components/parameters/X-Actor-Type'
-        - $ref: '#/components/parameters/X-Purpose-Of-Use'
-        - $ref: '#/components/parameters/X-Shift-Id'
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/JourneyId"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RouteRequest'
+              $ref: "#/components/schemas/RouteJourneyRequest"
       responses:
-        '200':
-          description: Patient routed to queue
+        "200":
+          description: Journey routed
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponseQueueItem'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                $ref: "#/components/schemas/ApiResponseJourneyResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
-  # -------------------------------------------------------------------------
-  # Queues
-  # -------------------------------------------------------------------------
-  /v1/queues:
+  /v1/journeys/{id}:
     get:
-      operationId: getQueues
-      summary: List queues for a facility/workspace
-      tags: [Queue]
+      operationId: getJourney
+      tags: [Journeys]
+      summary: Get a journey by ID (Class C)
       parameters:
-        - name: facilityId
-          in: query
-          required: false
-          schema:
-            type: string
-        - name: workspaceId
-          in: query
-          required: false
-          schema:
-            type: string
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
-        - $ref: '#/components/parameters/X-Actor-Type'
-        - $ref: '#/components/parameters/X-Purpose-Of-Use'
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/JourneyId"
       responses:
-        '200':
-          description: List of queues
+        "200":
+          description: Journey detail
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponseQueueArray'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+                $ref: "#/components/schemas/ApiResponseJourneyResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
-  /v1/queues/{queueId}/enqueue:
-    post:
-      operationId: enqueuePatient
-      summary: Manually enqueue a patient
-      tags: [Queue]
-      parameters:
-        - name: queueId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
-        - $ref: '#/components/parameters/X-Actor-Type'
-        - $ref: '#/components/parameters/X-Purpose-Of-Use'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/EnqueueRequest'
-      responses:
-        '201':
-          description: Patient enqueued
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponseQueueItem'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-
-  /v1/queues/{queueId}/call-next:
-    post:
-      operationId: callNextPatient
-      summary: Call the next patient in the queue
-      description: |
-        Dequeues the highest-priority waiting patient, marks them as CALLED,
-        and returns the queue item with token number.
-      tags: [Queue]
-      parameters:
-        - name: queueId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
-        - $ref: '#/components/parameters/X-Actor-Type'
-        - $ref: '#/components/parameters/X-Purpose-Of-Use'
-        - $ref: '#/components/parameters/X-Shift-Id'
-      responses:
-        '200':
-          description: Next patient called
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponseQueueItem'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          description: Queue empty or not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
-  /v1/queues/{queueId}/items:
+  /v1/journeys/patient/{cpid}:
     get:
-      operationId: getQueueItems
-      summary: List items in a queue
-      tags: [Queue]
+      operationId: getPatientJourneys
+      tags: [Journeys]
+      summary: Get all journeys for a patient (Class C)
       parameters:
-        - name: queueId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
-        - $ref: '#/components/parameters/X-Actor-Type'
-        - $ref: '#/components/parameters/X-Purpose-Of-Use'
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/PatientCpid"
+        - $ref: "#/components/parameters/PageNumber"
+        - $ref: "#/components/parameters/PageSize"
       responses:
-        '200':
-          description: Queue items
+        "200":
+          description: Paged patient journey list
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponseQueueItemArray'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                $ref: "#/components/schemas/ApiResponsePagedJourneyResponse"
 
-  # -------------------------------------------------------------------------
-  # Queue Items
-  # -------------------------------------------------------------------------
-  /v1/queue-items/{itemId}/status:
-    post:
-      operationId: updateQueueItemStatus
-      summary: Update status of a queue item
-      description: |
-        Transition a queue item to a new status (e.g., CALLED -> IN_SERVICE,
-        IN_SERVICE -> COMPLETED, CALLED -> NO_SHOW).
-      tags: [QueueItem]
-      parameters:
-        - name: itemId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
-        - $ref: '#/components/parameters/X-Actor-Type'
-        - $ref: '#/components/parameters/X-Purpose-Of-Use'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/QueueStatusUpdateRequest'
-      responses:
-        '200':
-          description: Status updated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponseQueueItem'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
+  # ---- Encounters ----------------------------------------------------------
 
-  /v1/queue-items/{itemId}/transfer:
-    post:
-      operationId: transferQueueItem
-      summary: Transfer a queue item to another queue
-      tags: [QueueItem]
-      parameters:
-        - name: itemId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
-        - $ref: '#/components/parameters/X-Actor-Type'
-        - $ref: '#/components/parameters/X-Purpose-Of-Use'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/QueueTransferRequest'
-      responses:
-        '200':
-          description: Item transferred
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponseQueueItem'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-
-  # -------------------------------------------------------------------------
-  # Encounters
-  # -------------------------------------------------------------------------
   /v1/journeys/{id}/encounter/start:
     post:
       operationId: startEncounter
-      summary: Start a clinical encounter for a journey
-      description: |
-        Creates a new encounter associated with the journey. Transitions
-        the journey to ENCOUNTER_STARTED state.
-      tags: [Encounter]
+      tags: [Encounters]
+      summary: Start a clinical encounter on a journey (Class A)
       parameters:
-        - name: id
-          in: path
-          required: true
-          description: Journey ID
-          schema:
-            type: string
-            format: uuid
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
-        - $ref: '#/components/parameters/X-Actor-Type'
-        - $ref: '#/components/parameters/X-Purpose-Of-Use'
-        - $ref: '#/components/parameters/X-Shift-Id'
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/Decision"
+        - $ref: "#/components/parameters/JourneyId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StartEncounterRequest"
       responses:
-        '201':
+        "201":
           description: Encounter started
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponseEncounter'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '409':
-          description: Encounter already in progress
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ApiResponseEncounterResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /v1/encounters/{id}/complete:
     post:
       operationId: completeEncounter
-      summary: Complete a clinical encounter
-      tags: [Encounter]
+      tags: [Encounters]
+      summary: Complete a clinical encounter (Class A)
       parameters:
-        - name: id
-          in: path
-          required: true
-          description: Encounter ID
-          schema:
-            type: string
-            format: uuid
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
-        - $ref: '#/components/parameters/X-Actor-Type'
-        - $ref: '#/components/parameters/X-Purpose-Of-Use'
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/Decision"
+        - $ref: "#/components/parameters/EncounterId"
       responses:
-        '200':
+        "200":
           description: Encounter completed
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponseEncounter'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                $ref: "#/components/schemas/ApiResponseEncounterResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /v1/encounters/{id}:
     get:
       operationId: getEncounter
-      summary: Get encounter details
-      tags: [Encounter]
+      tags: [Encounters]
+      summary: Get an encounter by ID (Class C)
       parameters:
-        - name: id
-          in: path
-          required: true
-          description: Encounter ID
-          schema:
-            type: string
-            format: uuid
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
-        - $ref: '#/components/parameters/X-Actor-Type'
-        - $ref: '#/components/parameters/X-Purpose-Of-Use'
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/EncounterId"
       responses:
-        '200':
-          description: Encounter details
+        "200":
+          description: Encounter detail
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponseEncounter'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                $ref: "#/components/schemas/ApiResponseEncounterResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /v1/patient/{cpid}/timeline:
     get:
       operationId: getPatientTimeline
-      summary: Get patient journey timeline
-      description: |
-        Returns a chronological timeline of all journey events for the patient.
-      tags: [Patient]
+      tags: [Encounters]
+      summary: Get clinical timeline for a patient (Class C)
       parameters:
-        - name: cpid
-          in: path
-          required: true
-          description: Client Pseudonymous ID (CPID)
-          schema:
-            type: string
-            example: "CPID-00000001"
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
-        - $ref: '#/components/parameters/X-Actor-Type'
-        - $ref: '#/components/parameters/X-Purpose-Of-Use'
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/PatientCpid"
       responses:
-        '200':
-          description: Patient timeline
+        "200":
+          description: Patient clinical timeline
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponsePatientTimeline'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                $ref: "#/components/schemas/ApiResponsePatientTimeline"
 
-  # -------------------------------------------------------------------------
-  # Admissions
-  # -------------------------------------------------------------------------
-  /v1/journeys/{id}/admit:
-    post:
-      operationId: requestAdmission
-      summary: Request inpatient admission
-      description: |
-        Initiates an admission request for a patient journey. Creates an
-        admission record in PENDING_APPROVAL state.
-      tags: [Admission]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          description: Journey ID
-          schema:
-            type: string
-            format: uuid
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
-        - $ref: '#/components/parameters/X-Actor-Type'
-        - $ref: '#/components/parameters/X-Purpose-Of-Use'
-        - $ref: '#/components/parameters/X-Shift-Id'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AdmitRequest'
-      responses:
-        '201':
-          description: Admission requested
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponseAdmission'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
+  # ---- Discharge -----------------------------------------------------------
 
-  /v1/admissions/{id}/approve:
-    post:
-      operationId: approveAdmission
-      summary: Approve an admission request
-      tags: [Admission]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          description: Admission ID
-          schema:
-            type: string
-            format: uuid
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
-        - $ref: '#/components/parameters/X-Actor-Type'
-        - $ref: '#/components/parameters/X-Purpose-Of-Use'
-      responses:
-        '200':
-          description: Admission approved
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponseAdmission'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-
-  /v1/admissions/{id}/admit:
-    post:
-      operationId: admitPatient
-      summary: Formally admit the patient
-      description: |
-        Transitions the admission from APPROVED to ADMITTED. The journey
-        state moves to ADMITTED.
-      tags: [Admission]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          description: Admission ID
-          schema:
-            type: string
-            format: uuid
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
-        - $ref: '#/components/parameters/X-Actor-Type'
-        - $ref: '#/components/parameters/X-Purpose-Of-Use'
-      responses:
-        '200':
-          description: Patient admitted
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponseAdmission'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-
-  /v1/admissions/{id}/assign-bed:
-    post:
-      operationId: assignBed
-      summary: Assign a bed to an admitted patient
-      tags: [Admission]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          description: Admission ID
-          schema:
-            type: string
-            format: uuid
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
-        - $ref: '#/components/parameters/X-Actor-Type'
-        - $ref: '#/components/parameters/X-Purpose-Of-Use'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/BedAssignRequest'
-      responses:
-        '200':
-          description: Bed assigned
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponseAdmission'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '409':
-          description: Bed already occupied
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
-  /v1/admissions/{id}/transfer:
-    post:
-      operationId: transferAdmission
-      summary: Transfer an admitted patient to another ward
-      tags: [Admission]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          description: Admission ID
-          schema:
-            type: string
-            format: uuid
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
-        - $ref: '#/components/parameters/X-Actor-Type'
-        - $ref: '#/components/parameters/X-Purpose-Of-Use'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AdmissionTransferRequest'
-      responses:
-        '200':
-          description: Patient transferred
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponseAdmission'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-
-  # -------------------------------------------------------------------------
-  # Discharge
-  # -------------------------------------------------------------------------
   /v1/journeys/{id}/discharge/start:
     post:
       operationId: startDischarge
-      summary: Initiate the discharge process
-      description: |
-        Creates a discharge case that tracks blockers (pending labs,
-        pharmacy clearance, etc.) before the patient can be discharged.
       tags: [Discharge]
+      summary: Start the discharge process for a journey (Class A)
       parameters:
-        - name: id
-          in: path
-          required: true
-          description: Journey ID
-          schema:
-            type: string
-            format: uuid
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
-        - $ref: '#/components/parameters/X-Actor-Type'
-        - $ref: '#/components/parameters/X-Purpose-Of-Use'
-        - $ref: '#/components/parameters/X-Shift-Id'
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/Decision"
+        - $ref: "#/components/parameters/JourneyId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StartDischargeRequest"
       responses:
-        '201':
-          description: Discharge process initiated
+        "201":
+          description: Discharge process started
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponseDischargeCase'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                $ref: "#/components/schemas/ApiResponseDischargeResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /v1/discharge/{caseId}/status:
     get:
       operationId: getDischargeStatus
-      summary: Get discharge case status
       tags: [Discharge]
+      summary: Get discharge case status (Class C)
       parameters:
-        - name: caseId
-          in: path
-          required: true
-          description: Discharge case ID
-          schema:
-            type: string
-            format: uuid
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
-        - $ref: '#/components/parameters/X-Actor-Type'
-        - $ref: '#/components/parameters/X-Purpose-Of-Use'
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/DischargeCaseId"
       responses:
-        '200':
-          description: Discharge case details
+        "200":
+          description: Discharge status
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponseDischargeCase'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                $ref: "#/components/schemas/ApiResponseDischargeResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /v1/discharge/{caseId}/clear-blocker:
     post:
       operationId: clearDischargeBlocker
-      summary: Clear a discharge blocker
       tags: [Discharge]
+      summary: Clear a discharge blocker (Class A)
       parameters:
-        - name: caseId
-          in: path
-          required: true
-          description: Discharge case ID
-          schema:
-            type: string
-            format: uuid
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
-        - $ref: '#/components/parameters/X-Actor-Type'
-        - $ref: '#/components/parameters/X-Purpose-Of-Use'
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/Decision"
+        - $ref: "#/components/parameters/DischargeCaseId"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ClearBlockerRequest'
+              $ref: "#/components/schemas/ClearBlockerRequest"
       responses:
-        '200':
+        "200":
           description: Blocker cleared
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponseDischargeCase'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                $ref: "#/components/schemas/ApiResponseDischargeResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /v1/discharge/{caseId}/complete:
     post:
       operationId: completeDischarge
-      summary: Complete the discharge
-      description: |
-        Marks the discharge as complete. All blockers must be resolved
-        before this can succeed. The journey transitions to DISCHARGED.
       tags: [Discharge]
+      summary: Complete the discharge process (Class A)
       parameters:
-        - name: caseId
-          in: path
-          required: true
-          description: Discharge case ID
-          schema:
-            type: string
-            format: uuid
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
-        - $ref: '#/components/parameters/X-Actor-Type'
-        - $ref: '#/components/parameters/X-Purpose-Of-Use'
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/Decision"
+        - $ref: "#/components/parameters/DischargeCaseId"
       responses:
-        '200':
+        "200":
           description: Discharge completed
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponseDischargeCase'
-        '400':
-          description: Unresolved blockers remain
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                $ref: "#/components/schemas/ApiResponseDischargeResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
-  # -------------------------------------------------------------------------
-  # Death Registration
-  # -------------------------------------------------------------------------
-  /v1/journeys/{id}/death/record:
-    post:
-      operationId: recordDeath
-      summary: Record a patient death
-      description: |
-        Records patient death and creates a death case for UBOMI
-        notification processing.
-      tags: [Death]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          description: Journey ID
-          schema:
-            type: string
-            format: uuid
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
-        - $ref: '#/components/parameters/X-Actor-Type'
-        - $ref: '#/components/parameters/X-Purpose-Of-Use'
-        - $ref: '#/components/parameters/X-Shift-Id'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/DeathRecordRequest'
-      responses:
-        '201':
-          description: Death recorded
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponseDeathCase'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
+  # ---- Queues --------------------------------------------------------------
 
-  /v1/death/{caseId}/ubomi-status:
-    post:
-      operationId: updateUbomiStatus
-      summary: Update UBOMI registration status
-      description: |
-        Updates the UBOMI (civil registration) status for a death case
-        (e.g., SUBMITTED, ACCEPTED, REJECTED).
-      tags: [Death]
-      parameters:
-        - name: caseId
-          in: path
-          required: true
-          description: Death case ID
-          schema:
-            type: string
-            format: uuid
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
-        - $ref: '#/components/parameters/X-Actor-Type'
-        - $ref: '#/components/parameters/X-Purpose-Of-Use'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UbomiStatusUpdateRequest'
-      responses:
-        '200':
-          description: UBOMI status updated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponseDeathCase'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-
-  /v1/death/{caseId}/complete:
-    post:
-      operationId: completeDeathCase
-      summary: Complete the death registration case
-      tags: [Death]
-      parameters:
-        - name: caseId
-          in: path
-          required: true
-          description: Death case ID
-          schema:
-            type: string
-            format: uuid
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
-        - $ref: '#/components/parameters/X-Actor-Type'
-        - $ref: '#/components/parameters/X-Purpose-Of-Use'
-      responses:
-        '200':
-          description: Death case completed
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponseDeathCase'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-
-  # -------------------------------------------------------------------------
-  # Control Tower / Ops
-  # -------------------------------------------------------------------------
-  /v1/ops/control-tower:
+  /v1/queues:
     get:
-      operationId: getControlTower
-      summary: Get facility control tower data
-      description: |
-        Returns real-time operational analytics including queue stats,
-        admission occupancy, journey state distribution, and wait times.
-      tags: [ControlTower]
+      operationId: listQueues
+      tags: [Queues]
+      summary: List queues for a facility (Class C)
       parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
         - name: facilityId
           in: query
           required: true
           schema:
             type: string
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
-        - $ref: '#/components/parameters/X-Actor-Type'
-        - $ref: '#/components/parameters/X-Purpose-Of-Use'
-      responses:
-        '200':
-          description: Control tower data
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponseControlTowerData'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-
-  /v1/ops/bottlenecks:
-    get:
-      operationId: getBottlenecks
-      summary: Get active bottleneck alerts
-      tags: [ControlTower]
-      parameters:
-        - name: facilityId
-          in: query
-          required: true
-          schema:
-            type: string
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
-        - $ref: '#/components/parameters/X-Actor-Type'
-        - $ref: '#/components/parameters/X-Purpose-Of-Use'
-      responses:
-        '200':
-          description: Bottleneck alerts
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponseBottleneckArray'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-
-  /v1/ops/queues/telemetry:
-    get:
-      operationId: getQueueTelemetry
-      summary: Get queue telemetry time-series data
-      tags: [ControlTower]
-      parameters:
-        - name: facilityId
-          in: query
-          required: true
-          schema:
-            type: string
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
-        - $ref: '#/components/parameters/X-Actor-Type'
-        - $ref: '#/components/parameters/X-Purpose-Of-Use'
-      responses:
-        '200':
-          description: Queue telemetry data
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponseQueueTelemetryArray'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-
-  # -------------------------------------------------------------------------
-  # Tasks
-  # -------------------------------------------------------------------------
-  /v1/tasks:
-    post:
-      operationId: createTask
-      summary: Create a new task
-      tags: [Task]
-      parameters:
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
-        - $ref: '#/components/parameters/X-Actor-Type'
-        - $ref: '#/components/parameters/X-Purpose-Of-Use'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TaskCreateRequest'
-      responses:
-        '201':
-          description: Task created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponseTask'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-
-  /v1/tasks/{taskId}/complete:
-    post:
-      operationId: completeTask
-      summary: Mark a task as completed
-      tags: [Task]
-      parameters:
-        - name: taskId
-          in: path
-          required: true
-          schema:
-            type: string
             format: uuid
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
-        - $ref: '#/components/parameters/X-Actor-Type'
-        - $ref: '#/components/parameters/X-Purpose-Of-Use'
-      responses:
-        '200':
-          description: Task completed
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponseTask'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-
-  /v1/tasks/my:
-    get:
-      operationId: getMyTasks
-      summary: Get tasks assigned to the current actor
-      tags: [Task]
-      parameters:
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
-        - $ref: '#/components/parameters/X-Actor-Type'
-        - $ref: '#/components/parameters/X-Purpose-Of-Use'
-      responses:
-        '200':
-          description: My tasks
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponseTaskArray'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-
-  /v1/tasks/workspace/{workspaceId}:
-    get:
-      operationId: getWorkspaceTasks
-      summary: Get tasks for a workspace
-      tags: [Task]
-      parameters:
         - name: workspaceId
-          in: path
-          required: true
-          schema:
-            type: string
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
-        - $ref: '#/components/parameters/X-Actor-Type'
-        - $ref: '#/components/parameters/X-Purpose-Of-Use'
-      responses:
-        '200':
-          description: Workspace tasks
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponseTaskArray'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-
-  /v1/tasks/journey/{journeyId}:
-    get:
-      operationId: getJourneyTasks
-      summary: Get tasks for a journey
-      tags: [Task]
-      parameters:
-        - name: journeyId
-          in: path
-          required: true
+          in: query
+          required: false
           schema:
             type: string
             format: uuid
-        - $ref: '#/components/parameters/X-Tenant-Id'
-        - $ref: '#/components/parameters/X-Correlation-Id'
-        - $ref: '#/components/parameters/X-Actor-Id'
-        - $ref: '#/components/parameters/X-Actor-Type'
-        - $ref: '#/components/parameters/X-Purpose-Of-Use'
       responses:
-        '200':
-          description: Journey tasks
+        "200":
+          description: Queue list
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponseTaskArray'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+                $ref: "#/components/schemas/ApiResponseQueueList"
 
-# ===========================================================================
-# Components
-# ===========================================================================
+  /v1/queues/{queueId}/enqueue:
+    post:
+      operationId: enqueueJourney
+      tags: [Queues]
+      summary: Enqueue a journey into a queue (Class B)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/QueueId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EnqueueRequest"
+      responses:
+        "201":
+          description: Journey enqueued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseQueueItemResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /v1/queues/{queueId}/call-next:
+    post:
+      operationId: callNextInQueue
+      tags: [Queues]
+      summary: Call the next patient in a queue (Class B)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/QueueId"
+      responses:
+        "200":
+          description: Next queue item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseQueueItemResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /v1/queues/{queueId}/items:
+    get:
+      operationId: listQueueItems
+      tags: [Queues]
+      summary: List items in a queue (Class C)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/QueueId"
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [WAITING, CALLED, IN_PROGRESS, COMPLETED, SKIPPED]
+      responses:
+        "200":
+          description: Queue item list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseQueueItemList"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+# ============================================================================
+# COMPONENTS
+# ============================================================================
 components:
-  # -------------------------------------------------------------------------
-  # Security Schemes
-  # -------------------------------------------------------------------------
+
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
-      description: Keycloak-issued JWT -- also validated by Envoy ext_authz -> TSHEPO
+      description: Keycloak-issued access token (forwarded by Envoy)
 
-  # -------------------------------------------------------------------------
-  # Reusable Parameters (trust headers)
-  # -------------------------------------------------------------------------
   parameters:
-    X-Tenant-Id:
+    TenantId:
       name: X-Tenant-Id
       in: header
       required: true
-      description: Tenant identifier injected by TSHEPO
+      description: Tenant identifier — injected by Envoy after TSHEPO authorisation
       schema:
         type: string
-        example: "moh-zw"
-    X-Correlation-Id:
+    CorrelationId:
       name: X-Correlation-Id
       in: header
       required: true
@@ -1378,1056 +535,541 @@ components:
       schema:
         type: string
         format: uuid
-    X-Actor-Id:
+    ActorId:
       name: X-Actor-Id
       in: header
       required: true
-      description: Actor (user/service) identifier injected by TSHEPO
+      description: Authenticated actor (user or service) identifier
       schema:
         type: string
-        example: "clinician-001"
-    X-Actor-Type:
+    ActorType:
       name: X-Actor-Type
       in: header
       required: true
-      description: Type of actor (CLINICIAN, NURSE, ADMIN, SYSTEM)
+      description: Type of actor making the request
       schema:
         type: string
-        enum: [CLINICIAN, NURSE, ADMIN, SYSTEM]
-        example: "CLINICIAN"
-    X-Purpose-Of-Use:
+        enum: [CITIZEN, PROVIDER, ADMIN, SYSTEM, SERVICE]
+    PurposeOfUse:
       name: X-Purpose-Of-Use
       in: header
       required: true
-      description: Purpose of use for access control evaluation
+      description: Why this request is being made
       schema:
         type: string
-        enum: [TREATMENT, OPERATIONS, EMERGENCY, RESEARCH, AUDIT]
-        example: "TREATMENT"
-    X-Facility-Id:
+    DeviceFingerprint:
+      name: X-Device-Fingerprint
+      in: header
+      required: true
+      description: Device identity hash
+      schema:
+        type: string
+    FacilityId:
       name: X-Facility-Id
       in: header
       required: false
-      description: Facility identifier from active work session
-      schema:
-        type: string
-    X-Workspace-Id:
-      name: X-Workspace-Id
-      in: header
-      required: false
-      description: Workspace identifier from active work session
-      schema:
-        type: string
-    X-Shift-Id:
-      name: X-Shift-Id
-      in: header
-      required: false
-      description: Active shift identifier
+      description: Facility scope (contextual)
       schema:
         type: string
         format: uuid
+    WorkspaceId:
+      name: X-Workspace-Id
+      in: header
+      required: false
+      description: Workspace scope (contextual)
+      schema:
+        type: string
+        format: uuid
+    ShiftId:
+      name: X-Shift-Id
+      in: header
+      required: false
+      description: Duty shift scope (contextual)
+      schema:
+        type: string
+        format: uuid
+    Decision:
+      name: X-Decision
+      in: header
+      required: false
+      description: PDP decision header — ALLOW, DENY, STEP_UP_REQUIRED (Class A endpoints require ALLOW)
+      schema:
+        type: string
+        enum: [ALLOW, DENY, STEP_UP_REQUIRED]
+    Obligations:
+      name: X-Obligations
+      in: header
+      required: false
+      description: JSON obligations blob from TSHEPO
+      schema:
+        type: string
+    PageNumber:
+      name: page
+      in: query
+      schema:
+        type: integer
+        default: 0
+    PageSize:
+      name: size
+      in: query
+      schema:
+        type: integer
+        default: 20
+        maximum: 100
+    JourneyId:
+      name: id
+      in: path
+      required: true
+      description: Journey identifier
+      schema:
+        type: integer
+        format: int64
+    EncounterId:
+      name: id
+      in: path
+      required: true
+      description: Encounter identifier
+      schema:
+        type: integer
+        format: int64
+    DischargeCaseId:
+      name: caseId
+      in: path
+      required: true
+      description: Discharge case identifier
+      schema:
+        type: integer
+        format: int64
+    QueueId:
+      name: queueId
+      in: path
+      required: true
+      description: Queue identifier
+      schema:
+        type: integer
+        format: int64
+    PatientCpid:
+      name: cpid
+      in: path
+      required: true
+      description: Patient CPID (clinical patient identifier)
+      schema:
+        type: string
 
-  # -------------------------------------------------------------------------
-  # Reusable Responses
-  # -------------------------------------------------------------------------
   responses:
-    Unauthorized:
-      description: Missing or invalid bearer token / trust headers
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponse'
     BadRequest:
-      description: Invalid request body or parameters
+      description: Validation error
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ErrorResponse'
+            $ref: "#/components/schemas/ErrorResponse"
     NotFound:
       description: Resource not found
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ErrorResponse'
+            $ref: "#/components/schemas/ErrorResponse"
+    Conflict:
+      description: Duplicate resource
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Unauthorized:
+      description: Missing or invalid trust headers
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Forbidden:
+      description: PDP denied the request (X-Decision=DENY)
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
 
-  # -------------------------------------------------------------------------
-  # Schemas
-  # -------------------------------------------------------------------------
   schemas:
-    # -- API Envelope Wrappers --
-    ApiResponseWorkSession:
-      type: object
-      properties:
-        success:
-          type: boolean
-          example: true
-        data:
-          $ref: '#/components/schemas/WorkSession'
 
-    ApiResponseWorkContext:
-      type: object
-      properties:
-        success:
-          type: boolean
-          example: true
-        data:
-          $ref: '#/components/schemas/WorkContext'
+    # ---- Requests ----------------------------------------------------------
 
-    ApiResponseJourney:
+    StartJourneyRequest:
       type: object
-      properties:
-        success:
-          type: boolean
-          example: true
-        data:
-          $ref: '#/components/schemas/Journey'
-
-    ApiResponseQueueItem:
-      type: object
-      properties:
-        success:
-          type: boolean
-          example: true
-        data:
-          $ref: '#/components/schemas/QueueItem'
-
-    ApiResponseQueueItemArray:
-      type: object
-      properties:
-        success:
-          type: boolean
-          example: true
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/QueueItem'
-
-    ApiResponseQueueArray:
-      type: object
-      properties:
-        success:
-          type: boolean
-          example: true
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/Queue'
-
-    ApiResponseEncounter:
-      type: object
-      properties:
-        success:
-          type: boolean
-          example: true
-        data:
-          $ref: '#/components/schemas/Encounter'
-
-    ApiResponseAdmission:
-      type: object
-      properties:
-        success:
-          type: boolean
-          example: true
-        data:
-          $ref: '#/components/schemas/Admission'
-
-    ApiResponseDischargeCase:
-      type: object
-      properties:
-        success:
-          type: boolean
-          example: true
-        data:
-          $ref: '#/components/schemas/DischargeCase'
-
-    ApiResponseDeathCase:
-      type: object
-      properties:
-        success:
-          type: boolean
-          example: true
-        data:
-          $ref: '#/components/schemas/DeathCase'
-
-    ApiResponseControlTowerData:
-      type: object
-      properties:
-        success:
-          type: boolean
-          example: true
-        data:
-          $ref: '#/components/schemas/ControlTowerData'
-
-    ApiResponseBottleneckArray:
-      type: object
-      properties:
-        success:
-          type: boolean
-          example: true
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/Bottleneck'
-
-    ApiResponseQueueTelemetryArray:
-      type: object
-      properties:
-        success:
-          type: boolean
-          example: true
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/QueueTelemetry'
-
-    ApiResponseTask:
-      type: object
-      properties:
-        success:
-          type: boolean
-          example: true
-        data:
-          $ref: '#/components/schemas/Task'
-
-    ApiResponseTaskArray:
-      type: object
-      properties:
-        success:
-          type: boolean
-          example: true
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/Task'
-
-    ApiResponsePatientTimeline:
-      type: object
-      properties:
-        success:
-          type: boolean
-          example: true
-        data:
-          $ref: '#/components/schemas/PatientTimeline'
-
-    # -- Request Schemas --
-    WorkStartRequest:
-      type: object
-      required: [facilityId, workspaceId, dutyMode]
+      required: [facilityId, patientCpid]
       properties:
         facilityId:
           type: string
-          description: Facility where the shift takes place
-          example: "FAC-001"
-        workspaceId:
-          type: string
-          description: Workspace within the facility
-          example: "WS-OPD-01"
-        dutyMode:
-          type: string
-          enum: [CLINICAL, ADMIN, VIRTUAL]
-          description: Type of duty for this shift
-          example: "CLINICAL"
-
-    JourneyStartRequest:
-      type: object
-      required: [patientCpid, facilityId]
-      properties:
+          format: uuid
         patientCpid:
           type: string
-          description: Patient CPID from VITO
-          example: "CPID-00000001"
-        facilityId:
+        referralSource:
           type: string
-          description: Facility where the journey starts
-          example: "FAC-001"
+        referralId:
+          type: string
 
     TriageRequest:
       type: object
       required: [acuity]
       properties:
         acuity:
-          type: integer
-          minimum: 1
-          maximum: 5
-          description: "Triage acuity: 1=Red/Immediate, 2=Orange/Urgent, 3=Yellow/Semi-urgent, 4=Green/Non-urgent, 5=Blue/Admin"
-          example: 3
+          type: string
+          enum: [IMMEDIATE, URGENT, LESS_URGENT, NON_URGENT]
         vitals:
-          $ref: '#/components/schemas/Vitals'
+          type: object
+          additionalProperties: true
         notes:
           type: string
-          description: Triage notes / chief complaint
-          example: "Chest pain, onset 2 hours ago"
 
-    Vitals:
-      type: object
-      properties:
-        systolicBp:
-          type: number
-          description: Systolic blood pressure (mmHg)
-          example: 120
-        diastolicBp:
-          type: number
-          description: Diastolic blood pressure (mmHg)
-          example: 80
-        heartRate:
-          type: number
-          description: Heart rate (beats per minute)
-          example: 72
-        temperature:
-          type: number
-          description: Temperature (Celsius)
-          example: 36.5
-        respiratoryRate:
-          type: number
-          description: Respiratory rate (breaths per minute)
-          example: 16
-        oxygenSaturation:
-          type: number
-          description: Oxygen saturation (SpO2 %)
-          example: 98
-
-    RouteRequest:
+    RouteJourneyRequest:
       type: object
       required: [targetQueueId]
       properties:
         targetQueueId:
-          type: string
-          format: uuid
-          description: Queue to route the patient to
-        priority:
-          type: string
-          enum: [NORMAL, HIGH, URGENT]
-          default: NORMAL
-          description: Queue priority override
-
-    EnqueueRequest:
-      type: object
-      required: [journeyId, patientCpid]
-      properties:
-        journeyId:
-          type: string
-          format: uuid
-        patientCpid:
-          type: string
-        priority:
-          type: string
-          enum: [NORMAL, HIGH, URGENT]
-          default: NORMAL
-
-    QueueStatusUpdateRequest:
-      type: object
-      required: [status]
-      properties:
-        status:
-          type: string
-          enum: [WAITING, CALLED, IN_SERVICE, COMPLETED, NO_SHOW, TRANSFERRED, CANCELLED]
-          description: New status for the queue item
-
-    QueueTransferRequest:
-      type: object
-      required: [targetQueueId, reason]
-      properties:
-        targetQueueId:
-          type: string
-          format: uuid
-          description: Queue to transfer the item to
-        reason:
-          type: string
-          description: Reason for transfer
-          example: "Patient needs specialist consultation"
-
-    AdmitRequest:
-      type: object
-      required: [wardId, reason]
-      properties:
-        wardId:
-          type: string
-          description: Target ward for admission
-          example: "WARD-MED-01"
-        reason:
-          type: string
-          description: Reason for admission
-          example: "Pneumonia requiring IV antibiotics"
-        expectedLos:
           type: integer
-          description: Expected length of stay in days
-          example: 5
+          format: int64
 
-    BedAssignRequest:
+    StartEncounterRequest:
       type: object
-      required: [bedId]
+      required: [encounterType]
       properties:
-        bedId:
+        encounterType:
           type: string
-          description: Bed identifier to assign
-          example: "BED-MED-01-A3"
+          enum: [OUTPATIENT, INPATIENT, EMERGENCY, VIRTUAL]
 
-    AdmissionTransferRequest:
+    StartDischargeRequest:
       type: object
-      required: [targetWardId, reason]
+      required: [dischargeType]
       properties:
-        targetWardId:
+        dischargeType:
           type: string
-          description: Target ward for transfer
-          example: "WARD-ICU-01"
-        targetBedId:
-          type: string
-          description: Specific bed in the target ward (optional)
-        reason:
-          type: string
-          description: Reason for inter-ward transfer
-          example: "Patient condition deteriorated, requires ICU care"
-
-    DeathRecordRequest:
-      type: object
-      required: [dateOfDeath, causeOfDeath, placeOfDeath, certifiedById]
-      properties:
-        dateOfDeath:
-          type: string
-          format: date-time
-          description: Date and time of death (ISO 8601)
-          example: "2024-12-15T14:30:00Z"
-        causeOfDeath:
-          type: string
-          description: Primary cause of death
-          example: "Acute myocardial infarction"
-        placeOfDeath:
-          type: string
-          description: Location of death within the facility
-          example: "ICU Ward A, Bed 3"
-        certifiedById:
-          type: string
-          description: ID of the certifying practitioner
-          example: "PROV-DR-042"
-
-    UbomiStatusUpdateRequest:
-      type: object
-      required: [ubomiStatus]
-      properties:
-        ubomiStatus:
-          type: string
-          enum: [PENDING, SUBMITTED, ACCEPTED, REJECTED]
-          description: UBOMI civil registration status
+          enum: [ROUTINE, AGAINST_ADVICE, TRANSFER, DEATH]
 
     ClearBlockerRequest:
       type: object
-      required: [blockerId]
+      required: [blockerName]
       properties:
-        blockerId:
+        blockerName:
           type: string
-          format: uuid
-          description: ID of the discharge blocker to clear
 
-    TaskCreateRequest:
+    EnqueueRequest:
       type: object
-      required: [workspaceId, title, priority]
+      required: [journeyId]
       properties:
         journeyId:
-          type: string
-          format: uuid
-          description: Associated journey (optional)
-        workspaceId:
-          type: string
-          description: Workspace the task belongs to
-        title:
-          type: string
-          description: Task title
-          example: "Follow up on lab results"
-        description:
-          type: string
-          description: Detailed task description
+          type: integer
+          format: int64
         priority:
-          type: string
-          enum: [LOW, NORMAL, HIGH, URGENT]
-          example: "NORMAL"
-        assigneeId:
-          type: string
-          description: Actor ID to assign the task to
-        dueAt:
-          type: string
-          format: date-time
-          description: Task due date
+          type: integer
+          default: 0
 
-    # -- Domain Schemas --
-    WorkSession:
+    # ---- Response wrappers -------------------------------------------------
+
+    ApiResponseJourneyResponse:
       type: object
-      required: [shiftId, actorId, actorDisplayName, facilityId, facilityName, workspaceId, workspaceName, dutyMode, startedAt, status]
       properties:
-        shiftId:
+        success:
+          type: boolean
+        correlationId:
           type: string
           format: uuid
-          example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
-        actorId:
-          type: string
-          example: "clinician-001"
-        actorDisplayName:
-          type: string
-          example: "Dr. Sarah Moyo"
-        facilityId:
-          type: string
-          example: "FAC-001"
-        facilityName:
-          type: string
-          example: "Parirenyatwa Group of Hospitals"
-        workspaceId:
-          type: string
-          example: "WS-OPD-01"
-        workspaceName:
-          type: string
-          example: "OPD Room 1"
-        dutyMode:
-          type: string
-          enum: [CLINICAL, ADMIN, VIRTUAL]
-        startedAt:
-          type: string
-          format: date-time
-        endedAt:
-          type: string
-          format: date-time
-          nullable: true
-        status:
-          type: string
-          enum: [ACTIVE, ENDED]
+        data:
+          $ref: "#/components/schemas/JourneyResponse"
 
-    WorkContext:
+    ApiResponsePagedJourneyResponse:
       type: object
-      required: [facilityId, facilityName, workspaceId, workspaceName]
       properties:
-        activeShift:
-          $ref: '#/components/schemas/WorkSession'
-        facilityId:
+        success:
+          type: boolean
+        correlationId:
           type: string
-        facilityName:
-          type: string
-        workspaceId:
-          type: string
-        workspaceName:
-          type: string
+          format: uuid
+        data:
+          $ref: "#/components/schemas/PagedJourneyResponse"
 
-    Journey:
+    ApiResponseEncounterResponse:
       type: object
-      required: [id, patientCpid, facilityId, state, startedAt]
+      properties:
+        success:
+          type: boolean
+        correlationId:
+          type: string
+          format: uuid
+        data:
+          $ref: "#/components/schemas/EncounterResponse"
+
+    ApiResponsePatientTimeline:
+      type: object
+      properties:
+        success:
+          type: boolean
+        correlationId:
+          type: string
+          format: uuid
+        data:
+          $ref: "#/components/schemas/PatientTimeline"
+
+    ApiResponseDischargeResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        correlationId:
+          type: string
+          format: uuid
+        data:
+          $ref: "#/components/schemas/DischargeResponse"
+
+    ApiResponseQueueList:
+      type: object
+      properties:
+        success:
+          type: boolean
+        correlationId:
+          type: string
+          format: uuid
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/QueueResponse"
+
+    ApiResponseQueueItemResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        correlationId:
+          type: string
+          format: uuid
+        data:
+          $ref: "#/components/schemas/QueueItemResponse"
+
+    ApiResponseQueueItemList:
+      type: object
+      properties:
+        success:
+          type: boolean
+        correlationId:
+          type: string
+          format: uuid
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/QueueItemResponse"
+
+    # ---- Domain objects ----------------------------------------------------
+
+    JourneyResponse:
+      type: object
       properties:
         id:
+          type: integer
+          format: int64
+        journeyRef:
+          type: string
+        facilityId:
           type: string
           format: uuid
         patientCpid:
           type: string
-          example: "CPID-00000001"
-        facilityId:
+        status:
           type: string
-        state:
-          type: string
-          enum: [ARRIVED, TRIAGED, QUEUED, IN_SERVICE, ENCOUNTER_STARTED, ADMITTED, DISCHARGED, DEATH_RECORDED, COMPLETED, CANCELLED]
+          enum: [REGISTERED, TRIAGED, QUEUED, IN_ENCOUNTER, PENDING_DISCHARGE, DISCHARGED]
         acuity:
+          type: string
+        referralSource:
+          type: string
+        referralId:
+          type: string
+        startedAt:
+          type: string
+          format: date-time
+        dischargedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    PagedJourneyResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/JourneyResponse"
+        page:
           type: integer
-          minimum: 1
-          maximum: 5
-          nullable: true
-        tokenNumber:
+        size:
+          type: integer
+        totalElements:
+          type: integer
+          format: int64
+
+    EncounterResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        encounterRef:
           type: string
-          nullable: true
-          example: "A042"
-        currentQueueId:
+        journeyId:
+          type: integer
+          format: int64
+        encounterType:
           type: string
-          format: uuid
-          nullable: true
-        currentQueueName:
+        status:
           type: string
-          nullable: true
-        encounterId:
+          enum: [ACTIVE, COMPLETED, CANCELLED]
+        providerId:
           type: string
-          format: uuid
-          nullable: true
-        admissionId:
-          type: string
-          format: uuid
-          nullable: true
         startedAt:
           type: string
           format: date-time
         completedAt:
           type: string
           format: date-time
-          nullable: true
-        triageNotes:
+        createdAt:
           type: string
-          nullable: true
+          format: date-time
 
-    Queue:
+    PatientTimeline:
       type: object
-      required: [id, name, facilityId, workspaceId, waitingCount, inServiceCount, averageWaitMinutes, active]
       properties:
-        id:
-          type: string
-          format: uuid
-        name:
-          type: string
-          example: "General OPD"
-        facilityId:
-          type: string
-        workspaceId:
-          type: string
-        waitingCount:
-          type: integer
-          example: 12
-        inServiceCount:
-          type: integer
-          example: 3
-        averageWaitMinutes:
-          type: integer
-          example: 25
-        active:
-          type: boolean
-
-    QueueItem:
-      type: object
-      required: [id, queueId, journeyId, patientCpid, tokenNumber, priority, status, enqueuedAt]
-      properties:
-        id:
-          type: string
-          format: uuid
-        queueId:
-          type: string
-          format: uuid
-        journeyId:
-          type: string
-          format: uuid
         patientCpid:
           type: string
-        tokenNumber:
+        encounters:
+          type: array
+          items:
+            $ref: "#/components/schemas/EncounterResponse"
+
+    DischargeResponse:
+      type: object
+      properties:
+        caseId:
+          type: integer
+          format: int64
+        journeyId:
+          type: integer
+          format: int64
+        dischargeType:
           type: string
-          example: "A042"
-        priority:
-          type: string
-          enum: [NORMAL, HIGH, URGENT]
         status:
           type: string
-          enum: [WAITING, CALLED, IN_SERVICE, COMPLETED, NO_SHOW, TRANSFERRED, CANCELLED]
-        acuity:
+          enum: [INITIATED, PENDING_CLEARANCE, CLEARED, COMPLETED]
+        blockers:
+          type: array
+          items:
+            $ref: "#/components/schemas/DischargeBlocker"
+        startedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+
+    DischargeBlocker:
+      type: object
+      properties:
+        name:
+          type: string
+        cleared:
+          type: boolean
+        clearedAt:
+          type: string
+          format: date-time
+
+    QueueResponse:
+      type: object
+      properties:
+        id:
           type: integer
-          minimum: 1
-          maximum: 5
-          nullable: true
+          format: int64
+        name:
+          type: string
+        queueType:
+          type: string
+        facilityId:
+          type: string
+          format: uuid
+        workspaceId:
+          type: string
+          format: uuid
+        waitingCount:
+          type: integer
+        status:
+          type: string
+          enum: [ACTIVE, PAUSED, CLOSED]
+
+    QueueItemResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        queueId:
+          type: integer
+          format: int64
+        journeyId:
+          type: integer
+          format: int64
+        patientCpid:
+          type: string
+        priority:
+          type: integer
+        position:
+          type: integer
+        status:
+          type: string
+          enum: [WAITING, CALLED, IN_PROGRESS, COMPLETED, SKIPPED]
         enqueuedAt:
           type: string
           format: date-time
         calledAt:
           type: string
           format: date-time
-          nullable: true
-        serviceStartedAt:
-          type: string
-          format: date-time
-          nullable: true
-        completedAt:
-          type: string
-          format: date-time
-          nullable: true
 
-    Encounter:
+    SnapshotResponse:
       type: object
-      required: [id, journeyId, patientCpid, facilityId, practitionerId, type, status, startedAt]
       properties:
-        id:
-          type: string
-          format: uuid
-        journeyId:
-          type: string
-          format: uuid
-        patientCpid:
-          type: string
-        facilityId:
-          type: string
-        practitionerId:
-          type: string
-        type:
-          type: string
-          example: "AMB"
-        status:
-          type: string
-          enum: [IN_PROGRESS, COMPLETED, CANCELLED]
-        startedAt:
+        as_of:
           type: string
           format: date-time
-        completedAt:
-          type: string
-          format: date-time
-          nullable: true
-        notes:
-          type: string
-          nullable: true
-
-    Admission:
-      type: object
-      required: [id, journeyId, patientCpid, facilityId, wardId, wardName, status, reason]
-      properties:
-        id:
-          type: string
-          format: uuid
-        journeyId:
-          type: string
-          format: uuid
-        patientCpid:
-          type: string
-        facilityId:
-          type: string
-        wardId:
-          type: string
-        wardName:
-          type: string
-          example: "Medical Ward A"
-        bedId:
-          type: string
-          nullable: true
-        bedLabel:
-          type: string
-          nullable: true
-          example: "Bed A3"
-        status:
-          type: string
-          enum: [PENDING_APPROVAL, APPROVED, ADMITTED, TRANSFERRED, DISCHARGED]
-        reason:
-          type: string
-        admittedAt:
-          type: string
-          format: date-time
-          nullable: true
-        dischargedAt:
-          type: string
-          format: date-time
-          nullable: true
-
-    DischargeCase:
-      type: object
-      required: [id, journeyId, admissionId, patientCpid, status, blockers, startedAt]
-      properties:
-        id:
-          type: string
-          format: uuid
-        journeyId:
-          type: string
-          format: uuid
-        admissionId:
-          type: string
-          format: uuid
-        patientCpid:
-          type: string
-        status:
-          type: string
-          enum: [IN_PROGRESS, BLOCKED, READY, COMPLETED]
-        blockers:
-          type: array
-          items:
-            $ref: '#/components/schemas/DischargeBlocker'
-        startedAt:
-          type: string
-          format: date-time
-        completedAt:
-          type: string
-          format: date-time
-          nullable: true
-
-    DischargeBlocker:
-      type: object
-      required: [id, type, description, resolved]
-      properties:
-        id:
-          type: string
-          format: uuid
-        type:
-          type: string
-          description: Blocker category
-          example: "PENDING_LAB_RESULTS"
-        description:
-          type: string
-          example: "Waiting for CBC results"
-        resolved:
+        cursor:
+          type: integer
+        limit:
+          type: integer
+        has_more:
           type: boolean
-        resolvedAt:
-          type: string
-          format: date-time
-          nullable: true
-
-    DeathCase:
-      type: object
-      required: [id, journeyId, patientCpid, dateOfDeath, causeOfDeath, placeOfDeath, certifiedById, ubomiStatus, status, recordedAt]
-      properties:
-        id:
-          type: string
-          format: uuid
-        journeyId:
-          type: string
-          format: uuid
-        patientCpid:
-          type: string
-        dateOfDeath:
-          type: string
-          format: date-time
-        causeOfDeath:
-          type: string
-        placeOfDeath:
-          type: string
-        certifiedById:
-          type: string
-        ubomiStatus:
-          type: string
-          enum: [PENDING, SUBMITTED, ACCEPTED, REJECTED]
-        status:
-          type: string
-          enum: [RECORDED, UBOMI_PENDING, COMPLETED]
-        recordedAt:
-          type: string
-          format: date-time
-        completedAt:
-          type: string
-          format: date-time
-          nullable: true
-
-    ControlTowerData:
-      type: object
-      required: [facilityId, facilityName, timestamp, queueStats, admissionSummary, journeysByState, activeJourneyCount, averageTotalWaitMinutes]
-      properties:
-        facilityId:
-          type: string
-        facilityName:
-          type: string
-        timestamp:
-          type: string
-          format: date-time
-        queueStats:
+        total:
+          type: integer
+        items:
           type: array
           items:
-            $ref: '#/components/schemas/QueueStat'
-        admissionSummary:
-          $ref: '#/components/schemas/AdmissionSummary'
-        journeysByState:
-          type: object
-          additionalProperties:
-            type: integer
-          example:
-            ARRIVED: 5
-            TRIAGED: 3
-            QUEUED: 18
-            IN_SERVICE: 7
-            ADMITTED: 12
-        activeJourneyCount:
-          type: integer
-          example: 45
-        averageTotalWaitMinutes:
-          type: integer
-          example: 32
+            type: object
+            additionalProperties: true
 
-    QueueStat:
+    GenericResponse:
       type: object
-      required: [queueId, queueName, workspaceId, workspaceName, waitingCount, inServiceCount, completedToday, averageWaitMinutes, longestWaitMinutes]
       properties:
-        queueId:
+        message:
           type: string
-          format: uuid
-        queueName:
-          type: string
-        workspaceId:
-          type: string
-        workspaceName:
-          type: string
-        waitingCount:
-          type: integer
-        inServiceCount:
-          type: integer
-        completedToday:
-          type: integer
-        averageWaitMinutes:
-          type: integer
-        longestWaitMinutes:
-          type: integer
-
-    AdmissionSummary:
-      type: object
-      required: [totalBeds, occupiedBeds, occupancyPercent, wardBreakdown]
-      properties:
-        totalBeds:
-          type: integer
-          example: 200
-        occupiedBeds:
-          type: integer
-          example: 165
-        occupancyPercent:
-          type: number
-          format: float
-          example: 82.5
-        wardBreakdown:
-          type: array
-          items:
-            $ref: '#/components/schemas/WardOccupancy'
-
-    WardOccupancy:
-      type: object
-      required: [wardId, wardName, totalBeds, occupiedBeds, occupancyPercent]
-      properties:
-        wardId:
-          type: string
-        wardName:
-          type: string
-          example: "Medical Ward A"
-        totalBeds:
-          type: integer
-          example: 30
-        occupiedBeds:
-          type: integer
-          example: 25
-        occupancyPercent:
-          type: number
-          format: float
-          example: 83.3
-
-    Bottleneck:
-      type: object
-      required: [id, type, severity, description, detectedAt, resolved]
-      properties:
-        id:
-          type: string
-          format: uuid
-        type:
-          type: string
-          enum: [LONG_WAIT, QUEUE_OVERFLOW, DISCHARGE_BLOCKED, BED_SHORTAGE, STAFF_SHORTAGE]
-        severity:
-          type: string
-          enum: [LOW, MEDIUM, HIGH, CRITICAL]
-        description:
-          type: string
-          example: "General OPD queue has 25 patients waiting, average wait exceeds 60 minutes"
-        affectedQueueId:
-          type: string
-          format: uuid
-          nullable: true
-        affectedWardId:
-          type: string
-          nullable: true
-        detectedAt:
-          type: string
-          format: date-time
-        resolved:
-          type: boolean
-
-    QueueTelemetry:
-      type: object
-      required: [queueId, queueName, timestamps, waitingCounts, avgWaitMinutes]
-      properties:
-        queueId:
-          type: string
-          format: uuid
-        queueName:
-          type: string
-        timestamps:
-          type: array
-          items:
-            type: string
-            format: date-time
-        waitingCounts:
-          type: array
-          items:
-            type: integer
-        avgWaitMinutes:
-          type: array
-          items:
-            type: number
-
-    Task:
-      type: object
-      required: [id, workspaceId, title, priority, status, createdById, createdAt]
-      properties:
-        id:
-          type: string
-          format: uuid
-        journeyId:
-          type: string
-          format: uuid
-          nullable: true
-        workspaceId:
-          type: string
-        title:
-          type: string
-        description:
-          type: string
-          nullable: true
-        priority:
-          type: string
-          enum: [LOW, NORMAL, HIGH, URGENT]
-        status:
-          type: string
-          enum: [PENDING, IN_PROGRESS, COMPLETED, CANCELLED]
-        assigneeId:
-          type: string
-          nullable: true
-        assigneeName:
-          type: string
-          nullable: true
-        createdById:
-          type: string
-        createdAt:
-          type: string
-          format: date-time
-        dueAt:
-          type: string
-          format: date-time
-          nullable: true
-        completedAt:
-          type: string
-          format: date-time
-          nullable: true
-
-    PatientTimeline:
-      type: object
-      required: [cpid, entries, totalEntries]
-      properties:
-        cpid:
-          type: string
-        entries:
-          type: array
-          items:
-            $ref: '#/components/schemas/PatientTimelineEntry'
-        totalEntries:
-          type: integer
-
-    PatientTimelineEntry:
-      type: object
-      required: [id, journeyId, type, summary, timestamp, actorId, actorName]
-      properties:
-        id:
-          type: string
-          format: uuid
-        journeyId:
-          type: string
-          format: uuid
-        type:
-          type: string
-          description: Event type (ARRIVAL, TRIAGE, QUEUE, ENCOUNTER, ADMISSION, DISCHARGE, DEATH)
-          example: "TRIAGE"
-        summary:
-          type: string
-          example: "Triaged with acuity 3 (Yellow/Semi-urgent)"
-        timestamp:
-          type: string
-          format: date-time
-        actorId:
-          type: string
-        actorName:
+        referenceId:
           type: string
 
-    # -- Error --
     ErrorResponse:
       type: object
       properties:
         success:
           type: boolean
-          example: false
-        error:
-          type: object
-          properties:
-            code:
-              type: string
-              example: "NOT_FOUND"
-            message:
-              type: string
-              example: "Journey not found"
+          default: false
+        correlationId:
+          type: string
+          format: uuid
+        errorCode:
+          type: string
+        message:
+          type: string
+        details:
+          type: array
+          items:
+            type: string

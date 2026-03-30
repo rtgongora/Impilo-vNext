@@ -1,503 +1,588 @@
-openapi: 3.0.3
+# =============================================================================
+# MUSHEX — Finance & Claims Service API (OpenAPI 3.0)
+# Manages insurance claims, ledger entries, payments, settlements, and
+# fraud flags for healthcare financial operations within Impilo.
+# =============================================================================
+openapi: "3.0.3"
+
 info:
-  title: MUSHEX — Health Payments, Remittances & Claims Switching API
-  description: >
-    National payment intent engine, remittance/split payments, claims switching,
-    double-entry-lite ledger, settlement batches, fraud/waste/abuse detection,
-    and provider-neutral payment rail adapters for the Impilo health platform.
-  version: 0.1.0
+  title: MUSHEX — Finance & Claims Service
+  version: "1.0.0"
+  description: |
+    MUSHEX handles all financial operations within Impilo including insurance
+    claim submission, adjudication, payment processing, settlement runs,
+    and fraud detection.
+
+    **Consistency classes**
+    * Class A — destructive/high-trust mutations (require PDP decision header)
+    * Class B — creation / registration mutations
+    * Class C — reads and snapshots
   contact:
-    name: MoHCC Digital Health Division
+    name: Impilo Platform Team
+  license:
+    name: Proprietary
 
 servers:
-  - url: http://localhost:10000
-    description: Local Envoy gateway
   - url: http://localhost:8087
-    description: Direct service access
+    description: Local development
+  - url: https://{tenant}.impilo.health/api
+    description: Production (per-tenant)
+    variables:
+      tenant:
+        default: demo
 
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Claims
+    description: Insurance claim lifecycle management
+  - name: Ledger
+    description: Financial ledger entries
+  - name: Payments
+    description: Internal payment processing
+  - name: Settlements
+    description: Insurer settlement runs and payouts
+  - name: Fraud
+    description: Fraud detection and flag management
+
+# ============================================================================
+# PATHS
+# ============================================================================
 paths:
-  /mushex/v1/payment-intents:
-    post:
-      tags: [Payments]
-      summary: Create a payment intent
-      operationId: createPaymentIntent
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateIntentRequest'
-      responses:
-        '201':
-          description: Intent created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponse_PaymentIntent'
 
-  /mushex/v1/payment-intents/{id}:
-    get:
-      tags: [Payments]
-      summary: Get payment intent by ID
-      operationId: getPaymentIntent
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Intent found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponse_PaymentIntent'
-
-  /mushex/v1/payment-intents/{id}/cancel:
-    post:
-      tags: [Payments]
-      summary: Cancel a payment intent
-      operationId: cancelPaymentIntent
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Intent cancelled
-
-  /mushex/v1/payment-intents/{id}/issue-remittance-slip:
-    post:
-      tags: [Remittance]
-      summary: Issue a remittance slip (OTP/QR) for delegated payment
-      operationId: issueRemittanceSlip
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '201':
-          description: Slip issued with token and OTP
-
-  /mushex/v1/payment-intents/{id}/refund:
-    post:
-      tags: [Refunds]
-      summary: Request a refund for a paid intent
-      operationId: requestRefund
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RefundRequest'
-      responses:
-        '201':
-          description: Refund requested
-
-  /mushex/v1/payment-intents/{id}/receipts:
-    get:
-      tags: [Receipts]
-      summary: Get receipts for a payment intent
-      operationId: getReceipts
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Receipts found
-
-  /mushex/v1/remittance/claim:
-    post:
-      tags: [Remittance]
-      summary: Claim a remittance slip using token and OTP
-      operationId: claimRemittance
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RemittanceClaimRequest'
-      responses:
-        '200':
-          description: Remittance claimed
-
-  /mushex/v1/adapters/{adapterType}/webhook:
-    post:
-      tags: [Adapters]
-      summary: Receive payment webhook callback (internal only)
-      operationId: adapterWebhook
-      parameters:
-        - name: adapterType
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: X-Webhook-Signature
-          in: header
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: string
-      responses:
-        '200':
-          description: Webhook acknowledged
+  # ---- Claims --------------------------------------------------------------
 
   /mushex/v1/claims:
     post:
-      tags: [Claims]
-      summary: Create a claim
       operationId: createClaim
+      tags: [Claims]
+      summary: Create an insurance claim (Class B)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ClaimCreateRequest'
+              $ref: "#/components/schemas/CreateClaimRequest"
       responses:
-        '201':
+        "201":
           description: Claim created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseClaimResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          $ref: "#/components/responses/Conflict"
 
   /mushex/v1/claims/{id}:
     get:
-      tags: [Claims]
-      summary: Get claim by ID
       operationId: getClaim
+      tags: [Claims]
+      summary: Get a claim with events and attachments (Class C)
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/ClaimId"
       responses:
-        '200':
-          description: Claim found
+        "200":
+          description: Claim detail with events and attachments
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseClaimResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /mushex/v1/claims/{id}/submit:
     post:
-      tags: [Claims]
-      summary: Submit claim to insurer
       operationId: submitClaim
+      tags: [Claims]
+      summary: Submit a claim to insurer (Class B)
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/ClaimId"
       responses:
-        '200':
+        "200":
           description: Claim submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseClaimResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /mushex/v1/claims/{id}/adjudication:
     post:
+      operationId: adjudicateClaim
       tags: [Claims]
-      summary: Record adjudication from insurer (callback)
-      operationId: recordAdjudication
+      summary: Record claim adjudication decision (Class A)
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/Decision"
+        - $ref: "#/components/parameters/ClaimId"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ClaimAdjudicationRequest'
+              $ref: "#/components/schemas/ClaimAdjudicationRequest"
       responses:
-        '200':
-          description: Adjudication recorded
+        "200":
+          description: Claim adjudicated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseClaimResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /mushex/v1/claims/{id}/dispute:
     post:
-      tags: [Claims]
-      summary: Dispute a claim decision
       operationId: disputeClaim
+      tags: [Claims]
+      summary: Raise a dispute on a claim (Class A)
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/Decision"
+        - $ref: "#/components/parameters/ClaimId"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ClaimDisputeRequest'
+              $ref: "#/components/schemas/ClaimDisputeRequest"
       responses:
-        '200':
-          description: Dispute filed
+        "200":
+          description: Claim dispute recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseClaimResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
-  /mushex/v1/settlements/run:
+  /mushex/v1/claims/{id}/attachments:
     post:
-      tags: [Settlements]
-      summary: Run settlement computation for a period
-      operationId: runSettlement
+      operationId: addClaimAttachment
+      tags: [Claims]
+      summary: Add a document attachment to a claim (Class B)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/ClaimId"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SettlementRunRequest'
+              $ref: "#/components/schemas/ClaimAttachmentRequest"
       responses:
-        '201':
-          description: Settlement created
+        "201":
+          description: Attachment added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseClaimResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
-  /mushex/v1/settlements/{id}:
-    get:
-      tags: [Settlements]
-      summary: Get settlement details
-      operationId: getSettlement
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Settlement found
-
-  /mushex/v1/settlements/{id}/release-payouts:
-    post:
-      tags: [Settlements]
-      summary: Release settlement payouts (step-up required)
-      operationId: releasePayouts
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Payouts released
-
-  /mushex/v1/recon/import-statement:
-    post:
-      tags: [Reconciliation]
-      summary: Import bank statement lines for reconciliation
-      operationId: importStatement
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/ReconImportLine'
-      responses:
-        '201':
-          description: Statement imported
-
-  /mushex/v1/recon/unmatched:
-    get:
-      tags: [Reconciliation]
-      summary: List unmatched reconciliation entries
-      operationId: getUnmatched
-      parameters:
-        - name: page
-          in: query
-          schema:
-            type: integer
-            default: 0
-        - name: size
-          in: query
-          schema:
-            type: integer
-            default: 20
-      responses:
-        '200':
-          description: Unmatched entries
-
-  /mushex/v1/recon/match:
-    post:
-      tags: [Reconciliation]
-      summary: Match a reconciliation entry to a payment intent
-      operationId: matchReconEntry
-      parameters:
-        - name: reconId
-          in: query
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ReconMatchRequest'
-      responses:
-        '200':
-          description: Entry matched
-
-  /mushex/v1/ops/reviews/pending:
-    get:
-      tags: [Operations]
-      summary: List pending ops reviews
-      operationId: getPendingReviews
-      parameters:
-        - name: page
-          in: query
-          schema:
-            type: integer
-            default: 0
-        - name: size
-          in: query
-          schema:
-            type: integer
-            default: 20
-      responses:
-        '200':
-          description: Pending reviews
-
-  /mushex/v1/ops/reviews/{id}/approve:
-    post:
-      tags: [Operations]
-      summary: Approve an ops review
-      operationId: approveReview
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Review approved
-
-  /mushex/v1/fraud/flags:
-    get:
-      tags: [Fraud]
-      summary: List fraud flags
-      operationId: getFraudFlags
-      parameters:
-        - name: page
-          in: query
-          schema:
-            type: integer
-            default: 0
-        - name: size
-          in: query
-          schema:
-            type: integer
-            default: 20
-      responses:
-        '200':
-          description: Fraud flags
+  # ---- Ledger --------------------------------------------------------------
 
   /mushex/v1/ledger/entries:
     get:
+      operationId: listLedgerEntries
       tags: [Ledger]
-      summary: List ledger entries
-      operationId: getLedgerEntries
+      summary: List ledger entries (paged) (Class C)
       parameters:
-        - name: page
-          in: query
-          schema:
-            type: integer
-            default: 0
-        - name: size
-          in: query
-          schema:
-            type: integer
-            default: 20
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/PageNumber"
+        - $ref: "#/components/parameters/PageSize"
       responses:
-        '200':
-          description: Ledger entries
+        "200":
+          description: Paged ledger entries
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponsePagedLedgerEntry"
 
+  # ---- Payments ------------------------------------------------------------
+
+  /internal/v1/payments:
+    post:
+      operationId: createPayment
+      tags: [Payments]
+      summary: Process an internal payment (Class A)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/Decision"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePaymentRequest"
+      responses:
+        "201":
+          description: Payment processed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponsePaymentResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  # ---- Settlements ---------------------------------------------------------
+
+  /mushex/v1/settlements/run:
+    post:
+      operationId: runSettlement
+      tags: [Settlements]
+      summary: Execute a settlement run for a period (Class A)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/Decision"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SettlementRunRequest"
+      responses:
+        "202":
+          description: Settlement run initiated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseSettlementResponse"
+
+  /mushex/v1/settlements/{id}:
+    get:
+      operationId: getSettlement
+      tags: [Settlements]
+      summary: Get settlement by ID (Class C)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/SettlementId"
+      responses:
+        "200":
+          description: Settlement detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseSettlementResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /mushex/v1/settlements/{id}/release-payouts:
+    post:
+      operationId: releaseSettlementPayouts
+      tags: [Settlements]
+      summary: Release payouts for a settlement (Class A)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/Decision"
+        - $ref: "#/components/parameters/SettlementId"
+      responses:
+        "200":
+          description: Payouts released
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseSettlementResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # ---- Fraud ---------------------------------------------------------------
+
+  /mushex/v1/fraud/flags:
+    get:
+      operationId: listFraudFlags
+      tags: [Fraud]
+      summary: List fraud flags (paged) (Class C)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/PageNumber"
+        - $ref: "#/components/parameters/PageSize"
+      responses:
+        "200":
+          description: Paged fraud flags
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponsePagedFraudFlag"
+
+# ============================================================================
+# COMPONENTS
+# ============================================================================
 components:
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Keycloak-issued access token (forwarded by Envoy)
+
+  parameters:
+    TenantId:
+      name: X-Tenant-Id
+      in: header
+      required: true
+      description: Tenant identifier — injected by Envoy after TSHEPO authorisation
+      schema:
+        type: string
+    CorrelationId:
+      name: X-Correlation-Id
+      in: header
+      required: true
+      description: End-to-end correlation ID for distributed tracing
+      schema:
+        type: string
+        format: uuid
+    ActorId:
+      name: X-Actor-Id
+      in: header
+      required: true
+      description: Authenticated actor (user or service) identifier
+      schema:
+        type: string
+    ActorType:
+      name: X-Actor-Type
+      in: header
+      required: true
+      description: Type of actor making the request
+      schema:
+        type: string
+        enum: [CITIZEN, PROVIDER, ADMIN, SYSTEM, SERVICE]
+    PurposeOfUse:
+      name: X-Purpose-Of-Use
+      in: header
+      required: true
+      description: Why this request is being made
+      schema:
+        type: string
+    DeviceFingerprint:
+      name: X-Device-Fingerprint
+      in: header
+      required: true
+      description: Device identity hash
+      schema:
+        type: string
+    FacilityId:
+      name: X-Facility-Id
+      in: header
+      required: false
+      description: Facility scope (contextual)
+      schema:
+        type: string
+        format: uuid
+    WorkspaceId:
+      name: X-Workspace-Id
+      in: header
+      required: false
+      description: Workspace scope (contextual)
+      schema:
+        type: string
+        format: uuid
+    ShiftId:
+      name: X-Shift-Id
+      in: header
+      required: false
+      description: Duty shift scope (contextual)
+      schema:
+        type: string
+        format: uuid
+    Decision:
+      name: X-Decision
+      in: header
+      required: false
+      description: PDP decision header — ALLOW, DENY, STEP_UP_REQUIRED (Class A endpoints require ALLOW)
+      schema:
+        type: string
+        enum: [ALLOW, DENY, STEP_UP_REQUIRED]
+    Obligations:
+      name: X-Obligations
+      in: header
+      required: false
+      description: JSON obligations blob from TSHEPO
+      schema:
+        type: string
+    PageNumber:
+      name: page
+      in: query
+      schema:
+        type: integer
+        default: 0
+    PageSize:
+      name: size
+      in: query
+      schema:
+        type: integer
+        default: 20
+        maximum: 100
+    ClaimId:
+      name: id
+      in: path
+      required: true
+      description: Claim identifier
+      schema:
+        type: integer
+        format: int64
+    SettlementId:
+      name: id
+      in: path
+      required: true
+      description: Settlement identifier
+      schema:
+        type: integer
+        format: int64
+
+  responses:
+    BadRequest:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Conflict:
+      description: Duplicate resource
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Unauthorized:
+      description: Missing or invalid trust headers
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Forbidden:
+      description: PDP denied the request (X-Decision=DENY)
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
   schemas:
-    CreateIntentRequest:
-      type: object
-      required: [sourceType, sourceId, amount, idempotencyKey]
-      properties:
-        sourceType:
-          type: string
-          enum: [COSTA_BILL, MSIKA_ORDER, ADHOC]
-        sourceId:
-          type: string
-        amount:
-          type: number
-          format: decimal
-          minimum: 0.01
-        currency:
-          type: string
-          default: USD
-        facilityId:
-          type: string
-          format: uuid
-        idempotencyKey:
-          type: string
-        metadata:
-          type: string
 
-    RefundRequest:
-      type: object
-      required: [amount]
-      properties:
-        amount:
-          type: number
-          format: decimal
-          minimum: 0.01
-        reason:
-          type: string
+    # ---- Requests ----------------------------------------------------------
 
-    RemittanceClaimRequest:
+    CreateClaimRequest:
       type: object
-      required: [token, otp]
-      properties:
-        token:
-          type: string
-        otp:
-          type: string
-
-    ClaimCreateRequest:
-      type: object
-      required: [billId, insurerId]
+      required: [billId, insurerId, facilityId]
       properties:
         billId:
-          type: string
+          type: integer
+          format: int64
         insurerId:
           type: string
+          format: uuid
         facilityId:
           type: string
           format: uuid
         totals:
+          $ref: "#/components/schemas/ClaimTotals"
+
+    ClaimTotals:
+      type: object
+      properties:
+        grossAmount:
+          type: number
+          format: double
+        patientResidual:
+          type: number
+          format: double
+        insurerPayable:
+          type: number
+          format: double
+        currency:
           type: string
 
     ClaimAdjudicationRequest:
       type: object
-      required: [patientResidual, insurerPayable]
+      required: [decision]
       properties:
         decision:
           type: string
+          enum: [APPROVED, PARTIALLY_APPROVED, DENIED]
         patientResidual:
           type: number
-          format: decimal
+          format: double
         insurerPayable:
           type: number
-          format: decimal
+          format: double
+        notes:
+          type: string
 
     ClaimDisputeRequest:
       type: object
@@ -505,6 +590,39 @@ components:
       properties:
         reason:
           type: string
+
+    ClaimAttachmentRequest:
+      type: object
+      required: [landelaDocId, docType]
+      properties:
+        landelaDocId:
+          type: string
+        docType:
+          type: string
+
+    CreatePaymentRequest:
+      type: object
+      required: [sourceType, sourceId, amount, currency, facilityId, idempotencyKey]
+      properties:
+        sourceType:
+          type: string
+          enum: [BILL, CLAIM, SETTLEMENT]
+        sourceId:
+          type: integer
+          format: int64
+        amount:
+          type: number
+          format: double
+        currency:
+          type: string
+        facilityId:
+          type: string
+          format: uuid
+        idempotencyKey:
+          type: string
+        metadata:
+          type: object
+          additionalProperties: true
 
     SettlementRunRequest:
       type: object
@@ -517,100 +635,320 @@ components:
           type: string
           format: date
 
-    ReconImportLine:
-      type: object
-      properties:
-        statementRef:
-          type: string
-        statementDate:
-          type: string
-          format: date
-        amount:
-          type: number
-          format: decimal
-        currency:
-          type: string
-        counterparty:
-          type: string
+    # ---- Response wrappers -------------------------------------------------
 
-    ReconMatchRequest:
-      type: object
-      required: [intentId]
-      properties:
-        intentId:
-          type: string
-
-    PaymentIntent:
-      type: object
-      properties:
-        intentId:
-          type: string
-        tenantId:
-          type: string
-          format: uuid
-        sourceType:
-          type: string
-        sourceId:
-          type: string
-        currency:
-          type: string
-        amountTotal:
-          type: number
-        amountPaid:
-          type: number
-        status:
-          type: string
-        createdAt:
-          type: string
-          format: date-time
-
-    ApiResponse_PaymentIntent:
+    ApiResponseClaimResponse:
       type: object
       properties:
         success:
           type: boolean
-        data:
-          $ref: '#/components/schemas/PaymentIntent'
         correlationId:
           type: string
-        timestamp:
+          format: uuid
+        data:
+          $ref: "#/components/schemas/ClaimResponse"
+
+    ApiResponsePagedLedgerEntry:
+      type: object
+      properties:
+        success:
+          type: boolean
+        correlationId:
+          type: string
+          format: uuid
+        data:
+          $ref: "#/components/schemas/PagedLedgerEntry"
+
+    ApiResponsePaymentResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        correlationId:
+          type: string
+          format: uuid
+        data:
+          $ref: "#/components/schemas/PaymentResponse"
+
+    ApiResponseSettlementResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        correlationId:
+          type: string
+          format: uuid
+        data:
+          $ref: "#/components/schemas/SettlementResponse"
+
+    ApiResponsePagedFraudFlag:
+      type: object
+      properties:
+        success:
+          type: boolean
+        correlationId:
+          type: string
+          format: uuid
+        data:
+          $ref: "#/components/schemas/PagedFraudFlag"
+
+    # ---- Domain objects ----------------------------------------------------
+
+    ClaimResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        claimRef:
+          type: string
+        billId:
+          type: integer
+          format: int64
+        insurerId:
+          type: string
+          format: uuid
+        facilityId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [DRAFT, SUBMITTED, IN_REVIEW, APPROVED, PARTIALLY_APPROVED, DENIED, DISPUTED, SETTLED]
+        totals:
+          $ref: "#/components/schemas/ClaimTotals"
+        events:
+          type: array
+          items:
+            $ref: "#/components/schemas/ClaimEvent"
+        attachments:
+          type: array
+          items:
+            $ref: "#/components/schemas/ClaimAttachment"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
           type: string
           format: date-time
 
-  securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-    trustHeaders:
-      type: apiKey
-      in: header
-      name: X-Tenant-Id
+    ClaimEvent:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        eventType:
+          type: string
+        actorId:
+          type: string
+        notes:
+          type: string
+        occurredAt:
+          type: string
+          format: date-time
 
-security:
-  - bearerAuth: []
-    trustHeaders: []
+    ClaimAttachment:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        landelaDocId:
+          type: string
+        docType:
+          type: string
+        addedAt:
+          type: string
+          format: date-time
 
-tags:
-  - name: Payments
-    description: Payment intent lifecycle
-  - name: Remittance
-    description: Delegated payment slips
-  - name: Refunds
-    description: Refund processing
-  - name: Receipts
-    description: Payment receipts
-  - name: Adapters
-    description: Payment rail adapter webhooks
-  - name: Claims
-    description: Insurance claims switching
-  - name: Settlements
-    description: Provider settlement and payouts
-  - name: Reconciliation
-    description: Bank statement reconciliation
-  - name: Operations
-    description: Ops review queue
-  - name: Fraud
-    description: Fraud/waste/abuse detection
-  - name: Ledger
-    description: Double-entry-lite ledger
+    LedgerEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        entryType:
+          type: string
+        sourceType:
+          type: string
+        sourceId:
+          type: integer
+          format: int64
+        amount:
+          type: number
+          format: double
+        currency:
+          type: string
+        facilityId:
+          type: string
+          format: uuid
+        description:
+          type: string
+        postedAt:
+          type: string
+          format: date-time
+
+    PagedLedgerEntry:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/LedgerEntry"
+        page:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+          format: int64
+
+    PaymentResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        paymentRef:
+          type: string
+        sourceType:
+          type: string
+        sourceId:
+          type: integer
+          format: int64
+        amount:
+          type: number
+          format: double
+        currency:
+          type: string
+        facilityId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [PENDING, PROCESSING, COMPLETED, FAILED, REVERSED]
+        idempotencyKey:
+          type: string
+        processedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    SettlementResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        settlementRef:
+          type: string
+        periodStart:
+          type: string
+          format: date
+        periodEnd:
+          type: string
+          format: date
+        status:
+          type: string
+          enum: [RUNNING, COMPLETED, PAYOUTS_RELEASED, FAILED]
+        totalClaims:
+          type: integer
+        totalAmount:
+          type: number
+          format: double
+        currency:
+          type: string
+        completedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    FraudFlag:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        flagType:
+          type: string
+        sourceType:
+          type: string
+        sourceId:
+          type: integer
+          format: int64
+        severity:
+          type: string
+          enum: [LOW, MEDIUM, HIGH, CRITICAL]
+        description:
+          type: string
+        status:
+          type: string
+          enum: [OPEN, UNDER_REVIEW, CLEARED, CONFIRMED]
+        detectedAt:
+          type: string
+          format: date-time
+
+    PagedFraudFlag:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/FraudFlag"
+        page:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+          format: int64
+
+    SnapshotResponse:
+      type: object
+      properties:
+        as_of:
+          type: string
+          format: date-time
+        cursor:
+          type: integer
+        limit:
+          type: integer
+        has_more:
+          type: boolean
+        total:
+          type: integer
+        items:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+
+    GenericResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        referenceId:
+          type: string
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          default: false
+        correlationId:
+          type: string
+          format: uuid
+        errorCode:
+          type: string
+        message:
+          type: string
+        details:
+          type: array
+          items:
+            type: string

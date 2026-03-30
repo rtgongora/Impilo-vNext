@@ -1,0 +1,1796 @@
+# =============================================================================
+# VARAPI — Provider Registry API (OpenAPI 3.0)
+# Manages healthcare provider registration, licensing, privileges (credentialing),
+# CPD tracking, eligibility checks, and council data reconciliation.
+# =============================================================================
+openapi: "3.0.3"
+
+info:
+  title: VARAPI — Provider Registry
+  version: "1.0.0"
+  description: |
+    VARAPI is the Ring 0 single source of truth for healthcare provider identities,
+    licenses, privileges, CPD records, and regulatory council data within Impilo.
+
+    **Consistency classes**
+    * Class A — destructive/high-trust mutations (require PDP decision header)
+    * Class B — creation / registration mutations
+    * Class C — reads and snapshots
+  contact:
+    name: Impilo Platform Team
+  license:
+    name: Proprietary
+
+servers:
+  - url: http://localhost:8083
+    description: Local development
+  - url: https://{tenant}.impilo.health/api
+    description: Production (per-tenant)
+    variables:
+      tenant:
+        default: demo
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Providers
+    description: Provider registration and lifecycle management
+  - name: Licenses
+    description: Professional license issuance and lifecycle
+  - name: Privileges
+    description: Facility/workspace credentialing and approval workflow
+  - name: Councils
+    description: Regulatory council management and data import
+  - name: CPD
+    description: Continuing Professional Development tracking
+  - name: Eligibility
+    description: Provider eligibility checks for downstream services
+  - name: Reconciliation
+    description: Council data import reconciliation case management
+  - name: Snapshots
+    description: Cursor-paginated bulk snapshots for Ring 0 consumers
+
+# ============================================================================
+# PATHS
+# ============================================================================
+paths:
+
+  # ---- Providers -----------------------------------------------------------
+
+  /v1/internal/providers:
+    post:
+      operationId: createProvider
+      tags: [Providers]
+      summary: Register a new healthcare provider (Class B)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProviderRequest"
+      responses:
+        "201":
+          description: Provider registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseProviderResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /v1/internal/providers/search:
+    post:
+      operationId: searchProviders
+      tags: [Providers]
+      summary: Search providers with paging and filters (Class C)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProviderSearchRequest"
+      responses:
+        "200":
+          description: Paged list of matching providers
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponsePagedProviderSummary"
+
+  /v1/internal/providers/{providerPublicId}:
+    get:
+      operationId: getProvider
+      tags: [Providers]
+      summary: Get a provider by public ID (Class C)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/ProviderPublicId"
+      responses:
+        "200":
+          description: Provider detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseProviderResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      operationId: updateProvider
+      tags: [Providers]
+      summary: Update provider demographics (Class B)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/ProviderPublicId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProviderRequest"
+      responses:
+        "200":
+          description: Updated provider
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseProviderResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /v1/internal/providers/{providerPublicId}/status:
+    post:
+      operationId: changeProviderStatus
+      tags: [Providers]
+      summary: Change provider status — suspend / reactivate / deregister (Class A)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/Decision"
+        - $ref: "#/components/parameters/ProviderPublicId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StatusChangeRequest"
+      responses:
+        "200":
+          description: Updated provider status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseProviderResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # ---- Licenses ------------------------------------------------------------
+
+  /v1/internal/providers/{providerPublicId}/licenses:
+    post:
+      operationId: issueLicense
+      tags: [Licenses]
+      summary: Issue a professional license for a provider (Class A)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/Decision"
+        - $ref: "#/components/parameters/ProviderPublicId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IssueLicenseRequest"
+      responses:
+        "201":
+          description: License issued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseLicenseResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          $ref: "#/components/responses/Conflict"
+    get:
+      operationId: getLicenseHistory
+      tags: [Licenses]
+      summary: Get license history for a provider (Class C)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/ProviderPublicId"
+      responses:
+        "200":
+          description: List of licenses
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseLicenseList"
+
+  /v1/internal/providers/{providerPublicId}/licenses/{licenseId}/renew:
+    post:
+      operationId: renewLicense
+      tags: [Licenses]
+      summary: Renew an existing license (Class A)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/Decision"
+        - $ref: "#/components/parameters/ProviderPublicId"
+        - $ref: "#/components/parameters/LicenseId"
+      responses:
+        "200":
+          description: License renewed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseLicenseResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /v1/internal/providers/{providerPublicId}/licenses/{licenseId}/suspend:
+    post:
+      operationId: suspendLicense
+      tags: [Licenses]
+      summary: Suspend a license (Class A)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/Decision"
+        - $ref: "#/components/parameters/ProviderPublicId"
+        - $ref: "#/components/parameters/LicenseId"
+        - name: reason
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: License suspended
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseLicenseResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /v1/internal/providers/{providerPublicId}/licenses/{licenseId}/revoke:
+    post:
+      operationId: revokeLicense
+      tags: [Licenses]
+      summary: Revoke a license permanently (Class A)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/Decision"
+        - $ref: "#/components/parameters/ProviderPublicId"
+        - $ref: "#/components/parameters/LicenseId"
+        - name: reason
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: License revoked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseLicenseResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # ---- Privileges ----------------------------------------------------------
+
+  /v1/internal/providers/{providerPublicId}/privileges/grant:
+    post:
+      operationId: grantPrivilege
+      tags: [Privileges]
+      summary: Grant a facility/workspace privilege (Class A)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/Decision"
+        - $ref: "#/components/parameters/ProviderPublicId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GrantPrivilegeRequest"
+      responses:
+        "201":
+          description: Privilege granted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponsePrivilegeResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /v1/internal/providers/{providerPublicId}/privileges/revoke:
+    post:
+      operationId: revokePrivilege
+      tags: [Privileges]
+      summary: Revoke a provider privilege (Class A)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/Decision"
+        - $ref: "#/components/parameters/ProviderPublicId"
+        - name: privilegeId
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: reason
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Privilege revoked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponsePrivilegeResponse"
+
+  /v1/internal/providers/{providerPublicId}/privileges:
+    get:
+      operationId: listPrivileges
+      tags: [Privileges]
+      summary: List all privileges for a provider (Class C)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/ProviderPublicId"
+      responses:
+        "200":
+          description: Provider privilege list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponsePrivilegeList"
+
+  /v1/internal/privileges/pending:
+    get:
+      operationId: listPendingPrivilegeApprovals
+      tags: [Privileges]
+      summary: List privileges pending approval (Class C)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/PageNumber"
+        - $ref: "#/components/parameters/PageSize"
+      responses:
+        "200":
+          description: Paged list of pending privilege approvals
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponsePagedPrivilegeResponse"
+
+  /v1/internal/privileges/{privilegeId}/decide:
+    post:
+      operationId: decidePrivilege
+      tags: [Privileges]
+      summary: Approve or deny a pending privilege (Class A)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/Decision"
+        - name: privilegeId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PrivilegeDecisionRequest"
+      responses:
+        "200":
+          description: Privilege decision recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponsePrivilegeResponse"
+
+  # ---- Councils ------------------------------------------------------------
+
+  /v1/internal/councils:
+    post:
+      operationId: createCouncil
+      tags: [Councils]
+      summary: Register a regulatory council (Class B)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCouncilRequest"
+      responses:
+        "201":
+          description: Council created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseCouncilResponse"
+        "409":
+          $ref: "#/components/responses/Conflict"
+    get:
+      operationId: listCouncils
+      tags: [Councils]
+      summary: List all councils (Class C)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+      responses:
+        "200":
+          description: Council list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseCouncilList"
+
+  /v1/internal/councils/{councilId}:
+    get:
+      operationId: getCouncil
+      tags: [Councils]
+      summary: Get a council by ID (Class C)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/CouncilId"
+      responses:
+        "200":
+          description: Council detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseCouncilResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /v1/internal/councils/{councilId}/imports:
+    post:
+      operationId: triggerCouncilImport
+      tags: [Councils]
+      summary: Trigger a data import job from a council system (Class A)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/Decision"
+        - $ref: "#/components/parameters/CouncilId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ImportTriggerRequest"
+      responses:
+        "202":
+          description: Import job queued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseGeneric"
+
+  # ---- CPD -----------------------------------------------------------------
+
+  /v1/internal/providers/{providerPublicId}/cpd/cycles:
+    post:
+      operationId: createCpdCycle
+      tags: [CPD]
+      summary: Create a new CPD cycle for a provider (Class B)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/ProviderPublicId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCpdCycleRequest"
+      responses:
+        "201":
+          description: CPD cycle created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseCpdSummary"
+
+  /v1/internal/providers/{providerPublicId}/cpd/cycles/{cycleId}/events:
+    post:
+      operationId: recordCpdEvent
+      tags: [CPD]
+      summary: Record a CPD event (course, conference, etc.) (Class B)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/ProviderPublicId"
+        - name: cycleId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecordCpdEventRequest"
+      responses:
+        "201":
+          description: CPD event recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseCpdEvent"
+
+  /v1/internal/providers/{providerPublicId}/cpd/events/{eventId}/verify:
+    post:
+      operationId: verifyCpdEvent
+      tags: [CPD]
+      summary: Verify a CPD event (Class A)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/Decision"
+        - $ref: "#/components/parameters/ProviderPublicId"
+        - name: eventId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: CPD event verified
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseCpdEvent"
+
+  /v1/internal/providers/{providerPublicId}/cpd/summary:
+    get:
+      operationId: getCpdSummary
+      tags: [CPD]
+      summary: Get CPD summary for a provider (Class C)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/ProviderPublicId"
+      responses:
+        "200":
+          description: CPD summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseCpdSummary"
+
+  # ---- Eligibility ---------------------------------------------------------
+
+  /v1/internal/eligibility/check:
+    post:
+      operationId: checkEligibility
+      tags: [Eligibility]
+      summary: Check provider eligibility at a facility/workspace (Class C)
+      description: |
+        Returns a generic response (same structure and timing regardless of
+        whether the provider exists) to prevent enumeration attacks.
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EligibilityCheckRequest"
+      responses:
+        "200":
+          description: Eligibility result (always 200, check eligible field)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseEligibilityResult"
+
+  # ---- Reconciliation ------------------------------------------------------
+
+  /v1/internal/reconciliation/queue:
+    get:
+      operationId: getReconciliationQueue
+      tags: [Reconciliation]
+      summary: List reconciliation cases (Class C)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/PageNumber"
+        - $ref: "#/components/parameters/PageSize"
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [OPEN, RESOLVED, SKIPPED]
+      responses:
+        "200":
+          description: Paged reconciliation queue
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponsePagedReconciliationCase"
+
+  /v1/internal/reconciliation/{caseId}/decision:
+    post:
+      operationId: decideReconciliationCase
+      tags: [Reconciliation]
+      summary: Resolve or skip a reconciliation case (Class A)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/Decision"
+        - name: caseId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReconciliationDecisionRequest"
+      responses:
+        "200":
+          description: Case resolved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseReconciliationCase"
+
+  # ---- Snapshots -----------------------------------------------------------
+
+  /internal/v1/snapshots/providers:
+    get:
+      operationId: providerSnapshot
+      tags: [Snapshots]
+      summary: Cursor-paginated provider snapshot (Class C)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: cursor
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+            maximum: 500
+      responses:
+        "200":
+          description: Provider snapshot page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SnapshotResponse"
+
+  /internal/v1/snapshots/providers/emit:
+    post:
+      operationId: emitProviderSnapshot
+      tags: [Snapshots]
+      summary: Trigger a full provider snapshot emit to Kafka (Class A)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - $ref: "#/components/parameters/PurposeOfUse"
+        - $ref: "#/components/parameters/DeviceFingerprint"
+        - $ref: "#/components/parameters/Decision"
+      responses:
+        "200":
+          description: Snapshot emit queued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SnapshotEmitResponse"
+
+# ============================================================================
+# COMPONENTS
+# ============================================================================
+components:
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Keycloak-issued access token (forwarded by Envoy)
+
+  parameters:
+    TenantId:
+      name: X-Tenant-Id
+      in: header
+      required: true
+      description: Tenant identifier — injected by Envoy after TSHEPO authorisation
+      schema:
+        type: string
+    CorrelationId:
+      name: X-Correlation-Id
+      in: header
+      required: true
+      description: End-to-end correlation ID for distributed tracing
+      schema:
+        type: string
+        format: uuid
+    ActorId:
+      name: X-Actor-Id
+      in: header
+      required: true
+      description: Authenticated actor (user or service) identifier
+      schema:
+        type: string
+    ActorType:
+      name: X-Actor-Type
+      in: header
+      required: true
+      description: Type of actor making the request
+      schema:
+        type: string
+        enum: [CITIZEN, PROVIDER, ADMIN, SYSTEM, SERVICE]
+    PurposeOfUse:
+      name: X-Purpose-Of-Use
+      in: header
+      required: true
+      description: Why this request is being made
+      schema:
+        type: string
+    DeviceFingerprint:
+      name: X-Device-Fingerprint
+      in: header
+      required: true
+      description: Device identity hash
+      schema:
+        type: string
+    FacilityId:
+      name: X-Facility-Id
+      in: header
+      required: false
+      description: Facility scope (contextual)
+      schema:
+        type: string
+        format: uuid
+    WorkspaceId:
+      name: X-Workspace-Id
+      in: header
+      required: false
+      description: Workspace scope (contextual)
+      schema:
+        type: string
+        format: uuid
+    ShiftId:
+      name: X-Shift-Id
+      in: header
+      required: false
+      description: Duty shift scope (contextual)
+      schema:
+        type: string
+        format: uuid
+    Decision:
+      name: X-Decision
+      in: header
+      required: false
+      description: PDP decision header — ALLOW, DENY, STEP_UP_REQUIRED (Class A endpoints require ALLOW)
+      schema:
+        type: string
+        enum: [ALLOW, DENY, STEP_UP_REQUIRED]
+    Obligations:
+      name: X-Obligations
+      in: header
+      required: false
+      description: JSON obligations blob from TSHEPO
+      schema:
+        type: string
+    PageNumber:
+      name: page
+      in: query
+      schema:
+        type: integer
+        default: 0
+    PageSize:
+      name: size
+      in: query
+      schema:
+        type: integer
+        default: 20
+        maximum: 100
+    ProviderPublicId:
+      name: providerPublicId
+      in: path
+      required: true
+      description: Provider public identifier (UUID string)
+      schema:
+        type: string
+    LicenseId:
+      name: licenseId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+    CouncilId:
+      name: councilId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+
+  responses:
+    BadRequest:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Conflict:
+      description: Duplicate resource
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Unauthorized:
+      description: Missing or invalid trust headers
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Forbidden:
+      description: PDP denied the request (X-Decision=DENY)
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+  schemas:
+
+    # ---- Requests ----------------------------------------------------------
+
+    CreateProviderRequest:
+      type: object
+      required: [givenName, familyName, profession]
+      properties:
+        title:
+          type: string
+        givenName:
+          type: string
+        familyName:
+          type: string
+        dateOfBirth:
+          type: string
+          format: date
+        gender:
+          type: string
+          enum: [MALE, FEMALE, OTHER, UNKNOWN]
+        nationality:
+          type: string
+        nationalId:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        profession:
+          type: string
+        cadre:
+          type: string
+        primaryCouncilId:
+          type: integer
+          format: int64
+        employmentOrgId:
+          type: string
+          format: uuid
+
+    UpdateProviderRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        cadre:
+          type: string
+        employmentOrgId:
+          type: string
+          format: uuid
+
+    ProviderSearchRequest:
+      type: object
+      properties:
+        query:
+          type: string
+        profession:
+          type: string
+        status:
+          type: string
+        page:
+          type: integer
+          default: 0
+        size:
+          type: integer
+          default: 20
+
+    StatusChangeRequest:
+      type: object
+      required: [newStatus]
+      properties:
+        newStatus:
+          type: string
+          enum: [ACTIVE, SUSPENDED, DEREGISTERED]
+        reason:
+          type: string
+
+    IssueLicenseRequest:
+      type: object
+      required: [licenseType, licenseNumber, councilId, validFrom]
+      properties:
+        licenseType:
+          type: string
+        licenseNumber:
+          type: string
+        councilId:
+          type: integer
+          format: int64
+        validFrom:
+          type: string
+          format: date
+        validTo:
+          type: string
+          format: date
+        conditions:
+          type: string
+
+    GrantPrivilegeRequest:
+      type: object
+      required: [privilegeType, scope]
+      properties:
+        privilegeType:
+          type: string
+        scope:
+          type: string
+        facilityId:
+          type: string
+          format: uuid
+        workspaceId:
+          type: string
+          format: uuid
+        validFrom:
+          type: string
+          format: date
+        validTo:
+          type: string
+          format: date
+        supervisingProviderPublicId:
+          type: string
+        notes:
+          type: string
+
+    PrivilegeDecisionRequest:
+      type: object
+      required: [action]
+      properties:
+        action:
+          type: string
+          enum: [APPROVE, DENY]
+        notes:
+          type: string
+
+    CreateCouncilRequest:
+      type: object
+      required: [councilCode, name, councilType]
+      properties:
+        councilCode:
+          type: string
+        name:
+          type: string
+        councilType:
+          type: string
+        description:
+          type: string
+        website:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+
+    ImportTriggerRequest:
+      type: object
+      required: [importType]
+      properties:
+        importType:
+          type: string
+          enum: [FULL, DELTA, VALIDATION]
+        sourceUrl:
+          type: string
+        parameters:
+          type: object
+          additionalProperties: true
+
+    CreateCpdCycleRequest:
+      type: object
+      required: [cycleName, startDate, endDate, requiredPoints]
+      properties:
+        councilId:
+          type: integer
+          format: int64
+        cycleName:
+          type: string
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        requiredPoints:
+          type: integer
+
+    RecordCpdEventRequest:
+      type: object
+      required: [eventType, title, pointsAwarded, eventDate]
+      properties:
+        eventType:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        pointsAwarded:
+          type: integer
+        eventDate:
+          type: string
+          format: date
+        externalRef:
+          type: string
+
+    EligibilityCheckRequest:
+      type: object
+      properties:
+        providerPublicId:
+          type: string
+        facilityId:
+          type: string
+          format: uuid
+        workspaceId:
+          type: string
+          format: uuid
+        privilegeType:
+          type: string
+
+    ReconciliationDecisionRequest:
+      type: object
+      required: [action]
+      properties:
+        action:
+          type: string
+          enum: [MERGE, OVERRIDE, SKIP]
+        notes:
+          type: string
+
+    # ---- Response wrappers -------------------------------------------------
+
+    ApiResponseProviderResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        correlationId:
+          type: string
+          format: uuid
+        data:
+          $ref: "#/components/schemas/ProviderResponse"
+
+    ApiResponsePagedProviderSummary:
+      type: object
+      properties:
+        success:
+          type: boolean
+        correlationId:
+          type: string
+          format: uuid
+        data:
+          $ref: "#/components/schemas/PagedProviderSummary"
+
+    ApiResponseLicenseResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        correlationId:
+          type: string
+          format: uuid
+        data:
+          $ref: "#/components/schemas/LicenseResponse"
+
+    ApiResponseLicenseList:
+      type: object
+      properties:
+        success:
+          type: boolean
+        correlationId:
+          type: string
+          format: uuid
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/LicenseResponse"
+
+    ApiResponsePrivilegeResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        correlationId:
+          type: string
+          format: uuid
+        data:
+          $ref: "#/components/schemas/PrivilegeResponse"
+
+    ApiResponsePrivilegeList:
+      type: object
+      properties:
+        success:
+          type: boolean
+        correlationId:
+          type: string
+          format: uuid
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/PrivilegeResponse"
+
+    ApiResponsePagedPrivilegeResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        correlationId:
+          type: string
+          format: uuid
+        data:
+          $ref: "#/components/schemas/PagedPrivilegeResponse"
+
+    ApiResponseCouncilResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        correlationId:
+          type: string
+          format: uuid
+        data:
+          $ref: "#/components/schemas/CouncilResponse"
+
+    ApiResponseCouncilList:
+      type: object
+      properties:
+        success:
+          type: boolean
+        correlationId:
+          type: string
+          format: uuid
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/CouncilResponse"
+
+    ApiResponseGeneric:
+      type: object
+      properties:
+        success:
+          type: boolean
+        correlationId:
+          type: string
+          format: uuid
+        data:
+          $ref: "#/components/schemas/GenericResponse"
+
+    ApiResponseCpdSummary:
+      type: object
+      properties:
+        success:
+          type: boolean
+        correlationId:
+          type: string
+          format: uuid
+        data:
+          $ref: "#/components/schemas/CpdSummaryResponse"
+
+    ApiResponseCpdEvent:
+      type: object
+      properties:
+        success:
+          type: boolean
+        correlationId:
+          type: string
+          format: uuid
+        data:
+          $ref: "#/components/schemas/CpdEventDto"
+
+    ApiResponseEligibilityResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+        correlationId:
+          type: string
+          format: uuid
+        data:
+          $ref: "#/components/schemas/EligibilityResult"
+
+    ApiResponsePagedReconciliationCase:
+      type: object
+      properties:
+        success:
+          type: boolean
+        correlationId:
+          type: string
+          format: uuid
+        data:
+          $ref: "#/components/schemas/PagedReconciliationCase"
+
+    ApiResponseReconciliationCase:
+      type: object
+      properties:
+        success:
+          type: boolean
+        correlationId:
+          type: string
+          format: uuid
+        data:
+          $ref: "#/components/schemas/ReconciliationCaseResponse"
+
+    # ---- Domain objects ----------------------------------------------------
+
+    ProviderResponse:
+      type: object
+      properties:
+        providerPublicId:
+          type: string
+        providerRef:
+          type: string
+          format: uuid
+        title:
+          type: string
+        givenName:
+          type: string
+        familyName:
+          type: string
+        dateOfBirth:
+          type: string
+          format: date
+        gender:
+          type: string
+        nationality:
+          type: string
+        nationalId:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        practiceNumber:
+          type: string
+        profession:
+          type: string
+        cadre:
+          type: string
+        primaryCouncilId:
+          type: integer
+          format: int64
+        employmentOrgId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [ACTIVE, SUSPENDED, DEREGISTERED, PENDING]
+        version:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ProviderSummary:
+      type: object
+      properties:
+        providerPublicId:
+          type: string
+        title:
+          type: string
+        givenName:
+          type: string
+        familyName:
+          type: string
+        profession:
+          type: string
+        cadre:
+          type: string
+        status:
+          type: string
+        practiceNumber:
+          type: string
+
+    PagedProviderSummary:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProviderSummary"
+        page:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+          format: int64
+
+    LicenseResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        providerPublicId:
+          type: string
+        councilId:
+          type: integer
+          format: int64
+        councilName:
+          type: string
+        licenseType:
+          type: string
+        licenseNumber:
+          type: string
+        status:
+          type: string
+          enum: [ACTIVE, SUSPENDED, REVOKED, EXPIRED]
+        validFrom:
+          type: string
+          format: date
+        validTo:
+          type: string
+          format: date
+        conditions:
+          type: string
+        issuedBy:
+          type: string
+        issuedAt:
+          type: string
+          format: date-time
+        suspendedAt:
+          type: string
+          format: date-time
+        suspensionReason:
+          type: string
+        revokedAt:
+          type: string
+          format: date-time
+        revocationReason:
+          type: string
+
+    PrivilegeResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        providerPublicId:
+          type: string
+        facilityId:
+          type: string
+          format: uuid
+        workspaceId:
+          type: string
+          format: uuid
+        scope:
+          type: string
+        privilegeType:
+          type: string
+        status:
+          type: string
+          enum: [ACTIVE, PENDING, REVOKED, SUSPENDED]
+        grantedBy:
+          type: string
+        grantedAt:
+          type: string
+          format: date-time
+        validFrom:
+          type: string
+          format: date
+        validTo:
+          type: string
+          format: date
+        supervisingProviderPublicId:
+          type: string
+        notes:
+          type: string
+
+    PagedPrivilegeResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/PrivilegeResponse"
+        page:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+          format: int64
+
+    CouncilResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        councilCode:
+          type: string
+        name:
+          type: string
+        councilType:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+        website:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CpdSummaryResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        providerPublicId:
+          type: string
+        cycleName:
+          type: string
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        requiredPoints:
+          type: integer
+        earnedPoints:
+          type: integer
+        status:
+          type: string
+        requirementMet:
+          type: boolean
+
+    CpdEventDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        cycleId:
+          type: integer
+          format: int64
+        eventType:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        pointsAwarded:
+          type: integer
+        eventDate:
+          type: string
+          format: date
+        externalRef:
+          type: string
+        verified:
+          type: boolean
+        verifiedBy:
+          type: string
+        verifiedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    EligibilityResult:
+      type: object
+      properties:
+        eligible:
+          type: boolean
+        reasons:
+          type: array
+          items:
+            type: string
+        checkedAt:
+          type: string
+          format: date-time
+
+    ReconciliationCaseResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        councilId:
+          type: integer
+          format: int64
+        councilName:
+          type: string
+        sourceSystem:
+          type: string
+        sourceRef:
+          type: string
+        providerPublicId:
+          type: string
+        caseType:
+          type: string
+        status:
+          type: string
+        payload:
+          type: object
+          additionalProperties: true
+        notes:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    PagedReconciliationCase:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReconciliationCaseResponse"
+        page:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+          format: int64
+
+    SnapshotResponse:
+      type: object
+      properties:
+        as_of:
+          type: string
+          format: date-time
+        cursor:
+          type: integer
+        limit:
+          type: integer
+        has_more:
+          type: boolean
+        total:
+          type: integer
+          format: int64
+        items:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+
+    SnapshotEmitResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        entity:
+          type: string
+        tenant_id:
+          type: string
+        total_records:
+          type: integer
+          format: int64
+        emitted_at:
+          type: string
+          format: date-time
+        topic:
+          type: string
+
+    GenericResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+        correlationId:
+          type: string
+          format: uuid
+        timestamp:
+          type: string
+          format: date-time
