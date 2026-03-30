@@ -212,8 +212,9 @@ class ConsentCrudServiceTest {
             EventOutboxEntity outboxEvent = outboxCaptor.getValue();
             assertThat(outboxEvent.getAggregateType()).isEqualTo("ConsentDirective");
             assertThat(outboxEvent.getAggregateId()).isEqualTo(newEntity.getId().toString());
-            assertThat(outboxEvent.getEventType()).isEqualTo("ConsentCreated");
-            assertThat(outboxEvent.getPayload()).isNotEmpty();
+            assertThat(outboxEvent.getEventType()).isEqualTo("impilo.tshepo.consent.created.v1");
+            assertThat(outboxEvent.getPayload()).contains("eventType");
+            assertThat(outboxEvent.getPayload()).contains("impilo.tshepo.consent.created.v1");
         }
 
         @Test
@@ -335,9 +336,10 @@ class ConsentCrudServiceTest {
 
             verify(outboxRepo).save(outboxCaptor.capture());
             EventOutboxEntity outbox = outboxCaptor.getValue();
-            assertThat(outbox.getEventType()).isEqualTo("ConsentRevoked");
+            assertThat(outbox.getEventType()).isEqualTo("impilo.tshepo.consent.revoked.v1");
             assertThat(outbox.getAggregateType()).isEqualTo("ConsentDirective");
             assertThat(outbox.getAggregateId()).isEqualTo(consentId.toString());
+            assertThat(outbox.getPayload()).contains("impilo.tshepo.consent.revoked.v1");
         }
 
         @Test

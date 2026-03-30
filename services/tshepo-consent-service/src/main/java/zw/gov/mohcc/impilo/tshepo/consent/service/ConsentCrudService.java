@@ -9,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import zw.gov.mohcc.impilo.sharedkernel.events.EventEnvelope;
 import zw.gov.mohcc.impilo.tshepo.consent.config.ConsentProperties;
 import zw.gov.mohcc.impilo.tshepo.consent.dto.ConsentDirectiveDto;
 import zw.gov.mohcc.impilo.tshepo.consent.dto.CreateConsentRequest;
@@ -21,8 +22,12 @@ import zw.gov.mohcc.impilo.tshepo.consent.persistence.ConsentDirectiveEntity;
 import zw.gov.mohcc.impilo.tshepo.consent.persistence.ConsentDirectiveRepository;
 import zw.gov.mohcc.impilo.tshepo.consent.persistence.EventOutboxEntity;
 import zw.gov.mohcc.impilo.tshepo.consent.persistence.EventOutboxRepository;
+import zw.gov.mohcc.impilo.tshepo.sdk.TrustContext;
+import zw.gov.mohcc.impilo.tshepo.sdk.TrustContextHolder;
 
 import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.UUID;
@@ -248,22 +253,47 @@ public class ConsentCrudService {
     }
 
     private void createOutboxEvent(ConsentDirectiveEntity consent, String eventType) {
+        TrustContext ctx = TrustContextHolder.get();
+
+        String canonicalEventType = switch (eventType) {
+            case "ConsentCreated" -> "impilo.tshepo.consent.created.v1";
+            case "ConsentUpdated" -> "impilo.tshepo.consent.updated.v1";
+            case "ConsentRevoked" -> "impilo.tshepo.consent.revoked.v1";
+            default -> eventType;
+        };
+
+        Map<String, Object> payload = Map.of(
+                "consentId", consent.getId().toString(),
+                "tenantId", consent.getTenantId().toString(),
+                "patientRef", consent.getPatientRef(),
+                "status", consent.getStatus(),
+                "scope", consent.getScope(),
+                "purpose", consent.getPurpose(),
+                "provision", consent.getProvision(),
+                "timestamp", Instant.now().toString()
+        );
+
+        EventEnvelope envelope = EventEnvelope.builder()
+                .eventType(canonicalEventType)
+                .schemaVersion(1)
+                .correlationId(ctx != null && ctx.correlationId() != null ? ctx.correlationId().toString() : UUID.randomUUID().toString())
+                .causationId(ctx != null && ctx.correlationId() != null ? ctx.correlationId().toString() : UUID.randomUUID().toString())
+                .idempotencyKey(UUID.randomUUID().toString())
+                .producer("tshepo-consent-service")
+                .tenantId(consent.getTenantId().toString())
+                .podId(ctx != null && ctx.podId() != null ? ctx.podId() : "national")
+                .occurredAt(OffsetDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")))
+                .subjectType("ConsentDirective")
+                .subjectId(consent.getId().toString())
+                .payload(payload)
+                .build();
+
         EventOutboxEntity outbox = new EventOutboxEntity();
         outbox.setAggregateType("ConsentDirective");
         outbox.setAggregateId(consent.getId().toString());
-        outbox.setEventType(eventType);
+        outbox.setEventType(canonicalEventType);
         try {
-            Map<String, Object> payload = Map.of(
-                    "consentId", consent.getId().toString(),
-                    "tenantId", consent.getTenantId().toString(),
-                    "patientRef", consent.getPatientRef(),
-                    "status", consent.getStatus(),
-                    "scope", consent.getScope(),
-                    "purpose", consent.getPurpose(),
-                    "provision", consent.getProvision(),
-                    "timestamp", Instant.now().toString()
-            );
-            outbox.setPayload(objectMapper.writeValueAsString(payload));
+            outbox.setPayload(objectMapper.writeValueAsString(envelope));
         } catch (JsonProcessingException e) {
             log.error("Failed to serialize outbox event for consent={}: {}", consent.getId(), e.getMessage());
             outbox.setPayload("{}");

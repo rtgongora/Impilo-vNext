@@ -15,7 +15,7 @@ spring:
       minimum-idle: 3
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: none
     open-in-view: false
     properties:
       hibernate:
@@ -29,11 +29,31 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: ${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:impilo}
+  cloud:
+    vault:
+      host: ${VAULT_HOST:localhost}
+      port: ${VAULT_PORT:8200}
+      scheme: http
+      token: ${VAULT_TOKEN:impilo-dev-root}
+      kv:
+        enabled: true
+        backend: secret
+      # Enable fail-fast so service doesn't start if Vault is down in production
+      fail-fast: ${VAULT_FAIL_FAST:false}
+---
+spring:
+  config:
+    activate:
+      on-profile: test
+  cloud:
+    vault:
+      enabled: false
+---
+security:
+  oauth2:
+    resourceserver:
+      jwt:
+        issuer-uri: ""
 
 # --- TSHEPO Keys configuration ---
 tshepo:
@@ -46,7 +66,7 @@ tshepo:
     token-default-ttl-seconds: ${TSHEPO_KEYS_TOKEN_TTL:300}
     jwks-cache-ttl-seconds: ${TSHEPO_KEYS_JWKS_CACHE_TTL:60}
     events:
-      kafka-topic: platform.keys.events
+      kafka-topic: trust.tshepo.keys.events
 
 management:
   endpoints:

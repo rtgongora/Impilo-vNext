@@ -55,7 +55,7 @@ public class ConsentProperties {
 
     public static class Outbox {
         private long pollIntervalMs = 1000;
-        private String kafkaTopic = "platform.consent.events";
+        private String kafkaTopic = "trust.tshepo.consent.events";
 
         public long getPollIntervalMs() {
             return pollIntervalMs;

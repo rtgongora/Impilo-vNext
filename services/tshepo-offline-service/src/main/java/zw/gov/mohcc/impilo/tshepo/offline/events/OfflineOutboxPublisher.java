@@ -20,7 +20,7 @@ import java.util.List;
 public class OfflineOutboxPublisher {
 
     private static final Logger log = LoggerFactory.getLogger(OfflineOutboxPublisher.class);
-    private static final String OFFLINE_TOPIC = "platform.offline.events";
+    private static final String OFFLINE_TOPIC = "trust.tshepo.offline.events";
 
     private final EventOutboxRepository outboxRepo;
     private final KafkaTemplate<String, String> kafkaTemplate;

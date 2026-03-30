@@ -17,6 +17,7 @@ import org.bouncycastle.crypto.params.Ed25519PrivateKeyParameters;
 import org.bouncycastle.crypto.params.Ed25519PublicKeyParameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import zw.gov.mohcc.impilo.tshepo.keys.config.KeysProperties;
 import zw.gov.mohcc.impilo.tshepo.keys.persistence.entity.EventOutboxEntity;
@@ -61,12 +62,16 @@ public class Ed25519SigningService {
 
     public Ed25519SigningService(SigningKeyRepository signingKeyRepository,
                                  EventOutboxRepository eventOutboxRepository,
-                                 KeysProperties keysProperties) {
+                                 KeysProperties keysProperties,
+                                 @Value("${vault.transit.kek:}") String vaultKek) {
         this.signingKeyRepository = signingKeyRepository;
         this.eventOutboxRepository = eventOutboxRepository;
         this.keysProperties = keysProperties;
         this.secureRandom = new SecureRandom();
-        this.kekBytes = hexToBytes(keysProperties.getKek());
+
+        // Priority: Vault Transit KEK > KeysProperties KEK
+        String finalKek = (vaultKek != null && !vaultKek.isEmpty()) ? vaultKek : keysProperties.getKek();
+        this.kekBytes = hexToBytes(finalKek);
 
         if (this.kekBytes.length != 32) {
             throw new IllegalStateException("KEK must be exactly 32 bytes (256 bits) for AES-256-GCM, got " + this.kekBytes.length);

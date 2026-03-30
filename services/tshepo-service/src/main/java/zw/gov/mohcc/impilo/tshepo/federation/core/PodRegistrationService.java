@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import zw.gov.mohcc.impilo.sharedkernel.events.DeltaPayload;
 import zw.gov.mohcc.impilo.tshepo.federation.persistence.*;
 import zw.gov.mohcc.impilo.tshepo.persistence.EventOutboxEntity;
 import zw.gov.mohcc.impilo.tshepo.persistence.EventOutboxRepository;
@@ -140,6 +141,8 @@ public class PodRegistrationService {
             throw new IllegalStateException("Pod is already revoked: " + podId);
         }
 
+        Map<String, Object> before = podToMap(pod);
+
         Instant now = Instant.now();
         pod.setStatus(PodStatus.REVOKED);
         pod.setRevokedAt(now);
@@ -147,12 +150,17 @@ public class PodRegistrationService {
         pod.setRevocationReason(reason);
         pod = podRepo.save(pod);
 
+        Map<String, Object> after = podToMap(pod);
+
         // Update revocation cache immediately for real-time enforcement
         revocationCache.markRevoked(podId.toString());
 
         // Publish HIGH_PRI revocation event (uses control channel topic)
+        DeltaPayload delta = new DeltaPayload("REVOKE", before, after, List.of("status", "revoked_at", "revoked_by", "revocation_reason"));
         publishOutboxEvent("POD_REVOCATION", pod.getPodId().toString(),
                 "impilo.federation.pod.revoked.v1", Map.of(
+                        "delta", delta.toMap(),
+                        "full", after,
                         "pod_id", pod.getPodId().toString(),
                         "pod_name", pod.getPodName(),
                         "revoked_by", revokedBy,
@@ -177,6 +185,8 @@ public class PodRegistrationService {
             throw new IllegalStateException("Pod is not in a revoked/suspended state: " + podId);
         }
 
+        Map<String, Object> before = podToMap(pod);
+
         Instant now = Instant.now();
         pod.setStatus(PodStatus.ACTIVE);
         pod.setRevokedAt(null);
@@ -186,11 +196,16 @@ public class PodRegistrationService {
         pod.setExpiresAt(now.plus(DEFAULT_REGISTRATION_VALIDITY));
         pod = podRepo.save(pod);
 
+        Map<String, Object> after = podToMap(pod);
+
         // Clear from revocation cache
         revocationCache.clearRevocation(podId.toString());
 
+        DeltaPayload delta = DeltaPayload.of(before, after, List.of("status", "revoked_at", "revoked_by", "revocation_reason", "issued_at", "expires_at"));
         publishOutboxEvent("POD_REGISTRATION", pod.getPodId().toString(),
                 "impilo.federation.pod.reinstated.v1", Map.of(
+                        "delta", delta.toMap(),
+                        "full", after,
                         "pod_id", pod.getPodId().toString(),
                         "pod_name", pod.getPodName(),
                         "reinstated_by", reinstatedBy,
@@ -262,6 +277,21 @@ public class PodRegistrationService {
         return requested.stream()
                 .filter(allowed::contains)
                 .toList();
+    }
+
+    private Map<String, Object> podToMap(PodRegistrationEntity p) {
+        Map<String, Object> map = new java.util.HashMap<>();
+        map.put("registration_id", p.getRegistrationId());
+        map.put("pod_id", p.getPodId());
+        map.put("pod_name", p.getPodName());
+        map.put("region", p.getRegion());
+        map.put("status", p.getStatus() != null ? p.getStatus().name() : null);
+        map.put("issued_at", p.getIssuedAt());
+        map.put("expires_at", p.getExpiresAt());
+        map.put("revoked_at", p.getRevokedAt());
+        map.put("revoked_by", p.getRevokedBy());
+        map.put("revocation_reason", p.getRevocationReason());
+        return map;
     }
 
     private void publishOutboxEvent(String aggregateType, String aggregateId,

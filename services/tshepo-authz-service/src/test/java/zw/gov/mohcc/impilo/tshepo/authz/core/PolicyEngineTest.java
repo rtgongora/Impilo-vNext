@@ -44,6 +44,7 @@ class PolicyEngineTest {
     @Mock private BreakGlassService breakGlassService;
     @Mock private PolicyDecisionLogRepository decisionLogRepository;
     @Mock private AuditPublisher auditPublisher;
+    @Mock private DecisionEvidencePublisher decisionEvidencePublisher;
 
     private AuthzProperties properties;
     private ObjectMapper objectMapper;
@@ -64,7 +65,7 @@ class PolicyEngineTest {
         policyEngine = new PolicyEngine(
                 riskScoring, policyCacheService, consentClient,
                 stepUpService, breakGlassService, decisionLogRepository,
-                auditPublisher, properties, objectMapper
+                auditPublisher, decisionEvidencePublisher, properties, objectMapper
         );
     }
 
@@ -191,7 +192,7 @@ class PolicyEngineTest {
         assertEquals("MISSING_TENANT", response.errorCode(),
                 "Error code must be MISSING_TENANT");
         verify(decisionLogRepository).save(any(PolicyDecisionLogEntity.class));
-        verify(auditPublisher).queueAuditEvent(eq(request), eq("DENY"), eq(0), eq("MISSING_TENANT"));
+        verify(auditPublisher).queueAuditEvent(eq(request), eq("DENY"), eq(0), eq("MISSING_TENANT"), anyString());
     }
 
     // ════════════════════════════════════════════════════════════════════
@@ -299,7 +300,7 @@ class PolicyEngineTest {
                 "ALLOW response must include header mutations");
 
         // Verify audit was logged
-        verify(auditPublisher).queueAuditEvent(eq(request), eq("ALLOW"), eq(10), isNull());
+        verify(auditPublisher).queueAuditEvent(eq(request), eq("ALLOW"), eq(10), isNull(), anyString());
     }
 
     // ════════════════════════════════════════════════════════════════════
@@ -559,7 +560,7 @@ class PolicyEngineTest {
         policyEngine.evaluate(request);
 
         verify(auditPublisher).queueAuditEvent(
-                eq(request), eq("DENY"), eq(0), eq("MISSING_TENANT"));
+                eq(request), eq("DENY"), eq(0), eq("MISSING_TENANT"), anyString());
     }
 
     // ════════════════════════════════════════════════════════════════════

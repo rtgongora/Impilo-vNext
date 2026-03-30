@@ -31,7 +31,7 @@ public class IdentityOutboxPublisher {
 
     public IdentityOutboxPublisher(EventOutboxRepository outboxRepo,
                                     KafkaTemplate<String, String> kafkaTemplate,
-                                    @Value("${tshepo.outbox.kafka-topic:platform.identity.events}") String topic) {
+                                    @Value("${tshepo.outbox.kafka-topic:trust.tshepo.identity.events}") String topic) {
         this.outboxRepo = outboxRepo;
         this.kafkaTemplate = kafkaTemplate;
         this.topic = topic;

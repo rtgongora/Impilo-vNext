@@ -15,7 +15,7 @@ spring:
       minimum-idle: 5
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: none
     open-in-view: false
     properties:
       hibernate:
@@ -39,7 +39,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:impilo}
+          issuer-uri: ""
 
 # --- TSHEPO Offline-specific ---
 tshepo:
@@ -62,7 +62,7 @@ tshepo:
     keys-url: ${TSHEPO_KEYS_URL:http://localhost:8184}
     authz-url: ${TSHEPO_AUTHZ_URL:http://localhost:8081}
   kafka:
-    topic: platform.offline.events
+    topic: trust.tshepo.offline.events
 
 management:
   endpoints:

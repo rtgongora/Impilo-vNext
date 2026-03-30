@@ -75,11 +75,11 @@ class PolicyEngineDecisionEvidenceTest {
     @DisplayName("ALLOW decision: DecisionEvidenceDto is published with correct fields")
     void allowDecision_publishesDecisionEvidence() {
         when(riskScoring.score(eq(TENANT_ID), any(), eq(ACTOR_ID))).thenReturn(10);
-        PolicyRuleEntity allow = allowRule("patients");
+        PolicyRuleEntity allow = allowRule("facilities");
         when(policyCacheService.getActiveRulesForResource(eq(TENANT_ID), anyString()))
                 .thenReturn(List.of(allow));
 
-        AuthzInternalRequest request = buildRequest("TREATMENT", "GET:/v1/patients", "patients", null);
+        AuthzInternalRequest request = buildRequest("TREATMENT", "GET:/v1/facilities", "facilities", null);
         policyEngine.evaluate(request);
 
         ArgumentCaptor<DecisionEvidenceDto> captor = ArgumentCaptor.forClass(DecisionEvidenceDto.class);
@@ -89,7 +89,7 @@ class PolicyEngineDecisionEvidenceTest {
         assertThat(evidence).isNotNull();
         assertThat(evidence.actorId()).isEqualTo(ACTOR_ID);
         assertThat(evidence.actorType()).isEqualTo("PROVIDER");
-        assertThat(evidence.action()).isEqualTo("GET:/v1/patients");
+        assertThat(evidence.action()).isEqualTo("GET:/v1/facilities");
         assertThat(evidence.decision()).isEqualTo("ALLOW");
         assertThat(evidence.policyVersion()).isEqualTo(POLICY_VERSION);
         assertThat(evidence.consistencyClass()).isEqualTo("C");
@@ -100,11 +100,11 @@ class PolicyEngineDecisionEvidenceTest {
     @DisplayName("ALLOW decision on POST: consistencyClass is B")
     void allowDecision_postAction_consistencyClassB() {
         when(riskScoring.score(eq(TENANT_ID), any(), eq(ACTOR_ID))).thenReturn(10);
-        PolicyRuleEntity allow = allowRule("patients");
+        PolicyRuleEntity allow = allowRule("facilities");
         when(policyCacheService.getActiveRulesForResource(eq(TENANT_ID), anyString()))
                 .thenReturn(List.of(allow));
 
-        AuthzInternalRequest request = buildRequest("TREATMENT", "POST:/v1/patients", "patients", null);
+        AuthzInternalRequest request = buildRequest("TREATMENT", "POST:/v1/facilities", "facilities", null);
         policyEngine.evaluate(request);
 
         ArgumentCaptor<DecisionEvidenceDto> captor = ArgumentCaptor.forClass(DecisionEvidenceDto.class);
@@ -117,11 +117,11 @@ class PolicyEngineDecisionEvidenceTest {
     @DisplayName("ALLOW decision on DELETE: consistencyClass is A")
     void allowDecision_deleteAction_consistencyClassA() {
         when(riskScoring.score(eq(TENANT_ID), any(), eq(ACTOR_ID))).thenReturn(10);
-        PolicyRuleEntity allow = allowRule("patients");
+        PolicyRuleEntity allow = allowRule("facilities");
         when(policyCacheService.getActiveRulesForResource(eq(TENANT_ID), anyString()))
                 .thenReturn(List.of(allow));
 
-        AuthzInternalRequest request = buildRequest("TREATMENT", "DELETE:/v1/patients/123", "patients", null);
+        AuthzInternalRequest request = buildRequest("TREATMENT", "DELETE:/v1/facilities/123", "facilities", null);
         policyEngine.evaluate(request);
 
         ArgumentCaptor<DecisionEvidenceDto> captor = ArgumentCaptor.forClass(DecisionEvidenceDto.class);
@@ -176,12 +176,12 @@ class PolicyEngineDecisionEvidenceTest {
     @DisplayName("STEP_UP decision: DecisionEvidenceDto is published with STEP_UP_REQUIRED decision")
     void stepUpDecision_publishesDecisionEvidence() {
         when(riskScoring.score(eq(TENANT_ID), any(), eq(ACTOR_ID))).thenReturn(65);
-        PolicyRuleEntity allow = allowRule("patients");
+        PolicyRuleEntity allow = allowRule("facilities");
         when(policyCacheService.getActiveRulesForResource(eq(TENANT_ID), anyString()))
                 .thenReturn(List.of(allow));
         when(stepUpService.hasRecentStepUp(eq(TENANT_ID), eq(ACTOR_ID))).thenReturn(false);
 
-        AuthzInternalRequest request = buildRequest("TREATMENT", "DELETE:/v1/patients/123", "patients", null);
+        AuthzInternalRequest request = buildRequest("TREATMENT", "DELETE:/v1/facilities/123", "facilities", null);
         policyEngine.evaluate(request);
 
         ArgumentCaptor<DecisionEvidenceDto> captor = ArgumentCaptor.forClass(DecisionEvidenceDto.class);
@@ -203,7 +203,7 @@ class PolicyEngineDecisionEvidenceTest {
         when(policyCacheService.getActiveRulesForResource(eq(TENANT_ID), anyString()))
                 .thenReturn(List.of(allow));
         when(consentClient.evaluateConsent(any(), any(), any(), any(), any()))
-                .thenReturn(new ConsentDecision(true, null));
+                .thenReturn(ConsentDecision.permit("consent-001", null));
 
         AuthzInternalRequest request = buildRequest("TREATMENT", "GET:/v1/Patient/patient-456", "Patient", "patient-456");
         policyEngine.evaluate(request);
@@ -220,11 +220,11 @@ class PolicyEngineDecisionEvidenceTest {
     @DisplayName("AuditPublisher receives policyVersion on every ALLOW decision")
     void allowDecision_auditPublisherReceivesPolicyVersion() {
         when(riskScoring.score(eq(TENANT_ID), any(), eq(ACTOR_ID))).thenReturn(10);
-        PolicyRuleEntity allow = allowRule("patients");
+        PolicyRuleEntity allow = allowRule("facilities");
         when(policyCacheService.getActiveRulesForResource(eq(TENANT_ID), anyString()))
                 .thenReturn(List.of(allow));
 
-        AuthzInternalRequest request = buildRequest("TREATMENT", "GET:/v1/patients", "patients", null);
+        AuthzInternalRequest request = buildRequest("TREATMENT", "GET:/v1/facilities", "facilities", null);
         policyEngine.evaluate(request);
 
         verify(auditPublisher).queueAuditEvent(eq(request), eq("ALLOW"), anyInt(), isNull(), eq(POLICY_VERSION));

@@ -23,7 +23,7 @@ import java.util.List;
 public class AuditOutboxPublisher {
 
     private static final Logger log = LoggerFactory.getLogger(AuditOutboxPublisher.class);
-    private static final String AUDIT_TOPIC = "platform.audit.events";
+    private static final String AUDIT_TOPIC = "trust.tshepo.audit.events";
 
     private final EventOutboxRepository outboxRepo;
     private final KafkaTemplate<String, String> kafkaTemplate;

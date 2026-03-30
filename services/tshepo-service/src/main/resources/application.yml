@@ -15,7 +15,7 @@ spring:
       minimum-idle: 5
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: none
     open-in-view: false
     properties:
       hibernate:
@@ -36,7 +36,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:impilo}
+          issuer-uri: ""
 
 # --- TSHEPO-specific ---
 tshepo:
@@ -45,7 +45,7 @@ tshepo:
     max-requests-per-minute: 120
     step-up-window-seconds: 300
   audit:
-    kafka-topic: platform.audit.events
+    kafka-topic: trust.tshepo.audit.events
 
 impilo:
   ops:

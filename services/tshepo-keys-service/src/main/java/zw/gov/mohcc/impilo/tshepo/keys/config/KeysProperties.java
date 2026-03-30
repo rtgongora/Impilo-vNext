@@ -83,7 +83,7 @@ public class KeysProperties {
     }
 
     public static class Events {
-        private String kafkaTopic = "platform.keys.events";
+        private String kafkaTopic = "trust.tshepo.keys.events";
 
         public String getKafkaTopic() {
             return kafkaTopic;
