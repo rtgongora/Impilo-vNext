@@ -2,6 +2,11 @@ server:
   port: ${SERVER_PORT:8132}
 
 spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:}
   application:
     name: search-service
   datasource:
