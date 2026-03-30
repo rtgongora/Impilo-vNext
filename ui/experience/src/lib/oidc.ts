@@ -211,7 +211,7 @@ export function parseUserFromToken(accessToken: string): {
   }
 
   return {
-    id: payload.sub ?? "",
+    id: payload.sub ?? payload.preferred_username ?? "",
     email: payload.email ?? payload.preferred_username ?? "",
     displayName:
       payload.name ?? payload.preferred_username ?? payload.email ?? "",
