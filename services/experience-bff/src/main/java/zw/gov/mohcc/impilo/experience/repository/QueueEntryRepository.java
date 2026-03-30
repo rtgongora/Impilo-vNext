@@ -21,7 +21,7 @@ public interface QueueEntryRepository extends JpaRepository<QueueEntry, UUID> {
         """)
     Page<QueueEntry> findByFilters(
             @Param("tenantId") String tenantId,
-            @Param("facilityId") String facilityId,
+            @Param("facilityId") UUID facilityId,
             @Param("status") String status,
             @Param("queueType") String queueType,
             Pageable pageable);

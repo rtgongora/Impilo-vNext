@@ -63,8 +63,9 @@ public class QueueController {
 
         PageRequest pageable = PageRequest.of(page, Math.min(size, 100), Sort.by("createdAt").descending());
 
+        UUID facilityUuid = facilityId != null ? UUID.fromString(facilityId) : null;
         Page<QueueEntry> result = queueEntryRepository.findByFilters(
-                tenantId, facilityId, status, queueType, pageable);
+                tenantId, facilityUuid, status, queueType, pageable);
 
         List<Map<String, Object>> data = result.getContent().stream()
                 .map(this::toResource)
