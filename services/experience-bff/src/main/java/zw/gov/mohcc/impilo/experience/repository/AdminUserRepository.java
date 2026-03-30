@@ -17,15 +17,15 @@ public interface AdminUserRepository extends JpaRepository<AdminUser, UUID> {
         WHERE u.tenantId = :tenantId
         AND (:role IS NULL OR u.role = :role)
         AND (:status IS NULL OR u.status = :status)
-        AND (:search IS NULL OR LOWER(u.username) LIKE LOWER(CONCAT('%', :search, '%'))
-             OR LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%'))
-             OR LOWER(u.displayName) LIKE LOWER(CONCAT('%', :search, '%')))
+        AND (:pattern IS NULL OR LOWER(u.username) LIKE :pattern
+             OR LOWER(u.email) LIKE :pattern
+             OR LOWER(u.displayName) LIKE :pattern)
         """)
     Page<AdminUser> findByFilters(
             @Param("tenantId") String tenantId,
             @Param("role") String role,
             @Param("status") String status,
-            @Param("search") String search,
+            @Param("pattern") String pattern,
             Pageable pageable);
 
     Optional<AdminUser> findByIdAndTenantId(UUID id, String tenantId);

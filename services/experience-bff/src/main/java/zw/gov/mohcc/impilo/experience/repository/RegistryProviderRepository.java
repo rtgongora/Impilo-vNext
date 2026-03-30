@@ -15,13 +15,13 @@ public interface RegistryProviderRepository extends JpaRepository<RegistryProvid
     @Query("""
         SELECT r FROM RegistryProvider r
         WHERE r.tenantId = :tenantId
-        AND (:search IS NULL OR LOWER(r.givenName) LIKE LOWER(CONCAT('%', :search, '%'))
-             OR LOWER(r.familyName) LIKE LOWER(CONCAT('%', :search, '%'))
-             OR LOWER(r.providerNumber) LIKE LOWER(CONCAT('%', :search, '%')))
+        AND (:pattern IS NULL OR LOWER(r.givenName) LIKE :pattern
+             OR LOWER(r.familyName) LIKE :pattern
+             OR LOWER(r.providerNumber) LIKE :pattern)
         """)
     Page<RegistryProvider> findByFilters(
             @Param("tenantId") String tenantId,
-            @Param("search") String search,
+            @Param("pattern") String pattern,
             Pageable pageable);
 
     Optional<RegistryProvider> findByIdAndTenantId(UUID id, String tenantId);

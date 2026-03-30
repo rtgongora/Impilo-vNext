@@ -17,14 +17,14 @@ public interface FacilityRepository extends JpaRepository<Facility, UUID> {
         AND (:status IS NULL OR f.status = :status)
         AND (:facilityType IS NULL OR f.facilityType = :facilityType)
         AND (:province IS NULL OR f.province = :province)
-        AND (:search IS NULL OR LOWER(f.name) LIKE LOWER(CONCAT('%', :search, '%'))
-             OR LOWER(f.code) LIKE LOWER(CONCAT('%', :search, '%')))
+        AND (:pattern IS NULL OR LOWER(f.name) LIKE :pattern
+             OR LOWER(f.code) LIKE :pattern)
         """)
     Page<Facility> findByFilters(
             @Param("tenantId") String tenantId,
             @Param("status") String status,
             @Param("facilityType") String facilityType,
             @Param("province") String province,
-            @Param("search") String search,
+            @Param("pattern") String pattern,
             Pageable pageable);
 }

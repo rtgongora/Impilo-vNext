@@ -39,8 +39,12 @@ public class FacilityController {
 
         PageRequest pageable = PageRequest.of(page, Math.min(size, 100), Sort.by("name").ascending());
 
+        String pattern = (search != null && !search.isBlank())
+                ? "%" + search.toLowerCase() + "%"
+                : null;
+
         Page<Facility> result = facilityRepository.findByFilters(
-                tenantId, status, facilityType, province, search, pageable);
+                tenantId, status, facilityType, province, pattern, pageable);
 
         List<Map<String, Object>> data = result.getContent().stream()
                 .map(this::toResource)

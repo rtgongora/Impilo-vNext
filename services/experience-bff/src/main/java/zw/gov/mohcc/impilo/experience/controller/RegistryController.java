@@ -43,7 +43,11 @@ public class RegistryController {
 
         PageRequest pageable = PageRequest.of(page, Math.min(size, 100), Sort.by("familyName").ascending());
 
-        Page<RegistryProvider> result = registryProviderRepository.findByFilters(tenantId, search, pageable);
+        String pattern = (search != null && !search.isBlank())
+                ? "%" + search.toLowerCase() + "%"
+                : null;
+
+        Page<RegistryProvider> result = registryProviderRepository.findByFilters(tenantId, pattern, pageable);
 
         List<Map<String, Object>> data = result.getContent().stream()
                 .map(this::toProviderResource)
@@ -99,8 +103,12 @@ public class RegistryController {
 
         PageRequest pageable = PageRequest.of(page, Math.min(size, 100), Sort.by("name").ascending());
 
+        String facilityPattern = (search != null && !search.isBlank())
+                ? "%" + search.toLowerCase() + "%"
+                : null;
+
         Page<Facility> result = facilityRepository.findByFilters(
-                tenantId, status, facilityType, province, search, pageable);
+                tenantId, status, facilityType, province, facilityPattern, pageable);
 
         List<Map<String, Object>> data = result.getContent().stream()
                 .map(this::toFacilityResource)

@@ -39,7 +39,11 @@ public class AdminUserController {
 
         PageRequest pageable = PageRequest.of(page, Math.min(size, 100), Sort.by("username").ascending());
 
-        Page<AdminUser> result = adminUserRepository.findByFilters(tenantId, role, status, search, pageable);
+        String pattern = (search != null && !search.isBlank())
+                ? "%" + search.toLowerCase() + "%"
+                : null;
+
+        Page<AdminUser> result = adminUserRepository.findByFilters(tenantId, role, status, pattern, pageable);
 
         List<Map<String, Object>> data = result.getContent().stream()
                 .map(this::toResource)
