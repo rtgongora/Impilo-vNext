@@ -445,13 +445,15 @@ services:
       NEXT_PUBLIC_KEYCLOAK_URL: ${NEXT_PUBLIC_KEYCLOAK_URL:-http://localhost:8080}
       NEXT_PUBLIC_KEYCLOAK_REALM: ${KEYCLOAK_REALM:-impilo}
       NEXT_PUBLIC_KEYCLOAK_CLIENT_ID: experience-ui
+      PORT: 3020
+      HOSTNAME: "0.0.0.0"
     ports:
       - "3020:3020"
     depends_on:
       experience-bff:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:3020 || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://0.0.0.0:3020 || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 10
