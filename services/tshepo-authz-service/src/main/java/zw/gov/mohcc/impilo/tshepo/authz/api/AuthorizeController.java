@@ -62,10 +62,15 @@ public class AuthorizeController {
                               RequestMethod.OPTIONS})
     public ResponseEntity<AuthzResponse> authorize(HttpServletRequest request) {
 
+        // Allow CORS preflight through without authentication
+        String incomingMethod = request.getHeader(":method") != null
+                ? request.getHeader(":method") : request.getMethod();
+        if ("OPTIONS".equalsIgnoreCase(incomingMethod)) {
+            return ResponseEntity.ok().build();
+        }
+
         // Extract original method/path from Envoy forwarded request
-        String originalMethod = request.getHeader(":method") != null
-                ? request.getHeader(":method")
-                : request.getMethod();
+        String originalMethod = incomingMethod;
         String originalPath = request.getHeader(":path") != null
                 ? request.getHeader(":path")
                 : request.getRequestURI();

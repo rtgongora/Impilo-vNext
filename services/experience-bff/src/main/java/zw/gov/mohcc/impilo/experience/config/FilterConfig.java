@@ -1,5 +1,7 @@
 package zw.gov.mohcc.impilo.experience.config;
 
+import jakarta.servlet.*;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -8,13 +10,25 @@ import zw.gov.mohcc.impilo.companion.filter.IdempotencyFilter;
 import zw.gov.mohcc.impilo.companion.filter.V11HeaderFilter;
 import zw.gov.mohcc.impilo.companion.idempotency.IdempotencyService;
 
+import java.io.IOException;
+
 @Configuration
 public class FilterConfig {
 
     @Bean
-    public FilterRegistrationBean<V11HeaderFilter> v11HeaderFilter() {
-        FilterRegistrationBean<V11HeaderFilter> reg = new FilterRegistrationBean<>();
-        reg.setFilter(new V11HeaderFilter());
+    public FilterRegistrationBean<Filter> v11HeaderFilter() {
+        V11HeaderFilter delegate = new V11HeaderFilter();
+        Filter corsAware = (request, response, chain) -> {
+            HttpServletRequest req = (HttpServletRequest) request;
+            if ("OPTIONS".equalsIgnoreCase(req.getMethod())) {
+                chain.doFilter(request, response);
+                return;
+            }
+            delegate.doFilter(request, response, chain);
+        };
+
+        FilterRegistrationBean<Filter> reg = new FilterRegistrationBean<>();
+        reg.setFilter(corsAware);
         reg.addUrlPatterns("/internal/v1/*");
         reg.setOrder(Ordered.HIGHEST_PRECEDENCE + 10);
         reg.setName("v11HeaderFilter");

@@ -75,6 +75,11 @@ public class SecurityConfig {
             "X-Request-ID",
             "X-Correlation-ID",
             "X-Client-Timeout-MS",
+            "X-Purpose-Of-Use",
+            "X-Actor-ID",
+            "X-Actor-Type",
+            "X-Facility-ID",
+            "X-Shift-ID",
             "Idempotency-Key"
         ));
         config.setExposedHeaders(List.of(

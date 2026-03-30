@@ -43,6 +43,12 @@ public class V11HeaderFilter implements Filter {
 
         String path = httpReq.getRequestURI();
 
+        // Skip CORS preflight — OPTIONS requires no trust headers
+        if ("OPTIONS".equalsIgnoreCase(httpReq.getMethod())) {
+            chain.doFilter(request, response);
+            return;
+        }
+
         // Only enforce on v1.1 paths
         if (!isV11Path(path)) {
             chain.doFilter(request, response);

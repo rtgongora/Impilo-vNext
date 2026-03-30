@@ -34,6 +34,15 @@ static_resources:
                   virtual_hosts:
                     - name: impilo_services
                       domains: ["*"]
+                      cors:
+                        allow_origin_string_match:
+                          - prefix: "http://localhost"
+                          - prefix: "https://localhost"
+                        allow_methods: "GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD"
+                        allow_headers: "Authorization, Content-Type, X-Tenant-ID, X-Pod-ID, X-Request-ID, X-Correlation-ID, X-Purpose-Of-Use, X-Actor-ID, X-Actor-Type, X-Facility-ID, X-Shift-ID, X-Client-Timeout-MS, Idempotency-Key"
+                        expose_headers: "X-Request-ID, X-Correlation-ID, X-Policy-Decision, X-Policy-Version"
+                        max_age: "3600"
+                        allow_credentials: false
                       routes:
                         # ── TSHEPO Service (legacy + authz) ──
                         - match: { prefix: "/api/v1/authorize" }
@@ -107,7 +116,20 @@ static_resources:
                         - match: { prefix: "/external/v1/" }
                           route: { cluster: tshepo_service }
 
-                        # ── Experience BFF ──
+                        # ── Experience BFF — CORS preflight (bypass ext_authz) ──
+                        - match:
+                            prefix: "/bff/"
+                            headers:
+                              - name: ":method"
+                                string_match:
+                                  exact: "OPTIONS"
+                          route: { cluster: experience_bff, prefix_rewrite: "/" }
+                          typed_per_filter_config:
+                            envoy.filters.http.ext_authz:
+                              "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthzPerRoute
+                              disabled: true
+
+                        # ── Experience BFF — authenticated requests ──
                         - match: { prefix: "/bff/" }
                           route: { cluster: experience_bff, prefix_rewrite: "/" }
 
@@ -116,6 +138,9 @@ static_resources:
                           route: { cluster: tshepo_service }
 
                 http_filters:
+                  - name: envoy.filters.http.cors
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.filters.http.cors.v3.Cors
                   # ── OPA ext_authz (v1.1 header + idempotency enforcement) ──
                   - name: envoy.filters.http.ext_authz
                     typed_config:
