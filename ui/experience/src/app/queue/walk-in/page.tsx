@@ -55,12 +55,18 @@ export default function WalkInPage() {
 
       // If creating a new patient, first register them
       if (showNewPatient && !patientId) {
+        const nameParts = newName.trim().split(/\s+/);
+        const given_name = nameParts[0] || newName;
+        const family_name = nameParts.length > 1 ? nameParts.slice(1).join(" ") : given_name;
+
         const newPatientRes = await apiClient.post<ApiResponse<PatientResource>>(
           "/internal/v1/patients",
           {
-            displayName: newName,
-            dateOfBirth: newDob,
-            gender: newGender,
+            given_name,
+            family_name,
+            date_of_birth: newDob || null,
+            sex: newGender,
+            facility_id: facility.id,
           },
         );
         patientId = newPatientRes.data.id;
