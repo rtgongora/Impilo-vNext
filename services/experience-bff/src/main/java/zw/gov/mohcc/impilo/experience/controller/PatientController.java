@@ -65,13 +65,20 @@ public class PatientController {
         UUID id = UUID.randomUUID();
         String cpid = "CP-" + id.toString().substring(0, 8).toUpperCase();
 
+        java.time.LocalDate dob = null;
+        if (req.date_of_birth() != null && !req.date_of_birth().isBlank()) {
+            try {
+                dob = java.time.LocalDate.parse(req.date_of_birth().substring(0, 10));
+            } catch (Exception ignored) {}
+        }
+
         jdbcTemplate.update("""
                 INSERT INTO patients (id, tenant_id, cpid, given_name, family_name, date_of_birth,
                     sex, national_id, phone, facility_id, status, created_at, updated_at)
-                VALUES (?::uuid, ?, ?, ?, ?, ?::date, ?, ?, ?, ?, 'PROVISIONAL', NOW(), NOW())
+                VALUES (?::uuid, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'PROVISIONAL', NOW(), NOW())
                 """,
                 id.toString(), tenantId, cpid,
-                req.given_name(), req.family_name(), req.date_of_birth(),
+                req.given_name(), req.family_name(), dob,
                 req.sex(), req.national_id(), req.phone(), req.facility_id());
 
         outboxService.writeOutboxEvent(
