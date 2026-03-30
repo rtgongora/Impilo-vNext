@@ -16,14 +16,15 @@ public interface PatientRepository extends JpaRepository<Patient, UUID> {
         SELECT p FROM Patient p
         WHERE p.tenantId = :tenantId
         AND (:status IS NULL OR p.status = :status)
-        AND (:search IS NULL OR LOWER(p.givenName) LIKE LOWER(CONCAT('%', :search, '%'))
-             OR LOWER(p.familyName) LIKE LOWER(CONCAT('%', :search, '%'))
-             OR LOWER(p.cpid) LIKE LOWER(CONCAT('%', :search, '%'))
-             OR LOWER(p.nationalId) LIKE LOWER(CONCAT('%', :search, '%')))
+        AND (:pattern IS NULL
+             OR LOWER(p.givenName) LIKE :pattern
+             OR LOWER(p.familyName) LIKE :pattern
+             OR LOWER(p.cpid) LIKE :pattern
+             OR LOWER(COALESCE(p.nationalId, '')) LIKE :pattern)
         """)
     Page<Patient> findByFilters(
             @Param("tenantId") String tenantId,
-            @Param("search") String search,
+            @Param("pattern") String pattern,
             @Param("status") String status,
             Pageable pageable);
 

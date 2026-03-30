@@ -82,7 +82,8 @@ public class PatientController {
 
         PageRequest pageable = PageRequest.of(page, Math.min(size, 100), Sort.by("familyName").ascending());
 
-        Page<Patient> result = patientRepository.findByFilters(tenantId, search, status, pageable);
+        String pattern = (search == null || search.isBlank()) ? null : "%" + search.toLowerCase() + "%";
+        Page<Patient> result = patientRepository.findByFilters(tenantId, pattern, status, pageable);
 
         List<Map<String, Object>> data = result.getContent().stream()
                 .map(this::toResource)
