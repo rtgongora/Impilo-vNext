@@ -10,12 +10,15 @@ import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useQueueEntries, useCallPatient } from "@/hooks/queries/useQueue";
 
-const PRIORITY_LABELS: Record<number, { label: string; className: string }> = {
-  1: { label: "Emergency", className: "bg-red-100 text-red-700" },
-  2: { label: "Urgent", className: "bg-orange-100 text-orange-700" },
-  3: { label: "Standard", className: "bg-amber-100 text-amber-700" },
-  4: { label: "Non-Urgent", className: "bg-green-100 text-green-700" },
-  5: { label: "Routine", className: "bg-gray-100 text-gray-700" },
+const PRIORITY_ORDER: Record<string, number> = {
+  EMERGENCY: 1, URGENT: 2, NORMAL: 3, LOW: 4,
+};
+
+const PRIORITY_LABELS: Record<string, { label: string; className: string }> = {
+  EMERGENCY: { label: "Emergency", className: "bg-red-100 text-red-700" },
+  URGENT: { label: "Urgent", className: "bg-orange-100 text-orange-700" },
+  NORMAL: { label: "Standard", className: "bg-amber-100 text-amber-700" },
+  LOW: { label: "Routine", className: "bg-gray-100 text-gray-700" },
 };
 
 export default function WaitingListPage() {
@@ -23,10 +26,10 @@ export default function WaitingListPage() {
   const callPatient = useCallPatient();
 
   const entries = (data?.data ?? []).sort((a, b) => {
-    if (a.attributes.priority !== b.attributes.priority) {
-      return a.attributes.priority - b.attributes.priority;
-    }
-    return new Date(a.attributes.queuedAt).getTime() - new Date(b.attributes.queuedAt).getTime();
+    const pa = PRIORITY_ORDER[a.attributes.priority] ?? 99;
+    const pb = PRIORITY_ORDER[b.attributes.priority] ?? 99;
+    if (pa !== pb) return pa - pb;
+    return new Date(a.attributes.arrival_time).getTime() - new Date(b.attributes.arrival_time).getTime();
   });
 
   function formatWaitTime(queuedAt: string): string {
@@ -70,11 +73,11 @@ export default function WaitingListPage() {
               </thead>
               <tbody>
                 {entries.map((entry) => {
-                  const prio = PRIORITY_LABELS[entry.attributes.priority] ?? PRIORITY_LABELS[5];
+                  const prio = PRIORITY_LABELS[entry.attributes.priority] ?? { label: entry.attributes.priority, className: "bg-gray-100 text-gray-700" };
                   return (
                     <tr key={entry.id} className="border-b last:border-b-0 hover:bg-gray-50">
                       <td className="px-4 py-3 font-medium text-gray-900">
-                        {(entry.attributes as Record<string, unknown>).patientName as string || entry.attributes.patientId}
+                        {entry.attributes.patient_id}
                       </td>
                       <td className="px-4 py-3">
                         <span className={`inline-block px-2 py-0.5 text-xs rounded-full font-medium ${prio.className}`}>
@@ -85,11 +88,11 @@ export default function WaitingListPage() {
                       <td className="px-4 py-3 text-gray-600">
                         <span className="inline-flex items-center gap-1">
                           <Clock className="w-3.5 h-3.5" />
-                          {formatWaitTime(entry.attributes.queuedAt)}
+                          {formatWaitTime(entry.attributes.arrival_time)}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-gray-600">
-                        {new Date(entry.attributes.queuedAt).toLocaleTimeString()}
+                        {new Date(entry.attributes.arrival_time).toLocaleTimeString()}
                       </td>
                       <td className="px-4 py-3 text-right">
                         <button

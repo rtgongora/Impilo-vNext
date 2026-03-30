@@ -13,11 +13,11 @@ import { PageShell } from "@/components/PageShell";
 import { useQueueEntries, useCallPatient } from "@/hooks/queries/useQueue";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 
-const PRIORITY_LABELS: Record<number, { label: string; className: string }> = {
-  1: { label: "Emergency", className: "bg-red-100 text-red-700" },
-  2: { label: "Urgent", className: "bg-orange-100 text-orange-700" },
-  3: { label: "Normal", className: "bg-blue-100 text-blue-700" },
-  4: { label: "Low", className: "bg-gray-100 text-gray-600" },
+const PRIORITY_LABELS: Record<string, { label: string; className: string }> = {
+  EMERGENCY: { label: "Emergency", className: "bg-red-100 text-red-700" },
+  URGENT: { label: "Urgent", className: "bg-orange-100 text-orange-700" },
+  NORMAL: { label: "Normal", className: "bg-blue-100 text-blue-700" },
+  LOW: { label: "Low", className: "bg-gray-100 text-gray-600" },
 };
 
 const STATUS_STYLES: Record<string, string> = {
@@ -107,17 +107,16 @@ export default function QueuePage() {
                   return (
                     <tr key={entry.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-4 py-3 font-medium text-gray-900">
-                        {(entry.attributes as Record<string, unknown>).patientName as string ??
-                          entry.attributes.patientId}
+                        {entry.attributes.patient_id}
                       </td>
                       <td className="px-4 py-3 text-gray-600">
-                        {(entry.attributes as Record<string, unknown>).queueType as string ?? "General"}
+                        {entry.attributes.queue_type ?? "General"}
                       </td>
                       <td className="px-4 py-3">
                         <span
                           className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full ${priority.className}`}
                         >
-                          {entry.attributes.priority <= 2 && (
+                          {(entry.attributes.priority === "EMERGENCY" || entry.attributes.priority === "URGENT") && (
                             <AlertTriangle className="w-3 h-3" />
                           )}
                           {priority.label}
@@ -133,14 +132,14 @@ export default function QueuePage() {
                       <td className="px-4 py-3 text-gray-500">
                         <div className="flex items-center gap-1">
                           <Clock className="w-3 h-3" />
-                          {new Date(entry.attributes.queuedAt).toLocaleTimeString()}
+                          {new Date(entry.attributes.arrival_time).toLocaleTimeString()}
                         </div>
                       </td>
                       <td className="px-4 py-3 text-right">
                         {entry.attributes.status === "WAITING" && (
                           <button
                             onClick={() =>
-                              handleCall(entry.id, entry.attributes.patientId)
+                              handleCall(entry.id, entry.attributes.patient_id)
                             }
                             disabled={callPatient.isPending}
                             className="px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors"
@@ -150,7 +149,7 @@ export default function QueuePage() {
                         )}
                         {entry.attributes.status === "CALLED" && (
                           <Link
-                            href={`/ehr/${entry.attributes.patientId}`}
+                            href={`/ehr/${entry.attributes.patient_id}`}
                             className="px-3 py-1.5 bg-green-600 text-white text-xs font-medium rounded-md hover:bg-green-700 transition-colors inline-block"
                           >
                             Open Chart

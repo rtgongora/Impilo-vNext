@@ -65,12 +65,12 @@ export default function ScheduledQueuePage() {
                   return (
                     <tr key={entry.id} className="border-b last:border-b-0 hover:bg-gray-50">
                       <td className="px-4 py-3 font-medium text-gray-900">
-                        {(attrs.patientName as string) || entry.attributes.patientId}
+                        {(attrs.patientName as string) || entry.attributes.patient_id}
                       </td>
                       <td className="px-4 py-3 text-gray-600">
                         {attrs.appointmentTime
                           ? new Date(attrs.appointmentTime as string).toLocaleString()
-                          : new Date(entry.attributes.queuedAt).toLocaleString()}
+                          : new Date(entry.attributes.arrival_time).toLocaleString()}
                       </td>
                       <td className="px-4 py-3 text-gray-600">
                         {(attrs.appointmentType as string) || "General"}

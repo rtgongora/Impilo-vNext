@@ -71,15 +71,15 @@ export default function TriageQueuePage() {
                 {entries.map((entry) => (
                   <tr key={entry.id} className="border-b last:border-b-0 hover:bg-gray-50">
                     <td className="px-4 py-3 font-medium text-gray-900">
-                      {(entry.attributes as Record<string, unknown>).patientName as string || entry.attributes.patientId}
+                      {entry.attributes.patient_id}
                     </td>
                     <td className="px-4 py-3 text-gray-600">
-                      {new Date(entry.attributes.queuedAt).toLocaleTimeString()}
+                      {new Date(entry.attributes.arrival_time).toLocaleTimeString()}
                     </td>
                     <td className="px-4 py-3 text-gray-600">
                       <span className="inline-flex items-center gap-1">
                         <Clock className="w-3.5 h-3.5" />
-                        {formatWaitTime(entry.attributes.queuedAt)}
+                        {formatWaitTime(entry.attributes.arrival_time)}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-gray-600">

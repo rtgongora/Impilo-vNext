@@ -9,11 +9,18 @@ export interface QueueEntryResource {
   id: string;
   type: "queue_entry";
   attributes: {
-    patientId: string;
-    facilityId: string;
+    patient_id: string;
+    facility_id: string;
+    workspace_id: string;
+    queue_type: string;
+    priority: string;
     status: string;
-    priority: number;
-    queuedAt: string;
+    arrival_time: string;
+    reason: string | null;
+    triage_category: string | null;
+    assigned_to: string | null;
+    called_at: string | null;
+    completed_at: string | null;
     [key: string]: unknown;
   };
 }

@@ -98,7 +98,7 @@ export default function ShiftHandoverPage() {
                         <Users className="w-4 h-4 text-gray-400" />
                         <div>
                           <p className="text-sm font-medium text-gray-900">
-                            {(attrs.patientName as string) || entry.attributes.patientId}
+                            {(attrs.patientName as string) || entry.attributes.patient_id}
                           </p>
                           <p className="text-xs text-gray-500">
                             Status: {entry.attributes.status}
