@@ -57,13 +57,13 @@ cmd_build() {
     ensure_caches
 
     log_info "Phase 1: Maven build (all backend services)"
-    docker compose -f "$BUILD_COMPOSE" run --rm maven-builder
+    docker-compose -f "$BUILD_COMPOSE" run --rm maven-builder
 
     log_info "Phase 2: UI build (Experience)"
-    docker compose -f "$BUILD_COMPOSE" run --rm ui-builder
+    docker-compose -f "$BUILD_COMPOSE" run --rm ui-builder
 
     log_info "Phase 3: Building Docker images for runtime"
-    docker compose -f "$RUNTIME_COMPOSE" build
+    docker-compose -f "$RUNTIME_COMPOSE" build
 
     log_ok "Build complete. Run './scripts/dev-runtime.sh up' to start."
 }
@@ -74,19 +74,19 @@ cmd_up() {
     ensure_env
 
     log_info "Starting infrastructure (postgres, redis, kafka, keycloak, minio, hapi-fhir)..."
-    docker compose -f "$RUNTIME_COMPOSE" up -d postgres redis kafka keycloak minio hapi-fhir
+    docker-compose -f "$RUNTIME_COMPOSE" up -d postgres redis kafka keycloak minio hapi-fhir
 
     log_info "Waiting for infrastructure readiness..."
-    docker compose -f "$RUNTIME_COMPOSE" up -d --wait postgres redis kafka
+    docker-compose -f "$RUNTIME_COMPOSE" up -d --wait postgres redis kafka
 
     log_info "Starting edge (OPA + Envoy)..."
-    docker compose -f "$RUNTIME_COMPOSE" up -d opa envoy
+    docker-compose -f "$RUNTIME_COMPOSE" up -d opa envoy
 
     log_info "Starting backend services..."
-    docker compose -f "$RUNTIME_COMPOSE" up -d tshepo vito varapi tuso zibo pct oros experience-bff
+    docker-compose -f "$RUNTIME_COMPOSE" up -d tshepo vito varapi tuso zibo pct oros experience-bff
 
     log_info "Starting UI..."
-    docker compose -f "$RUNTIME_COMPOSE" up -d experience-ui
+    docker-compose -f "$RUNTIME_COMPOSE" up -d experience-ui
 
     log_ok "All services starting. Use './scripts/dev-runtime.sh status' to check health."
     log_info "Envoy gateway: http://localhost:10000"
@@ -100,7 +100,7 @@ cmd_up() {
 # ── DOWN ─────────────────────────────────────────────────────────────
 cmd_down() {
     log_info "Stopping Impilo Dev Runtime..."
-    docker compose -f "$RUNTIME_COMPOSE" down
+    docker-compose -f "$RUNTIME_COMPOSE" down
     log_ok "All containers stopped."
 }
 
@@ -132,12 +132,12 @@ cmd_smoke() {
 
 # ── LOGS ─────────────────────────────────────────────────────────────
 cmd_logs() {
-    docker compose -f "$RUNTIME_COMPOSE" logs -f --tail=50
+    docker-compose -f "$RUNTIME_COMPOSE" logs -f --tail=50
 }
 
 # ── STATUS ───────────────────────────────────────────────────────────
 cmd_status() {
-    docker compose -f "$RUNTIME_COMPOSE" ps --format "table {{.Name}}\t{{.Status}}\t{{.Ports}}"
+    docker-compose -f "$RUNTIME_COMPOSE" ps --format "table {{.Name}}\t{{.Status}}\t{{.Ports}}"
 }
 
 # ── MAIN ─────────────────────────────────────────────────────────────

@@ -1,0 +1,277 @@
+asyncapi: 2.6.0
+info:
+  title: Impilo Event Bus Contracts
+  version: 1.1.0
+  description: Canonical event contracts for the Impilo vNext event-driven architecture.
+
+servers:
+  production:
+    url: kafka.impilo.prod:9092
+    protocol: kafka
+    description: Production Kafka cluster
+
+channels:
+  # ── Trust Bus ──
+  trust.revocation.consent:
+    publish:
+      message:
+        $ref: '#/components/messages/EventEnvelope'
+    bindings:
+      kafka:
+        topic: trust.revocation.consent
+        partitions: 3
+        replicas: 3
+  trust.revocation.identity:
+    publish:
+      message:
+        $ref: '#/components/messages/EventEnvelope'
+    bindings:
+      kafka:
+        topic: trust.revocation.identity
+        partitions: 3
+        replicas: 3
+  trust.revocation.privilege:
+    publish:
+      message:
+        $ref: '#/components/messages/EventEnvelope'
+    bindings:
+      kafka:
+        topic: trust.revocation.privilege
+        partitions: 3
+        replicas: 3
+  trust.federation.pod_registered:
+    publish:
+      message:
+        $ref: '#/components/messages/EventEnvelope'
+    bindings:
+      kafka:
+        topic: trust.federation.pod_registered
+        partitions: 1
+        replicas: 3
+  trust.decision_evidence:
+    publish:
+      message:
+        $ref: '#/components/messages/EventEnvelope'
+    bindings:
+      kafka:
+        topic: trust.decision_evidence
+        partitions: 6
+        replicas: 3
+
+  # ── Kernel Bus ──
+  kernel.vito.client.created:
+    publish:
+      message:
+        $ref: '#/components/messages/EventEnvelope'
+    bindings:
+      kafka:
+        topic: kernel.vito.client.created
+        partitions: 3
+        replicas: 3
+  kernel.tuso.facility.created:
+    publish:
+      message:
+        $ref: '#/components/messages/EventEnvelope'
+    bindings:
+      kafka:
+        topic: kernel.tuso.facility.created
+        partitions: 1
+        replicas: 3
+  kernel.varapi.provider.created:
+    publish:
+      message:
+        $ref: '#/components/messages/EventEnvelope'
+    bindings:
+      kafka:
+        topic: kernel.varapi.provider.created
+        partitions: 3
+        replicas: 3
+  kernel.msika.catalog.product.created:
+    publish:
+      message:
+        $ref: '#/components/messages/EventEnvelope'
+    bindings:
+      kafka:
+        topic: kernel.msika.catalog.product.created
+        partitions: 3
+        replicas: 3
+  kernel.zibo.artifact.code_system.created:
+    publish:
+      message:
+        $ref: '#/components/messages/EventEnvelope'
+    bindings:
+      kafka:
+        topic: kernel.zibo.artifact.code_system.created
+        partitions: 1
+        replicas: 3
+  kernel.costa.bill.finalized:
+    publish:
+      message:
+        $ref: '#/components/messages/EventEnvelope'
+    bindings:
+      kafka:
+        topic: kernel.costa.bill.finalized
+        partitions: 6
+        replicas: 3
+
+  # ── Clinical Bus ──
+  clinical.pct.journey.started:
+    publish:
+      message:
+        $ref: '#/components/messages/EventEnvelope'
+    bindings:
+      kafka:
+        topic: clinical.pct.journey.started
+        partitions: 12
+        replicas: 3
+  clinical.pct.journey.discharged:
+    publish:
+      message:
+        $ref: '#/components/messages/EventEnvelope'
+    bindings:
+      kafka:
+        topic: clinical.pct.journey.discharged
+        partitions: 12
+        replicas: 3
+  clinical.oros.order.created:
+    publish:
+      message:
+        $ref: '#/components/messages/EventEnvelope'
+    bindings:
+      kafka:
+        topic: clinical.oros.order.created
+        partitions: 12
+        replicas: 3
+  clinical.oros.result.submitted:
+    publish:
+      message:
+        $ref: '#/components/messages/EventEnvelope'
+    bindings:
+      kafka:
+        topic: clinical.oros.result.submitted
+        partitions: 12
+        replicas: 3
+  clinical.pharmacy.dispense.completed:
+    publish:
+      message:
+        $ref: '#/components/messages/EventEnvelope'
+    bindings:
+      kafka:
+        topic: clinical.pharmacy.dispense.completed
+        partitions: 6
+        replicas: 3
+  clinical.inpatient.admission.created:
+    publish:
+      message:
+        $ref: '#/components/messages/EventEnvelope'
+    bindings:
+      kafka:
+        topic: clinical.inpatient.admission.created
+        partitions: 6
+        replicas: 3
+
+components:
+  messages:
+    EventEnvelope:
+      name: EventEnvelope
+      title: Event Envelope
+      summary: Canonical wrapper for all domain events.
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/EventEnvelope'
+
+  schemas:
+    EventEnvelope:
+      type: object
+      required:
+        - eventId
+        - eventType
+        - schemaVersion
+        - correlationId
+        - causationId
+        - idempotencyKey
+        - producer
+        - tenantId
+        - podId
+        - occurredAt
+        - emittedAt
+        - subjectType
+        - subjectId
+        - payload
+      properties:
+        eventId:
+          type: string
+          description: Unique event identifier (UUID/ULID)
+          format: uuid
+        eventType:
+          type: string
+          description: Dot-notation event type (e.g. impilo.vito.patient.created.v1)
+        schemaVersion:
+          type: integer
+          minimum: 1
+          description: Version of the payload schema
+        correlationId:
+          type: string
+          description: End-to-end correlation identifier
+        causationId:
+          type: string
+          description: Identifier of the event that caused this event
+        idempotencyKey:
+          type: string
+          description: Client-supplied idempotency key
+        producer:
+          type: string
+          description: Name of the producing service
+        tenantId:
+          type: string
+          description: Tenant scope
+        podId:
+          type: string
+          description: Originating pod/facility identifier
+        occurredAt:
+          type: string
+          format: date-time
+          description: When the domain event actually happened
+        emittedAt:
+          type: string
+          format: date-time
+          description: When the envelope was created
+        subjectType:
+          type: string
+          description: Type of the subject (e.g. Patient, Order)
+        subjectId:
+          type: string
+          description: Identifier of the subject
+        payload:
+          type: object
+          description: The event payload (domain-specific)
+          oneOf:
+            - $ref: '#/components/schemas/DeltaPayload'
+            - type: object
+        meta:
+          type: object
+          description: Optional metadata
+
+    DeltaPayload:
+      type: object
+      required:
+        - op
+        - changedFields
+      properties:
+        op:
+          type: string
+          enum: [CREATE, UPDATE, DELETE, MERGE, REVOKE]
+          description: The operation type
+        before:
+          type: object
+          nullable: true
+          description: State before the change
+        after:
+          type: object
+          nullable: true
+          description: State after the change
+        changedFields:
+          type: array
+          items:
+            type: string
+          description: List of field paths that changed

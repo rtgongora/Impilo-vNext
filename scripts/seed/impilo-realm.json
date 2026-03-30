@@ -2,35 +2,105 @@
   "id": "impilo",
   "realm": "impilo",
   "enabled": true,
-  "passwordPolicy": "hashAlgorithm(argon2id)",
+  "displayName": "Impilo vNext",
+  "displayNameHtml": "<strong>Impilo vNext</strong>",
+  "loginWithEmailAllowed": true,
+  "registrationAllowed": false,
+  "resetPasswordAllowed": false,
+  "editUsernameAllowed": false,
+  "sslRequired": "none",
+  "accessTokenLifespan": 28800,
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 36000,
+  "accessCodeLifespan": 60,
+  "accessCodeLifespanUserAction": 300,
+  "defaultSignatureAlgorithm": "RS256",
+  "bruteForceProtected": false,
+  "duplicateEmailsAllowed": false,
+  "verifyEmail": false,
+  "internationalizationEnabled": false,
+  "defaultLocale": "en",
   "roles": {
     "realm": [
-      { "name": "SYSTEM_ADMIN", "description": "System Administrator" },
-      { "name": "FACILITY_ADMIN", "description": "Facility Administrator" },
-      { "name": "CLINICIAN", "description": "Clinician" },
-      { "name": "NURSE", "description": "Nurse" },
-      { "name": "PHARMACIST", "description": "Pharmacist" },
-      { "name": "FINANCE_OFFICER", "description": "Finance Officer" },
-      { "name": "CITIZEN", "description": "Citizen / Patient" }
+      {
+        "name": "SYSTEM_ADMIN",
+        "description": "Full platform administrator with unrestricted access",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "FACILITY_ADMIN",
+        "description": "Administrator scoped to a single facility",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "CLINICIAN",
+        "description": "Licensed medical practitioner (doctor, specialist)",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "NURSE",
+        "description": "Registered or enrolled nurse",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "PHARMACIST",
+        "description": "Licensed pharmacist with dispensing authority",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "CITIZEN",
+        "description": "Patient or citizen accessing personal health records",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "SUPPORT_AGENT",
+        "description": "Help-desk or support staff",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "DEVELOPER",
+        "description": "Developer role for integration and debugging",
+        "composite": false,
+        "clientRole": false
+      }
     ]
   },
+  "passwordPolicy": "hashAlgorithm(argon2id)",
   "clientScopes": [
     {
-      "name": "impilo-context",
-      "description": "Context headers for Impilo trust model",
+      "name": "openid",
+      "description": "OpenID Connect scope",
       "protocol": "openid-connect",
       "attributes": {
         "include.in.token.scope": "true",
-        "display.on.consent.screen": "true"
+        "display.on.consent.screen": "false"
+      }
+    },
+    {
+      "name": "profile",
+      "description": "OpenID Connect built-in scope: profile",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true",
+        "consent.screen.text": "${profileScopeConsentText}"
       },
       "protocolMappers": [
         {
-          "name": "facilityId",
+          "name": "username",
           "protocol": "openid-connect",
           "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
           "config": {
-            "user.attribute": "facilityId",
-            "claim.name": "facilityId",
+            "user.attribute": "username",
+            "claim.name": "preferred_username",
             "jsonType.label": "String",
             "id.token.claim": "true",
             "access.token.claim": "true",
@@ -38,12 +108,24 @@
           }
         },
         {
-          "name": "podId",
+          "name": "full name",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-full-name-mapper",
+          "consentRequired": false,
+          "config": {
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        },
+        {
+          "name": "given name",
           "protocol": "openid-connect",
           "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
           "config": {
-            "user.attribute": "podId",
-            "claim.name": "podId",
+            "user.attribute": "firstName",
+            "claim.name": "given_name",
             "jsonType.label": "String",
             "id.token.claim": "true",
             "access.token.claim": "true",
@@ -51,12 +133,13 @@
           }
         },
         {
-          "name": "shiftId",
+          "name": "family name",
           "protocol": "openid-connect",
           "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
           "config": {
-            "user.attribute": "shiftId",
-            "claim.name": "shiftId",
+            "user.attribute": "lastName",
+            "claim.name": "family_name",
             "jsonType.label": "String",
             "id.token.claim": "true",
             "access.token.claim": "true",
@@ -64,22 +147,416 @@
           }
         }
       ]
+    },
+    {
+      "name": "email",
+      "description": "OpenID Connect built-in scope: email",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true",
+        "consent.screen.text": "${emailScopeConsentText}"
+      },
+      "protocolMappers": [
+        {
+          "name": "email",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "email",
+            "claim.name": "email",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        },
+        {
+          "name": "email verified",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "emailVerified",
+            "claim.name": "email_verified",
+            "jsonType.label": "boolean",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "name": "impilo-tenant",
+      "description": "Adds tenant_id claim to access tokens",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "false"
+      },
+      "protocolMappers": [
+        {
+          "name": "tenant_id",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-hardcoded-claim-mapper",
+          "consentRequired": false,
+          "config": {
+            "claim.name": "tenant_id",
+            "claim.value": "moh-zw",
+            "jsonType.label": "String",
+            "id.token.claim": "false",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "false"
+          }
+        },
+        {
+          "name": "facility_id",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "facility_id",
+            "claim.name": "facility_id",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "false"
+          }
+        },
+        {
+          "name": "pod_id",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "pod_id",
+            "claim.name": "pod_id",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "false"
+          }
+        },
+        {
+          "name": "shift_id",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "shift_id",
+            "claim.name": "shift_id",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "false"
+          }
+        }
+      ]
     }
   ],
+
+  "defaultDefaultClientScopes": [
+    "openid",
+    "profile",
+    "email",
+    "impilo-tenant"
+  ],
   "clients": [
-    { "clientId": "tshepo-authz", "enabled": true, "publicClient": false, "secret": "changeme", "serviceAccountsEnabled": true, "defaultClientScopes": ["web-origins", "role_list", "profile", "roles", "email", "impilo-context"] },
-    { "clientId": "vito", "enabled": true, "publicClient": false, "secret": "changeme", "serviceAccountsEnabled": true, "defaultClientScopes": ["web-origins", "role_list", "profile", "roles", "email", "impilo-context"] },
-    { "clientId": "tuso", "enabled": true, "publicClient": false, "secret": "changeme", "serviceAccountsEnabled": true, "defaultClientScopes": ["web-origins", "role_list", "profile", "roles", "email", "impilo-context"] },
-    { "clientId": "varapi", "enabled": true, "publicClient": false, "secret": "changeme", "serviceAccountsEnabled": true, "defaultClientScopes": ["web-origins", "role_list", "profile", "roles", "email", "impilo-context"] },
-    { "clientId": "msika", "enabled": true, "publicClient": false, "secret": "changeme", "serviceAccountsEnabled": true, "defaultClientScopes": ["web-origins", "role_list", "profile", "roles", "email", "impilo-context"] },
-    { "clientId": "zibo", "enabled": true, "publicClient": false, "secret": "changeme", "serviceAccountsEnabled": true, "defaultClientScopes": ["web-origins", "role_list", "profile", "roles", "email", "impilo-context"] },
-    { "clientId": "mushex", "enabled": true, "publicClient": false, "secret": "changeme", "serviceAccountsEnabled": true, "defaultClientScopes": ["web-origins", "role_list", "profile", "roles", "email", "impilo-context"] },
-    { "clientId": "pct", "enabled": true, "publicClient": false, "secret": "changeme", "serviceAccountsEnabled": true, "defaultClientScopes": ["web-origins", "role_list", "profile", "roles", "email", "impilo-context"] },
-    { "clientId": "oros", "enabled": true, "publicClient": false, "secret": "changeme", "serviceAccountsEnabled": true, "defaultClientScopes": ["web-origins", "role_list", "profile", "roles", "email", "impilo-context"] },
-    { "clientId": "pharmacy", "enabled": true, "publicClient": false, "secret": "changeme", "serviceAccountsEnabled": true, "defaultClientScopes": ["web-origins", "role_list", "profile", "roles", "email", "impilo-context"] },
-    { "clientId": "costa", "enabled": true, "publicClient": false, "secret": "changeme", "serviceAccountsEnabled": true, "defaultClientScopes": ["web-origins", "role_list", "profile", "roles", "email", "impilo-context"] },
-    { "clientId": "ehr-app", "enabled": true, "publicClient": true, "redirectUris": ["http://localhost:3002/*"], "webOrigins": ["http://localhost:3002"], "defaultClientScopes": ["web-origins", "role_list", "profile", "roles", "email", "impilo-context"] },
-    { "clientId": "ops-console", "enabled": true, "publicClient": true, "redirectUris": ["http://localhost:3001/*"], "webOrigins": ["http://localhost:3001"], "defaultClientScopes": ["web-origins", "role_list", "profile", "roles", "email", "impilo-context"] },
-    { "clientId": "portal", "enabled": true, "publicClient": true, "redirectUris": ["http://localhost:3003/*"], "webOrigins": ["http://localhost:3003"], "defaultClientScopes": ["web-origins", "role_list", "profile", "roles", "email", "impilo-context"] }
+    {
+      "clientId": "one-ui-shell",
+      "name": "Impilo One UI Shell",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": ["http://localhost:3000/*"],
+      "webOrigins": ["http://localhost:3000"],
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "ops-console",
+      "name": "Impilo Ops Console",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": ["http://localhost:3001/*"],
+      "webOrigins": ["http://localhost:3001"],
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "ehr-app",
+      "name": "Impilo EHR App",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": ["http://localhost:3002/*"],
+      "webOrigins": ["http://localhost:3002"],
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "portal",
+      "name": "Impilo Citizen Portal",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": ["http://localhost:3003/*"],
+      "webOrigins": ["http://localhost:3003"],
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "tshepo-authz",
+      "name": "TSHEPO Authorization Service",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "tshepo-authz-secret",
+      "serviceAccountsEnabled": true,
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "vito",
+      "name": "VITO Client Registry",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "vito-secret",
+      "serviceAccountsEnabled": true,
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "tuso",
+      "name": "TUSO Facility Registry",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "tuso-secret",
+      "serviceAccountsEnabled": true,
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "varapi",
+      "name": "VARAPI Provider Registry",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "varapi-secret",
+      "serviceAccountsEnabled": true,
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "msika",
+      "name": "MSIKA Catalog Service",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "msika-secret",
+      "serviceAccountsEnabled": true,
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "zibo",
+      "name": "ZIBO Terminology Service",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "zibo-secret",
+      "serviceAccountsEnabled": true,
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "mushex",
+      "name": "MUSHEX Payments Service",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "mushex-secret",
+      "serviceAccountsEnabled": true,
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "pct",
+      "name": "PCT Patient Care Tracker",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "pct-secret",
+      "serviceAccountsEnabled": true,
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "oros",
+      "name": "OROS Orders Service",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "oros-secret",
+      "serviceAccountsEnabled": true,
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "pharmacy",
+      "name": "Pharmacy Service",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "pharmacy-secret",
+      "serviceAccountsEnabled": true,
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "costa",
+      "name": "COSTA Costing Engine",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "costa-secret",
+      "serviceAccountsEnabled": true,
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "impilo-backend",
+      "name": "Impilo Generic Backend Service Account",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "impilo-backend-secret",
+      "serviceAccountsEnabled": true,
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "integration-test",
+      "name": "Integration Test Harness",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "integration-test-secret",
+      "directAccessGrantsEnabled": true,
+      "protocol": "openid-connect"
+    }
+  ],
+
+  "users": [
+    {
+      "username": "admin.central",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Central",
+      "lastName": "Admin",
+      "email": "admin@mohcc.gov.zw",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "test123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "SYSTEM_ADMIN"
+      ]
+    },
+    {
+      "username": "admin.harare",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Harare",
+      "lastName": "Admin",
+      "email": "harare.admin@mohcc.gov.zw",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "test123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "FACILITY_ADMIN"
+      ]
+    },
+    {
+      "username": "dr.mapfumo",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Tendai",
+      "lastName": "Mapfumo",
+      "email": "mapfumo@mohcc.gov.zw",
+      "attributes": {
+        "facility_id": [
+          "f1000000-0000-0000-0000-000000000001"
+        ],
+        "provider_number": [
+          "PROV-ZW-001"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "test123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "CLINICIAN"
+      ]
+    },
+    {
+      "username": "nurse.chienda",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Rumbidzai",
+      "lastName": "Chienda",
+      "email": "chienda@mohcc.gov.zw",
+      "attributes": {
+        "facility_id": [
+          "f1000000-0000-0000-0000-000000000002"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "test123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "NURSE"
+      ]
+    },
+    {
+      "username": "citizen.moyo",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Tatenda",
+      "lastName": "Moyo",
+      "email": "tatenda.moyo@example.com",
+      "attributes": {
+        "cpid": [
+          "CPID-ZW-00001"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "test123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "CITIZEN"
+      ]
+    },
+    {
+      "username": "support.agent1",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Support",
+      "lastName": "Agent",
+      "email": "support@mohcc.gov.zw",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "test123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "SUPPORT_AGENT"
+      ]
+    }
   ]
 }
