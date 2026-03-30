@@ -20,8 +20,9 @@ export interface ShiftResource {
 }
 
 interface StartShiftPayload {
-  facilityId: string;
-  workspaceId: string;
+  facility_id: string;
+  workspace_id: string;
+  user_id: string;
 }
 
 type ShiftResponse = ApiResponse<ShiftResource>;

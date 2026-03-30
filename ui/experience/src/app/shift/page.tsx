@@ -12,6 +12,7 @@ import { PageShell } from "@/components/PageShell";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useWorkspaceStore } from "@/hooks/useWorkspaceStore";
 import { useShiftStore } from "@/hooks/useShiftStore";
+import { useAuthStore } from "@/hooks/useAuthStore";
 import { useStartShift } from "@/hooks/queries/useShifts";
 
 export default function ShiftPage() {
@@ -19,15 +20,17 @@ export default function ShiftPage() {
   const facility = useFacilityStore((s) => s.facility);
   const workspace = useWorkspaceStore((s) => s.workspace);
   const startShiftStore = useShiftStore((s) => s.startShift);
+  const user = useAuthStore((s) => s.user);
   const startShiftMutation = useStartShift();
 
   function handleStartShift() {
-    if (!facility || !workspace) return;
+    if (!facility || !workspace || !user) return;
 
     startShiftMutation.mutate(
       {
-        facilityId: facility.id,
-        workspaceId: workspace.id,
+        facility_id: facility.id,
+        workspace_id: workspace.id,
+        user_id: user.id,
       },
       {
         onSuccess: (res) => {
