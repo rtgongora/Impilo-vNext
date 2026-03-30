@@ -19,11 +19,16 @@ import java.util.Map;
  *
  * <p>Consumers call {@link #extract(String, ObjectMapper)} and always get a flat
  * domain-data map regardless of which format arrived.</p>
+ *
+ * <p><strong>Self-consumption guard:</strong> any envelope with
+ * {@code source_service = "experience-bff"} is immediately discarded (returns {@code null})
+ * so the BFF never processes its own outbox events.</p>
  */
 public final class EventPayloadExtractor {
 
     private static final Logger log = LoggerFactory.getLogger(EventPayloadExtractor.class);
     private static final TypeReference<Map<String, Object>> MAP_TYPE = new TypeReference<>() {};
+    private static final String SELF_SERVICE = "experience-bff";
 
     private EventPayloadExtractor() {}
 
@@ -32,16 +37,23 @@ public final class EventPayloadExtractor {
      *
      * <p>Detection logic:</p>
      * <ol>
+     *   <li>If the root JSON has {@code source_service = "experience-bff"} → discard (self-consumption guard).</li>
      *   <li>If the root JSON has an {@code event_id} or {@code eventId} field →
      *       treat as v1.1 EventEnvelope; extract the {@code payload} field.</li>
      *   <li>Otherwise treat as raw legacy payload.</li>
      * </ol>
      *
-     * @return extracted payload map, or {@code null} if parsing fails
+     * @return extracted payload map, or {@code null} if parsing fails or event must be skipped
      */
     public static Map<String, Object> extract(String message, ObjectMapper mapper) {
         try {
             JsonNode root = mapper.readTree(message);
+
+            String sourceService = root.path("source_service").asText(null);
+            if (SELF_SERVICE.equals(sourceService)) {
+                log.debug("EventPayloadExtractor: discarding self-generated event (source_service={})", sourceService);
+                return null;
+            }
 
             boolean isEnvelope = root.has("event_id") || root.has("eventId");
 

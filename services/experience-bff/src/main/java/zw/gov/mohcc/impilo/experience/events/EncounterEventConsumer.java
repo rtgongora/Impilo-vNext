@@ -62,6 +62,13 @@ public class EncounterEventConsumer {
     public void onFhirResourceEvent(String message) {
         try {
             JsonNode root = objectMapper.readTree(message);
+
+            String sourceService = root.path("source_service").asText(null);
+            if ("experience-bff".equals(sourceService)) {
+                log.debug("EncounterEventConsumer: discarding self-generated event (source_service=experience-bff)");
+                return;
+            }
+
             String resourceType = root.path("resourceType").asText(null);
             if (resourceType == null) {
                 log.debug("EncounterEventConsumer: no resourceType in message, skipping");
