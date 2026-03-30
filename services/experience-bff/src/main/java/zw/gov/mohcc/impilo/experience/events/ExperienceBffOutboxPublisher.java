@@ -116,6 +116,7 @@ public class ExperienceBffOutboxPublisher {
      */
     static String resolveTopic(String eventType) {
         if (eventType == null) return "experience.events";
+        if (eventType.contains("patient"))    return "experience.patient";
         if (eventType.contains("allergy"))    return "experience.allergy";
         if (eventType.contains("encounter"))  return "experience.encounter";
         if (eventType.contains("vitals") || eventType.contains("vital")) return "experience.vitals";

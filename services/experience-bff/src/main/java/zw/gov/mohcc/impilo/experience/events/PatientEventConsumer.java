@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.Map;
+import java.util.UUID;
 
 import static zw.gov.mohcc.impilo.experience.events.EventPayloadExtractor.*;
 
@@ -81,6 +82,26 @@ public class PatientEventConsumer {
         String cpid = crid != null ? crid : healthId;
 
         OffsetDateTime now = OffsetDateTime.now();
+
+        if (crid != null) {
+            try {
+                UUID cridUuid = UUID.fromString(crid);
+                int updated = jdbc.update("""
+                    UPDATE patients
+                    SET cpid = ?, status = ?, given_name = ?, family_name = ?,
+                        date_of_birth = COALESCE(?::date, date_of_birth),
+                        sex = COALESCE(?, sex), updated_at = ?
+                    WHERE id = ?::uuid
+                    """,
+                        healthId, status, givenName, familyName,
+                        dateOfBirth, sex, now, cridUuid.toString());
+                if (updated > 0) {
+                    log.info("PatientEventConsumer: reconciled provisional patient id={} with vito healthId={}", cridUuid, healthId);
+                    return;
+                }
+            } catch (IllegalArgumentException ignored) {
+            }
+        }
 
         jdbc.update("""
             INSERT INTO patients

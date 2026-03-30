@@ -96,6 +96,65 @@ public class IdentityService {
     }
 
     /**
+     * Register a client identity that originated from the experience-bff.
+     *
+     * <p>Uses the {@code bff_patient_id} as the authoritative CRID so the record can be
+     * correlated back to the provisional patient in the BFF.  If a client with the same
+     * CRID already exists the call is a no-op (idempotent on replay).</p>
+     *
+     * <p>Publishes a rich {@code IDENTITY_CREATED} event that includes all demographic
+     * fields, allowing the BFF {@code PatientEventConsumer} to update the provisional
+     * patient record with the authoritative VITO {@code healthId} as its CPID.</p>
+     *
+     * @param bffPatientId UUID from the BFF — used as CRID for correlation
+     * @param tenantUuid   deterministic tenant UUID derived from the tenant string
+     * @param tenantLabel  original string tenant label (e.g. "moh-zw") stored in event for BFF correlation
+     * @return created (or existing) client
+     */
+    @Transactional
+    public ClientRegistrationResult registerFromExperience(UUID bffPatientId,
+                                                            UUID tenantUuid,
+                                                            String tenantLabel,
+                                                            String givenName,
+                                                            String familyName,
+                                                            String dateOfBirth,
+                                                            String sex) {
+        return clientRepository.findByTenantIdAndCrid(tenantUuid, bffPatientId)
+                .map(existing -> {
+                    log.info("IdentityService.registerFromExperience: idempotent skip, crid={} already exists as healthId={}", bffPatientId, existing.getHealthId());
+                    return new ClientRegistrationResult(existing, "");
+                })
+                .orElseGet(() -> {
+                    ClientEntity client = new ClientEntity();
+                    client.setCrid(bffPatientId);
+                    client.setTenantId(tenantUuid);
+                    client.setGivenName(givenName != null ? givenName : "Unknown");
+                    client.setFamilyName(familyName != null ? familyName : "Unknown");
+                    if (dateOfBirth != null && !dateOfBirth.isBlank()) {
+                        try {
+                            client.setDateOfBirth(java.time.LocalDate.parse(dateOfBirth.substring(0, 10)));
+                        } catch (Exception e) {
+                            log.warn("IdentityService.registerFromExperience: could not parse dob '{}': {}", dateOfBirth, e.getMessage());
+                        }
+                    }
+                    client.setSex(sex);
+                    client.setStatus(IdentityStatus.PROVISIONAL);
+
+                    client = clientRepository.save(client);
+                    String did = didGenerator.generate(client.getHealthId());
+
+                    Map<String, Object> eventPayload = clientToMap(client);
+                    eventPayload.put("did", did);
+                    eventPayload.put("tenant_label", tenantLabel);
+
+                    publishEvent("CLIENT", client.getHealthId().toString(), "IDENTITY_CREATED", eventPayload);
+
+                    log.info("IdentityService.registerFromExperience: registered healthId={} crid={} tenant={}", client.getHealthId(), bffPatientId, tenantLabel);
+                    return new ClientRegistrationResult(client, did);
+                });
+    }
+
+    /**
      * Promote a PROVISIONAL identity to VERIFIED after proofing.
      */
     @Transactional
