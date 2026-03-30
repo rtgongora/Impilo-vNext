@@ -89,14 +89,15 @@ class OrosIntegrationTest {
                 resultRepository, stateMachine, outboxRepository, objectMapper);
 
         ackService = new AcknowledgementService(
-                ackRepository, stateMachine, outboxRepository, objectMapper);
+                ackRepository, orderRepository, stateMachine, outboxRepository, properties, objectMapper);
 
-        slaService = new SlaService(slaTimerRepository, properties);
+        slaService = new SlaService(
+                slaTimerRepository, orderRepository, outboxRepository, properties, objectMapper);
     }
 
     private TrustContext createTrustContext() {
         return new TrustContext(TENANT_ID, ACTOR_ID, "PROVIDER", "TREATMENT",
-                null, CORRELATION_ID, FACILITY_ID, WORKSPACE_ID, null, AccessMode.INTERNAL);
+                null, CORRELATION_ID, FACILITY_ID, WORKSPACE_ID, null, "national", AccessMode.INTERNAL);
     }
 
     @Test

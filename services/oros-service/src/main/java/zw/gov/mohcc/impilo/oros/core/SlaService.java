@@ -60,11 +60,6 @@ public class SlaService {
         this.objectMapper = objectMapper;
     }
 
-    public SlaService(SlaTimerRepository slaTimerRepository,
-                      OrosProperties properties) {
-        this(slaTimerRepository, null, null, properties, null);
-    }
-
     public SlaTimerEntity startTimer(OrderEntity order) {
         return startTimer(order.getOrderId(), "OVERALL", 0);
     }

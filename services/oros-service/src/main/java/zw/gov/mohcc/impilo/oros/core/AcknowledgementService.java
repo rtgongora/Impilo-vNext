@@ -69,13 +69,6 @@ public class AcknowledgementService {
         this.objectMapper = objectMapper;
     }
 
-    public AcknowledgementService(AcknowledgementRepository ackRepository,
-                                  OrderStateMachine stateMachine,
-                                  EventOutboxRepository outboxRepository,
-                                  ObjectMapper objectMapper) {
-        this(ackRepository, null, stateMachine, outboxRepository, null, objectMapper);
-    }
-
     /**
      * Record an acknowledgement for an order.
      *

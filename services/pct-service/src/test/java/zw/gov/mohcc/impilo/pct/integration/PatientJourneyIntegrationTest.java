@@ -108,7 +108,7 @@ class PatientJourneyIntegrationTest {
 
     private TrustContext createTrustContext() {
         return new TrustContext(TENANT_ID, ACTOR_ID, "PROVIDER", "TREATMENT",
-                null, CORRELATION_ID, FACILITY_ID, WORKSPACE_ID, null, AccessMode.INTERNAL);
+                null, CORRELATION_ID, FACILITY_ID, WORKSPACE_ID, null, "national", AccessMode.INTERNAL);
     }
 
     @Test

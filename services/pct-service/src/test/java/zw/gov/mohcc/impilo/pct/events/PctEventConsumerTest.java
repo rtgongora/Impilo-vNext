@@ -63,7 +63,7 @@ class PctEventConsumerTest {
 
     private TrustContext createTrustContext() {
         return new TrustContext(TENANT_ID, ACTOR_ID, "SYSTEM", "TREATMENT",
-                null, CORRELATION_ID, FACILITY_ID, null, null, AccessMode.INTERNAL);
+                null, CORRELATION_ID, FACILITY_ID, null, null, "national", AccessMode.INTERNAL);
     }
 
     @Nested

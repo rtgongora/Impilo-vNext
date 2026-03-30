@@ -13,7 +13,7 @@ public class CompanionV11Config {
 
     @Bean
     public IdempotencyRepository companionIdempotencyRepository(JdbcTemplate jdbc) {
-        return new JdbcIdempotencyRepository(jdbc, "pct.idempotency_keys", 24);
+        return new JdbcIdempotencyRepository(jdbc, "pct_idempotency_keys", 24);
     }
 
     @Bean

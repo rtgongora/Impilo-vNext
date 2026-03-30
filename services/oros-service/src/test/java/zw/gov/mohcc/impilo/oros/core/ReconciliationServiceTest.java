@@ -57,7 +57,7 @@ class ReconciliationServiceTest {
 
     private TrustContext createTrustContext() {
         return new TrustContext(TENANT_ID, ACTOR_ID, "PROVIDER", "OPERATIONS",
-                null, CORRELATION_ID, FACILITY_ID, null, null, AccessMode.INTERNAL);
+                null, CORRELATION_ID, FACILITY_ID, null, null, "national", AccessMode.INTERNAL);
     }
 
     private ReconcileQueueEntity createPendingEntry() {
