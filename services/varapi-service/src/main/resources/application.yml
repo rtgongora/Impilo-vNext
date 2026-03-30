@@ -6,16 +6,16 @@ spring:
     name: varapi-service
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/varapi
-    username: postgres
-    password: postgres
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/varapi
+    username: ${POSTGRES_USER:impilo}
+    password: ${POSTGRES_PASSWORD:changeme}
     hikari:
       maximum-pool-size: 20
       minimum-idle: 5
 
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: none
     open-in-view: false
     properties:
       hibernate:
@@ -30,21 +30,21 @@ spring:
     locations: classpath:db/migration
 
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
 
   data:
     redis:
-      host: localhost
-      port: 6379
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
 
   security:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:8080/realms/impilo
+          issuer-uri: ""
 
 impilo:
   ops:
@@ -76,14 +76,14 @@ varapi:
   hmac:
     pepper: ${VARAPI_HMAC_PEPPER:dev-pepper-change-in-production}
   zibo:
-    base-url: http://localhost:8085
+    base-url: http://zibo:8085
     validation-mode: LENIENT  # STRICT or LENIENT
     enabled: false
   tuso:
-    base-url: http://localhost:8084
+    base-url: http://tuso:8084
   document:
     storage-type: MINIO
-    minio-endpoint: http://localhost:9000
+    minio-endpoint: http://minio:9000
     minio-bucket: varapi-documents
     minio-access-key: ${MINIO_ACCESS_KEY:minioadmin}
     minio-secret-key: ${MINIO_SECRET_KEY:minioadmin}

@@ -58,11 +58,10 @@ public class ProductController {
             @RequestParam(defaultValue = "100") int limit) {
 
         OffsetDateTime asOf = OffsetDateTime.now();
-        Page<CatalogItemEntity> page = catalogItemRepository.findAll(
-                PageRequest.of(cursor, Math.min(limit, 500), Sort.by("itemId")));
+        Page<CatalogItemEntity> page = catalogItemRepository.findByKind(
+                "PRODUCT", PageRequest.of(cursor, Math.min(limit, 500), Sort.by("itemId")));
 
         List<Map<String, Object>> items = page.getContent().stream()
-                .filter(e -> "PRODUCT".equals(e.getKind()))
                 .map(this::toSnapshotItem)
                 .toList();
 

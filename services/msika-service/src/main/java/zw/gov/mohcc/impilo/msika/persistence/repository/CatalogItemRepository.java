@@ -12,6 +12,7 @@ import java.util.Optional;
 
 public interface CatalogItemRepository extends JpaRepository<CatalogItemEntity, String> {
     Page<CatalogItemEntity> findByCatalogId(String catalogId, Pageable pageable);
+    Page<CatalogItemEntity> findByKind(String kind, Pageable pageable);
     Page<CatalogItemEntity> findByCatalogIdAndKind(String catalogId, String kind, Pageable pageable);
     List<CatalogItemEntity> findByCatalogIdAndKind(String catalogId, String kind);
     Optional<CatalogItemEntity> findByCatalogIdAndCanonicalCode(String catalogId, String canonicalCode);

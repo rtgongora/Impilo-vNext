@@ -49,16 +49,18 @@ public class OutboxPublisher {
 
     public static String routeTopic(String eventType) {
         return switch (eventType) {
-            case "INTENT_CREATED" -> "mushex.payment.intent.created";
-            case "STATUS_CHANGED" -> "mushex.payment.status.changed";
-            case "REFUND_REQUESTED", "REFUND_COMPLETED", "REFUND_FAILED" -> "mushex.refund.status.changed";
-            case "CLAIM_SUBMITTED" -> "mushex.claim.submitted";
-            case "CLAIM_ADJUDICATED" -> "mushex.claim.adjudicated";
-            case "SETTLEMENT_BATCH_RELEASED" -> "mushex.settlement.batch.released";
-            case "FRAUD_FLAGGED" -> "mushex.fraud.flagged";
-            case "REMITTANCE_ISSUED" -> "mushex.remittance.issued";
-            case "REMITTANCE_CLAIMED" -> "mushex.remittance.claimed";
-            default -> "mushex.events";
+            case "INTENT_CREATED" -> "kernel.mushex.payment.intent.created";
+            case "STATUS_CHANGED" -> "kernel.mushex.payment.status.changed";
+            case "REFUND_REQUESTED", "REFUND_COMPLETED", "REFUND_FAILED" -> "kernel.mushex.payment.refund.changed";
+            case "CLAIM_SUBMITTED" -> "kernel.mushex.claim.submitted";
+            case "CLAIM_ADJUDICATED" -> "kernel.mushex.claim.adjudicated";
+            case "CLAIM_PAID" -> "kernel.mushex.claim.paid";
+            case "CLAIM_DISPUTED" -> "kernel.mushex.claim.disputed";
+            case "SETTLEMENT_BATCH_RELEASED" -> "kernel.mushex.payment.settlement.released";
+            case "FRAUD_FLAGGED" -> "kernel.mushex.payment.fraud.flagged";
+            case "REMITTANCE_ISSUED" -> "kernel.mushex.payment.remittance.issued";
+            case "REMITTANCE_CLAIMED" -> "kernel.mushex.payment.remittance.claimed";
+            default -> "kernel.mushex.events";
         };
     }
 }

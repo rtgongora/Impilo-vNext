@@ -44,6 +44,14 @@ public class CompanionV11Config {
         registry.register(ActionRegistryEntry.classA("/mushex/v1/payment-intents/{id}/refund", "POST", "request_refund", true));
         registry.register(ActionRegistryEntry.classC("/mushex/v1/payment-intents/{id}/receipts", "GET", "get_receipts"));
 
+        // Internal API — claims
+        registry.register(ActionRegistryEntry.classB("/internal/v1/claims", "POST", "internal_create_claim", 0));
+        registry.register(ActionRegistryEntry.classA("/internal/v1/claims/{id}/adjudicate", "POST", "internal_adjudicate_claim", true));
+        registry.register(ActionRegistryEntry.classC("/internal/v1/claims/snapshot", "GET", "internal_claims_snapshot"));
+
+        // Internal API — payments
+        registry.register(ActionRegistryEntry.classA("/internal/v1/payments", "POST", "internal_create_payment", true));
+
         return registry;
     }
 }

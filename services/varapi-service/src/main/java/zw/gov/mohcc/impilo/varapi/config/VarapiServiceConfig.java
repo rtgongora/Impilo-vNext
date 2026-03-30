@@ -27,4 +27,9 @@ public class VarapiServiceConfig {
     public RestTemplate restTemplate() {
         return new RestTemplate();
     }
+
+    @Bean
+    public ca.uhn.fhir.context.FhirContext fhirContext() {
+        return ca.uhn.fhir.context.FhirContext.forR4();
+    }
 }

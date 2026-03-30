@@ -10,6 +10,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
+import zw.gov.mohcc.impilo.companion.consistency.ActionRegistry;
+import zw.gov.mohcc.impilo.companion.consistency.ActionRegistryEntry;
 import zw.gov.mohcc.impilo.companion.idempotency.IdempotencyRepository;
 import zw.gov.mohcc.impilo.companion.idempotency.JdbcIdempotencyRepository;
 
@@ -23,6 +25,24 @@ public class CompanionV11Config {
     @Bean
     public IdempotencyRepository companionIdempotencyRepository(JdbcTemplate jdbc) {
         return new JdbcIdempotencyRepository(jdbc, "ubomi.idempotency_keys", 24);
+    }
+
+    @Bean
+    public ActionRegistry actionRegistry() {
+        ActionRegistry registry = new ActionRegistry();
+
+        registry.register(ActionRegistryEntry.classC("/v1/births", "GET", "list_births"));
+        registry.register(ActionRegistryEntry.classB("/v1/births", "POST", "submit_birth", 0));
+        registry.register(ActionRegistryEntry.classA("/v1/births/{notificationId}/approve", "POST", "approve_birth", true));
+
+        registry.register(ActionRegistryEntry.classC("/v1/deaths", "GET", "list_deaths"));
+        registry.register(ActionRegistryEntry.classB("/v1/deaths", "POST", "submit_death", 0));
+        registry.register(ActionRegistryEntry.classB("/v1/deaths/{notificationId}/certify", "POST", "certify_death", 0));
+        registry.register(ActionRegistryEntry.classA("/v1/deaths/{notificationId}/register", "POST", "register_death", true));
+
+        registry.register(ActionRegistryEntry.classC("/v1/verifications/{registrationNumber}", "GET", "verify_vital_event"));
+
+        return registry;
     }
 
     @Bean("trustChannelKafkaTemplate")

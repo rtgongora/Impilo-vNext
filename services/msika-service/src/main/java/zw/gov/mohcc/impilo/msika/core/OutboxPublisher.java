@@ -48,6 +48,7 @@ public class OutboxPublisher extends CompanionOutboxPublisher {
             case "CATALOG_PUBLISHED", "CATALOG_APPROVED" -> "msika.core.catalog.published";
             case "ITEM_CREATED", "ITEM_UPDATED", "ITEM_DELETED" -> "msika.core.item.changed";
             case "MAPPING_APPROVED" -> "msika.core.mapping.approved";
+            case "TARIFF_CREATED", "TARIFF_UPDATED" -> "kernel.msika.catalog.tariff";
             default -> "msika.core.events";
         };
     }
@@ -97,7 +98,20 @@ public class OutboxPublisher extends CompanionOutboxPublisher {
             case "CATALOG_PUBLISHED", "CATALOG_APPROVED" -> "msika.core.catalog.published";
             case "ITEM_CREATED", "ITEM_UPDATED", "ITEM_DELETED" -> "msika.core.item.changed";
             case "MAPPING_APPROVED" -> "msika.core.mapping.approved";
+            case "TARIFF_CREATED", "TARIFF_UPDATED" -> "msika.core.tariff.changed";
             default -> "msika.core.events";
+        };
+    }
+
+    @Override
+    protected String resolveV11Topic(OutboxRow row) {
+        if (row.eventType() == null) return "kernel.msika.events";
+        return switch (row.eventType()) {
+            case "CATALOG_PUBLISHED", "CATALOG_APPROVED" -> "kernel.msika.catalog";
+            case "ITEM_CREATED", "ITEM_UPDATED", "ITEM_DELETED" -> "kernel.msika.item";
+            case "MAPPING_APPROVED" -> "kernel.msika.mapping";
+            case "TARIFF_CREATED", "TARIFF_UPDATED" -> "kernel.msika.tariff";
+            default -> "kernel.msika.events";
         };
     }
 }

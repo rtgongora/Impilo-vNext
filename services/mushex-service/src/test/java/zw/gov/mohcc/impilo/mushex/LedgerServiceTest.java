@@ -55,7 +55,7 @@ class LedgerServiceTest {
         service = new LedgerService(accountRepository, entryRepository, outboxRepository, objectMapper);
         TrustContextHolder.set(new TrustContext(
             tenantId, "actor-1", "FACILITY_FINANCE", "BILLING",
-            "device-1", UUID.randomUUID(), facilityId, null, null, AccessMode.INTERNAL
+            "device-1", UUID.randomUUID(), facilityId, null, null, "national", AccessMode.INTERNAL
         ));
         // Default: objectMapper returns empty JSON
         lenient().when(objectMapper.writeValueAsString(any())).thenReturn("{}");

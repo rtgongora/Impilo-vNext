@@ -10,17 +10,6 @@ import zw.gov.mohcc.impilo.shared.response.ApiResponse;
 import zw.gov.mohcc.impilo.ubomi.core.DeathNotificationService;
 import zw.gov.mohcc.impilo.ubomi.persistence.entity.DeathNotificationEntity;
 
-/**
- * Death Notification API.
- *
- * Facilities submit death notifications which trigger:
- *   1. VITO client status update (DECEASED flag on Impilo ID)
- *   2. SHR encounter closure in BUTANO
- *   3. Civil registry death certificate issuance workflow
- *
- * External civil registrar systems can query death records.
- * Only INTERNAL consumers can certify cause-of-death.
- */
 @RestController
 @RequestMapping("/v1/deaths")
 public class DeathNotificationController {
@@ -62,10 +51,6 @@ public class DeathNotificationController {
         );
     }
 
-    /**
-     * Certify cause of death — requires medical practitioner authorization.
-     * INTERNAL mode only.
-     */
     @PostMapping("/{notificationId}/certify")
     public ResponseEntity<ApiResponse<DeathNotificationEntity>> certifyDeath(
             @PathVariable Long notificationId) {
@@ -82,6 +67,24 @@ public class DeathNotificationController {
 
         return ResponseEntity.ok(
             ApiResponse.ok(certified, ctx.correlationId().toString())
+        );
+    }
+
+    @PostMapping("/{notificationId}/register")
+    public ResponseEntity<ApiResponse<DeathNotificationEntity>> registerDeath(
+            @PathVariable Long notificationId) {
+        TrustContext ctx = TrustContextHolder.require();
+
+        if (ctx.mode() == AccessMode.EXTERNAL) {
+            return ResponseEntity.status(403).body(
+                ApiResponse.error("FORBIDDEN", "External consumers cannot register deaths", 403, ctx.correlationId().toString())
+            );
+        }
+
+        DeathNotificationEntity registered = deathNotificationService.register(ctx.tenantId(), notificationId);
+
+        return ResponseEntity.ok(
+            ApiResponse.ok(registered, ctx.correlationId().toString())
         );
     }
 }

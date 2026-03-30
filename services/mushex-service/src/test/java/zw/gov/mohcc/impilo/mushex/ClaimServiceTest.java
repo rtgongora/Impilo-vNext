@@ -64,7 +64,7 @@ class ClaimServiceTest {
         );
         TrustContextHolder.set(new TrustContext(
             tenantId, "actor-1", "FACILITY_FINANCE", "BILLING",
-            "device-1", UUID.randomUUID(), facilityId, null, null, AccessMode.INTERNAL
+            "device-1", UUID.randomUUID(), facilityId, null, null, "national", AccessMode.INTERNAL
         ));
     }
 

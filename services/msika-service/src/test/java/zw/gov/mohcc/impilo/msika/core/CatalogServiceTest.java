@@ -38,7 +38,7 @@ class CatalogServiceTest {
         catalogService = new CatalogService(catalogRepository, itemRepository, outboxRepository, changeLogService, objectMapper);
         TrustContext ctx = new TrustContext(
                 UUID.randomUUID(), "actor-1", "ADMIN", "ADMIN",
-                "test-device", UUID.randomUUID(), null, null, null, AccessMode.INTERNAL
+                "test-device", UUID.randomUUID(), null, null, null, "national", AccessMode.INTERNAL
         );
         TrustContextHolder.set(ctx);
     }

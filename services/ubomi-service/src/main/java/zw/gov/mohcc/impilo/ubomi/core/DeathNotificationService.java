@@ -1,52 +1,49 @@
 package zw.gov.mohcc.impilo.ubomi.core;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import zw.gov.mohcc.impilo.ubomi.integration.VitoClient;
 import zw.gov.mohcc.impilo.ubomi.persistence.entity.DeathNotificationEntity;
 import zw.gov.mohcc.impilo.ubomi.persistence.entity.EventOutboxEntity;
 import zw.gov.mohcc.impilo.ubomi.persistence.repository.DeathNotificationRepository;
 import zw.gov.mohcc.impilo.ubomi.persistence.repository.EventOutboxRepository;
 
 import java.time.OffsetDateTime;
+import java.util.Map;
 import java.util.UUID;
 
-/**
- * Business logic for death notifications.
- *
- * Lifecycle: SUBMITTED -> CERTIFIED -> REGISTERED (or REJECTED / CANCELLED)
- *
- * On CERTIFIED, a medical practitioner has certified the cause of death.
- * On REGISTERED, publishes a DEATH_REGISTERED event so that:
- *   - VITO marks the CPID as DECEASED
- *   - BUTANO closes open SHR encounters
- *   - Civil registry issues the death certificate
- */
 @Service
 public class DeathNotificationService {
 
+    private static final Logger log = LoggerFactory.getLogger(DeathNotificationService.class);
+    private static final String TRUST_REVOCATION_IDENTITY_TOPIC = "trust.revocation.identity";
+
     private final DeathNotificationRepository deathRepository;
     private final EventOutboxRepository outboxRepository;
+    private final VitoClient vitoClient;
+    private final KafkaTemplate<String, String> trustChannelKafkaTemplate;
 
     public DeathNotificationService(DeathNotificationRepository deathRepository,
-                                     EventOutboxRepository outboxRepository) {
+                                     EventOutboxRepository outboxRepository,
+                                     VitoClient vitoClient,
+                                     @Qualifier("trustChannelKafkaTemplate") KafkaTemplate<String, String> trustChannelKafkaTemplate) {
         this.deathRepository = deathRepository;
         this.outboxRepository = outboxRepository;
+        this.vitoClient = vitoClient;
+        this.trustChannelKafkaTemplate = trustChannelKafkaTemplate;
     }
 
-    /**
-     * Paginated listing of death notifications for a tenant.
-     */
     @Transactional(readOnly = true)
     public Page<DeathNotificationEntity> list(UUID tenantId, int page, int size) {
         return deathRepository.findByTenantId(tenantId, PageRequest.of(page, size));
     }
 
-    /**
-     * Submit a new death notification.
-     * Sets initial status to SUBMITTED and publishes a DEATH_SUBMITTED event.
-     */
     @Transactional
     public DeathNotificationEntity submit(DeathNotificationEntity entity) {
         entity.setStatus("SUBMITTED");
@@ -54,20 +51,16 @@ public class DeathNotificationService {
 
         publishEvent("DEATH_NOTIFICATION", entity.getId().toString(),
                 "DEATH_SUBMITTED",
-                String.format("{\"notificationId\":%d,\"notificationNumber\":\"%s\",\"tenantId\":\"%s\",\"deceasedCpid\":\"%s\"}",
-                        entity.getId(), entity.getNotificationNumber(),
-                        entity.getTenantId(), entity.getDeceasedCpid()));
+                Map.of(
+                        "notificationId", entity.getId(),
+                        "notificationNumber", entity.getNotificationNumber(),
+                        "tenantId", entity.getTenantId().toString(),
+                        "deceasedCpid", entity.getDeceasedCpid()
+                ));
 
         return entity;
     }
 
-    /**
-     * Certify cause of death — requires medical practitioner authorization.
-     * Transitions status from SUBMITTED to CERTIFIED.
-     *
-     * @throws IllegalArgumentException if notification not found
-     * @throws IllegalStateException if notification is not in a certifiable state
-     */
     @Transactional
     public DeathNotificationEntity certify(UUID tenantId, Long notificationId,
                                             String certifyingPractitioner, String certifierRole) {
@@ -87,23 +80,69 @@ public class DeathNotificationService {
 
         publishEvent("DEATH_NOTIFICATION", entity.getId().toString(),
                 "DEATH_CERTIFIED",
-                String.format("{\"notificationId\":%d,\"deceasedCpid\":\"%s\",\"certifiedBy\":\"%s\"}",
-                        entity.getId(), entity.getDeceasedCpid(), certifyingPractitioner));
+                Map.of(
+                        "notificationId", entity.getId(),
+                        "deceasedCpid", entity.getDeceasedCpid(),
+                        "certifiedBy", certifyingPractitioner
+                ));
 
         return entity;
     }
 
-    /**
-     * Find a single death notification by tenant and ID.
-     */
+    @Transactional
+    public DeathNotificationEntity register(UUID tenantId, Long notificationId) {
+        DeathNotificationEntity entity = deathRepository.findByTenantIdAndId(tenantId, notificationId)
+                .orElseThrow(() -> new IllegalArgumentException("Death notification not found: " + notificationId));
+
+        if (!"CERTIFIED".equals(entity.getStatus())) {
+            throw new IllegalStateException(
+                    "Cannot register death notification in status: " + entity.getStatus());
+        }
+
+        entity.setStatus("REGISTERED");
+        entity.setRegisteredAt(OffsetDateTime.now());
+        entity = deathRepository.save(entity);
+
+        publishEvent("DEATH_NOTIFICATION", entity.getId().toString(),
+                "DEATH_REGISTERED",
+                Map.of(
+                        "notificationId", entity.getId(),
+                        "notificationNumber", entity.getNotificationNumber(),
+                        "tenantId", entity.getTenantId().toString(),
+                        "deceasedCpid", entity.getDeceasedCpid()
+                ));
+
+        publishToTrustRevocationChannel(entity);
+
+        vitoClient.notifyDeath(
+                entity.getDeceasedCpid(),
+                entity.getNotificationNumber(),
+                entity.getTenantId().toString()
+        );
+
+        return entity;
+    }
+
     @Transactional(readOnly = true)
     public DeathNotificationEntity findById(UUID tenantId, Long id) {
         return deathRepository.findByTenantIdAndId(tenantId, id)
                 .orElseThrow(() -> new IllegalArgumentException("Death notification not found: " + id));
     }
 
+    private void publishToTrustRevocationChannel(DeathNotificationEntity entity) {
+        String payload = String.format(
+                "{\"eventType\":\"impilo.ubomi.identity.revoked.v1\",\"deceasedCpid\":\"%s\",\"tenantId\":\"%s\",\"notificationNumber\":\"%s\",\"occurredAt\":\"%s\"}",
+                entity.getDeceasedCpid(),
+                entity.getTenantId(),
+                entity.getNotificationNumber(),
+                OffsetDateTime.now()
+        );
+        trustChannelKafkaTemplate.send(TRUST_REVOCATION_IDENTITY_TOPIC, entity.getDeceasedCpid(), payload);
+        log.info("Published identity revocation to trust channel for deceasedCpid={}", entity.getDeceasedCpid());
+    }
+
     private void publishEvent(String aggregateType, String aggregateId,
-                               String eventType, String payload) {
+                               String eventType, Map<String, Object> payload) {
         EventOutboxEntity event = new EventOutboxEntity();
         event.setAggregateType(aggregateType);
         event.setAggregateId(aggregateId);

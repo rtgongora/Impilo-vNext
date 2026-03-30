@@ -36,6 +36,20 @@ public class CompanionV11Config {
         registry.register(ActionRegistryEntry.classC("/internal/v1/snapshots/catalogs", "GET", "catalog_snapshot"));
         registry.register(ActionRegistryEntry.classC("/internal/v1/snapshots/catalogs/emit", "POST", "emit_catalog_snapshot"));
 
+        // Products
+        registry.register(ActionRegistryEntry.classB("/internal/v1/products", "POST", "create_product", 0));
+        registry.register(ActionRegistryEntry.classC("/internal/v1/products/snapshot", "GET", "product_snapshot"));
+
+        // Service catalog
+        registry.register(ActionRegistryEntry.classB("/internal/v1/service-catalogs/items", "POST", "create_service_item", 0));
+        registry.register(ActionRegistryEntry.classC("/internal/v1/service-catalogs/snapshot", "GET", "service_snapshot"));
+
+        // Tariffs
+        registry.register(ActionRegistryEntry.classB("/internal/v1/tariffs", "POST", "create_tariff", 0));
+        registry.register(ActionRegistryEntry.classC("/internal/v1/tariffs", "GET", "list_tariffs"));
+        registry.register(ActionRegistryEntry.classC("/internal/v1/tariffs/{id}", "GET", "get_tariff"));
+        registry.register(ActionRegistryEntry.classA("/internal/v1/tariffs/{id}", "PUT", "update_tariff", true));
+
         return registry;
     }
 }

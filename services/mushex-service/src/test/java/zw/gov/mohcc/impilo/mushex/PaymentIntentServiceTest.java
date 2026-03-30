@@ -54,7 +54,7 @@ class PaymentIntentServiceTest {
         service = new PaymentIntentService(intentRepository, outboxRepository, receiptService, objectMapper);
         TrustContextHolder.set(new TrustContext(
             tenantId, "actor-1", "FACILITY_FINANCE", "BILLING",
-            "device-1", correlationId, facilityId, null, null, AccessMode.INTERNAL
+            "device-1", correlationId, facilityId, null, null, "national", AccessMode.INTERNAL
         ));
     }
 

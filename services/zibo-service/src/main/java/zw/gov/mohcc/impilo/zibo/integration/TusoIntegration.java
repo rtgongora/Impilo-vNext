@@ -37,17 +37,6 @@ public class TusoIntegration {
     }
 
     /**
-     * Constructor for testing with a custom RestTemplate.
-     *
-     * @param restTemplate the RestTemplate to use
-     * @param tusoBaseUrl  the base URL for the TUSO service
-     */
-    TusoIntegration(RestTemplate restTemplate, String tusoBaseUrl) {
-        this.restTemplate = restTemplate;
-        this.tusoBaseUrl = tusoBaseUrl;
-    }
-
-    /**
      * Look up a facility profile from TUSO by facility ID.
      *
      * <p>Returns a map containing facility metadata such as facility type,

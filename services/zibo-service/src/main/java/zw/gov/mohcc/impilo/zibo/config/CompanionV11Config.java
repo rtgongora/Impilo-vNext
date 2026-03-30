@@ -38,6 +38,20 @@ public class CompanionV11Config {
         registry.register(ActionRegistryEntry.classC("/internal/v1/snapshots/artifacts", "GET", "artifact_snapshot"));
         registry.register(ActionRegistryEntry.classC("/internal/v1/snapshots/artifacts/emit", "POST", "emit_artifact_snapshot"));
 
+        // CodeSystem typed endpoints
+        registry.register(ActionRegistryEntry.classB("/internal/v1/code-systems", "POST", "create_code_system", 0));
+        registry.register(ActionRegistryEntry.classC("/internal/v1/code-systems/{id}/validate", "GET", "validate_code_against_code_system"));
+        registry.register(ActionRegistryEntry.classC("/internal/v1/code-systems/snapshot", "GET", "code_system_snapshot"));
+
+        // ValueSet typed endpoints
+        registry.register(ActionRegistryEntry.classB("/internal/v1/value-sets", "POST", "create_value_set", 0));
+        registry.register(ActionRegistryEntry.classC("/internal/v1/value-sets/snapshot", "GET", "value_set_snapshot"));
+
+        // ConceptMap typed endpoints
+        registry.register(ActionRegistryEntry.classB("/internal/v1/concept-maps", "POST", "create_concept_map", 0));
+        registry.register(ActionRegistryEntry.classC("/internal/v1/concept-maps/{id}", "GET", "get_concept_map"));
+        registry.register(ActionRegistryEntry.classC("/internal/v1/concept-maps/snapshot", "GET", "concept_map_snapshot"));
+
         return registry;
     }
 }

@@ -75,6 +75,15 @@ public class UbomiOutboxPublisher extends CompanionOutboxPublisher {
     @Override
     protected String resolveLegacyTopic(OutboxRow row) {
         return switch (row.aggregateType()) {
+            case "BIRTH_NOTIFICATION" -> "ubomi.birth";
+            case "DEATH_NOTIFICATION" -> "ubomi.death";
+            default -> "ubomi.events";
+        };
+    }
+
+    @Override
+    protected String resolveV11Topic(OutboxRow row) {
+        return switch (row.aggregateType()) {
             case "BIRTH_NOTIFICATION" -> "kernel.ubomi.birth";
             case "DEATH_NOTIFICATION" -> "kernel.ubomi.death";
             default -> "kernel.ubomi.events";

@@ -4,46 +4,36 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import zw.gov.mohcc.impilo.ubomi.integration.VitoClient;
 import zw.gov.mohcc.impilo.ubomi.persistence.entity.BirthNotificationEntity;
 import zw.gov.mohcc.impilo.ubomi.persistence.entity.EventOutboxEntity;
 import zw.gov.mohcc.impilo.ubomi.persistence.repository.BirthNotificationRepository;
 import zw.gov.mohcc.impilo.ubomi.persistence.repository.EventOutboxRepository;
 
 import java.time.OffsetDateTime;
+import java.util.Map;
 import java.util.UUID;
 
-/**
- * Business logic for birth notifications.
- *
- * Lifecycle: SUBMITTED -> VALIDATED -> REGISTERED (or REJECTED / CANCELLED)
- *
- * On REGISTERED, publishes a BIRTH_REGISTERED event via the outbox pattern
- * so that VITO can issue the newborn's Impilo ID.
- */
 @Service
 public class BirthNotificationService {
 
     private final BirthNotificationRepository birthRepository;
     private final EventOutboxRepository outboxRepository;
+    private final VitoClient vitoClient;
 
     public BirthNotificationService(BirthNotificationRepository birthRepository,
-                                     EventOutboxRepository outboxRepository) {
+                                     EventOutboxRepository outboxRepository,
+                                     VitoClient vitoClient) {
         this.birthRepository = birthRepository;
         this.outboxRepository = outboxRepository;
+        this.vitoClient = vitoClient;
     }
 
-    /**
-     * Paginated listing of birth notifications for a tenant.
-     */
     @Transactional(readOnly = true)
     public Page<BirthNotificationEntity> list(UUID tenantId, int page, int size) {
         return birthRepository.findByTenantId(tenantId, PageRequest.of(page, size));
     }
 
-    /**
-     * Submit a new birth notification.
-     * Sets initial status to SUBMITTED and publishes a BIRTH_SUBMITTED event.
-     */
     @Transactional
     public BirthNotificationEntity submit(BirthNotificationEntity entity) {
         entity.setStatus("SUBMITTED");
@@ -51,19 +41,15 @@ public class BirthNotificationService {
 
         publishEvent("BIRTH_NOTIFICATION", entity.getId().toString(),
                 "BIRTH_SUBMITTED",
-                String.format("{\"notificationId\":%d,\"notificationNumber\":\"%s\",\"tenantId\":\"%s\"}",
-                        entity.getId(), entity.getNotificationNumber(), entity.getTenantId()));
+                Map.of(
+                        "notificationId", entity.getId(),
+                        "notificationNumber", entity.getNotificationNumber(),
+                        "tenantId", entity.getTenantId().toString()
+                ));
 
         return entity;
     }
 
-    /**
-     * Approve a birth notification, transitioning it to REGISTERED.
-     * Publishes BIRTH_REGISTERED event so VITO can issue the newborn's Impilo ID.
-     *
-     * @throws IllegalArgumentException if notification not found
-     * @throws IllegalStateException if notification is not in an approvable state
-     */
     @Transactional
     public BirthNotificationEntity approve(UUID tenantId, Long notificationId) {
         BirthNotificationEntity entity = birthRepository.findByTenantIdAndId(tenantId, notificationId)
@@ -80,16 +66,24 @@ public class BirthNotificationService {
 
         publishEvent("BIRTH_NOTIFICATION", entity.getId().toString(),
                 "BIRTH_REGISTERED",
-                String.format("{\"notificationId\":%d,\"notificationNumber\":\"%s\",\"tenantId\":\"%s\",\"motherCpid\":\"%s\"}",
-                        entity.getId(), entity.getNotificationNumber(),
-                        entity.getTenantId(), entity.getMotherCpid()));
+                Map.of(
+                        "notificationId", entity.getId(),
+                        "notificationNumber", entity.getNotificationNumber(),
+                        "tenantId", entity.getTenantId().toString(),
+                        "motherCpid", entity.getMotherCpid() != null ? entity.getMotherCpid() : ""
+                ));
+
+        if (entity.getMotherCpid() != null) {
+            vitoClient.notifyBirthRegistration(
+                    entity.getMotherCpid(),
+                    entity.getNotificationNumber(),
+                    entity.getTenantId().toString()
+            );
+        }
 
         return entity;
     }
 
-    /**
-     * Find a single birth notification by tenant and ID.
-     */
     @Transactional(readOnly = true)
     public BirthNotificationEntity findById(UUID tenantId, Long id) {
         return birthRepository.findByTenantIdAndId(tenantId, id)
@@ -97,7 +91,7 @@ public class BirthNotificationService {
     }
 
     private void publishEvent(String aggregateType, String aggregateId,
-                               String eventType, String payload) {
+                               String eventType, Map<String, Object> payload) {
         EventOutboxEntity event = new EventOutboxEntity();
         event.setAggregateType(aggregateType);
         event.setAggregateId(aggregateId);

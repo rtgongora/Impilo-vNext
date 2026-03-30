@@ -84,4 +84,14 @@ public class VarapiOutboxPublisher extends CompanionOutboxPublisher {
             default -> "varapi.events";
         };
     }
+
+    @Override
+    protected String resolveV11Topic(OutboxRow row) {
+        return switch (row.aggregateType()) {
+            case "PROVIDER" -> "kernel.varapi.provider";
+            case "COUNCIL" -> "kernel.varapi.council";
+            case "CREDENTIAL" -> "kernel.varapi.credential";
+            default -> "kernel.varapi.events";
+        };
+    }
 }

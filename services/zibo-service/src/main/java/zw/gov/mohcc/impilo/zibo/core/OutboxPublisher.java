@@ -91,4 +91,19 @@ public class OutboxPublisher extends CompanionOutboxPublisher {
             default -> "zibo.events";
         };
     }
+
+    @Override
+    protected String resolveV11Topic(OutboxRow row) {
+        if (row.eventType() == null) return "kernel.zibo.events";
+        return switch (row.eventType()) {
+            case "ARTIFACT_CREATED", "ARTIFACT_UPDATED",
+                 "ARTIFACT_PUBLISHED", "ARTIFACT_DEPRECATED", "ARTIFACT_RETIRED"
+                    -> "kernel.zibo.artifact";
+            case "PACK_PUBLISHED", "PACK_DEPRECATED", "PACK_ASSIGNED"
+                    -> "kernel.zibo.pack";
+            case "VALIDATION_FAILED"
+                    -> "kernel.zibo.validation";
+            default -> "kernel.zibo.events";
+        };
+    }
 }

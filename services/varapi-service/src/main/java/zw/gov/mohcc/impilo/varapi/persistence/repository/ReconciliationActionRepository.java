@@ -9,5 +9,5 @@ import java.util.List;
 @Repository
 public interface ReconciliationActionRepository extends JpaRepository<ReconciliationActionEntity, Long> {
 
-    List<ReconciliationActionEntity> findByCaseIdOrderByCreatedAtDesc(Long caseId);
+    List<ReconciliationActionEntity> findByReconciliationCase_IdOrderByCreatedAtDesc(Long caseId);
 }

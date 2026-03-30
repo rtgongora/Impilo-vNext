@@ -58,6 +58,14 @@ public interface ArtifactRepository extends JpaRepository<ArtifactEntity, UUID> 
 
     long countByTenantId(UUID tenantId);
 
+    Page<ArtifactEntity> findByTenantIdAndFhirType(UUID tenantId, ArtifactType fhirType, Pageable pageable);
+
+    long countByTenantIdAndFhirType(UUID tenantId, ArtifactType fhirType);
+
+    Page<ArtifactEntity> findByFhirType(ArtifactType fhirType, Pageable pageable);
+
+    long countByFhirType(ArtifactType fhirType);
+
     /**
      * Finds all versions of an artifact identified by canonical URL, ordered by creation date descending.
      */
