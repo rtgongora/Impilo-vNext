@@ -120,6 +120,9 @@ public class V11HeaderFilter implements Filter {
      */
     public static boolean isV11Path(String path) {
         return path != null
-                && (path.startsWith("/internal/v1/") || path.startsWith("/external/v1/"));
+                && (path.startsWith("/internal/v1") || path.startsWith("/external/v1")
+                || path.startsWith("/v1/internal") || path.startsWith("/v1/external")
+                || path.startsWith("/v1/catalogs") || path.startsWith("/v1/artifacts")
+                || path.startsWith("/mushex/v1"));
     }
 }

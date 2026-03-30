@@ -62,12 +62,24 @@ public class TechCompanionAutoConfiguration {
             "/internal/v1/*",
             "/internal/v1/**",
             "/external/v1/*",
-            "/external/v1/**"
+            "/external/v1/**",
+            "/v1/internal/*",
+            "/v1/internal/**",
+            "/v1/external/*",
+            "/v1/external/**",
+            "/v1/catalogs/**",
+            "/v1/artifacts/**",
+            "/mushex/v1/**"
     };
 
     private static final String[] IDEMPOTENCY_URL_PATTERNS = {
             "/internal/v1/*",
-            "/internal/v1/**"
+            "/internal/v1/**",
+            "/v1/internal/*",
+            "/v1/internal/**",
+            "/v1/catalogs/**",
+            "/v1/artifacts/**",
+            "/mushex/v1/**"
     };
 
     // ── JDBC idempotency (preferred when JdbcTemplate is available) ──
