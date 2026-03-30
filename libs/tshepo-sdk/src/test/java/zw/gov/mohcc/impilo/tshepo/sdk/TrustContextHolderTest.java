@@ -45,7 +45,7 @@ class TrustContextHolderTest {
         return new TrustContext(
                 UUID.randomUUID(), "actor-1", "PROVIDER", "TREATMENT",
                 "fp-abc123", UUID.randomUUID(),
-                null, null, null, AccessMode.EXTERNAL
+                null, null, null, "national", AccessMode.EXTERNAL
         );
     }
 }

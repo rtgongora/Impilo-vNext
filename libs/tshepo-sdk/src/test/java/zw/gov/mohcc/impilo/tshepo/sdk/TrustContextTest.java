@@ -19,7 +19,7 @@ class TrustContextTest {
         TrustContext ctx = new TrustContext(
                 TENANT_ID, "actor-1", "PROVIDER", "TREATMENT",
                 "fp-abc123", CORRELATION_ID,
-                facilityId, null, null, AccessMode.EXTERNAL
+                facilityId, null, null, "national", AccessMode.EXTERNAL
         );
 
         assertThat(ctx.hasFacilityScope()).isTrue();
@@ -30,7 +30,7 @@ class TrustContextTest {
         TrustContext ctx = new TrustContext(
                 TENANT_ID, "actor-1", "PROVIDER", "TREATMENT",
                 "fp-abc123", CORRELATION_ID,
-                null, null, null, AccessMode.EXTERNAL
+                null, null, null, "national", AccessMode.EXTERNAL
         );
 
         assertThat(ctx.hasFacilityScope()).isFalse();
@@ -43,7 +43,7 @@ class TrustContextTest {
         TrustContext ctx = new TrustContext(
                 TENANT_ID, "actor-1", "ADMIN", "OPERATIONS",
                 "fp-abc123", CORRELATION_ID,
-                null, workspaceId, null, AccessMode.EXTERNAL
+                null, workspaceId, null, "national", AccessMode.EXTERNAL
         );
 
         assertThat(ctx.hasWorkspaceScope()).isTrue();
@@ -54,7 +54,7 @@ class TrustContextTest {
         TrustContext ctx = new TrustContext(
                 TENANT_ID, "svc-scheduler", "SERVICE", "SYSTEM",
                 "fp-svc", CORRELATION_ID,
-                null, null, null, AccessMode.INTERNAL
+                null, null, null, "national", AccessMode.INTERNAL
         );
 
         assertThat(ctx.isInternal()).isTrue();

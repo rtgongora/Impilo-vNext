@@ -67,6 +67,12 @@ public class TrustContextFilter extends OncePerRequestFilter {
             UUID workspaceId = parseUuid(request.getHeader(TrustHeaders.WORKSPACE_ID));
             String shiftId = request.getHeader(TrustHeaders.SHIFT_ID);
 
+            // Pod isolation context
+            String podId = request.getHeader(TrustContext.H_POD_ID);
+            if (podId == null || podId.isBlank()) {
+                podId = "national";
+            }
+
             // Detect access mode
             String modeStr = request.getHeader(TrustHeaders.ACCESS_MODE);
             AccessMode mode = "INTERNAL".equalsIgnoreCase(modeStr)
@@ -75,7 +81,7 @@ public class TrustContextFilter extends OncePerRequestFilter {
             TrustContext ctx = new TrustContext(
                     tenantId, actorId, actorType, purposeOfUse,
                     deviceFingerprint, correlationId,
-                    facilityId, workspaceId, shiftId, mode
+                    facilityId, workspaceId, shiftId, podId, mode
             );
 
             TrustContextHolder.set(ctx);

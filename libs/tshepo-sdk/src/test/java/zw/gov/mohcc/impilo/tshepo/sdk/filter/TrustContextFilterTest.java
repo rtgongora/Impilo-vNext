@@ -56,6 +56,7 @@ class TrustContextFilterTest {
         when(request.getHeader(TrustHeaders.FACILITY_ID)).thenReturn(FACILITY_ID.toString());
         when(request.getHeader(TrustHeaders.WORKSPACE_ID)).thenReturn(WORKSPACE_ID.toString());
         when(request.getHeader(TrustHeaders.SHIFT_ID)).thenReturn("shift-001");
+        when(request.getHeader(TrustContext.H_POD_ID)).thenReturn("provincial");
         when(request.getHeader(TrustHeaders.ACCESS_MODE)).thenReturn("INTERNAL");
 
         // Capture the context during chain.doFilter because filter clears it in finally
@@ -71,6 +72,7 @@ class TrustContextFilterTest {
             assertThat(ctx.facilityId()).isEqualTo(FACILITY_ID);
             assertThat(ctx.workspaceId()).isEqualTo(WORKSPACE_ID);
             assertThat(ctx.shiftId()).isEqualTo("shift-001");
+            assertThat(ctx.podId()).isEqualTo("provincial");
             assertThat(ctx.isInternal()).isTrue();
             return null;
         }).when(chain).doFilter(request, response);
@@ -111,6 +113,7 @@ class TrustContextFilterTest {
             assertThat(ctx.facilityId()).isNull();
             assertThat(ctx.workspaceId()).isNull();
             assertThat(ctx.shiftId()).isNull();
+            assertThat(ctx.podId()).isEqualTo("national");
             assertThat(ctx.isInternal()).isFalse();
             return null;
         }).when(chain).doFilter(request, response);
@@ -127,5 +130,6 @@ class TrustContextFilterTest {
         when(request.getHeader(TrustHeaders.PURPOSE_OF_USE)).thenReturn("TREATMENT");
         when(request.getHeader(TrustHeaders.DEVICE_FINGERPRINT)).thenReturn("fp-abc123");
         when(request.getHeader(TrustHeaders.CORRELATION_ID)).thenReturn(CORRELATION_ID.toString());
+        lenient().when(request.getHeader(TrustContext.H_POD_ID)).thenReturn(null);
     }
 }
