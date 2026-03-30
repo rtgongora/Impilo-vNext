@@ -34,10 +34,10 @@ services:
         # Copy all built JARs to output directory for easy access
         mkdir -p /build/output
         find /build/services -path "*/target/*.jar" -not -name "*-sources.jar" -not -name "*-javadoc.jar" -not -name "original-*" | while read jar; do
-          svc_dir=$(echo "$jar" | sed 's|/build/services/||' | cut -d/ -f1)
-          mkdir -p "/build/output/$svc_dir"
-          cp "$jar" "/build/output/$svc_dir/"
-          echo "  -> $svc_dir/$(basename $jar)"
+          svc_dir=$$(echo "$$jar" | sed 's|/build/services/||' | cut -d/ -f1)
+          mkdir -p "/build/output/$$svc_dir"
+          cp "$$jar" "/build/output/$$svc_dir/"
+          echo "  -> $$svc_dir/$$(basename $$jar)"
         done
         echo "=== JAR output complete ==="
     volumes:

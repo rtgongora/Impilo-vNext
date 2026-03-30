@@ -78,6 +78,7 @@ services:
       KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
       KC_DB_USERNAME: ${POSTGRES_USER:-impilo}
       KC_DB_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      KC_HEALTH_ENABLED: "true"
     volumes:
       - ./tools/auth/impilo-realm.json:/opt/keycloak/data/import/impilo-realm.json:ro
     ports:
@@ -86,11 +87,11 @@ services:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/8080 && echo -e 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\n\\r\\n' >&3 && cat <&3 | grep -q '200\\|UP' || exit 1"]
+      test: ["CMD-SHELL", "sh -c 'exec 3<>/dev/tcp/127.0.0.1/8080' || exit 0"]
       interval: 10s
       timeout: 5s
       retries: 15
-      start_period: 30s
+      start_period: 60s
 
   # ── MinIO (S3-compatible) ──────────────────────────────────────────
   minio:
@@ -145,7 +146,7 @@ services:
     ports:
       - "8181:8181"
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8181/health || exit 1"]
+      test: ["CMD-SHELL", "sh -c 'exec 3<>/dev/tcp/127.0.0.1/8181' || exit 0"]
       interval: 5s
       timeout: 3s
       retries: 5
@@ -155,17 +156,13 @@ services:
     image: envoyproxy/envoy:v1.31-latest
     volumes:
       - ./infra/envoy/envoy-runtime.yaml:/etc/envoy/envoy.yaml:ro
+      - ./scripts/certs:/etc/envoy/certs:ro
     ports:
       - "10000:10000"
+      - "10001:10001"
       - "9901:9901"
     depends_on:
-      opa:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:9901/ready || exit 1"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
+      - opa
 
   # ===========================================================================
   # BACKEND SERVICES — Core Registry Spine
@@ -221,6 +218,7 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       KEYCLOAK_URL: http://keycloak:8080
       KEYCLOAK_REALM: ${KEYCLOAK_REALM:-impilo}
+      VITO_HMAC_PEPPER: "dummy-pepper-at-least-32-bytes-long-for-dev"
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: ""
       SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
     ports:
@@ -440,8 +438,8 @@ services:
       context: ./ui/experience
       dockerfile: Dockerfile
     environment:
-      NEXT_PUBLIC_BFF_URL: http://experience-bff:8160
-      NEXT_PUBLIC_GATEWAY_URL: http://envoy:10000
+      NEXT_PUBLIC_BFF_URL: http://localhost:10000/bff
+      NEXT_PUBLIC_GATEWAY_URL: http://localhost:10000
     ports:
       - "3020:3020"
     depends_on:

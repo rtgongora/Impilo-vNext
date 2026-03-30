@@ -288,11 +288,6 @@ static_resources:
                           route: { cluster: butano_service }
 
                 http_filters:
-                  # ---------------------------------------------------------------
-                  # External authorization via TSHEPO Authz Service
-                  # gRPC preferred (faster, typed); HTTP fallback available.
-                  # Envoy calls tshepo-authz-service on EVERY request.
-                  # ---------------------------------------------------------------
                   - name: envoy.filters.http.ext_authz
                     typed_config:
                       "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthz
@@ -301,34 +296,6 @@ static_resources:
                         envoy_grpc:
                           cluster_name: tshepo_authz_grpc
                         timeout: 0.5s
-                      # Fallback: HTTP service if gRPC is unavailable
-                      # http_service:
-                      #   server_uri:
-                      #     uri: http://host.docker.internal:8081
-                      #     cluster: tshepo_authz_service
-                      #     timeout: 0.5s
-                      #   path_prefix: "/v1/authorize"
-                      #   authorization_request:
-                      #     allowed_headers:
-                      #       patterns:
-                      #         - exact: "authorization"
-                      #         - exact: "x-tenant-id"
-                      #         - exact: "x-actor-id"
-                      #         - exact: "x-actor-type"
-                      #         - exact: "x-purpose-of-use"
-                      #         - exact: "x-device-fingerprint"
-                      #         - exact: "x-correlation-id"
-                      #         - exact: "x-facility-id"
-                      #         - exact: "x-workspace-id"
-                      #         - exact: "x-shift-id"
-                      #   authorization_response:
-                      #     allowed_upstream_headers:
-                      #       patterns:
-                      #         - exact: "x-obligations"
-                      #         - exact: "x-decision"
-                      #         - exact: "x-max-scope"
-                      #         - exact: "x-mask-fields"
-                      #         - exact: "x-logging-level"
                       failure_mode_allow: false
                       with_request_body:
                         max_request_bytes: 8192
@@ -336,6 +303,58 @@ static_resources:
                   - name: envoy.filters.http.router
                     typed_config:
                       "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+
+    - name: internal_listener
+      address:
+        socket_address:
+          address: 0.0.0.0
+          port_value: 10001
+      filter_chains:
+        - filters:
+            - name: envoy.filters.network.http_connection_manager
+              typed_config:
+                "@type": type.googleapis.com/envoy.extensions.filters.http.connection_manager.v3.HttpConnectionManager
+                stat_prefix: ingress_http_internal
+                codec_type: AUTO
+                route_config:
+                  name: internal_route
+                  virtual_hosts:
+                    - name: internal_services
+                      domains: ["*"]
+                      routes:
+                        # ── Internal Federation & Registry Sync ──
+                        - match: { prefix: "/internal/v1/" }
+                          route: { cluster: tshepo_authz_service }
+                        - match: { prefix: "/v1/internal/" }
+                          route: { cluster: vito_service }
+                        # Default internal routes for all services
+                        - match: { prefix: "/" }
+                          route: { cluster: tshepo_authz_service }
+                http_filters:
+                  - name: envoy.filters.http.ext_authz
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthz
+                      transport_api_version: V3
+                      grpc_service:
+                        envoy_grpc:
+                          cluster_name: tshepo_authz_grpc
+                        timeout: 0.5s
+                      failure_mode_allow: false
+                  - name: envoy.filters.http.router
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+          transport_socket:
+            name: envoy.transport_sockets.tls
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.DownstreamTlsContext
+              require_client_certificate: true
+              common_tls_context:
+                tls_certificates:
+                  - certificate_chain: { filename: "/etc/envoy/certs/envoy.crt" }
+                    private_key: { filename: "/etc/envoy/certs/envoy.key" }
+                validation_context:
+                  trusted_ca: { filename: "/etc/envoy/certs/ca.crt" }
+
 
   clusters:
     # ── TSHEPO Authz (HTTP — for routes) ──

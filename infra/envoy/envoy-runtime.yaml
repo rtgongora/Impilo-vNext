@@ -109,7 +109,7 @@ static_resources:
 
                         # ── Experience BFF ──
                         - match: { prefix: "/bff/" }
-                          route: { cluster: experience_bff }
+                          route: { cluster: experience_bff, prefix_rewrite: "/" }
 
                         # ── Health check passthrough ──
                         - match: { prefix: "/actuator/health" }
@@ -146,6 +146,47 @@ static_resources:
                   - name: envoy.filters.http.router
                     typed_config:
                       "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+
+    - name: internal_listener
+      address:
+        socket_address:
+          address: 0.0.0.0
+          port_value: 10001
+      filter_chains:
+        - filters:
+            - name: envoy.filters.network.http_connection_manager
+              typed_config:
+                "@type": type.googleapis.com/envoy.extensions.filters.http.connection_manager.v3.HttpConnectionManager
+                stat_prefix: ingress_http_internal
+                codec_type: AUTO
+                route_config:
+                  name: internal_route
+                  virtual_hosts:
+                    - name: internal_services
+                      domains: ["*"]
+                      routes:
+                        - match: { prefix: "/internal/v1/" }
+                          route: { cluster: tshepo_service }
+                        - match: { prefix: "/v1/internal/" }
+                          route: { cluster: vito_service }
+                        - match: { prefix: "/" }
+                          route: { cluster: tshepo_service }
+                http_filters:
+                  - name: envoy.filters.http.router
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+          transport_socket:
+            name: envoy.transport_sockets.tls
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.DownstreamTlsContext
+              require_client_certificate: true
+              common_tls_context:
+                tls_certificates:
+                  - certificate_chain: { filename: "/etc/envoy/certs/envoy.crt" }
+                    private_key: { filename: "/etc/envoy/certs/envoy.key" }
+                validation_context:
+                  trusted_ca: { filename: "/etc/envoy/certs/ca.crt" }
+
 
   clusters:
     # ── OPA Sidecar ──

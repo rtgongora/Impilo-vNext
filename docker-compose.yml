@@ -76,7 +76,7 @@ services:
   # ---------------------------------------------------------------------------
   keycloak:
     image: quay.io/keycloak/keycloak:25.0
-    command: start-dev
+    command: start-dev --import-realm
     environment:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
@@ -86,6 +86,8 @@ services:
       KC_DB_PASSWORD: changeme
     ports:
       - "8080:8080"
+    volumes:
+      - ./scripts/seed/impilo-realm.json:/opt/keycloak/data/import/impilo-realm.json
     depends_on:
       postgres:
         condition: service_healthy
@@ -118,6 +120,119 @@ services:
       - "4242:4242"
     volumes:
       - orthanc_data:/var/lib/orthanc/db
+
+  # ---------------------------------------------------------------------------
+  # HashiCorp Vault (Secret Management)
+  # ---------------------------------------------------------------------------
+  vault:
+    image: hashicorp/vault:1.17
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: "impilo-dev-root"
+      VAULT_ADDR: "http://0.0.0.0:8200"
+    ports:
+      - "8200:8200"
+    cap_add:
+      - IPC_LOCK
+
+  # ---------------------------------------------------------------------------
+  # Apicurio Schema Registry (Event Schemas)
+  # ---------------------------------------------------------------------------
+  apicurio:
+    image: apicurio/apicurio-registry-mem:2.6.2.Final
+    ports:
+      - "8093:8081"
+
+  # ---------------------------------------------------------------------------
+  # Prometheus (Metrics Collection)
+  # ---------------------------------------------------------------------------
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    volumes:
+      - ./infra/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+
+  # ---------------------------------------------------------------------------
+  # Grafana (Dashboards)
+  # ---------------------------------------------------------------------------
+  grafana:
+    image: grafana/grafana:11.1.0
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    ports:
+      - "3100:3000"
+
+  # ---------------------------------------------------------------------------
+  # Domain Services
+  # ---------------------------------------------------------------------------
+  tuso:
+    build:
+      context: ./services/tuso-service
+    ports:
+      - "8084:8084"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/tuso
+      SPRING_DATASOURCE_USERNAME: impilo
+      SPRING_DATASOURCE_PASSWORD: changeme
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8084/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  zibo:
+    build:
+      context: ./services/zibo-service
+    ports:
+      - "8085:8085"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/zibo
+      SPRING_DATASOURCE_USERNAME: impilo
+      SPRING_DATASOURCE_PASSWORD: changeme
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8085/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # ---------------------------------------------------------------------------
+  # Seed Data One-Shot Service
+  # ---------------------------------------------------------------------------
+  seed-data:
+    image: postgres:16-alpine
+    environment:
+      PGPASSWORD: changeme
+    volumes:
+      - ./scripts/seed:/scripts/seed
+    depends_on:
+      postgres:
+        condition: service_healthy
+      tuso:
+        condition: service_healthy
+      zibo:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        apk add --no-cache jq
+        echo "Waiting for PostgreSQL..."
+        until pg_isready -h postgres -U impilo; do
+          sleep 1
+        done
+        echo "PostgreSQL is ready. Running TUSO seed script..."
+        psql -h postgres -U impilo -d tuso -f /scripts/seed/tuso_seed.sql
+        echo "Preparing ZIBO compact seed data..."
+        jq -c . /scripts/seed/zibo_seed.json > /scripts/seed/zibo_seed.compact.json
+        echo "Running ZIBO seed script..."
+        psql -h postgres -U impilo -d zibo -f /scripts/seed/zibo_seed.sql
+        rm /scripts/seed/zibo_seed.compact.json
+        echo "Seed data loaded."
 
 volumes:
   pg_data:

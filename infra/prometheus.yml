@@ -1,14 +1,311 @@
 global:
   scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    platform: impilo-vnext
+    environment: local
+
+rule_files:
+  - "rules/*.yml"
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
 
 scrape_configs:
-  - job_name: 'prometheus'
+
+  - job_name: prometheus
     static_configs:
       - targets: ['localhost:9090']
 
-  - job_name: 'impilo-infrastructure'
+  # ─── Infrastructure ───────────────────────────────────────────────────────────
+
+  - job_name: impilo-infrastructure
+    metrics_path: /metrics
     static_configs:
       - targets:
-        - 'keycloak:8080'
-        - 'hapi-fhir:8080'
-        - 'vault:8200'
+          - keycloak:8080
+          - hapi-fhir:8080
+          - vault:8200
+        labels:
+          plane: infrastructure
+
+  - job_name: impilo-envoy
+    metrics_path: /stats/prometheus
+    static_configs:
+      - targets:
+          - envoy:9901
+        labels:
+          plane: gateway
+
+  - job_name: impilo-kafka
+    static_configs:
+      - targets:
+          - kafka:9308
+        labels:
+          plane: infrastructure
+
+  - job_name: impilo-postgres
+    static_configs:
+      - targets:
+          - postgres-exporter:9187
+        labels:
+          plane: infrastructure
+
+  - job_name: impilo-redis
+    static_configs:
+      - targets:
+          - redis-exporter:9121
+        labels:
+          plane: infrastructure
+
+  # ─── Trust & Governance Plane ─────────────────────────────────────────────────
+
+  - job_name: tshepo-authz
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['tshepo-authz-service:8081']
+        labels:
+          plane: trust-governance
+          service: tshepo-authz
+
+  - job_name: tshepo-identity
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['tshepo-identity-service:8181']
+        labels:
+          plane: trust-governance
+          service: tshepo-identity
+
+  - job_name: tshepo-consent
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['tshepo-consent-service:8182']
+        labels:
+          plane: trust-governance
+          service: tshepo-consent
+
+  - job_name: tshepo-audit
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['tshepo-audit-service:8183']
+        labels:
+          plane: trust-governance
+          service: tshepo-audit
+
+  - job_name: tshepo-keys
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['tshepo-keys-service:8184']
+        labels:
+          plane: trust-governance
+          service: tshepo-keys
+
+  - job_name: tshepo-offline
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['tshepo-offline-service:8185']
+        labels:
+          plane: trust-governance
+          service: tshepo-offline
+
+  # ─── Registry Spine Plane ─────────────────────────────────────────────────────
+
+  - job_name: vito
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['vito-service:8082']
+        labels:
+          plane: registry-spine
+          service: vito
+
+  - job_name: varapi
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['varapi-service:8083']
+        labels:
+          plane: registry-spine
+          service: varapi
+
+  - job_name: tuso
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['tuso-service:8084']
+        labels:
+          plane: registry-spine
+          service: tuso
+
+  - job_name: zibo
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['zibo-service:8085']
+        labels:
+          plane: registry-spine
+          service: zibo
+
+  - job_name: card-print-agent
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['card-print-agent:8091']
+        labels:
+          plane: registry-spine
+          service: card-print-agent
+
+  # ─── Clinical Execution Plane ─────────────────────────────────────────────────
+
+  - job_name: pct
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['pct-service:8088']
+        labels:
+          plane: clinical-execution
+          service: pct
+
+  - job_name: oros
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['oros-service:8089']
+        labels:
+          plane: clinical-execution
+          service: oros
+
+  - job_name: pharmacy
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['pharmacy-service:8092']
+        labels:
+          plane: clinical-execution
+          service: pharmacy
+
+  - job_name: inpatient
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['inpatient-service:8093']
+        labels:
+          plane: clinical-execution
+          service: inpatient
+
+  - job_name: butano-fhir
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['butano-fhir:8094']
+        labels:
+          plane: clinical-execution
+          service: butano-fhir
+
+  - job_name: fhir-gateway
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['fhir-gateway-service:8095']
+        labels:
+          plane: clinical-execution
+          service: fhir-gateway
+
+  - job_name: pacs-adapter
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['pacs-adapter-service:8096']
+        labels:
+          plane: clinical-execution
+          service: pacs-adapter
+
+  # ─── Finance Plane ────────────────────────────────────────────────────────────
+
+  - job_name: mushex
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['mushex-service:8086']
+        labels:
+          plane: finance
+          service: mushex
+
+  - job_name: costing
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['costing-engine-service:8097']
+        labels:
+          plane: finance
+          service: costing
+
+  - job_name: msika
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['msika-service:8098']
+        labels:
+          plane: finance
+          service: msika
+
+  - job_name: msika-flow
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['msika-flow-service:8099']
+        labels:
+          plane: finance
+          service: msika-flow
+
+  - job_name: ubomi
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['ubomi-service:8100']
+        labels:
+          plane: finance
+          service: ubomi
+
+  # ─── Integration / Ops Plane ──────────────────────────────────────────────────
+
+  - job_name: inventory
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['inventory-service:8101']
+        labels:
+          plane: integration-ops
+          service: inventory
+
+  - job_name: notification
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['notification-service:8102']
+        labels:
+          plane: integration-ops
+          service: notification
+
+  - job_name: jobs
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['jobs-service:8103']
+        labels:
+          plane: integration-ops
+          service: jobs
+
+  - job_name: integration-hub
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['integration-hub:8104']
+        labels:
+          plane: integration-ops
+          service: integration-hub
+
+  - job_name: offline-sync
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['offline-sync-service:8105']
+        labels:
+          plane: integration-ops
+          service: offline-sync
+
+  - job_name: document
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['document-service:8106']
+        labels:
+          plane: integration-ops
+          service: document
+
+  - job_name: product-registry
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['product-registry-service:8107']
+        labels:
+          plane: integration-ops
+          service: product-registry
