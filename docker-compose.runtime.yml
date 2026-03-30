@@ -420,6 +420,7 @@ services:
       DB_USER: ${POSTGRES_USER:-impilo}
       DB_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
       SPRING_PROFILES_ACTIVE: default
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3020,http://localhost:10000}
     ports:
       - "8160:8160"
     depends_on:

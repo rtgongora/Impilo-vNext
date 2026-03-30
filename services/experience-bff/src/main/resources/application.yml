@@ -23,14 +23,19 @@ spring:
     locations: classpath:db/migration
     baseline-on-migrate: true
 
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3020,http://localhost:10000}
+
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics
+        include: health,info,metrics,prometheus
   endpoint:
     health:
       show-details: when-authorized
+    prometheus:
+      enabled: true
 
 logging:
   level:
