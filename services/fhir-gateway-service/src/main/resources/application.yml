@@ -15,7 +15,7 @@ spring:
       minimum-idle: 5
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: none
     open-in-view: false
     properties:
       hibernate:
@@ -32,6 +32,9 @@ spring:
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 
 fhir-gateway:
+  backend-url: ${FHIR_BACKEND_URL:http://localhost:8090}
+  pii:
+    enforce: ${FHIR_PII_ENFORCE:true}
   outbox:
     poll-interval-ms: 2000
 

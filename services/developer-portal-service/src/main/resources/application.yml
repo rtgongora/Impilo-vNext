@@ -10,7 +10,7 @@ spring:
     password: ${DB_PASS:impilo}
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: none
     properties:
       hibernate.dialect: org.hibernate.dialect.PostgreSQLDialect
     open-in-view: false
@@ -22,3 +22,28 @@ spring:
 impilo:
   companion:
     enabled: true
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    urls:
+      - name: "TSHEPO (Authorization)"
+        url: "http://localhost:8081/v3/api-docs"
+      - name: "VITO (Client Registry)"
+        url: "http://localhost:8082/v3/api-docs"
+      - name: "VARAPI (Provider Registry)"
+        url: "http://localhost:8083/v3/api-docs"
+      - name: "TUSO (Facility Registry)"
+        url: "http://localhost:8084/v3/api-docs"
+      - name: "ZIBO (Terminology)"
+        url: "http://localhost:8085/v3/api-docs"
+      - name: "PCT (Care Tracking)"
+        url: "http://localhost:8088/v3/api-docs"
+      - name: "OROS (Orders & Results)"
+        url: "http://localhost:8089/v3/api-docs"
+      - name: "MUSHEX (Claims & Finance)"
+        url: "http://localhost:8087/v3/api-docs"
+      - name: "BUTANO (FHIR Gateway)"
+        url: "http://localhost:8092/v3/api-docs"

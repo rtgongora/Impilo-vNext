@@ -94,7 +94,7 @@ class InventoryIntegrationTest {
     void setUp() {
         TrustContext ctx = new TrustContext(
                 TENANT_ID, "test-user", "PROVIDER", "INVENTORY_MANAGEMENT",
-                null, CORRELATION_ID, FACILITY_ID, null, null, AccessMode.INTERNAL);
+                null, CORRELATION_ID, FACILITY_ID, null, null, "national", AccessMode.INTERNAL);
         TrustContextHolder.set(ctx);
     }
 

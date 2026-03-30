@@ -30,6 +30,20 @@ public class AuthSessionController {
 
         String method = body.getOrDefault("method", "email").toString();
         String identifier = body.getOrDefault("identifier", "").toString();
+        if (identifier.isBlank() && body.containsKey("email")) {
+            identifier = body.get("email").toString();
+        }
+
+        if (identifier.isBlank()) {
+            Map<String, Object> errorResponse = new LinkedHashMap<>();
+            errorResponse.put("error", Map.of(
+                "code", "INVALID_CREDENTIALS",
+                "message", "Email or identifier is required",
+                "request_id", requestId,
+                "correlation_id", correlationId
+            ));
+            return ResponseEntity.status(401).body(errorResponse);
+        }
 
         // Stage-1: return a session token without full OIDC flow
         String sessionToken = UUID.randomUUID().toString();
@@ -37,10 +51,12 @@ public class AuthSessionController {
 
         Map<String, Object> user = new LinkedHashMap<>();
         user.put("id", UUID.randomUUID().toString());
-        user.put("identifier", identifier);
+        user.put("email", identifier);
+        user.put("displayName", identifier.contains("@") ? identifier.split("@")[0] : identifier);
         user.put("method", method);
         user.put("tenant_id", tenantId);
         user.put("roles", java.util.List.of("CLINICIAN"));
+        user.put("actorType", "PROVIDER");
 
         Map<String, Object> session = new LinkedHashMap<>();
         session.put("token", sessionToken);

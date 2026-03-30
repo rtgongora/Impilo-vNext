@@ -107,6 +107,7 @@ public class PharmacyConsumer {
                     UUID.fromString(facilityId),
                     null,
                     null,
+                    "national",
                     null);
             TrustContextHolder.set(ctx);
 
