@@ -1,5 +1,6 @@
 package zw.gov.mohcc.impilo.experience.controller;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -40,6 +41,7 @@ public class PatientController {
         this.outboxService = outboxService;
     }
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public record CreatePatientRequest(
             @NotBlank String given_name,
             @NotBlank String family_name,
