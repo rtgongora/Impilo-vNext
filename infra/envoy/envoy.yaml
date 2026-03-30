@@ -270,6 +270,7 @@ static_resources:
                           typed_per_filter_config:
                             envoy.filters.http.ext_authz:
                               "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthzPerRoute
+                              disabled: true
 
                         # ── BUTANO — Shared Health Record (HAPI FHIR R4) ──
                         - match: { prefix: "/fhir" }
@@ -296,14 +297,36 @@ static_resources:
                     typed_config:
                       "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthz
                       transport_api_version: V3
-                      grpc_service:
-                        envoy_grpc:
-                          cluster_name: tshepo_authz_grpc
-                        timeout: 0.5s
+                      http_service:
+                        server_uri:
+                          uri: http://host.docker.internal:8081
+                          cluster: tshepo_authz_service
+                          timeout: 0.5s
+                        path_prefix: "/v1/authorize"
+                        authorization_request:
+                          allowed_headers:
+                            patterns:
+                              - exact: "authorization"
+                              - exact: "x-tenant-id"
+                              - exact: "x-actor-id"
+                              - exact: "x-actor-type"
+                              - exact: "x-purpose-of-use"
+                              - exact: "x-device-fingerprint"
+                              - exact: "x-correlation-id"
+                              - exact: "x-facility-id"
+                              - exact: "x-workspace-id"
+                              - exact: "x-pod-id"
+                              - exact: "x-client-timeout-ms"
+                              - exact: "x-request-id"
+                              - exact: "x-session-id"
+                              - exact: "x-assurance-level"
+                        authorization_response:
+                          allowed_upstream_headers:
+                            patterns:
+                              - exact: "x-policy-decision"
+                              - exact: "x-policy-version"
+                              - exact: "x-decision-reason"
                       failure_mode_allow: false
-                      with_request_body:
-                        max_request_bytes: 8192
-                        allow_partial_message: true
                   - name: envoy.filters.http.router
                     typed_config:
                       "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
@@ -317,7 +340,7 @@ static_resources:
         - filters:
             - name: envoy.filters.network.http_connection_manager
               typed_config:
-                "@type": type.googleapis.com/envoy.extensions.filters.http.connection_manager.v3.HttpConnectionManager
+                "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
                 stat_prefix: ingress_http_internal
                 codec_type: AUTO
                 route_config:
@@ -339,10 +362,34 @@ static_resources:
                     typed_config:
                       "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthz
                       transport_api_version: V3
-                      grpc_service:
-                        envoy_grpc:
-                          cluster_name: tshepo_authz_grpc
-                        timeout: 0.5s
+                      http_service:
+                        server_uri:
+                          uri: http://host.docker.internal:8081
+                          cluster: tshepo_authz_service
+                          timeout: 0.5s
+                        path_prefix: "/v1/authorize"
+                        authorization_request:
+                          allowed_headers:
+                            patterns:
+                              - exact: "authorization"
+                              - exact: "x-tenant-id"
+                              - exact: "x-actor-id"
+                              - exact: "x-actor-type"
+                              - exact: "x-purpose-of-use"
+                              - exact: "x-device-fingerprint"
+                              - exact: "x-correlation-id"
+                              - exact: "x-facility-id"
+                              - exact: "x-workspace-id"
+                              - exact: "x-pod-id"
+                              - exact: "x-client-timeout-ms"
+                              - exact: "x-request-id"
+                              - exact: "x-session-id"
+                              - exact: "x-assurance-level"
+                        authorization_response:
+                          allowed_upstream_headers:
+                            patterns:
+                              - exact: "x-policy-decision"
+                              - exact: "x-policy-version"
                       failure_mode_allow: false
                   - name: envoy.filters.http.router
                     typed_config:
