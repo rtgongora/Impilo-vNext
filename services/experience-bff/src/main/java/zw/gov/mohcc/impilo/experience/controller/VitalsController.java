@@ -151,6 +151,22 @@ public class VitalsController {
                 bmi, request.pain_score(), request.notes(),
                 now, now);
 
+        Map<String, Object> vitalsPayload = new java.util.LinkedHashMap<>();
+        vitalsPayload.put("vitals_id", vitalsId.toString());
+        vitalsPayload.put("patient_id", request.patient_id());
+        vitalsPayload.put("encounter_id", request.encounter_id() != null ? request.encounter_id() : "");
+        vitalsPayload.put("recorded_by", request.recorded_by() != null ? request.recorded_by() : "");
+        vitalsPayload.put("systolic", request.systolic());
+        vitalsPayload.put("diastolic", request.diastolic());
+        vitalsPayload.put("heart_rate", request.heart_rate());
+        vitalsPayload.put("temperature", request.temperature());
+        vitalsPayload.put("respiratory_rate", request.respiratory_rate());
+        vitalsPayload.put("oxygen_saturation", request.oxygen_saturation());
+        vitalsPayload.put("weight", request.weight());
+        vitalsPayload.put("height", request.height());
+        vitalsPayload.put("bmi", bmi);
+        vitalsPayload.put("pain_score", request.pain_score());
+        vitalsPayload.put("recorded_at", now.toString());
         outboxService.writeOutboxEvent(
                 "impilo.experience.vitals.recorded.v1",
                 correlationId,
@@ -160,12 +176,7 @@ public class VitalsController {
                 podId,
                 "VitalsRecord",
                 vitalsId.toString(),
-                Map.of(
-                        "vitals_id", vitalsId.toString(),
-                        "patient_id", request.patient_id(),
-                        "encounter_id", request.encounter_id() != null ? request.encounter_id() : "",
-                        "recorded_by", request.recorded_by() != null ? request.recorded_by() : ""
-                ),
+                vitalsPayload,
                 Map.of()
         );
 

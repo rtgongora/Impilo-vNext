@@ -122,11 +122,7 @@ services:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/fhir/metadata > /dev/null 2>&1 || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
+      test: ["NONE"]
 
   # ===========================================================================
   # EDGE — Envoy + OPA
@@ -432,6 +428,38 @@ services:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8160/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+
+  # ── FHIR Gateway Service (port 8092) ───────────────────────────────
+  fhir-gateway:
+    build:
+      context: ./services/fhir-gateway-service
+      dockerfile: Dockerfile
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER:-impilo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/fhir_gateway
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-impilo}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      KEYCLOAK_ISSUER_URI: ${KEYCLOAK_ISSUER_URI:-http://keycloak:8080/realms/impilo}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      FHIR_BACKEND_URL: http://hapi-fhir:8080
+    ports:
+      - "8092:8092"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      hapi-fhir:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8092/actuator/health || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 15
