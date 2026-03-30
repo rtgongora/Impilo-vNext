@@ -72,6 +72,7 @@
       }
     ]
   },
+  "passwordPolicy": "hashAlgorithm(argon2id)",
   "clientScopes": [
     {
       "name": "openid",
@@ -209,106 +210,7 @@
             "access.token.claim": "true",
             "userinfo.token.claim": "false"
           }
-        }
-      ]
-    }
-  ],
-  "defaultDefaultClientScopes": [
-    "openid",
-    "profile",
-    "email",
-    "impilo-tenant"
-  ],
-  "clients": [
-    {
-      "clientId": "experience-ui",
-      "name": "Impilo Experience UI",
-      "enabled": true,
-      "publicClient": true,
-      "standardFlowEnabled": true,
-      "directAccessGrantsEnabled": true,
-      "serviceAccountsEnabled": false,
-      "redirectUris": [
-        "http://localhost:3020/*"
-      ],
-      "webOrigins": [
-        "http://localhost:3020"
-      ],
-      "protocol": "openid-connect",
-      "fullScopeAllowed": true,
-      "defaultClientScopes": [
-        "openid",
-        "profile",
-        "email",
-        "impilo-tenant"
-      ]
-    },
-    {
-      "clientId": "one-ui-shell",
-      "name": "Impilo One UI Shell",
-      "enabled": true,
-      "publicClient": true,
-      "standardFlowEnabled": true,
-      "directAccessGrantsEnabled": false,
-      "serviceAccountsEnabled": false,
-      "redirectUris": [
-        "http://localhost:3000/*"
-      ],
-      "webOrigins": [
-        "http://localhost:3000"
-      ],
-      "protocol": "openid-connect",
-      "fullScopeAllowed": true,
-      "defaultClientScopes": [
-        "openid",
-        "profile",
-        "email",
-        "impilo-tenant"
-      ]
-    },
-    {
-      "clientId": "citizen-portal",
-      "name": "Impilo Citizen Portal",
-      "enabled": true,
-      "publicClient": true,
-      "standardFlowEnabled": true,
-      "directAccessGrantsEnabled": false,
-      "serviceAccountsEnabled": false,
-      "redirectUris": [
-        "http://localhost:3003/*"
-      ],
-      "webOrigins": [
-        "http://localhost:3003"
-      ],
-      "protocol": "openid-connect",
-      "fullScopeAllowed": true,
-      "defaultClientScopes": [
-        "openid",
-        "profile",
-        "email",
-        "impilo-tenant"
-      ]
-    },
-    {
-      "clientId": "impilo-backend",
-      "name": "Impilo Backend Service Account",
-      "enabled": true,
-      "publicClient": false,
-      "standardFlowEnabled": false,
-      "directAccessGrantsEnabled": false,
-      "serviceAccountsEnabled": true,
-      "secret": "impilo-backend-secret",
-      "redirectUris": [],
-      "webOrigins": [],
-      "protocol": "openid-connect",
-      "fullScopeAllowed": true,
-      "defaultClientScopes": [
-        "openid",
-        "profile",
-        "email",
-        "impilo-tenant"
-      ],
-      "protocolMappers": [
+        },
         {
           "name": "facility_id",
           "protocol": "openid-connect",
@@ -320,34 +222,215 @@
             "jsonType.label": "String",
             "id.token.claim": "true",
             "access.token.claim": "true",
-            "userinfo.token.claim": "true",
-            "multivalued": "false",
-            "aggregate.attrs": "false"
+            "userinfo.token.claim": "false"
+          }
+        },
+        {
+          "name": "pod_id",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "pod_id",
+            "claim.name": "pod_id",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "false"
+          }
+        },
+        {
+          "name": "shift_id",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "shift_id",
+            "claim.name": "shift_id",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "false"
           }
         }
       ]
+    }
+  ],
+
+  "defaultDefaultClientScopes": [
+    "openid",
+    "profile",
+    "email",
+    "impilo-tenant"
+  ],
+  "clients": [
+    {
+      "clientId": "one-ui-shell",
+      "name": "Impilo One UI Shell",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": ["http://localhost:3000/*"],
+      "webOrigins": ["http://localhost:3000"],
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "ops-console",
+      "name": "Impilo Ops Console",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": ["http://localhost:3001/*"],
+      "webOrigins": ["http://localhost:3001"],
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "ehr-app",
+      "name": "Impilo EHR App",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": ["http://localhost:3002/*"],
+      "webOrigins": ["http://localhost:3002"],
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "portal",
+      "name": "Impilo Citizen Portal",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": ["http://localhost:3003/*"],
+      "webOrigins": ["http://localhost:3003"],
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "tshepo-authz",
+      "name": "TSHEPO Authorization Service",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "tshepo-authz-secret",
+      "serviceAccountsEnabled": true,
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "vito",
+      "name": "VITO Client Registry",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "vito-secret",
+      "serviceAccountsEnabled": true,
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "tuso",
+      "name": "TUSO Facility Registry",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "tuso-secret",
+      "serviceAccountsEnabled": true,
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "varapi",
+      "name": "VARAPI Provider Registry",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "varapi-secret",
+      "serviceAccountsEnabled": true,
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "msika",
+      "name": "MSIKA Catalog Service",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "msika-secret",
+      "serviceAccountsEnabled": true,
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "zibo",
+      "name": "ZIBO Terminology Service",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "zibo-secret",
+      "serviceAccountsEnabled": true,
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "mushex",
+      "name": "MUSHEX Payments Service",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "mushex-secret",
+      "serviceAccountsEnabled": true,
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "pct",
+      "name": "PCT Patient Care Tracker",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "pct-secret",
+      "serviceAccountsEnabled": true,
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "oros",
+      "name": "OROS Orders Service",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "oros-secret",
+      "serviceAccountsEnabled": true,
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "pharmacy",
+      "name": "Pharmacy Service",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "pharmacy-secret",
+      "serviceAccountsEnabled": true,
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "costa",
+      "name": "COSTA Costing Engine",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "costa-secret",
+      "serviceAccountsEnabled": true,
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "impilo-backend",
+      "name": "Impilo Generic Backend Service Account",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "impilo-backend-secret",
+      "serviceAccountsEnabled": true,
+      "protocol": "openid-connect"
     },
     {
       "clientId": "integration-test",
       "name": "Integration Test Harness",
       "enabled": true,
       "publicClient": false,
-      "standardFlowEnabled": false,
-      "directAccessGrantsEnabled": true,
-      "serviceAccountsEnabled": false,
       "secret": "integration-test-secret",
-      "redirectUris": [],
-      "webOrigins": [],
-      "protocol": "openid-connect",
-      "fullScopeAllowed": true,
-      "defaultClientScopes": [
-        "openid",
-        "profile",
-        "email",
-        "impilo-tenant"
-      ]
+      "directAccessGrantsEnabled": true,
+      "protocol": "openid-connect"
     }
   ],
+
   "users": [
     {
       "username": "admin.central",

@@ -2,12 +2,74 @@ import type { Patient, Encounter, VitalSign, Prescription } from "@/stores/ehrSt
 
 const BFF_URL = process.env.NEXT_PUBLIC_BFF_URL || "http://localhost:8100";
 
-interface LabResult {
+export interface LabResult {
   testName: string;
   value: string;
   unit: string;
   date: string;
   abnormal: boolean;
+}
+
+export interface DashboardSummary {
+  activeJourneys: number;
+  pendingOrders: number;
+  pendingResults: number;
+  todayEncounters: number;
+  criticalAlerts: number;
+}
+
+export interface Journey {
+  id: string;
+  patientCpid: string;
+  state:
+    | "REGISTERED"
+    | "TRIAGED"
+    | "WAITING"
+    | "IN_CONSULTATION"
+    | "REFERRED"
+    | "LAB_ORDERED"
+    | "PHARMACY"
+    | "IN_PROCEDURE"
+    | "OBSERVATION"
+    | "DECISION"
+    | "DISCHARGE_PENDING"
+    | "DISCHARGED"
+    | "CANCELLED";
+  facilityId: string;
+  startedAt: string;
+  updatedAt: string;
+  chiefComplaint?: string;
+}
+
+export interface ClinicalOrder {
+  id: string;
+  patientCpid: string;
+  orderType: "LAB" | "IMAGING" | "PROCEDURE" | "REFERRAL" | "MEDICATION";
+  status:
+    | "PLACED"
+    | "ACKNOWLEDGED"
+    | "IN_PROGRESS"
+    | "FULFILLED"
+    | "CANCELLED"
+    | "SLA_BREACHED";
+  priority: "ROUTINE" | "URGENT" | "STAT";
+  description: string;
+  orderedBy: string;
+  orderedAt: string;
+  dueBy?: string;
+}
+
+export interface ClinicalResult {
+  id: string;
+  orderId: string;
+  patientCpid: string;
+  resultType: "LAB" | "IMAGING" | "PROCEDURE";
+  status: "PRELIMINARY" | "FINAL" | "AMENDED" | "CANCELLED";
+  summary: string;
+  abnormal: boolean;
+  critical: boolean;
+  reportedAt: string;
+  signedOffBy?: string;
 }
 
 async function fetchJson<T>(path: string, options?: RequestInit): Promise<T> {
@@ -61,4 +123,28 @@ export const apiClient = {
       method: "POST",
       body: JSON.stringify(rx),
     }),
+
+  getDashboardSummary: (): Promise<DashboardSummary> =>
+    fetchJson(`/internal/v1/dashboard/summary`),
+
+  getPatient: (cpid: string): Promise<Patient> =>
+    fetchJson(`/internal/v1/patients/${cpid}`),
+
+  getJourneyTimeline: (cpid: string): Promise<Journey[]> =>
+    fetchJson(`/internal/v1/patients/${cpid}/journeys`),
+
+  listEncounters: (status?: string): Promise<Encounter[]> =>
+    fetchJson(
+      `/internal/v1/encounters${status ? `?status=${encodeURIComponent(status)}` : ""}`
+    ),
+
+  listOrders: (status?: string, priority?: string): Promise<ClinicalOrder[]> =>
+    fetchJson(
+      `/internal/v1/orders?${status ? `status=${encodeURIComponent(status)}&` : ""}${priority ? `priority=${encodeURIComponent(priority)}` : ""}`
+    ),
+
+  listResults: (status?: string): Promise<ClinicalResult[]> =>
+    fetchJson(
+      `/internal/v1/results${status ? `?status=${encodeURIComponent(status)}` : ""}`
+    ),
 };
