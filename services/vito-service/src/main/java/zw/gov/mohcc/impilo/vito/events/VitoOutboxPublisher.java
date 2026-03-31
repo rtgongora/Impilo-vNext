@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.vito.events;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import java.util.List;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -47,9 +48,28 @@ public class VitoOutboxPublisher extends CompanionOutboxPublisher {
     @Scheduled(fixedDelayString = "${vito.outbox.poll-interval-ms:2000}")
     @Transactional
     public void poll() {
-        int count = publishPendingEvents();
-        if (count > 0) {
-            log.info("Published {} outbox events", count);
+        try {
+            List<OutboxRow> events = (List<OutboxRow>) (List<?>) fetchUnpublished();
+            if (events.isEmpty()) return;
+
+            int published = 0;
+            for (OutboxRow row : events) {
+                try {
+                    String legacyTopic = VitoEventMapper.resolveLegacyTopic(row.aggregateType());
+                    sendToKafka(legacyTopic, row.aggregateId(), row.payloadJson());
+                    markPublished(row, java.time.OffsetDateTime.now());
+                    log.debug("VitoOutboxPublisher: published row id={} to topic={}", row.id(), legacyTopic);
+                    published++;
+                } catch (Exception e) {
+                    log.error("VitoOutboxPublisher: failed row id={} type={}: {}", row.id(), row.eventType(), e.getMessage(), e);
+                    break;
+                }
+            }
+            if (published > 0) {
+                log.info("VitoOutboxPublisher: published {} outbox events", published);
+            }
+        } catch (Exception e) {
+            log.error("VitoOutboxPublisher.poll: error: {}", e.getMessage(), e);
         }
     }
 
