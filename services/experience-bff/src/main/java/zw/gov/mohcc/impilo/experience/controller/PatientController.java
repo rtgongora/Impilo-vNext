@@ -72,14 +72,21 @@ public class PatientController {
             } catch (Exception ignored) {}
         }
 
+        UUID facilityUuid = null;
+        if (req.facility_id() != null && !req.facility_id().isBlank()) {
+            try {
+                facilityUuid = UUID.fromString(req.facility_id());
+            } catch (IllegalArgumentException ignored) {}
+        }
+
         jdbcTemplate.update("""
                 INSERT INTO patients (id, tenant_id, cpid, given_name, family_name, date_of_birth,
                     sex, national_id, phone, facility_id, status, created_at, updated_at)
-                VALUES (?::uuid, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'PROVISIONAL', NOW(), NOW())
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'PROVISIONAL', NOW(), NOW())
                 """,
-                id.toString(), tenantId, cpid,
+                id, tenantId, cpid,
                 req.given_name(), req.family_name(), dob,
-                req.sex(), req.national_id(), req.phone(), req.facility_id());
+                req.sex(), req.national_id(), req.phone(), facilityUuid);
 
         outboxService.writeOutboxEvent(
                 "impilo.experience.patient.registered.v1",
