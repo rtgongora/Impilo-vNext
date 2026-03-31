@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.vito.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -28,6 +30,7 @@ public class MergeHistoryEntity {
     @Column(name = "strategy")
     private String strategy;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "field_decisions", columnDefinition = "jsonb")
     private String fieldDecisions;
 

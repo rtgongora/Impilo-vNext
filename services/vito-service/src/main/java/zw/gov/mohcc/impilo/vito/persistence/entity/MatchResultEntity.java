@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.vito.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import zw.gov.mohcc.impilo.vito.core.MatchDisposition;
 
 import java.math.BigDecimal;
@@ -30,6 +32,7 @@ public class MatchResultEntity {
     @Column(name = "match_algorithm", nullable = false)
     private String matchAlgorithm;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "match_fields", nullable = false, columnDefinition = "jsonb")
     private String matchFields;
 

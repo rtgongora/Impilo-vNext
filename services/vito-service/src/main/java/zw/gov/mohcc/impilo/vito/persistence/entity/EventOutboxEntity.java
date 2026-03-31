@@ -1,11 +1,15 @@
 package zw.gov.mohcc.impilo.vito.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.DynamicUpdate;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import zw.gov.mohcc.impilo.sharedkernel.events.CompanionOutboxPublisher;
 
 import java.time.OffsetDateTime;
 
 @Entity
+@DynamicUpdate
 @Table(name = "event_outbox", schema = "vito")
 public class EventOutboxEntity {
 
@@ -22,6 +26,7 @@ public class EventOutboxEntity {
     @Column(name = "event_type", nullable = false)
     private String eventType;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "payload", nullable = false, columnDefinition = "jsonb")
     private String payload;
 
