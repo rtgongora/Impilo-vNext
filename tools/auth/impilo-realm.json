@@ -204,7 +204,7 @@
           "consentRequired": false,
           "config": {
             "claim.name": "tenant_id",
-            "claim.value": "moh-zw",
+            "claim.value": "00000000-0000-0000-0000-000000000001",
             "jsonType.label": "String",
             "id.token.claim": "false",
             "access.token.claim": "true",
@@ -478,6 +478,22 @@
           }
         }
       ]
+    },
+    {
+      "clientId": "vito-web",
+      "name": "VITO Web UI",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "http://localhost:3004/*"
+      ],
+      "webOrigins": [
+        "http://localhost:3004"
+      ],
+      "protocol": "openid-connect"
     }
   ],
   "users": [

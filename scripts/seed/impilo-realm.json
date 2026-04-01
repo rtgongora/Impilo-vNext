@@ -204,7 +204,7 @@
           "consentRequired": false,
           "config": {
             "claim.name": "tenant_id",
-            "claim.value": "moh-zw",
+            "claim.value": "00000000-0000-0000-0000-000000000001",
             "jsonType.label": "String",
             "id.token.claim": "false",
             "access.token.claim": "true",
@@ -256,7 +256,6 @@
       ]
     }
   ],
-
   "defaultDefaultClientScopes": [
     "openid",
     "profile",
@@ -272,8 +271,12 @@
       "standardFlowEnabled": true,
       "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": false,
-      "redirectUris": ["http://localhost:3000/*"],
-      "webOrigins": ["http://localhost:3000"],
+      "redirectUris": [
+        "http://localhost:3000/*"
+      ],
+      "webOrigins": [
+        "http://localhost:3000"
+      ],
       "protocol": "openid-connect"
     },
     {
@@ -284,8 +287,12 @@
       "standardFlowEnabled": true,
       "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": false,
-      "redirectUris": ["http://localhost:3001/*"],
-      "webOrigins": ["http://localhost:3001"],
+      "redirectUris": [
+        "http://localhost:3001/*"
+      ],
+      "webOrigins": [
+        "http://localhost:3001"
+      ],
       "protocol": "openid-connect"
     },
     {
@@ -296,8 +303,12 @@
       "standardFlowEnabled": true,
       "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": false,
-      "redirectUris": ["http://localhost:3002/*"],
-      "webOrigins": ["http://localhost:3002"],
+      "redirectUris": [
+        "http://localhost:3002/*"
+      ],
+      "webOrigins": [
+        "http://localhost:3002"
+      ],
       "protocol": "openid-connect"
     },
     {
@@ -308,8 +319,12 @@
       "standardFlowEnabled": true,
       "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": false,
-      "redirectUris": ["http://localhost:3003/*"],
-      "webOrigins": ["http://localhost:3003"],
+      "redirectUris": [
+        "http://localhost:3003/*"
+      ],
+      "webOrigins": [
+        "http://localhost:3003"
+      ],
       "protocol": "openid-connect"
     },
     {
@@ -428,9 +443,24 @@
       "secret": "integration-test-secret",
       "directAccessGrantsEnabled": true,
       "protocol": "openid-connect"
+    },
+    {
+      "clientId": "vito-web",
+      "name": "VITO Web UI",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "http://localhost:3004/*"
+      ],
+      "webOrigins": [
+        "http://localhost:3004"
+      ],
+      "protocol": "openid-connect"
     }
   ],
-
   "users": [
     {
       "username": "admin.central",

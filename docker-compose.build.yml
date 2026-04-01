@@ -58,6 +58,8 @@ services:
     command:
       - |
         set -e
+        echo "=== Clearing stale Next.js build cache ==="
+        rm -rf .next
         echo "=== Installing npm dependencies ==="
         npm install --legacy-peer-deps --cache /root/.npm
         echo "=== Building Experience UI ==="
