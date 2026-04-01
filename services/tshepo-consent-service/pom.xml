@@ -108,6 +108,13 @@
             <artifactId>tshepo-contracts</artifactId>
         </dependency>
 
+        <!-- TSHEPO SDK (TrustContext, TrustContextHolder) -->
+        <dependency>
+            <groupId>zw.gov.mohcc.impilo</groupId>
+            <artifactId>tshepo-sdk</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- Test -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

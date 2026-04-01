@@ -107,7 +107,8 @@ class AuditChainServiceTest {
                 "TREATMENT",
                 FACILITY_ID,
                 CORRELATION_ID,
-                Map.of("key", "value")
+                null,
+                Map.<String, Object>of("key", "value")
         );
     }
 
@@ -125,7 +126,8 @@ class AuditChainServiceTest {
                 "TREATMENT",
                 FACILITY_ID,
                 CORRELATION_ID,
-                Map.of("key", "value")
+                null,
+                Map.<String, Object>of("key", "value")
         );
     }
 
@@ -586,7 +588,7 @@ class AuditChainServiceTest {
         AuditEventRequest request = new AuditEventRequest(
                 TENANT_A, "AUTH_DECISION", "user-1", "PRACTITIONER",
                 null, null, null, "READ", "SUCCESS", null,
-                FACILITY_ID, CORRELATION_ID, null
+                FACILITY_ID, CORRELATION_ID, null, null
         );
 
         AuditEventEntity result = auditChainService.appendEvent(request);

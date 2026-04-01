@@ -58,6 +58,7 @@ public class AuditIngestController {
                 saved.getPurposeOfUse(),
                 saved.getFacilityId(),
                 saved.getCorrelationId(),
+                saved.getPolicyVersion(),
                 saved.getDetail(),
                 saved.getPreviousHash(),
                 saved.getEntryHash(),
