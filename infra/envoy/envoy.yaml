@@ -77,7 +77,40 @@ static_resources:
                         - match: { prefix: "/api/v1/offline" }
                           route: { cluster: tshepo_offline_service }
 
-                        # ── VITO — Client Registry ──
+                        # ── VITO — All public paths (vito-web UI → Envoy proxy) ──
+                        - match: { prefix: "/v1/cards" }
+                          route: { cluster: vito_service }
+                        - match: { prefix: "/v1/clients" }
+                          route: { cluster: vito_service }
+                        - match: { prefix: "/v1/identity" }
+                          route: { cluster: vito_service }
+                        - match: { prefix: "/v1/internal/" }
+                          route: { cluster: vito_service }
+                        - match: { prefix: "/v1/portal" }
+                          route: { cluster: vito_service }
+                        - match: { prefix: "/v1/qr" }
+                          route: { cluster: vito_service }
+                        - match: { prefix: "/v1/slips" }
+                          route: { cluster: vito_service }
+                        - match: { prefix: "/v1/print" }
+                          route: { cluster: vito_service }
+                        - match: { prefix: "/v1/match" }
+                          route: { cluster: vito_service }
+                        - match: { prefix: "/v1/dedup" }
+                          route: { cluster: vito_service }
+                        - match: { prefix: "/v1/wallets" }
+                          route: { cluster: vito_service }
+                        - match: { prefix: "/v1/wallet" }
+                          route: { cluster: vito_service }
+                        - match: { prefix: "/v1/biometric" }
+                          route: { cluster: vito_service }
+                        - match: { prefix: "/v1/registry" }
+                          route: { cluster: vito_service }
+                        - match: { prefix: "/v1/audit" }
+                          route: { cluster: vito_service }
+                        - match: { prefix: "/v1/recovery" }
+                          route: { cluster: vito_service }
+                        # Legacy /api/v1/ aliases kept for backwards compat
                         - match: { prefix: "/api/v1/clients" }
                           route: { cluster: vito_service }
                         - match: { prefix: "/api/v1/recovery" }
