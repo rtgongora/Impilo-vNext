@@ -87,10 +87,9 @@ public class IdentityService {
         // IssuanceStateMachineService.issue() when the issuance is approved.
 
         // Publish IDENTITY_CREATED event
-        publishEvent("CLIENT", client.getHealthId().toString(),
-                "IDENTITY_CREATED",
-                String.format("{\"healthId\":\"%s\",\"status\":\"PROVISIONAL\",\"did\":\"%s\"}",
-                        client.getHealthId(), did));
+        Map<String, Object> eventPayload = clientToMap(client);
+        eventPayload.put("did", did);
+        publishEvent("CLIENT", client.getHealthId().toString(), "IDENTITY_CREATED", eventPayload);
 
         return new ClientRegistrationResult(client, did);
     }

@@ -91,7 +91,7 @@ class IssuanceStateMachineTest {
         when(issuanceRepo.findById(1L)).thenReturn(Optional.of(req));
 
         assertThrows(IllegalStateException.class, () ->
-                service.deliver(tenantId, 1L));
+                service.deliver(tenantId, 1L, null));
     }
 
     @Test

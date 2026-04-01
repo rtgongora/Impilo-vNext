@@ -138,10 +138,13 @@ public class IssuanceStateMachineService {
      * Mark as delivered (card collected by client or delegate).
      */
     @Transactional
-    public IssuanceRequestEntity deliver(UUID tenantId, Long requestId) {
+    public IssuanceRequestEntity deliver(UUID tenantId, Long requestId, String deliveryChannel) {
         IssuanceRequestEntity req = findAndValidateState(tenantId, requestId, IssuanceState.ISSUED);
         req.setState(IssuanceState.DELIVERED);
         req.setDeliveredAt(OffsetDateTime.now());
+        if (deliveryChannel != null && !deliveryChannel.isBlank()) {
+            req.setMetadata("{\"deliveryChannel\":\"" + deliveryChannel + "\"}");
+        }
         return issuanceRepo.save(req);
     }
 
