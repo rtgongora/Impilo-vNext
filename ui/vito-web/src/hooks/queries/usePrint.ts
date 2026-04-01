@@ -5,6 +5,7 @@ import { cardKeys } from "./useCards";
 
 export interface PrintJobPayload {
   cardId: string;
+  printerId: string;
   templateId?: string;
   priority?: PrintPriority;
 }

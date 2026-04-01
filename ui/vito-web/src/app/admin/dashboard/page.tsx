@@ -21,6 +21,9 @@ import AssignmentIcon from "@mui/icons-material/Assignment";
 import MergeTypeIcon from "@mui/icons-material/MergeType";
 import CompareArrowsIcon from "@mui/icons-material/CompareArrows";
 import CreditCardIcon from "@mui/icons-material/CreditCard";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import NextLink from "next/link";
+import { Button } from "@mui/material";
 import { ErrorAlert } from "@/components/common/ErrorAlert";
 import { LoadingSkeleton } from "@/components/common/LoadingSkeleton";
 import { useListClients } from "@/hooks/queries/useClients";
@@ -79,7 +82,7 @@ export default function AdminDashboardPage() {
   const matchQuery = usePendingMatches({ page: 0, size: 1 });
   const dedupQuery = useDedupCases({ page: 0, size: 1, disposition: "PENDING" });
   const activeCardsQuery = useCardsByStatus("ACTIVE");
-  const auditQuery = useAuditLog({ page: 0, size: 10 });
+  const auditQuery = useAuditLog({ page: 0, size: 10, refetchInterval: 15000 });
 
   const anyKpiError =
     clientsQuery.error ||
@@ -136,7 +139,7 @@ export default function AdminDashboardPage() {
         <Grid item xs={12} sm={6} md={4} lg={2.4}>
           <KpiCard
             title="Active Cards"
-            value={activeCardsQuery.data?.length}
+            value={activeCardsQuery.data?.totalElements}
             icon={<CreditCardIcon fontSize="large" />}
             loading={activeCardsQuery.isLoading}
             color="success.main"
@@ -144,9 +147,19 @@ export default function AdminDashboardPage() {
         </Grid>
       </Grid>
 
-      <Typography variant="h6" sx={{ mb: 2 }}>
-        Recent Activity
-      </Typography>
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+        <Typography variant="h6">
+          Recent Activity
+        </Typography>
+        <Button
+          component={NextLink}
+          href="/admin/audit"
+          size="small"
+          endIcon={<ArrowForwardIcon />}
+        >
+          View All
+        </Button>
+      </Box>
 
       {auditQuery.error && <ErrorAlert error={auditQuery.error} />}
 
@@ -165,7 +178,7 @@ export default function AdminDashboardPage() {
             {auditQuery.isLoading ? (
               <LoadingSkeleton rows={10} columns={5} />
             ) : (
-              auditQuery.data?.items.map((event) => (
+              (auditQuery.data?.items ?? []).map((event) => (
                 <TableRow key={event.id} hover>
                   <TableCell sx={{ whiteSpace: "nowrap" }}>
                     {formatTimestamp(event.publishedAt ?? event.createdAt)}
@@ -188,7 +201,7 @@ export default function AdminDashboardPage() {
                 </TableRow>
               ))
             )}
-            {!auditQuery.isLoading && !auditQuery.data?.items.length && (
+            {!auditQuery.isLoading && !(auditQuery.data?.items?.length) && (
               <TableRow>
                 <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
                   <Typography variant="body2" color="text.secondary">

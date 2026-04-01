@@ -102,7 +102,7 @@ export default function ClientDetailPage() {
     );
   };
 
-  if (isLoading) return <LoadingSkeleton rows={10} />;
+  if (isLoading) return <LoadingSkeleton columns={3} />;
   if (error) return <ErrorAlert error={error} />;
   if (!client) return <Typography>Client not found</Typography>;
 
@@ -122,7 +122,7 @@ export default function ClientDetailPage() {
           <Paper sx={{ p: 3 }}>
             <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
               <Typography variant="h6">Identity Details</Typography>
-              <StatusChip status={client.status!} />
+              <StatusChip status={client.status!} type="client" />
             </Box>
             <Divider sx={{ mb: 2 }} />
             <Grid container spacing={2}>
@@ -213,24 +213,22 @@ export default function ClientDetailPage() {
       <ConfirmDialog
         open={dialog.type === "verify"}
         title="Verify Client"
-        content="Are you sure you want to verify this client's identity using biometrics?"
+        message="Are you sure you want to verify this client's identity using biometrics?"
         onConfirm={handleVerify}
         onCancel={() => setDialog({ ...dialog, type: null })}
-        isLoading={verifyMutation.isPending}
+        loading={verifyMutation.isPending}
       />
 
       {/* Deactivate Dialog */}
       <ConfirmDialog
         open={dialog.type === "deactivate"}
         title="Deactivate Client"
+        message="Please provide a reason for deactivating this client."
         onConfirm={handleDeactivate}
         onCancel={() => setDialog({ ...dialog, type: null })}
-        isLoading={deactivateMutation.isPending}
+        loading={deactivateMutation.isPending}
         confirmColor="error"
       >
-        <Typography gutterBottom>
-          Please provide a reason for deactivating this client.
-        </Typography>
         <TextField
           fullWidth
           label="Reason"
@@ -244,14 +242,12 @@ export default function ClientDetailPage() {
       <ConfirmDialog
         open={dialog.type === "deceased"}
         title="Mark as Deceased"
+        message="Please provide the date of death."
         onConfirm={handleMarkDeceased}
         onCancel={() => setDialog({ ...dialog, type: null })}
-        isLoading={deceasedMutation.isPending}
+        loading={deceasedMutation.isPending}
         confirmColor="error"
       >
-        <Typography gutterBottom>
-          Please provide the date of death.
-        </Typography>
         <TextField
           fullWidth
           type="date"
@@ -267,14 +263,12 @@ export default function ClientDetailPage() {
       <ConfirmDialog
         open={dialog.type === "rotate"}
         title="Rotate CPID"
+        message="Rotating the CPID will generate a new unique identifier for this client."
         onConfirm={handleRotate}
         onCancel={() => setDialog({ ...dialog, type: null })}
-        isLoading={rotateMutation.isPending}
+        loading={rotateMutation.isPending}
         confirmColor="warning"
       >
-        <Typography gutterBottom>
-          Rotating the CPID will generate a new unique identifier for this client.
-        </Typography>
         <TextField
           fullWidth
           label="Reason"

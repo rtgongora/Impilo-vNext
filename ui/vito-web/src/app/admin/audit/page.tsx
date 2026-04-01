@@ -259,7 +259,11 @@ export default function AuditLogPage() {
         </CardContent>
       </Card>
 
-      {error && <ErrorAlert error={error} sx={{ mb: 2 }} />}
+      {error && (
+        <Box sx={{ mb: 2 }}>
+          <ErrorAlert error={error} />
+        </Box>
+      )}
 
       <TableContainer component={Paper}>
         <Table size="small">
@@ -278,11 +282,11 @@ export default function AuditLogPage() {
             {isLoading ? (
               <LoadingSkeleton rows={10} columns={7} />
             ) : (
-              data?.items.map((event) => (
+              data?.items?.map((event) => (
                 <AuditRow key={event.id} event={event} />
               ))
             )}
-            {!isLoading && !data?.items.length && (
+            {!isLoading && !data?.items?.length && (
               <TableRow>
                 <TableCell colSpan={7} align="center" sx={{ py: 8 }}>
                   <Typography variant="body1" color="text.secondary">

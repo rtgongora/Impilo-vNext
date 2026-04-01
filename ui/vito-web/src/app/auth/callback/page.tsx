@@ -1,23 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Box, CircularProgress, Typography, Alert, Container, Button } from "@mui/material";
 import { exchangeCode, parseUserFromToken } from "@/lib/oidc";
 import { useAuthStore } from "@/hooks/useAuthStore";
 
-/**
- * Auth Callback Page — Exchanges OIDC code for tokens and handles user login.
- * 
- * This page processes the ?code=...&state=... from Keycloak.
- */
 export default function AuthCallbackPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const setAuth = useAuthStore((s) => s.setAuth);
   const [error, setError] = useState<string | null>(null);
+  const exchangeStarted = useRef(false);
 
   useEffect(() => {
+    // Guard against React StrictMode double-invoke — only run once.
+    if (exchangeStarted.current) return;
+    exchangeStarted.current = true;
+
     const code = searchParams.get("code");
     const state = searchParams.get("state");
     const errorParam = searchParams.get("error");
@@ -38,11 +38,10 @@ export default function AuthCallbackPage() {
     exchangeCode(code, state, redirectUri)
       .then((tokens) => {
         const user = parseUserFromToken(tokens.access_token);
-        
-        // setAuth persists auth_token and auth_user to sessionStorage with "vito:" prefix
         setAuth(user, tokens.access_token);
 
-        // Persistent storage for other tokens
+        sessionStorage.setItem("vito:tenant_id", user.tenantId);
+
         if (tokens.refresh_token) {
           sessionStorage.setItem("vito:refresh_token", tokens.refresh_token);
         }
@@ -50,7 +49,6 @@ export default function AuthCallbackPage() {
           sessionStorage.setItem("vito:id_token", tokens.id_token);
         }
 
-        // Redirect based on actorType
         if (user.actorType === "CITIZEN") {
           router.replace("/portal");
         } else {
@@ -67,8 +65,8 @@ export default function AuthCallbackPage() {
     return (
       <Container maxWidth="sm">
         <Box sx={{ mt: 8 }}>
-          <Alert 
-            severity="error" 
+          <Alert
+            severity="error"
             variant="filled"
             action={
               <Button color="inherit" size="small" onClick={() => router.replace("/auth/login")}>

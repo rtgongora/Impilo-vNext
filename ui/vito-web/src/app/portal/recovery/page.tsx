@@ -147,7 +147,7 @@ export default function IdentityRecoveryPage() {
           <form onSubmit={handleVerify}>
             <Stack spacing={3}>
               <Typography variant="body2" color="text.secondary">
-                We've sent a verification code to your registered {channel.toLowerCase()}. Please
+                We&apos;ve sent a verification code to your registered {channel.toLowerCase()}. Please
                 enter it below.
               </Typography>
               <TextField

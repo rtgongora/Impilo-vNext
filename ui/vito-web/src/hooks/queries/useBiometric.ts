@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { vitoApiClient } from "@/lib/apiClient";
-import type { BiometricMetadata, BiometricEnrollPayload, GenericResponse } from "@/types/vito";
+import type { BiometricTemplate, BiometricEnrollPayload, GenericResponse } from "@/types/vito";
 
 export const biometricKeys = {
   all: ["biometric"] as const,
@@ -10,7 +10,7 @@ export const biometricKeys = {
 export function useBiometricTemplates(healthId: string) {
   return useQuery({
     queryKey: biometricKeys.templates(healthId),
-    queryFn: () => vitoApiClient.get<BiometricMetadata>(`/v1/biometric/${healthId}`),
+    queryFn: () => vitoApiClient.get<BiometricTemplate[]>(`/v1/biometric/${healthId}`),
     enabled: !!healthId,
     staleTime: 30_000,
   });

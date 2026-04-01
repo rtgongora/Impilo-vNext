@@ -7,6 +7,7 @@ import {
   Typography,
   Grid,
   TextField,
+  MenuItem,
   Button,
   Table,
   TableBody,
@@ -57,6 +58,7 @@ export default function WalletsPage() {
   const [amount, setAmount] = useState<string>("0");
   const [reference, setReference] = useState("");
   const [description, setDescription] = useState("");
+  const [newWalletCurrency, setNewWalletCurrency] = useState("USD");
 
   const {
     data: wallet,
@@ -91,7 +93,7 @@ export default function WalletsPage() {
 
   const handleCreateWallet = async () => {
     try {
-      await createWallet.mutateAsync(activeHealthId);
+      await createWallet.mutateAsync({ healthId: activeHealthId, currency: newWalletCurrency });
       setCreateModalOpen(false);
     } catch (e) {
       // handled by mutation
@@ -102,8 +104,9 @@ export default function WalletsPage() {
     try {
       const payload: WalletTransactionPayload = {
         healthId: activeHealthId,
+        currency: wallet?.currency ?? "USD",
         amount: parseFloat(amount),
-        reference,
+        transactionRef: reference,
         description,
       };
       await topUpWallet.mutateAsync(payload);
@@ -118,8 +121,9 @@ export default function WalletsPage() {
     try {
       const payload: WalletTransactionPayload = {
         healthId: activeHealthId,
+        currency: wallet?.currency ?? "USD",
         amount: parseFloat(amount),
-        reference,
+        transactionRef: reference,
         description,
       };
       await payWallet.mutateAsync(payload);
@@ -136,7 +140,7 @@ export default function WalletsPage() {
     setDescription("");
   };
 
-  const activeCard = cards?.find((c) => c.status === "ACTIVE");
+  const activeCard = cards?.items?.find((c) => c.status === "ACTIVE");
   const isWalletNotFound = walletError instanceof VitoApiError && walletError.status === 404;
 
   return (
@@ -265,7 +269,7 @@ export default function WalletsPage() {
                     {journalLoading ? (
                       <LoadingSkeleton rows={5} columns={5} />
                     ) : (
-                      journal?.items.map((entry) => (
+                      journal?.items?.map((entry) => (
                         <TableRow key={entry.journalId}>
                           <TableCell>
                             <StatusChip status={entry.type!} type="journal" />
@@ -284,7 +288,7 @@ export default function WalletsPage() {
                         </TableRow>
                       ))
                     )}
-                    {wallet && journal && journal.items.length === 0 && !journalLoading && (
+                    {wallet && journal && journal.items?.length === 0 && !journalLoading && (
                       <TableRow>
                         <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
                           <Typography variant="body2" color="text.secondary">
@@ -316,9 +320,20 @@ export default function WalletsPage() {
       <Dialog open={createModalOpen} onClose={() => !createWallet.isPending && setCreateModalOpen(false)}>
         <DialogTitle>Create Wallet</DialogTitle>
         <DialogContent>
-          <Typography sx={{ mt: 1 }}>
-            Do you want to initialize a digital wallet for Health ID <strong>{activeHealthId}</strong>?
+          <Typography sx={{ mt: 1, mb: 2 }}>
+            Initialize a digital wallet for Health ID <strong>{activeHealthId}</strong>.
           </Typography>
+          <TextField
+            select
+            fullWidth
+            label="Currency"
+            value={newWalletCurrency}
+            onChange={(e) => setNewWalletCurrency(e.target.value)}
+          >
+            <MenuItem value="USD">USD — US Dollar</MenuItem>
+            <MenuItem value="ZWL">ZWL — Zimbabwe Dollar</MenuItem>
+            <MenuItem value="ZAR">ZAR — South African Rand</MenuItem>
+          </TextField>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
           <Button onClick={() => setCreateModalOpen(false)} disabled={createWallet.isPending}>

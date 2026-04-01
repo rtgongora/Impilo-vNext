@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { vitoApiClient } from "@/lib/apiClient";
 import type {
+  RegistryMode,
   RegistryModeResponse,
   ProvisionalIdResponse,
   ProvisionalIdRecord,
@@ -48,13 +49,19 @@ export function useIssueProvisional() {
   return useMutation({
     mutationFn: ({
       facilityId,
+      healthId,
+      reason,
       expiryHours,
     }: {
       facilityId: string;
+      healthId?: string;
+      reason?: string;
       expiryHours?: number;
     }) =>
       vitoApiClient.post<ProvisionalIdResponse>("/v1/registry/provisional/issue", {
         facilityId,
+        healthId,
+        reason,
         expiryHours,
       }),
     onSuccess: () => {
@@ -122,10 +129,21 @@ export function useResolveRegistryDedup() {
       survivorCpid,
     }: {
       caseId: string;
-      action: "MERGE" | "REJECT" | "DEFER";
+      action: "MERGE" | "NOT_DUPLICATE" | "REJECT" | "DEFER";
       survivorCpid?: string;
     }) =>
       vitoApiClient.post(`/v1/registry/dedup/${caseId}/resolve`, { action, survivorCpid }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: registryKeys.all });
+    },
+  });
+}
+
+export function useUpdateRegistryMode() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ mode, reason }: { mode: RegistryMode; reason?: string }) =>
+      vitoApiClient.post<RegistryModeResponse>("/v1/registry/mode", { mode, reason }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: registryKeys.all });
     },

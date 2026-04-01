@@ -44,8 +44,8 @@ export function useWalletJournal(params: WalletJournalParams) {
 export function useCreateWallet() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (healthId: string) =>
-      vitoApiClient.post<Wallet>("/v1/wallet/create", { healthId }),
+    mutationFn: ({ healthId, currency }: { healthId: string; currency: string }) =>
+      vitoApiClient.post<Wallet>("/v1/wallet/create", { healthId, currency }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: walletKeys.all });
     },

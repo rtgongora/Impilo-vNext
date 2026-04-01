@@ -6,6 +6,8 @@ import type {
   DelegatedPickup,
   GenericResponse,
   PortalIdRequestPayload,
+  PortalRequestIdResponse,
+  PortalQrResponse,
   RecoveryStartPayload,
   RecoveryVerifyPayload,
   RecoveryVerifyResponse,
@@ -30,14 +32,14 @@ export function usePortalMe() {
 export function useRequestId() {
   return useMutation({
     mutationFn: (payload: PortalIdRequestPayload) =>
-      vitoApiClient.post<IssuanceRequest>("/v1/portal/id/request", payload),
+      vitoApiClient.post<PortalRequestIdResponse>("/v1/portal/id/request", payload),
   });
 }
 
 export function useHealthIdQr() {
   return useQuery({
     queryKey: portalKeys.qr(),
-    queryFn: () => vitoApiClient.blob("/v1/portal/health-id/qr?format=png"),
+    queryFn: () => vitoApiClient.get<PortalQrResponse>("/v1/portal/health-id/qr"),
     staleTime: 30_000,
   });
 }

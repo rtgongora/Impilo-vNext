@@ -7,7 +7,9 @@ import {
   CARD_STATUS_LABEL,
   ISSUANCE_STATE_LABEL,
   WALLET_STATUS_LABEL,
+  WALLET_JOURNAL_TYPE_LABEL,
   MATCH_STATUS_LABEL,
+  MATCH_DISPOSITION_LABEL,
   DEDUP_STATUS_LABEL,
 } from "@/lib/constants";
 
@@ -16,7 +18,9 @@ export type StatusType =
   | "card"
   | "issuance"
   | "wallet"
+  | "journal"
   | "match"
+  | "match_disposition"
   | "dedup";
 
 interface StatusChipProps {
@@ -36,8 +40,12 @@ const getLabel = (status: string, type: StatusType): string => {
       return ISSUANCE_STATE_LABEL[status] || status;
     case "wallet":
       return WALLET_STATUS_LABEL[status] || status;
+    case "journal":
+      return WALLET_JOURNAL_TYPE_LABEL[status] || status;
     case "match":
       return MATCH_STATUS_LABEL[status] || status;
+    case "match_disposition":
+      return MATCH_DISPOSITION_LABEL[status] || status;
     case "dedup":
       return DEDUP_STATUS_LABEL[status] || status;
     default:
@@ -59,6 +67,8 @@ const getColor = (status: string): ChipProps["color"] => {
       "MERGED",
       "COMPLETED",
       "SUCCESS",
+      "TOPUP",
+      "OFFLINE_REDEEM",
     ].includes(s)
   ) {
     return "success";
@@ -66,7 +76,7 @@ const getColor = (status: string): ChipProps["color"] => {
 
   // Warning/Info states
   if (
-    ["REQUESTED", "PRINTING", "SUBMITTED", "PENDING", "QUEUED", "PRINTED"].includes(
+    ["REQUESTED", "PRINTING", "SUBMITTED", "PENDING", "QUEUED", "PRINTED", "OFFLINE_VOUCHER"].includes(
       s
     )
   ) {
@@ -82,6 +92,8 @@ const getColor = (status: string): ChipProps["color"] => {
       "FAILED",
       "REVOKED",
       "CANCELLED",
+      "PAYMENT",
+      "REVERSAL",
     ].includes(s)
   ) {
     return "error";

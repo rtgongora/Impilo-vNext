@@ -118,11 +118,24 @@ export async function buildAuthUrl(
   redirectUri: string,
   acrValues?: string
 ): Promise<string> {
-  const { verifier, challenge } = await generatePkce();
-  const state = base64UrlEncode(crypto.getRandomValues(new Uint8Array(16)).buffer);
+  // Idempotent: reuse existing PKCE params if already generated.
+  // This prevents React StrictMode's double effect invocation from overwriting
+  // the state stored by the first invocation before the redirect completes.
+  let verifier = sessionStorage.getItem("oidc:pkce_verifier");
+  let state = sessionStorage.getItem("oidc:state");
+  let challenge: string;
 
-  sessionStorage.setItem("oidc:pkce_verifier", verifier);
-  sessionStorage.setItem("oidc:state", state);
+  if (verifier && state) {
+    const challengeBuffer = await sha256(verifier);
+    challenge = base64UrlEncode(challengeBuffer);
+  } else {
+    const pkce = await generatePkce();
+    verifier = pkce.verifier;
+    challenge = pkce.challenge;
+    state = base64UrlEncode(crypto.getRandomValues(new Uint8Array(16)).buffer);
+    sessionStorage.setItem("oidc:pkce_verifier", verifier);
+    sessionStorage.setItem("oidc:state", state);
+  }
 
   const params = new URLSearchParams({
     client_id: KEYCLOAK_CLIENT_ID,
@@ -192,6 +205,7 @@ export function parseUserFromToken(accessToken: string): {
   displayName: string;
   roles: string[];
   actorType: "PROVIDER" | "OPERATOR" | "CITIZEN" | "SYSTEM";
+  tenantId: string;
 } {
   const [, payloadB64] = accessToken.split(".");
   const payload = JSON.parse(atob(payloadB64.replace(/-/g, "+").replace(/_/g, "/")));
@@ -217,6 +231,7 @@ export function parseUserFromToken(accessToken: string): {
       payload.name ?? payload.preferred_username ?? payload.email ?? "",
     roles: realmRoles,
     actorType,
+    tenantId: payload.tenant_id ?? "00000000-0000-0000-0000-000000000001",
   };
 }
 

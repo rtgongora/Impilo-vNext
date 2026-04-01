@@ -22,11 +22,12 @@ export const CARD_STATUS_LABEL: Record<string, string> = {
 
 export const ISSUANCE_STATE_LABEL: Record<string, string> = {
   SUBMITTED: "Submitted",
-  PROOFED: "Proofed",
+  PROOFING: "Proofing",
   APPROVED: "Approved",
   ISSUED: "Issued",
   DELIVERED: "Delivered",
   REJECTED: "Rejected",
+  EXPIRED: "Expired",
 };
 
 export const MODALITY_TYPE_LABEL: Record<string, string> = {
@@ -57,12 +58,22 @@ export const MATCH_STATUS_LABEL: Record<string, string> = {
   MERGED: "Merged",
   SPLIT: "Split",
   DISMISSED: "Dismissed",
+  DEFERRED: "Deferred",
+};
+
+export const MATCH_DISPOSITION_LABEL: Record<string, string> = {
+  PENDING: "Pending Review",
+  AUTO_LINKED: "Auto-Linked",
+  MANUAL_LINKED: "Manually Linked",
+  REJECTED: "Rejected",
+  DEFERRED: "Deferred",
 };
 
 export const DEDUP_STATUS_LABEL: Record<string, string> = {
   PENDING: "Pending",
   MERGED: "Merged",
   NOT_DUPLICATE: "Not a Duplicate",
+  DEFERRED: "Deferred",
 };
 
 export const DELEGATED_PICKUP_STATUS_LABEL: Record<string, string> = {

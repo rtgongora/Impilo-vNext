@@ -6,7 +6,7 @@ export type CardStatus = "REQUESTED" | "PRINTING" | "PRINTED" | "ACTIVE" | "INAC
 
 export type CardType = "PHYSICAL" | "VIRTUAL";
 
-export type IssuanceStatus = "SUBMITTED" | "PROOFED" | "APPROVED" | "ISSUED" | "DELIVERED" | "REJECTED";
+export type IssuanceStatus = "SUBMITTED" | "PROOFING" | "APPROVED" | "ISSUED" | "DELIVERED" | "REJECTED" | "EXPIRED";
 
 export type ProofingMethod = "DOCUMENT_SCAN" | "BIOMETRIC" | "IN_PERSON" | "REMOTE_VIDEO" | "DHA_LOOKUP";
 
@@ -16,11 +16,13 @@ export type WalletStatus = "ACTIVE" | "FROZEN" | "CLOSED";
 
 export type WalletJournalType = "TOPUP" | "PAYMENT" | "REVERSAL" | "OFFLINE_VOUCHER" | "OFFLINE_REDEEM";
 
-export type MatchStatus = "PENDING" | "MERGED" | "SPLIT" | "DISMISSED";
+export type MatchStatus = "PENDING" | "MERGED" | "SPLIT" | "DISMISSED" | "DEFERRED";
 
-export type MatchResolution = "MERGE" | "SPLIT" | "DISMISS";
+export type MatchResolution = "MERGE" | "SPLIT" | "DISMISS" | "DEFER";
 
-export type DedupStatus = "PENDING" | "MERGED" | "NOT_DUPLICATE";
+export type MatchDisposition = "PENDING" | "AUTO_LINKED" | "MANUAL_LINKED" | "REJECTED" | "DEFERRED";
+
+export type DedupStatus = "PENDING" | "MERGED" | "NOT_DUPLICATE" | "DEFERRED";
 
 export type DedupAction = "MERGE" | "NOT_DUPLICATE";
 
@@ -28,13 +30,19 @@ export type DelegatedPickupStatus = "ACTIVE" | "REDEEMED" | "EXPIRED" | "CANCELL
 
 export type RegistryMode = "NORMAL" | "PROVISIONAL" | "OFFLINE";
 
-export type BiometricModality =
-  | "FINGERPRINT_LEFT_INDEX"
-  | "FINGERPRINT_RIGHT_INDEX"
-  | "FINGERPRINT_LEFT_THUMB"
-  | "FINGERPRINT_RIGHT_THUMB"
-  | "IRIS_LEFT"
-  | "IRIS_RIGHT";
+export type BiometricModality = "FINGERPRINT" | "IRIS" | "FACE";
+
+export interface BiometricTemplate {
+  id: number;
+  healthId: string;
+  modality: BiometricModality;
+  position?: string;
+  qualityScore?: number;
+  captureDevice?: string;
+  capturedBy?: string;
+  status: "ACTIVE" | "SUPERSEDED" | "REVOKED";
+  capturedAt: string;
+}
 
 export type BiometricTemplateFormat = "ISO_19794_2" | "ISO_19794_6" | "PROPRIETARY";
 
@@ -97,14 +105,16 @@ export interface IssuanceRequest {
   applicantName?: string;
   dateOfBirth?: string;
   facilityId?: string;
-  proofingEvents?: ProofingEvent[];
+  type?: string;
+  channel?: string;
+  rejectionReason?: string;
+  impiloIdIssued?: string;
+  actorId?: string;
   submittedAt?: string;
   approvedAt?: string;
   issuedAt?: string;
   deliveredAt?: string;
   rejectedAt?: string;
-  rejectionReason?: string;
-  actorId?: string;
 }
 
 export interface SmartCard {
@@ -145,15 +155,16 @@ export interface WalletJournal {
 }
 
 export interface MatchResult {
-  matchId?: string;
-  primaryCpid?: string;
-  candidateCpids?: string[];
-  scores?: Record<string, number>;
-  status?: MatchStatus;
-  resolution?: MatchResolution;
-  survivorCpid?: string;
-  resolvedAt?: string;
+  id?: number;
+  matchId?: string; // Some frontend code might use this
+  sourceHealthId?: string;
+  candidateHealthId?: string;
+  matchScore: number;
+  matchAlgorithm?: string;
+  matchFields?: string;
+  disposition: MatchDisposition;
   resolvedBy?: string;
+  resolvedAt?: string;
   createdAt?: string;
 }
 
@@ -269,6 +280,8 @@ export interface ProvisionalIdResponse {
 
 export interface ProvisionalIdRecord {
   provisionalRef?: string;
+  healthId?: string;
+  reason?: string;
   givenName?: string;
   familyName?: string;
   dateOfBirth?: string;
@@ -381,17 +394,19 @@ export interface CardRequestPayload {
 
 export interface WalletTransactionPayload {
   healthId: string;
+  currency: string;
   amount: number;
-  reference?: string;
+  transactionRef: string;
   description?: string;
 }
 
 export interface BiometricEnrollPayload {
   healthId: string;
   modality: BiometricModality;
-  template: string;
-  templateFormat?: BiometricTemplateFormat;
-  quality?: number;
+  position?: string;
+  templateDataBase64: string;
+  qualityScore?: number;
+  captureDevice?: string;
 }
 
 export interface VerifyClientPayload {
@@ -415,14 +430,31 @@ export interface DelegatedPickupRedeemPayload {
 }
 
 export interface PortalIdRequestPayload {
-  givenName: string;
-  familyName: string;
-  dateOfBirth: string;
+  // Demographics (for NEW requests)
+  givenName?: string;
+  familyName?: string;
+  dateOfBirth?: string;
   gender?: Gender;
   nationalId?: string;
-  phoneNumber: string;
+  phoneNumber?: string;
   email?: string;
   address?: Address;
+
+  // Existing ID request
+  healthId?: string;
+  type?: "NEW" | "REPLACEMENT";
+  channel?: DeliveryChannel;
+  notes?: string;
+}
+
+export interface PortalRequestIdResponse {
+  status: string;
+  message: string;
+  referenceId?: string;
+}
+
+export interface PortalQrResponse {
+  qr: string;
 }
 
 export interface RecoveryStartPayload {

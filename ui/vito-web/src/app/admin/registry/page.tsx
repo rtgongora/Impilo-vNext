@@ -20,6 +20,7 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  CircularProgress,
 } from "@mui/material";
 import { PageHeader } from "@/components/common/PageHeader";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
@@ -229,7 +230,7 @@ export default function RegistryAdminPage() {
               {provisionalLoading ? (
                 <LoadingSkeleton rows={3} columns={5} />
               ) : (
-                pendingProvisional?.items.map((row) => (
+                pendingProvisional?.items?.map((row) => (
                   <TableRow key={row.provisionalRef}>
                     <TableCell>{row.provisionalRef}</TableCell>
                     <TableCell>{row.healthId || "N/A"}</TableCell>
@@ -248,7 +249,7 @@ export default function RegistryAdminPage() {
                   </TableRow>
                 ))
               )}
-              {!provisionalLoading && !pendingProvisional?.items.length && (
+              {!provisionalLoading && !pendingProvisional?.items?.length && (
                 <TableRow>
                   <TableCell colSpan={5} align="center">
                     No pending provisional IDs
@@ -283,7 +284,12 @@ export default function RegistryAdminPage() {
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setIssueModalOpen(false)}>Cancel</Button>
-            <Button variant="contained" onClick={handleIssueProvisional} loading={issueProvisional.isPending}>
+            <Button
+              variant="contained"
+              onClick={handleIssueProvisional}
+              disabled={issueProvisional.isPending}
+              startIcon={issueProvisional.isPending ? <CircularProgress size={20} color="inherit" /> : null}
+            >
               Issue
             </Button>
           </DialogActions>
@@ -312,7 +318,7 @@ export default function RegistryAdminPage() {
               {dedupLoading ? (
                 <LoadingSkeleton rows={3} columns={5} />
               ) : (
-                dedupData?.items.map((row) => (
+                dedupData?.items?.map((row) => (
                   <TableRow key={row.caseId}>
                     <TableCell>{row.caseId}</TableCell>
                     <TableCell>{row.cpidA}</TableCell>
@@ -326,7 +332,7 @@ export default function RegistryAdminPage() {
                   </TableRow>
                 ))
               )}
-              {!dedupLoading && !dedupData?.items.length && (
+              {!dedupLoading && !dedupData?.items?.length && (
                 <TableRow>
                   <TableCell colSpan={5} align="center">
                     No pending dedup cases
@@ -352,7 +358,12 @@ export default function RegistryAdminPage() {
             value={matchHealthId}
             onChange={(e) => setMatchHealthId(e.target.value)}
           />
-          <Button variant="contained" onClick={handleRunMatchTest} loading={runMatch.isPending}>
+          <Button
+            variant="contained"
+            onClick={handleRunMatchTest}
+            disabled={runMatch.isPending}
+            startIcon={runMatch.isPending ? <CircularProgress size={20} color="inherit" /> : null}
+          >
             Run Match Test
           </Button>
         </Box>

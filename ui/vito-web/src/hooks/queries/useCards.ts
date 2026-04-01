@@ -6,6 +6,7 @@ import type {
   CardRequestPayload,
   GenericResponse,
   InactivationReason,
+  PagedResponse,
 } from "@/types/vito";
 
 export const cardKeys = {
@@ -17,7 +18,7 @@ export const cardKeys = {
 export function useCardsByStatus(status: CardStatus) {
   return useQuery({
     queryKey: cardKeys.byStatus(status),
-    queryFn: () => vitoApiClient.get<SmartCard[]>(`/v1/cards/by-status/${status}`),
+    queryFn: () => vitoApiClient.get<PagedResponse<SmartCard>>(`/v1/cards/by-status/${status}`),
     staleTime: 30_000,
   });
 }
@@ -25,7 +26,7 @@ export function useCardsByStatus(status: CardStatus) {
 export function useCardHistory(healthId: string) {
   return useQuery({
     queryKey: cardKeys.history(healthId),
-    queryFn: () => vitoApiClient.get<SmartCard[]>(`/v1/cards/history/${healthId}`),
+    queryFn: () => vitoApiClient.get<PagedResponse<SmartCard>>(`/v1/cards/history/${healthId}`),
     enabled: !!healthId,
     staleTime: 30_000,
   });

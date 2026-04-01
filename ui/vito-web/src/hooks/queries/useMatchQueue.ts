@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { vitoApiClient } from "@/lib/apiClient";
-import type { MatchResult, MatchResolution, PagedResponse } from "@/types/vito";
+import type { MatchResult, MatchDisposition, PagedResponse } from "@/types/vito";
 
 export interface ListMatchParams {
   page?: number;
@@ -45,16 +45,13 @@ export function useResolveMatch() {
   return useMutation({
     mutationFn: ({
       matchId,
-      resolution,
-      survivorCpid,
+      disposition,
     }: {
       matchId: string;
-      resolution: MatchResolution;
-      survivorCpid?: string;
+      disposition: MatchDisposition;
     }) =>
       vitoApiClient.post<MatchResult>(`/v1/match/${matchId}/resolve`, {
-        resolution,
-        survivorCpid,
+        disposition,
       }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: matchKeys.all });

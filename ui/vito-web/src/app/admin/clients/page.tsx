@@ -102,10 +102,18 @@ export default function ClientsPage() {
           </TextField>
         </Box>
 
-        <ErrorAlert error={error} sx={{ mb: 2 }} />
+        <Box sx={{ mb: 2 }}>
+          <ErrorAlert error={error} />
+        </Box>
 
         {isLoading ? (
-          <LoadingSkeleton rows={rowsPerPage} columns={5} />
+          <TableContainer>
+            <Table>
+              <TableBody>
+                <LoadingSkeleton rows={rowsPerPage} columns={5} />
+              </TableBody>
+            </Table>
+          </TableContainer>
         ) : (
           <TableContainer>
             <Table>
@@ -119,7 +127,7 @@ export default function ClientsPage() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {data?.items.map((client) => (
+                {data?.items?.map((client) => (
                   <TableRow
                     key={client.healthId}
                     hover
@@ -133,11 +141,11 @@ export default function ClientsPage() {
                     <TableCell>{client.gender}</TableCell>
                     <TableCell>{client.dateOfBirth}</TableCell>
                     <TableCell>
-                      <StatusChip status={client.status!} />
+                      <StatusChip status={client.status!} type="client" />
                     </TableCell>
                   </TableRow>
                 ))}
-                {!data?.items.length && (
+                {!data?.items?.length && (
                   <TableRow>
                     <TableCell colSpan={5} align="center">
                       <Typography variant="body2" sx={{ py: 4 }}>

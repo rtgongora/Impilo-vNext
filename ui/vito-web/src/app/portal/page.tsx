@@ -241,7 +241,7 @@ export default function PortalProfilePage() {
             <PersonIcon sx={{ fontSize: 120 }} />
           </Box>
           <Typography variant="h4" fontWeight="800" gutterBottom sx={{ letterSpacing: -0.5 }}>
-            You haven't registered for a Health ID yet
+            You haven&apos;t registered for a Health ID yet
           </Typography>
           <Typography
             variant="body1"

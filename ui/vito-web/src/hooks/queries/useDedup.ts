@@ -59,6 +59,31 @@ export function useUnmergeCase() {
   });
 }
 
+export function useResolveDedupCase() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      caseId,
+      action,
+      survivorCpid,
+      notes,
+    }: {
+      caseId: string;
+      action: "MERGE" | "NOT_DUPLICATE" | "DEFERRED";
+      survivorCpid?: string;
+      notes?: string;
+    }) =>
+      vitoApiClient.post<DedupCase>(`/v1/registry/dedup/${caseId}/resolve`, {
+        action,
+        survivorCpid,
+        notes,
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: dedupKeys.all });
+    },
+  });
+}
+
 export function useRecalculateScore() {
   const qc = useQueryClient();
   return useMutation({

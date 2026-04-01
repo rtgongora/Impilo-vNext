@@ -19,11 +19,21 @@
  * x-access-mode is a vito-web extension not yet in shared-ui.
  */
 
-import { TRUST_HEADERS } from "../../../shared-ui/lib/contracts";
 import { VITO_STORAGE_KEYS } from "./constants";
 
+const TRUST_HEADERS = {
+  TENANT_ID: "x-tenant-id",
+  ACTOR_ID: "x-actor-id",
+  ACTOR_TYPE: "x-actor-type",
+  PURPOSE_OF_USE: "x-purpose-of-use",
+  CORRELATION_ID: "x-correlation-id",
+} as const;
+
+// In the browser, use same-origin so Next.js rewrites proxy /v1/* → Envoy (avoids CORS).
+// In SSR or when overridden by env var, use the absolute URL.
 const VITO_API_BASE =
-  process.env.NEXT_PUBLIC_VITO_API_URL || "http://localhost:10000";
+  process.env.NEXT_PUBLIC_VITO_API_URL ||
+  (typeof window !== "undefined" ? "" : "http://localhost:10000");
 
 const X_ACCESS_MODE = "x-access-mode";
 const X_STEP_UP_TOKEN = "x-step-up-token";
@@ -79,7 +89,7 @@ function readToken(): string | null {
 }
 
 function readTenantId(): string {
-  return sessionStorage.getItem(VITO_STORAGE_KEYS.TENANT_ID) || "tenant-moh-zw";
+  return sessionStorage.getItem(VITO_STORAGE_KEYS.TENANT_ID) || "00000000-0000-0000-0000-000000000001";
 }
 
 function readStepUpToken(): string | null {
@@ -114,6 +124,8 @@ function buildHeaders(
     [TRUST_HEADERS.CORRELATION_ID]: correlationId,
     [TRUST_HEADERS.PURPOSE_OF_USE]: purposeOfUse,
     [X_ACCESS_MODE]: accessMode,
+    "X-Pod-ID": "national",
+    "X-Request-ID": crypto.randomUUID(),
   };
 
   if (token) {
@@ -195,7 +207,8 @@ async function request<T>(
 
   const contentType = response.headers.get("Content-Type") ?? "";
   if (contentType.includes("application/json")) {
-    return response.json() as Promise<T>;
+    const envelope = await response.json() as { success?: boolean; data?: T; [k: string]: unknown };
+    return (envelope?.data !== undefined ? envelope.data : envelope) as T;
   }
 
   return response.text() as unknown as Promise<T>;

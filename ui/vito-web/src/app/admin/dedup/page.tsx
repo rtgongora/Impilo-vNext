@@ -71,7 +71,7 @@ function DedupRow({
         <TableCell>{row.caseId}</TableCell>
         <TableCell>{row.cpidA}</TableCell>
         <TableCell>{row.cpidB}</TableCell>
-        <TableCell>{(row.matchScore * 100).toFixed(1)}%</TableCell>
+        <TableCell>{row.matchScore ? (row.matchScore * 100).toFixed(1) : "0"}%</TableCell>
         <TableCell>
           <StatusChip status={row.status!} type="dedup" />
         </TableCell>
@@ -265,7 +265,7 @@ export default function DedupPage() {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {data?.items.map((row) => (
+                  {data?.items?.map((row) => (
                     <DedupRow
                       key={row.caseId}
                       row={row}
@@ -284,7 +284,7 @@ export default function DedupPage() {
                       }}
                     />
                   ))}
-                  {!data?.items.length && (
+                  {!data?.items?.length && (
                     <TableRow>
                       <TableCell colSpan={7} align="center">
                         <Typography variant="body2" sx={{ py: 4 }}>

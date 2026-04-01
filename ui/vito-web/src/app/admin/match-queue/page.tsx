@@ -104,7 +104,7 @@ export default function MatchQueuePage() {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {data?.items.map((match) => (
+                  {data?.items?.map((match) => (
                     <TableRow key={match.id || match.matchId} hover>
                       <TableCell>{match.sourceHealthId}</TableCell>
                       <TableCell>{match.candidateHealthId}</TableCell>
@@ -138,7 +138,7 @@ export default function MatchQueuePage() {
                       </TableCell>
                     </TableRow>
                   ))}
-                  {!data?.items.length && (
+                  {!data?.items?.length && (
                     <TableRow>
                       <TableCell colSpan={5} align="center">
                         <Typography variant="body2" sx={{ py: 4 }}>

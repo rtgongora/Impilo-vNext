@@ -134,7 +134,8 @@ export default function RegisterPage() {
             <Alert severity="success" sx={{ mb: 3 }}>
               <Typography variant="subtitle1" fontWeight="bold">Registration Successful!</Typography>
               <Typography>Assigned Health ID: {registeredClient.healthId}</Typography>
-              <Typography>CPID: {registeredClient.cpid}</Typography>
+              <Typography>DID: {(registeredClient as any).did}</Typography>
+              <Typography>Status: {registeredClient.status}</Typography>
               <Button 
                 variant="outlined" 
                 size="small" 
@@ -185,7 +186,9 @@ export default function RegisterPage() {
                   </Button>
                 </Grid>
               </Grid>
-              <ErrorAlert error={registerMutation.error} sx={{ mt: 2 }} />
+              <Box sx={{ mt: 2 }}>
+                <ErrorAlert error={registerMutation.error} />
+              </Box>
             </Box>
           )}
         </CustomTabPanel>
@@ -246,7 +249,9 @@ export default function RegisterPage() {
               </Paper>
             </Box>
           )}
-          <ErrorAlert error={resolveMutation.error} sx={{ mt: 2 }} />
+          <Box sx={{ mt: 2 }}>
+            <ErrorAlert error={resolveMutation.error} />
+          </Box>
         </CustomTabPanel>
       </Paper>
 

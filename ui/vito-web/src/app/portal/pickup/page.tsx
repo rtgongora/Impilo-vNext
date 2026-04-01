@@ -19,6 +19,7 @@ import { useCreatePickup, useRedeemPickup } from "@/hooks/queries/usePortal";
 import { PageHeader } from "@/components/common/PageHeader";
 import { ErrorAlert } from "@/components/common/ErrorAlert";
 import { VitoApiError } from "@/lib/apiClient";
+import Link from "next/link";
 
 interface TabPanelProps {
   children?: React.ReactNode;

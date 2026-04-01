@@ -1,42 +1,40 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Box,
-  Button,
-  Card,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  FormControl,
-  Grid,
-  InputLabel,
-  MenuItem,
   Paper,
-  Select,
-  Tab,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
-  TablePagination,
   TableRow,
-  Tabs,
-  TextField,
+  TablePagination,
   Typography,
+  Tabs,
+  Tab,
+  Button,
+  IconButton,
+  Tooltip,
+  Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  MenuItem,
+  Grid,
 } from "@mui/material";
-import {
-  Add as AddIcon,
-  Visibility as ViewIcon,
-  CheckCircle as ApproveIcon,
-  Cancel as RejectIcon,
-  PlayArrow as StartIcon,
-  LocalShipping as DeliverIcon,
-  Badge as IssueIcon,
-} from "@mui/icons-material";
-import Link from "next/link";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import CancelIcon from "@mui/icons-material/Cancel";
+import PrintIcon from "@mui/icons-material/Print";
+import LocalShippingIcon from "@mui/icons-material/LocalShipping";
+import AddIcon from "@mui/icons-material/Add";
+import AssignmentIndIcon from "@mui/icons-material/AssignmentInd";
+
 import {
   useIssuanceQueue,
   useSubmitIssuance,
@@ -50,43 +48,48 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { StatusChip } from "@/components/common/StatusChip";
 import { LoadingSkeleton } from "@/components/common/LoadingSkeleton";
 import { ErrorAlert } from "@/components/common/ErrorAlert";
-import { IssuanceStatus, DeliveryChannel, IssuanceSubmitPayload } from "@/types/vito";
-import { DELIVERY_CHANNEL_LABEL, GENDER_LABEL } from "@/lib/constants";
+import { ConfirmDialog } from "@/components/common/ConfirmDialog";
+import type { IssuanceStatus, IssuanceSubmitPayload } from "@/types/vito";
+import { ISSUANCE_STATE_LABEL } from "@/lib/constants";
 
 const STATUS_TABS: IssuanceStatus[] = [
   "SUBMITTED",
-  "PROOFED",
+  "PROOFING",
   "APPROVED",
   "ISSUED",
   "DELIVERED",
   "REJECTED",
 ];
 
-export default function IssuanceQueuePage() {
+export default function IssuancePage() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState(0);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const status = STATUS_TABS[activeTab];
+
+  // Modals state
+  const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
+  const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
+  const [isApproveDialogOpen, setIsApproveDialogOpen] = useState(false);
+  const [isIssueDialogOpen, setIsIssueDialogOpen] = useState(false);
+  const [isDeliverDialogOpen, setIsDeliverDialogOpen] = useState(false);
+
+  const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
+  const [rejectionReason, setRejectionReason] = useState("");
+  const [approvalNotes, setApprovalNotes] = useState("");
+
+  const [submitPayload, setSubmitPayload] = useState<IssuanceSubmitPayload>({
+    givenName: "",
+    familyName: "",
+    dateOfBirth: "",
+  });
+
+  const currentStatus = STATUS_TABS[activeTab];
 
   const { data, isLoading, error } = useIssuanceQueue({
     page,
     size: rowsPerPage,
-    status,
-  });
-
-  const [submitModalOpen, setSubmitModalOpen] = useState(false);
-  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
-  const [deliverDialogOpen, setDeliverDialogOpen] = useState(false);
-  const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
-  const [rejectionReason, setRejectionReason] = useState("");
-  const [deliveryChannel, setDeliveryChannel] = useState<DeliveryChannel>("IN_PERSON");
-
-  const [newRequest, setNewRequest] = useState<IssuanceSubmitPayload>({
-    givenName: "",
-    familyName: "",
-    dateOfBirth: "",
-    gender: "UNKNOWN",
-    facilityId: "",
+    status: currentStatus,
   });
 
   const submitMutation = useSubmitIssuance();
@@ -96,178 +99,143 @@ export default function IssuanceQueuePage() {
   const deliverMutation = useDeliverIssuance();
   const rejectMutation = useRejectIssuance();
 
-  const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = (_: unknown, newValue: number) => {
     setActiveTab(newValue);
     setPage(0);
   };
 
-  const handlePageChange = (_: unknown, newPage: number) => {
+  const handleChangePage = (_: unknown, newPage: number) => {
     setPage(newPage);
   };
 
-  const handleRowsPerPageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
 
-  const handleSubmitNew = async () => {
-    await submitMutation.mutateAsync(newRequest);
-    setSubmitModalOpen(false);
-    setNewRequest({
-      givenName: "",
-      familyName: "",
-      dateOfBirth: "",
-      gender: "UNKNOWN",
-      facilityId: "",
-    });
+  const handleRowClick = (requestId: string) => {
+    router.push(`/admin/issuance/${requestId}`);
   };
 
-  const handleStartProofing = async (requestId: string) => {
-    await startProofingMutation.mutateAsync({
-      requestId,
-      event: {
-        method: "IN_PERSON",
-        outcome: "PASSED",
-        performedAt: new Date().toISOString(),
-      },
-    });
-  };
-
-  const handleApprove = async (requestId: string) => {
-    await approveMutation.mutateAsync({ requestId });
-  };
-
-  const handleIssue = async (requestId: string) => {
-    await issueMutation.mutateAsync(requestId);
+  const handleSubmitRequest = async () => {
+    try {
+      await submitMutation.mutateAsync(submitPayload);
+      setIsSubmitModalOpen(false);
+      setSubmitPayload({
+        givenName: "",
+        familyName: "",
+        dateOfBirth: "",
+      });
+    } catch (err) {
+      console.error("Failed to submit issuance request", err);
+    }
   };
 
   const handleReject = async () => {
     if (selectedRequestId && rejectionReason) {
-      await rejectMutation.mutateAsync({
-        requestId: selectedRequestId,
-        reason: rejectionReason,
-      });
-      setRejectDialogOpen(false);
-      setRejectionReason("");
-      setSelectedRequestId(null);
+      try {
+        await rejectMutation.mutateAsync({
+          requestId: selectedRequestId,
+          reason: rejectionReason,
+        });
+        setIsRejectDialogOpen(false);
+        setRejectionReason("");
+        setSelectedRequestId(null);
+      } catch (err) {
+        console.error("Failed to reject request", err);
+      }
+    }
+  };
+
+  const handleApprove = async () => {
+    if (selectedRequestId) {
+      try {
+        await approveMutation.mutateAsync({
+          requestId: selectedRequestId,
+          notes: approvalNotes,
+        });
+        setIsApproveDialogOpen(false);
+        setApprovalNotes("");
+        setSelectedRequestId(null);
+      } catch (err) {
+        console.error("Failed to approve request", err);
+      }
+    }
+  };
+
+  const handleIssue = async () => {
+    if (selectedRequestId) {
+      try {
+        await issueMutation.mutateAsync(selectedRequestId);
+        setIsIssueDialogOpen(false);
+        setSelectedRequestId(null);
+      } catch (err) {
+        console.error("Failed to issue request", err);
+      }
     }
   };
 
   const handleDeliver = async () => {
     if (selectedRequestId) {
-      await deliverMutation.mutateAsync({
-        requestId: selectedRequestId,
-        deliveryChannel,
-        deliveredAt: new Date().toISOString(),
-      });
-      setDeliverDialogOpen(false);
-      setSelectedRequestId(null);
+      try {
+        await deliverMutation.mutateAsync({
+          requestId: selectedRequestId,
+          deliveryChannel: "IN_PERSON",
+          deliveredAt: new Date().toISOString(),
+        });
+        setIsDeliverDialogOpen(false);
+        setSelectedRequestId(null);
+      } catch (err) {
+        console.error("Failed to deliver request", err);
+      }
     }
   };
 
-  const renderActions = (requestId: string, currentStatus: IssuanceStatus) => {
-    return (
-      <Box sx={{ display: "flex", gap: 1 }}>
-        <Button
-          component={Link}
-          href={`/admin/issuance/${requestId}`}
-          size="small"
-          startIcon={<ViewIcon />}
-        >
-          View
-        </Button>
-        {currentStatus === "SUBMITTED" && (
-          <Button
-            size="small"
-            color="primary"
-            variant="contained"
-            startIcon={<StartIcon />}
-            onClick={() => handleStartProofing(requestId)}
-            disabled={startProofingMutation.isPending}
-          >
-            Start Proofing
-          </Button>
-        )}
-        {currentStatus === "PROOFED" && (
-          <>
-            <Button
-              size="small"
-              color="success"
-              variant="contained"
-              startIcon={<ApproveIcon />}
-              onClick={() => handleApprove(requestId)}
-              disabled={approveMutation.isPending}
-            >
-              Approve
-            </Button>
-            <Button
-              size="small"
-              color="error"
-              variant="outlined"
-              startIcon={<RejectIcon />}
-              onClick={() => {
-                setSelectedRequestId(requestId);
-                setRejectDialogOpen(true);
-              }}
-              disabled={rejectMutation.isPending}
-            >
-              Reject
-            </Button>
-          </>
-        )}
-        {currentStatus === "APPROVED" && (
-          <Button
-            size="small"
-            color="primary"
-            variant="contained"
-            startIcon={<IssueIcon />}
-            onClick={() => handleIssue(requestId)}
-            disabled={issueMutation.isPending}
-          >
-            Issue
-          </Button>
-        )}
-        {currentStatus === "ISSUED" && (
-          <Button
-            size="small"
-            color="success"
-            variant="contained"
-            startIcon={<DeliverIcon />}
-            onClick={() => {
-              setSelectedRequestId(requestId);
-              setDeliverDialogOpen(true);
-            }}
-            disabled={deliverMutation.isPending}
-          >
-            Mark Delivered
-          </Button>
-        )}
-      </Box>
-    );
+  const handleStartProofing = async (requestId: string) => {
+    try {
+      await startProofingMutation.mutateAsync({ requestId, event: {} });
+    } catch (err) {
+      console.error("Failed to start proofing", err);
+    }
+  };
+
+  const openRejectDialog = (requestId: string) => {
+    setSelectedRequestId(requestId);
+    setIsRejectDialogOpen(true);
+  };
+
+  const openApproveDialog = (requestId: string) => {
+    setSelectedRequestId(requestId);
+    setIsApproveDialogOpen(true);
+  };
+
+  const openIssueDialog = (requestId: string) => {
+    setSelectedRequestId(requestId);
+    setIsIssueDialogOpen(true);
+  };
+
+  const openDeliverDialog = (requestId: string) => {
+    setSelectedRequestId(requestId);
+    setIsDeliverDialogOpen(true);
   };
 
   return (
     <Box>
       <PageHeader
         title="Issuance Queue"
-        breadcrumbs={[
-          { label: "Admin", href: "/admin" },
-          { label: "Issuance Queue" },
-        ]}
+        breadcrumbs={[{ label: "Admin", href: "/admin" }, { label: "Issuance" }]}
         action={
           <Button
             variant="contained"
             startIcon={<AddIcon />}
-            onClick={() => setSubmitModalOpen(true)}
+            onClick={() => setIsSubmitModalOpen(true)}
           >
-            Submit New Request
+            Submit Request
           </Button>
         }
       />
 
-      <ErrorAlert error={error as any} />
-
-      <Card sx={{ mb: 4 }}>
+      <Paper sx={{ width: "100%", mb: 3 }}>
         <Tabs
           value={activeTab}
           onChange={handleTabChange}
@@ -277,147 +245,273 @@ export default function IssuanceQueuePage() {
           scrollButtons="auto"
           sx={{ borderBottom: 1, borderColor: "divider" }}
         >
-          {STATUS_TABS.map((s) => (
-            <Tab key={s} label={s} />
+          {STATUS_TABS.map((status) => (
+            <Tab key={status} label={ISSUANCE_STATE_LABEL[status]} />
           ))}
         </Tabs>
 
-        <TableContainer>
-          <Table sx={{ minWidth: 650 }}>
-            <TableHead>
-              <TableRow>
-                <TableCell>Request ID</TableCell>
-                <TableCell>Applicant</TableCell>
-                <TableCell>DOB</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Submitted At</TableCell>
-                <TableCell align="right">Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {isLoading ? (
-                <LoadingSkeleton rows={rowsPerPage} columns={6} />
-              ) : data?.items.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} align="center">
-                    No requests found in this state.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                data?.items.map((row) => (
-                  <TableRow key={row.requestId}>
-                    <TableCell sx={{ fontFamily: "monospace", fontSize: "0.8rem" }}>
-                      {row.requestId}
-                    </TableCell>
-                    <TableCell>{row.applicantName}</TableCell>
-                    <TableCell>{row.dateOfBirth}</TableCell>
-                    <TableCell>
-                      <StatusChip status={row.status || ""} type="issuance" />
-                    </TableCell>
-                    <TableCell>
-                      {row.submittedAt ? new Date(row.submittedAt).toLocaleString() : "-"}
-                    </TableCell>
-                    <TableCell align="right">
-                      {renderActions(row.requestId!, row.status!)}
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-        <TablePagination
-          rowsPerPageOptions={[5, 10, 25]}
-          component="div"
-          count={data?.totalElements || 0}
-          rowsPerPage={rowsPerPage}
-          page={page}
-          onPageChange={handlePageChange}
-          onRowsPerPageChange={handleRowsPerPageChange}
-        />
-      </Card>
+        <Box sx={{ p: 2 }}>
+          <ErrorAlert error={error} />
 
-      {/* Submit New Request Modal */}
-      <Dialog open={submitModalOpen} onClose={() => setSubmitModalOpen(false)} fullWidth maxWidth="sm">
-        <DialogTitle>Submit New Issuance Request</DialogTitle>
-        <DialogContent>
-          <Box sx={{ mt: 2, display: "flex", flexDirection: "column", gap: 2 }}>
-            <Grid container spacing={2}>
-              <Grid item xs={6}>
-                <TextField
-                  fullWidth
-                  label="Given Name"
-                  value={newRequest.givenName}
-                  onChange={(e) => setNewRequest({ ...newRequest, givenName: e.target.value })}
-                />
-              </Grid>
-              <Grid item xs={6}>
-                <TextField
-                  fullWidth
-                  label="Family Name"
-                  value={newRequest.familyName}
-                  onChange={(e) => setNewRequest({ ...newRequest, familyName: e.target.value })}
-                />
-              </Grid>
-              <Grid item xs={6}>
-                <TextField
-                  fullWidth
-                  label="Date of Birth"
-                  type="date"
-                  InputLabelProps={{ shrink: true }}
-                  value={newRequest.dateOfBirth}
-                  onChange={(e) => setNewRequest({ ...newRequest, dateOfBirth: e.target.value })}
-                />
-              </Grid>
-              <Grid item xs={6}>
-                <FormControl fullWidth>
-                  <InputLabel>Gender</InputLabel>
-                  <Select
-                    value={newRequest.gender}
-                    label="Gender"
-                    onChange={(e) => setNewRequest({ ...newRequest, gender: e.target.value as any })}
-                  >
-                    {Object.entries(GENDER_LABEL).map(([val, label]) => (
-                      <MenuItem key={val} value={val}>
-                        {label}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Facility ID"
-                  value={newRequest.facilityId}
-                  onChange={(e) => setNewRequest({ ...newRequest, facilityId: e.target.value })}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="National ID (Optional)"
-                  value={newRequest.nationalId || ""}
-                  onChange={(e) => setNewRequest({ ...newRequest, nationalId: e.target.value })}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Phone Number (Optional)"
-                  value={newRequest.phoneNumber || ""}
-                  onChange={(e) => setNewRequest({ ...newRequest, phoneNumber: e.target.value })}
-                />
-              </Grid>
+          {isLoading ? (
+            <TableContainer>
+              <Table>
+                <TableBody>
+                  <LoadingSkeleton rows={rowsPerPage} columns={6} />
+                </TableBody>
+              </Table>
+            </TableContainer>
+          ) : (
+            <TableContainer>
+              <Table size="medium">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>ID</TableCell>
+                    <TableCell>Health ID</TableCell>
+                    <TableCell>Type</TableCell>
+                    <TableCell>Submitted At</TableCell>
+                    <TableCell>State</TableCell>
+                    <TableCell align="right">Actions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {(data?.items ?? []).map((request) => (
+                    <TableRow key={request.requestId} hover>
+                      <TableCell>{request.requestId}</TableCell>
+                      <TableCell>{request.applicantName}</TableCell>
+                      <TableCell>{request.type}</TableCell>
+                      <TableCell>
+                        {request.submittedAt
+                          ? new Date(request.submittedAt).toLocaleDateString()
+                          : "-"}
+                      </TableCell>
+                      <TableCell>
+                        <StatusChip status={request.status!} type="issuance" />
+                      </TableCell>
+                      <TableCell align="right">
+                        <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1 }}>
+                          <Tooltip title="View Details">
+                            <IconButton
+                              size="small"
+                              onClick={() => handleRowClick(request.requestId!)}
+                            >
+                              <VisibilityIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+
+                          {currentStatus === "SUBMITTED" && (
+                            <>
+                              <Tooltip title="Start Proofing">
+                                <IconButton
+                                  size="small"
+                                  color="primary"
+                                  onClick={() => handleStartProofing(request.requestId!)}
+                                >
+                                  <AssignmentIndIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title="Reject">
+                                <IconButton
+                                  size="small"
+                                  color="error"
+                                  onClick={() => openRejectDialog(request.requestId!)}
+                                >
+                                  <CancelIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                            </>
+                          )}
+
+                          {currentStatus === "PROOFING" && (
+                            <>
+                              <Tooltip title="Approve">
+                                <IconButton
+                                  size="small"
+                                  color="success"
+                                  onClick={() => openApproveDialog(request.requestId!)}
+                                >
+                                  <CheckCircleIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title="Reject">
+                                <IconButton
+                                  size="small"
+                                  color="error"
+                                  onClick={() => openRejectDialog(request.requestId!)}
+                                >
+                                  <CancelIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                            </>
+                          )}
+
+                          {currentStatus === "APPROVED" && (
+                            <>
+                              <Tooltip title="Issue Card">
+                                <IconButton
+                                  size="small"
+                                  color="primary"
+                                  onClick={() => openIssueDialog(request.requestId!)}
+                                >
+                                  <PrintIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title="Reject">
+                                <IconButton
+                                  size="small"
+                                  color="error"
+                                  onClick={() => openRejectDialog(request.requestId!)}
+                                >
+                                  <CancelIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                            </>
+                          )}
+
+                          {currentStatus === "ISSUED" && (
+                            <Tooltip title="Mark Delivered">
+                              <IconButton
+                                size="small"
+                                color="primary"
+                                onClick={() => openDeliverDialog(request.requestId!)}
+                              >
+                                <LocalShippingIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          )}
+                        </Box>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {!data?.items?.length && (
+                    <TableRow>
+                      <TableCell colSpan={6} align="center">
+                        <Typography variant="body2" sx={{ py: 4 }}>
+                          No issuance requests found in this state
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+              <TablePagination
+                rowsPerPageOptions={[5, 10, 25]}
+                component="div"
+                count={data?.totalElements || 0}
+                rowsPerPage={rowsPerPage}
+                page={page}
+                onPageChange={handleChangePage}
+                onRowsPerPageChange={handleChangeRowsPerPage}
+              />
+            </TableContainer>
+          )}
+        </Box>
+      </Paper>
+
+      {/* Submit Modal */}
+      <Dialog
+        open={isSubmitModalOpen}
+        onClose={() => { setIsSubmitModalOpen(false); submitMutation.reset(); }}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>Submit Issuance Request</DialogTitle>
+        <DialogContent dividers>
+          {submitMutation.isError && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {(submitMutation.error as Error)?.message ?? "Failed to submit issuance request"}
+            </Alert>
+          )}
+          <Grid container spacing={2} sx={{ mt: 1 }}>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Given Name"
+                value={submitPayload.givenName}
+                onChange={(e) => setSubmitPayload({ ...submitPayload, givenName: e.target.value })}
+                required
+              />
             </Grid>
-          </Box>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Family Name"
+                value={submitPayload.familyName}
+                onChange={(e) => setSubmitPayload({ ...submitPayload, familyName: e.target.value })}
+                required
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Date of Birth"
+                type="date"
+                InputLabelProps={{ shrink: true }}
+                value={submitPayload.dateOfBirth}
+                onChange={(e) => setSubmitPayload({ ...submitPayload, dateOfBirth: e.target.value })}
+                required
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                select
+                label="Gender"
+                value={submitPayload.gender ?? ""}
+                onChange={(e) => setSubmitPayload({ ...submitPayload, gender: e.target.value as IssuanceSubmitPayload["gender"] })}
+              >
+                <MenuItem value="MALE">Male</MenuItem>
+                <MenuItem value="FEMALE">Female</MenuItem>
+                <MenuItem value="OTHER">Other</MenuItem>
+                <MenuItem value="UNKNOWN">Unknown</MenuItem>
+              </TextField>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="National ID"
+                value={submitPayload.nationalId ?? ""}
+                onChange={(e) => setSubmitPayload({ ...submitPayload, nationalId: e.target.value })}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Phone Number"
+                value={submitPayload.phoneNumber ?? ""}
+                onChange={(e) => setSubmitPayload({ ...submitPayload, phoneNumber: e.target.value })}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Facility ID"
+                value={submitPayload.facilityId ?? ""}
+                onChange={(e) => setSubmitPayload({ ...submitPayload, facilityId: e.target.value })}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                select
+                label="Source"
+                value={submitPayload.source ?? ""}
+                onChange={(e) => setSubmitPayload({ ...submitPayload, source: e.target.value as IssuanceSubmitPayload["source"] })}
+              >
+                <MenuItem value="FACILITY">Facility</MenuItem>
+                <MenuItem value="PORTAL">Portal</MenuItem>
+                <MenuItem value="FIELD">Field</MenuItem>
+                <MenuItem value="MIGRATION">Migration</MenuItem>
+              </TextField>
+            </Grid>
+          </Grid>
         </DialogContent>
-        <DialogActions sx={{ p: 3 }}>
-          <Button onClick={() => setSubmitModalOpen(false)}>Cancel</Button>
+        <DialogActions sx={{ p: 2 }}>
+          <Button onClick={() => setIsSubmitModalOpen(false)}>Cancel</Button>
           <Button
+            onClick={handleSubmitRequest}
             variant="contained"
-            onClick={handleSubmitNew}
-            disabled={submitMutation.isPending || !newRequest.givenName || !newRequest.familyName || !newRequest.dateOfBirth}
+            disabled={submitMutation.isPending}
           >
             Submit
           </Button>
@@ -425,73 +519,70 @@ export default function IssuanceQueuePage() {
       </Dialog>
 
       {/* Reject Dialog */}
-      <Dialog open={rejectDialogOpen} onClose={() => setRejectDialogOpen(false)} fullWidth maxWidth="xs">
-        <DialogTitle>Reject Issuance Request</DialogTitle>
-        <DialogContent>
-          <Box sx={{ mt: 2 }}>
-            <Typography variant="body2" sx={{ mb: 2 }}>
-              Please provide a reason for rejecting this request. This action cannot be undone.
-            </Typography>
-            <TextField
-              fullWidth
-              multiline
-              rows={3}
-              label="Rejection Reason"
-              required
-              value={rejectionReason}
-              onChange={(e) => setRejectionReason(e.target.value)}
-            />
-          </Box>
-        </DialogContent>
-        <DialogActions sx={{ p: 3 }}>
-          <Button onClick={() => setRejectDialogOpen(false)}>Cancel</Button>
-          <Button
-            variant="contained"
-            color="error"
-            onClick={handleReject}
-            disabled={rejectMutation.isPending || !rejectionReason}
-          >
-            Reject Request
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <ConfirmDialog
+        open={isRejectDialogOpen}
+        title="Reject Request"
+        message="Please provide a reason for rejecting this issuance request."
+        onConfirm={handleReject}
+        onCancel={() => setIsRejectDialogOpen(false)}
+        confirmLabel="Reject"
+        confirmColor="error"
+        loading={rejectMutation.isPending}
+      >
+        <TextField
+          fullWidth
+          label="Rejection Reason"
+          multiline
+          rows={3}
+          value={rejectionReason}
+          onChange={(e) => setRejectionReason(e.target.value)}
+          sx={{ mt: 2 }}
+        />
+      </ConfirmDialog>
+
+      {/* Approve Dialog */}
+      <ConfirmDialog
+        open={isApproveDialogOpen}
+        title="Approve Request"
+        message="Are you sure you want to approve this issuance request?"
+        onConfirm={handleApprove}
+        onCancel={() => setIsApproveDialogOpen(false)}
+        confirmLabel="Approve"
+        confirmColor="success"
+        loading={approveMutation.isPending}
+      >
+        <TextField
+          fullWidth
+          label="Notes (Optional)"
+          multiline
+          rows={2}
+          value={approvalNotes}
+          onChange={(e) => setApprovalNotes(e.target.value)}
+          sx={{ mt: 2 }}
+        />
+      </ConfirmDialog>
+
+      {/* Issue Dialog */}
+      <ConfirmDialog
+        open={isIssueDialogOpen}
+        title="Issue Smart Card"
+        message="This will mark the card as issued and ready for delivery. Continue?"
+        onConfirm={handleIssue}
+        onCancel={() => setIsIssueDialogOpen(false)}
+        confirmLabel="Issue"
+        loading={issueMutation.isPending}
+      />
 
       {/* Deliver Dialog */}
-      <Dialog open={deliverDialogOpen} onClose={() => setDeliverDialogOpen(false)} fullWidth maxWidth="xs">
-        <DialogTitle>Mark as Delivered</DialogTitle>
-        <DialogContent>
-          <Box sx={{ mt: 2 }}>
-            <Typography variant="body2" sx={{ mb: 2 }}>
-              Confirm that the card has been delivered to the applicant.
-            </Typography>
-            <FormControl fullWidth>
-              <InputLabel>Delivery Channel</InputLabel>
-              <Select
-                value={deliveryChannel}
-                label="Delivery Channel"
-                onChange={(e) => setDeliveryChannel(e.target.value as DeliveryChannel)}
-              >
-                {Object.entries(DELIVERY_CHANNEL_LABEL).map(([val, label]) => (
-                  <MenuItem key={val} value={val}>
-                    {label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Box>
-        </DialogContent>
-        <DialogActions sx={{ p: 3 }}>
-          <Button onClick={() => setDeliverDialogOpen(false)}>Cancel</Button>
-          <Button
-            variant="contained"
-            color="success"
-            onClick={handleDeliver}
-            disabled={deliverMutation.isPending}
-          >
-            Confirm Delivery
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <ConfirmDialog
+        open={isDeliverDialogOpen}
+        title="Confirm Delivery"
+        message="Mark this issuance request as delivered to the applicant?"
+        onConfirm={handleDeliver}
+        onCancel={() => setIsDeliverDialogOpen(false)}
+        confirmLabel="Deliver"
+        loading={deliverMutation.isPending}
+      />
     </Box>
   );
 }

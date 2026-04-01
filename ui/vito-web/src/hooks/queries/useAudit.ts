@@ -6,6 +6,10 @@ export interface AuditLogParams {
   page?: number;
   size?: number;
   aggregateType?: string;
+  eventType?: string;
+  actorId?: string;
+  from?: string;
+  to?: string;
   refetchInterval?: number;
 }
 
@@ -24,6 +28,10 @@ export function useAuditLog(params: AuditLogParams = {}) {
       if (queryParams.page !== undefined) searchParams.set("page", String(queryParams.page));
       if (queryParams.size !== undefined) searchParams.set("size", String(queryParams.size));
       if (queryParams.aggregateType) searchParams.set("aggregateType", queryParams.aggregateType);
+      if (queryParams.eventType) searchParams.set("eventType", queryParams.eventType);
+      if (queryParams.actorId) searchParams.set("actorId", queryParams.actorId);
+      if (queryParams.from) searchParams.set("from", queryParams.from);
+      if (queryParams.to) searchParams.set("to", queryParams.to);
       const qs = searchParams.toString();
       return vitoApiClient.get<PagedResponse<AuditEvent>>(
         `/v1/internal/audit${qs ? `?${qs}` : ""}`

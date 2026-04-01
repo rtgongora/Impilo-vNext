@@ -1,31 +1,35 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Box,
-  Button,
-  Tab,
+  Paper,
   Tabs,
+  Tab,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
-  Typography,
+  Button,
+  IconButton,
+  Tooltip,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   TextField,
   MenuItem,
-  Snackbar,
-  Alert,
-  IconButton,
+  Typography,
 } from "@mui/material";
-import { Add as AddIcon, History as HistoryIcon, Print as PrintIcon } from "@mui/icons-material";
-import Link from "next/link";
+import AddIcon from "@mui/icons-material/Add";
+import PrintIcon from "@mui/icons-material/Print";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import BlockIcon from "@mui/icons-material/Block";
+import HistoryIcon from "@mui/icons-material/History";
+import CancelIcon from "@mui/icons-material/Cancel";
 import { PageHeader } from "@/components/common/PageHeader";
 import { StatusChip } from "@/components/common/StatusChip";
 import { LoadingSkeleton } from "@/components/common/LoadingSkeleton";
@@ -38,71 +42,73 @@ import {
   useInactivateCard,
   useRevokeCard,
 } from "@/hooks/queries/useCards";
-import type { CardStatus, SmartCard, CardType } from "@/types/vito";
+import type { CardStatus, CardType, InactivationReason } from "@/types/vito";
 
-const STATUSES: CardStatus[] = ["REQUESTED", "PRINTING", "PRINTED", "ACTIVE", "INACTIVE", "REVOKED"];
+const TABS: { label: string; value: CardStatus }[] = [
+  { label: "REQUESTED", value: "REQUESTED" },
+  { label: "PRINT_QUEUED", value: "PRINTING" },
+  { label: "ACTIVE", value: "ACTIVE" },
+  { label: "INACTIVE", value: "INACTIVE" },
+  { label: "REVOKED", value: "REVOKED" },
+];
 
 export default function CardsPage() {
-  const [activeTab, setActiveTab] = useState(0);
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState<CardStatus>("REQUESTED");
   const [requestModalOpen, setRequestModalOpen] = useState(false);
-  const [revokeDialogOpen, setRevokeDialogOpen] = useState(false);
-  const [selectedCard, setSelectedCard] = useState<SmartCard | null>(null);
+  const [confirmAction, setConfirmAction] = useState<{
+    type: "ACTIVATE" | "INACTIVATE" | "REVOKE";
+    cardId: string;
+  } | null>(null);
+  
+  // Form states
+  const [healthId, setHealthId] = useState("");
+  const [cardType, setCardType] = useState<CardType>("PHYSICAL");
+  const [publicKey, setPublicKey] = useState(""); // Mentioned by user
+  const [inactivationReason, setInactivationReason] = useState<InactivationReason>("OTHER");
   const [revocationReason, setRevocationReason] = useState("");
-  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: "success" | "error" }>({
-    open: false,
-    message: "",
-    severity: "success",
-  });
 
-  const currentStatus = STATUSES[activeTab];
-  const { data: cards, isLoading, error } = useCardsByStatus(currentStatus);
-
+  const { data: cards, isLoading, error } = useCardsByStatus(activeTab);
   const requestCardMutation = useRequestCard();
   const activateCardMutation = useActivateCard();
   const inactivateCardMutation = useInactivateCard();
   const revokeCardMutation = useRevokeCard();
 
-  const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
-    setActiveTab(newValue);
-  };
-
-  const handleRequestSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const healthId = formData.get("healthId") as string;
-    const cardType = formData.get("cardType") as CardType;
-
+  const handleRequestCard = async () => {
     try {
-      await requestCardMutation.mutateAsync({ healthId, cardType });
-      setSnackbar({ open: true, message: "Card requested successfully", severity: "success" });
-      setRequestModalOpen(false);
-    } catch (err) {
-      setSnackbar({ open: true, message: "Failed to request card", severity: "error" });
-    }
-  };
-
-  const handleRevoke = async () => {
-    if (!selectedCard) return;
-    try {
-      await revokeCardMutation.mutateAsync({
-        cardId: selectedCard.cardId!,
-        revocationReason,
+      await requestCardMutation.mutateAsync({
+        healthId,
+        cardType,
       });
-      setSnackbar({ open: true, message: "Card revoked successfully", severity: "success" });
-      setRevokeDialogOpen(false);
-      setSelectedCard(null);
-      setRevocationReason("");
-    } catch (err) {
-      setSnackbar({ open: true, message: "Failed to revoke card", severity: "error" });
+      setRequestModalOpen(false);
+      setHealthId("");
+      setPublicKey("");
+    } catch (e) {
+      // Error handled by mutation
     }
   };
 
-  const handleAction = async (action: () => Promise<any>, successMsg: string, errorMsg: string) => {
+  const handleConfirmAction = async () => {
+    if (!confirmAction) return;
+
     try {
-      await action();
-      setSnackbar({ open: true, message: successMsg, severity: "success" });
-    } catch (err) {
-      setSnackbar({ open: true, message: errorMsg, severity: "error" });
+      if (confirmAction.type === "ACTIVATE") {
+        await activateCardMutation.mutateAsync(confirmAction.cardId);
+      } else if (confirmAction.type === "INACTIVATE") {
+        await inactivateCardMutation.mutateAsync({
+          cardId: confirmAction.cardId,
+          reason: inactivationReason,
+        });
+      } else if (confirmAction.type === "REVOKE") {
+        await revokeCardMutation.mutateAsync({
+          cardId: confirmAction.cardId,
+          revocationReason,
+        });
+      }
+      setConfirmAction(null);
+      setRevocationReason("");
+    } catch (e) {
+      // Error handled by mutation
     }
   };
 
@@ -110,221 +116,255 @@ export default function CardsPage() {
     <Box>
       <PageHeader
         title="SMART Cards"
-        breadcrumbs={[{ label: "Admin", href: "/admin/dashboard" }, { label: "Cards" }]}
+        breadcrumbs={[{ label: "Admin", href: "/admin" }, { label: "Cards" }]}
+        action={
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => setRequestModalOpen(true)}
+          >
+            Request New Card
+          </Button>
+        }
       />
 
-      <Box sx={{ mb: 3, display: "flex", justifyContent: "flex-end" }}>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => setRequestModalOpen(true)}
-        >
-          Request New Card
-        </Button>
-      </Box>
-
-      <Paper sx={{ width: "100%", mb: 2 }}>
+      <Paper sx={{ mb: 3 }}>
         <Tabs
           value={activeTab}
-          onChange={handleTabChange}
+          onChange={(_, value) => setActiveTab(value)}
           indicatorColor="primary"
           textColor="primary"
-          variant="scrollable"
-          scrollButtons="auto"
+          variant="fullWidth"
         >
-          {STATUSES.map((status) => (
-            <Tab key={status} label={status} />
+          {TABS.map((tab) => (
+            <Tab key={tab.value} label={tab.label} value={tab.value} />
           ))}
         </Tabs>
-
-        <Box sx={{ p: 2 }}>
-          <ErrorAlert error={error as any} />
-          
-          <TableContainer>
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Card ID</TableCell>
-                  <TableCell>Health ID</TableCell>
-                  <TableCell>Card Number</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell>Requested At</TableCell>
-                  <TableCell align="right">Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {isLoading ? (
-                  <LoadingSkeleton rows={5} columns={6} />
-                ) : cards?.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} align="center">
-                      <Typography variant="body2" sx={{ py: 2 }}>No cards found in this status</Typography>
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  cards?.map((card) => (
-                    <TableRow key={card.cardId}>
-                      <TableCell>{card.cardId?.substring(0, 8)}...</TableCell>
-                      <TableCell>{card.healthId}</TableCell>
-                      <TableCell>{card.cardNumber || "-"}</TableCell>
-                      <TableCell>
-                        <StatusChip status={card.status!} type="card" />
-                      </TableCell>
-                      <TableCell>{card.requestedAt ? new Date(card.requestedAt).toLocaleDateString() : "-"}</TableCell>
-                      <TableCell align="right">
-                        <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1 }}>
-                          {card.status === "REQUESTED" && (
-                            <Button
-                              size="small"
-                              component={Link}
-                              href={`/admin/print?cardId=${card.cardId}`}
-                              startIcon={<PrintIcon />}
-                            >
-                              Print
-                            </Button>
-                          )}
-                          {card.status === "ACTIVE" && (
-                            <Button
-                              size="small"
-                              color="warning"
-                              onClick={() => handleAction(
-                                () => inactivateCardMutation.mutateAsync({ cardId: card.cardId!, reason: "OTHER" }),
-                                "Card inactivated",
-                                "Failed to inactivate card"
-                              )}
-                            >
-                              Inactivate
-                            </Button>
-                          )}
-                          {card.status === "INACTIVE" && (
-                            <Button
-                              size="small"
-                              color="success"
-                              onClick={() => handleAction(
-                                () => activateCardMutation.mutateAsync(card.cardId!),
-                                "Card activated",
-                                "Failed to activate card"
-                              )}
-                            >
-                              Activate
-                            </Button>
-                          )}
-                          {card.status !== "REVOKED" && (
-                            <Button
-                              size="small"
-                              color="error"
-                              onClick={() => {
-                                setSelectedCard(card);
-                                setRevokeDialogOpen(true);
-                              }}
-                            >
-                              Revoke
-                            </Button>
-                          )}
-                          <IconButton
-                            size="small"
-                            component={Link}
-                            href={`/admin/cards/history/${card.healthId}`}
-                            title="History"
-                          >
-                            <HistoryIcon fontSize="small" />
-                          </IconButton>
-                        </Box>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Box>
       </Paper>
 
-      {/* Request Modal */}
-      <Dialog open={requestModalOpen} onClose={() => setRequestModalOpen(false)} maxWidth="sm" fullWidth>
-        <form onSubmit={handleRequestSubmit}>
-          <DialogTitle>Request New SMART Card</DialogTitle>
-          <DialogContent>
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
-              <TextField
-                name="healthId"
-                label="Health ID"
-                required
-                fullWidth
-              />
-              <TextField
-                name="cardType"
-                label="Card Type"
-                select
-                defaultValue="PHYSICAL"
-                required
-                fullWidth
-              >
-                <MenuItem value="PHYSICAL">Physical</MenuItem>
-                <MenuItem value="VIRTUAL">Virtual</MenuItem>
-              </TextField>
-              {/* Note: The plan mentioned Public Key input but the CardRequestPayload only has healthId and cardType and deliveryFacilityId */}
-              <TextField
-                name="deliveryFacilityId"
-                label="Delivery Facility ID"
-                fullWidth
-              />
-            </Box>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setRequestModalOpen(false)}>Cancel</Button>
-            <Button type="submit" variant="contained" disabled={requestCardMutation.isPending}>
-              Submit Request
-            </Button>
-          </DialogActions>
-        </form>
-      </Dialog>
+      <Box sx={{ mb: 2 }}>
+        <ErrorAlert error={error} />
+      </Box>
 
-      {/* Revoke Dialog */}
-      <Dialog open={revokeDialogOpen} onClose={() => setRevokeDialogOpen(false)}>
-        <DialogTitle>Revoke Card</DialogTitle>
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Card ID</TableCell>
+              <TableCell>Health ID</TableCell>
+              <TableCell>Card Number</TableCell>
+              <TableCell>Type</TableCell>
+              <TableCell>Status</TableCell>
+              <TableCell align="right">Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {isLoading ? (
+              <LoadingSkeleton columns={6} rows={5} />
+            ) : (
+              (cards?.items ?? []).map((card) => (
+                <TableRow key={card.cardId}>
+                  <TableCell sx={{ fontFamily: "monospace", fontSize: "0.8rem" }}>
+                    {card.cardId?.substring(0, 8)}...
+                  </TableCell>
+                  <TableCell>{card.healthId}</TableCell>
+                  <TableCell>{card.cardNumber || "-"}</TableCell>
+                  <TableCell>{card.cardType}</TableCell>
+                  <TableCell>
+                    <StatusChip status={card.status!} type="card" />
+                  </TableCell>
+                  <TableCell align="right">
+                    <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1 }}>
+                      {(card.status === "REQUESTED" || card.status === "PRINTING") && (
+                        <Tooltip title="Submit to Print">
+                          <IconButton
+                            size="small"
+                            color="primary"
+                            onClick={() => router.push(`/admin/print?cardId=${card.cardId}`)}
+                          >
+                            <PrintIcon />
+                          </IconButton>
+                        </Tooltip>
+                      )}
+                      {card.status === "INACTIVE" && (
+                        <Tooltip title="Activate">
+                          <IconButton
+                            size="small"
+                            color="success"
+                            onClick={() =>
+                              setConfirmAction({ type: "ACTIVATE", cardId: card.cardId! })
+                            }
+                          >
+                            <CheckCircleIcon />
+                          </IconButton>
+                        </Tooltip>
+                      )}
+                      {card.status === "ACTIVE" && (
+                        <Tooltip title="Inactivate">
+                          <IconButton
+                            size="small"
+                            color="warning"
+                            onClick={() =>
+                              setConfirmAction({ type: "INACTIVATE", cardId: card.cardId! })
+                            }
+                          >
+                            <BlockIcon />
+                          </IconButton>
+                        </Tooltip>
+                      )}
+                      {(card.status === "ACTIVE" || card.status === "INACTIVE") && (
+                        <Tooltip title="Revoke">
+                          <IconButton
+                            size="small"
+                            color="error"
+                            onClick={() =>
+                              setConfirmAction({ type: "REVOKE", cardId: card.cardId! })
+                            }
+                          >
+                            <CancelIcon />
+                          </IconButton>
+                        </Tooltip>
+                      )}
+                      <Tooltip title="View History">
+                        <IconButton
+                          size="small"
+                          onClick={() => router.push(`/admin/cards/history/${card.healthId}`)}
+                        >
+                          <HistoryIcon />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+            {!isLoading && !(cards?.items?.length) && (
+              <TableRow>
+                <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    No cards found for status {activeTab}
+                  </Typography>
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+      {/* Request New Card Modal */}
+      <Dialog
+        open={requestModalOpen}
+        onClose={() => setRequestModalOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Request New SMART Card</DialogTitle>
         <DialogContent>
-          <Typography variant="body2" sx={{ mb: 2 }}>
-            Are you sure you want to permanently revoke card {selectedCard?.cardId}? This action cannot be undone.
-          </Typography>
-          <TextField
-            select
-            fullWidth
-            label="Revocation Reason"
-            value={revocationReason}
-            onChange={(e) => setRevocationReason(e.target.value)}
-            required
-          >
-            <MenuItem value="LOST">Lost</MenuItem>
-            <MenuItem value="STOLEN">Stolen</MenuItem>
-            <MenuItem value="DAMAGED">Damaged</MenuItem>
-            <MenuItem value="EXPIRED">Expired</MenuItem>
-            <MenuItem value="COMPROMISED">Compromised</MenuItem>
-            <MenuItem value="OTHER">Other</MenuItem>
-          </TextField>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 1 }}>
+            <TextField
+              label="Health ID"
+              fullWidth
+              value={healthId}
+              onChange={(e) => setHealthId(e.target.value)}
+              required
+            />
+            <TextField
+              select
+              label="Card Type"
+              fullWidth
+              value={cardType}
+              onChange={(e) => setCardType(e.target.value as CardType)}
+            >
+              <MenuItem value="PHYSICAL">Physical Card</MenuItem>
+              <MenuItem value="VIRTUAL">Virtual Card</MenuItem>
+            </TextField>
+            <TextField
+              label="Public Key (Hex/Base64)"
+              fullWidth
+              multiline
+              rows={3}
+              value={publicKey}
+              onChange={(e) => setPublicKey(e.target.value)}
+              placeholder="Required for virtual cards or secure physical cards..."
+            />
+          </Box>
+          {requestCardMutation.error && (
+            <Box sx={{ mt: 2 }}>
+              <ErrorAlert error={requestCardMutation.error} />
+            </Box>
+          )}
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setRevokeDialogOpen(false)}>Cancel</Button>
+        <DialogActions sx={{ px: 3, pb: 3 }}>
+          <Button onClick={() => setRequestModalOpen(false)} color="inherit">
+            Cancel
+          </Button>
           <Button
-            onClick={handleRevoke}
-            color="error"
+            onClick={handleRequestCard}
             variant="contained"
-            disabled={!revocationReason || revokeCardMutation.isPending}
+            disabled={!healthId || requestCardMutation.isPending}
           >
-            Revoke
+            Submit Request
           </Button>
         </DialogActions>
       </Dialog>
 
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={6000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
+      {/* Confirmation Dialogs */}
+      <ConfirmDialog
+        open={confirmAction?.type === "ACTIVATE"}
+        title="Activate SMART Card"
+        message="Are you sure you want to activate this card? This will enable it for use in the platform."
+        onConfirm={handleConfirmAction}
+        onCancel={() => setConfirmAction(null)}
+        confirmLabel="Activate"
+        confirmColor="success"
+        loading={activateCardMutation.isPending}
+      />
+
+      <ConfirmDialog
+        open={confirmAction?.type === "INACTIVATE"}
+        title="Inactivate SMART Card"
+        message="Are you sure you want to temporarily inactivate this card?"
+        onConfirm={handleConfirmAction}
+        onCancel={() => setConfirmAction(null)}
+        confirmLabel="Inactivate"
+        confirmColor="warning"
+        loading={inactivateCardMutation.isPending}
       >
-        <Alert severity={snackbar.severity} onClose={() => setSnackbar({ ...snackbar, open: false })}>
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
+        <TextField
+          select
+          fullWidth
+          label="Inactivation Reason"
+          value={inactivationReason}
+          onChange={(e) => setInactivationReason(e.target.value as InactivationReason)}
+          sx={{ mt: 2 }}
+        >
+          <MenuItem value="LOST">Lost</MenuItem>
+          <MenuItem value="STOLEN">Stolen</MenuItem>
+          <MenuItem value="DAMAGED">Damaged</MenuItem>
+          <MenuItem value="OTHER">Other</MenuItem>
+        </TextField>
+      </ConfirmDialog>
+
+      <ConfirmDialog
+        open={confirmAction?.type === "REVOKE"}
+        title="Revoke SMART Card"
+        message="WARNING: Revocation is permanent. This card will be blacklisted and cannot be used again."
+        onConfirm={handleConfirmAction}
+        onCancel={() => setConfirmAction(null)}
+        confirmLabel="Permanently Revoke"
+        confirmColor="error"
+        loading={revokeCardMutation.isPending}
+      >
+        <TextField
+          fullWidth
+          label="Revocation Reason"
+          value={revocationReason}
+          onChange={(e) => setRevocationReason(e.target.value)}
+          placeholder="Enter reason for permanent revocation..."
+          sx={{ mt: 2 }}
+          required
+        />
+      </ConfirmDialog>
     </Box>
   );
 }
