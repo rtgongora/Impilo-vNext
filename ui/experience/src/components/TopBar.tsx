@@ -36,7 +36,7 @@ const EHR_ACTIONS = [
 export function TopBar() {
   const params = useParams();
   const pathname = usePathname();
-  const { user } = useAuthStore();
+  const { user, hasRole } = useAuthStore();
   const { facility } = useFacilityStore();
   const { shift } = useShiftStore();
 
@@ -87,6 +87,9 @@ export function TopBar() {
           const href = getActionHref(action);
           const Icon = action.icon;
           if (!href) return null;
+          // Finance links require finance-capable role
+          if (action.href.startsWith("/finance") &&
+              !hasRole("SYSTEM_ADMIN") && !hasRole("FACILITY_ADMIN") && !hasRole("FINANCE")) return null;
           return (
             <Link
               key={action.label}
