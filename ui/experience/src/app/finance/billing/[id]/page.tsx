@@ -605,9 +605,24 @@ export default function BillingDetailPage() {
               </div>
 
               {/* Refund creation form — only for bills with paid payments */}
-              {hasPaidPayment && (
+              {hasPaidPayment && (() => {
+                const totalPaid = payments
+                  .filter((p) => p.attributes.status === "PAID")
+                  .reduce((sum, p) => sum + (p.attributes.paidAmount ?? p.attributes.amount), 0);
+                const totalRefunded = refunds
+                  .filter((r) => r.attributes.status !== "FAILED")
+                  .reduce((sum, r) => sum + r.attributes.amount, 0);
+                const refundableBalance = Math.max(0, totalPaid - totalRefunded);
+                return (
                 <div className="px-5 py-3 border-b bg-gray-50">
-                  <p className="text-xs font-medium text-gray-600 mb-2">Request Refund</p>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs font-medium text-gray-600">Request Refund</p>
+                    <p className="text-xs text-gray-500">
+                      Refundable: <span className="font-mono font-medium text-gray-700">
+                        {bill.attributes.currency} {refundableBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                      </span>
+                    </p>
+                  </div>
                   <div className="flex items-start gap-2">
                     <input
                       type="number"
@@ -641,7 +656,8 @@ export default function BillingDetailPage() {
                     <p className="mt-2 text-xs text-green-600">Refund request created successfully.</p>
                   )}
                 </div>
-              )}
+                );
+              })()}
 
               {refunds.length === 0 ? (
                 <div className="p-8 text-center">

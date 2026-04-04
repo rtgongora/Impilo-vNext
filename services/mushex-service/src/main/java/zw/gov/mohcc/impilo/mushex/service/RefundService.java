@@ -132,6 +132,7 @@ public class RefundService {
                 Map.of(
                         "refundId", refund.getRefundId(),
                         "intentId", intentId,
+                        "billId", intent.getSourceId() != null ? intent.getSourceId() : "",
                         "amount", amount.toPlainString(),
                         "reason", reason != null ? reason : ""
                 ),
@@ -186,6 +187,7 @@ public class RefundService {
                 Map.of(
                         "refundId", refundId,
                         "intentId", refund.getIntentId(),
+                        "billId", intent.getSourceId() != null ? intent.getSourceId() : "",
                         "adapterRef", adapterRef != null ? adapterRef : "",
                         "amount", refund.getAmount().toPlainString()
                 ),
@@ -235,6 +237,7 @@ public class RefundService {
                 Map.of(
                         "refundId", refundId,
                         "intentId", refund.getIntentId(),
+                        "billId", intent.getSourceId() != null ? intent.getSourceId() : "",
                         "reason", reason != null ? reason : ""
                 ),
                 ctx.tenantId());

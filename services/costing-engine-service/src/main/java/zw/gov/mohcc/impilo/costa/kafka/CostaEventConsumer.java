@@ -345,16 +345,37 @@ public class CostaEventConsumer {
             String intentId = text(event, "intentId");
             String status = text(event, "status");
             String billId = text(event, "billId");
-            String reason = text(event, "reason");
+            BigDecimal eventAmount = event.has("amount")
+                    ? new BigDecimal(event.get("amount").asText()) : null;
 
             // Try to find the COSTA refund to update
-            // Strategy: match by billId + PENDING status + amount
+            // Strategy 1: match by mushexRefundId (already linked)
+            // Strategy 2: match by billId + PENDING status + amount
             if (billId != null) {
                 List<RefundEntity> costaRefunds = refundRepository.findByBillId(billId);
+
+                // Prefer already-linked refund
                 RefundEntity target = costaRefunds.stream()
-                        .filter(r -> r.getStatus() == RefundStatus.PENDING)
+                        .filter(r -> mushexRefundId != null && mushexRefundId.equals(r.getMushexRefundId()))
                         .findFirst()
                         .orElse(null);
+
+                // Fall back to PENDING refund matched by amount
+                if (target == null) {
+                    target = costaRefunds.stream()
+                            .filter(r -> r.getStatus() == RefundStatus.PENDING)
+                            .filter(r -> eventAmount == null || r.getAmount().compareTo(eventAmount) == 0)
+                            .findFirst()
+                            .orElse(null);
+                }
+
+                // Last resort: any PENDING refund
+                if (target == null) {
+                    target = costaRefunds.stream()
+                            .filter(r -> r.getStatus() == RefundStatus.PENDING)
+                            .findFirst()
+                            .orElse(null);
+                }
 
                 if (target != null) {
                     target.setMushexRefundId(mushexRefundId);
