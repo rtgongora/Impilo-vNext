@@ -9,7 +9,7 @@
  * Uses the real SchedulingController BFF API with TUSO booking bridge.
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import {
   CalendarDays,
@@ -23,11 +23,13 @@ import {
   Video,
   Save,
   AlertCircle,
+  Search,
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
+import { usePatients, type PatientResource } from "@/hooks/queries/usePatients";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
 
 interface AppointmentResource {
@@ -84,8 +86,33 @@ export default function SchedulingPage() {
   const [creating, setCreating] = useState(false);
   const [actionPending, setActionPending] = useState<string | null>(null);
 
+  // Patient search state
+  const [patientSearch, setPatientSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [selectedPatient, setSelectedPatient] = useState<PatientResource | null>(null);
+  const [showPatientDropdown, setShowPatientDropdown] = useState(false);
+  const searchTimeout = useRef<NodeJS.Timeout | null>(null);
+
+  const { data: searchResults } = usePatients(
+    debouncedSearch.length >= 2 ? { search: debouncedSearch } : undefined
+  );
+  const patients = debouncedSearch.length >= 2 ? (searchResults?.data ?? []) : [];
+
+  function handlePatientSearchChange(value: string) {
+    setPatientSearch(value);
+    setSelectedPatient(null);
+    if (searchTimeout.current) clearTimeout(searchTimeout.current);
+    searchTimeout.current = setTimeout(() => setDebouncedSearch(value), 300);
+    setShowPatientDropdown(true);
+  }
+
+  function handleSelectPatient(patient: PatientResource) {
+    setSelectedPatient(patient);
+    setPatientSearch(patient.attributes.displayName);
+    setShowPatientDropdown(false);
+  }
+
   const [form, setForm] = useState({
-    patient_id: "",
     appointment_type: "OPD",
     date: "",
     time: "09:00",
@@ -120,13 +147,13 @@ export default function SchedulingPage() {
   }
 
   async function handleCreate() {
-    if (!facility || !form.patient_id || !form.date) return;
+    if (!facility || !selectedPatient || !form.date) return;
     setCreating(true);
     try {
       const scheduledAt = `${form.date}T${form.time}:00Z`;
       const endAt = new Date(new Date(scheduledAt).getTime() + 30 * 60000).toISOString();
       await apiClient.post("/internal/v1/appointments", {
-        patient_id: form.patient_id,
+        patient_id: selectedPatient.id,
         facility_id: facility.id,
         provider_id: user?.id ?? null,
         provider_name: user?.displayName ?? user?.email ?? null,
@@ -136,7 +163,9 @@ export default function SchedulingPage() {
         reason: form.reason || null,
         notes: form.notes || null,
       });
-      setForm({ patient_id: "", appointment_type: "OPD", date: "", time: "09:00", reason: "", notes: "" });
+      setForm({ appointment_type: "OPD", date: "", time: "09:00", reason: "", notes: "" });
+      setSelectedPatient(null);
+      setPatientSearch("");
       setShowCreate(false);
       fetchAppointments();
     } catch {
@@ -207,11 +236,47 @@ export default function SchedulingPage() {
               Schedule Appointment
             </h3>
             <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Patient ID *</label>
-                <input type="text" required value={form.patient_id} onChange={(e) => setForm({ ...form, patient_id: e.target.value })}
-                  placeholder="Patient UUID or search"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <div className="relative">
+                <label className="block text-xs font-medium text-gray-600 mb-1">Patient *</label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    type="text"
+                    value={patientSearch}
+                    onChange={(e) => handlePatientSearchChange(e.target.value)}
+                    onFocus={() => patients.length > 0 && setShowPatientDropdown(true)}
+                    placeholder="Search by name or CPID..."
+                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                {selectedPatient && (
+                  <div className="mt-1 flex items-center gap-2 text-xs text-green-700 bg-green-50 px-2 py-1 rounded">
+                    <User className="w-3 h-3" />
+                    {selectedPatient.attributes.displayName} — CPID: {selectedPatient.attributes.cpid}
+                  </div>
+                )}
+                {showPatientDropdown && patients.length > 0 && !selectedPatient && (
+                  <div className="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                    {patients.map((p) => (
+                      <button
+                        key={p.id}
+                        onClick={() => handleSelectPatient(p)}
+                        className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-blue-50 transition-colors"
+                      >
+                        <User className="w-4 h-4 text-gray-400" />
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">{p.attributes.displayName}</p>
+                          <p className="text-xs text-gray-500">CPID: {p.attributes.cpid} · {p.attributes.gender} · DOB: {p.attributes.dateOfBirth}</p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {showPatientDropdown && debouncedSearch.length >= 2 && patients.length === 0 && !selectedPatient && (
+                  <div className="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg p-3 text-center">
+                    <p className="text-xs text-gray-500">No patients found for &ldquo;{debouncedSearch}&rdquo;</p>
+                  </div>
+                )}
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Type</label>
@@ -233,18 +298,26 @@ export default function SchedulingPage() {
                 </select>
               </div>
             </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Reason</label>
-              <input type="text" value={form.reason} onChange={(e) => setForm({ ...form, reason: e.target.value })}
-                placeholder="e.g. Follow-up diabetes check"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Reason</label>
+                <input type="text" value={form.reason} onChange={(e) => setForm({ ...form, reason: e.target.value })}
+                  placeholder="e.g. Follow-up diabetes check"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Notes</label>
+                <input type="text" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                  placeholder="Additional scheduling notes"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
             </div>
             <div className="flex gap-3">
               <button onClick={() => setShowCreate(false)}
                 className="flex-1 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors">
                 Cancel
               </button>
-              <button onClick={handleCreate} disabled={creating || !form.patient_id || !form.date}
+              <button onClick={handleCreate} disabled={creating || !selectedPatient || !form.date}
                 className="flex-1 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors">
                 {creating ? <><Loader2 className="w-4 h-4 animate-spin" /> Scheduling...</> : <><Save className="w-4 h-4" /> Schedule</>}
               </button>
