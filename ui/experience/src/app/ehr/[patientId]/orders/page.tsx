@@ -21,7 +21,7 @@ import {
   useLabOrders,
   useCreateLabOrder,
   useCollectLabOrder,
-  useResultLabOrder,
+  useCancelLabOrder,
   type LabOrderResource,
 } from "@/hooks/queries/useLabOrders";
 import { useAuthStore } from "@/hooks/useAuthStore";
@@ -63,6 +63,7 @@ export default function OrdersPage() {
   const { data: ordersData, isLoading } = useLabOrders(patientId);
   const createOrder = useCreateLabOrder();
   const collectOrder = useCollectLabOrder();
+  const cancelOrder = useCancelLabOrder();
 
   // Result entry state
   const [resultingOrder, setResultingOrder] = useState<LabOrderResource | null>(null);
@@ -433,13 +434,22 @@ export default function OrdersPage() {
                           </td>
                           <td className="px-4 py-3 text-right whitespace-nowrap">
                             {order.attributes.status === "ORDERED" && (
-                              <button
-                                onClick={() => collectOrder.mutate({ id: order.id })}
-                                disabled={collectOrder.isPending}
-                                className="px-2.5 py-1 bg-yellow-100 text-yellow-700 text-xs font-medium rounded hover:bg-yellow-200 transition-colors"
-                              >
-                                Mark Collected
-                              </button>
+                              <div className="inline-flex gap-1">
+                                <button
+                                  onClick={() => collectOrder.mutate({ id: order.id })}
+                                  disabled={collectOrder.isPending}
+                                  className="px-2.5 py-1 bg-yellow-100 text-yellow-700 text-xs font-medium rounded hover:bg-yellow-200 transition-colors"
+                                >
+                                  Collect
+                                </button>
+                                <button
+                                  onClick={() => cancelOrder.mutate({ id: order.id })}
+                                  disabled={cancelOrder.isPending}
+                                  className="px-2.5 py-1 bg-red-50 text-red-600 text-xs font-medium rounded hover:bg-red-100 transition-colors"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
                             )}
                             {order.attributes.status === "COLLECTED" && (
                               <button

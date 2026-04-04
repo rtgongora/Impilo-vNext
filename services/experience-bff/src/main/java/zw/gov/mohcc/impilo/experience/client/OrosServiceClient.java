@@ -117,6 +117,41 @@ public class OrosServiceClient {
         return extractData(response);
     }
 
+    /**
+     * Get results for an OROS order.
+     *
+     * @param orderId the OROS order ID
+     * @return list of result summaries
+     */
+    public JsonNode getOrderResults(String orderId) {
+        String url = baseUrl + "/v1/orders/" + orderId + "/results";
+        log.debug("OROS: Getting results for order={}", orderId);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Post a result for an OROS order.
+     *
+     * @param orderId      the OROS order ID
+     * @param kind         result kind (LAB, IMAGING, PHARMACY, DOCUMENT)
+     * @param summary      result summary object (will be serialized to JSON)
+     * @param isCritical   whether this is a critical result
+     * @return the result summary from OROS
+     */
+    public JsonNode postResult(String orderId, String kind, Object summary, boolean isCritical) {
+        String url = baseUrl + "/v1/orders/" + orderId + "/results";
+
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("kind", kind);
+        body.put("summary", summary);
+        body.put("isCritical", isCritical);
+
+        log.info("OROS: Posting result for order={}, kind={}, critical={}", orderId, kind, isCritical);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) {
             return response.getBody().get("data");

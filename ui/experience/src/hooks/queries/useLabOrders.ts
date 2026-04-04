@@ -86,6 +86,18 @@ export function useCollectLabOrder() {
   });
 }
 
+export function useCancelLabOrder() {
+  const queryClient = useQueryClient();
+
+  return useMutation<LabOrderResponse, unknown, { id: string; reason?: string }>({
+    mutationFn: ({ id, reason }: { id: string; reason?: string }) =>
+      apiClient.post<LabOrderResponse>(`/internal/v1/lab-orders/${id}/cancel`, reason ? { reason } : undefined),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["lab-orders"] });
+    },
+  });
+}
+
 export function useResultLabOrder() {
   const queryClient = useQueryClient();
 

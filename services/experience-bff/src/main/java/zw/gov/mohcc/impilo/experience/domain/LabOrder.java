@@ -72,6 +72,11 @@ public class LabOrder {
         this.resultedAt = OffsetDateTime.now();
     }
 
+    public void cancel() {
+        this.status = "CANCELLED";
+        this.updatedAt = OffsetDateTime.now();
+    }
+
     public UUID getId() { return id; }
     public String getTenantId() { return tenantId; }
     public UUID getPatientId() { return patientId; }

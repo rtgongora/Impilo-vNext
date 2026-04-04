@@ -322,6 +322,24 @@ public class LabOrdersController {
                     resulted_by = ?, resulted_by_name = ?
                 WHERE id = ? AND tenant_id = ?
                 """, resultDataJson, resultNotes, resultedBy, resultedByName, id, tenantId);
+
+            // Delegate result to OROS sovereign service if order was bridged
+            List<Map<String, Object>> orosRows = jdbcTemplate.queryForList(
+                    "SELECT oros_order_id FROM lab_orders WHERE id = ? AND tenant_id = ?", id, tenantId);
+            if (!orosRows.isEmpty() && orosRows.get(0).get("oros_order_id") != null) {
+                String orosOrderId = orosRows.get(0).get("oros_order_id").toString();
+                try {
+                    boolean hasCritical = false;
+                    if (body.containsKey("result_data") && body.get("result_data") instanceof List<?> rdList) {
+                        hasCritical = rdList.stream().anyMatch(item ->
+                                item instanceof Map<?, ?> m && "CRITICAL".equals(m.get("interpretation")));
+                    }
+                    orosClient.postResult(orosOrderId, "LAB", body.get("result_data"), hasCritical);
+                    log.info("OROS result posted for order={}, orosOrder={}", id, orosOrderId);
+                } catch (Exception e) {
+                    log.warn("OROS result delegation failed (non-blocking): {}", e.getMessage());
+                }
+            }
         }
 
         outboxService.writeOutboxEvent(
@@ -348,6 +366,60 @@ public class LabOrdersController {
                 "correlation_id", correlationId
         ));
 
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{id}/cancel")
+    @Transactional
+    public ResponseEntity<Map<String, Object>> cancelLabOrder(
+            @PathVariable UUID id,
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.POD_ID) String podId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
+            @RequestBody(required = false) Map<String, Object> body) {
+
+        LabOrder order = labOrderRepository.findByIdAndTenantId(id, tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException("Lab order not found: " + id));
+
+        if ("RESULTED".equals(order.getStatus()) || "CANCELLED".equals(order.getStatus())) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", Map.of("code", "INVALID_STATE", "message",
+                            "Cannot cancel order in status: " + order.getStatus())));
+        }
+
+        order.cancel();
+        labOrderRepository.save(order);
+
+        String reason = body != null && body.containsKey("reason") ? (String) body.get("reason") : null;
+
+        // Cancel in OROS if bridged
+        List<Map<String, Object>> orosRows = jdbcTemplate.queryForList(
+                "SELECT oros_order_id FROM lab_orders WHERE id = ? AND tenant_id = ?", id, tenantId);
+        if (!orosRows.isEmpty() && orosRows.get(0).get("oros_order_id") != null) {
+            try {
+                orosClient.cancelOrder(orosRows.get(0).get("oros_order_id").toString(),
+                        reason != null ? reason : "Cancelled from experience UI");
+                log.info("OROS order cancelled for lab order={}", id);
+            } catch (Exception e) {
+                log.warn("OROS cancel failed (non-blocking): {}", e.getMessage());
+            }
+        }
+
+        outboxService.writeOutboxEvent(
+                "impilo.experience.lab-order.cancelled.v1",
+                correlationId, requestId,
+                idempotencyKey != null ? idempotencyKey : requestId,
+                tenantId, podId,
+                "LabOrder", id.toString(),
+                Map.of("order_id", id.toString(), "status", "CANCELLED"),
+                Map.of()
+        );
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", toResource(order));
+        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return ResponseEntity.ok(response);
     }
 
