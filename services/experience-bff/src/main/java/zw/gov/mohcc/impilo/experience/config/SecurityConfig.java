@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -22,20 +23,22 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Security configuration with Keycloak JWT validation.
+ * Security configuration with Keycloak JWT validation and role-based access control.
  *
  * <p>When a JwtDecoder bean is available (production/integration): enforces
  * RS256 signature verification, expiration checking, and path-based RBAC.
  * When no JwtDecoder bean exists (dev with OAuth2 auto-config excluded):
  * falls back to permitAll() with a prominent warning log.</p>
  *
- * <p>Path-based access rules (production mode):</p>
+ * <h3>Role Groups (aligned with frontend AuthGuardProvider ROLE_GROUPS)</h3>
  * <ul>
- *   <li>Auth endpoints (/internal/v1/auth/**) — public</li>
- *   <li>Admin endpoints (/internal/v1/admin/**) — ADMIN role group</li>
- *   <li>Finance endpoints (/internal/v1/finance/**) — FINANCE role group</li>
- *   <li>Actuator/health — public</li>
- *   <li>All other endpoints — authenticated (valid JWT required)</li>
+ *   <li>ADMIN: SYSTEM_ADMIN, FACILITY_ADMIN, DEVELOPER</li>
+ *   <li>FINANCE: SYSTEM_ADMIN, FACILITY_ADMIN, FINANCE</li>
+ *   <li>CLINICAL: CLINICIAN, NURSE, FACILITY_ADMIN, SYSTEM_ADMIN, DEVELOPER</li>
+ *   <li>PRESCRIBER: CLINICIAN, FACILITY_ADMIN, SYSTEM_ADMIN, DEVELOPER</li>
+ *   <li>DISPENSER: PHARMACIST, FACILITY_ADMIN, SYSTEM_ADMIN, DEVELOPER</li>
+ *   <li>QUEUE: CLINICIAN, NURSE, SUPPORT_AGENT, FACILITY_ADMIN, SYSTEM_ADMIN, DEVELOPER</li>
+ *   <li>CITIZEN: CITIZEN, SYSTEM_ADMIN, DEVELOPER</li>
  * </ul>
  */
 @Configuration
@@ -43,6 +46,31 @@ import java.util.Map;
 public class SecurityConfig {
 
     private static final Logger log = LoggerFactory.getLogger(SecurityConfig.class);
+
+    // ── Role group arrays ────────────────────────────────────────────
+    // Each array lists the Keycloak realm roles that grant access to the group.
+    // SYSTEM_ADMIN and DEVELOPER have override access to all groups.
+
+    private static final String[] ADMIN_ROLES = {
+            "SYSTEM_ADMIN", "FACILITY_ADMIN", "DEVELOPER"};
+
+    private static final String[] FINANCE_ROLES = {
+            "SYSTEM_ADMIN", "FACILITY_ADMIN", "FINANCE"};
+
+    private static final String[] CLINICAL_ROLES = {
+            "CLINICIAN", "NURSE", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"};
+
+    private static final String[] PRESCRIBER_ROLES = {
+            "CLINICIAN", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"};
+
+    private static final String[] DISPENSER_ROLES = {
+            "PHARMACIST", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"};
+
+    private static final String[] QUEUE_ROLES = {
+            "CLINICIAN", "NURSE", "SUPPORT_AGENT", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"};
+
+    private static final String[] CITIZEN_ROLES = {
+            "CITIZEN", "SYSTEM_ADMIN", "DEVELOPER"};
 
     @Autowired(required = false)
     private JwtDecoder jwtDecoder;
@@ -54,23 +82,85 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         if (jwtDecoder != null) {
-            // Production mode: full JWT validation + RBAC
             log.info("JWT validation ENABLED — enforcing role-based access control");
             http
                 .authorizeHttpRequests(auth -> auth
+                    // ── Public endpoints ──────────────────────────────────
                     .requestMatchers("/internal/v1/auth/**").permitAll()
                     .requestMatchers("/actuator/**").permitAll()
-                    .requestMatchers("/internal/v1/admin/**").hasAnyRole(
-                            "SYSTEM_ADMIN", "FACILITY_ADMIN", "DEVELOPER")
-                    .requestMatchers("/internal/v1/finance/**").hasAnyRole(
-                            "SYSTEM_ADMIN", "FACILITY_ADMIN", "FINANCE")
+
+                    // ── Admin zone ────────────────────────────────────────
+                    .requestMatchers("/internal/v1/admin/**").hasAnyRole(ADMIN_ROLES)
+
+                    // ── Finance zone ──────────────────────────────────────
+                    .requestMatchers("/internal/v1/finance/**").hasAnyRole(FINANCE_ROLES)
+
+                    // ── Queue management ──────────────────────────────────
+                    .requestMatchers(HttpMethod.POST, "/internal/v1/queue/**")
+                            .hasAnyRole(QUEUE_ROLES)
+
+                    // ── Pharmacy: prescriptions require prescriber role ───
+                    .requestMatchers(HttpMethod.POST, "/internal/v1/pharmacy/prescriptions")
+                            .hasAnyRole(PRESCRIBER_ROLES)
+                    .requestMatchers(HttpMethod.POST, "/internal/v1/pharmacy/prescriptions/*/cancel")
+                            .hasAnyRole(PRESCRIBER_ROLES)
+                    // ── Pharmacy: dispense requires dispenser role ────────
+                    .requestMatchers(HttpMethod.POST, "/internal/v1/pharmacy/dispense")
+                            .hasAnyRole(DISPENSER_ROLES)
+
+                    // ── Mobile provider: prescriptions → prescriber ───────
+                    .requestMatchers(HttpMethod.POST, "/internal/v1/mobile/provider/prescriptions")
+                            .hasAnyRole(PRESCRIBER_ROLES)
+                    .requestMatchers(HttpMethod.POST, "/internal/v1/mobile/provider/prescriptions/*/cancel")
+                            .hasAnyRole(PRESCRIBER_ROLES)
+
+                    // ── Clinical write endpoints (broad clinical staff) ───
+                    .requestMatchers(HttpMethod.POST, "/internal/v1/encounters/**")
+                            .hasAnyRole(CLINICAL_ROLES)
+                    .requestMatchers(HttpMethod.POST, "/internal/v1/triage/**")
+                            .hasAnyRole(CLINICAL_ROLES)
+                    .requestMatchers(HttpMethod.POST, "/internal/v1/vitals/**")
+                            .hasAnyRole(CLINICAL_ROLES)
+                    .requestMatchers(HttpMethod.POST, "/internal/v1/clinical-notes/**")
+                            .hasAnyRole(CLINICAL_ROLES)
+                    .requestMatchers(HttpMethod.POST, "/internal/v1/lab-orders/**")
+                            .hasAnyRole(CLINICAL_ROLES)
+                    .requestMatchers(HttpMethod.POST, "/internal/v1/conditions/**")
+                            .hasAnyRole(CLINICAL_ROLES)
+                    .requestMatchers(HttpMethod.POST, "/internal/v1/allergies/**")
+                            .hasAnyRole(CLINICAL_ROLES)
+                    .requestMatchers(HttpMethod.DELETE, "/internal/v1/allergies/**")
+                            .hasAnyRole(CLINICAL_ROLES)
+                    .requestMatchers(HttpMethod.POST, "/internal/v1/immunizations/**")
+                            .hasAnyRole(CLINICAL_ROLES)
+                    .requestMatchers(HttpMethod.POST, "/internal/v1/referrals/**")
+                            .hasAnyRole(CLINICAL_ROLES)
+                    .requestMatchers(HttpMethod.POST, "/internal/v1/clinical-documents/**")
+                            .hasAnyRole(CLINICAL_ROLES)
+
+                    // ── Mobile provider clinical operations ───────────────
+                    .requestMatchers(HttpMethod.POST, "/internal/v1/mobile/provider/encounters/**")
+                            .hasAnyRole(CLINICAL_ROLES)
+                    .requestMatchers(HttpMethod.POST, "/internal/v1/mobile/provider/triage/**")
+                            .hasAnyRole(CLINICAL_ROLES)
+                    .requestMatchers(HttpMethod.POST, "/internal/v1/mobile/provider/vitals/**")
+                            .hasAnyRole(CLINICAL_ROLES)
+                    .requestMatchers(HttpMethod.DELETE, "/internal/v1/mobile/provider/vitals/**")
+                            .hasAnyRole(CLINICAL_ROLES)
+                    .requestMatchers(HttpMethod.POST, "/internal/v1/mobile/provider/discharge")
+                            .hasAnyRole(CLINICAL_ROLES)
+
+                    // ── Citizen mobile endpoints ──────────────────────────
+                    .requestMatchers("/internal/v1/mobile/citizen/**")
+                            .hasAnyRole(CITIZEN_ROLES)
+
+                    // ── All other endpoints — authenticated ───────────────
                     .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
                     .jwt(jwt -> jwt.jwtAuthenticationConverter(keycloakJwtConverter()))
                 );
         } else {
-            // Dev mode: OAuth2 auto-config excluded, no JwtDecoder available
             log.warn("SECURITY: JWT validation DISABLED — no JwtDecoder bean found. "
                     + "All endpoints are open. This is acceptable only in development. "
                     + "Ensure OAuth2ResourceServerAutoConfiguration is NOT excluded in production.");
@@ -87,10 +177,6 @@ public class SecurityConfig {
         return converter;
     }
 
-    /**
-     * Extracts realm_access.roles from the Keycloak JWT and converts them
-     * to Spring Security authorities with the ROLE_ prefix.
-     */
     static class KeycloakRealmRoleConverter implements Converter<Jwt, Collection<GrantedAuthority>> {
 
         @Override
