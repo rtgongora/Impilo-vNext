@@ -96,8 +96,13 @@ export default function BillingPage() {
                     STATUS_STYLES[invoice.attributes.status] ?? "bg-gray-100 text-gray-600";
                   return (
                     <tr key={invoice.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-4 py-3 font-medium text-gray-900">
-                        {invoice.attributes.invoiceNumber}
+                      <td className="px-4 py-3">
+                        <Link
+                          href={`/finance/billing/${invoice.id}`}
+                          className="font-medium text-blue-600 hover:text-blue-800"
+                        >
+                          {invoice.attributes.invoiceNumber}
+                        </Link>
                       </td>
                       <td className="px-4 py-3 text-gray-600">
                         {invoice.attributes.patient}
