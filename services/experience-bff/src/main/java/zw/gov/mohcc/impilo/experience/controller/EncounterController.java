@@ -241,6 +241,19 @@ public class EncounterController {
         encounter.close();
         encounterRepository.save(encounter);
 
+        // Complete any active queue entries for this patient
+        try {
+            OffsetDateTime completedNow = OffsetDateTime.now();
+            jdbcTemplate.update("""
+                UPDATE queue_entries SET status = 'COMPLETED', completed_at = ?, updated_at = ?
+                WHERE tenant_id = ? AND patient_id = ? AND facility_id = ?
+                AND status IN ('CALLED', 'WAITING', 'SEEN')
+                """, completedNow, completedNow, tenantId, encounter.getPatientId(),
+                    encounter.getFacilityId());
+        } catch (Exception e) {
+            log.warn("Queue completion on close failed (non-blocking): {}", e.getMessage());
+        }
+
         outboxService.writeOutboxEvent(
                 "impilo.experience.encounter.closed.v1",
                 correlationId,
@@ -312,6 +325,23 @@ public class EncounterController {
             }
         }
 
+        // Complete any CALLED/IN_PROGRESS queue entries for this patient at this facility
+        try {
+            OffsetDateTime completedNow = OffsetDateTime.now();
+            int queueCompleted = jdbcTemplate.update("""
+                UPDATE queue_entries SET status = 'COMPLETED', completed_at = ?, updated_at = ?
+                WHERE tenant_id = ? AND patient_id = ? AND facility_id = ?
+                AND status IN ('CALLED', 'WAITING', 'SEEN')
+                """, completedNow, completedNow, tenantId, encounter.getPatientId(),
+                    encounter.getFacilityId());
+            if (queueCompleted > 0) {
+                log.info("Queue entries completed: {} for patient={} on encounter discharge",
+                        queueCompleted, encounter.getPatientId());
+            }
+        } catch (Exception e) {
+            log.warn("Queue completion on discharge failed (non-blocking): {}", e.getMessage());
+        }
+
         outboxService.writeOutboxEvent(
                 "impilo.experience.encounter.discharged.v1",
                 correlationId,
@@ -324,7 +354,7 @@ public class EncounterController {
                 Map.of(
                         "encounter_id", id.toString(),
                         "discharge_type", request.discharge_type(),
-                        "status", "DISCHARGED"
+                        "status", encounter.getStatus()
                 ),
                 Map.of()
         );

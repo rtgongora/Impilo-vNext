@@ -24,7 +24,14 @@ import { useFacilityStore } from "@/hooks/useFacilityStore";
 
 const STATUS_BADGE: Record<string, string> = {
   IN_PROGRESS: "bg-green-100 text-green-700",
+  ACTIVE: "bg-green-100 text-green-700",
   COMPLETED: "bg-gray-100 text-gray-600",
+  DISCHARGED: "bg-blue-100 text-blue-700",
+  ADMITTED: "bg-purple-100 text-purple-700",
+  TRANSFERRED: "bg-amber-100 text-amber-700",
+  REFERRED: "bg-indigo-100 text-indigo-700",
+  DECEASED: "bg-red-100 text-red-700",
+  LAMA: "bg-gray-200 text-gray-700",
   CANCELLED: "bg-red-100 text-red-700",
 };
 
