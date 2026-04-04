@@ -11,9 +11,13 @@ import zw.gov.mohcc.impilo.costa.domain.repository.*;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -44,6 +48,14 @@ public class PaymentIntegrationService {
         this.claimPackRepository = claimPackRepository;
         this.outboxRepository = outboxRepository;
         this.objectMapper = objectMapper;
+    }
+
+    public List<PaymentEntity> getPaymentsForBill(String billId) {
+        return paymentRepository.findByBillId(billId);
+    }
+
+    public Page<PaymentEntity> listPayments(UUID tenantId, Pageable pageable) {
+        return paymentRepository.findByTenantId(tenantId, pageable);
     }
 
     @Transactional

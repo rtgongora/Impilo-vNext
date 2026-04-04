@@ -6,11 +6,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.costa.api.dto.*;
 import zw.gov.mohcc.impilo.costa.domain.entity.*;
+import zw.gov.mohcc.impilo.costa.domain.enums.BillStatus;
 import zw.gov.mohcc.impilo.costa.domain.enums.BillType;
 import zw.gov.mohcc.impilo.costa.service.BillService;
 import zw.gov.mohcc.impilo.costa.service.PaymentIntegrationService;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import zw.gov.mohcc.impilo.shared.response.ApiResponse;
+import zw.gov.mohcc.impilo.shared.response.PagedResponse;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -26,6 +32,21 @@ public class BillController {
     public BillController(BillService billService, PaymentIntegrationService paymentService) {
         this.billService = billService;
         this.paymentService = paymentService;
+    }
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<PagedResponse<BillHeaderEntity>>> listBills(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "50") int size,
+            @RequestParam(required = false) String status) {
+        var ctx = TrustContextHolder.require();
+        BillStatus billStatus = status != null ? BillStatus.valueOf(status) : null;
+        Page<BillHeaderEntity> bills = billService.listBills(
+                ctx.tenantId(), billStatus,
+                PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
+        PagedResponse<BillHeaderEntity> paged = PagedResponse.of(
+                bills.getContent(), page, size, bills.getTotalElements());
+        return ResponseEntity.ok(ApiResponse.ok(paged, ctx.correlationId().toString()));
     }
 
     @PostMapping("/draft")
@@ -121,5 +142,12 @@ public class BillController {
                 request.reason(), request.reasonCode(), request.refundType());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok(refund, ctx.correlationId().toString()));
+    }
+
+    @GetMapping("/{id}/payments")
+    public ResponseEntity<ApiResponse<List<PaymentEntity>>> getBillPayments(@PathVariable String id) {
+        var ctx = TrustContextHolder.require();
+        List<PaymentEntity> payments = paymentService.getPaymentsForBill(id);
+        return ResponseEntity.ok(ApiResponse.ok(payments, ctx.correlationId().toString()));
     }
 }

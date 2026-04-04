@@ -19,6 +19,9 @@ import zw.gov.mohcc.impilo.costa.rules.RuleResult;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -266,6 +269,13 @@ public class BillService {
                 ctx.tenantId());
 
         return bill;
+    }
+
+    public Page<BillHeaderEntity> listBills(UUID tenantId, BillStatus status, Pageable pageable) {
+        if (status != null) {
+            return billHeaderRepository.findByTenantIdAndStatus(tenantId, status, pageable);
+        }
+        return billHeaderRepository.findByTenantId(tenantId, pageable);
     }
 
     public BillHeaderEntity getBill(String billId) {

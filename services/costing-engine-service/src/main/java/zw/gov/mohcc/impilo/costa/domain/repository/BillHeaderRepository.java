@@ -17,4 +17,5 @@ public interface BillHeaderRepository extends JpaRepository<BillHeaderEntity, St
     List<BillHeaderEntity> findByEncounterId(String encounterId);
     Optional<BillHeaderEntity> findByMsikaOrderId(String msikaOrderId);
     Page<BillHeaderEntity> findByTenantIdAndStatus(UUID tenantId, BillStatus status, Pageable pageable);
+    Page<BillHeaderEntity> findByTenantId(UUID tenantId, Pageable pageable);
 }
