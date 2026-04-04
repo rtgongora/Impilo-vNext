@@ -40,13 +40,17 @@ public class PharmacyController {
 
     public record CreatePrescriptionRequest(
             @NotBlank String patient_id,
-            @NotBlank String facility_id,
+            String facility_id,
             String encounter_id,
             @NotBlank String medication_name,
+            String generic_name,
             String dosage,
+            String route,
             String frequency,
             String duration,
             Integer quantity,
+            String instructions,
+            String indication,
             @NotBlank String prescribed_by
     ) {}
 
@@ -119,12 +123,15 @@ public class PharmacyController {
         jdbcTemplate.update("""
             INSERT INTO prescriptions
                 (id, tenant_id, facility_id, patient_id, encounter_id, medication_name,
-                 dosage, frequency, duration, quantity, status, prescribed_by, created_at, updated_at)
-            VALUES (?, ?, ?::uuid, ?::uuid, ?::uuid, ?, ?, ?, ?, ?, 'PENDING', ?, ?, ?)
+                 generic_name, dosage, route, frequency, duration, quantity, instructions,
+                 indication, status, prescribed_by, created_at, updated_at)
+            VALUES (?, ?, ?::uuid, ?::uuid, ?::uuid, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'PENDING', ?, ?, ?)
             """,
                 rxId, tenantId, request.facility_id(), request.patient_id(),
                 request.encounter_id(), request.medication_name(),
-                request.dosage(), request.frequency(), request.duration(), request.quantity(),
+                request.generic_name(), request.dosage(), request.route(),
+                request.frequency(), request.duration(), request.quantity(),
+                request.instructions(), request.indication(),
                 request.prescribed_by(), now, now);
 
         outboxService.writeOutboxEvent(
@@ -150,10 +157,14 @@ public class PharmacyController {
         attributes.put("facility_id", request.facility_id());
         attributes.put("encounter_id", request.encounter_id());
         attributes.put("medication_name", request.medication_name());
+        attributes.put("generic_name", request.generic_name());
         attributes.put("dosage", request.dosage());
+        attributes.put("route", request.route());
         attributes.put("frequency", request.frequency());
         attributes.put("duration", request.duration());
         attributes.put("quantity", request.quantity());
+        attributes.put("instructions", request.instructions());
+        attributes.put("indication", request.indication());
         attributes.put("status", "PENDING");
         attributes.put("prescribed_by", request.prescribed_by());
         attributes.put("created_at", now);
