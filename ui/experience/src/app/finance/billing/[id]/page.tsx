@@ -12,7 +12,7 @@ import Link from "next/link";
 import {
   ArrowLeft, Loader2, Receipt, AlertCircle, FileText,
   Send, CheckCircle, Lock, FileOutput, CreditCard, DollarSign,
-  XCircle, RefreshCw,
+  XCircle, RefreshCw, RotateCcw,
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
@@ -101,6 +101,36 @@ const PAYMENT_STATUS_STYLES: Record<string, string> = {
   CANCELLED: "bg-gray-100 text-gray-600",
 };
 
+interface RefundResource {
+  id: string;
+  type: "refund";
+  attributes: {
+    billId: string;
+    amount: number;
+    reason: string;
+    reasonCode: string;
+    refundType: string;
+    status: string;
+    createdAt: string;
+    processedAt: string;
+    [key: string]: unknown;
+  };
+}
+
+const REFUND_STATUS_STYLES: Record<string, string> = {
+  PENDING: "bg-yellow-100 text-yellow-700",
+  PROCESSED: "bg-green-100 text-green-700",
+  FAILED: "bg-red-100 text-red-700",
+};
+
+function useBillRefunds(billId: string) {
+  return useQuery<{ data: RefundResource[] }>({
+    queryKey: ["finance-billing-refunds", billId],
+    queryFn: () => apiClient.get(`/internal/v1/finance/billing/${billId}/refunds`),
+    enabled: !!billId,
+  });
+}
+
 function useBillPayments(billId: string) {
   return useQuery<{ data: PaymentResource[] }>({
     queryKey: ["finance-billing-payments", billId],
@@ -127,9 +157,12 @@ export default function BillingDetailPage() {
   const [approvalNote, setApprovalNote] = useState("");
   const [paymentAmount, setPaymentAmount] = useState("");
   const [paymentType, setPaymentType] = useState("FULL");
+  const [refundAmount, setRefundAmount] = useState("");
+  const [refundReason, setRefundReason] = useState("");
 
   const { data, isLoading, error } = useBillingDetail(id);
   const { data: paymentsData, refetch: refetchPayments } = useBillPayments(id);
+  const { data: refundsData, refetch: refetchRefunds } = useBillRefunds(id);
   const billAction = useBillAction(id);
   const queryClient = useQueryClient();
   const createPayment = useMutation({
@@ -148,8 +181,20 @@ export default function BillingDetailPage() {
       refetchPayments();
     },
   });
+  const createRefund = useMutation({
+    mutationFn: (body: { amount: string; reason: string }) =>
+      apiClient.post(`/internal/v1/finance/billing/${id}/refund`, body),
+    onSuccess: () => {
+      refetchRefunds();
+      refetchPayments();
+      setRefundAmount("");
+      setRefundReason("");
+    },
+  });
   const bill = data?.data;
   const payments: PaymentResource[] = paymentsData?.data ?? [];
+  const refunds: RefundResource[] = refundsData?.data ?? [];
+  const hasPaidPayment = payments.some((p) => p.attributes.status === "PAID");
 
   // Default FULL payment amount to bill's totalPayable
   useEffect(() => {
@@ -533,6 +578,110 @@ export default function BillingDetailPage() {
                             Cancel
                           </button>
                         )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Refunds */}
+            <div className="bg-white rounded-lg border border-gray-200">
+              <div className="px-5 py-4 border-b flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <RotateCcw className="w-4 h-4 text-gray-500" />
+                  <h3 className="text-sm font-medium text-gray-900">Refunds</h3>
+                  {refunds.length > 0 && (
+                    <span className="text-xs text-gray-400">({refunds.length})</span>
+                  )}
+                </div>
+                <button
+                  onClick={() => refetchRefunds()}
+                  className="inline-flex items-center gap-1 px-2 py-1 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
+                >
+                  <RefreshCw className="w-3 h-3" />
+                  Refresh
+                </button>
+              </div>
+
+              {/* Refund creation form — only for bills with paid payments */}
+              {hasPaidPayment && (
+                <div className="px-5 py-3 border-b bg-gray-50">
+                  <p className="text-xs font-medium text-gray-600 mb-2">Request Refund</p>
+                  <div className="flex items-start gap-2">
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0.01"
+                      placeholder="Refund amount"
+                      value={refundAmount}
+                      onChange={(e) => setRefundAmount(e.target.value)}
+                      className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 w-32"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Reason for refund"
+                      value={refundReason}
+                      onChange={(e) => setRefundReason(e.target.value)}
+                      className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 flex-1"
+                    />
+                    <button
+                      onClick={() => createRefund.mutate({ amount: refundAmount, reason: refundReason })}
+                      disabled={createRefund.isPending || !refundAmount || !refundReason}
+                      className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors whitespace-nowrap"
+                    >
+                      {createRefund.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <RotateCcw className="w-4 h-4" />}
+                      Request Refund
+                    </button>
+                  </div>
+                  {createRefund.isError && (
+                    <p className="mt-2 text-xs text-red-600">Failed to create refund request.</p>
+                  )}
+                  {createRefund.isSuccess && (
+                    <p className="mt-2 text-xs text-green-600">Refund request created successfully.</p>
+                  )}
+                </div>
+              )}
+
+              {refunds.length === 0 ? (
+                <div className="p-8 text-center">
+                  <RotateCcw className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                  <p className="text-gray-400 text-sm">No refunds recorded</p>
+                  {!hasPaidPayment && (
+                    <p className="text-gray-400 text-xs mt-1">
+                      Refunds can be requested after a payment has been completed.
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div className="divide-y divide-gray-100">
+                  {refunds.map((refund) => (
+                    <div key={refund.id} className="px-5 py-3 flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">
+                          {refund.attributes.refundType} Refund
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {refund.attributes.reason}
+                          {refund.attributes.createdAt && (
+                            <span> &middot; {new Date(refund.attributes.createdAt).toLocaleString()}</span>
+                          )}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span
+                          className={`inline-block px-2 py-0.5 text-xs rounded-full font-medium ${
+                            REFUND_STATUS_STYLES[refund.attributes.status] ?? "bg-gray-100 text-gray-600"
+                          }`}
+                        >
+                          {refund.attributes.status}
+                        </span>
+                        <span className="text-sm font-mono font-semibold text-red-600">
+                          -{bill.attributes.currency}{" "}
+                          {refund.attributes.amount.toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                          })}
+                        </span>
                       </div>
                     </div>
                   ))}
