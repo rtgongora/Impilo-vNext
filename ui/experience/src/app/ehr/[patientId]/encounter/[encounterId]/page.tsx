@@ -102,7 +102,7 @@ export default function EncounterPage() {
   const [examSaving, setExamSaving] = useState(false);
   const [examSaved, setExamSaved] = useState(false);
 
-  // Triage state (Lovable-aligned acuity + danger signs)
+  // Triage state (Lovable-aligned acuity + danger signs + quick vitals)
   const [triageAcuity, setTriageAcuity] = useState<number | null>(null);
   const [triageNotes, setTriageNotes] = useState("");
   const [triageSaving, setTriageSaving] = useState(false);
@@ -113,6 +113,13 @@ export default function EncounterPage() {
     "Convulsions", "Dehydration (severe)", "High fever (>39°C)", "Shock",
   ];
   const [dangerSigns, setDangerSigns] = useState<Record<string, boolean>>({});
+  // Quick triage vitals
+  const [tvSystolic, setTvSystolic] = useState("");
+  const [tvDiastolic, setTvDiastolic] = useState("");
+  const [tvHR, setTvHR] = useState("");
+  const [tvTemp, setTvTemp] = useState("");
+  const [tvSpO2, setTvSpO2] = useState("");
+  const [tvRR, setTvRR] = useState("");
 
   const isActive =
     encounter?.attributes.status === "ACTIVE" ||
@@ -212,12 +219,23 @@ export default function EncounterPage() {
     try {
       const activeDangerSigns = Object.entries(dangerSigns)
         .map(([name, present]) => ({ name, present }));
+      const toNum = (v: string) => (v.trim() === "" ? null : Number(v));
+      const vitals: Record<string, number | null> = {
+        systolic: toNum(tvSystolic),
+        diastolic: toNum(tvDiastolic),
+        heart_rate: toNum(tvHR),
+        temperature: toNum(tvTemp),
+        oxygen_saturation: toNum(tvSpO2),
+        respiratory_rate: toNum(tvRR),
+      };
+      const hasVitals = Object.values(vitals).some((v) => v != null);
       await apiClient.post("/internal/v1/triage", {
         patient_id: patientId,
         encounter_id: encounterId,
         acuity: triageAcuity,
         chief_complaint: (encounter?.attributes as Record<string, unknown>)?.chief_complaint ?? null,
         danger_signs: activeDangerSigns,
+        vitals: hasVitals ? vitals : null,
         notes: triageNotes || null,
         triaged_by: currentUserId,
         triaged_by_name: currentUserName,
@@ -323,8 +341,8 @@ export default function EncounterPage() {
               </div>
             </div>
 
-            {/* Existing Triage Display — show if already triaged */}
-            {existingTriage && !isActive && (
+            {/* Existing Triage Display — show when triage already recorded */}
+            {existingTriage && (
               <div className={`rounded-lg border-2 p-4 ${
                 existingTriage.attributes.acuity === 1 ? "border-red-400 bg-red-50" :
                 existingTriage.attributes.acuity === 2 ? "border-orange-400 bg-orange-50" :
@@ -332,24 +350,56 @@ export default function EncounterPage() {
                 existingTriage.attributes.acuity === 4 ? "border-green-400 bg-green-50" :
                 "border-blue-400 bg-blue-50"
               }`}>
-                <div className="flex items-center gap-3">
-                  <AlertTriangle className="w-5 h-5" />
-                  <div>
-                    <span className="text-sm font-semibold">
-                      Triage: P{String(existingTriage.attributes.acuity)} — {
-                        existingTriage.attributes.acuity === 1 ? "Resuscitation" :
-                        existingTriage.attributes.acuity === 2 ? "Emergency" :
-                        existingTriage.attributes.acuity === 3 ? "Urgent" :
-                        existingTriage.attributes.acuity === 4 ? "Standard" : "Non-urgent"
-                      }
-                    </span>
-                    {existingTriage.attributes.triaged_by_name && (
-                      <span className="text-xs text-gray-500 ml-2">
-                        by {String(existingTriage.attributes.triaged_by_name)}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <AlertTriangle className="w-5 h-5" />
+                    <div>
+                      <span className="text-sm font-semibold">
+                        Triage: P{String(existingTriage.attributes.acuity)} — {
+                          existingTriage.attributes.acuity === 1 ? "Resuscitation" :
+                          existingTriage.attributes.acuity === 2 ? "Emergency" :
+                          existingTriage.attributes.acuity === 3 ? "Urgent" :
+                          existingTriage.attributes.acuity === 4 ? "Standard" : "Non-urgent"
+                        }
                       </span>
-                    )}
+                      {existingTriage.attributes.triaged_by_name && (
+                        <span className="text-xs text-gray-500 ml-2">
+                          by {String(existingTriage.attributes.triaged_by_name)}
+                        </span>
+                      )}
+                    </div>
                   </div>
+                  {/* Triage vitals summary if available */}
+                  {existingTriage.attributes.vitals && typeof existingTriage.attributes.vitals === "object" && (
+                    <div className="flex items-center gap-3 text-xs">
+                      {(existingTriage.attributes.vitals as Record<string, unknown>).systolic != null && (
+                        <span>BP: {String((existingTriage.attributes.vitals as Record<string, unknown>).systolic)}/{String((existingTriage.attributes.vitals as Record<string, unknown>).diastolic ?? "")}</span>
+                      )}
+                      {(existingTriage.attributes.vitals as Record<string, unknown>).heart_rate != null && (
+                        <span>HR: {String((existingTriage.attributes.vitals as Record<string, unknown>).heart_rate)}</span>
+                      )}
+                      {(existingTriage.attributes.vitals as Record<string, unknown>).oxygen_saturation != null && (
+                        <span>SpO₂: {String((existingTriage.attributes.vitals as Record<string, unknown>).oxygen_saturation)}%</span>
+                      )}
+                      {(existingTriage.attributes.vitals as Record<string, unknown>).temperature != null && (
+                        <span>T: {String((existingTriage.attributes.vitals as Record<string, unknown>).temperature)}°C</span>
+                      )}
+                    </div>
+                  )}
                 </div>
+                {/* Danger signs summary */}
+                {existingTriage.attributes.danger_signs && Array.isArray(existingTriage.attributes.danger_signs) && (
+                  (() => {
+                    const present = (existingTriage.attributes.danger_signs as Array<{ name: string; present: boolean }>).filter((d) => d.present);
+                    return present.length > 0 ? (
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {present.map((d) => (
+                          <span key={d.name} className="px-2 py-0.5 text-xs bg-red-100 text-red-700 rounded-full">{d.name}</span>
+                        ))}
+                      </div>
+                    ) : null;
+                  })()
+                )}
               </div>
             )}
 
@@ -419,6 +469,43 @@ export default function EncounterPage() {
                         </button>
                       );
                     })}
+                  </div>
+                </div>
+
+                {/* Quick Triage Vitals */}
+                <div className="mb-4">
+                  <label className="block text-xs font-medium text-gray-600 mb-2">Triage Vitals</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <label className="block text-[10px] text-gray-500 mb-0.5">Systolic</label>
+                      <input type="number" value={tvSystolic} onChange={(e) => setTvSystolic(e.target.value)} placeholder="mmHg"
+                        className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-amber-500" />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] text-gray-500 mb-0.5">Diastolic</label>
+                      <input type="number" value={tvDiastolic} onChange={(e) => setTvDiastolic(e.target.value)} placeholder="mmHg"
+                        className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-amber-500" />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] text-gray-500 mb-0.5">Heart Rate</label>
+                      <input type="number" value={tvHR} onChange={(e) => setTvHR(e.target.value)} placeholder="bpm"
+                        className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-amber-500" />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] text-gray-500 mb-0.5">Temperature</label>
+                      <input type="number" step="0.1" value={tvTemp} onChange={(e) => setTvTemp(e.target.value)} placeholder="°C"
+                        className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-amber-500" />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] text-gray-500 mb-0.5">SpO₂</label>
+                      <input type="number" value={tvSpO2} onChange={(e) => setTvSpO2(e.target.value)} placeholder="%"
+                        className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-amber-500" />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] text-gray-500 mb-0.5">Resp Rate</label>
+                      <input type="number" value={tvRR} onChange={(e) => setTvRR(e.target.value)} placeholder="/min"
+                        className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-amber-500" />
+                    </div>
                   </div>
                 </div>
 
