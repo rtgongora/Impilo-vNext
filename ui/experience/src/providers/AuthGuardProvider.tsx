@@ -15,6 +15,17 @@ import { useWorkspaceStore } from "@/hooks/useWorkspaceStore";
 import { useShiftStore } from "@/hooks/useShiftStore";
 import { ROUTES, type GuardType } from "@/lib/routes";
 
+/** Map abstract role-group names used in routes.ts to concrete Keycloak roles. */
+const ROLE_GROUPS: Record<string, string[]> = {
+  ADMIN: ["SYSTEM_ADMIN", "FACILITY_ADMIN", "DEVELOPER"],
+};
+
+function matchesRequiredRole(hasRole: (r: string) => boolean, requiredRole: string): boolean {
+  const group = ROLE_GROUPS[requiredRole];
+  if (group) return group.some((r) => hasRole(r));
+  return hasRole(requiredRole);
+}
+
 function findRouteGuard(pathname: string): { guard: GuardType; requiredRole?: string } | null {
   // Try exact match first, then pattern match
   for (const route of ROUTES) {
@@ -66,7 +77,7 @@ export function AuthGuardProvider({ children }: { children: ReactNode }) {
         break;
       case "role":
         if (!isAuthenticated) { router.replace("/auth/login"); return; }
-        if (requiredRole && !hasRole(requiredRole)) { router.replace("/home"); return; }
+        if (requiredRole && !matchesRequiredRole(hasRole, requiredRole)) { router.replace("/home"); return; }
         break;
     }
   }, [pathname, isAuthenticated, hasFacility, hasWorkspace, hasShift, hasRole, router]);
