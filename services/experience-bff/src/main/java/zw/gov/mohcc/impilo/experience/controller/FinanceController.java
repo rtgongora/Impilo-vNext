@@ -231,6 +231,24 @@ public class FinanceController {
         }
     }
 
+    /**
+     * POST /internal/v1/finance/billing/{id}/payments/{paymentId}/cancel
+     *
+     * Cancel a PENDING payment for a bill.
+     */
+    @PostMapping("/billing/{id}/payments/{paymentId}/cancel")
+    public ResponseEntity<Map<String, Object>> cancelPayment(
+            @PathVariable String id, @PathVariable String paymentId) {
+        try {
+            JsonNode result = costaClient.cancelPayment(id, paymentId);
+            return ResponseEntity.ok(Map.of("data", toPaymentResource(result)));
+        } catch (Exception e) {
+            log.error("Failed to cancel payment {} for bill {}: {}", paymentId, id, e.getMessage());
+            return ResponseEntity.status(400).body(Map.of(
+                    "error", Map.of("code", "CANCEL_FAILED", "message", e.getMessage())));
+        }
+    }
+
     // ── Tariffs & Payments (global lists) ────────────────────────────
 
     /**

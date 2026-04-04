@@ -85,6 +85,36 @@ public class PaymentIntegrationService {
         return invoice;
     }
 
+    /**
+     * Cancel a PENDING payment. Only payments in PENDING status can be cancelled.
+     */
+    @Transactional
+    public PaymentEntity cancelPayment(Long paymentId) {
+        PaymentEntity payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new IllegalArgumentException("Payment not found: " + paymentId));
+
+        if (payment.getStatus() != PaymentStatus.PENDING) {
+            throw new IllegalStateException(
+                    "Cannot cancel payment in status: " + payment.getStatus() + ". Only PENDING payments can be cancelled.");
+        }
+
+        payment.setStatus(PaymentStatus.CANCELLED);
+        paymentRepository.save(payment);
+
+        BillHeaderEntity bill = billHeaderRepository.findById(payment.getBillId()).orElse(null);
+        UUID tenantId = bill != null ? bill.getTenantId() : null;
+
+        if (tenantId != null) {
+            publishEvent("PAYMENT", payment.getId().toString(), "PAYMENT_CANCELLED",
+                    Map.of("billId", payment.getBillId(), "paymentId", payment.getId(),
+                            "amount", payment.getAmount()),
+                    tenantId);
+        }
+
+        log.info("Payment {} cancelled for bill {}", paymentId, payment.getBillId());
+        return payment;
+    }
+
     @Transactional
     public PaymentEntity createPaymentIntent(String billId, PaymentType paymentType, BigDecimal amount) {
         BillHeaderEntity bill = billHeaderRepository.findById(billId)

@@ -150,4 +150,12 @@ public class BillController {
         List<PaymentEntity> payments = paymentService.getPaymentsForBill(id);
         return ResponseEntity.ok(ApiResponse.ok(payments, ctx.correlationId().toString()));
     }
+
+    @PostMapping("/{id}/payments/{paymentId}/cancel")
+    public ResponseEntity<ApiResponse<PaymentEntity>> cancelPayment(
+            @PathVariable String id, @PathVariable Long paymentId) {
+        var ctx = TrustContextHolder.require();
+        PaymentEntity payment = paymentService.cancelPayment(paymentId);
+        return ResponseEntity.ok(ApiResponse.ok(payment, ctx.correlationId().toString()));
+    }
 }

@@ -111,6 +111,16 @@ public class CostaServiceClient {
     }
 
     /**
+     * Cancel a PENDING payment for a bill.
+     */
+    public JsonNode cancelPayment(String billId, String paymentId) {
+        String url = baseUrl + "/costa/v1/bills/" + billId + "/payments/" + paymentId + "/cancel";
+        log.info("COSTA: Cancelling payment {} for bill {}", paymentId, billId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, Map.of(), JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
      * List bills (paginated, tenant-scoped via trust headers).
      *
      * @param page   zero-based page number
