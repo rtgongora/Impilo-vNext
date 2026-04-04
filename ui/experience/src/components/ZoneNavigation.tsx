@@ -250,6 +250,16 @@ export function ZoneNavigation() {
   const sections = getNavSections(context);
   const isInContext = context !== "home";
 
+  // Auto-sync work mode from URL context
+  const setWorkMode = useWorkModeStore((s) => s.setMode);
+  const contextToMode: Partial<Record<PageContext, WorkMode>> = {
+    clinical: "clinical", admin: "admin", finance: "finance", pharmacy: "pharmacy",
+  };
+  const inferredMode = contextToMode[context];
+  if (inferredMode && inferredMode !== workMode) {
+    setWorkMode(inferredMode);
+  }
+
   return (
     <nav className={`bg-gray-900 text-gray-300 flex flex-col shrink-0 transition-all duration-200 ${collapsed ? "w-14" : "w-56"}`}>
       {/* Header */}

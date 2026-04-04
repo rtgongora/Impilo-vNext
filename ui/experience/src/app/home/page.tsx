@@ -27,6 +27,7 @@ import { useShiftStore } from "@/hooks/useShiftStore";
 import { useRoleGroup } from "@/hooks/useRoleGroup";
 import { useWorkModeStore } from "@/hooks/useWorkModeStore";
 import { useFacilities, type FacilityResource } from "@/hooks/queries/useFacilities";
+import { useProviderLicenses, hasActiveLicense } from "@/hooks/queries/useLicenses";
 import { apiClient } from "@/lib/api-client";
 
 interface QuickAction {
@@ -129,6 +130,13 @@ export default function HomePage() {
   const router = useRouter();
   const hasWorkContext = !!facility;
 
+  // Fetch license data for clinical providers
+  const { data: licenseData } = useProviderLicenses(
+    isClinical ? user?.id : undefined
+  );
+  const licenses = licenseData?.data ?? [];
+  const licenseActive = licenses.length === 0 || hasActiveLicense(licenses);
+
   // Fetch facilities for workplace selection hub
   const { data: facilitiesData, isLoading: facilitiesLoading } = useFacilities();
   const facilities: FacilityResource[] = facilitiesData?.data ?? [];
@@ -172,11 +180,20 @@ export default function HomePage() {
                     : "Welcome to Impilo vNext"}
                 </p>
               </div>
-              {user?.actorType && (
-                <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-blue-50 text-blue-700">
-                  {user.actorType}
-                </span>
-              )}
+              <div className="flex items-center gap-2">
+                {isClinical && licenses.length > 0 && (
+                  <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${
+                    licenseActive ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"
+                  }`}>
+                    {licenseActive ? "Licensed" : "License Issue"}
+                  </span>
+                )}
+                {user?.actorType && (
+                  <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-blue-50 text-blue-700">
+                    {user.actorType}
+                  </span>
+                )}
+              </div>
             </div>
 
             <div className="mt-4 flex flex-wrap gap-3">

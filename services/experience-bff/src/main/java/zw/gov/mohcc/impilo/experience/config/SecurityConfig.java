@@ -114,6 +114,12 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.POST, "/internal/v1/mobile/provider/prescriptions/*/cancel")
                             .hasAnyRole(PRESCRIBER_ROLES)
 
+                    // ── Workspace selection requires clinical staff ──────
+                    .requestMatchers(HttpMethod.GET, "/internal/v1/workspaces")
+                            .hasAnyRole(CLINICAL_ROLES)
+                    .requestMatchers(HttpMethod.POST, "/internal/v1/workspaces/*/activate")
+                            .hasAnyRole(CLINICAL_ROLES)
+
                     // ── Clinical write endpoints (broad clinical staff) ───
                     .requestMatchers(HttpMethod.POST, "/internal/v1/encounters/**")
                             .hasAnyRole(CLINICAL_ROLES)
