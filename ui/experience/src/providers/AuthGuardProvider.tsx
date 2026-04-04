@@ -18,6 +18,7 @@ import { ROUTES, type GuardType } from "@/lib/routes";
 /** Map abstract role-group names used in routes.ts to concrete Keycloak roles. */
 const ROLE_GROUPS: Record<string, string[]> = {
   ADMIN: ["SYSTEM_ADMIN", "FACILITY_ADMIN", "DEVELOPER"],
+  FINANCE: ["SYSTEM_ADMIN", "FACILITY_ADMIN", "FINANCE"],
 };
 
 function matchesRequiredRole(hasRole: (r: string) => boolean, requiredRole: string): boolean {

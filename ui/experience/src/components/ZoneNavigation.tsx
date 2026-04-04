@@ -17,6 +17,7 @@ import { useWorkspaceStore } from "@/hooks/useWorkspaceStore";
 import { useShiftStore } from "@/hooks/useShiftStore";
 
 const ADMIN_ROLES = ["SYSTEM_ADMIN", "FACILITY_ADMIN", "DEVELOPER"];
+const FINANCE_ROLES = ["SYSTEM_ADMIN", "FACILITY_ADMIN", "FINANCE"];
 
 interface NavItem {
   label: string;
@@ -39,7 +40,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Pharmacy", href: "/pharmacy", zone: "work" },
   { label: "Inventory", href: "/inventory", zone: "work" },
   { label: "Marketplace", href: "/marketplace", zone: "work" },
-  { label: "Finance", href: "/finance", zone: "work" },
+  { label: "Finance", href: "/finance", zone: "work", requiredRoles: FINANCE_ROLES },
 
   // Professional Zone
   { label: "Registry", href: "/registry", zone: "professional" },
