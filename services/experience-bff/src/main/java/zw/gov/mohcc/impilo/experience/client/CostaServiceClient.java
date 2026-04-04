@@ -51,6 +51,48 @@ public class CostaServiceClient {
     }
 
     /**
+     * Submit a bill for approval (DRAFT/ACCUMULATING → APPROVAL_PENDING).
+     */
+    public JsonNode submitForApproval(String billId) {
+        String url = baseUrl + "/costa/v1/bills/" + billId + "/submit-approval";
+        log.info("COSTA: Submitting bill {} for approval", billId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, Map.of(), JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Approve a bill (APPROVAL_PENDING → APPROVED).
+     */
+    public JsonNode approveBill(String billId, String note) {
+        String url = baseUrl + "/costa/v1/bills/" + billId + "/approve";
+        Map<String, Object> body = new LinkedHashMap<>();
+        if (note != null) body.put("note", note);
+        log.info("COSTA: Approving bill {}", billId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Finalize a bill (APPROVED → FINAL).
+     */
+    public JsonNode finalizeBill(String billId) {
+        String url = baseUrl + "/costa/v1/bills/" + billId + "/finalize";
+        log.info("COSTA: Finalizing bill {}", billId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, Map.of(), JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Issue an invoice for a finalized bill.
+     */
+    public JsonNode issueInvoice(String billId) {
+        String url = baseUrl + "/costa/v1/bills/" + billId + "/issue-invoice";
+        log.info("COSTA: Issuing invoice for bill {}", billId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, Map.of(), JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
      * List bills (paginated, tenant-scoped via trust headers).
      *
      * @param page   zero-based page number

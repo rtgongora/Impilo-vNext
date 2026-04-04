@@ -101,6 +101,88 @@ public class FinanceController {
         }
     }
 
+    // ── Bill Lifecycle Write Operations ─────────────────────────────
+
+    /**
+     * POST /internal/v1/finance/billing/{id}/submit
+     *
+     * Submit a bill for approval (DRAFT/ACCUMULATING → APPROVAL_PENDING).
+     */
+    @PostMapping("/billing/{id}/submit")
+    public ResponseEntity<Map<String, Object>> submitBillForApproval(@PathVariable String id) {
+        try {
+            JsonNode result = costaClient.submitForApproval(id);
+            return ResponseEntity.ok(Map.of("data", toBillingResource(result)));
+        } catch (Exception e) {
+            log.error("Failed to submit bill {} for approval: {}", id, e.getMessage());
+            return ResponseEntity.status(400).body(Map.of(
+                    "error", Map.of("code", "SUBMIT_FAILED", "message", e.getMessage())));
+        }
+    }
+
+    /**
+     * POST /internal/v1/finance/billing/{id}/approve
+     *
+     * Approve a bill (APPROVAL_PENDING → APPROVED).
+     */
+    @PostMapping("/billing/{id}/approve")
+    public ResponseEntity<Map<String, Object>> approveBill(
+            @PathVariable String id,
+            @RequestBody(required = false) Map<String, String> body) {
+        try {
+            String note = body != null ? body.get("note") : null;
+            JsonNode result = costaClient.approveBill(id, note);
+            return ResponseEntity.ok(Map.of("data", toBillingResource(result)));
+        } catch (Exception e) {
+            log.error("Failed to approve bill {}: {}", id, e.getMessage());
+            return ResponseEntity.status(400).body(Map.of(
+                    "error", Map.of("code", "APPROVE_FAILED", "message", e.getMessage())));
+        }
+    }
+
+    /**
+     * POST /internal/v1/finance/billing/{id}/finalize
+     *
+     * Finalize an approved bill (APPROVED → FINAL).
+     */
+    @PostMapping("/billing/{id}/finalize")
+    public ResponseEntity<Map<String, Object>> finalizeBill(@PathVariable String id) {
+        try {
+            JsonNode result = costaClient.finalizeBill(id);
+            return ResponseEntity.ok(Map.of("data", toBillingResource(result)));
+        } catch (Exception e) {
+            log.error("Failed to finalize bill {}: {}", id, e.getMessage());
+            return ResponseEntity.status(400).body(Map.of(
+                    "error", Map.of("code", "FINALIZE_FAILED", "message", e.getMessage())));
+        }
+    }
+
+    /**
+     * POST /internal/v1/finance/billing/{id}/invoice
+     *
+     * Issue an invoice for a finalized bill.
+     */
+    @PostMapping("/billing/{id}/invoice")
+    public ResponseEntity<Map<String, Object>> issueInvoice(@PathVariable String id) {
+        try {
+            JsonNode result = costaClient.issueInvoice(id);
+            ObjectNode resource = objectMapper.createObjectNode();
+            resource.put("id", textOrEmpty(result, "invoiceId"));
+            resource.put("type", "invoice-document");
+            ObjectNode attrs = resource.putObject("attributes");
+            attrs.put("invoiceNumber", textOrEmpty(result, "invoiceNumber"));
+            attrs.put("billId", textOrEmpty(result, "billId"));
+            attrs.put("issuedAt", textOrEmpty(result, "issuedAt"));
+            return ResponseEntity.status(201).body(Map.of("data", resource));
+        } catch (Exception e) {
+            log.error("Failed to issue invoice for bill {}: {}", id, e.getMessage());
+            return ResponseEntity.status(400).body(Map.of(
+                    "error", Map.of("code", "INVOICE_FAILED", "message", e.getMessage())));
+        }
+    }
+
+    // ── Tariffs & Payments ───────────────────────────────────────────
+
     /**
      * GET /internal/v1/finance/tariffs
      *
