@@ -181,7 +181,57 @@ public class FinanceController {
         }
     }
 
-    // ── Tariffs & Payments ───────────────────────────────────────────
+    /**
+     * POST /internal/v1/finance/billing/{id}/payment
+     *
+     * Create a payment intent for a bill via COSTA.
+     * COSTA creates the local PaymentEntity; MusheX auto-creates the
+     * PaymentIntentEntity when the bill.finalized event arrives.
+     */
+    @PostMapping("/billing/{id}/payment")
+    public ResponseEntity<Map<String, Object>> createPaymentIntent(
+            @PathVariable String id,
+            @RequestBody Map<String, String> body) {
+        try {
+            String paymentType = body.getOrDefault("paymentType", "FULL");
+            String amount = body.get("amount");
+            if (amount == null || amount.isBlank()) {
+                return ResponseEntity.status(400).body(Map.of(
+                        "error", Map.of("code", "MISSING_AMOUNT", "message", "amount is required")));
+            }
+            JsonNode result = costaClient.createPaymentIntent(id, paymentType, amount);
+            ObjectNode resource = toPaymentResource(result);
+            return ResponseEntity.status(201).body(Map.of("data", resource));
+        } catch (Exception e) {
+            log.error("Failed to create payment intent for bill {}: {}", id, e.getMessage());
+            return ResponseEntity.status(400).body(Map.of(
+                    "error", Map.of("code", "PAYMENT_FAILED", "message", e.getMessage())));
+        }
+    }
+
+    /**
+     * GET /internal/v1/finance/billing/{id}/payments
+     *
+     * List payments for a specific bill from COSTA.
+     */
+    @GetMapping("/billing/{id}/payments")
+    public ResponseEntity<Map<String, Object>> getBillPayments(@PathVariable String id) {
+        try {
+            JsonNode costaData = costaClient.getBillPayments(id);
+            ArrayNode resources = objectMapper.createArrayNode();
+            if (costaData != null && costaData.isArray()) {
+                for (JsonNode payment : costaData) {
+                    resources.add(toPaymentResource(payment));
+                }
+            }
+            return ResponseEntity.ok(Map.of("data", resources));
+        } catch (Exception e) {
+            log.error("Failed to fetch payments for bill {}: {}", id, e.getMessage());
+            return ResponseEntity.ok(Map.of("data", objectMapper.createArrayNode()));
+        }
+    }
+
+    // ── Tariffs & Payments (global lists) ────────────────────────────
 
     /**
      * GET /internal/v1/finance/tariffs

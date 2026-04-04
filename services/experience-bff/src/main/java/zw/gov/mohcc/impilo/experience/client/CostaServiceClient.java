@@ -93,6 +93,24 @@ public class CostaServiceClient {
     }
 
     /**
+     * Create a payment intent for a finalized bill.
+     *
+     * @param billId      the COSTA bill ID
+     * @param paymentType FULL, DEPOSIT, REMAINDER, THIRD_PARTY, or REMITTANCE
+     * @param amount      payment amount
+     * @return the created PaymentEntity from COSTA
+     */
+    public JsonNode createPaymentIntent(String billId, String paymentType, String amount) {
+        String url = baseUrl + "/costa/v1/bills/" + billId + "/create-payment-intent";
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("paymentType", paymentType);
+        body.put("amount", amount);
+        log.info("COSTA: Creating payment intent for bill={}, type={}, amount={}", billId, paymentType, amount);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
      * List bills (paginated, tenant-scoped via trust headers).
      *
      * @param page   zero-based page number
