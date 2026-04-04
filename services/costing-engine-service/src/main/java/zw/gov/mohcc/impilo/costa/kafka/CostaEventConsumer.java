@@ -74,6 +74,18 @@ public class CostaEventConsumer {
             encounter.setStatus(EncounterStatus.OPEN);
             encounterRepository.save(encounter);
 
+            // Auto-create a DRAFT bill for the encounter so order/dispense events
+            // can post line items as they arrive (before discharge)
+            try {
+                BillHeaderEntity bill = billService.createDraft(
+                        encounter.getEncounterId(), null, BillType.ENCOUNTER);
+                log.info("Auto-created DRAFT bill {} for encounter {}",
+                        bill.getBillId(), encounter.getEncounterId());
+            } catch (Exception billErr) {
+                log.warn("Failed to auto-create bill for encounter {} (non-blocking): {}",
+                        encounter.getEncounterId(), billErr.getMessage());
+            }
+
             markProcessed(eventId, "PCT");
             ack.acknowledge();
             log.info("Created encounter {} for PCT journey {}", encounter.getEncounterId(), journeyId);
@@ -177,7 +189,7 @@ public class CostaEventConsumer {
         }
     }
 
-    @KafkaListener(topics = "pharmacy.dispense.completed", groupId = "costa-costing-engine")
+    @KafkaListener(topics = "pharmacy.dispense.complete", groupId = "costa-costing-engine")
     @Transactional
     public void onDispenseCompleted(String message, Acknowledgment ack) {
         try {
@@ -265,7 +277,7 @@ public class CostaEventConsumer {
         }
     }
 
-    @KafkaListener(topics = "inventory.ledger.event_posted", groupId = "costa-costing-engine")
+    @KafkaListener(topics = "inventory.ledger.event.created", groupId = "costa-costing-engine")
     @Transactional
     public void onInventoryEvent(String message, Acknowledgment ack) {
         try {
