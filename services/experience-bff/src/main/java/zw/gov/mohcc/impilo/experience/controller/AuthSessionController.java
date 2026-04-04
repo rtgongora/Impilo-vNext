@@ -42,6 +42,14 @@ public class AuthSessionController {
     @Value("${KEYCLOAK_CLIENT_ID:experience-ui}")
     private String clientId;
 
+    /**
+     * Controls whether local fallback tokens are issued when Keycloak is unreachable.
+     * Default: false (fail-closed). Set to true ONLY in development/test environments.
+     * Fallback tokens are unsigned UUIDs and will NOT pass Spring Security JWT validation.
+     */
+    @Value("${impilo.auth.fallback-enabled:false}")
+    private boolean fallbackEnabled;
+
     private final RestTemplate restTemplate = new RestTemplate();
 
     /**
@@ -125,13 +133,24 @@ public class AuthSessionController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
                         "error", Map.of("code", "INVALID_CREDENTIALS", "message", "Invalid email or password")));
             }
-            log.warn("Keycloak login error: {}", e.getMessage());
+            log.warn("Keycloak login error (status {}): {}", e.getStatusCode(), e.getMessage());
         } catch (Exception e) {
-            log.warn("Keycloak unreachable, falling back to local session: {}", e.getMessage());
+            log.warn("Keycloak unreachable for login: {}", e.getMessage());
         }
 
         // Fallback: local session when Keycloak is not available
-        log.warn("Using local session fallback for: {}", email);
+        if (!fallbackEnabled) {
+            log.error("Keycloak unreachable and fallback is disabled (impilo.auth.fallback-enabled=false). "
+                    + "Login failed for: {}", email);
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(Map.of(
+                    "error", Map.of(
+                            "code", "AUTH_UNAVAILABLE",
+                            "message", "Authentication service is temporarily unavailable. Please try again later.")));
+        }
+
+        log.warn("SECURITY: Using local session fallback for: {}. "
+                + "Fallback tokens are unsigned and will NOT pass JWT validation on protected endpoints. "
+                + "This mode is intended for development only.", email);
         String fallbackToken = UUID.randomUUID().toString();
         String fallbackUserId = UUID.nameUUIDFromBytes(email.getBytes()).toString();
         return buildLoginResponse(fallbackToken, null, 28800, fallbackUserId, email, email,

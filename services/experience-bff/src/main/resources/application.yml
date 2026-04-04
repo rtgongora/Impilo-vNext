@@ -39,6 +39,8 @@ management:
       show-details: when-authorized
 
 impilo:
+  auth:
+    fallback-enabled: ${AUTH_FALLBACK_ENABLED:false}
   services:
     pct-base-url: ${PCT_BASE_URL:http://localhost:8088}
     oros-base-url: ${OROS_BASE_URL:http://localhost:8089}
