@@ -25,6 +25,7 @@ import {
   type LabOrderResource,
 } from "@/hooks/queries/useLabOrders";
 import { useAuthStore } from "@/hooks/useAuthStore";
+import { useRoleGroup } from "@/hooks/useRoleGroup";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useEncounters } from "@/hooks/queries/useEncounters";
 import { useQueryClient } from "@tanstack/react-query";
@@ -57,6 +58,7 @@ export default function OrdersPage() {
   const params = useParams<{ patientId: string }>();
   const { patientId } = params;
   const { user } = useAuthStore();
+  const { isClinical } = useRoleGroup();
   const facility = useFacilityStore((s) => s.facility);
   const { data: encountersData } = useEncounters(patientId);
   const activeEncounter = (encountersData?.data ?? []).find(
@@ -132,6 +134,7 @@ export default function OrdersPage() {
                   Orders ({orders.length})
                 </h2>
               </div>
+              {isClinical && (
               <button
                 onClick={() => setShowForm((prev) => !prev)}
                 className="inline-flex items-center gap-1.5 px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
@@ -139,6 +142,7 @@ export default function OrdersPage() {
                 <Plus className="w-4 h-4" />
                 Add Order
               </button>
+              )}
             </div>
 
             {/* Add Order Form */}

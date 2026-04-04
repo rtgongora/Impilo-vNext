@@ -16,6 +16,7 @@ import {
   type VitalsResource,
 } from "@/hooks/queries/useVitals";
 import { useAuthStore } from "@/hooks/useAuthStore";
+import { useRoleGroup } from "@/hooks/useRoleGroup";
 import { useEncounters } from "@/hooks/queries/useEncounters";
 
 export default function VitalsPage() {
@@ -23,6 +24,7 @@ export default function VitalsPage() {
   const patientId = params.patientId;
 
   const { user } = useAuthStore();
+  const { isClinical } = useRoleGroup();
   const { data: encountersData } = useEncounters(patientId);
   const activeEncounter = (encountersData?.data ?? []).find(
     (e) => e.attributes.status === "IN_PROGRESS" || e.attributes.status === "ACTIVE"
@@ -109,6 +111,7 @@ export default function VitalsPage() {
                   Recorded Vitals
                 </h2>
               </div>
+              {isClinical && (
               <button
                 type="button"
                 onClick={() => setShowForm((prev) => !prev)}
@@ -117,6 +120,7 @@ export default function VitalsPage() {
                 <Plus className="w-4 h-4" />
                 Record Vitals
               </button>
+              )}
             </div>
 
             {/* New vitals form */}
