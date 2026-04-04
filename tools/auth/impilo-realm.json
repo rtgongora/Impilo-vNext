@@ -488,6 +488,24 @@
       "realmRoles": [
         "SUPPORT_AGENT"
       ]
+    },
+    {
+      "username": "finance.ndlovu",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Finance",
+      "lastName": "Ndlovu",
+      "email": "finance.ndlovu@mohcc.gov.zw",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "test123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "FINANCE"
+      ]
     }
   ]
 }
