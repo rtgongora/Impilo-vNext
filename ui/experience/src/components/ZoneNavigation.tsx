@@ -30,6 +30,7 @@ const NAV_ITEMS: NavItem[] = [
 
   // Work Zone
   { label: "Queue", href: "/queue", zone: "work" },
+  { label: "Scheduling", href: "/scheduling", zone: "work" },
   { label: "Telemedicine", href: "/telemedicine", zone: "work" },
   { label: "Pharmacy", href: "/pharmacy", zone: "work" },
   { label: "Inventory", href: "/inventory", zone: "work" },
