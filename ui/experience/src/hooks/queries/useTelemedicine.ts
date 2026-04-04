@@ -21,6 +21,7 @@ export interface TelemedicineSession {
     ended_at: string | null;
     duration_seconds: number | null;
     notes: string | null;
+    referral_id: string | null;
     created_at: string;
     updated_at: string;
     token?: string;
@@ -33,6 +34,7 @@ interface CreateTelemedicineSessionPayload {
   patient_id: string;
   provider_id?: string;
   facility_id: string;
+  referral_id?: string;
   session_type: string;
   scheduled_at?: string;
   notes?: string;

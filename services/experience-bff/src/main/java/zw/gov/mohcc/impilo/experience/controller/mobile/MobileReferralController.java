@@ -30,15 +30,25 @@ public class MobileReferralController {
         this.outboxService = outboxService;
     }
 
+    /**
+     * Mobile referral creation request.
+     * Field names match the canonical referral schema (V6):
+     *   reason (not referral_reason), urgency (not priority),
+     *   referred_to_facility (not destination_facility_id),
+     *   referred_by (not referring_facility_id).
+     */
     public record CreateReferralRequest(
-            @NotBlank String encounter_id,
             @NotBlank String patient_id,
-            @NotBlank String referring_facility_id,
-            @NotBlank String destination_facility_id,
-            @NotBlank String referral_reason,
-            String priority,
+            String encounter_id,
+            String referral_type,
+            String specialty,
+            String referred_to,
+            @NotBlank String referred_to_facility,
+            @NotBlank String reason,
+            String urgency,
             String clinical_summary,
-            String specialty
+            @NotBlank String referred_by,
+            String referred_by_name
     ) {}
 
     @PostMapping
@@ -53,19 +63,23 @@ public class MobileReferralController {
 
         UUID referralId = UUID.randomUUID();
         OffsetDateTime now = OffsetDateTime.now();
-        String priority = request.priority() != null ? request.priority() : "ROUTINE";
+        String urgency = request.urgency() != null ? request.urgency() : "ROUTINE";
+        String referralType = request.referral_type() != null ? request.referral_type() : "SPECIALIST";
 
         jdbcTemplate.update("""
             INSERT INTO referrals
-                (id, tenant_id, encounter_id, patient_id, referring_facility_id,
-                 destination_facility_id, referral_reason, priority, clinical_summary,
-                 specialty, status, referred_at, created_at, updated_at)
-            VALUES (?, ?, ?::uuid, ?::uuid, ?::uuid, ?::uuid, ?, ?, ?, ?, 'PENDING', ?, ?, ?)
+                (id, tenant_id, patient_id, encounter_id, referral_type,
+                 specialty, referred_to, referred_to_facility, reason, urgency,
+                 status, clinical_summary, referred_by, referred_by_name,
+                 created_at, updated_at)
+            VALUES (?, ?, ?::uuid, ?::uuid, ?, ?, ?, ?, ?, ?, 'PENDING', ?, ?, ?, ?, ?)
             """,
-                referralId, tenantId, request.encounter_id(), request.patient_id(),
-                request.referring_facility_id(), request.destination_facility_id(),
-                request.referral_reason(), priority, request.clinical_summary(),
-                request.specialty(), now, now, now);
+                referralId, tenantId, request.patient_id(), request.encounter_id(),
+                referralType, request.specialty(), request.referred_to(),
+                request.referred_to_facility(), request.reason(), urgency,
+                request.clinical_summary(),
+                request.referred_by(), request.referred_by_name() != null ? request.referred_by_name() : "",
+                now, now);
 
         outboxService.writeOutboxEvent(
                 "impilo.experience.referral.created.v1",
@@ -78,27 +92,28 @@ public class MobileReferralController {
                 referralId.toString(),
                 Map.of(
                         "referral_id", referralId.toString(),
-                        "encounter_id", request.encounter_id(),
                         "patient_id", request.patient_id(),
-                        "referring_facility_id", request.referring_facility_id(),
-                        "destination_facility_id", request.destination_facility_id(),
-                        "priority", priority,
+                        "referred_to_facility", request.referred_to_facility(),
+                        "referred_by", request.referred_by(),
+                        "urgency", urgency,
                         "status", "PENDING"
                 ),
                 Map.of()
         );
 
         Map<String, Object> attributes = new LinkedHashMap<>();
-        attributes.put("encounter_id", request.encounter_id());
         attributes.put("patient_id", request.patient_id());
-        attributes.put("referring_facility_id", request.referring_facility_id());
-        attributes.put("destination_facility_id", request.destination_facility_id());
-        attributes.put("referral_reason", request.referral_reason());
-        attributes.put("priority", priority);
-        attributes.put("clinical_summary", request.clinical_summary());
+        attributes.put("encounter_id", request.encounter_id());
+        attributes.put("referral_type", referralType);
         attributes.put("specialty", request.specialty());
+        attributes.put("referred_to", request.referred_to());
+        attributes.put("referred_to_facility", request.referred_to_facility());
+        attributes.put("reason", request.reason());
+        attributes.put("urgency", urgency);
+        attributes.put("clinical_summary", request.clinical_summary());
+        attributes.put("referred_by", request.referred_by());
+        attributes.put("referred_by_name", request.referred_by_name());
         attributes.put("status", "PENDING");
-        attributes.put("referred_at", now);
         attributes.put("created_at", now);
 
         Map<String, Object> response = new LinkedHashMap<>();
@@ -232,32 +247,30 @@ public class MobileReferralController {
         List<Map<String, Object>> rows;
         Long total;
 
+        String selectCols = """
+                SELECT id, patient_id, encounter_id, referral_type, specialty,
+                       referred_to, referred_to_facility, reason, urgency, status,
+                       clinical_summary, referred_by, referred_by_name,
+                       receiving_facility_id, receiving_facility_name,
+                       response_notes, responded_at, accepted_at,
+                       scheduled_at, completed_at, outcome, created_at, updated_at
+                FROM referrals
+                """;
+
         if (encounterId != null) {
-            rows = jdbcTemplate.queryForList("""
-                SELECT id, encounter_id, patient_id, referring_facility_id, destination_facility_id,
-                       referral_reason, priority, clinical_summary, specialty, status,
-                       referred_at, accepted_at, completed_at, created_at, updated_at
-                FROM referrals
-                WHERE tenant_id = ? AND encounter_id = ?::uuid
-                ORDER BY referred_at DESC
-                LIMIT ? OFFSET ?
-                """, tenantId, encounterId, limit, offset);
-            total = jdbcTemplate.queryForObject("""
-                SELECT count(*) FROM referrals WHERE tenant_id = ? AND encounter_id = ?::uuid
-                """, Long.class, tenantId, encounterId);
+            rows = jdbcTemplate.queryForList(
+                    selectCols + " WHERE tenant_id = ? AND encounter_id = ?::uuid ORDER BY created_at DESC LIMIT ? OFFSET ?",
+                    tenantId, encounterId, limit, offset);
+            total = jdbcTemplate.queryForObject(
+                    "SELECT count(*) FROM referrals WHERE tenant_id = ? AND encounter_id = ?::uuid",
+                    Long.class, tenantId, encounterId);
         } else if (patientId != null) {
-            rows = jdbcTemplate.queryForList("""
-                SELECT id, encounter_id, patient_id, referring_facility_id, destination_facility_id,
-                       referral_reason, priority, clinical_summary, specialty, status,
-                       referred_at, accepted_at, completed_at, created_at, updated_at
-                FROM referrals
-                WHERE tenant_id = ? AND patient_id = ?::uuid
-                ORDER BY referred_at DESC
-                LIMIT ? OFFSET ?
-                """, tenantId, patientId, limit, offset);
-            total = jdbcTemplate.queryForObject("""
-                SELECT count(*) FROM referrals WHERE tenant_id = ? AND patient_id = ?::uuid
-                """, Long.class, tenantId, patientId);
+            rows = jdbcTemplate.queryForList(
+                    selectCols + " WHERE tenant_id = ? AND patient_id = ?::uuid ORDER BY created_at DESC LIMIT ? OFFSET ?",
+                    tenantId, patientId, limit, offset);
+            total = jdbcTemplate.queryForObject(
+                    "SELECT count(*) FROM referrals WHERE tenant_id = ? AND patient_id = ?::uuid",
+                    Long.class, tenantId, patientId);
         } else {
             rows = List.of();
             total = 0L;
@@ -265,18 +278,24 @@ public class MobileReferralController {
 
         List<Map<String, Object>> data = rows.stream().map(row -> {
             Map<String, Object> attributes = new LinkedHashMap<>();
-            attributes.put("encounter_id", row.get("encounter_id"));
             attributes.put("patient_id", row.get("patient_id"));
-            attributes.put("referring_facility_id", row.get("referring_facility_id"));
-            attributes.put("destination_facility_id", row.get("destination_facility_id"));
-            attributes.put("referral_reason", row.get("referral_reason"));
-            attributes.put("priority", row.get("priority"));
-            attributes.put("clinical_summary", row.get("clinical_summary"));
+            attributes.put("encounter_id", row.get("encounter_id"));
+            attributes.put("referral_type", row.get("referral_type"));
             attributes.put("specialty", row.get("specialty"));
+            attributes.put("referred_to", row.get("referred_to"));
+            attributes.put("referred_to_facility", row.get("referred_to_facility"));
+            attributes.put("reason", row.get("reason"));
+            attributes.put("urgency", row.get("urgency"));
             attributes.put("status", row.get("status"));
-            attributes.put("referred_at", row.get("referred_at"));
+            attributes.put("clinical_summary", row.get("clinical_summary"));
+            attributes.put("referred_by", row.get("referred_by"));
+            attributes.put("referred_by_name", row.get("referred_by_name"));
+            attributes.put("receiving_facility_id", row.get("receiving_facility_id"));
+            attributes.put("receiving_facility_name", row.get("receiving_facility_name"));
+            attributes.put("response_notes", row.get("response_notes"));
+            attributes.put("responded_at", row.get("responded_at"));
             attributes.put("accepted_at", row.get("accepted_at"));
-            attributes.put("completed_at", row.get("completed_at"));
+            attributes.put("outcome", row.get("outcome"));
             attributes.put("created_at", row.get("created_at"));
             attributes.put("updated_at", row.get("updated_at"));
 

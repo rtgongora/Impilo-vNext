@@ -367,25 +367,13 @@ public class ReferralsController {
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @Valid @RequestBody AcceptReferralRequest request) {
 
-        OffsetDateTime now = OffsetDateTime.now();
+        Referral referral = referralRepository.findByIdAndTenantId(id, tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException("Referral not found: " + id));
 
-        int updated = jdbcTemplate.update("""
-            UPDATE referrals SET status = 'ACCEPTED',
-                receiving_facility_id = ?::uuid,
-                receiving_facility_name = ?,
-                scheduled_at = ?,
-                accepted_at = ?,
-                updated_at = ?
-            WHERE id = ? AND tenant_id = ? AND status = 'PENDING'
-            """,
-                request.receiving_facility_id(),
-                request.receiving_facility_name(),
-                request.scheduled_at() != null ? OffsetDateTime.parse(request.scheduled_at()) : null,
-                now, now, id, tenantId);
-
-        if (updated == 0) {
-            throw new ResourceNotFoundException("Pending referral not found: " + id);
-        }
+        UUID receivingId = request.receiving_facility_id() != null
+                ? UUID.fromString(request.receiving_facility_id()) : null;
+        referral.accept(receivingId, request.receiving_facility_name());
+        referralRepository.save(referral);
 
         outboxService.writeOutboxEvent(
                 "impilo.experience.referral.accepted.v1",
@@ -401,9 +389,6 @@ public class ReferralsController {
                 ),
                 Map.of()
         );
-
-        Referral referral = referralRepository.findByIdAndTenantId(id, tenantId)
-                .orElseThrow(() -> new ResourceNotFoundException("Referral not found: " + id));
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", toResource(referral));
@@ -426,23 +411,11 @@ public class ReferralsController {
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @Valid @RequestBody RespondReferralRequest request) {
 
-        OffsetDateTime now = OffsetDateTime.now();
+        Referral referral = referralRepository.findByIdAndTenantId(id, tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException("Referral not found: " + id));
 
-        int updated = jdbcTemplate.update("""
-            UPDATE referrals SET status = 'RESPONDED',
-                response_notes = ?,
-                outcome = COALESCE(?, outcome),
-                responded_at = ?,
-                updated_at = ?
-            WHERE id = ? AND tenant_id = ? AND status IN ('ACCEPTED', 'PENDING')
-            """,
-                request.response_notes(),
-                request.outcome(),
-                now, now, id, tenantId);
-
-        if (updated == 0) {
-            throw new ResourceNotFoundException("Accepted referral not found: " + id);
-        }
+        referral.respond(request.response_notes(), request.outcome());
+        referralRepository.save(referral);
 
         outboxService.writeOutboxEvent(
                 "impilo.experience.referral.responded.v1",
@@ -482,6 +455,11 @@ public class ReferralsController {
         attributes.put("clinical_summary", r.getClinicalSummary());
         attributes.put("referred_by", r.getReferredBy());
         attributes.put("referred_by_name", r.getReferredByName());
+        attributes.put("receiving_facility_id", r.getReceivingFacilityId());
+        attributes.put("receiving_facility_name", r.getReceivingFacilityName());
+        attributes.put("response_notes", r.getResponseNotes());
+        attributes.put("responded_at", r.getRespondedAt());
+        attributes.put("accepted_at", r.getAcceptedAt());
         attributes.put("scheduled_at", r.getScheduledAt());
         attributes.put("completed_at", r.getCompletedAt());
         attributes.put("outcome", r.getOutcome());
