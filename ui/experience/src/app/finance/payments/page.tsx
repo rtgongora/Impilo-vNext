@@ -37,10 +37,10 @@ function usePayments() {
 }
 
 const STATUS_STYLES: Record<string, string> = {
-  COMPLETED: "bg-green-100 text-green-700",
   PENDING: "bg-yellow-100 text-yellow-700",
+  PAID: "bg-green-100 text-green-700",
   FAILED: "bg-red-100 text-red-700",
-  REFUNDED: "bg-gray-100 text-gray-600",
+  CANCELLED: "bg-gray-100 text-gray-600",
 };
 
 export default function PaymentsPage() {
