@@ -6,16 +6,14 @@
  */
 
 import { useParams } from "next/navigation";
-import Link from "next/link";
 import { useState } from "react";
-import { FileText, Plus, Loader2, CheckCircle2, ArrowLeft } from "lucide-react";
+import { FileText, Plus, Loader2, CheckCircle2} from "lucide-react";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import {
   useClinicalNotes,
   useCreateNote,
-  useSignNote,
-} from "@/hooks/queries/useClinicalNotes";
+  useSignNote } from "@/hooks/queries/useClinicalNotes";
 import { useAuthStore } from "@/hooks/useAuthStore";
 
 const NOTE_TYPES = ["PROGRESS", "ASSESSMENT", "DISCHARGE", "CONSULTATION"] as const;
@@ -28,8 +26,7 @@ const EMPTY_FORM = {
   plan: "",
   body: "",
   authorId: "",
-  authorName: "",
-};
+  authorName: "" };
 
 export default function ClinicalNotesPage() {
   const params = useParams<{ patientId: string }>();
@@ -44,8 +41,7 @@ export default function ClinicalNotesPage() {
   const [form, setForm] = useState({
     ...EMPTY_FORM,
     authorId: user?.id ?? "",
-    authorName: user?.displayName ?? user?.email ?? "",
-  });
+    authorName: user?.displayName ?? user?.email ?? "" });
 
   const notes = notesData?.data ?? [];
 
@@ -68,14 +64,12 @@ export default function ClinicalNotesPage() {
         plan: form.plan || null,
         body: form.body || null,
         authorId: form.authorId,
-        authorName: form.authorName,
-      },
+        authorName: form.authorName },
       {
         onSuccess: () => {
           setForm(EMPTY_FORM);
           setShowForm(false);
-        },
-      },
+        } },
     );
   }
 
@@ -86,16 +80,6 @@ export default function ClinicalNotesPage() {
   return (
     <EHRLayout>
       <PageShell title="Clinical Notes">
-        {/* Back link */}
-        <div className="mb-4">
-          <Link
-            href={`/ehr/${patientId}`}
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to patient chart
-          </Link>
-        </div>
 
         {/* Header with Add Note button */}
         <div className="flex items-center justify-between mb-4">

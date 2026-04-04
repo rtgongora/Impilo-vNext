@@ -182,56 +182,29 @@ export default function EncounterPage() {
           </div>
         ) : (
           <div className="space-y-6">
-            {/* Encounter Header */}
-            <div className="bg-white rounded-lg border border-gray-200 p-5">
-              <div className="flex items-start justify-between">
-                <div>
-                  <div className="flex items-center gap-3">
-                    <h2 className="text-lg font-semibold text-gray-900">
-                      {encounter.attributes.encounterType} Encounter
-                    </h2>
-                    <span
-                      className={`px-2.5 py-0.5 text-xs font-medium rounded-full ${
-                        isActive
-                          ? "bg-green-100 text-green-700"
-                          : "bg-gray-100 text-gray-600"
-                      }`}
-                    >
-                      {encounter.attributes.status}
+            {/* Encounter Context Bar */}
+            <div className="bg-white rounded-lg border border-gray-200 p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <h2 className="text-base font-semibold text-gray-900">
+                    {encounter.attributes.encounterType} Encounter
+                  </h2>
+                  <span
+                    className={`px-2.5 py-0.5 text-xs font-medium rounded-full ${
+                      isActive
+                        ? "bg-green-100 text-green-700"
+                        : "bg-gray-100 text-gray-600"
+                    }`}
+                  >
+                    {encounter.attributes.status}
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    Started: {new Date(encounter.attributes.startedAt).toLocaleString()}
+                  </span>
+                  {encounter.attributes.closedAt && (
+                    <span className="text-xs text-gray-500">
+                      Closed: {new Date(encounter.attributes.closedAt).toLocaleString()}
                     </span>
-                  </div>
-                  {patient && (
-                    <div className="flex items-center gap-2 mt-2 text-sm text-gray-500">
-                      <User className="w-4 h-4" />
-                      <span>{patient.attributes.displayName}</span>
-                      <span className="text-gray-300">|</span>
-                      <span>CPID: {patient.attributes.cpid}</span>
-                    </div>
-                  )}
-                  <div className="flex items-center gap-2 mt-1 text-sm text-gray-500">
-                    <Clock className="w-4 h-4" />
-                    <span>
-                      Started: {new Date(encounter.attributes.startedAt).toLocaleString()}
-                    </span>
-                    {encounter.attributes.closedAt && (
-                      <>
-                        <span className="text-gray-300">|</span>
-                        <span>
-                          Closed: {new Date(encounter.attributes.closedAt).toLocaleString()}
-                        </span>
-                      </>
-                    )}
-                  </div>
-                  {(encounter.attributes as Record<string, unknown>).pct_journey_id && (
-                    <div className="flex items-center gap-2 mt-1 text-xs text-gray-400">
-                      <span>Journey: {String((encounter.attributes as Record<string, unknown>).pct_journey_id)}</span>
-                      {(encounter.attributes as Record<string, unknown>).pct_encounter_ref && (
-                        <>
-                          <span className="text-gray-300">|</span>
-                          <span>PCT Ref: {String((encounter.attributes as Record<string, unknown>).pct_encounter_ref)}</span>
-                        </>
-                      )}
-                    </div>
                   )}
                 </div>
                 {/* Quick action links */}

@@ -13,9 +13,7 @@
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
 import {
-  ArrowLeft,
   Loader2,
   CheckCircle2,
   AlertCircle,
@@ -28,8 +26,7 @@ import {
   ClipboardList,
   FileSignature,
   Calendar,
-  AlertTriangle,
-} from "lucide-react";
+  AlertTriangle } from "lucide-react";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { apiClient } from "@/lib/api-client";
@@ -55,8 +52,7 @@ const DISPOSITION_TO_DISCHARGE_TYPE: Record<string, string> = {
   TRANSFER: "TRANSFER",
   REFER: "REFER",
   DEATH: "DEATH",
-  LAMA: "AMA",
-};
+  LAMA: "AMA" };
 
 export default function VisitOutcomePage() {
   const params = useParams<{ patientId: string }>();
@@ -128,8 +124,7 @@ export default function VisitOutcomePage() {
           follow_up_instructions: followUp || null,
           medications_at_discharge: medications || null,
           patient_instructions: fullInstructions || null,
-          discharged_by: user?.id ?? "system",
-        }
+          discharged_by: user?.id ?? "system" }
       );
       setSubmitted(true);
     } catch {
@@ -142,15 +137,6 @@ export default function VisitOutcomePage() {
   return (
     <EHRLayout>
       <PageShell title="Visit Outcome">
-        <div className="mb-4">
-          <Link
-            href={`/ehr/${patientId}`}
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to patient chart
-          </Link>
-        </div>
 
         {isLoading ? (
           <div className="flex items-center justify-center py-16">

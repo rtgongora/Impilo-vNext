@@ -7,15 +7,13 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import Link from "next/link";
-import { FileText, Plus, Loader2, ArrowLeft } from "lucide-react";
+import { FileText, Plus, Loader2} from "lucide-react";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import {
   useClinicalDocuments,
   useUploadDocument,
-  type ClinicalDocumentResource,
-} from "@/hooks/queries/useClinicalDocuments";
+  type ClinicalDocumentResource } from "@/hooks/queries/useClinicalDocuments";
 import { useAuthStore } from "@/hooks/useAuthStore";
 
 /* ------------------------------------------------------------------ */
@@ -36,8 +34,7 @@ const DOC_TYPE_BADGE: Record<string, string> = {
   IMAGING: "bg-purple-100 text-purple-700",
   CONSENT_FORM: "bg-yellow-100 text-yellow-700",
   REFERRAL_LETTER: "bg-orange-100 text-orange-700",
-  OTHER: "bg-gray-100 text-gray-600",
-};
+  OTHER: "bg-gray-100 text-gray-600" };
 
 /* ------------------------------------------------------------------ */
 /*  Empty form state                                                   */
@@ -48,8 +45,7 @@ const EMPTY_FORM = {
   document_type: "CLINICAL_NOTE",
   description: "",
   uploaded_by: "",
-  storage_key: "",
-};
+  storage_key: "" };
 
 /* ------------------------------------------------------------------ */
 /*  Page component                                                     */
@@ -81,30 +77,18 @@ export default function DocumentsPage() {
         title: form.title,
         description: form.description.trim() || null,
         uploaded_by: form.uploaded_by,
-        storage_key: form.storage_key.trim() || undefined,
-      },
+        storage_key: form.storage_key.trim() || undefined },
       {
         onSuccess: () => {
           setForm({ ...EMPTY_FORM });
           setShowForm(false);
-        },
-      },
+        } },
     );
   }
 
   return (
     <EHRLayout>
       <PageShell title="Documents" subtitle="Clinical documents and uploads">
-        {/* Back link */}
-        <div className="mb-4">
-          <Link
-            href={`/ehr/${patientId}`}
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to patient chart
-          </Link>
-        </div>
 
         {isLoading ? (
           <div className="flex items-center justify-center py-16">

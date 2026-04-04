@@ -7,15 +7,13 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import Link from "next/link";
-import { Syringe, Plus, Loader2, ArrowLeft } from "lucide-react";
+import { Syringe, Plus, Loader2} from "lucide-react";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import {
   useImmunizations,
   useRecordImmunization,
-  type ImmunizationResource,
-} from "@/hooks/queries/useImmunizations";
+  type ImmunizationResource } from "@/hooks/queries/useImmunizations";
 import { useAuthStore } from "@/hooks/useAuthStore";
 
 /* ------------------------------------------------------------------ */
@@ -25,8 +23,7 @@ import { useAuthStore } from "@/hooks/useAuthStore";
 const STATUS_BADGE: Record<string, string> = {
   COMPLETED: "bg-green-100 text-green-700",
   NOT_DONE: "bg-gray-100 text-gray-600",
-  ENTERED_IN_ERROR: "bg-red-100 text-red-700",
-};
+  ENTERED_IN_ERROR: "bg-red-100 text-red-700" };
 
 /* ------------------------------------------------------------------ */
 /*  Empty form state                                                   */
@@ -41,8 +38,7 @@ const EMPTY_FORM = {
   site: "",
   route: "",
   administered_by: "",
-  notes: "",
-};
+  notes: "" };
 
 /* ------------------------------------------------------------------ */
 /*  Page component                                                     */
@@ -79,30 +75,18 @@ export default function ImmunizationsPage() {
         route: form.route.trim() || null,
         administeredAt: new Date().toISOString(),
         notes: form.notes.trim() || null,
-        administered_by: form.administered_by,
-      },
+        administered_by: form.administered_by },
       {
         onSuccess: () => {
           setForm({ ...EMPTY_FORM });
           setShowForm(false);
-        },
-      },
+        } },
     );
   }
 
   return (
     <EHRLayout>
       <PageShell title="Immunizations" subtitle="Patient immunization records">
-        {/* Back link */}
-        <div className="mb-4">
-          <Link
-            href={`/ehr/${patientId}`}
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to patient chart
-          </Link>
-        </div>
 
         {isLoading ? (
           <div className="flex items-center justify-center py-16">

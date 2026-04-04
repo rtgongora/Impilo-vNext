@@ -7,7 +7,7 @@
 
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Loader2, Clock, AlertCircle, Activity, FileText } from "lucide-react";
+import { Loader2, Clock, AlertCircle, Activity, FileText } from "lucide-react";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { useEncounters } from "@/hooks/queries/useEncounters";
@@ -28,13 +28,11 @@ export default function MedicalHistoryPage() {
   const { data: conditionsData, isLoading: loadingCond } = useQuery({
     queryKey: ["conditions", { patientId }],
     queryFn: () => apiClient.get<ApiResponse<GenericResource[]>>(`/internal/v1/conditions?patient_id=${patientId}`),
-    enabled: !!patientId,
-  });
+    enabled: !!patientId });
   const { data: immunData, isLoading: loadingImmun } = useQuery({
     queryKey: ["immunizations", { patientId }],
     queryFn: () => apiClient.get<ApiResponse<GenericResource[]>>(`/internal/v1/immunizations?patient_id=${patientId}`),
-    enabled: !!patientId,
-  });
+    enabled: !!patientId });
 
   const encounters = encountersData?.data ?? [];
   const conditions = conditionsData?.data ?? [];
@@ -47,11 +45,6 @@ export default function MedicalHistoryPage() {
   return (
     <EHRLayout>
       <PageShell title="Medical History">
-        <div className="mb-4">
-          <Link href={`/ehr/${patientId}`} className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors">
-            <ArrowLeft className="w-4 h-4" /> Back to patient chart
-          </Link>
-        </div>
 
         {isLoading ? (
           <div className="flex items-center justify-center py-16">

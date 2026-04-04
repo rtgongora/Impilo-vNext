@@ -7,21 +7,18 @@
  */
 
 import { useParams } from "next/navigation";
-import Link from "next/link";
-import { TestTube2, Loader2, ArrowLeft, AlertTriangle } from "lucide-react";
+import { TestTube2, Loader2, AlertTriangle } from "lucide-react";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import {
   useLabOrders,
-  type LabOrderResource,
-} from "@/hooks/queries/useLabOrders";
+  type LabOrderResource } from "@/hooks/queries/useLabOrders";
 
 /** Interpretation colour classes */
 const INTERPRETATION_STYLE: Record<string, string> = {
   NORMAL: "text-green-700 bg-green-50",
   ABNORMAL: "text-red-700 bg-red-50",
-  CRITICAL: "text-red-700 bg-red-50 font-bold",
-};
+  CRITICAL: "text-red-700 bg-red-50 font-bold" };
 
 function interpretationClass(interpretation: string): string {
   return INTERPRETATION_STYLE[interpretation] ?? "text-gray-700 bg-gray-50";
@@ -67,8 +64,7 @@ function groupByDate(orders: LabOrderResource[]): Map<string, LabOrderResource[]
       ? new Date(order.attributes.resultedAt).toLocaleDateString("en-ZA", {
           year: "numeric",
           month: "long",
-          day: "numeric",
-        })
+          day: "numeric" })
       : "Unknown Date";
     const existing = groups.get(dateKey) ?? [];
     existing.push(order);
@@ -93,16 +89,6 @@ export default function ResultsPage() {
   return (
     <EHRLayout>
       <PageShell title="Results">
-        {/* Back link */}
-        <div className="mb-4">
-          <Link
-            href={`/ehr/${patientId}`}
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to patient chart
-          </Link>
-        </div>
 
         {isLoading ? (
           <div className="flex items-center justify-center py-16">

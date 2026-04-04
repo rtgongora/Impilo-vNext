@@ -7,8 +7,7 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import Link from "next/link";
-import { Pill, Plus, Loader2, ArrowLeft } from "lucide-react";
+import { Pill, Plus, Loader2} from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
@@ -44,8 +43,7 @@ function usePatientPrescriptions(patientId: string) {
       apiClient.get<PrescriptionsResponse>(
         `/internal/v1/pharmacy/prescriptions?patient_id=${patientId}`,
       ),
-    enabled: !!patientId,
-  });
+    enabled: !!patientId });
 }
 
 /* ------------------------------------------------------------------ */
@@ -55,8 +53,7 @@ function usePatientPrescriptions(patientId: string) {
 const STATUS_BADGE: Record<string, string> = {
   PENDING: "bg-yellow-100 text-yellow-700",
   DISPENSED: "bg-green-100 text-green-700",
-  CANCELLED: "bg-gray-100 text-gray-600",
-};
+  CANCELLED: "bg-gray-100 text-gray-600" };
 
 /* ------------------------------------------------------------------ */
 /*  Empty form state                                                   */
@@ -68,8 +65,7 @@ const EMPTY_FORM = {
   frequency: "",
   duration: "",
   quantity: 1,
-  prescribed_by: "",
-};
+  prescribed_by: "" };
 
 /* ------------------------------------------------------------------ */
 /*  Page component                                                     */
@@ -107,12 +103,10 @@ export default function MedicationsPage() {
         frequency: form.frequency,
         duration: form.duration,
         quantity: form.quantity,
-        prescribed_by: form.prescribed_by,
-      });
+        prescribed_by: form.prescribed_by });
 
       queryClient.invalidateQueries({
-        queryKey: ["prescriptions", { patientId }],
-      });
+        queryKey: ["prescriptions", { patientId }] });
       setForm({ ...EMPTY_FORM });
       setShowForm(false);
     } catch {
@@ -125,16 +119,6 @@ export default function MedicationsPage() {
   return (
     <EHRLayout>
       <PageShell title="Medications">
-        {/* Back link */}
-        <div className="mb-4">
-          <Link
-            href={`/ehr/${patientId}`}
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to patient chart
-          </Link>
-        </div>
 
         {isLoading ? (
           <div className="flex items-center justify-center py-16">

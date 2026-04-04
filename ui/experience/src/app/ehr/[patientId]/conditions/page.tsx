@@ -7,16 +7,14 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import Link from "next/link";
-import { HeartPulse, Plus, Loader2, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { HeartPulse, Plus, Loader2, CheckCircle2 } from "lucide-react";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import {
   useConditions,
   useCreateCondition,
   useResolveCondition,
-  type ConditionResource,
-} from "@/hooks/queries/useConditions";
+  type ConditionResource } from "@/hooks/queries/useConditions";
 
 /* ------------------------------------------------------------------ */
 /*  Badge helpers                                                      */
@@ -25,14 +23,12 @@ import {
 const STATUS_BADGE: Record<string, string> = {
   ACTIVE: "bg-red-100 text-red-700",
   RESOLVED: "bg-green-100 text-green-700",
-  INACTIVE: "bg-gray-100 text-gray-600",
-};
+  INACTIVE: "bg-gray-100 text-gray-600" };
 
 const SEVERITY_BADGE: Record<string, string> = {
   MILD: "bg-green-100 text-green-700",
   MODERATE: "bg-yellow-100 text-yellow-700",
-  SEVERE: "bg-red-100 text-red-700",
-};
+  SEVERE: "bg-red-100 text-red-700" };
 
 /* ------------------------------------------------------------------ */
 /*  Empty form state                                                   */
@@ -45,8 +41,7 @@ const EMPTY_FORM = {
   clinical_status: "ACTIVE",
   severity: "MODERATE",
   onset_date: "",
-  notes: "",
-};
+  notes: "" };
 
 /* ------------------------------------------------------------------ */
 /*  Page component                                                     */
@@ -79,14 +74,12 @@ export default function ConditionsPage() {
         category: form.category,
         severity: form.severity,
         onsetDate: form.onset_date || null,
-        notes: form.notes.trim() || null,
-      },
+        notes: form.notes.trim() || null },
       {
         onSuccess: () => {
           setForm({ ...EMPTY_FORM });
           setShowForm(false);
-        },
-      },
+        } },
     );
   }
 
@@ -97,16 +90,6 @@ export default function ConditionsPage() {
   return (
     <EHRLayout>
       <PageShell title="Conditions" subtitle="Patient problem list and condition management">
-        {/* Back link */}
-        <div className="mb-4">
-          <Link
-            href={`/ehr/${patientId}`}
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to patient chart
-          </Link>
-        </div>
 
         {isLoading ? (
           <div className="flex items-center justify-center py-16">

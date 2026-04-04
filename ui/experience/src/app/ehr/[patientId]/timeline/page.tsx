@@ -6,11 +6,9 @@
  */
 
 import { useParams } from "next/navigation";
-import Link from "next/link";
 import {
   Clock,
   Loader2,
-  ArrowLeft,
   Stethoscope,
   HeartPulse,
   FileText,
@@ -18,14 +16,12 @@ import {
   FlaskConical,
   ArrowRightLeft,
   Pill,
-  Syringe,
-} from "lucide-react";
+  Syringe } from "lucide-react";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import {
   useTimeline,
-  type TimelineEntryResource,
-} from "@/hooks/queries/useTimeline";
+  type TimelineEntryResource } from "@/hooks/queries/useTimeline";
 
 /* ------------------------------------------------------------------ */
 /*  Event type color mapping                                           */
@@ -39,58 +35,48 @@ const EVENT_TYPE_CONFIG: Record<
     color: "text-blue-700",
     bgColor: "bg-blue-100",
     borderColor: "border-blue-400",
-    icon: Stethoscope,
-  },
+    icon: Stethoscope },
   VITALS: {
     color: "text-red-700",
     bgColor: "bg-red-100",
     borderColor: "border-red-400",
-    icon: HeartPulse,
-  },
+    icon: HeartPulse },
   NOTE: {
     color: "text-indigo-700",
     bgColor: "bg-indigo-100",
     borderColor: "border-indigo-400",
-    icon: FileText,
-  },
+    icon: FileText },
   ORDER: {
     color: "text-purple-700",
     bgColor: "bg-purple-100",
     borderColor: "border-purple-400",
-    icon: ClipboardList,
-  },
+    icon: ClipboardList },
   RESULT: {
     color: "text-green-700",
     bgColor: "bg-green-100",
     borderColor: "border-green-400",
-    icon: FlaskConical,
-  },
+    icon: FlaskConical },
   REFERRAL: {
     color: "text-orange-700",
     bgColor: "bg-orange-100",
     borderColor: "border-orange-400",
-    icon: ArrowRightLeft,
-  },
+    icon: ArrowRightLeft },
   PRESCRIPTION: {
     color: "text-teal-700",
     bgColor: "bg-teal-100",
     borderColor: "border-teal-400",
-    icon: Pill,
-  },
+    icon: Pill },
   IMMUNIZATION: {
     color: "text-cyan-700",
     bgColor: "bg-cyan-100",
     borderColor: "border-cyan-400",
-    icon: Syringe,
-  },
-};
+    icon: Syringe } };
 
 const DEFAULT_CONFIG = {
   color: "text-gray-700",
   bgColor: "bg-gray-100",
   borderColor: "border-gray-400",
-  icon: Clock,
-};
+  icon: Clock };
 
 /* ------------------------------------------------------------------ */
 /*  Page component                                                     */
@@ -106,16 +92,6 @@ export default function TimelinePage() {
   return (
     <EHRLayout>
       <PageShell title="Timeline" subtitle="Clinical event timeline">
-        {/* Back link */}
-        <div className="mb-4">
-          <Link
-            href={`/ehr/${patientId}`}
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to patient chart
-          </Link>
-        </div>
 
         {isLoading ? (
           <div className="flex items-center justify-center py-16">

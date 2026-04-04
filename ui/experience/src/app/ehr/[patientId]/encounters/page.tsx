@@ -8,14 +8,13 @@
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ClipboardList, Plus, Loader2, ArrowLeft } from "lucide-react";
+import { ClipboardList, Plus, Loader2} from "lucide-react";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import {
   useEncounters,
   useCreateEncounter,
-  type EncounterResource,
-} from "@/hooks/queries/useEncounters";
+  type EncounterResource } from "@/hooks/queries/useEncounters";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 
 /* ------------------------------------------------------------------ */
@@ -32,8 +31,7 @@ const STATUS_BADGE: Record<string, string> = {
   REFERRED: "bg-indigo-100 text-indigo-700",
   DECEASED: "bg-red-100 text-red-700",
   LAMA: "bg-gray-200 text-gray-700",
-  CANCELLED: "bg-red-100 text-red-700",
-};
+  CANCELLED: "bg-red-100 text-red-700" };
 
 /* ------------------------------------------------------------------ */
 /*  Empty form state                                                   */
@@ -41,8 +39,7 @@ const STATUS_BADGE: Record<string, string> = {
 
 const EMPTY_FORM = {
   encounter_type: "OUTPATIENT",
-  chief_complaint: "",
-};
+  chief_complaint: "" };
 
 /* ------------------------------------------------------------------ */
 /*  Page component                                                     */
@@ -73,8 +70,7 @@ export default function EncountersPage() {
         patientId,
         facilityId: facility?.id ?? "",
         encounterType: form.encounter_type,
-        chief_complaint: form.chief_complaint.trim() || undefined,
-      },
+        chief_complaint: form.chief_complaint.trim() || undefined },
       {
         onSuccess: (data) => {
           setForm({ ...EMPTY_FORM });
@@ -83,24 +79,13 @@ export default function EncountersPage() {
           if (newEncounterId) {
             router.push(`/ehr/${patientId}/encounter/${newEncounterId}`);
           }
-        },
-      },
+        } },
     );
   }
 
   return (
     <EHRLayout>
       <PageShell title="Encounters" subtitle="Patient encounter history">
-        {/* Back link */}
-        <div className="mb-4">
-          <Link
-            href={`/ehr/${patientId}`}
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to patient chart
-          </Link>
-        </div>
 
         {isLoading ? (
           <div className="flex items-center justify-center py-16">

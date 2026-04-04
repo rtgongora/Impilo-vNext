@@ -15,7 +15,6 @@ import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  ArrowLeft,
   Users,
   Send,
   Video,
@@ -29,8 +28,7 @@ import {
   User,
   Building2,
   ArrowUpRight,
-  Activity,
-} from "lucide-react";
+  Activity } from "lucide-react";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { usePatient } from "@/hooks/queries/usePatients";
@@ -39,14 +37,12 @@ import {
   useReferrals,
   useCreateReferral,
   useCompleteReferral,
-  type ReferralResource,
-} from "@/hooks/queries/useReferrals";
+  type ReferralResource } from "@/hooks/queries/useReferrals";
 import {
   useTelemedicineSessions,
   useJoinTelemedicineSession,
   useCreateTelemedicineSession,
-  type TelemedicineSession,
-} from "@/hooks/queries/useTelemedicine";
+  type TelemedicineSession } from "@/hooks/queries/useTelemedicine";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
@@ -62,14 +58,12 @@ const STATUS_STYLE: Record<string, string> = {
   COMPLETED: "bg-green-100 text-green-700",
   CANCELLED: "bg-gray-100 text-gray-600",
   IN_PROGRESS: "bg-green-100 text-green-700",
-  SCHEDULED: "bg-blue-100 text-blue-700",
-};
+  SCHEDULED: "bg-blue-100 text-blue-700" };
 
 const URGENCY_STYLE: Record<string, string> = {
   EMERGENCY: "bg-red-100 text-red-700",
   URGENT: "bg-orange-100 text-orange-700",
-  ROUTINE: "bg-blue-100 text-blue-700",
-};
+  ROUTINE: "bg-blue-100 text-blue-700" };
 
 type ActiveTab = "consultations" | "referrals" | "teleconsults";
 
@@ -131,8 +125,7 @@ export default function ConsultsPage() {
     referred_to_facility: "",
     reason: "",
     urgency: "ROUTINE",
-    clinical_summary: "",
-  });
+    clinical_summary: "" });
 
   function handleCreateReferral() {
     createReferral.mutate(
@@ -145,8 +138,7 @@ export default function ConsultsPage() {
         referredToFacility: refForm.referred_to_facility,
         reason: refForm.reason,
         urgency: refForm.urgency,
-        clinicalSummary: refForm.clinical_summary || null,
-      },
+        clinicalSummary: refForm.clinical_summary || null },
       {
         onSuccess: () => {
           setRefForm({
@@ -156,11 +148,9 @@ export default function ConsultsPage() {
             referred_to_facility: "",
             reason: "",
             urgency: "ROUTINE",
-            clinical_summary: "",
-          });
+            clinical_summary: "" });
           setShowNewReferral(false);
-        },
-      }
+        } }
     );
   }
 
@@ -175,8 +165,7 @@ export default function ConsultsPage() {
         referredToFacility: refForm.referred_to_facility,
         reason: refForm.reason,
         urgency: refForm.urgency,
-        clinicalSummary: refForm.clinical_summary || null,
-      },
+        clinicalSummary: refForm.clinical_summary || null },
       {
         onSuccess: () => {
           setRefForm({
@@ -186,11 +175,9 @@ export default function ConsultsPage() {
             referred_to_facility: "",
             reason: "",
             urgency: "ROUTINE",
-            clinical_summary: "",
-          });
+            clinical_summary: "" });
           setShowNewConsult(false);
-        },
-      }
+        } }
     );
   }
 
@@ -201,8 +188,7 @@ export default function ConsultsPage() {
       provider_id: user?.id,
       facility_id: facility.id,
       session_type: mode,
-      encounter_id: activeEncounter?.id,
-    });
+      encounter_id: activeEncounter?.id });
   }
 
   // Tabs definition
@@ -217,15 +203,6 @@ export default function ConsultsPage() {
   return (
     <EHRLayout>
       <PageShell title="Consults & Referrals">
-        <div className="mb-4">
-          <Link
-            href={`/ehr/${patientId}`}
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to patient chart
-          </Link>
-        </div>
 
         <div className="space-y-5">
           {/* Patient Context Header — Lovable-aligned */}
@@ -542,8 +519,7 @@ function getWorkflowStage(status: string): { stage: number; label: string } {
     PENDING: { stage: 2, label: "Consent & Submit" },
     ACCEPTED: { stage: 4, label: "Under Review" },
     RESPONDED: { stage: 6, label: "Actions Documented" },
-    COMPLETED: { stage: 7, label: "Loop Closed" },
-  };
+    COMPLETED: { stage: 7, label: "Loop Closed" } };
   return map[status] ?? { stage: 1, label: "Building Package" };
 }
 

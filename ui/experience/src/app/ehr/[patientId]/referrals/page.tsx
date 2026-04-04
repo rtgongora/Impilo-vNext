@@ -12,30 +12,25 @@ import {
   ArrowUpRight,
   Plus,
   Loader2,
-  ArrowLeft,
-  CheckCircle2,
-} from "lucide-react";
+  CheckCircle2 } from "lucide-react";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import {
   useReferrals,
-  useCreateReferral,
-} from "@/hooks/queries/useReferrals";
+  useCreateReferral } from "@/hooks/queries/useReferrals";
 import { useAuthStore } from "@/hooks/useAuthStore";
 
 const URGENCY_BADGE: Record<string, string> = {
   ROUTINE: "bg-blue-100 text-blue-700",
   URGENT: "bg-orange-100 text-orange-700",
-  EMERGENCY: "bg-red-100 text-red-700",
-};
+  EMERGENCY: "bg-red-100 text-red-700" };
 
 const STATUS_BADGE: Record<string, string> = {
   PENDING: "bg-yellow-100 text-yellow-700",
   ACCEPTED: "bg-blue-100 text-blue-700",
   RESPONDED: "bg-purple-100 text-purple-700",
   COMPLETED: "bg-green-100 text-green-700",
-  DECLINED: "bg-gray-100 text-gray-600",
-};
+  DECLINED: "bg-gray-100 text-gray-600" };
 
 const EMPTY_FORM = {
   referral_type: "SPECIALIST",
@@ -46,8 +41,7 @@ const EMPTY_FORM = {
   urgency: "ROUTINE",
   clinical_summary: "",
   referred_by: "",
-  referred_by_name: "",
-};
+  referred_by_name: "" };
 
 export default function ReferralsPage() {
   const params = useParams<{ patientId: string }>();
@@ -82,30 +76,18 @@ export default function ReferralsPage() {
         referredToFacility: form.referred_to_facility,
         reason: form.reason,
         urgency: form.urgency,
-        clinicalSummary: form.clinical_summary || null,
-      },
+        clinicalSummary: form.clinical_summary || null },
       {
         onSuccess: () => {
           setForm({ ...EMPTY_FORM });
           setShowForm(false);
-        },
-      },
+        } },
     );
   }
 
   return (
     <EHRLayout>
       <PageShell title="Referrals">
-        {/* Back link */}
-        <div className="mb-4">
-          <Link
-            href={`/ehr/${patientId}`}
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to patient chart
-          </Link>
-        </div>
 
         {isLoading ? (
           <div className="flex items-center justify-center py-16">

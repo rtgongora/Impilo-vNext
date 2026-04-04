@@ -6,9 +6,8 @@
  */
 
 import { useState } from "react";
-import { useParams, useSearchParams } from "next/navigation";
-import Link from "next/link";
-import { Activity, Loader2, Plus, ArrowLeft } from "lucide-react";
+import { useParams } from "next/navigation";
+import { Activity, Loader2, Plus } from "lucide-react";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import {
@@ -17,14 +16,18 @@ import {
   type VitalsResource,
 } from "@/hooks/queries/useVitals";
 import { useAuthStore } from "@/hooks/useAuthStore";
+import { useEncounters } from "@/hooks/queries/useEncounters";
 
 export default function VitalsPage() {
   const params = useParams<{ patientId: string }>();
-  const searchParams = useSearchParams();
   const patientId = params.patientId;
-  const encounterId = searchParams.get("encounterId") ?? "";
 
   const { user } = useAuthStore();
+  const { data: encountersData } = useEncounters(patientId);
+  const activeEncounter = (encountersData?.data ?? []).find(
+    (e) => e.attributes.status === "IN_PROGRESS" || e.attributes.status === "ACTIVE"
+  );
+  const encounterId = activeEncounter?.id ?? "";
   const { data: vitalsData, isLoading } = useVitals(patientId);
   const recordVitals = useRecordVitals();
 
@@ -74,14 +77,12 @@ export default function VitalsPage() {
         weight: toNum(weight),
         height: toNum(height),
         painScore: toNum(painScore),
-        notes: notes.trim() || null,
-      },
+        notes: notes.trim() || null },
       {
         onSuccess: () => {
           resetForm();
           setShowForm(false);
-        },
-      },
+        } },
     );
   }
 
@@ -92,16 +93,6 @@ export default function VitalsPage() {
   return (
     <EHRLayout>
       <PageShell title="Vitals" subtitle="Patient vital signs history and recording">
-        {/* Back link */}
-        <div className="mb-4">
-          <Link
-            href={`/ehr/${patientId}`}
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to patient chart
-          </Link>
-        </div>
 
         {isLoading ? (
           <div className="flex items-center justify-center py-16">

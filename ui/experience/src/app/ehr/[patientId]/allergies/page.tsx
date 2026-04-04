@@ -7,15 +7,13 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import Link from "next/link";
-import { ShieldAlert, Plus, Loader2, ArrowLeft } from "lucide-react";
+import { ShieldAlert, Plus, Loader2} from "lucide-react";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import {
   useAllergies,
   useCreateAllergy,
-  type AllergyResource,
-} from "@/hooks/queries/useAllergies";
+  type AllergyResource } from "@/hooks/queries/useAllergies";
 import { useAuthStore } from "@/hooks/useAuthStore";
 
 /* ------------------------------------------------------------------ */
@@ -25,14 +23,12 @@ import { useAuthStore } from "@/hooks/useAuthStore";
 const TYPE_BADGE: Record<string, string> = {
   MEDICATION: "bg-purple-100 text-purple-700",
   FOOD: "bg-orange-100 text-orange-700",
-  ENVIRONMENTAL: "bg-teal-100 text-teal-700",
-};
+  ENVIRONMENTAL: "bg-teal-100 text-teal-700" };
 
 const SEVERITY_BADGE: Record<string, string> = {
   MILD: "bg-green-100 text-green-700",
   MODERATE: "bg-yellow-100 text-yellow-700",
-  SEVERE: "bg-red-100 text-red-700",
-};
+  SEVERE: "bg-red-100 text-red-700" };
 
 /* ------------------------------------------------------------------ */
 /*  Empty form state                                                   */
@@ -44,8 +40,7 @@ const EMPTY_FORM = {
   reaction: "",
   severity: "MILD",
   onset_date: "",
-  recorded_by: "",
-};
+  recorded_by: "" };
 
 /* ------------------------------------------------------------------ */
 /*  Page component                                                     */
@@ -78,30 +73,18 @@ export default function AllergiesPage() {
         reaction: form.reaction.trim() || null,
         severity: form.severity,
         onsetDate: form.onset_date || null,
-        recorded_by: form.recorded_by,
-      },
+        recorded_by: form.recorded_by },
       {
         onSuccess: () => {
           setForm({ ...EMPTY_FORM });
           setShowForm(false);
-        },
-      },
+        } },
     );
   }
 
   return (
     <EHRLayout>
       <PageShell title="Allergies" subtitle="Patient allergy records and management">
-        {/* Back link */}
-        <div className="mb-4">
-          <Link
-            href={`/ehr/${patientId}`}
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to patient chart
-          </Link>
-        </div>
 
         {isLoading ? (
           <div className="flex items-center justify-center py-16">

@@ -8,7 +8,6 @@
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
-  ArrowLeft,
   Loader2,
   User,
   Activity,
@@ -16,8 +15,7 @@ import {
   Pill,
   FileText,
   TestTube2,
-  Syringe,
-} from "lucide-react";
+  Syringe } from "lucide-react";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { usePatient } from "@/hooks/queries/usePatients";
@@ -35,20 +33,17 @@ export default function PatientSummaryPage() {
   const { data: allergiesData } = useQuery({
     queryKey: ["allergies", { patientId }],
     queryFn: () => apiClient.get<ApiResponse<Array<{ id: string; type: string; attributes: Record<string, unknown> }>>>(`/internal/v1/allergies?patient_id=${patientId}`),
-    enabled: !!patientId,
-  });
+    enabled: !!patientId });
 
   const { data: conditionsData } = useQuery({
     queryKey: ["conditions", { patientId }],
     queryFn: () => apiClient.get<ApiResponse<Array<{ id: string; type: string; attributes: Record<string, unknown> }>>>(`/internal/v1/conditions?patient_id=${patientId}`),
-    enabled: !!patientId,
-  });
+    enabled: !!patientId });
 
   const { data: medsData } = useQuery({
     queryKey: ["prescriptions", { patientId }],
     queryFn: () => apiClient.get<ApiResponse<Array<{ id: string; type: string; attributes: Record<string, unknown> }>>>(`/internal/v1/pharmacy/prescriptions?patient_id=${patientId}`),
-    enabled: !!patientId,
-  });
+    enabled: !!patientId });
 
   const patient = patientData?.data;
   const encounters = encountersData?.data ?? [];
@@ -62,11 +57,6 @@ export default function PatientSummaryPage() {
   return (
     <EHRLayout>
       <PageShell title="Patient Summary">
-        <div className="mb-4">
-          <Link href={`/ehr/${patientId}`} className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors">
-            <ArrowLeft className="w-4 h-4" /> Back to patient chart
-          </Link>
-        </div>
 
         {loadingPatient ? (
           <div className="flex items-center justify-center py-16">

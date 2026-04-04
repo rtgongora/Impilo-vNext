@@ -10,15 +10,13 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
   Video,
-  ArrowLeft,
   Loader2,
   Plus,
   Phone,
   Clock,
   CheckCircle2,
   Calendar,
-  AlertCircle,
-} from "lucide-react";
+  AlertCircle } from "lucide-react";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { useEncounters } from "@/hooks/queries/useEncounters";
@@ -48,8 +46,7 @@ const STATUS_STYLE: Record<string, string> = {
   SCHEDULED: "bg-blue-100 text-blue-700",
   IN_PROGRESS: "bg-green-100 text-green-700",
   COMPLETED: "bg-gray-100 text-gray-600",
-  CANCELLED: "bg-red-100 text-red-600",
-};
+  CANCELLED: "bg-red-100 text-red-600" };
 
 export default function TeleconsultsPage() {
   const params = useParams<{ patientId: string }>();
@@ -75,8 +72,7 @@ export default function TeleconsultsPage() {
     session_type: "VIDEO",
     referral_id: "",
     scheduled_date: "",
-    notes: "",
-  });
+    notes: "" });
   const [isCreating, setIsCreating] = useState(false);
 
   // Fetch teleconsult sessions for this patient
@@ -104,8 +100,7 @@ export default function TeleconsultsPage() {
         scheduled_at: scheduleForm.scheduled_date
           ? new Date(scheduleForm.scheduled_date).toISOString()
           : new Date(Date.now() + 3600000).toISOString(),
-        notes: scheduleForm.notes || null,
-      };
+        notes: scheduleForm.notes || null };
       if (activeEncounter) {
         body.encounter_id = activeEncounter.id;
       }
@@ -132,15 +127,6 @@ export default function TeleconsultsPage() {
   return (
     <EHRLayout>
       <PageShell title="Teleconsults">
-        <div className="mb-4">
-          <Link
-            href={`/ehr/${patientId}`}
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to patient chart
-          </Link>
-        </div>
 
         <div className="space-y-6">
           <div className="flex items-center justify-between">

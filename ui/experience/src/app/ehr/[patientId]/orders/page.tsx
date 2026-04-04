@@ -7,20 +7,16 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import Link from "next/link";
 import {
   ClipboardList,
   Plus,
   Loader2,
-  ArrowLeft,
-  TestTube2,
-} from "lucide-react";
+  TestTube2 } from "lucide-react";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import {
   useLabOrders,
-  useCreateLabOrder,
-} from "@/hooks/queries/useLabOrders";
+  useCreateLabOrder } from "@/hooks/queries/useLabOrders";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useEncounters } from "@/hooks/queries/useEncounters";
@@ -29,14 +25,12 @@ const STATUS_BADGE: Record<string, string> = {
   ORDERED: "bg-blue-100 text-blue-700",
   COLLECTED: "bg-yellow-100 text-yellow-700",
   RESULTED: "bg-green-100 text-green-700",
-  CANCELLED: "bg-gray-100 text-gray-600",
-};
+  CANCELLED: "bg-gray-100 text-gray-600" };
 
 const PRIORITY_BADGE: Record<string, string> = {
   STAT: "bg-red-100 text-red-700",
   URGENT: "bg-orange-100 text-orange-700",
-  ROUTINE: "bg-blue-100 text-blue-700",
-};
+  ROUTINE: "bg-blue-100 text-blue-700" };
 
 const EMPTY_FORM = {
   test_name: "",
@@ -46,8 +40,7 @@ const EMPTY_FORM = {
   clinical_notes: "",
   ordered_by: "",
   ordered_by_name: "",
-  facility_id: "",
-};
+  facility_id: "" };
 
 export default function OrdersPage() {
   const params = useParams<{ patientId: string }>();
@@ -69,8 +62,7 @@ export default function OrdersPage() {
     ...EMPTY_FORM,
     ordered_by: user?.id ?? "",
     ordered_by_name: user?.displayName ?? user?.email ?? "",
-    facility_id: facility?.id ?? "",
-  });
+    facility_id: facility?.id ?? "" });
 
   function updateField(field: string, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -90,30 +82,18 @@ export default function OrdersPage() {
         clinicalNotes: form.clinical_notes || null,
         facilityId: facility?.id ?? form.facility_id,
         orderedBy: form.ordered_by || user?.id || "",
-        orderedByName: form.ordered_by_name || user?.displayName || user?.email || "",
-      },
+        orderedByName: form.ordered_by_name || user?.displayName || user?.email || "" },
       {
         onSuccess: () => {
           setForm({ ...EMPTY_FORM });
           setShowForm(false);
-        },
-      },
+        } },
     );
   }
 
   return (
     <EHRLayout>
       <PageShell title="Lab Orders">
-        {/* Back link */}
-        <div className="mb-4">
-          <Link
-            href={`/ehr/${patientId}`}
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to patient chart
-          </Link>
-        </div>
 
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
