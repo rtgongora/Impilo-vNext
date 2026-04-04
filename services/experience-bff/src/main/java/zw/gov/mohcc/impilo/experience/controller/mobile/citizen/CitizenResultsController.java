@@ -9,7 +9,13 @@ import zw.gov.mohcc.impilo.experience.controller.ResourceNotFoundException;
 import java.util.*;
 
 /**
- * Citizen lab results endpoints.
+ * Citizen lab results endpoints — queries the canonical lab_orders table
+ * for RESULTED orders with result_data (V12).
+ *
+ * <p>Replaces the previous implementation that queried a non-existent
+ * lab_results table. Results are now sourced from lab_orders WHERE
+ * status = 'RESULTED', with structured result_data JSONB.</p>
+ *
  * GET /internal/v1/mobile/citizen/results
  * GET /internal/v1/mobile/citizen/results/{id}
  */
@@ -29,7 +35,6 @@ public class CitizenResultsController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader("X-Actor-ID") String actorId,
-            @RequestParam(required = false) String status,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
 
@@ -37,25 +42,19 @@ public class CitizenResultsController {
         int limit = Math.min(size, 100);
         int offset = page * limit;
 
-        StringBuilder sql = new StringBuilder("""
-            SELECT id, test_name, category, status, value, unit, reference_range,
-                   interpretation, ordered_by, facility_name, collected_at, result_at, created_at
-            FROM lab_results WHERE tenant_id = ? AND patient_id = ?
-            """);
-        List<Object> params = new ArrayList<>(List.of(tenantId, patientId));
+        List<Map<String, Object>> rows = jdbcTemplate.queryForList("""
+            SELECT id, test_name, test_code, category, priority, status,
+                   clinical_notes, ordered_by_name, facility_id,
+                   result_data, result_notes, resulted_by_name,
+                   collected_at, resulted_at, created_at
+            FROM lab_orders
+            WHERE tenant_id = ? AND patient_id = ? AND status IN ('RESULTED', 'REVIEWED')
+            ORDER BY resulted_at DESC NULLS LAST
+            LIMIT ? OFFSET ?
+            """, tenantId, patientId, limit, offset);
 
-        if (status != null) {
-            sql.append(" AND status = ?");
-            params.add(status);
-        }
-        sql.append(" ORDER BY created_at DESC LIMIT ? OFFSET ?");
-        params.add(limit);
-        params.add(offset);
-
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql.toString(), params.toArray());
         Long total = jdbcTemplate.queryForObject(
-                "SELECT count(*) FROM lab_results WHERE tenant_id = ? AND patient_id = ?" +
-                        (status != null ? " AND status = '" + status + "'" : ""),
+                "SELECT count(*) FROM lab_orders WHERE tenant_id = ? AND patient_id = ? AND status IN ('RESULTED', 'REVIEWED')",
                 Long.class, tenantId, patientId);
 
         List<Map<String, Object>> data = rows.stream().map(this::toResource).toList();
@@ -77,9 +76,11 @@ public class CitizenResultsController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
 
         List<Map<String, Object>> rows = jdbcTemplate.queryForList("""
-            SELECT id, test_name, category, status, value, unit, reference_range,
-                   interpretation, ordered_by, facility_name, collected_at, result_at, created_at
-            FROM lab_results WHERE id = ? AND tenant_id = ?
+            SELECT id, test_name, test_code, category, priority, status,
+                   clinical_notes, ordered_by_name, facility_id,
+                   result_data, result_notes, resulted_by_name,
+                   collected_at, resulted_at, created_at
+            FROM lab_orders WHERE id = ? AND tenant_id = ?
             """, id, tenantId);
 
         if (rows.isEmpty()) throw new ResourceNotFoundException("Lab result not found: " + id);
@@ -101,16 +102,15 @@ public class CitizenResultsController {
         Map<String, Object> r = new LinkedHashMap<>();
         r.put("id", row.get("id").toString());
         r.put("testName", row.get("test_name"));
+        r.put("testCode", row.get("test_code"));
         r.put("category", row.get("category"));
         r.put("status", row.get("status"));
-        r.put("value", row.get("value"));
-        r.put("unit", row.get("unit"));
-        r.put("referenceRange", row.get("reference_range"));
-        r.put("interpretation", row.get("interpretation"));
-        r.put("orderedBy", row.get("ordered_by"));
-        r.put("facilityName", row.get("facility_name"));
+        r.put("resultData", row.get("result_data"));
+        r.put("resultNotes", row.get("result_notes"));
+        r.put("orderedBy", row.get("ordered_by_name"));
+        r.put("resultedBy", row.get("resulted_by_name"));
         r.put("collectedAt", row.get("collected_at"));
-        r.put("resultAt", row.get("result_at"));
+        r.put("resultedAt", row.get("resulted_at"));
         r.put("createdAt", row.get("created_at"));
         return r;
     }

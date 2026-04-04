@@ -39,7 +39,7 @@ public class CitizenRecordsController {
 
         StringBuilder sql = new StringBuilder("""
             SELECT id, encounter_id, document_type, title, description, mime_type,
-                   file_size, storage_key, uploaded_by, status, created_at
+                   file_size, storage_key, uploaded_by, status, document_object_id, created_at
             FROM clinical_documents WHERE tenant_id = ? AND patient_id = ?
             """);
         StringBuilder countSql = new StringBuilder(
@@ -73,7 +73,7 @@ public class CitizenRecordsController {
 
         List<Map<String, Object>> rows = jdbcTemplate.queryForList("""
             SELECT id, encounter_id, document_type, title, description, mime_type,
-                   file_size, storage_key, uploaded_by, status, created_at
+                   file_size, storage_key, uploaded_by, status, document_object_id, created_at
             FROM clinical_documents WHERE id = ? AND tenant_id = ?
             """, id, tenantId);
 
@@ -104,6 +104,7 @@ public class CitizenRecordsController {
         r.put("storageKey", row.get("storage_key"));
         r.put("uploadedBy", row.get("uploaded_by"));
         r.put("status", row.get("status"));
+        r.put("documentObjectId", row.get("document_object_id") != null ? row.get("document_object_id").toString() : null);
         r.put("createdAt", row.get("created_at"));
         return r;
     }

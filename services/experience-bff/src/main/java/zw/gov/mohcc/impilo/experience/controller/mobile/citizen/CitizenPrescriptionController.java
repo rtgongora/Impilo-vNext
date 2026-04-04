@@ -45,8 +45,9 @@ public class CitizenPrescriptionController {
         int offset = page * limit;
 
         StringBuilder sql = new StringBuilder("""
-            SELECT p.id, p.medication_name, p.dosage, p.frequency, p.duration,
-                   p.quantity, p.status, p.prescribed_by, p.dispensed_at, p.created_at
+            SELECT p.id, p.medication_name, p.generic_name, p.dosage, p.route,
+                   p.frequency, p.duration, p.quantity, p.instructions, p.indication,
+                   p.status, p.prescribed_by, p.dispensed_by, p.dispensed_at, p.created_at
             FROM prescriptions p
             WHERE p.tenant_id = ? AND p.patient_id = ?
             """);
@@ -87,8 +88,9 @@ public class CitizenPrescriptionController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
 
         List<Map<String, Object>> rows = jdbcTemplate.queryForList("""
-            SELECT id, medication_name, dosage, frequency, duration, quantity, status,
-                   prescribed_by, dispensed_at, created_at
+            SELECT id, medication_name, generic_name, dosage, route, frequency, duration,
+                   quantity, instructions, indication, status, prescribed_by,
+                   dispensed_by, dispensed_at, created_at
             FROM prescriptions WHERE id = ? AND tenant_id = ?
             """, id, tenantId);
 
@@ -140,15 +142,18 @@ public class CitizenPrescriptionController {
         Map<String, Object> r = new LinkedHashMap<>();
         r.put("id", row.get("id").toString());
         r.put("medicationName", row.get("medication_name"));
+        r.put("genericName", row.get("generic_name"));
         r.put("dosage", row.get("dosage"));
+        r.put("route", row.get("route"));
         r.put("frequency", row.get("frequency"));
         r.put("duration", row.get("duration"));
         r.put("quantity", row.get("quantity"));
+        r.put("instructions", row.get("instructions"));
+        r.put("indication", row.get("indication"));
         r.put("status", row.get("status"));
         r.put("prescribedBy", row.get("prescribed_by"));
-        r.put("facilityName", "");
-        r.put("refillsRemaining", 3);
-        r.put("lastFilledAt", row.get("dispensed_at"));
+        r.put("dispensedBy", row.get("dispensed_by"));
+        r.put("dispensedAt", row.get("dispensed_at"));
         r.put("createdAt", row.get("created_at"));
         return r;
     }
