@@ -30,10 +30,12 @@ export function useHydration(): void {
     // --- Auth ---
     const token = sessionStorage.getItem("exp:auth_token");
     const userJson = sessionStorage.getItem("exp:auth_user");
+    const refreshToken = sessionStorage.getItem("exp:refresh_token");
+    const expiresAt = sessionStorage.getItem("exp:expires_at");
     if (token && userJson) {
       try {
         const user = JSON.parse(userJson);
-        useAuthStore.getState().setAuth(user, token);
+        useAuthStore.getState().setAuth(user, token, refreshToken, expiresAt);
       } catch {
         // Corrupted data — skip auth hydration
       }
