@@ -37,11 +37,12 @@ const ROLE_STYLES: Record<string, string> = {
   CITIZEN: "bg-purple-100 text-purple-700",
   SUPPORT_AGENT: "bg-amber-100 text-amber-700",
   DEVELOPER: "bg-gray-100 text-gray-700",
+  FINANCE: "bg-emerald-100 text-emerald-700",
 };
 
 const ALL_ROLES = [
   "SYSTEM_ADMIN", "FACILITY_ADMIN", "CLINICIAN", "NURSE",
-  "PHARMACIST", "CITIZEN", "SUPPORT_AGENT", "DEVELOPER",
+  "PHARMACIST", "CITIZEN", "SUPPORT_AGENT", "DEVELOPER", "FINANCE",
 ];
 
 export default function AdminUsersPage() {
