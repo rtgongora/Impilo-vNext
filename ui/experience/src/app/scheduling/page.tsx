@@ -182,7 +182,7 @@ export default function SchedulingPage() {
 
   useEffect(() => {
     fetchAppointments();
-  }, [facility?.id, activeTab]);
+  }, [facility?.id, activeTab, viewMode, weekStart]);
 
   async function fetchAppointments() {
     setIsLoading(true);
