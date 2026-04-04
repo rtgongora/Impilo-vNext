@@ -112,6 +112,38 @@ export default function SchedulingPage() {
     setShowPatientDropdown(false);
   }
 
+  // Resource and availability state
+  const [resources, setResources] = useState<Array<{ id: string; name: string; resourceType: string }>>([]);
+  const [selectedResourceId, setSelectedResourceId] = useState("");
+  const [availabilitySlots, setAvailabilitySlots] = useState<Array<{ time: string; available: boolean }>>([]);
+  const [loadingAvailability, setLoadingAvailability] = useState(false);
+
+  // Fetch facility resources when facility changes
+  useEffect(() => {
+    if (!facility?.id) return;
+    apiClient.get<ApiResponse<Array<{ id: string; name: string; resourceType: string }>>>(
+      `/internal/v1/appointments/resources?facility_id=${facility.id}`
+    ).then((res) => {
+      const data = res.data;
+      if (Array.isArray(data)) setResources(data);
+      else setResources([]);
+    }).catch(() => setResources([]));
+  }, [facility?.id]);
+
+  // Fetch availability when resource + date change
+  useEffect(() => {
+    if (!selectedResourceId || !form.date) {
+      setAvailabilitySlots([]);
+      return;
+    }
+    setLoadingAvailability(true);
+    apiClient.get<ApiResponse<{ slots: Array<{ time: string; available: boolean }> }>>(
+      `/internal/v1/appointments/availability?resource_id=${selectedResourceId}&date=${form.date}`
+    ).then((res) => {
+      setAvailabilitySlots((res.data as { slots: Array<{ time: string; available: boolean }> })?.slots ?? []);
+    }).catch(() => setAvailabilitySlots([])).finally(() => setLoadingAvailability(false));
+  }, [selectedResourceId, form.date]);
+
   const [form, setForm] = useState({
     appointment_type: "OPD",
     date: "",
@@ -162,10 +194,13 @@ export default function SchedulingPage() {
         end_at: endAt,
         reason: form.reason || null,
         notes: form.notes || null,
+        resource_id: selectedResourceId || null,
       });
       setForm({ appointment_type: "OPD", date: "", time: "09:00", reason: "", notes: "" });
       setSelectedPatient(null);
       setPatientSearch("");
+      setSelectedResourceId("");
+      setAvailabilitySlots([]);
       setShowCreate(false);
       fetchAppointments();
     } catch {
@@ -291,13 +326,61 @@ export default function SchedulingPage() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
               <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Resource (optional)</label>
+                <select value={selectedResourceId} onChange={(e) => setSelectedResourceId(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  <option value="">No specific resource</option>
+                  {resources.map((r) => (
+                    <option key={r.id} value={r.id}>{r.name} ({r.resourceType})</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Availability Grid — shown when resource + date selected */}
+            {selectedResourceId && form.date && (
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-2">
+                  Available Time Slots
+                  {loadingAvailability && <Loader2 className="w-3 h-3 animate-spin inline ml-2" />}
+                </label>
+                {availabilitySlots.length > 0 ? (
+                  <div className="grid grid-cols-6 gap-1.5">
+                    {availabilitySlots.map((slot) => (
+                      <button
+                        key={slot.time}
+                        type="button"
+                        disabled={!slot.available}
+                        onClick={() => setForm({ ...form, time: slot.time })}
+                        className={`px-2 py-1.5 text-xs font-medium rounded border transition-colors ${
+                          form.time === slot.time
+                            ? "bg-blue-600 text-white border-blue-600"
+                            : slot.available
+                              ? "bg-white text-gray-700 border-gray-200 hover:bg-blue-50 hover:border-blue-300"
+                              : "bg-gray-100 text-gray-400 border-gray-100 cursor-not-allowed line-through"
+                        }`}
+                      >
+                        {slot.time}
+                      </button>
+                    ))}
+                  </div>
+                ) : !loadingAvailability ? (
+                  <p className="text-xs text-gray-400">Select a date and resource to see availability</p>
+                ) : null}
+              </div>
+            )}
+
+            {/* Fallback time selector when no resource selected */}
+            {!selectedResourceId && (
+              <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Time</label>
                 <select value={form.time} onChange={(e) => setForm({ ...form, time: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                   {TIME_SLOTS.map((t) => <option key={t} value={t}>{t}</option>)}
                 </select>
               </div>
-            </div>
+            )}
+
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Reason</label>

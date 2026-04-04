@@ -281,6 +281,113 @@ public class SchedulingController {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * List facility resources available for booking.
+     * GET /internal/v1/appointments/resources?facility_id=
+     *
+     * Proxies TusoServiceClient.listFacilityResources().
+     */
+    @GetMapping("/resources")
+    public ResponseEntity<Map<String, Object>> listResources(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestParam(name = "facility_id") String facilityId,
+            @RequestParam(required = false, name = "resource_type") String resourceType) {
+
+        try {
+            JsonNode resources = tusoClient.listFacilityResources(
+                    Long.parseLong(facilityId), resourceType);
+
+            Map<String, Object> response = new LinkedHashMap<>();
+            response.put("data", resources);
+            response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.warn("Failed to fetch facility resources: {}", e.getMessage());
+            Map<String, Object> response = new LinkedHashMap<>();
+            response.put("data", List.of());
+            response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
+            return ResponseEntity.ok(response);
+        }
+    }
+
+    /**
+     * Check availability for a resource on a specific date.
+     * GET /internal/v1/appointments/availability?resource_id=&date=
+     *
+     * Returns existing bookings for the resource on that date and
+     * computes available 30-minute time slots from 08:00 to 17:00.
+     */
+    @GetMapping("/availability")
+    public ResponseEntity<Map<String, Object>> checkAvailability(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestParam(name = "resource_id") String resourceId,
+            @RequestParam String date) {
+
+        try {
+            java.time.LocalDate localDate = java.time.LocalDate.parse(date);
+            java.time.OffsetDateTime dayStart = localDate.atTime(8, 0)
+                    .atZone(java.time.ZoneOffset.UTC).toOffsetDateTime();
+            java.time.OffsetDateTime dayEnd = localDate.atTime(17, 0)
+                    .atZone(java.time.ZoneOffset.UTC).toOffsetDateTime();
+
+            JsonNode bookings = tusoClient.listBookings(
+                    UUID.fromString(resourceId), dayStart, dayEnd);
+
+            // Compute occupied slots
+            java.util.Set<String> occupiedSlots = new java.util.HashSet<>();
+            if (bookings != null && bookings.isArray()) {
+                for (JsonNode booking : bookings) {
+                    String startStr = booking.has("startTime") ? booking.get("startTime").asText() : null;
+                    String endStr = booking.has("endTime") ? booking.get("endTime").asText() : null;
+                    if (startStr != null && endStr != null) {
+                        try {
+                            java.time.OffsetDateTime bStart = java.time.OffsetDateTime.parse(startStr);
+                            java.time.OffsetDateTime bEnd = java.time.OffsetDateTime.parse(endStr);
+                            // Mark all 30-min slots in this booking as occupied
+                            java.time.OffsetDateTime slot = bStart;
+                            while (slot.isBefore(bEnd)) {
+                                occupiedSlots.add(String.format("%02d:%02d",
+                                        slot.getHour(), slot.getMinute()));
+                                slot = slot.plusMinutes(30);
+                            }
+                        } catch (Exception ignored) {}
+                    }
+                }
+            }
+
+            // Generate all 30-min slots from 08:00 to 16:30
+            List<Map<String, Object>> slots = new java.util.ArrayList<>();
+            java.time.OffsetDateTime slotTime = dayStart;
+            while (slotTime.isBefore(dayEnd)) {
+                String slotLabel = String.format("%02d:%02d",
+                        slotTime.getHour(), slotTime.getMinute());
+                boolean available = !occupiedSlots.contains(slotLabel);
+                slots.add(Map.of("time", slotLabel, "available", available));
+                slotTime = slotTime.plusMinutes(30);
+            }
+
+            Map<String, Object> response = new LinkedHashMap<>();
+            response.put("data", Map.of(
+                    "date", date,
+                    "resource_id", resourceId,
+                    "slots", slots,
+                    "existing_bookings", bookings != null ? bookings : List.of()
+            ));
+            response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.warn("Failed to check availability: {}", e.getMessage());
+            Map<String, Object> response = new LinkedHashMap<>();
+            response.put("data", Map.of("date", date, "resource_id", resourceId, "slots", List.of()));
+            response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
+            return ResponseEntity.ok(response);
+        }
+    }
+
     private Map<String, Object> toResource(Map<String, Object> row) {
         Map<String, Object> attributes = new LinkedHashMap<>();
         attributes.put("patient_id", row.get("patient_id"));
