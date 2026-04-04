@@ -81,7 +81,7 @@ public class MobileEncounterController {
         List<Map<String, Object>> rows = jdbcTemplate.queryForList("""
             SELECT id, patient_id, facility_id, encounter_type, status,
                    chief_complaint, started_at, ended_at, pct_journey_id,
-                   pct_encounter_ref, created_at, updated_at
+                   pct_encounter_ref, costa_bill_id, created_at, updated_at
             FROM encounters
             WHERE tenant_id = ? AND patient_id = ?::uuid
             ORDER BY created_at DESC
@@ -98,6 +98,9 @@ public class MobileEncounterController {
             attributes.put("started_at", row.get("started_at"));
             attributes.put("ended_at", row.get("ended_at"));
             attributes.put("pct_journey_id", row.get("pct_journey_id"));
+            if (row.get("costa_bill_id") != null) {
+                attributes.put("costa_bill_id", row.get("costa_bill_id").toString());
+            }
             attributes.put("created_at", row.get("created_at"));
 
             Map<String, Object> resource = new LinkedHashMap<>();
