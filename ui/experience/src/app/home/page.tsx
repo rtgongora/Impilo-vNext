@@ -25,6 +25,7 @@ import { useAuthStore } from "@/hooks/useAuthStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useShiftStore } from "@/hooks/useShiftStore";
 import { useRoleGroup } from "@/hooks/useRoleGroup";
+import { useWorkModeStore } from "@/hooks/useWorkModeStore";
 import { useFacilities, type FacilityResource } from "@/hooks/queries/useFacilities";
 import { apiClient } from "@/lib/api-client";
 
@@ -140,6 +141,8 @@ export default function HomePage() {
       facilityType: f.attributes.facilityType,
       capabilities: f.attributes.capabilities ?? [],
     });
+    // Set work mode to clinical when selecting a facility for clinical work
+    useWorkModeStore.getState().setMode("clinical");
     router.push("/workspace");
   }
 
@@ -276,20 +279,20 @@ export default function HomePage() {
                   <p className="text-xs text-gray-500 mb-2">Or work without a facility context:</p>
                   <div className="flex flex-wrap gap-2">
                     {isAdmin && (
-                      <Link
-                        href="/admin"
+                      <button
+                        onClick={() => { useWorkModeStore.getState().setMode("admin"); router.push("/admin"); }}
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                       >
                         <Shield className="w-3.5 h-3.5" /> Administration
-                      </Link>
+                      </button>
                     )}
                     {isFinance && (
-                      <Link
-                        href="/finance"
+                      <button
+                        onClick={() => { useWorkModeStore.getState().setMode("finance"); router.push("/finance"); }}
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                       >
                         <Receipt className="w-3.5 h-3.5" /> Finance
-                      </Link>
+                      </button>
                     )}
                     <Link
                       href="/reports"

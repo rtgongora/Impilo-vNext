@@ -24,6 +24,7 @@ import {
 import { AuthLayout } from "@/components/AuthLayout";
 import { useLogin } from "@/hooks/queries/useAuth";
 import { useAuthStore } from "@/hooks/useAuthStore";
+import { useWorkModeStore } from "@/hooks/useWorkModeStore";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -79,6 +80,7 @@ export default function LoginPage() {
             refreshToken,
             expiresAt
           );
+          useWorkModeStore.getState().deriveFromRoles(user.roles);
           router.push("/home");
         },
         onError: (err: unknown) => {

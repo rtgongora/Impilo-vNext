@@ -6,6 +6,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import com.fasterxml.jackson.databind.JsonNode;
+import zw.gov.mohcc.impilo.experience.client.VarapiServiceClient;
 import zw.gov.mohcc.impilo.experience.domain.Facility;
 import zw.gov.mohcc.impilo.experience.domain.RegistryProvider;
 import zw.gov.mohcc.impilo.experience.repository.FacilityRepository;
@@ -25,11 +27,14 @@ public class RegistryController {
 
     private final RegistryProviderRepository registryProviderRepository;
     private final FacilityRepository facilityRepository;
+    private final VarapiServiceClient varapiClient;
 
     public RegistryController(RegistryProviderRepository registryProviderRepository,
-                              FacilityRepository facilityRepository) {
+                              FacilityRepository facilityRepository,
+                              VarapiServiceClient varapiClient) {
         this.registryProviderRepository = registryProviderRepository;
         this.facilityRepository = facilityRepository;
+        this.varapiClient = varapiClient;
     }
 
     @GetMapping("/providers")
@@ -139,6 +144,28 @@ public class RegistryController {
         resource.put("type", "RegistryProvider");
         resource.put("attributes", attributes);
         return resource;
+    }
+
+    /**
+     * GET /internal/v1/registry/providers/{id}/licenses
+     *
+     * Fetches license history for a provider from VARAPI.
+     */
+    @GetMapping("/providers/{id}/licenses")
+    public ResponseEntity<Map<String, Object>> getProviderLicenses(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode licenses = varapiClient.getProviderLicenses(id);
+            return ResponseEntity.ok(Map.of(
+                    "data", licenses != null ? licenses : new Object[0],
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            return ResponseEntity.ok(Map.of(
+                    "data", new Object[0],
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
     }
 
     private Map<String, Object> toFacilityResource(Facility f) {

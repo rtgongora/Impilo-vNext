@@ -9,12 +9,14 @@ import zw.gov.mohcc.impilo.experience.repository.WorkspaceRepository;
 import zw.gov.mohcc.impilo.experience.service.OutboxService;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 /**
- * Endpoint 2: RPC-like command — POST /internal/v1/workspaces/{id}/activate
- * Activates a workspace. Idempotent via IdempotencyFilter. Writes outbox event.
+ * Workspace management endpoints.
+ * GET  /internal/v1/workspaces — list workspaces for a facility.
+ * POST /internal/v1/workspaces/{id}/activate — activate a workspace.
  */
 @RestController
 @RequestMapping("/internal/v1/workspaces")
@@ -26,6 +28,32 @@ public class WorkspaceController {
     public WorkspaceController(WorkspaceRepository workspaceRepository, OutboxService outboxService) {
         this.workspaceRepository = workspaceRepository;
         this.outboxService = outboxService;
+    }
+
+    @GetMapping
+    public ResponseEntity<Map<String, Object>> listWorkspaces(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestParam(name = "facility_id") UUID facilityId) {
+
+        List<Workspace> workspaces = workspaceRepository.findByFacilityIdAndTenantId(facilityId, tenantId);
+
+        List<Map<String, Object>> data = workspaces.stream().map(ws -> {
+            Map<String, Object> attrs = new LinkedHashMap<>();
+            attrs.put("name", ws.getName());
+            attrs.put("workspaceType", ws.getWorkspaceType());
+            attrs.put("facilityId", ws.getFacilityId());
+            attrs.put("status", ws.getStatus());
+            return Map.<String, Object>of(
+                    "id", ws.getId().toString(),
+                    "type", "workspace",
+                    "attributes", attrs);
+        }).toList();
+
+        return ResponseEntity.ok(Map.of(
+                "data", data,
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 
     @PostMapping("/{id}/activate")

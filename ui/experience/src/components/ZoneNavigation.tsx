@@ -24,6 +24,17 @@ import { useAuthStore } from "@/hooks/useAuthStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useWorkspaceStore } from "@/hooks/useWorkspaceStore";
 import { useShiftStore } from "@/hooks/useShiftStore";
+import { useWorkModeStore, type WorkMode } from "@/hooks/useWorkModeStore";
+
+// ── Work mode indicator colors ───────────────────────────────────
+const WORK_MODE_COLORS: Record<WorkMode, string> = {
+  clinical: "bg-green-400",
+  pharmacy: "bg-emerald-400",
+  admin: "bg-red-400",
+  finance: "bg-blue-400",
+  oversight: "bg-purple-400",
+  general: "bg-gray-400",
+};
 
 // ── Role group arrays (must match SecurityConfig.java) ───────────
 const ADMIN_ROLES = ["SYSTEM_ADMIN", "FACILITY_ADMIN", "DEVELOPER"];
@@ -223,6 +234,7 @@ export function ZoneNavigation() {
   const { facility } = useFacilityStore();
   const { workspace } = useWorkspaceStore();
   const { shift } = useShiftStore();
+  const workMode = useWorkModeStore((s) => s.mode);
   const [collapsed, setCollapsed] = useState(() => {
     if (typeof window === "undefined") return false;
     return sessionStorage.getItem("exp:sidebar-collapsed") === "true";
@@ -327,6 +339,12 @@ export function ZoneNavigation() {
           </>
         ) : (
           <>
+            <div className="flex items-center gap-1.5 mb-1">
+              <span className={`w-1.5 h-1.5 rounded-full ${WORK_MODE_COLORS[workMode]}`} />
+              <span className="text-[10px] uppercase tracking-wider text-gray-500 font-semibold">
+                {workMode} mode
+              </span>
+            </div>
             {facility ? (
               <Link href="/facility" className="block text-xs text-gray-400 hover:text-white truncate">
                 <span className="text-gray-500">Facility:</span> {facility.name}
@@ -339,6 +357,7 @@ export function ZoneNavigation() {
             {workspace ? (
               <Link href="/workspace" className="block text-xs text-gray-400 hover:text-white truncate">
                 <span className="text-gray-500">Workspace:</span> {workspace.name}
+                <span className="ml-1 text-[10px] text-gray-500">({workspace.workspaceType})</span>
               </Link>
             ) : facility ? (
               <Link href="/workspace" className="block text-xs text-yellow-500 hover:text-yellow-400">
