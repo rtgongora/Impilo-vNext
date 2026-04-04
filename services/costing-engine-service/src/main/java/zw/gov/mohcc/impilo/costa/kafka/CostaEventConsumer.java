@@ -8,6 +8,8 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import zw.gov.mohcc.impilo.costa.domain.entity.BillHeaderEntity;
+import zw.gov.mohcc.impilo.costa.domain.entity.BillLineEntity;
 import zw.gov.mohcc.impilo.costa.domain.entity.EncounterEntity;
 import zw.gov.mohcc.impilo.costa.domain.entity.IdempotencyEntity;
 import zw.gov.mohcc.impilo.costa.domain.enums.*;
@@ -113,28 +115,58 @@ public class CostaEventConsumer {
             if (isProcessed(eventId, "OROS")) { ack.acknowledge(); return; }
 
             String orderId = text(event, "orderId");
-            String encounterRef = text(event, "encounterId");
-            String msikaCode = text(event, "msikaCode");
-            String description = text(event, "description");
+            String encounterRef = text(event, "encounterRef");
+            if (encounterRef == null) encounterRef = text(event, "encounterId");
             String orderType = text(event, "orderType");
-            BigDecimal qty = event.has("qty") ? new BigDecimal(event.get("qty").asText()) : BigDecimal.ONE;
+            String patientCpid = text(event, "patientCpid");
 
-            // Find or create bill for this encounter
-            if (encounterRef != null) {
-                EncounterEntity encounter = encounterRepository.findByPctJourneyId(encounterRef)
-                        .or(() -> encounterRepository.findById(encounterRef))
-                        .orElse(null);
+            // Extract billable code: prefer ziboOrderCode, fall back to orderType
+            String msikaCode = text(event, "ziboOrderCode");
+            if (msikaCode == null || msikaCode.isBlank()) {
+                msikaCode = orderType != null ? orderType : "ORDER";
+            }
 
-                if (encounter != null) {
-                    var bills = billService.getBill(encounter.getEncounterId());
-                    // Post line to existing bill or create new one
-                    // Simplified: find existing accumulating bill
-                    BillLineKind kind = "LAB".equals(orderType) || "IMAGING".equals(orderType)
-                            ? BillLineKind.SERVICE : BillLineKind.SERVICE;
+            // Build description from available fields
+            String description = text(event, "clinicalNotes");
+            if (description == null || description.isBlank()) {
+                description = (orderType != null ? orderType : "Order") + " - " + orderId;
+            }
 
-                    // This would normally find the active bill for the encounter
-                    log.info("OROS order {} received for encounter {}", orderId, encounterRef);
-                }
+            // Map order type to bill line kind
+            BillLineKind kind = mapOrderTypeToLineKind(orderType);
+
+            // Find COSTA encounter for this order
+            EncounterEntity encounter = resolveEncounter(encounterRef, patientCpid);
+            if (encounter == null) {
+                log.warn("OROS order {}: no COSTA encounter found for ref={}, patient={}",
+                        orderId, encounterRef, patientCpid);
+                markProcessed(eventId, "OROS");
+                ack.acknowledge();
+                return;
+            }
+
+            // Find the active bill for this encounter
+            BillHeaderEntity bill = billService.findActiveBillForEncounter(encounter.getEncounterId());
+            if (bill == null) {
+                log.warn("OROS order {}: no active bill for encounter {}, skipping line posting",
+                        orderId, encounter.getEncounterId());
+                markProcessed(eventId, "OROS");
+                ack.acknowledge();
+                return;
+            }
+
+            // Post the bill line
+            BillLineEntity line = billService.postLine(
+                    bill.getBillId(), msikaCode, description, kind,
+                    BigDecimal.ONE, CostMethodType.TARIFF,
+                    "OROS", orderId, Map.of());
+
+            if (line != null) {
+                log.info("OROS order {} posted as bill line {} on bill {}",
+                        orderId, line.getLineId(), bill.getBillId());
+            } else {
+                log.info("OROS order {} excluded by charging rules for bill {}",
+                        orderId, bill.getBillId());
             }
 
             markProcessed(eventId, "OROS");
@@ -153,12 +185,77 @@ public class CostaEventConsumer {
             String eventId = text(event, "eventId");
             if (isProcessed(eventId, "PHARMACY")) { ack.acknowledge(); return; }
 
-            String dispenseId = text(event, "dispenseId");
-            String msikaCode = text(event, "msikaCode");
-            BigDecimal qty = event.has("qty") ? new BigDecimal(event.get("qty").asText()) : BigDecimal.ONE;
-            BigDecimal unitCost = event.has("unitCost") ? new BigDecimal(event.get("unitCost").asText()) : null;
+            String dispenseId = text(event, "orderId");
+            if (dispenseId == null) dispenseId = text(event, "dispenseId");
+            String patientCpid = text(event, "patientCpid");
+            String orosOrderId = text(event, "orosOrderId");
 
-            log.info("Pharmacy dispense {} completed: {} x {}", dispenseId, msikaCode, qty);
+            // Extract drug info: try drugCode/drugDisplay, fall back to msikaCode
+            String msikaCode = text(event, "drugCode");
+            if (msikaCode == null) msikaCode = text(event, "msikaCode");
+            if (msikaCode == null) msikaCode = "DISPENSE";
+
+            String description = text(event, "drugDisplay");
+            if (description == null || description.isBlank()) {
+                description = "Pharmacy dispense - " + (dispenseId != null ? dispenseId : "unknown");
+            }
+
+            BigDecimal qty = BigDecimal.ONE;
+            if (event.has("qtyDispensed")) {
+                qty = new BigDecimal(event.get("qtyDispensed").asText());
+            } else if (event.has("qty")) {
+                qty = new BigDecimal(event.get("qty").asText());
+            }
+
+            // Determine cost method: use STOCK_AVG if unitCost provided
+            CostMethodType costMethod = CostMethodType.TARIFF;
+            Map<String, Object> context = new java.util.LinkedHashMap<>();
+            if (event.has("unitCost") && !event.get("unitCost").isNull()) {
+                costMethod = CostMethodType.STOCK_AVG;
+                context.put("unit_cost", event.get("unitCost").asText());
+            }
+
+            // Find encounter: try via OROS order reference, then by patient
+            EncounterEntity encounter = null;
+            if (orosOrderId != null) {
+                encounter = resolveEncounter(orosOrderId, patientCpid);
+            }
+            if (encounter == null && patientCpid != null) {
+                encounter = resolveEncounter(null, patientCpid);
+            }
+
+            if (encounter == null) {
+                log.warn("Pharmacy dispense {}: no COSTA encounter found for patient={}",
+                        dispenseId, patientCpid);
+                markProcessed(eventId, "PHARMACY");
+                ack.acknowledge();
+                return;
+            }
+
+            // Find the active bill for this encounter
+            BillHeaderEntity bill = billService.findActiveBillForEncounter(encounter.getEncounterId());
+            if (bill == null) {
+                log.warn("Pharmacy dispense {}: no active bill for encounter {}, skipping",
+                        dispenseId, encounter.getEncounterId());
+                markProcessed(eventId, "PHARMACY");
+                ack.acknowledge();
+                return;
+            }
+
+            // Post the bill line as PRODUCT
+            BillLineEntity line = billService.postLine(
+                    bill.getBillId(), msikaCode, description, BillLineKind.PRODUCT,
+                    qty, costMethod,
+                    "PHARMACY", dispenseId != null ? dispenseId : "unknown",
+                    context);
+
+            if (line != null) {
+                log.info("Pharmacy dispense {} posted as bill line {} on bill {}",
+                        dispenseId, line.getLineId(), bill.getBillId());
+            } else {
+                log.info("Pharmacy dispense {} excluded by charging rules for bill {}",
+                        dispenseId, bill.getBillId());
+            }
 
             markProcessed(eventId, "PHARMACY");
             ack.acknowledge();
@@ -215,6 +312,37 @@ public class CostaEventConsumer {
             log.error("Failed to process mushex.payment.status_changed", e);
             ack.acknowledge();
         }
+    }
+
+    /**
+     * Resolve a COSTA EncounterEntity from an encounter reference and/or patient CPID.
+     * Tries: pctJourneyId lookup, direct encounterId lookup, then most recent by patient.
+     */
+    private EncounterEntity resolveEncounter(String encounterRef, String patientCpid) {
+        if (encounterRef != null) {
+            var byJourney = encounterRepository.findByPctJourneyId(encounterRef);
+            if (byJourney.isPresent()) return byJourney.get();
+
+            var byId = encounterRepository.findById(encounterRef);
+            if (byId.isPresent()) return byId.get();
+        }
+        if (patientCpid != null) {
+            var byPatient = encounterRepository.findByPatientCpidOrderByOpenedAtDesc(patientCpid);
+            if (!byPatient.isEmpty()) return byPatient.get(0);
+        }
+        return null;
+    }
+
+    /**
+     * Map OROS order type to the appropriate BillLineKind.
+     */
+    private BillLineKind mapOrderTypeToLineKind(String orderType) {
+        if (orderType == null) return BillLineKind.SERVICE;
+        return switch (orderType) {
+            case "LAB", "IMAGING", "PROCEDURE" -> BillLineKind.SERVICE;
+            case "PHARMACY" -> BillLineKind.PRODUCT;
+            default -> BillLineKind.SERVICE;
+        };
     }
 
     private String text(JsonNode node, String field) {

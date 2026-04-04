@@ -278,6 +278,18 @@ public class BillService {
         return billHeaderRepository.findByTenantId(tenantId, pageable);
     }
 
+    /**
+     * Find the active (DRAFT or ACCUMULATING) bill for an encounter.
+     * Returns the first matching bill, or null if none exists.
+     */
+    public BillHeaderEntity findActiveBillForEncounter(String encounterId) {
+        List<BillHeaderEntity> bills = billHeaderRepository.findByEncounterId(encounterId);
+        return bills.stream()
+                .filter(b -> b.getStatus() == BillStatus.DRAFT || b.getStatus() == BillStatus.ACCUMULATING)
+                .findFirst()
+                .orElse(null);
+    }
+
     public BillHeaderEntity getBill(String billId) {
         return billHeaderRepository.findById(billId)
                 .orElseThrow(() -> new IllegalArgumentException("Bill not found: " + billId));
