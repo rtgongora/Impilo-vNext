@@ -7,11 +7,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Pill, Loader2, CheckCircle2, ArrowLeft } from "lucide-react";
+import { Pill, Loader2, CheckCircle2, ArrowLeft, ShieldAlert } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
+import { useRoleGroup } from "@/hooks/useRoleGroup";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -53,6 +54,7 @@ function usePendingPrescriptions() {
 
 export default function PharmacyDispensePage() {
   const queryClient = useQueryClient();
+  const { isDispenser } = useRoleGroup();
 
   const { data: prescriptionsData, isLoading, isError } =
     usePendingPrescriptions();
@@ -86,6 +88,13 @@ export default function PharmacyDispensePage() {
   return (
     <AppLayout>
       <PageShell title="Dispensing" subtitle="Review and dispense pending prescriptions">
+        {!isDispenser ? (
+          <div className="bg-white rounded-lg border border-red-200 p-12 text-center">
+            <ShieldAlert className="w-10 h-10 text-red-300 mx-auto mb-3" />
+            <p className="text-red-600 text-sm font-medium">Access Denied</p>
+            <p className="text-gray-500 text-xs mt-1">Only pharmacists can access the dispensing workflow.</p>
+          </div>
+        ) : (<>
         {/* Back link */}
         <div className="mb-4">
           <Link
@@ -213,6 +222,7 @@ export default function PharmacyDispensePage() {
             )}
           </div>
         )}
+        </>)}
       </PageShell>
     </AppLayout>
   );
