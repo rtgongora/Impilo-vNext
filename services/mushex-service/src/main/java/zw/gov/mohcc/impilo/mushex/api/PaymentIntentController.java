@@ -109,7 +109,7 @@ public class PaymentIntentController {
         var ctx = TrustContextHolder.require();
         String correlationId = ctx.correlationId().toString();
 
-        RefundEntity refund = refundService.createRefund(id, request.amount(), request.reason());
+        RefundEntity refund = refundService.requestRefund(id, request.amount(), request.reason());
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok(refund, correlationId));

@@ -180,6 +180,15 @@ public class PaymentIntegrationService {
         BillHeaderEntity bill = billHeaderRepository.findById(billId)
                 .orElseThrow(() -> new IllegalArgumentException("Bill not found: " + billId));
 
+        // Validate that at least one PAID payment exists for this bill
+        List<PaymentEntity> payments = paymentRepository.findByBillId(billId);
+        boolean hasPaidPayment = payments.stream()
+                .anyMatch(p -> p.getStatus() == PaymentStatus.PAID);
+        if (!hasPaidPayment) {
+            throw new IllegalStateException(
+                    "Cannot create refund for bill " + billId + ": no PAID payments exist");
+        }
+
         TrustContext ctx = TrustContextHolder.require();
 
         RefundEntity refund = new RefundEntity();
