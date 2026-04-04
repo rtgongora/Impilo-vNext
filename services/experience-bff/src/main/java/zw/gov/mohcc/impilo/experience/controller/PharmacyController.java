@@ -196,6 +196,35 @@ public class PharmacyController {
         prescription.dispense(request.dispensed_by());
         prescriptionRepository.save(prescription);
 
+        // Enrich outbox event with full medication data for pharmacy-service consumption
+        Map<String, Object> eventPayload = new LinkedHashMap<>();
+        eventPayload.put("prescription_id", prescriptionId.toString());
+        eventPayload.put("patient_id", prescription.getPatientId().toString());
+        eventPayload.put("facility_id", prescription.getFacilityId() != null ? prescription.getFacilityId().toString() : null);
+        eventPayload.put("encounter_id", prescription.getEncounterId() != null ? prescription.getEncounterId().toString() : null);
+        eventPayload.put("medication_name", prescription.getMedicationName());
+        eventPayload.put("dosage", prescription.getDosage());
+        eventPayload.put("frequency", prescription.getFrequency());
+        eventPayload.put("quantity", prescription.getQuantity());
+        eventPayload.put("dispensed_by", request.dispensed_by());
+        eventPayload.put("status", "DISPENSED");
+
+        // Include V13 fields from JDBC
+        try {
+            List<Map<String, Object>> rxRows = jdbcTemplate.queryForList(
+                    "SELECT route, instructions, indication, generic_name FROM prescriptions WHERE id = ?",
+                    prescriptionId);
+            if (!rxRows.isEmpty()) {
+                Map<String, Object> rxData = rxRows.get(0);
+                eventPayload.put("route", rxData.get("route"));
+                eventPayload.put("instructions", rxData.get("instructions"));
+                eventPayload.put("indication", rxData.get("indication"));
+                eventPayload.put("generic_name", rxData.get("generic_name"));
+            }
+        } catch (Exception e) {
+            // V13 columns may not exist yet
+        }
+
         outboxService.writeOutboxEvent(
                 "impilo.experience.pharmacy.dispensed.v1",
                 correlationId,
@@ -205,11 +234,7 @@ public class PharmacyController {
                 podId,
                 "Prescription",
                 prescriptionId.toString(),
-                Map.of(
-                        "prescription_id", prescriptionId.toString(),
-                        "dispensed_by", request.dispensed_by(),
-                        "status", "DISPENSED"
-                ),
+                eventPayload,
                 Map.of()
         );
 

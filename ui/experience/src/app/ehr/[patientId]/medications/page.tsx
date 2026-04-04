@@ -286,6 +286,12 @@ export default function MedicationsPage() {
                             Prescribed by: {String(a.prescribed_by ?? a.prescribedBy ?? "")}
                             {a.created_at && ` · ${new Date(String(a.created_at ?? a.createdAt)).toLocaleDateString()}`}
                           </p>
+                          {a.status === "DISPENSED" && (
+                            <p className="text-xs text-purple-600 mt-0.5">
+                              Dispensed by: {String(a.dispensed_by ?? a.dispensedBy ?? "")}
+                              {(a.dispensed_at ?? a.dispensedAt) && ` · ${new Date(String(a.dispensed_at ?? a.dispensedAt)).toLocaleString()}`}
+                            </p>
+                          )}
                         </div>
                         {isPending && (
                           <div className="flex flex-col gap-1">
