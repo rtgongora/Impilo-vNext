@@ -13,6 +13,7 @@ import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 
 import java.time.OffsetDateTime;
 import java.util.*;
+import java.util.Set;
 
 /**
  * Auth session controller with real Keycloak credential exchange.
@@ -277,6 +278,223 @@ public class AuthSessionController {
         ));
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return ResponseEntity.ok(response);
+    }
+
+    @Value("${KEYCLOAK_BACKEND_CLIENT_ID:impilo-backend}")
+    private String backendClientId;
+
+    @Value("${KEYCLOAK_BACKEND_SECRET:impilo-backend-secret}")
+    private String backendSecret;
+
+    /**
+     * Register a new user via Keycloak Admin REST API.
+     *
+     * <p>Uses the impilo-backend service account to obtain an admin token,
+     * then creates the user and assigns the requested realm role.</p>
+     */
+    @PostMapping("/register")
+    public ResponseEntity<Map<String, Object>> register(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.POD_ID) String podId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody Map<String, Object> body) {
+
+        String email = body.getOrDefault("email", "").toString().trim();
+        String password = body.getOrDefault("password", "").toString();
+        String firstName = body.getOrDefault("firstName", "").toString().trim();
+        String lastName = body.getOrDefault("lastName", "").toString().trim();
+        String role = body.getOrDefault("role", "CITIZEN").toString().toUpperCase();
+
+        // Validation
+        if (email.isBlank() || password.isBlank() || firstName.isBlank() || lastName.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", Map.of("code", "VALIDATION", "message",
+                            "email, password, firstName, and lastName are required")));
+        }
+        if (password.length() < 8) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", Map.of("code", "VALIDATION", "message",
+                            "Password must be at least 8 characters")));
+        }
+
+        Set<String> allowedRoles = Set.of("CITIZEN", "CLINICIAN", "NURSE", "PHARMACIST");
+        if (!allowedRoles.contains(role)) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", Map.of("code", "VALIDATION", "message",
+                            "Self-registration is only available for: " + allowedRoles)));
+        }
+
+        try {
+            // 1. Get admin token via service account
+            String adminToken = getServiceAccountToken();
+            if (adminToken == null) {
+                return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(Map.of(
+                        "error", Map.of("code", "AUTH_SERVICE_UNAVAILABLE",
+                                "message", "Registration service is temporarily unavailable")));
+            }
+
+            // 2. Create user in Keycloak
+            String adminUrl = keycloakUrl + "/admin/realms/" + realm + "/users";
+
+            Map<String, Object> userRep = new LinkedHashMap<>();
+            userRep.put("username", email);
+            userRep.put("email", email);
+            userRep.put("firstName", firstName);
+            userRep.put("lastName", lastName);
+            userRep.put("enabled", true);
+            userRep.put("emailVerified", false);
+            userRep.put("credentials", List.of(Map.of(
+                    "type", "password",
+                    "value", password,
+                    "temporary", false
+            )));
+
+            HttpHeaders adminHeaders = new HttpHeaders();
+            adminHeaders.setContentType(MediaType.APPLICATION_JSON);
+            adminHeaders.setBearerAuth(adminToken);
+
+            ResponseEntity<String> createResponse = restTemplate.exchange(
+                    adminUrl, HttpMethod.POST,
+                    new HttpEntity<>(userRep, adminHeaders),
+                    String.class);
+
+            if (createResponse.getStatusCode() == HttpStatus.CONFLICT) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                        "error", Map.of("code", "USER_EXISTS",
+                                "message", "An account with this email already exists")));
+            }
+
+            if (!createResponse.getStatusCode().is2xxSuccessful()) {
+                log.error("Keycloak user creation failed: {} {}", createResponse.getStatusCode(), createResponse.getBody());
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                        "error", Map.of("code", "REGISTRATION_FAILED",
+                                "message", "Failed to create account")));
+            }
+
+            // 3. Get the created user's ID from the Location header
+            String locationHeader = createResponse.getHeaders().getFirst("Location");
+            String userId = locationHeader != null
+                    ? locationHeader.substring(locationHeader.lastIndexOf("/") + 1)
+                    : null;
+
+            // 4. Assign realm role if we have the user ID
+            if (userId != null && !role.equals("default")) {
+                try {
+                    // Get the role representation
+                    String rolesUrl = keycloakUrl + "/admin/realms/" + realm + "/roles/" + role;
+                    ResponseEntity<JsonNode> roleResponse = restTemplate.exchange(
+                            rolesUrl, HttpMethod.GET,
+                            new HttpEntity<>(adminHeaders),
+                            JsonNode.class);
+
+                    if (roleResponse.getStatusCode().is2xxSuccessful() && roleResponse.getBody() != null) {
+                        // Assign role to user
+                        String assignUrl = keycloakUrl + "/admin/realms/" + realm + "/users/" + userId + "/role-mappings/realm";
+                        restTemplate.exchange(
+                                assignUrl, HttpMethod.POST,
+                                new HttpEntity<>(List.of(roleResponse.getBody()), adminHeaders),
+                                String.class);
+                        log.info("Role {} assigned to user {}", role, userId);
+                    }
+                } catch (Exception e) {
+                    log.warn("Failed to assign role {} to user {}: {}", role, userId, e.getMessage());
+                }
+            }
+
+            log.info("User registered: email={}, role={}, keycloakId={}", email, role, userId);
+
+            // 5. Auto-login the new user
+            try {
+                String tokenUrl = keycloakUrl + "/realms/" + realm + "/protocol/openid-connect/token";
+                MultiValueMap<String, String> loginForm = new LinkedMultiValueMap<>();
+                loginForm.add("grant_type", "password");
+                loginForm.add("client_id", clientId);
+                loginForm.add("username", email);
+                loginForm.add("password", password);
+
+                HttpHeaders loginHeaders = new HttpHeaders();
+                loginHeaders.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+                ResponseEntity<JsonNode> loginResponse = restTemplate.exchange(
+                        tokenUrl, HttpMethod.POST,
+                        new HttpEntity<>(loginForm, loginHeaders),
+                        JsonNode.class);
+
+                if (loginResponse.getStatusCode().is2xxSuccessful() && loginResponse.getBody() != null) {
+                    JsonNode tokenData = loginResponse.getBody();
+                    String accessToken = tokenData.get("access_token").asText();
+                    String refreshToken = tokenData.has("refresh_token") ? tokenData.get("refresh_token").asText() : null;
+                    int expiresIn = tokenData.has("expires_in") ? tokenData.get("expires_in").asInt() : 28800;
+
+                    return buildLoginResponse(accessToken, refreshToken, expiresIn,
+                            userId != null ? userId : UUID.randomUUID().toString(),
+                            email, firstName + " " + lastName,
+                            List.of(role), determineActorType(List.of(role)),
+                            requestId, correlationId);
+                }
+            } catch (Exception e) {
+                log.warn("Auto-login after registration failed: {}", e.getMessage());
+            }
+
+            // Registration succeeded but auto-login failed — return success without token
+            Map<String, Object> response = new LinkedHashMap<>();
+            response.put("data", Map.of(
+                    "id", userId != null ? userId : "registered",
+                    "type", "registration",
+                    "attributes", Map.of(
+                            "status", "REGISTERED",
+                            "email", email,
+                            "role", role,
+                            "message", "Account created. Please sign in."
+                    )
+            ));
+            response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+
+        } catch (org.springframework.web.client.HttpClientErrorException e) {
+            if (e.getStatusCode() == HttpStatus.CONFLICT) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                        "error", Map.of("code", "USER_EXISTS",
+                                "message", "An account with this email already exists")));
+            }
+            log.error("Registration error: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                    "error", Map.of("code", "REGISTRATION_FAILED", "message", "Registration failed")));
+        } catch (Exception e) {
+            log.error("Registration error: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                    "error", Map.of("code", "REGISTRATION_FAILED", "message", "Registration failed")));
+        }
+    }
+
+    /**
+     * Get a service account access token for Keycloak admin operations.
+     */
+    private String getServiceAccountToken() {
+        try {
+            String tokenUrl = keycloakUrl + "/realms/" + realm + "/protocol/openid-connect/token";
+
+            MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
+            formData.add("grant_type", "client_credentials");
+            formData.add("client_id", backendClientId);
+            formData.add("client_secret", backendSecret);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+            ResponseEntity<JsonNode> response = restTemplate.exchange(
+                    tokenUrl, HttpMethod.POST,
+                    new HttpEntity<>(formData, headers),
+                    JsonNode.class);
+
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                return response.getBody().get("access_token").asText();
+            }
+        } catch (Exception e) {
+            log.error("Failed to get service account token: {}", e.getMessage());
+        }
+        return null;
     }
 
     private String determineActorType(List<String> roles) {

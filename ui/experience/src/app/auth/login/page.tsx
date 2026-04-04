@@ -192,6 +192,15 @@ export default function LoginPage() {
           </Link>
         </div>
       </div>
+
+      <div className="mt-4 text-center">
+        <p className="text-sm text-gray-500">
+          Don&apos;t have an account?{" "}
+          <Link href="/auth/register" className="text-blue-600 hover:text-blue-800 font-medium">
+            Create account
+          </Link>
+        </p>
+      </div>
     </AuthLayout>
   );
 }
