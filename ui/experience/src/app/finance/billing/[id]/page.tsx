@@ -6,7 +6,7 @@
  * Route: /finance/billing/[id] | pageTitle: "Bill Details"
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -150,6 +150,13 @@ export default function BillingDetailPage() {
   });
   const bill = data?.data;
   const payments: PaymentResource[] = paymentsData?.data ?? [];
+
+  // Default FULL payment amount to bill's totalPayable
+  useEffect(() => {
+    if (bill && paymentType === "FULL" && !paymentAmount) {
+      setPaymentAmount(bill.attributes.amount.toFixed(2));
+    }
+  }, [bill, paymentType, paymentAmount]);
 
   const status = bill?.attributes.status ?? "";
 
@@ -317,7 +324,12 @@ export default function BillingDetailPage() {
                       <div className="flex items-center gap-2">
                         <select
                           value={paymentType}
-                          onChange={(e) => setPaymentType(e.target.value)}
+                          onChange={(e) => {
+                            setPaymentType(e.target.value);
+                            if (e.target.value === "FULL" && bill) {
+                              setPaymentAmount(bill.attributes.amount.toFixed(2));
+                            }
+                          }}
                           className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                         >
                           <option value="FULL">Full Payment</option>
