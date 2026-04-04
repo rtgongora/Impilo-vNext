@@ -105,7 +105,7 @@ public class AdmissionWorkflow {
         payload.put("admissionId", admission.getId().toString());
         payload.put("journeyId", journeyId);
         payload.put("patientCpid", journey.getPatientCpid());
-        payload.put("wardId", wardId.toString());
+        payload.put("wardId", wardId != null ? wardId.toString() : null);
         payload.put("bedId", bedId != null ? bedId.toString() : null);
         payload.put("requestedBy", ctx.actorId());
         writeOutbox("ADMISSION", admission.getId().toString(),

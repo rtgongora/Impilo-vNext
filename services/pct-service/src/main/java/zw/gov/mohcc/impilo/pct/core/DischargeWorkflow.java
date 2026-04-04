@@ -85,17 +85,23 @@ public class DischargeWorkflow {
     private final DischargeCaseRepository dischargeCaseRepository;
     private final JourneyRepository journeyRepository;
     private final JourneyStateMachine journeyStateMachine;
+    private final AdmissionWorkflow admissionWorkflow;
+    private final TransferService transferService;
     private final EventOutboxRepository outboxRepository;
     private final ObjectMapper objectMapper;
 
     public DischargeWorkflow(DischargeCaseRepository dischargeCaseRepository,
                              JourneyRepository journeyRepository,
                              JourneyStateMachine journeyStateMachine,
+                             AdmissionWorkflow admissionWorkflow,
+                             TransferService transferService,
                              EventOutboxRepository outboxRepository,
                              ObjectMapper objectMapper) {
         this.dischargeCaseRepository = dischargeCaseRepository;
         this.journeyRepository = journeyRepository;
         this.journeyStateMachine = journeyStateMachine;
+        this.admissionWorkflow = admissionWorkflow;
+        this.transferService = transferService;
         this.outboxRepository = outboxRepository;
         this.objectMapper = objectMapper;
     }
@@ -243,21 +249,57 @@ public class DischargeWorkflow {
 
         dischargeCase = dischargeCaseRepository.save(dischargeCase);
 
-        // Transition journey to the disposition-appropriate terminal state
-        JourneyEntity journey = journeyRepository.findByJourneyId(dischargeCase.getJourneyId())
+        String journeyId = dischargeCase.getJourneyId();
+        String dtype = dischargeCase.getDischargeType();
+        JourneyState terminalState = resolveTerminalState(dtype);
+
+        JourneyEntity journey = journeyRepository.findByJourneyId(journeyId)
                 .orElseThrow(() -> new IllegalStateException(
-                        "Journey not found for discharge case: " + dischargeCase.getJourneyId()));
-        JourneyState terminalState = resolveTerminalState(dischargeCase.getDischargeType());
+                        "Journey not found for discharge case: " + journeyId));
+
+        // Transition journey to the disposition-appropriate terminal state
         journeyStateMachine.transition(journey, terminalState);
+
+        // Invoke downstream workflows for disposition types that require them.
+        // These run AFTER the journey terminal transition because they represent
+        // the NEXT phase of the patient's care, not this encounter's conclusion.
+        if ("ADMIT".equalsIgnoreCase(dtype)) {
+            try {
+                // Create an admission record. Ward/bed not known at disposition time —
+                // admission starts in REQUESTED status, assigned later by the receiving ward.
+                // We use the facility ID as a placeholder ward (the bed management system
+                // will assign the actual ward/bed when the admission is processed).
+                admissionWorkflow.requestAdmission(journeyId, journey.getFacilityId(), null);
+                log.info("Admission requested as part of ADMIT disposition for journey={}", journeyId);
+            } catch (Exception e) {
+                // Non-blocking: the admission workflow is a downstream consequence,
+                // not a prerequisite for completing the discharge/disposition.
+                log.warn("Admission creation on ADMIT disposition failed (non-blocking): {}", e.getMessage());
+            }
+        } else if ("TRANSFER".equalsIgnoreCase(dtype)) {
+            // Transfer requires an active admission. If the patient was in
+            // outpatient/ER without admission, the state transition to TRANSFERRED
+            // is sufficient — no transfer record is created.
+            try {
+                transferService.requestTransfer(journeyId, journey.getFacilityId(), null, "INTER_FACILITY");
+                log.info("Transfer requested as part of TRANSFER disposition for journey={}", journeyId);
+            } catch (IllegalStateException e) {
+                // Expected if no active admission exists (outpatient transfer)
+                log.info("No active admission for transfer record (outpatient path): {}", e.getMessage());
+            } catch (Exception e) {
+                log.warn("Transfer creation on TRANSFER disposition failed (non-blocking): {}", e.getMessage());
+            }
+        }
 
         writeOutbox("DISCHARGE", caseId.toString(), "DISCHARGE_COMPLETED", toJson(Map.of(
                 "caseId", caseId.toString(),
-                "journeyId", dischargeCase.getJourneyId(),
-                "dischargeType", dischargeCase.getDischargeType(),
+                "journeyId", journeyId,
+                "dischargeType", dtype,
                 "terminalState", terminalState.name(),
                 "closedAt", dischargeCase.getClosedAt().toString())));
 
-        log.info("Discharge completed: case={}, journey={}", caseId, dischargeCase.getJourneyId());
+        log.info("Discharge completed: case={}, journey={}, terminal={}",
+                caseId, journeyId, terminalState);
 
         return dischargeCase;
     }
