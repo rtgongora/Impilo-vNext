@@ -40,9 +40,16 @@ export default function TriageQueuePage() {
   const [acuity, setAcuity] = useState<number | null>(null);
   const [dangerSigns, setDangerSigns] = useState<Record<string, boolean>>({});
   const [notes, setNotes] = useState("");
+  // Quick triage vitals
+  const [vSystolic, setVSystolic] = useState("");
+  const [vDiastolic, setVDiastolic] = useState("");
+  const [vHR, setVHR] = useState("");
+  const [vTemp, setVTemp] = useState("");
+  const [vSpO2, setVSpO2] = useState("");
+  const [vRR, setVRR] = useState("");
 
   const triageMutation = useMutation({
-    mutationFn: (payload: { id: string; acuity: number; danger_signs: Array<{ name: string; present: boolean }>; notes: string | null; triaged_by: string; triaged_by_name: string }) =>
+    mutationFn: (payload: { id: string; acuity: number; danger_signs: Array<{ name: string; present: boolean }>; vitals: Record<string, number | null> | null; notes: string | null; triaged_by: string; triaged_by_name: string }) =>
       apiClient.post<ApiResponse<unknown>>(`/internal/v1/queue/entries/${payload.id}/triage`, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["queue-entries"] });
@@ -50,6 +57,7 @@ export default function TriageQueuePage() {
       setAcuity(null);
       setDangerSigns({});
       setNotes("");
+      setVSystolic(""); setVDiastolic(""); setVHR(""); setVTemp(""); setVSpO2(""); setVRR("");
     },
   });
 
@@ -67,10 +75,21 @@ export default function TriageQueuePage() {
     if (!triagingEntry || acuity == null) return;
     const activeDangerSigns = Object.entries(dangerSigns)
       .map(([name, present]) => ({ name, present }));
+    const toNum = (v: string) => (v.trim() === "" ? null : Number(v));
+    const vitals: Record<string, number | null> = {
+      systolic: toNum(vSystolic),
+      diastolic: toNum(vDiastolic),
+      heart_rate: toNum(vHR),
+      temperature: toNum(vTemp),
+      oxygen_saturation: toNum(vSpO2),
+      respiratory_rate: toNum(vRR),
+    };
+    const hasVitals = Object.values(vitals).some((v) => v != null);
     triageMutation.mutate({
       id: triagingEntry.id,
       acuity,
       danger_signs: activeDangerSigns,
+      vitals: hasVitals ? vitals : null,
       notes: notes || null,
       triaged_by: user?.id ?? "system",
       triaged_by_name: user?.displayName ?? user?.email ?? "",
@@ -148,6 +167,43 @@ export default function TriageQueuePage() {
                         </button>
                       );
                     })}
+                  </div>
+                </div>
+
+                {/* Quick Triage Vitals */}
+                <div className="mb-4">
+                  <label className="block text-xs font-medium text-gray-600 mb-2">Triage Vitals</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <label className="block text-[10px] text-gray-500 mb-0.5">Systolic</label>
+                      <input type="number" value={vSystolic} onChange={(e) => setVSystolic(e.target.value)} placeholder="mmHg"
+                        className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-amber-500" />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] text-gray-500 mb-0.5">Diastolic</label>
+                      <input type="number" value={vDiastolic} onChange={(e) => setVDiastolic(e.target.value)} placeholder="mmHg"
+                        className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-amber-500" />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] text-gray-500 mb-0.5">Heart Rate</label>
+                      <input type="number" value={vHR} onChange={(e) => setVHR(e.target.value)} placeholder="bpm"
+                        className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-amber-500" />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] text-gray-500 mb-0.5">Temperature</label>
+                      <input type="number" step="0.1" value={vTemp} onChange={(e) => setVTemp(e.target.value)} placeholder="°C"
+                        className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-amber-500" />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] text-gray-500 mb-0.5">SpO₂</label>
+                      <input type="number" value={vSpO2} onChange={(e) => setVSpO2(e.target.value)} placeholder="%"
+                        className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-amber-500" />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] text-gray-500 mb-0.5">Resp Rate</label>
+                      <input type="number" value={vRR} onChange={(e) => setVRR(e.target.value)} placeholder="/min"
+                        className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-amber-500" />
+                    </div>
                   </div>
                 </div>
 

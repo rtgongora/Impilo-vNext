@@ -13,11 +13,24 @@ import { PageShell } from "@/components/PageShell";
 import { useQueueEntries, useCallPatient } from "@/hooks/queries/useQueue";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 
-const PRIORITY_LABELS: Record<number, { label: string; className: string }> = {
-  1: { label: "Emergency", className: "bg-red-100 text-red-700" },
-  2: { label: "Urgent", className: "bg-orange-100 text-orange-700" },
-  3: { label: "Normal", className: "bg-blue-100 text-blue-700" },
-  4: { label: "Low", className: "bg-gray-100 text-gray-600" },
+const PRIORITY_LABELS: Record<string, { label: string; className: string }> = {
+  EMERGENCY: { label: "Emergency", className: "bg-red-100 text-red-700" },
+  URGENT: { label: "Urgent", className: "bg-orange-100 text-orange-700" },
+  NORMAL: { label: "Normal", className: "bg-blue-100 text-blue-700" },
+  LOW: { label: "Low", className: "bg-gray-100 text-gray-600" },
+  // Numeric fallbacks for backward compat
+  "1": { label: "Emergency", className: "bg-red-100 text-red-700" },
+  "2": { label: "Urgent", className: "bg-orange-100 text-orange-700" },
+  "3": { label: "Normal", className: "bg-blue-100 text-blue-700" },
+  "4": { label: "Low", className: "bg-gray-100 text-gray-600" },
+};
+
+const TRIAGE_CATEGORY_STYLES: Record<string, string> = {
+  RED: "bg-red-500 text-white",
+  ORANGE: "bg-orange-500 text-white",
+  YELLOW: "bg-yellow-400 text-black",
+  GREEN: "bg-green-500 text-white",
+  BLUE: "bg-blue-500 text-white",
 };
 
 const STATUS_STYLES: Record<string, string> = {
@@ -96,21 +109,25 @@ export default function QueuePage() {
               <thead>
                 <tr className="border-b bg-gray-50">
                   <th className="text-left px-4 py-3 font-medium text-gray-600">Patient</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Queue Type</th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-600">Triage</th>
                   <th className="text-left px-4 py-3 font-medium text-gray-600">Priority</th>
                   <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Arrival Time</th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-600">Arrival</th>
                   <th className="text-right px-4 py-3 font-medium text-gray-600">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {entries.map((entry) => {
-                  const priority = PRIORITY_LABELS[entry.attributes.priority] ?? {
-                    label: `P${entry.attributes.priority}`,
+                  const priorityKey = String(entry.attributes.priority);
+                  const priority = PRIORITY_LABELS[priorityKey] ?? {
+                    label: priorityKey,
                     className: "bg-gray-100 text-gray-600",
                   };
                   const statusStyle =
                     STATUS_STYLES[entry.attributes.status] ?? "bg-gray-100 text-gray-600";
+                  const triageCat = (entry.attributes as Record<string, unknown>).triage_category as string
+                    ?? (entry.attributes as Record<string, unknown>).triageCategory as string;
+                  const triageStyle = triageCat ? TRIAGE_CATEGORY_STYLES[triageCat] ?? "" : "";
 
                   return (
                     <tr key={entry.id} className="hover:bg-gray-50 transition-colors">
@@ -118,8 +135,14 @@ export default function QueuePage() {
                         {(entry.attributes as Record<string, unknown>).patientName as string ??
                           entry.attributes.patientId}
                       </td>
-                      <td className="px-4 py-3 text-gray-600">
-                        {(entry.attributes as Record<string, unknown>).queueType as string ?? "General"}
+                      <td className="px-4 py-3">
+                        {triageCat ? (
+                          <span className={`inline-block w-6 h-6 rounded-full text-center text-xs font-bold leading-6 ${triageStyle}`}>
+                            {triageCat.charAt(0)}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-gray-400">—</span>
+                        )}
                       </td>
                       <td className="px-4 py-3">
                         <span

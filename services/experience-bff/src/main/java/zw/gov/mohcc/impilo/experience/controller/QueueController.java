@@ -73,7 +73,9 @@ public class QueueController {
             @RequestParam(required = false) String status,
             @RequestParam(required = false, name = "queue_type") String queueType) {
 
-        PageRequest pageable = PageRequest.of(page, Math.min(size, 100), Sort.by("createdAt").descending());
+        // Sort by arrival time ascending (FIFO — longest waiting first)
+        PageRequest pageable = PageRequest.of(page, Math.min(size, 100),
+                Sort.by(Sort.Order.asc("arrivalTime")));
 
         Page<QueueEntry> result = queueEntryRepository.findByFilters(
                 tenantId, facilityId, status, queueType, pageable);
