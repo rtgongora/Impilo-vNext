@@ -12,6 +12,7 @@ import Link from "next/link";
 import {
   ArrowLeft, Loader2, Receipt, AlertCircle, FileText,
   Send, CheckCircle, Lock, FileOutput, CreditCard, DollarSign,
+  XCircle, RefreshCw,
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
@@ -138,6 +139,13 @@ export default function BillingDetailPage() {
       refetchPayments();
       queryClient.invalidateQueries({ queryKey: ["finance-billing", id] });
       setPaymentAmount("");
+    },
+  });
+  const cancelPayment = useMutation({
+    mutationFn: (paymentId: string) =>
+      apiClient.post(`/internal/v1/finance/billing/${id}/payments/${paymentId}/cancel`),
+    onSuccess: () => {
+      refetchPayments();
     },
   });
   const bill = data?.data;
@@ -442,12 +450,22 @@ export default function BillingDetailPage() {
 
             {/* Payments */}
             <div className="bg-white rounded-lg border border-gray-200">
-              <div className="px-5 py-4 border-b flex items-center gap-2">
-                <DollarSign className="w-4 h-4 text-gray-500" />
-                <h3 className="text-sm font-medium text-gray-900">Payments</h3>
-                {payments.length > 0 && (
-                  <span className="text-xs text-gray-400">({payments.length})</span>
-                )}
+              <div className="px-5 py-4 border-b flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <DollarSign className="w-4 h-4 text-gray-500" />
+                  <h3 className="text-sm font-medium text-gray-900">Payments</h3>
+                  {payments.length > 0 && (
+                    <span className="text-xs text-gray-400">({payments.length})</span>
+                  )}
+                </div>
+                <button
+                  onClick={() => refetchPayments()}
+                  className="inline-flex items-center gap-1 px-2 py-1 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
+                  title="Refresh payment status"
+                >
+                  <RefreshCw className="w-3 h-3" />
+                  Refresh
+                </button>
               </div>
               {payments.length === 0 ? (
                 <div className="p-8 text-center">
@@ -490,6 +508,19 @@ export default function BillingDetailPage() {
                             minimumFractionDigits: 2,
                           })}
                         </span>
+                        {payment.attributes.status === "PENDING" && (
+                          <button
+                            onClick={() => cancelPayment.mutate(payment.id)}
+                            disabled={cancelPayment.isPending}
+                            className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 disabled:opacity-50 transition-colors"
+                            title="Cancel this payment"
+                          >
+                            {cancelPayment.isPending
+                              ? <Loader2 className="w-3 h-3 animate-spin" />
+                              : <XCircle className="w-3 h-3" />}
+                            Cancel
+                          </button>
+                        )}
                       </div>
                     </div>
                   ))}
