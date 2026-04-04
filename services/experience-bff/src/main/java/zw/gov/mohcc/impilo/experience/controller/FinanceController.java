@@ -474,17 +474,12 @@ public class FinanceController {
     // ── Helpers ───────────────────────────────────────────────────────
 
     /**
-     * Maps COSTA BillStatus values to the simpler status set the billing UI understands.
+     * Maps COSTA BillStatus values to UI-visible status. Passes through
+     * the real status so the UI can show lifecycle-aware action buttons.
      */
     private String mapBillStatusToUi(String costaStatus) {
         if (costaStatus == null) return "DRAFT";
-        return switch (costaStatus) {
-            case "DRAFT", "ACCUMULATING" -> "DRAFT";
-            case "APPROVAL_PENDING" -> "ISSUED";
-            case "APPROVED", "FINAL" -> "ISSUED";
-            case "VOID", "ADJUSTED" -> "OVERDUE";
-            default -> costaStatus;
-        };
+        return costaStatus;
     }
 
     /**

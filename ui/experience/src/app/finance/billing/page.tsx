@@ -37,9 +37,12 @@ function useBilling() {
 
 const STATUS_STYLES: Record<string, string> = {
   DRAFT: "bg-gray-100 text-gray-600",
-  ISSUED: "bg-blue-100 text-blue-700",
-  PAID: "bg-green-100 text-green-700",
-  OVERDUE: "bg-red-100 text-red-700",
+  ACCUMULATING: "bg-yellow-100 text-yellow-700",
+  APPROVAL_PENDING: "bg-orange-100 text-orange-700",
+  APPROVED: "bg-blue-100 text-blue-700",
+  FINAL: "bg-green-100 text-green-700",
+  VOID: "bg-red-100 text-red-700",
+  ADJUSTED: "bg-purple-100 text-purple-700",
 };
 
 export default function BillingPage() {

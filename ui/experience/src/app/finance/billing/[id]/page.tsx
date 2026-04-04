@@ -1,14 +1,19 @@
 "use client";
 
 /**
- * Billing Detail — Single bill view with line items and party allocations.
+ * Billing Detail — Single bill view with line items, party allocations,
+ * and lifecycle action buttons (submit, approve, finalize, invoice).
  * Route: /finance/billing/[id] | pageTitle: "Bill Details"
  */
 
+import { useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Loader2, Receipt, AlertCircle, FileText } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import {
+  ArrowLeft, Loader2, Receipt, AlertCircle, FileText,
+  Send, CheckCircle, Lock, FileOutput,
+} from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
@@ -57,6 +62,11 @@ const STATUS_STYLES: Record<string, string> = {
   ISSUED: "bg-blue-100 text-blue-700",
   PAID: "bg-green-100 text-green-700",
   OVERDUE: "bg-red-100 text-red-700",
+  ACCUMULATING: "bg-yellow-100 text-yellow-700",
+  APPROVAL_PENDING: "bg-orange-100 text-orange-700",
+  APPROVED: "bg-blue-100 text-blue-700",
+  FINAL: "bg-green-100 text-green-700",
+  VOID: "bg-red-100 text-red-700",
 };
 
 function useBillingDetail(id: string) {
@@ -67,12 +77,28 @@ function useBillingDetail(id: string) {
   });
 }
 
+function useBillAction(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ action, body }: { action: string; body?: Record<string, string> }) =>
+      apiClient.post(`/internal/v1/finance/billing/${id}/${action}`, body ?? {}),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["finance-billing", id] });
+      queryClient.invalidateQueries({ queryKey: ["finance-billing"] });
+    },
+  });
+}
+
 export default function BillingDetailPage() {
   const params = useParams();
   const id = params.id as string;
+  const [approvalNote, setApprovalNote] = useState("");
 
   const { data, isLoading, error } = useBillingDetail(id);
+  const billAction = useBillAction(id);
   const bill = data?.data;
+
+  const status = bill?.attributes.status ?? "";
 
   return (
     <AppLayout>
@@ -120,10 +146,10 @@ export default function BillingDetailPage() {
                 </div>
                 <span
                   className={`inline-block px-2.5 py-1 text-xs rounded-full font-medium ${
-                    STATUS_STYLES[bill.attributes.status] ?? "bg-gray-100 text-gray-600"
+                    STATUS_STYLES[status] ?? "bg-gray-100 text-gray-600"
                   }`}
                 >
-                  {bill.attributes.status}
+                  {status.replace(/_/g, " ")}
                 </span>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4 pt-4 border-t">
@@ -157,6 +183,88 @@ export default function BillingDetailPage() {
                     })}
                   </p>
                 </div>
+              </div>
+            </div>
+
+            {/* Bill Actions */}
+            <div className="bg-white rounded-lg border border-gray-200 p-5">
+              <h3 className="text-sm font-medium text-gray-900 mb-3">Actions</h3>
+
+              {billAction.isError && (
+                <div className="mb-3 p-3 rounded-lg bg-red-50 border border-red-200">
+                  <p className="text-sm text-red-700">
+                    Action failed. The bill may not be in the required state for this operation.
+                  </p>
+                </div>
+              )}
+
+              {billAction.isSuccess && (
+                <div className="mb-3 p-3 rounded-lg bg-green-50 border border-green-200">
+                  <p className="text-sm text-green-700">Action completed successfully.</p>
+                </div>
+              )}
+
+              <div className="flex flex-wrap gap-3">
+                {(status === "DRAFT" || status === "ACCUMULATING") && (
+                  <button
+                    onClick={() => billAction.mutate({ action: "submit" })}
+                    disabled={billAction.isPending}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                  >
+                    {billAction.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                    Submit for Approval
+                  </button>
+                )}
+
+                {status === "APPROVAL_PENDING" && (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      placeholder="Approval note (optional)"
+                      value={approvalNote}
+                      onChange={(e) => setApprovalNote(e.target.value)}
+                      className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-64"
+                    />
+                    <button
+                      onClick={() => billAction.mutate({ action: "approve", body: { note: approvalNote } })}
+                      disabled={billAction.isPending}
+                      className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
+                    >
+                      {billAction.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
+                      Approve
+                    </button>
+                  </div>
+                )}
+
+                {status === "APPROVED" && (
+                  <button
+                    onClick={() => billAction.mutate({ action: "finalize" })}
+                    disabled={billAction.isPending}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 disabled:opacity-50 transition-colors"
+                  >
+                    {billAction.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Lock className="w-4 h-4" />}
+                    Finalize Bill
+                  </button>
+                )}
+
+                {status === "FINAL" && (
+                  <button
+                    onClick={() => billAction.mutate({ action: "invoice" })}
+                    disabled={billAction.isPending}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-amber-600 rounded-lg hover:bg-amber-700 disabled:opacity-50 transition-colors"
+                  >
+                    {billAction.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileOutput className="w-4 h-4" />}
+                    Issue Invoice
+                  </button>
+                )}
+
+                {status === "VOID" && (
+                  <p className="text-sm text-gray-500">This bill has been voided. No actions available.</p>
+                )}
+
+                {!["DRAFT", "ACCUMULATING", "APPROVAL_PENDING", "APPROVED", "FINAL", "VOID"].includes(status) && (
+                  <p className="text-sm text-gray-500">No actions available for this bill status.</p>
+                )}
               </div>
             </div>
 
