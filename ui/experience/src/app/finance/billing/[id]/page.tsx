@@ -11,7 +11,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft, Loader2, Receipt, AlertCircle, FileText,
-  Send, CheckCircle, Lock, FileOutput,
+  Send, CheckCircle, Lock, FileOutput, CreditCard, DollarSign,
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
@@ -75,6 +75,39 @@ function useBillingDetail(id: string) {
   });
 }
 
+interface PaymentResource {
+  id: string;
+  type: "payment";
+  attributes: {
+    paymentNumber: string;
+    payer: string;
+    amount: number;
+    currency: string;
+    method: string;
+    status: string;
+    date: string;
+    paidAmount: number;
+    billId: string;
+    [key: string]: unknown;
+  };
+}
+
+const PAYMENT_STATUS_STYLES: Record<string, string> = {
+  PENDING: "bg-yellow-100 text-yellow-700",
+  PAID: "bg-green-100 text-green-700",
+  COMPLETED: "bg-green-100 text-green-700",
+  FAILED: "bg-red-100 text-red-700",
+  CANCELLED: "bg-gray-100 text-gray-600",
+};
+
+function useBillPayments(billId: string) {
+  return useQuery<{ data: PaymentResource[] }>({
+    queryKey: ["finance-billing-payments", billId],
+    queryFn: () => apiClient.get(`/internal/v1/finance/billing/${billId}/payments`),
+    enabled: !!billId,
+  });
+}
+
 function useBillAction(id: string) {
   const queryClient = useQueryClient();
   return useMutation({
@@ -91,10 +124,24 @@ export default function BillingDetailPage() {
   const params = useParams();
   const id = params.id as string;
   const [approvalNote, setApprovalNote] = useState("");
+  const [paymentAmount, setPaymentAmount] = useState("");
+  const [paymentType, setPaymentType] = useState("FULL");
 
   const { data, isLoading, error } = useBillingDetail(id);
+  const { data: paymentsData, refetch: refetchPayments } = useBillPayments(id);
   const billAction = useBillAction(id);
+  const queryClient = useQueryClient();
+  const createPayment = useMutation({
+    mutationFn: (body: { paymentType: string; amount: string }) =>
+      apiClient.post(`/internal/v1/finance/billing/${id}/payment`, body),
+    onSuccess: () => {
+      refetchPayments();
+      queryClient.invalidateQueries({ queryKey: ["finance-billing", id] });
+      setPaymentAmount("");
+    },
+  });
   const bill = data?.data;
+  const payments: PaymentResource[] = paymentsData?.data ?? [];
 
   const status = bill?.attributes.status ?? "";
 
@@ -246,14 +293,57 @@ export default function BillingDetailPage() {
                 )}
 
                 {status === "FINAL" && (
-                  <button
-                    onClick={() => billAction.mutate({ action: "invoice" })}
-                    disabled={billAction.isPending}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-amber-600 rounded-lg hover:bg-amber-700 disabled:opacity-50 transition-colors"
-                  >
-                    {billAction.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileOutput className="w-4 h-4" />}
-                    Issue Invoice
-                  </button>
+                  <div className="flex flex-col gap-3 w-full">
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => billAction.mutate({ action: "invoice" })}
+                        disabled={billAction.isPending}
+                        className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-amber-600 rounded-lg hover:bg-amber-700 disabled:opacity-50 transition-colors"
+                      >
+                        {billAction.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileOutput className="w-4 h-4" />}
+                        Issue Invoice
+                      </button>
+                    </div>
+                    <div className="pt-3 border-t border-gray-200">
+                      <p className="text-xs font-medium text-gray-600 mb-2">Create Payment Intent</p>
+                      <div className="flex items-center gap-2">
+                        <select
+                          value={paymentType}
+                          onChange={(e) => setPaymentType(e.target.value)}
+                          className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="FULL">Full Payment</option>
+                          <option value="DEPOSIT">Deposit</option>
+                          <option value="REMAINDER">Remainder</option>
+                          <option value="THIRD_PARTY">Third Party</option>
+                          <option value="REMITTANCE">Remittance</option>
+                        </select>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0.01"
+                          placeholder="Amount"
+                          value={paymentAmount}
+                          onChange={(e) => setPaymentAmount(e.target.value)}
+                          className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 w-36"
+                        />
+                        <button
+                          onClick={() => createPayment.mutate({ paymentType, amount: paymentAmount })}
+                          disabled={createPayment.isPending || !paymentAmount}
+                          className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 disabled:opacity-50 transition-colors"
+                        >
+                          {createPayment.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
+                          Create Payment
+                        </button>
+                      </div>
+                      {createPayment.isError && (
+                        <p className="mt-2 text-xs text-red-600">Failed to create payment intent.</p>
+                      )}
+                      {createPayment.isSuccess && (
+                        <p className="mt-2 text-xs text-green-600">Payment intent created successfully.</p>
+                      )}
+                    </div>
+                  </div>
                 )}
 
                 {status === "VOID" && (
@@ -349,6 +439,63 @@ export default function BillingDetailPage() {
                 </div>
               </div>
             )}
+
+            {/* Payments */}
+            <div className="bg-white rounded-lg border border-gray-200">
+              <div className="px-5 py-4 border-b flex items-center gap-2">
+                <DollarSign className="w-4 h-4 text-gray-500" />
+                <h3 className="text-sm font-medium text-gray-900">Payments</h3>
+                {payments.length > 0 && (
+                  <span className="text-xs text-gray-400">({payments.length})</span>
+                )}
+              </div>
+              {payments.length === 0 ? (
+                <div className="p-8 text-center">
+                  <CreditCard className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                  <p className="text-gray-400 text-sm">No payments recorded</p>
+                  <p className="text-gray-400 text-xs mt-1">
+                    {status === "FINAL"
+                      ? "Use the payment form above to create a payment intent."
+                      : "Payment intents can be created after the bill is finalized."}
+                  </p>
+                </div>
+              ) : (
+                <div className="divide-y divide-gray-100">
+                  {payments.map((payment) => (
+                    <div key={payment.id} className="px-5 py-3 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">
+                            {payment.attributes.paymentNumber}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {payment.attributes.method} &middot;{" "}
+                            {payment.attributes.date
+                              ? new Date(payment.attributes.date).toLocaleString()
+                              : "—"}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span
+                          className={`inline-block px-2 py-0.5 text-xs rounded-full font-medium ${
+                            PAYMENT_STATUS_STYLES[payment.attributes.status] ?? "bg-gray-100 text-gray-600"
+                          }`}
+                        >
+                          {payment.attributes.status}
+                        </span>
+                        <span className="text-sm font-mono font-semibold text-gray-900">
+                          {payment.attributes.currency}{" "}
+                          {payment.attributes.amount.toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                          })}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </PageShell>
