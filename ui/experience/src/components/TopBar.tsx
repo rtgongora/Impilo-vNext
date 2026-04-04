@@ -28,7 +28,7 @@ const EHR_ACTIONS = [
   { label: "Pharmacy", href: "/pharmacy/dispense", icon: Pill },
   { label: "Payments", href: "/finance/billing", icon: CreditCard },
   { label: "Orders", href: "", icon: ClipboardList, dynamic: true },
-  { label: "Referrals", href: "", icon: ArrowRightLeft, dynamic: true },
+  { label: "Consults", href: "", icon: ArrowRightLeft, dynamic: true },
   { label: "Teleconsult", href: "/telemedicine", icon: Video },
   { label: "Shift Handoff", href: "/shift/handover", icon: Timer },
 ] as const;
@@ -45,7 +45,7 @@ export function TopBar() {
   function getActionHref(action: (typeof EHR_ACTIONS)[number]): string {
     if (action.dynamic && patientId) {
       if (action.label === "Orders") return `/ehr/${patientId}/orders`;
-      if (action.label === "Referrals") return `/ehr/${patientId}/referrals`;
+      if (action.label === "Consults") return `/ehr/${patientId}/consults`;
     }
     return action.href;
   }

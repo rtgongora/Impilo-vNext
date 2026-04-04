@@ -250,10 +250,10 @@ export default function EncounterPage() {
                       <Pill className="w-3 h-3" /> Rx
                     </Link>
                     <Link
-                      href={`/ehr/${patientId}/referrals`}
+                      href={`/ehr/${patientId}/consults`}
                       className="px-3 py-1.5 bg-orange-50 text-orange-700 text-xs font-medium rounded-lg hover:bg-orange-100 transition-colors flex items-center gap-1"
                     >
-                      <ArrowUpRight className="w-3 h-3" /> Referral
+                      <ArrowUpRight className="w-3 h-3" /> Consults
                     </Link>
                     <Link
                       href={`/ehr/${patientId}/discharge?encounterId=${encounterId}`}
