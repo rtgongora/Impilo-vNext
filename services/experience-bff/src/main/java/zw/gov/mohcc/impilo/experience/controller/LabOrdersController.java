@@ -293,13 +293,36 @@ public class LabOrdersController {
             @RequestHeader(CompanionHeaders.POD_ID) String podId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
-            @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey) {
+            @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
+            @RequestBody(required = false) Map<String, Object> body) {
 
         LabOrder order = labOrderRepository.findByIdAndTenantId(id, tenantId)
                 .orElseThrow(() -> new ResourceNotFoundException("Lab order not found: " + id));
 
         order.result();
         labOrderRepository.save(order);
+
+        // Store result data if provided
+        if (body != null) {
+            String resultDataJson = null;
+            try {
+                if (body.containsKey("result_data")) {
+                    resultDataJson = new com.fasterxml.jackson.databind.ObjectMapper()
+                            .writeValueAsString(body.get("result_data"));
+                }
+            } catch (Exception e) {
+                log.warn("Failed to serialize result data: {}", e.getMessage());
+            }
+            String resultNotes = body.containsKey("result_notes") ? (String) body.get("result_notes") : null;
+            String resultedBy = body.containsKey("resulted_by") ? (String) body.get("resulted_by") : null;
+            String resultedByName = body.containsKey("resulted_by_name") ? (String) body.get("resulted_by_name") : null;
+
+            jdbcTemplate.update("""
+                UPDATE lab_orders SET result_data = ?::jsonb, result_notes = ?,
+                    resulted_by = ?, resulted_by_name = ?
+                WHERE id = ? AND tenant_id = ?
+                """, resultDataJson, resultNotes, resultedBy, resultedByName, id, tenantId);
+        }
 
         outboxService.writeOutboxEvent(
                 "impilo.experience.lab-order.resulted.v1",
@@ -346,6 +369,24 @@ public class LabOrdersController {
         attributes.put("resulted_at", o.getResultedAt());
         attributes.put("created_at", o.getCreatedAt());
         attributes.put("updated_at", o.getUpdatedAt());
+
+        // Include result data for RESULTED orders (V12 columns via JDBC)
+        if ("RESULTED".equals(o.getStatus())) {
+            try {
+                List<Map<String, Object>> rows = jdbcTemplate.queryForList(
+                        "SELECT result_data, result_notes, resulted_by, resulted_by_name FROM lab_orders WHERE id = ?",
+                        o.getId());
+                if (!rows.isEmpty()) {
+                    Map<String, Object> row = rows.get(0);
+                    attributes.put("result_data", row.get("result_data"));
+                    attributes.put("result_notes", row.get("result_notes"));
+                    attributes.put("resulted_by", row.get("resulted_by"));
+                    attributes.put("resulted_by_name", row.get("resulted_by_name"));
+                }
+            } catch (Exception e) {
+                log.warn("Failed to load result data for order {}: {}", o.getId(), e.getMessage());
+            }
+        }
 
         Map<String, Object> resource = new LinkedHashMap<>();
         resource.put("id", o.getId().toString());

@@ -11,15 +11,23 @@ import {
   ClipboardList,
   Plus,
   Loader2,
-  TestTube2 } from "lucide-react";
+  TestTube2,
+  CheckCircle2,
+  Save,
+} from "lucide-react";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import {
   useLabOrders,
-  useCreateLabOrder } from "@/hooks/queries/useLabOrders";
+  useCreateLabOrder,
+  useCollectLabOrder,
+  useResultLabOrder,
+  type LabOrderResource,
+} from "@/hooks/queries/useLabOrders";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useEncounters } from "@/hooks/queries/useEncounters";
+import { apiClient, type ApiResponse } from "@/lib/api-client";
 
 const STATUS_BADGE: Record<string, string> = {
   ORDERED: "bg-blue-100 text-blue-700",
@@ -54,6 +62,15 @@ export default function OrdersPage() {
 
   const { data: ordersData, isLoading } = useLabOrders(patientId);
   const createOrder = useCreateLabOrder();
+  const collectOrder = useCollectLabOrder();
+
+  // Result entry state
+  const [resultingOrder, setResultingOrder] = useState<LabOrderResource | null>(null);
+  const [resultValues, setResultValues] = useState([
+    { name: "", value: "", unit: "", referenceRange: "", interpretation: "NORMAL" },
+  ]);
+  const [resultNotes, setResultNotes] = useState("");
+  const [resultSubmitting, setResultSubmitting] = useState(false);
 
   const orders = ordersData?.data ?? [];
 
@@ -273,6 +290,72 @@ export default function OrdersPage() {
             )}
 
             {/* Orders Table */}
+            {/* Result Entry Form */}
+            {resultingOrder && (
+              <div className="bg-white rounded-lg border-2 border-green-300 p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <TestTube2 className="w-5 h-5 text-green-600" />
+                    <h3 className="font-medium text-gray-900">
+                      Enter Results: {resultingOrder.attributes.testName}
+                    </h3>
+                  </div>
+                  <button onClick={() => { setResultingOrder(null); setResultValues([{ name: "", value: "", unit: "", referenceRange: "", interpretation: "NORMAL" }]); setResultNotes(""); }}
+                    className="text-xs text-gray-500 hover:text-gray-700">Cancel</button>
+                </div>
+                <div className="space-y-2 mb-3">
+                  {resultValues.map((rv, idx) => (
+                    <div key={idx} className="grid grid-cols-5 gap-2">
+                      <input type="text" value={rv.name} placeholder="Test name"
+                        onChange={(e) => { const n = [...resultValues]; n[idx] = { ...rv, name: e.target.value }; setResultValues(n); }}
+                        className="px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-green-500" />
+                      <input type="text" value={rv.value} placeholder="Value"
+                        onChange={(e) => { const n = [...resultValues]; n[idx] = { ...rv, value: e.target.value }; setResultValues(n); }}
+                        className="px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-green-500" />
+                      <input type="text" value={rv.unit} placeholder="Unit"
+                        onChange={(e) => { const n = [...resultValues]; n[idx] = { ...rv, unit: e.target.value }; setResultValues(n); }}
+                        className="px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-green-500" />
+                      <input type="text" value={rv.referenceRange} placeholder="Ref range"
+                        onChange={(e) => { const n = [...resultValues]; n[idx] = { ...rv, referenceRange: e.target.value }; setResultValues(n); }}
+                        className="px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-green-500" />
+                      <select value={rv.interpretation}
+                        onChange={(e) => { const n = [...resultValues]; n[idx] = { ...rv, interpretation: e.target.value }; setResultValues(n); }}
+                        className="px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-green-500">
+                        <option value="NORMAL">Normal</option>
+                        <option value="ABNORMAL">Abnormal</option>
+                        <option value="CRITICAL">Critical</option>
+                      </select>
+                    </div>
+                  ))}
+                  <button onClick={() => setResultValues([...resultValues, { name: "", value: "", unit: "", referenceRange: "", interpretation: "NORMAL" }])}
+                    className="text-xs text-blue-600 hover:text-blue-800">+ Add row</button>
+                </div>
+                <textarea value={resultNotes} onChange={(e) => setResultNotes(e.target.value)} rows={2} placeholder="Result notes..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 resize-none mb-3" />
+                <button
+                  onClick={async () => {
+                    setResultSubmitting(true);
+                    try {
+                      const validResults = resultValues.filter((rv) => rv.name.trim() && rv.value.trim());
+                      await apiClient.post(`/internal/v1/lab-orders/${resultingOrder.id}/result`, {
+                        result_data: validResults,
+                        result_notes: resultNotes || null,
+                        resulted_by: user?.id ?? "system",
+                        resulted_by_name: user?.displayName ?? user?.email ?? "",
+                      });
+                      setResultingOrder(null);
+                      setResultValues([{ name: "", value: "", unit: "", referenceRange: "", interpretation: "NORMAL" }]);
+                      setResultNotes("");
+                    } catch { /* handled by UI */ } finally { setResultSubmitting(false); }
+                  }}
+                  disabled={resultSubmitting || resultValues.every((rv) => !rv.name.trim())}
+                  className="w-full py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors"
+                >
+                  {resultSubmitting ? <><Loader2 className="w-4 h-4 animate-spin" /> Submitting...</> : <><Save className="w-4 h-4" /> Submit Results</>}
+                </button>
+              </div>
+            )}
+
             {orders.length === 0 ? (
               <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
                 <TestTube2 className="w-10 h-10 text-gray-300 mx-auto mb-3" />
@@ -304,6 +387,9 @@ export default function OrdersPage() {
                         </th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Date
+                        </th>
+                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Actions
                         </th>
                       </tr>
                     </thead>
@@ -344,6 +430,32 @@ export default function OrdersPage() {
                           </td>
                           <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
                             {new Date(order.attributes.createdAt).toLocaleDateString()}
+                          </td>
+                          <td className="px-4 py-3 text-right whitespace-nowrap">
+                            {order.attributes.status === "ORDERED" && (
+                              <button
+                                onClick={() => collectOrder.mutate({ id: order.id })}
+                                disabled={collectOrder.isPending}
+                                className="px-2.5 py-1 bg-yellow-100 text-yellow-700 text-xs font-medium rounded hover:bg-yellow-200 transition-colors"
+                              >
+                                Mark Collected
+                              </button>
+                            )}
+                            {order.attributes.status === "COLLECTED" && (
+                              <button
+                                onClick={() => {
+                                  setResultingOrder(order);
+                                }}
+                                className="px-2.5 py-1 bg-green-100 text-green-700 text-xs font-medium rounded hover:bg-green-200 transition-colors"
+                              >
+                                Enter Result
+                              </button>
+                            )}
+                            {order.attributes.status === "RESULTED" && (
+                              <span className="text-xs text-green-600 flex items-center gap-1 justify-end">
+                                <CheckCircle2 className="w-3 h-3" /> Complete
+                              </span>
+                            )}
                           </td>
                         </tr>
                       ))}

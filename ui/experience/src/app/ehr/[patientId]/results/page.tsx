@@ -3,60 +3,80 @@
 /**
  * Results — View lab results for a patient.
  * Route: /ehr/[patientId]/results | pageTitle: "Results"
- * Displays only RESULTED lab orders, grouped by result date.
+ *
+ * Displays RESULTED lab orders with real result data from the BFF.
+ * Result values come from the result_data JSONB column, populated
+ * when results are entered via POST /lab-orders/{id}/result.
  */
 
 import { useParams } from "next/navigation";
-import { TestTube2, Loader2, AlertTriangle } from "lucide-react";
+import { TestTube2, Loader2, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import {
   useLabOrders,
-  type LabOrderResource } from "@/hooks/queries/useLabOrders";
+  type LabOrderResource,
+} from "@/hooks/queries/useLabOrders";
 
-/** Interpretation colour classes */
 const INTERPRETATION_STYLE: Record<string, string> = {
   NORMAL: "text-green-700 bg-green-50",
   ABNORMAL: "text-red-700 bg-red-50",
-  CRITICAL: "text-red-700 bg-red-50 font-bold" };
+  CRITICAL: "text-red-700 bg-red-50 font-bold",
+};
 
-function interpretationClass(interpretation: string): string {
-  return INTERPRETATION_STYLE[interpretation] ?? "text-gray-700 bg-gray-50";
-}
-
-/** Simulated result values attached to a resulted order.
- *  In production these would come from a dedicated results API. */
 interface ResultValue {
   name: string;
   value: string;
   unit: string;
   referenceRange: string;
-  interpretation: "NORMAL" | "ABNORMAL" | "CRITICAL";
+  interpretation: string;
 }
 
 function getResultValues(order: LabOrderResource): ResultValue[] {
-  // Placeholder: derive sample result values from order metadata.
-  // Replace with a real API call when available.
-  const code = order.attributes.testCode?.toUpperCase() ?? "";
-  if (code === "CBC") {
-    return [
-      { name: "WBC", value: "7.2", unit: "x10^3/uL", referenceRange: "4.5-11.0", interpretation: "NORMAL" },
-      { name: "RBC", value: "4.8", unit: "x10^6/uL", referenceRange: "4.5-5.5", interpretation: "NORMAL" },
-      { name: "Hemoglobin", value: "14.1", unit: "g/dL", referenceRange: "13.5-17.5", interpretation: "NORMAL" },
-    ];
+  const attrs = order.attributes as Record<string, unknown>;
+  const resultData = attrs.result_data;
+
+  // Real result data from BFF
+  if (resultData && Array.isArray(resultData)) {
+    return (resultData as ResultValue[]).map((rv) => ({
+      name: rv.name ?? "",
+      value: rv.value ?? "",
+      unit: rv.unit ?? "",
+      referenceRange: rv.referenceRange ?? "",
+      interpretation: rv.interpretation ?? "NORMAL",
+    }));
   }
-  if (code === "BMP" || code === "CMP") {
-    return [
-      { name: "Glucose", value: "210", unit: "mg/dL", referenceRange: "70-100", interpretation: "ABNORMAL" },
-      { name: "Creatinine", value: "1.0", unit: "mg/dL", referenceRange: "0.7-1.3", interpretation: "NORMAL" },
-    ];
+
+  // If result_data is a JSON string, try to parse it
+  if (resultData && typeof resultData === "string") {
+    try {
+      const parsed = JSON.parse(resultData);
+      if (Array.isArray(parsed)) {
+        return parsed.map((rv: ResultValue) => ({
+          name: rv.name ?? "",
+          value: rv.value ?? "",
+          unit: rv.unit ?? "",
+          referenceRange: rv.referenceRange ?? "",
+          interpretation: rv.interpretation ?? "NORMAL",
+        }));
+      }
+    } catch {
+      // Not valid JSON
+    }
   }
+
+  // Fallback: show generic entry when no structured result data exists
   return [
-    { name: order.attributes.testName, value: "See report", unit: "", referenceRange: "-", interpretation: "NORMAL" },
+    {
+      name: order.attributes.testName,
+      value: "Pending result entry",
+      unit: "",
+      referenceRange: "—",
+      interpretation: "NORMAL",
+    },
   ];
 }
 
-/** Group resulted orders by their resultedAt date string (date portion only). */
 function groupByDate(orders: LabOrderResource[]): Map<string, LabOrderResource[]> {
   const groups = new Map<string, LabOrderResource[]>();
   for (const order of orders) {
@@ -64,7 +84,8 @@ function groupByDate(orders: LabOrderResource[]): Map<string, LabOrderResource[]
       ? new Date(order.attributes.resultedAt).toLocaleDateString("en-ZA", {
           year: "numeric",
           month: "long",
-          day: "numeric" })
+          day: "numeric",
+        })
       : "Unknown Date";
     const existing = groups.get(dateKey) ?? [];
     existing.push(order);
@@ -79,11 +100,9 @@ export default function ResultsPage() {
 
   const { data: ordersData, isLoading } = useLabOrders(patientId);
 
-  // Filter to only RESULTED orders
   const resultedOrders = (ordersData?.data ?? []).filter(
-    (o) => o.attributes.status === "RESULTED",
+    (o) => o.attributes.status === "RESULTED"
   );
-
   const groupedResults = groupByDate(resultedOrders);
 
   return (
@@ -93,7 +112,6 @@ export default function ResultsPage() {
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">Loading results...</span>
           </div>
         ) : resultedOrders.length === 0 ? (
           <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
@@ -101,134 +119,105 @@ export default function ResultsPage() {
             <p className="text-gray-400 text-sm">No results available</p>
           </div>
         ) : (
-          <div className="space-y-8">
-            {/* Header */}
+          <div className="space-y-6">
             <div className="flex items-center gap-2">
               <TestTube2 className="w-5 h-5 text-indigo-500" />
-              <h2 className="text-lg font-semibold text-gray-900">
+              <h2 className="text-sm font-semibold text-gray-900">
                 Results ({resultedOrders.length})
               </h2>
             </div>
 
-            {/* Results grouped by date */}
             {Array.from(groupedResults.entries()).map(([dateLabel, orders]) => (
-              <div key={dateLabel} className="space-y-4">
-                <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider">
+              <div key={dateLabel} className="space-y-3">
+                <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider">
                   {dateLabel}
                 </h3>
 
                 {orders.map((order) => {
                   const resultValues = getResultValues(order);
-                  const hasCritical = resultValues.some(
-                    (rv) => rv.interpretation === "CRITICAL",
-                  );
+                  const hasCritical = resultValues.some((rv) => rv.interpretation === "CRITICAL");
                   const hasAbnormal = resultValues.some(
-                    (rv) =>
-                      rv.interpretation === "ABNORMAL" ||
-                      rv.interpretation === "CRITICAL",
+                    (rv) => rv.interpretation === "ABNORMAL" || rv.interpretation === "CRITICAL"
                   );
+                  const attrs = order.attributes as Record<string, unknown>;
+                  const resultNotes = attrs.result_notes as string | null;
 
                   return (
-                    <div
-                      key={order.id}
-                      className="bg-white rounded-lg border border-gray-200 overflow-hidden"
-                    >
-                      {/* Card header */}
-                      <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+                    <div key={order.id} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                      {/* Header */}
+                      <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <TestTube2 className="w-5 h-5 text-indigo-500" />
+                          <TestTube2 className="w-4 h-4 text-indigo-500" />
                           <div>
-                            <p className="font-medium text-gray-900">
-                              {order.attributes.testName}
-                            </p>
-                            <p className="text-xs text-gray-500 mt-0.5">
-                              Order #{order.attributes.orderNumber} &middot;{" "}
-                              {order.attributes.category}
+                            <p className="text-sm font-medium text-gray-900">{order.attributes.testName}</p>
+                            <p className="text-xs text-gray-500">
+                              #{order.attributes.orderNumber} · {order.attributes.category}
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2">
                           {hasAbnormal && (
                             <span className="inline-flex items-center gap-1 text-xs font-medium text-red-600">
-                              <AlertTriangle className="w-3.5 h-3.5" />
+                              <AlertTriangle className="w-3 h-3" />
                               {hasCritical ? "Critical" : "Abnormal"}
                             </span>
                           )}
-                          <span className="px-2.5 py-0.5 text-xs font-medium rounded-full bg-green-100 text-green-700">
-                            RESULTED
-                          </span>
+                          {!hasAbnormal && (
+                            <span className="inline-flex items-center gap-1 text-xs font-medium text-green-600">
+                              <CheckCircle2 className="w-3 h-3" />
+                              Normal
+                            </span>
+                          )}
                         </div>
                       </div>
 
-                      {/* Metadata row */}
-                      <div className="px-5 py-3 bg-gray-50 flex flex-wrap gap-x-6 gap-y-1 text-xs text-gray-500">
-                        <span>
-                          <span className="font-medium text-gray-600">Ordered by:</span>{" "}
-                          {order.attributes.orderedByName}
-                        </span>
-                        <span>
-                          <span className="font-medium text-gray-600">Result date:</span>{" "}
-                          {order.attributes.resultedAt
-                            ? new Date(order.attributes.resultedAt).toLocaleDateString()
-                            : "-"}
-                        </span>
-                        <span>
-                          <span className="font-medium text-gray-600">Collected:</span>{" "}
-                          {order.attributes.collectedAt
-                            ? new Date(order.attributes.collectedAt).toLocaleDateString()
-                            : "-"}
-                        </span>
+                      {/* Metadata */}
+                      <div className="px-4 py-2 bg-gray-50 flex flex-wrap gap-x-5 text-xs text-gray-500">
+                        <span>Ordered: {order.attributes.orderedByName}</span>
+                        <span>Resulted: {order.attributes.resultedAt ? new Date(order.attributes.resultedAt).toLocaleDateString() : "—"}</span>
+                        {order.attributes.collectedAt && (
+                          <span>Collected: {new Date(order.attributes.collectedAt).toLocaleDateString()}</span>
+                        )}
                       </div>
 
-                      {/* Result values table */}
+                      {/* Result values */}
                       <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                           <thead>
-                            <tr className="border-b border-gray-200 bg-gray-50">
-                              <th className="px-5 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Test
-                              </th>
-                              <th className="px-5 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Value
-                              </th>
-                              <th className="px-5 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Unit
-                              </th>
-                              <th className="px-5 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Reference Range
-                              </th>
-                              <th className="px-5 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Interpretation
-                              </th>
+                            <tr className="border-b bg-gray-50">
+                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Test</th>
+                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Value</th>
+                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Unit</th>
+                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Reference</th>
+                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Status</th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-gray-200">
+                          <tbody className="divide-y divide-gray-100">
                             {resultValues.map((rv, idx) => (
-                              <tr key={idx} className="hover:bg-gray-50 transition-colors">
-                                <td className="px-5 py-3 text-gray-900 whitespace-nowrap">
-                                  {rv.name}
-                                </td>
-                                <td className="px-5 py-3 text-gray-900 font-medium whitespace-nowrap">
-                                  {rv.value}
-                                </td>
-                                <td className="px-5 py-3 text-gray-500 whitespace-nowrap">
-                                  {rv.unit}
-                                </td>
-                                <td className="px-5 py-3 text-gray-500 whitespace-nowrap">
-                                  {rv.referenceRange}
-                                </td>
-                                <td className="px-5 py-3 whitespace-nowrap">
-                                  <span
-                                    className={`px-2.5 py-0.5 text-xs font-medium rounded-full ${interpretationClass(rv.interpretation)}`}
-                                  >
-                                    {rv.interpretation}
-                                  </span>
+                              <tr key={idx} className="hover:bg-gray-50">
+                                <td className="px-4 py-2 text-gray-900">{rv.name}</td>
+                                <td className="px-4 py-2 font-medium text-gray-900">{rv.value}</td>
+                                <td className="px-4 py-2 text-gray-500">{rv.unit}</td>
+                                <td className="px-4 py-2 text-gray-500">{rv.referenceRange}</td>
+                                <td className="px-4 py-2">
+                                  <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${
+                                    INTERPRETATION_STYLE[rv.interpretation] ?? "text-gray-700 bg-gray-50"
+                                  }`}>{rv.interpretation}</span>
                                 </td>
                               </tr>
                             ))}
                           </tbody>
                         </table>
                       </div>
+
+                      {/* Result notes */}
+                      {resultNotes && (
+                        <div className="px-4 py-2 border-t border-gray-100 bg-gray-50">
+                          <p className="text-xs text-gray-500">
+                            <span className="font-medium">Notes:</span> {resultNotes}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   );
                 })}
