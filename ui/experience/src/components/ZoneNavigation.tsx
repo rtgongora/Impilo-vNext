@@ -18,6 +18,9 @@ import { useShiftStore } from "@/hooks/useShiftStore";
 
 const ADMIN_ROLES = ["SYSTEM_ADMIN", "FACILITY_ADMIN", "DEVELOPER"];
 const FINANCE_ROLES = ["SYSTEM_ADMIN", "FACILITY_ADMIN", "FINANCE"];
+const CLINICAL_ROLES = ["CLINICIAN", "NURSE", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"];
+const QUEUE_ROLES = ["CLINICIAN", "NURSE", "SUPPORT_AGENT", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"];
+const DISPENSER_ROLES = ["PHARMACIST", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"];
 
 interface NavItem {
   label: string;
@@ -34,10 +37,10 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Preferences", href: "/home/preferences", zone: "life" },
 
   // Work Zone
-  { label: "Queue", href: "/queue", zone: "work" },
-  { label: "Scheduling", href: "/scheduling", zone: "work" },
-  { label: "Telemedicine", href: "/telemedicine", zone: "work" },
-  { label: "Pharmacy", href: "/pharmacy", zone: "work" },
+  { label: "Queue", href: "/queue", zone: "work", requiredRoles: QUEUE_ROLES },
+  { label: "Scheduling", href: "/scheduling", zone: "work", requiredRoles: CLINICAL_ROLES },
+  { label: "Telemedicine", href: "/telemedicine", zone: "work", requiredRoles: CLINICAL_ROLES },
+  { label: "Pharmacy", href: "/pharmacy", zone: "work", requiredRoles: DISPENSER_ROLES },
   { label: "Inventory", href: "/inventory", zone: "work" },
   { label: "Marketplace", href: "/marketplace", zone: "work" },
   { label: "Finance", href: "/finance", zone: "work", requiredRoles: FINANCE_ROLES },

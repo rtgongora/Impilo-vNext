@@ -15,13 +15,21 @@ import { useWorkspaceStore } from "@/hooks/useWorkspaceStore";
 import { useShiftStore } from "@/hooks/useShiftStore";
 import { ROUTES, type GuardType } from "@/lib/routes";
 
-/** Map abstract role-group names used in routes.ts to concrete Keycloak roles. */
-const ROLE_GROUPS: Record<string, string[]> = {
+/**
+ * Map abstract role-group names used in routes.ts to concrete Keycloak roles.
+ * Must stay aligned with backend SecurityConfig.java role-group arrays.
+ */
+export const ROLE_GROUPS: Record<string, string[]> = {
   ADMIN: ["SYSTEM_ADMIN", "FACILITY_ADMIN", "DEVELOPER"],
   FINANCE: ["SYSTEM_ADMIN", "FACILITY_ADMIN", "FINANCE"],
+  CLINICAL: ["CLINICIAN", "NURSE", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"],
+  PRESCRIBER: ["CLINICIAN", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"],
+  DISPENSER: ["PHARMACIST", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"],
+  QUEUE: ["CLINICIAN", "NURSE", "SUPPORT_AGENT", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"],
+  CITIZEN: ["CITIZEN", "SYSTEM_ADMIN", "DEVELOPER"],
 };
 
-function matchesRequiredRole(hasRole: (r: string) => boolean, requiredRole: string): boolean {
+export function matchesRequiredRole(hasRole: (r: string) => boolean, requiredRole: string): boolean {
   const group = ROLE_GROUPS[requiredRole];
   if (group) return group.some((r) => hasRole(r));
   return hasRole(requiredRole);

@@ -9,6 +9,7 @@ import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuthStore } from "@/hooks/useAuthStore";
+import { useRoleGroup } from "@/hooks/useRoleGroup";
 import {
   Loader2,
   Activity,
@@ -37,6 +38,7 @@ export default function EncounterPage() {
   const router = useRouter();
   const { patientId, encounterId } = params;
   const { user } = useAuthStore();
+  const { isClinical, isPrescriber } = useRoleGroup();
 
   const { data: encounterData, isLoading: isLoadingEncounter } = useEncounter(encounterId);
   const { data: patientData } = usePatient(patientId);
@@ -319,8 +321,8 @@ export default function EncounterPage() {
                     </Link>
                   )}
                 </div>
-                {/* Quick action links */}
-                {isActive && (
+                {/* Quick action links — visible only to clinical staff */}
+                {isActive && isClinical && (
                   <div className="flex gap-2">
                     <Link
                       href={`/ehr/${patientId}/orders`}
@@ -328,12 +330,14 @@ export default function EncounterPage() {
                     >
                       <ClipboardList className="w-3 h-3" /> Orders
                     </Link>
+                    {isPrescriber && (
                     <Link
                       href={`/ehr/${patientId}/medications`}
                       className="px-3 py-1.5 bg-green-50 text-green-700 text-xs font-medium rounded-lg hover:bg-green-100 transition-colors flex items-center gap-1"
                     >
                       <Pill className="w-3 h-3" /> Rx
                     </Link>
+                    )}
                     <Link
                       href={`/ehr/${patientId}/consults`}
                       className="px-3 py-1.5 bg-orange-50 text-orange-700 text-xs font-medium rounded-lg hover:bg-orange-100 transition-colors flex items-center gap-1"
@@ -802,8 +806,8 @@ export default function EncounterPage() {
               </div>
             )}
 
-            {/* Close Encounter */}
-            {isActive && (
+            {/* Close Encounter — clinical staff only */}
+            {isActive && isClinical && (
               <div className="bg-white rounded-lg border border-gray-200 p-5">
                 {!showCloseConfirm ? (
                   <button

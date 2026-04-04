@@ -35,6 +35,7 @@ import { apiClient } from "@/lib/api-client";
 import { useEncounters, type EncounterResource } from "@/hooks/queries/useEncounters";
 import { usePatient } from "@/hooks/queries/usePatients";
 import { useAuthStore } from "@/hooks/useAuthStore";
+import { useRoleGroup } from "@/hooks/useRoleGroup";
 
 type DispositionType = "" | "DISCHARGE" | "ADMIT" | "TRANSFER" | "REFER" | "DEATH" | "LAMA";
 
@@ -61,6 +62,7 @@ export default function VisitOutcomePage() {
   const router = useRouter();
   const { patientId } = params;
   const { user } = useAuthStore();
+  const { isClinical } = useRoleGroup();
 
   const { data: encountersData, isLoading } = useEncounters(patientId);
   const { data: patientData } = usePatient(patientId);
@@ -143,7 +145,13 @@ export default function VisitOutcomePage() {
     <EHRLayout>
       <PageShell title="Visit Outcome">
 
-        {isLoading ? (
+        {!isClinical ? (
+          <div className="bg-white rounded-lg border border-red-200 p-12 text-center">
+            <AlertCircle className="w-10 h-10 text-red-300 mx-auto mb-3" />
+            <p className="text-red-600 text-sm font-medium">Access Denied</p>
+            <p className="text-gray-500 text-xs mt-1">Only clinical staff can perform discharge operations.</p>
+          </div>
+        ) : isLoading ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
           </div>
