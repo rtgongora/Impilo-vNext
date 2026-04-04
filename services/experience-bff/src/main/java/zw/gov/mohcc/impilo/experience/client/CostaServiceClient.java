@@ -88,6 +88,26 @@ public class CostaServiceClient {
     }
 
     /**
+     * List claims (paginated, tenant-scoped via trust headers).
+     */
+    public JsonNode listClaims(int page, int size) {
+        String url = baseUrl + "/costa/v1/claims?page=" + page + "&size=" + size;
+        log.info("COSTA: Listing claims page={}, size={}", page, size);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Get a single claim detail.
+     */
+    public JsonNode getClaim(String claimId) {
+        String url = baseUrl + "/costa/v1/claims/" + claimId;
+        log.info("COSTA: Getting claim={}", claimId);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
      * Get full audit trail for a bill.
      */
     public JsonNode getBillAudit(String billId) {

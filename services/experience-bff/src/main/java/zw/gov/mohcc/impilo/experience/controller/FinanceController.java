@@ -153,6 +153,75 @@ public class FinanceController {
         }
     }
 
+    /**
+     * GET /internal/v1/finance/claims
+     *
+     * Lists claim packs from COSTA, mapping to the UI's claim resource format.
+     */
+    @GetMapping("/claims")
+    public ResponseEntity<Map<String, Object>> listClaims(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "50") int size) {
+        try {
+            JsonNode costaData = costaClient.listClaims(page, size);
+            ArrayNode resources = objectMapper.createArrayNode();
+
+            JsonNode items = costaData != null && costaData.has("items") ? costaData.get("items") : null;
+            if (items != null && items.isArray()) {
+                for (JsonNode claim : items) {
+                    resources.add(toClaimResource(claim));
+                }
+            }
+
+            return ResponseEntity.ok(buildPagedResponse(resources, costaData));
+        } catch (Exception e) {
+            log.error("Failed to fetch claims from COSTA: {}", e.getMessage());
+            return ResponseEntity.ok(Map.of("data", new Object[0]));
+        }
+    }
+
+    /**
+     * GET /internal/v1/finance/claims/{id}
+     *
+     * Fetches a single claim pack from COSTA with bill context.
+     */
+    @GetMapping("/claims/{id}")
+    public ResponseEntity<Map<String, Object>> getClaimDetail(@PathVariable String id) {
+        try {
+            JsonNode costaData = costaClient.getClaim(id);
+            ObjectNode resource = toClaimResource(costaData);
+
+            // Attempt to enrich with bill lines if payload contains billId
+            String billId = textOrEmpty(costaData, "billId");
+            if (!billId.isEmpty()) {
+                try {
+                    JsonNode billData = costaClient.getBill(billId);
+                    if (billData != null && billData.has("lines")) {
+                        ArrayNode lineItems = objectMapper.createArrayNode();
+                        for (JsonNode line : billData.get("lines")) {
+                            ObjectNode li = objectMapper.createObjectNode();
+                            li.put("code", textOrEmpty(line, "msikaCode"));
+                            li.put("description", textOrEmpty(line, "description"));
+                            li.put("quantity", line.has("qty") ? line.get("qty").asDouble() : 0);
+                            li.put("unitPrice", line.has("unitPrice") ? line.get("unitPrice").asDouble() : 0);
+                            li.put("total", line.has("amount") ? line.get("amount").asDouble() : 0);
+                            lineItems.add(li);
+                        }
+                        resource.withObject("/attributes").set("lineItems", lineItems);
+                    }
+                } catch (Exception billErr) {
+                    log.warn("Failed to enrich claim with bill lines: {}", billErr.getMessage());
+                }
+            }
+
+            return ResponseEntity.ok(Map.of("data", resource));
+        } catch (Exception e) {
+            log.error("Failed to fetch claim detail from COSTA: {}", e.getMessage());
+            return ResponseEntity.status(404).body(Map.of(
+                    "error", Map.of("code", "NOT_FOUND", "message", "Claim not found")));
+        }
+    }
+
     // ── Resource Mappers ─────────────────────────────────────────────
 
     /**
@@ -231,6 +300,51 @@ public class FinanceController {
         return resource;
     }
 
+    /**
+     * Maps a COSTA ClaimPackEntity JSON to the UI's claim resource format.
+     * UI expects: { id, type: "claim", attributes: { claimNumber, patient, scheme, amount, currency, status, date } }
+     */
+    private ObjectNode toClaimResource(JsonNode claim) {
+        ObjectNode resource = objectMapper.createObjectNode();
+        resource.put("id", claim.has("id") ? claim.get("id").asText() : "");
+        resource.put("type", "claim");
+
+        ObjectNode attrs = resource.putObject("attributes");
+        attrs.put("claimNumber", "CLM-" + (claim.has("id") ? claim.get("id").asText() : ""));
+        attrs.put("scheme", textOrDefault(claim, "insurerRef", "Government"));
+        attrs.put("status", mapClaimStatusToUi(textOrDefault(claim, "status", "PENDING")));
+        attrs.put("date", textOrEmpty(claim, "createdAt"));
+        attrs.put("claimType", textOrDefault(claim, "claimType", "INITIAL"));
+        attrs.put("billId", textOrEmpty(claim, "billId"));
+
+        // Extract amount and patient from the claim payload JSONB
+        JsonNode payloadNode = null;
+        if (claim.has("payload")) {
+            try {
+                String payloadStr = claim.get("payload").asText("");
+                if (!payloadStr.isEmpty() && !payloadStr.equals("{}")) {
+                    payloadNode = objectMapper.readTree(payloadStr);
+                }
+            } catch (Exception e) {
+                // payload is already a JsonNode (not a string)
+                payloadNode = claim.get("payload").isObject() ? claim.get("payload") : null;
+            }
+        }
+
+        if (payloadNode != null) {
+            attrs.put("amount", payloadNode.has("insurerPayable")
+                    ? payloadNode.get("insurerPayable").asDouble() : 0.0);
+            attrs.put("currency", "USD");
+            attrs.put("patient", textOrEmpty(payloadNode, "facilityId"));
+        } else {
+            attrs.put("amount", 0.0);
+            attrs.put("currency", "USD");
+            attrs.put("patient", "");
+        }
+
+        return resource;
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────
 
     /**
@@ -243,6 +357,19 @@ public class FinanceController {
             case "APPROVAL_PENDING" -> "ISSUED";
             case "APPROVED", "FINAL" -> "ISSUED";
             case "VOID", "ADJUSTED" -> "OVERDUE";
+            default -> costaStatus;
+        };
+    }
+
+    /**
+     * Maps COSTA ClaimPackStatus values to the status set the claims UI understands.
+     */
+    private String mapClaimStatusToUi(String costaStatus) {
+        if (costaStatus == null) return "SUBMITTED";
+        return switch (costaStatus) {
+            case "PENDING", "SENT" -> "SUBMITTED";
+            case "ACKNOWLEDGED" -> "ADJUDICATED";
+            case "REJECTED", "FAILED" -> "REJECTED";
             default -> costaStatus;
         };
     }
