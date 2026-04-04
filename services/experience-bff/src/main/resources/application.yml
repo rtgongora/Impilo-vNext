@@ -26,6 +26,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
+          jwk-set-uri: ${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:impilo}/protocol/openid-connect/certs
           issuer-uri: ${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:impilo}
 
 management:
