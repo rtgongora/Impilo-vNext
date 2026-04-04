@@ -26,7 +26,9 @@ import {
   ClipboardList,
   FileSignature,
   Calendar,
-  AlertTriangle } from "lucide-react";
+  AlertTriangle,
+  Receipt } from "lucide-react";
+import Link from "next/link";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { apiClient } from "@/lib/api-client";
@@ -72,6 +74,7 @@ export default function VisitOutcomePage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [billId, setBillId] = useState<string | null>(null);
 
   // Shared form fields (all dispositions use the same API)
   const [diagnosis, setDiagnosis] = useState("");
@@ -115,7 +118,7 @@ export default function VisitOutcomePage() {
     }
 
     try {
-      await apiClient.post(
+      const result = await apiClient.post<{ data: { attributes: { costa_bill_id?: string; [key: string]: unknown } } }>(
         `/internal/v1/encounters/${activeEncounter.id}/discharge`,
         {
           discharge_type: dischargeType,
@@ -126,6 +129,8 @@ export default function VisitOutcomePage() {
           patient_instructions: fullInstructions || null,
           discharged_by: user?.id ?? "system" }
       );
+      const resultBillId = result?.data?.attributes?.costa_bill_id;
+      if (resultBillId) setBillId(resultBillId);
       setSubmitted(true);
     } catch {
       setError("Failed to complete encounter. Please try again.");
@@ -155,6 +160,21 @@ export default function VisitOutcomePage() {
             <p className="text-sm text-gray-500 mb-4">
               Visit outcome ({DISPOSITION_OPTIONS.find(d => d.id === disposition)?.label}) has been recorded.
             </p>
+            {billId && (
+              <div className="mb-4 p-3 rounded-lg bg-emerald-50 border border-emerald-200">
+                <p className="text-sm text-emerald-700 flex items-center justify-center gap-2">
+                  <Receipt className="w-4 h-4" />
+                  A billing draft has been created for this encounter.
+                </p>
+                <Link
+                  href={`/finance/billing/${billId}`}
+                  className="inline-flex items-center gap-1 mt-2 px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-100 rounded-lg hover:bg-emerald-200 transition-colors"
+                >
+                  <Receipt className="w-3 h-3" />
+                  View Bill
+                </Link>
+              </div>
+            )}
             <div className="flex justify-center gap-3">
               <button
                 onClick={() => router.push("/queue")}
