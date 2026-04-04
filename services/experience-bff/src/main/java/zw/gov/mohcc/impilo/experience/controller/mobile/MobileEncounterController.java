@@ -11,6 +11,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.CostaServiceClient;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 import zw.gov.mohcc.impilo.experience.controller.ResourceNotFoundException;
 import zw.gov.mohcc.impilo.experience.service.OutboxService;
@@ -41,13 +42,16 @@ public class MobileEncounterController {
     private final JdbcTemplate jdbcTemplate;
     private final OutboxService outboxService;
     private final PctServiceClient pctClient;
+    private final CostaServiceClient costaClient;
 
     public MobileEncounterController(JdbcTemplate jdbcTemplate,
                                      OutboxService outboxService,
-                                     PctServiceClient pctClient) {
+                                     PctServiceClient pctClient,
+                                     CostaServiceClient costaClient) {
         this.jdbcTemplate = jdbcTemplate;
         this.outboxService = outboxService;
         this.pctClient = pctClient;
+        this.costaClient = costaClient;
     }
 
     public record CreateEncounterRequest(
@@ -225,18 +229,43 @@ public class MobileEncounterController {
             log.warn("Queue completion from mobile close failed (non-blocking): {}", e.getMessage());
         }
 
+        // Delegate to COSTA: create bill draft for the closed encounter
+        String costaBillId = null;
+        try {
+            JsonNode billData = costaClient.createBillDraft(id.toString(), "ENCOUNTER");
+            if (billData != null && billData.has("billId")) {
+                costaBillId = billData.get("billId").asText();
+                jdbcTemplate.update(
+                        "UPDATE encounters SET costa_bill_id = ? WHERE id = ? AND tenant_id = ?",
+                        costaBillId, id, tenantId);
+                log.info("COSTA bill draft created from mobile close: billId={} for encounter={}", costaBillId, id);
+            }
+        } catch (Exception e) {
+            log.warn("COSTA bill draft creation from mobile close failed (non-blocking): {}", e.getMessage());
+        }
+
+        Map<String, Object> eventPayload = new LinkedHashMap<>();
+        eventPayload.put("encounter_id", id.toString());
+        eventPayload.put("status", "COMPLETED");
+        if (costaBillId != null) eventPayload.put("costa_bill_id", costaBillId);
+
         outboxService.writeOutboxEvent(
                 "impilo.experience.encounter.closed.v1",
                 correlationId, requestId,
                 idempotencyKey != null ? idempotencyKey : requestId,
                 tenantId, podId,
                 "Encounter", id.toString(),
-                Map.of("encounter_id", id.toString(), "status", "COMPLETED"),
+                eventPayload,
                 Map.of()
         );
 
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("id", id.toString());
+        data.put("status", "COMPLETED");
+        if (costaBillId != null) data.put("costa_bill_id", costaBillId);
+
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", Map.of("id", id.toString(), "status", "COMPLETED"));
+        response.put("data", data);
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return ResponseEntity.ok(response);
     }

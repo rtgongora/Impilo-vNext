@@ -14,6 +14,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.CostaServiceClient;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 import zw.gov.mohcc.impilo.experience.domain.Encounter;
 import zw.gov.mohcc.impilo.experience.repository.EncounterRepository;
@@ -39,15 +40,18 @@ public class EncounterController {
     private final OutboxService outboxService;
     private final JdbcTemplate jdbcTemplate;
     private final PctServiceClient pctClient;
+    private final CostaServiceClient costaClient;
 
     public EncounterController(EncounterRepository encounterRepository,
                                OutboxService outboxService,
                                JdbcTemplate jdbcTemplate,
-                               PctServiceClient pctClient) {
+                               PctServiceClient pctClient,
+                               CostaServiceClient costaClient) {
         this.encounterRepository = encounterRepository;
         this.outboxService = outboxService;
         this.jdbcTemplate = jdbcTemplate;
         this.pctClient = pctClient;
+        this.costaClient = costaClient;
     }
 
     public record CreateEncounterRequest(
@@ -254,6 +258,14 @@ public class EncounterController {
             log.warn("Queue completion on close failed (non-blocking): {}", e.getMessage());
         }
 
+        // Delegate to COSTA: create bill draft for the closed encounter
+        String costaBillId = createBillDraftForEncounter(id, tenantId, encounter.getEncounterType());
+
+        Map<String, Object> eventPayload = new LinkedHashMap<>();
+        eventPayload.put("encounter_id", id.toString());
+        eventPayload.put("status", "COMPLETED");
+        if (costaBillId != null) eventPayload.put("costa_bill_id", costaBillId);
+
         outboxService.writeOutboxEvent(
                 "impilo.experience.encounter.closed.v1",
                 correlationId,
@@ -263,15 +275,12 @@ public class EncounterController {
                 podId,
                 "Encounter",
                 id.toString(),
-                Map.of(
-                        "encounter_id", id.toString(),
-                        "status", "COMPLETED"
-                ),
+                eventPayload,
                 Map.of()
         );
 
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", toResource(encounter));
+        response.put("data", toResource(encounter, costaBillId));
         response.put("meta", Map.of(
                 "request_id", requestId,
                 "correlation_id", correlationId
@@ -342,6 +351,15 @@ public class EncounterController {
             log.warn("Queue completion on discharge failed (non-blocking): {}", e.getMessage());
         }
 
+        // Delegate to COSTA: create bill draft for the discharged encounter
+        String costaBillId = createBillDraftForEncounter(id, tenantId, encounter.getEncounterType());
+
+        Map<String, Object> eventPayload = new LinkedHashMap<>();
+        eventPayload.put("encounter_id", id.toString());
+        eventPayload.put("discharge_type", request.discharge_type());
+        eventPayload.put("status", encounter.getStatus());
+        if (costaBillId != null) eventPayload.put("costa_bill_id", costaBillId);
+
         outboxService.writeOutboxEvent(
                 "impilo.experience.encounter.discharged.v1",
                 correlationId,
@@ -351,16 +369,12 @@ public class EncounterController {
                 podId,
                 "Encounter",
                 id.toString(),
-                Map.of(
-                        "encounter_id", id.toString(),
-                        "discharge_type", request.discharge_type(),
-                        "status", encounter.getStatus()
-                ),
+                eventPayload,
                 Map.of()
         );
 
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", toResource(encounter));
+        response.put("data", toResource(encounter, costaBillId));
         response.put("meta", Map.of(
                 "request_id", requestId,
                 "correlation_id", correlationId
@@ -369,7 +383,37 @@ public class EncounterController {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * Create a COSTA bill draft for an encounter (non-blocking).
+     * Persists the bill ID as a bridge column on the encounter row.
+     *
+     * @return the COSTA bill ID, or null if creation failed
+     */
+    private String createBillDraftForEncounter(UUID encounterId, String tenantId, String encounterType) {
+        try {
+            String billType = "ENCOUNTER";
+            JsonNode billData = costaClient.createBillDraft(encounterId.toString(), billType);
+            if (billData != null && billData.has("billId")) {
+                String billId = billData.get("billId").asText();
+                jdbcTemplate.update(
+                        "UPDATE encounters SET costa_bill_id = ? WHERE id = ? AND tenant_id = ?",
+                        billId, encounterId, tenantId);
+                log.info("COSTA bill draft created: billId={} for encounter={}", billId, encounterId);
+                return billId;
+            }
+            log.warn("COSTA bill draft response missing billId for encounter={}", encounterId);
+        } catch (Exception e) {
+            log.warn("COSTA bill draft creation failed (non-blocking) for encounter={}: {}",
+                    encounterId, e.getMessage());
+        }
+        return null;
+    }
+
     private Map<String, Object> toResource(Encounter e) {
+        return toResource(e, null);
+    }
+
+    private Map<String, Object> toResource(Encounter e, String costaBillId) {
         Map<String, Object> attributes = new LinkedHashMap<>();
         attributes.put("facility_id", e.getFacilityId());
         attributes.put("patient_id", e.getPatientId());
@@ -392,6 +436,22 @@ public class EncounterController {
         attributes.put("discharged_at", e.getDischargedAt());
         attributes.put("created_at", e.getCreatedAt());
         attributes.put("updated_at", e.getUpdatedAt());
+
+        // Include COSTA bill bridge if available
+        if (costaBillId != null) {
+            attributes.put("costa_bill_id", costaBillId);
+        } else {
+            // Try to read from DB (for GET requests where bill was already created)
+            try {
+                List<Map<String, Object>> rows = jdbcTemplate.queryForList(
+                        "SELECT costa_bill_id FROM encounters WHERE id = ?", e.getId());
+                if (!rows.isEmpty() && rows.get(0).get("costa_bill_id") != null) {
+                    attributes.put("costa_bill_id", rows.get(0).get("costa_bill_id").toString());
+                }
+            } catch (Exception ex) {
+                // Non-critical — bill ID is informational
+            }
+        }
 
         Map<String, Object> resource = new LinkedHashMap<>();
         resource.put("id", e.getId().toString());

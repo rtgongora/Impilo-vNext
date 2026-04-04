@@ -1,11 +1,16 @@
 package zw.gov.mohcc.impilo.experience.controller.mobile;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.CostaServiceClient;
 import zw.gov.mohcc.impilo.experience.controller.ResourceNotFoundException;
 import zw.gov.mohcc.impilo.experience.domain.Encounter;
 import zw.gov.mohcc.impilo.experience.repository.EncounterRepository;
@@ -22,13 +27,21 @@ import java.util.*;
 @RequestMapping("/internal/v1/mobile/provider/discharge")
 public class MobileDischargeController {
 
+    private static final Logger log = LoggerFactory.getLogger(MobileDischargeController.class);
+
     private final EncounterRepository encounterRepository;
     private final OutboxService outboxService;
+    private final CostaServiceClient costaClient;
+    private final JdbcTemplate jdbcTemplate;
 
     public MobileDischargeController(EncounterRepository encounterRepository,
-                                      OutboxService outboxService) {
+                                      OutboxService outboxService,
+                                      CostaServiceClient costaClient,
+                                      JdbcTemplate jdbcTemplate) {
         this.encounterRepository = encounterRepository;
         this.outboxService = outboxService;
+        this.costaClient = costaClient;
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     public record MobileDischargeRequest(
@@ -68,6 +81,28 @@ public class MobileDischargeController {
         );
         encounterRepository.save(encounter);
 
+        // Delegate to COSTA: create bill draft for the discharged encounter
+        String costaBillId = null;
+        try {
+            JsonNode billData = costaClient.createBillDraft(encounterId.toString(), "ENCOUNTER");
+            if (billData != null && billData.has("billId")) {
+                costaBillId = billData.get("billId").asText();
+                jdbcTemplate.update(
+                        "UPDATE encounters SET costa_bill_id = ? WHERE id = ? AND tenant_id = ?",
+                        costaBillId, encounterId, tenantId);
+                log.info("COSTA bill draft created from mobile: billId={} for encounter={}", costaBillId, encounterId);
+            }
+        } catch (Exception e) {
+            log.warn("COSTA bill draft creation from mobile failed (non-blocking): {}", e.getMessage());
+        }
+
+        Map<String, Object> eventPayload = new LinkedHashMap<>();
+        eventPayload.put("encounter_id", encounterId.toString());
+        eventPayload.put("discharge_type", request.discharge_type());
+        eventPayload.put("status", encounter.getStatus());
+        eventPayload.put("source", "mobile");
+        if (costaBillId != null) eventPayload.put("costa_bill_id", costaBillId);
+
         outboxService.writeOutboxEvent(
                 "impilo.experience.encounter.discharged.v1",
                 correlationId,
@@ -77,20 +112,16 @@ public class MobileDischargeController {
                 podId,
                 "Encounter",
                 encounterId.toString(),
-                Map.of(
-                        "encounter_id", encounterId.toString(),
-                        "discharge_type", request.discharge_type(),
-                        "status", "DISCHARGED",
-                        "source", "mobile"
-                ),
+                eventPayload,
                 Map.of()
         );
 
         Map<String, Object> attributes = new LinkedHashMap<>();
         attributes.put("encounter_id", encounterId.toString());
-        attributes.put("status", "DISCHARGED");
+        attributes.put("status", encounter.getStatus());
         attributes.put("discharge_type", request.discharge_type());
         attributes.put("discharged_at", encounter.getDischargedAt());
+        if (costaBillId != null) attributes.put("costa_bill_id", costaBillId);
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", Map.of(
@@ -127,6 +158,18 @@ public class MobileDischargeController {
         attributes.put("patient_instructions", encounter.getPatientInstructions());
         attributes.put("discharged_by", encounter.getDischargedBy());
         attributes.put("discharged_at", encounter.getDischargedAt());
+
+        // Include COSTA bill reference if available
+        try {
+            List<Map<String, Object>> rows = jdbcTemplate.queryForList(
+                    "SELECT costa_bill_id FROM encounters WHERE id = ? AND tenant_id = ?",
+                    encounterId, tenantId);
+            if (!rows.isEmpty() && rows.get(0).get("costa_bill_id") != null) {
+                attributes.put("costa_bill_id", rows.get(0).get("costa_bill_id").toString());
+            }
+        } catch (Exception e) {
+            // Non-critical
+        }
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", Map.of(
