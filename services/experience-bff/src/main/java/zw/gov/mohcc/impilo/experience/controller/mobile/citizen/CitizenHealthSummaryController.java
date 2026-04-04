@@ -112,16 +112,29 @@ public class CitizenHealthSummaryController {
             ORDER BY scheduled_at ASC LIMIT 5
             """, tenantId, patientId);
 
+        // Recent documents
+        List<Map<String, Object>> documents = jdbcTemplate.queryForList("""
+            SELECT id, document_type, title, uploaded_by, created_at
+            FROM clinical_documents
+            WHERE tenant_id = ? AND patient_id = ? AND status = 'ACTIVE'
+            ORDER BY created_at DESC LIMIT 5
+            """, tenantId, patientId);
+
         // Counts for dashboard badges
         int activeConditionCount = conditions.size();
         int activeAllergyCount = allergies.size();
         int activeMedicationCount = medications.size();
         int pendingResultCount = 0;
+        int documentCount = 0;
         try {
             Long pending = jdbcTemplate.queryForObject(
                     "SELECT count(*) FROM lab_orders WHERE tenant_id = ? AND patient_id = ? AND status = 'ORDERED'",
                     Long.class, tenantId, patientId);
             pendingResultCount = pending != null ? pending.intValue() : 0;
+            Long docs = jdbcTemplate.queryForObject(
+                    "SELECT count(*) FROM clinical_documents WHERE tenant_id = ? AND patient_id = ? AND status = 'ACTIVE'",
+                    Long.class, tenantId, patientId);
+            documentCount = docs != null ? docs.intValue() : 0;
         } catch (Exception ignored) {}
 
         // Assemble summary
@@ -132,6 +145,7 @@ public class CitizenHealthSummaryController {
         summary.put("current_medications", medications);
         summary.put("latest_vitals", vitals.isEmpty() ? null : vitals.get(0));
         summary.put("recent_results", results);
+        summary.put("recent_documents", documents);
         summary.put("recent_encounters", encounters);
         summary.put("upcoming_telehealth", telehealth);
         summary.put("counts", Map.of(
@@ -139,7 +153,8 @@ public class CitizenHealthSummaryController {
                 "active_allergies", activeAllergyCount,
                 "active_medications", activeMedicationCount,
                 "pending_orders", pendingResultCount,
-                "upcoming_telehealth", telehealth.size()
+                "upcoming_telehealth", telehealth.size(),
+                "documents", documentCount
         ));
 
         Map<String, Object> response = new LinkedHashMap<>();
