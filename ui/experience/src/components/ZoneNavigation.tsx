@@ -11,14 +11,18 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAuthStore } from "@/hooks/useAuthStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useWorkspaceStore } from "@/hooks/useWorkspaceStore";
 import { useShiftStore } from "@/hooks/useShiftStore";
+
+const ADMIN_ROLES = ["SYSTEM_ADMIN", "FACILITY_ADMIN", "DEVELOPER"];
 
 interface NavItem {
   label: string;
   href: string;
   zone: "work" | "professional" | "life";
+  requiredRoles?: string[];
 }
 
 const NAV_ITEMS: NavItem[] = [
@@ -39,7 +43,7 @@ const NAV_ITEMS: NavItem[] = [
 
   // Professional Zone
   { label: "Registry", href: "/registry", zone: "professional" },
-  { label: "Admin", href: "/admin", zone: "professional" },
+  { label: "Admin", href: "/admin", zone: "professional", requiredRoles: ADMIN_ROLES },
   { label: "Reports", href: "/reports", zone: "professional" },
   { label: "Settings", href: "/settings", zone: "professional" },
 ];
@@ -54,6 +58,7 @@ const ZONE_ORDER: ("life" | "work" | "professional")[] = ["life", "work", "profe
 
 export function ZoneNavigation() {
   const pathname = usePathname();
+  const { hasRole } = useAuthStore();
   const { facility } = useFacilityStore();
   const { workspace } = useWorkspaceStore();
   const { shift } = useShiftStore();
@@ -72,7 +77,11 @@ export function ZoneNavigation() {
             <div className="px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-gray-500">
               {ZONE_LABELS[zone]}
             </div>
-            {NAV_ITEMS.filter((item) => item.zone === zone).map((item) => {
+            {NAV_ITEMS.filter((item) => {
+              if (item.zone !== zone) return false;
+              if (item.requiredRoles && !item.requiredRoles.some((r) => hasRole(r))) return false;
+              return true;
+            }).map((item) => {
               const isActive =
                 pathname === item.href || pathname.startsWith(item.href + "/");
               return (
