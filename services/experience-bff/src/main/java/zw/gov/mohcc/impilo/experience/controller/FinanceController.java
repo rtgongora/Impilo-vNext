@@ -249,6 +249,59 @@ public class FinanceController {
         }
     }
 
+    /**
+     * POST /internal/v1/finance/billing/{id}/refund
+     *
+     * Create a refund for a bill. Requires amount and reason.
+     */
+    @PostMapping("/billing/{id}/refund")
+    public ResponseEntity<Map<String, Object>> createRefund(
+            @PathVariable String id,
+            @RequestBody Map<String, String> body) {
+        try {
+            String amount = body.get("amount");
+            String reason = body.get("reason");
+            if (amount == null || amount.isBlank()) {
+                return ResponseEntity.status(400).body(Map.of(
+                        "error", Map.of("code", "MISSING_AMOUNT", "message", "amount is required")));
+            }
+            if (reason == null || reason.isBlank()) {
+                return ResponseEntity.status(400).body(Map.of(
+                        "error", Map.of("code", "MISSING_REASON", "message", "reason is required")));
+            }
+            String reasonCode = body.get("reasonCode");
+            String refundType = body.getOrDefault("refundType", "PARTIAL");
+            JsonNode result = costaClient.createRefund(id, amount, reason, reasonCode, refundType);
+            return ResponseEntity.status(201).body(Map.of("data", toRefundResource(result)));
+        } catch (Exception e) {
+            log.error("Failed to create refund for bill {}: {}", id, e.getMessage());
+            return ResponseEntity.status(400).body(Map.of(
+                    "error", Map.of("code", "REFUND_FAILED", "message", e.getMessage())));
+        }
+    }
+
+    /**
+     * GET /internal/v1/finance/billing/{id}/refunds
+     *
+     * List refunds for a specific bill.
+     */
+    @GetMapping("/billing/{id}/refunds")
+    public ResponseEntity<Map<String, Object>> getBillRefunds(@PathVariable String id) {
+        try {
+            JsonNode costaData = costaClient.getBillRefunds(id);
+            ArrayNode resources = objectMapper.createArrayNode();
+            if (costaData != null && costaData.isArray()) {
+                for (JsonNode refund : costaData) {
+                    resources.add(toRefundResource(refund));
+                }
+            }
+            return ResponseEntity.ok(Map.of("data", resources));
+        } catch (Exception e) {
+            log.error("Failed to fetch refunds for bill {}: {}", id, e.getMessage());
+            return ResponseEntity.ok(Map.of("data", objectMapper.createArrayNode()));
+        }
+    }
+
     // ── Tariffs & Payments (global lists) ────────────────────────────
 
     /**
@@ -535,6 +588,27 @@ public class FinanceController {
             attrs.put("currency", "USD");
             attrs.put("patient", "");
         }
+
+        return resource;
+    }
+
+    /**
+     * Maps a COSTA RefundEntity JSON to the UI's refund resource format.
+     */
+    private ObjectNode toRefundResource(JsonNode refund) {
+        ObjectNode resource = objectMapper.createObjectNode();
+        resource.put("id", refund.has("id") ? refund.get("id").asText() : "");
+        resource.put("type", "refund");
+
+        ObjectNode attrs = resource.putObject("attributes");
+        attrs.put("billId", textOrEmpty(refund, "billId"));
+        attrs.put("amount", refund.has("amount") ? refund.get("amount").asDouble() : 0.0);
+        attrs.put("reason", textOrEmpty(refund, "reason"));
+        attrs.put("reasonCode", textOrEmpty(refund, "reasonCode"));
+        attrs.put("refundType", textOrDefault(refund, "refundType", "PARTIAL"));
+        attrs.put("status", textOrDefault(refund, "status", "PENDING"));
+        attrs.put("createdAt", textOrEmpty(refund, "createdAt"));
+        attrs.put("processedAt", textOrEmpty(refund, "processedAt"));
 
         return resource;
     }

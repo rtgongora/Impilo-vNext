@@ -58,6 +58,10 @@ public class PaymentIntegrationService {
         return paymentRepository.findByTenantId(tenantId, pageable);
     }
 
+    public List<RefundEntity> getRefundsForBill(String billId) {
+        return refundRepository.findByBillId(billId);
+    }
+
     @Transactional
     public InvoiceEntity issueInvoice(String billId) {
         BillHeaderEntity bill = billHeaderRepository.findById(billId)

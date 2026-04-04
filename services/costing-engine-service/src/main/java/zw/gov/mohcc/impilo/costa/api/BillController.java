@@ -134,6 +134,13 @@ public class BillController {
                 .body(ApiResponse.ok(payment, ctx.correlationId().toString()));
     }
 
+    @GetMapping("/{id}/refunds")
+    public ResponseEntity<ApiResponse<List<RefundEntity>>> getBillRefunds(@PathVariable String id) {
+        var ctx = TrustContextHolder.require();
+        List<RefundEntity> refunds = paymentService.getRefundsForBill(id);
+        return ResponseEntity.ok(ApiResponse.ok(refunds, ctx.correlationId().toString()));
+    }
+
     @PostMapping("/{id}/refund")
     public ResponseEntity<ApiResponse<RefundEntity>> refund(@PathVariable String id,
                                                              @Valid @RequestBody RefundRequest request) {

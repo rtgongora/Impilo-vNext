@@ -121,6 +121,32 @@ public class CostaServiceClient {
     }
 
     /**
+     * Create a refund for a bill.
+     */
+    public JsonNode createRefund(String billId, String amount, String reason,
+                                  String reasonCode, String refundType) {
+        String url = baseUrl + "/costa/v1/bills/" + billId + "/refund";
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("amount", amount);
+        body.put("reason", reason);
+        if (reasonCode != null) body.put("reasonCode", reasonCode);
+        if (refundType != null) body.put("refundType", refundType);
+        log.info("COSTA: Creating refund for bill={}, amount={}", billId, amount);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * List refunds for a specific bill.
+     */
+    public JsonNode getBillRefunds(String billId) {
+        String url = baseUrl + "/costa/v1/bills/" + billId + "/refunds";
+        log.info("COSTA: Getting refunds for bill={}", billId);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
      * List bills (paginated, tenant-scoped via trust headers).
      *
      * @param page   zero-based page number
