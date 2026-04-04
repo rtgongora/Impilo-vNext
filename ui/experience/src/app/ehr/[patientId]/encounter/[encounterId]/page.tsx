@@ -22,6 +22,7 @@ import {
   ArrowUpRight,
   Save,
   Stethoscope,
+  Receipt,
 } from "lucide-react";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
@@ -307,6 +308,15 @@ export default function EncounterPage() {
                     <span className="text-xs text-gray-500">
                       Closed: {new Date(encounter.attributes.closedAt).toLocaleString()}
                     </span>
+                  )}
+                  {encounter.attributes.costa_bill_id && (
+                    <Link
+                      href={`/finance/billing/${encounter.attributes.costa_bill_id}`}
+                      className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-medium rounded-full bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors"
+                    >
+                      <Receipt className="w-3 h-3" />
+                      Bill
+                    </Link>
                   )}
                 </div>
                 {/* Quick action links */}

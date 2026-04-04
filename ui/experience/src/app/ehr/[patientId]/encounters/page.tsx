@@ -8,7 +8,7 @@
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ClipboardList, Plus, Loader2} from "lucide-react";
+import { ClipboardList, Plus, Loader2, Receipt } from "lucide-react";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import {
@@ -198,6 +198,7 @@ export default function EncountersPage() {
                         <th className="text-left px-4 py-3 font-medium text-gray-600">Start Date</th>
                         <th className="text-left px-4 py-3 font-medium text-gray-600">End Date</th>
                         <th className="text-left px-4 py-3 font-medium text-gray-600">Chief Complaint</th>
+                        <th className="text-left px-4 py-3 font-medium text-gray-600">Bill</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -240,6 +241,20 @@ export default function EncountersPage() {
                             </td>
                             <td className="px-4 py-3 text-gray-700">
                               {(a as Record<string, unknown>).chiefComplaint as string ?? (a as Record<string, unknown>).chief_complaint as string ?? "—"}
+                            </td>
+                            <td className="px-4 py-3">
+                              {a.costa_bill_id ? (
+                                <Link
+                                  href={`/finance/billing/${a.costa_bill_id}`}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors"
+                                >
+                                  <Receipt className="w-3 h-3" />
+                                  View
+                                </Link>
+                              ) : (
+                                <span className="text-xs text-gray-400">—</span>
+                              )}
                             </td>
                           </tr>
                         );
