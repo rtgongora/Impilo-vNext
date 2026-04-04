@@ -137,6 +137,8 @@ public class SecurityConfig {
                             .hasAnyRole(CLINICAL_ROLES)
                     .requestMatchers(HttpMethod.POST, "/internal/v1/clinical-documents/**")
                             .hasAnyRole(CLINICAL_ROLES)
+                    .requestMatchers(HttpMethod.POST, "/internal/v1/appointments/**")
+                            .hasAnyRole(CLINICAL_ROLES)
 
                     // ── Mobile provider clinical operations ───────────────
                     .requestMatchers(HttpMethod.POST, "/internal/v1/mobile/provider/encounters/**")
