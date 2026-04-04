@@ -182,11 +182,26 @@ public class PaymentIntegrationService {
 
         // Validate that at least one PAID payment exists for this bill
         List<PaymentEntity> payments = paymentRepository.findByBillId(billId);
-        boolean hasPaidPayment = payments.stream()
-                .anyMatch(p -> p.getStatus() == PaymentStatus.PAID);
-        if (!hasPaidPayment) {
+        BigDecimal totalPaid = payments.stream()
+                .filter(p -> p.getStatus() == PaymentStatus.PAID)
+                .map(PaymentEntity::getPaidAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        if (totalPaid.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalStateException(
                     "Cannot create refund for bill " + billId + ": no PAID payments exist");
+        }
+
+        // Validate refund amount against refundable balance
+        List<RefundEntity> existingRefunds = refundRepository.findByBillId(billId);
+        BigDecimal alreadyRefunded = existingRefunds.stream()
+                .filter(r -> r.getStatus() != RefundStatus.FAILED)
+                .map(RefundEntity::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal refundableBalance = totalPaid.subtract(alreadyRefunded);
+        if (amount.compareTo(refundableBalance) > 0) {
+            throw new IllegalStateException(
+                    "Refund amount " + amount + " exceeds refundable balance " + refundableBalance
+                    + " for bill " + billId);
         }
 
         TrustContext ctx = TrustContextHolder.require();

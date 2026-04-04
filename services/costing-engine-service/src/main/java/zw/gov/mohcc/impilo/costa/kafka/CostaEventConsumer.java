@@ -8,13 +8,13 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import zw.gov.mohcc.impilo.costa.domain.entity.BillHeaderEntity;
-import zw.gov.mohcc.impilo.costa.domain.entity.BillLineEntity;
-import zw.gov.mohcc.impilo.costa.domain.entity.EncounterEntity;
-import zw.gov.mohcc.impilo.costa.domain.entity.IdempotencyEntity;
+import zw.gov.mohcc.impilo.costa.domain.entity.*;
 import zw.gov.mohcc.impilo.costa.domain.enums.*;
 import zw.gov.mohcc.impilo.costa.domain.repository.EncounterRepository;
 import zw.gov.mohcc.impilo.costa.domain.repository.IdempotencyRepository;
+import zw.gov.mohcc.impilo.costa.domain.repository.RefundRepository;
+
+import java.util.List;
 import zw.gov.mohcc.impilo.costa.service.BillService;
 import zw.gov.mohcc.impilo.costa.service.InpatientCostingService;
 import zw.gov.mohcc.impilo.costa.service.PaymentIntegrationService;
@@ -33,6 +33,7 @@ public class CostaEventConsumer {
     private final InpatientCostingService inpatientCostingService;
     private final PaymentIntegrationService paymentService;
     private final EncounterRepository encounterRepository;
+    private final RefundRepository refundRepository;
     private final IdempotencyRepository idempotencyRepository;
     private final ObjectMapper objectMapper;
 
@@ -40,12 +41,14 @@ public class CostaEventConsumer {
                               InpatientCostingService inpatientCostingService,
                               PaymentIntegrationService paymentService,
                               EncounterRepository encounterRepository,
+                              RefundRepository refundRepository,
                               IdempotencyRepository idempotencyRepository,
                               ObjectMapper objectMapper) {
         this.billService = billService;
         this.inpatientCostingService = inpatientCostingService;
         this.paymentService = paymentService;
         this.encounterRepository = encounterRepository;
+        this.refundRepository = refundRepository;
         this.idempotencyRepository = idempotencyRepository;
         this.objectMapper = objectMapper;
     }
@@ -322,6 +325,63 @@ public class CostaEventConsumer {
             log.info("MUSHEX payment {} -> {}", paymentIntentId, status);
         } catch (Exception e) {
             log.error("Failed to process mushex.payment.status_changed", e);
+            ack.acknowledge();
+        }
+    }
+
+    /**
+     * When MusheX processes or fails a refund, update the corresponding
+     * COSTA RefundEntity status and link the mushexRefundId.
+     */
+    @KafkaListener(topics = "mushex.refund.status.changed", groupId = "costa-costing-engine")
+    @Transactional
+    public void onRefundStatusChanged(String message, Acknowledgment ack) {
+        try {
+            JsonNode event = objectMapper.readTree(message);
+            String eventId = text(event, "eventId");
+            if (isProcessed(eventId, "MUSHEX_REFUND")) { ack.acknowledge(); return; }
+
+            String mushexRefundId = text(event, "refundId");
+            String intentId = text(event, "intentId");
+            String status = text(event, "status");
+            String billId = text(event, "billId");
+            String reason = text(event, "reason");
+
+            // Try to find the COSTA refund to update
+            // Strategy: match by billId + PENDING status + amount
+            if (billId != null) {
+                List<RefundEntity> costaRefunds = refundRepository.findByBillId(billId);
+                RefundEntity target = costaRefunds.stream()
+                        .filter(r -> r.getStatus() == RefundStatus.PENDING)
+                        .findFirst()
+                        .orElse(null);
+
+                if (target != null) {
+                    target.setMushexRefundId(mushexRefundId);
+
+                    if ("COMPLETED".equals(status)) {
+                        target.setStatus(RefundStatus.PROCESSED);
+                        target.setProcessedAt(OffsetDateTime.now());
+                        log.info("COSTA refund {} marked PROCESSED (MusheX refund {})",
+                                target.getId(), mushexRefundId);
+                    } else if ("FAILED".equals(status)) {
+                        target.setStatus(RefundStatus.FAILED);
+                        target.setProcessedAt(OffsetDateTime.now());
+                        log.info("COSTA refund {} marked FAILED (MusheX refund {})",
+                                target.getId(), mushexRefundId);
+                    }
+
+                    refundRepository.save(target);
+                } else {
+                    log.warn("No PENDING COSTA refund found for bill {} to match MusheX refund {}",
+                            billId, mushexRefundId);
+                }
+            }
+
+            markProcessed(eventId, "MUSHEX_REFUND");
+            ack.acknowledge();
+        } catch (Exception e) {
+            log.error("Failed to process mushex.refund.status.changed", e);
             ack.acknowledge();
         }
     }

@@ -9,9 +9,13 @@ import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.mushex.domain.entity.IdempotencyEntity;
+import zw.gov.mohcc.impilo.mushex.domain.entity.PaymentIntentEntity;
 import zw.gov.mohcc.impilo.mushex.domain.repository.IdempotencyRepository;
+import zw.gov.mohcc.impilo.mushex.domain.repository.PaymentIntentRepository;
+import zw.gov.mohcc.impilo.mushex.domain.enums.IntentStatus;
 import zw.gov.mohcc.impilo.mushex.domain.enums.SourceType;
 import zw.gov.mohcc.impilo.mushex.service.PaymentIntentService;
+import zw.gov.mohcc.impilo.mushex.service.RefundService;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -23,13 +27,19 @@ public class CostaEventConsumer {
     private static final Logger log = LoggerFactory.getLogger(CostaEventConsumer.class);
 
     private final PaymentIntentService intentService;
+    private final RefundService refundService;
+    private final PaymentIntentRepository intentRepository;
     private final IdempotencyRepository idempotencyRepository;
     private final ObjectMapper objectMapper;
 
     public CostaEventConsumer(PaymentIntentService intentService,
+                              RefundService refundService,
+                              PaymentIntentRepository intentRepository,
                               IdempotencyRepository idempotencyRepository,
                               ObjectMapper objectMapper) {
         this.intentService = intentService;
+        this.refundService = refundService;
+        this.intentRepository = intentRepository;
         this.idempotencyRepository = idempotencyRepository;
         this.objectMapper = objectMapper;
     }
@@ -89,6 +99,58 @@ public class CostaEventConsumer {
             ack.acknowledge();
         } catch (Exception e) {
             log.error("Failed to process costa.invoice.issued", e);
+            ack.acknowledge();
+        }
+    }
+
+    /**
+     * When COSTA creates a refund on a bill, find the linked MusheX payment
+     * intent and create a corresponding refund request.
+     */
+    @KafkaListener(topics = "costa.refund.issued", groupId = "mushex-service")
+    @Transactional
+    public void onRefundIssued(String message, Acknowledgment ack) {
+        try {
+            JsonNode event = objectMapper.readTree(message);
+            String eventId = text(event, "eventId");
+
+            if (isProcessed(eventId, "COSTA_REFUND")) {
+                ack.acknowledge();
+                return;
+            }
+
+            String billId = text(event, "billId");
+            String costaRefundId = text(event, "refundId");
+            BigDecimal amount = event.has("amount")
+                    ? new BigDecimal(event.get("amount").asText()) : BigDecimal.ZERO;
+            String reason = text(event, "reason");
+
+            // Find the MusheX payment intent linked to this bill
+            var intents = intentRepository.findBySourceTypeAndSourceId(SourceType.COSTA_BILL, billId);
+            PaymentIntentEntity paidIntent = intents.stream()
+                    .filter(i -> i.getStatus() == IntentStatus.PAID)
+                    .findFirst()
+                    .orElse(null);
+
+            if (paidIntent == null) {
+                log.warn("COSTA refund {}: no PAID intent found for bill {}, skipping",
+                        costaRefundId, billId);
+                markProcessed(eventId, "COSTA_REFUND");
+                ack.acknowledge();
+                return;
+            }
+
+            // Create the refund on the MusheX payment intent
+            String refundReason = (reason != null ? reason : "COSTA refund") + " [COSTA:" + costaRefundId + "]";
+            refundService.requestRefund(paidIntent.getIntentId(), amount, refundReason);
+
+            log.info("Created MusheX refund for COSTA refund {} on intent {} (bill {})",
+                    costaRefundId, paidIntent.getIntentId(), billId);
+
+            markProcessed(eventId, "COSTA_REFUND");
+            ack.acknowledge();
+        } catch (Exception e) {
+            log.error("Failed to process costa.refund.issued", e);
             ack.acknowledge();
         }
     }
