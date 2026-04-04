@@ -24,6 +24,10 @@ import {
   Save,
   AlertCircle,
   Search,
+  ChevronLeft,
+  ChevronRight,
+  List,
+  CalendarRange,
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
@@ -75,13 +79,37 @@ const TIME_SLOTS = [
 ];
 
 type TabFilter = "all" | "SCHEDULED" | "CONFIRMED" | "today";
+type ViewMode = "list" | "calendar";
+
+function getWeekDays(weekStart: Date): Date[] {
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(weekStart);
+    d.setDate(d.getDate() + i);
+    return d;
+  });
+}
+
+function isSameDay(a: Date, b: Date): boolean {
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+}
+
+function getMonday(d: Date): Date {
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  const monday = new Date(d);
+  monday.setDate(diff);
+  monday.setHours(0, 0, 0, 0);
+  return monday;
+}
 
 export default function SchedulingPage() {
   const { user } = useAuthStore();
   const facility = useFacilityStore((s) => s.facility);
+  const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [activeTab, setActiveTab] = useState<TabFilter>("all");
   const [appointments, setAppointments] = useState<AppointmentResource[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [weekStart, setWeekStart] = useState<Date>(getMonday(new Date()));
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
   const [actionPending, setActionPending] = useState<string | null>(null);
@@ -237,22 +265,43 @@ export default function SchedulingPage() {
     <AppLayout>
       <PageShell title="Scheduling" subtitle={facility ? `Appointments at ${facility.name}` : "Select a facility"}>
 
-        {/* Tabs + Create */}
+        {/* View Toggle + Create */}
         <div className="flex items-center justify-between mb-5">
-          <div className="flex gap-1 border-b border-gray-200">
-            {tabs.map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === tab.key
-                    ? "border-blue-600 text-blue-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                {tab.label}
+          <div className="flex items-center gap-4">
+            {/* View mode toggle */}
+            <div className="flex bg-gray-100 rounded-lg p-0.5">
+              <button onClick={() => setViewMode("list")}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md flex items-center gap-1.5 transition-colors ${
+                  viewMode === "list" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
+                }`}>
+                <List className="w-3.5 h-3.5" /> List
               </button>
-            ))}
+              <button onClick={() => setViewMode("calendar")}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md flex items-center gap-1.5 transition-colors ${
+                  viewMode === "calendar" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
+                }`}>
+                <CalendarRange className="w-3.5 h-3.5" /> Calendar
+              </button>
+            </div>
+
+            {/* List tabs (only shown in list mode) */}
+            {viewMode === "list" && (
+              <div className="flex gap-1 border-b border-gray-200">
+                {tabs.map((tab) => (
+                  <button
+                    key={tab.key}
+                    onClick={() => setActiveTab(tab.key)}
+                    className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+                      activeTab === tab.key
+                        ? "border-blue-600 text-blue-600"
+                        : "border-transparent text-gray-500 hover:text-gray-700"
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           <button
             onClick={() => setShowCreate((v) => !v)}
@@ -408,17 +457,101 @@ export default function SchedulingPage() {
           </div>
         )}
 
-        {/* Appointment List */}
-        {isLoading ? (
+        {/* Calendar View */}
+        {viewMode === "calendar" && (
+          <div className="space-y-4">
+            {/* Week Navigation */}
+            <div className="flex items-center justify-between">
+              <button
+                onClick={() => { const d = new Date(weekStart); d.setDate(d.getDate() - 7); setWeekStart(d); }}
+                className="px-3 py-1.5 text-sm text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-1"
+              >
+                <ChevronLeft className="w-4 h-4" /> Previous
+              </button>
+              <h3 className="text-sm font-medium text-gray-900">
+                {weekStart.toLocaleDateString("en-ZA", { month: "short", day: "numeric" })} — {
+                  (() => { const end = new Date(weekStart); end.setDate(end.getDate() + 6); return end.toLocaleDateString("en-ZA", { month: "short", day: "numeric", year: "numeric" }); })()
+                }
+              </h3>
+              <button
+                onClick={() => { const d = new Date(weekStart); d.setDate(d.getDate() + 7); setWeekStart(d); }}
+                className="px-3 py-1.5 text-sm text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-1"
+              >
+                Next <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Week Grid */}
+            <div className="grid grid-cols-7 gap-3">
+              {getWeekDays(weekStart).map((date) => {
+                const dayAppts = appointments.filter((a) => {
+                  if (!a.attributes.scheduled_at) return false;
+                  return isSameDay(new Date(a.attributes.scheduled_at), date);
+                });
+                const isToday = isSameDay(date, new Date());
+
+                return (
+                  <div key={date.toISOString()} className={`bg-white rounded-lg border ${isToday ? "border-blue-400 ring-2 ring-blue-100" : "border-gray-200"}`}>
+                    <div className={`px-3 py-2 border-b ${isToday ? "bg-blue-50" : "bg-gray-50"}`}>
+                      <div className={`text-xs font-medium ${isToday ? "text-blue-700" : "text-gray-600"}`}>
+                        {date.toLocaleDateString("en-ZA", { weekday: "short" })}
+                      </div>
+                      <div className={`text-lg font-semibold ${isToday ? "text-blue-700" : "text-gray-900"}`}>
+                        {date.getDate()}
+                      </div>
+                    </div>
+                    <div className="p-2 min-h-[200px] max-h-[350px] overflow-y-auto space-y-1.5">
+                      {dayAppts.length === 0 ? (
+                        <p className="text-[10px] text-gray-400 text-center py-4">No appointments</p>
+                      ) : (
+                        dayAppts.map((appt) => {
+                          const a = appt.attributes;
+                          const status = STATUS_BADGE[a.status] ?? { label: a.status, className: "bg-gray-100 text-gray-600" };
+                          const time = a.scheduled_at ? new Date(a.scheduled_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
+                          const statusBorderColor =
+                            a.status === "SCHEDULED" ? "border-l-blue-500" :
+                            a.status === "CONFIRMED" ? "border-l-green-500" :
+                            a.status === "CANCELLED" ? "border-l-gray-400" :
+                            "border-l-purple-500";
+
+                          return (
+                            <div key={appt.id} className={`p-2 rounded border border-l-4 ${statusBorderColor} bg-white hover:bg-gray-50 transition-colors`}>
+                              <div className="flex items-center gap-1 mb-0.5">
+                                <Clock className="w-3 h-3 text-gray-400" />
+                                <span className="text-xs font-medium text-gray-900">{time}</span>
+                              </div>
+                              <p className="text-xs text-gray-700 truncate">
+                                {APPOINTMENT_TYPES.find((t) => t.value === a.appointment_type)?.label ?? a.appointment_type}
+                              </p>
+                              {a.provider_name && (
+                                <p className="text-[10px] text-gray-500 truncate">{a.provider_name}</p>
+                              )}
+                              <span className={`inline-block mt-1 px-1.5 py-0.5 text-[10px] font-medium rounded-full ${status.className}`}>
+                                {status.label}
+                              </span>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Appointment List (list mode only) */}
+        {viewMode === "list" && isLoading ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
           </div>
-        ) : appointments.length === 0 ? (
+        ) : viewMode === "list" && appointments.length === 0 ? (
           <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
             <CalendarDays className="w-10 h-10 text-gray-300 mx-auto mb-3" />
             <p className="text-gray-400 text-sm">No appointments found</p>
           </div>
-        ) : (
+        ) : viewMode === "list" ? (
           <div className="space-y-3">
             {appointments.map((appt) => {
               const a = appt.attributes;
@@ -503,7 +636,7 @@ export default function SchedulingPage() {
               );
             })}
           </div>
-        )}
+        ) : null}
       </PageShell>
     </AppLayout>
   );
