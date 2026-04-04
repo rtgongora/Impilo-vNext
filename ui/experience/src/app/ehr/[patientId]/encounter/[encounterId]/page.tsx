@@ -28,7 +28,8 @@ import { PageShell } from "@/components/PageShell";
 import { useEncounter, useCloseEncounter } from "@/hooks/queries/useEncounters";
 import { usePatient } from "@/hooks/queries/usePatients";
 import { useReferrals, type ReferralResource } from "@/hooks/queries/useReferrals";
-import { apiClient } from "@/lib/api-client";
+import { useQuery } from "@tanstack/react-query";
+import { apiClient, type ApiResponse } from "@/lib/api-client";
 
 export default function EncounterPage() {
   const params = useParams<{ patientId: string; encounterId: string }>();
@@ -40,6 +41,14 @@ export default function EncounterPage() {
   const { data: patientData } = usePatient(patientId);
   const { data: referralsData } = useReferrals(patientId);
   const closeEncounter = useCloseEncounter();
+
+  // Fetch existing triage for this encounter
+  const { data: triageData } = useQuery<ApiResponse<Array<{ id: string; attributes: Record<string, unknown> }>>>({
+    queryKey: ["triage", { encounterId }],
+    queryFn: () => apiClient.get(`/internal/v1/triage?encounter_id=${encounterId}`),
+    enabled: !!encounterId,
+  });
+  const existingTriage = (triageData?.data ?? [])[0] ?? null;
 
   // Filter referrals linked to this encounter or with responses
   const linkedReferrals = (referralsData?.data ?? []).filter(
@@ -313,6 +322,36 @@ export default function EncounterPage() {
                 )}
               </div>
             </div>
+
+            {/* Existing Triage Display — show if already triaged */}
+            {existingTriage && !isActive && (
+              <div className={`rounded-lg border-2 p-4 ${
+                existingTriage.attributes.acuity === 1 ? "border-red-400 bg-red-50" :
+                existingTriage.attributes.acuity === 2 ? "border-orange-400 bg-orange-50" :
+                existingTriage.attributes.acuity === 3 ? "border-yellow-400 bg-yellow-50" :
+                existingTriage.attributes.acuity === 4 ? "border-green-400 bg-green-50" :
+                "border-blue-400 bg-blue-50"
+              }`}>
+                <div className="flex items-center gap-3">
+                  <AlertTriangle className="w-5 h-5" />
+                  <div>
+                    <span className="text-sm font-semibold">
+                      Triage: P{String(existingTriage.attributes.acuity)} — {
+                        existingTriage.attributes.acuity === 1 ? "Resuscitation" :
+                        existingTriage.attributes.acuity === 2 ? "Emergency" :
+                        existingTriage.attributes.acuity === 3 ? "Urgent" :
+                        existingTriage.attributes.acuity === 4 ? "Standard" : "Non-urgent"
+                      }
+                    </span>
+                    {existingTriage.attributes.triaged_by_name && (
+                      <span className="text-xs text-gray-500 ml-2">
+                        by {String(existingTriage.attributes.triaged_by_name)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Triage / Acuity — Lovable TriagePanel alignment */}
             {isActive && (

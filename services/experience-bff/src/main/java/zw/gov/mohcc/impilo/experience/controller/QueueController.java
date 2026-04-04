@@ -248,6 +248,133 @@ public class QueueController {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * Record a triage assessment for a queue entry.
+     * POST /internal/v1/queue/entries/{id}/triage
+     *
+     * Creates a triage record via the triage API and updates the queue entry's
+     * triage_category and priority based on acuity level.
+     */
+    @PostMapping("/entries/{id}/triage")
+    @Transactional
+    public ResponseEntity<Map<String, Object>> triageEntry(
+            @PathVariable UUID id,
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.POD_ID) String podId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
+            @RequestBody Map<String, Object> body) {
+
+        QueueEntry entry = queueEntryRepository.findByIdAndTenantId(id, tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException("Queue entry not found: " + id));
+
+        int acuity = body.containsKey("acuity") ? ((Number) body.get("acuity")).intValue() : 3;
+        String notes = body.containsKey("notes") ? (String) body.get("notes") : null;
+
+        // Map acuity to triage category and priority
+        String triageCategory = switch (acuity) {
+            case 1 -> "RED";
+            case 2 -> "ORANGE";
+            case 3 -> "YELLOW";
+            case 4 -> "GREEN";
+            case 5 -> "BLUE";
+            default -> "YELLOW";
+        };
+        String priority = switch (acuity) {
+            case 1 -> "EMERGENCY";
+            case 2 -> "URGENT";
+            case 3 -> "NORMAL";
+            case 4, 5 -> "LOW";
+            default -> "NORMAL";
+        };
+
+        // Update queue entry triage status
+        OffsetDateTime now = OffsetDateTime.now();
+        jdbcTemplate.update("""
+            UPDATE queue_entries SET triage_category = ?, priority = ?, updated_at = ?
+            WHERE id = ? AND tenant_id = ?
+            """, triageCategory, priority, now, id, tenantId);
+
+        // Create triage record via triage API
+        UUID triageId = UUID.randomUUID();
+        String dangerSignsJson = "[]";
+        String vitalsJson = null;
+        try {
+            if (body.containsKey("danger_signs")) {
+                dangerSignsJson = new com.fasterxml.jackson.databind.ObjectMapper()
+                        .writeValueAsString(body.get("danger_signs"));
+            }
+            if (body.containsKey("vitals")) {
+                vitalsJson = new com.fasterxml.jackson.databind.ObjectMapper()
+                        .writeValueAsString(body.get("vitals"));
+            }
+        } catch (Exception e) {
+            log.warn("Failed to serialize triage data: {}", e.getMessage());
+        }
+
+        String triagedBy = body.containsKey("triaged_by") ? (String) body.get("triaged_by") : "system";
+        String triagedByName = body.containsKey("triaged_by_name") ? (String) body.get("triaged_by_name") : "";
+
+        jdbcTemplate.update("""
+            INSERT INTO triage_records
+                (id, tenant_id, patient_id, queue_entry_id, pct_journey_id,
+                 acuity, chief_complaint, danger_signs, vitals, notes,
+                 triaged_by, triaged_by_name, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?::jsonb, ?::jsonb, ?, ?, ?, ?, ?)
+            """,
+                triageId, tenantId, entry.getPatientId(), id,
+                null, // pct_journey_id resolved below
+                acuity,
+                body.containsKey("chief_complaint") ? (String) body.get("chief_complaint") : null,
+                dangerSignsJson, vitalsJson, notes,
+                triagedBy, triagedByName, now, now);
+
+        // Delegate to PCT if journey ID available
+        String pctJourneyId = null;
+        List<Map<String, Object>> journeyRows = jdbcTemplate.queryForList(
+                "SELECT pct_journey_id FROM queue_entries WHERE id = ? AND tenant_id = ?", id, tenantId);
+        if (!journeyRows.isEmpty() && journeyRows.get(0).get("pct_journey_id") != null) {
+            pctJourneyId = journeyRows.get(0).get("pct_journey_id").toString();
+            try {
+                pctClient.recordTriage(pctJourneyId, String.valueOf(acuity), null, notes);
+                // Update triage record with journey ID
+                jdbcTemplate.update("UPDATE triage_records SET pct_journey_id = ? WHERE id = ?",
+                        pctJourneyId, triageId);
+                log.info("PCT triage delegated from queue for journey={}", pctJourneyId);
+            } catch (Exception e) {
+                log.warn("PCT triage delegation from queue failed (non-blocking): {}", e.getMessage());
+            }
+        }
+
+        outboxService.writeOutboxEvent(
+                "impilo.experience.queue.entry-triaged.v1",
+                correlationId, requestId,
+                idempotencyKey != null ? idempotencyKey : requestId,
+                tenantId, podId,
+                "QueueEntry", id.toString(),
+                Map.of(
+                        "queue_entry_id", id.toString(),
+                        "acuity", acuity,
+                        "triage_category", triageCategory,
+                        "priority", priority
+                ),
+                Map.of()
+        );
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", Map.of(
+                "id", id.toString(),
+                "triage_id", triageId.toString(),
+                "acuity", acuity,
+                "triage_category", triageCategory,
+                "priority", priority,
+                "status", "TRIAGED"
+        ));
+        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
+        return ResponseEntity.ok(response);
+    }
+
     @PostMapping("/entries/{id}/complete")
     @Transactional
     public ResponseEntity<Map<String, Object>> completeEntry(
