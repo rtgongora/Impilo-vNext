@@ -16,6 +16,7 @@ import {
   useCreateAllergy,
   type AllergyResource,
 } from "@/hooks/queries/useAllergies";
+import { useAuthStore } from "@/hooks/useAuthStore";
 
 /* ------------------------------------------------------------------ */
 /*  Badge helpers                                                      */
@@ -54,13 +55,14 @@ export default function AllergiesPage() {
   const params = useParams<{ patientId: string }>();
   const patientId = params.patientId;
 
+  const { user } = useAuthStore();
   const { data: allergiesData, isLoading } = useAllergies(patientId);
   const createAllergy = useCreateAllergy();
 
   const allergies: AllergyResource[] = allergiesData?.data ?? [];
 
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ ...EMPTY_FORM });
+  const [form, setForm] = useState({ ...EMPTY_FORM, recorded_by: user?.displayName ?? user?.email ?? "" });
 
   function updateField(field: string, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));

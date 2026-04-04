@@ -16,6 +16,7 @@ import {
   useCreateNote,
   useSignNote,
 } from "@/hooks/queries/useClinicalNotes";
+import { useAuthStore } from "@/hooks/useAuthStore";
 
 const NOTE_TYPES = ["PROGRESS", "ASSESSMENT", "DISCHARGE", "CONSULTATION"] as const;
 
@@ -34,12 +35,17 @@ export default function ClinicalNotesPage() {
   const params = useParams<{ patientId: string }>();
   const patientId = params.patientId;
 
+  const { user } = useAuthStore();
   const { data: notesData, isLoading } = useClinicalNotes(patientId);
   const createNote = useCreateNote();
   const signNote = useSignNote();
 
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState(EMPTY_FORM);
+  const [form, setForm] = useState({
+    ...EMPTY_FORM,
+    authorId: user?.id ?? "",
+    authorName: user?.displayName ?? user?.email ?? "",
+  });
 
   const notes = notesData?.data ?? [];
 

@@ -16,6 +16,7 @@ import {
   useRecordVitals,
   type VitalsResource,
 } from "@/hooks/queries/useVitals";
+import { useAuthStore } from "@/hooks/useAuthStore";
 
 export default function VitalsPage() {
   const params = useParams<{ patientId: string }>();
@@ -23,6 +24,7 @@ export default function VitalsPage() {
   const patientId = params.patientId;
   const encounterId = searchParams.get("encounterId") ?? "";
 
+  const { user } = useAuthStore();
   const { data: vitalsData, isLoading } = useVitals(patientId);
   const recordVitals = useRecordVitals();
 
@@ -62,7 +64,7 @@ export default function VitalsPage() {
       {
         patientId,
         encounterId,
-        recorded_by: "current-user",
+        recorded_by: user?.id ?? "system",
         systolic: toNum(systolic),
         diastolic: toNum(diastolic),
         heartRate: toNum(heartRate),

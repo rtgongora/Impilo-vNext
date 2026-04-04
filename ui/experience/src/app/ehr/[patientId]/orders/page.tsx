@@ -21,6 +21,9 @@ import {
   useLabOrders,
   useCreateLabOrder,
 } from "@/hooks/queries/useLabOrders";
+import { useAuthStore } from "@/hooks/useAuthStore";
+import { useFacilityStore } from "@/hooks/useFacilityStore";
+import { useEncounters } from "@/hooks/queries/useEncounters";
 
 const STATUS_BADGE: Record<string, string> = {
   ORDERED: "bg-blue-100 text-blue-700",
@@ -49,6 +52,12 @@ const EMPTY_FORM = {
 export default function OrdersPage() {
   const params = useParams<{ patientId: string }>();
   const { patientId } = params;
+  const { user } = useAuthStore();
+  const facility = useFacilityStore((s) => s.facility);
+  const { data: encountersData } = useEncounters(patientId);
+  const activeEncounter = (encountersData?.data ?? []).find(
+    (e) => e.attributes.status === "IN_PROGRESS" || e.attributes.status === "ACTIVE"
+  );
 
   const { data: ordersData, isLoading } = useLabOrders(patientId);
   const createOrder = useCreateLabOrder();
@@ -56,7 +65,12 @@ export default function OrdersPage() {
   const orders = ordersData?.data ?? [];
 
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ ...EMPTY_FORM });
+  const [form, setForm] = useState({
+    ...EMPTY_FORM,
+    ordered_by: user?.id ?? "",
+    ordered_by_name: user?.displayName ?? user?.email ?? "",
+    facility_id: facility?.id ?? "",
+  });
 
   function updateField(field: string, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -68,15 +82,15 @@ export default function OrdersPage() {
     createOrder.mutate(
       {
         patientId,
-        encounterId: "",
+        encounterId: activeEncounter?.id ?? "",
         testName: form.test_name,
         testCode: form.test_code,
         category: form.category,
         priority: form.priority,
         clinicalNotes: form.clinical_notes || null,
-        facilityId: form.facility_id,
-        orderedBy: form.ordered_by,
-        orderedByName: form.ordered_by_name,
+        facilityId: facility?.id ?? form.facility_id,
+        orderedBy: form.ordered_by || user?.id || "",
+        orderedByName: form.ordered_by_name || user?.displayName || user?.email || "",
       },
       {
         onSuccess: () => {

@@ -16,6 +16,7 @@ import {
   useRecordImmunization,
   type ImmunizationResource,
 } from "@/hooks/queries/useImmunizations";
+import { useAuthStore } from "@/hooks/useAuthStore";
 
 /* ------------------------------------------------------------------ */
 /*  Badge helpers                                                      */
@@ -51,13 +52,14 @@ export default function ImmunizationsPage() {
   const params = useParams<{ patientId: string }>();
   const patientId = params.patientId;
 
+  const { user } = useAuthStore();
   const { data: immunizationsData, isLoading } = useImmunizations(patientId);
   const recordImmunization = useRecordImmunization();
 
   const immunizations: ImmunizationResource[] = immunizationsData?.data ?? [];
 
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ ...EMPTY_FORM });
+  const [form, setForm] = useState({ ...EMPTY_FORM, administered_by: user?.displayName ?? user?.email ?? "" });
 
   function updateField(field: string, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));

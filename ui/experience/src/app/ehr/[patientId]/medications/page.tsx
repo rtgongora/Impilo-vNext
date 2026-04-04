@@ -13,6 +13,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
+import { useAuthStore } from "@/hooks/useAuthStore";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -77,6 +78,7 @@ const EMPTY_FORM = {
 export default function MedicationsPage() {
   const params = useParams<{ patientId: string }>();
   const { patientId } = params;
+  const { user } = useAuthStore();
   const queryClient = useQueryClient();
 
   const { data: prescriptionsData, isLoading } =
@@ -84,7 +86,7 @@ export default function MedicationsPage() {
   const prescriptions = prescriptionsData?.data ?? [];
 
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ ...EMPTY_FORM });
+  const [form, setForm] = useState({ ...EMPTY_FORM, prescribed_by: user?.displayName ?? user?.email ?? "" });
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(false);
 

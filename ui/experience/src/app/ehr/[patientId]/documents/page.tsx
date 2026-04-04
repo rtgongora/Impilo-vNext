@@ -16,6 +16,7 @@ import {
   useUploadDocument,
   type ClinicalDocumentResource,
 } from "@/hooks/queries/useClinicalDocuments";
+import { useAuthStore } from "@/hooks/useAuthStore";
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
@@ -58,13 +59,14 @@ export default function DocumentsPage() {
   const params = useParams<{ patientId: string }>();
   const patientId = params.patientId;
 
+  const { user } = useAuthStore();
   const { data: documentsData, isLoading } = useClinicalDocuments(patientId);
   const uploadDocument = useUploadDocument();
 
   const documents: ClinicalDocumentResource[] = documentsData?.data ?? [];
 
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ ...EMPTY_FORM });
+  const [form, setForm] = useState({ ...EMPTY_FORM, uploaded_by: user?.displayName ?? user?.email ?? "" });
 
   function updateField(field: string, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
