@@ -76,8 +76,7 @@ const MENU_SECTIONS: MenuSection[] = [
   {
     title: "Consults & Referrals",
     items: [
-      { label: "Referrals", segment: "referrals", icon: ArrowRightLeft },
-      { label: "Teleconsults", segment: "teleconsults", icon: Video },
+      { label: "Consults", segment: "consults", icon: ArrowRightLeft },
       { label: "Documents", segment: "documents", icon: FileText },
     ],
   },
