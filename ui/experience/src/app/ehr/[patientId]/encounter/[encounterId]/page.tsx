@@ -16,6 +16,7 @@ import {
   XCircle,
   CheckCircle2,
   AlertCircle,
+  AlertTriangle,
   ClipboardList,
   Pill,
   ArrowUpRight,
@@ -91,6 +92,18 @@ export default function EncounterPage() {
   const [examNeuro, setExamNeuro] = useState("");
   const [examSaving, setExamSaving] = useState(false);
   const [examSaved, setExamSaved] = useState(false);
+
+  // Triage state (Lovable-aligned acuity + danger signs)
+  const [triageAcuity, setTriageAcuity] = useState<number | null>(null);
+  const [triageNotes, setTriageNotes] = useState("");
+  const [triageSaving, setTriageSaving] = useState(false);
+  const [triageSaved, setTriageSaved] = useState(false);
+  const DANGER_SIGNS = [
+    "Airway compromise", "Breathing difficulty", "Circulation failure",
+    "Altered consciousness", "Severe pain", "Active bleeding",
+    "Convulsions", "Dehydration (severe)", "High fever (>39°C)", "Shock",
+  ];
+  const [dangerSigns, setDangerSigns] = useState<Record<string, boolean>>({});
 
   const isActive =
     encounter?.attributes.status === "ACTIVE" ||
@@ -180,6 +193,31 @@ export default function EncounterPage() {
       // Error handled by UI feedback
     } finally {
       setExamSaving(false);
+    }
+  }
+
+  async function handleSaveTriage() {
+    if (triageAcuity == null) return;
+    setTriageSaving(true);
+    setTriageSaved(false);
+    try {
+      const activeDangerSigns = Object.entries(dangerSigns)
+        .map(([name, present]) => ({ name, present }));
+      await apiClient.post("/internal/v1/triage", {
+        patient_id: patientId,
+        encounter_id: encounterId,
+        acuity: triageAcuity,
+        chief_complaint: (encounter?.attributes as Record<string, unknown>)?.chief_complaint ?? null,
+        danger_signs: activeDangerSigns,
+        notes: triageNotes || null,
+        triaged_by: currentUserId,
+        triaged_by_name: currentUserName,
+      });
+      setTriageSaved(true);
+    } catch {
+      // Error handled by UI
+    } finally {
+      setTriageSaving(false);
     }
   }
 
@@ -275,6 +313,101 @@ export default function EncounterPage() {
                 )}
               </div>
             </div>
+
+            {/* Triage / Acuity — Lovable TriagePanel alignment */}
+            {isActive && (
+              <div className="bg-white rounded-lg border border-gray-200 p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="w-5 h-5 text-amber-500" />
+                    <h3 className="font-medium text-gray-900">Triage Assessment</h3>
+                  </div>
+                  {triageSaved && (
+                    <span className="text-xs text-green-600 flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3" /> Saved
+                    </span>
+                  )}
+                </div>
+
+                {/* Acuity Selection */}
+                <div className="mb-4">
+                  <label className="block text-xs font-medium text-gray-600 mb-2">Triage Category</label>
+                  <div className="grid grid-cols-5 gap-2">
+                    {[
+                      { level: 1, label: "Red", desc: "Resuscitation", color: "border-red-400 bg-red-50 text-red-700", active: "border-red-500 bg-red-100 ring-2 ring-red-300" },
+                      { level: 2, label: "Orange", desc: "Emergency", color: "border-orange-400 bg-orange-50 text-orange-700", active: "border-orange-500 bg-orange-100 ring-2 ring-orange-300" },
+                      { level: 3, label: "Yellow", desc: "Urgent", color: "border-yellow-400 bg-yellow-50 text-yellow-700", active: "border-yellow-500 bg-yellow-100 ring-2 ring-yellow-300" },
+                      { level: 4, label: "Green", desc: "Standard", color: "border-green-400 bg-green-50 text-green-700", active: "border-green-500 bg-green-100 ring-2 ring-green-300" },
+                      { level: 5, label: "Blue", desc: "Non-urgent", color: "border-blue-400 bg-blue-50 text-blue-700", active: "border-blue-500 bg-blue-100 ring-2 ring-blue-300" },
+                    ].map((t) => (
+                      <button
+                        key={t.level}
+                        onClick={() => setTriageAcuity(t.level)}
+                        className={`p-3 rounded-lg border-2 text-center transition-all ${
+                          triageAcuity === t.level ? t.active : t.color + " hover:opacity-80"
+                        }`}
+                      >
+                        <div className="text-lg font-bold">P{t.level}</div>
+                        <div className="text-xs font-medium">{t.label}</div>
+                        <div className="text-[10px] opacity-75">{t.desc}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Danger Signs */}
+                <div className="mb-4">
+                  <label className="block text-xs font-medium text-gray-600 mb-2">Danger Signs Screening</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {DANGER_SIGNS.map((sign) => {
+                      const present = dangerSigns[sign] ?? false;
+                      return (
+                        <button
+                          key={sign}
+                          onClick={() => setDangerSigns((prev) => ({ ...prev, [sign]: !prev[sign] }))}
+                          className={`flex items-center gap-2 p-2 rounded-lg text-sm text-left transition-colors ${
+                            present
+                              ? "bg-red-50 border border-red-200 text-red-700"
+                              : "bg-gray-50 border border-gray-200 text-gray-600 hover:bg-gray-100"
+                          }`}
+                        >
+                          {present ? (
+                            <AlertTriangle className="w-3.5 h-3.5 text-red-500 shrink-0" />
+                          ) : (
+                            <CheckCircle2 className="w-3.5 h-3.5 text-green-500 shrink-0" />
+                          )}
+                          <span className="text-xs">{sign}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Triage Notes */}
+                <div className="mb-4">
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Triage Notes</label>
+                  <textarea
+                    value={triageNotes}
+                    onChange={(e) => setTriageNotes(e.target.value)}
+                    rows={2}
+                    placeholder="Clinical observations, mechanism of injury, relevant context..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none"
+                  />
+                </div>
+
+                <button
+                  onClick={handleSaveTriage}
+                  disabled={triageSaving || triageAcuity == null}
+                  className="w-full py-2 bg-amber-600 text-white text-sm font-medium rounded-lg hover:bg-amber-700 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors"
+                >
+                  {triageSaving ? (
+                    <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</>
+                  ) : (
+                    <><Save className="w-4 h-4" /> Save Triage Assessment</>
+                  )}
+                </button>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Vitals Entry */}
