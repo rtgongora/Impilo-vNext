@@ -32,10 +32,10 @@ import java.util.concurrent.ThreadLocalRandom;
  *   ARRIVED               -&gt;  TRIAGED, QUEUED, CANCELLED, NO_SHOW
  *   TRIAGED               -&gt;  QUEUED, CANCELLED, NO_SHOW
  *   QUEUED                -&gt;  IN_SERVICE, NO_SHOW, LEFT_WITHOUT_BEING_SEEN, CANCELLED
- *   IN_SERVICE            -&gt;  ADMITTED, DISCHARGE_PENDING, QUEUED (re-queue), CANCELLED
+ *   IN_SERVICE            -&gt;  ADMITTED, DISCHARGE_PENDING, QUEUED (re-queue), CANCELLED, DEATH_RECORDED
  *   ADMITTED              -&gt;  TRANSFERRED, DISCHARGE_PENDING, DEATH_RECORDED
  *   TRANSFERRED           -&gt;  ADMITTED, DISCHARGE_PENDING
- *   DISCHARGE_PENDING     -&gt;  DISCHARGED, CANCELLED (cancel discharge)
+ *   DISCHARGE_PENDING     -&gt;  DISCHARGED, ADMITTED, TRANSFERRED, DEATH_RECORDED, CANCELLED
  *   DEATH_RECORDED        -&gt;  (terminal)
  *   DISCHARGED            -&gt;  (terminal)
  *   CANCELLED             -&gt;  (terminal)
@@ -83,7 +83,8 @@ public class JourneyStateMachine {
 
         m.put(JourneyState.IN_SERVICE,
                 EnumSet.of(JourneyState.ADMITTED, JourneyState.DISCHARGE_PENDING,
-                        JourneyState.QUEUED, JourneyState.CANCELLED));
+                        JourneyState.QUEUED, JourneyState.CANCELLED,
+                        JourneyState.DEATH_RECORDED));
 
         m.put(JourneyState.ADMITTED,
                 EnumSet.of(JourneyState.TRANSFERRED, JourneyState.DISCHARGE_PENDING,
@@ -92,8 +93,14 @@ public class JourneyStateMachine {
         m.put(JourneyState.TRANSFERRED,
                 EnumSet.of(JourneyState.ADMITTED, JourneyState.DISCHARGE_PENDING));
 
+        // DISCHARGE_PENDING can reach any terminal disposition state.
+        // The specific target is determined by the discharge type:
+        //   CLINICAL → DISCHARGED, ADMIT → ADMITTED, TRANSFER → TRANSFERRED,
+        //   DEATH → DEATH_RECORDED, or CANCELLED (cancel discharge)
         m.put(JourneyState.DISCHARGE_PENDING,
-                EnumSet.of(JourneyState.DISCHARGED, JourneyState.CANCELLED));
+                EnumSet.of(JourneyState.DISCHARGED, JourneyState.ADMITTED,
+                        JourneyState.TRANSFERRED, JourneyState.DEATH_RECORDED,
+                        JourneyState.CANCELLED));
 
         // Terminal states have no outgoing transitions
         m.put(JourneyState.DEATH_RECORDED, EnumSet.noneOf(JourneyState.class));
