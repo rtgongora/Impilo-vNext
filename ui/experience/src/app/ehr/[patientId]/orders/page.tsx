@@ -27,13 +27,16 @@ import {
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useEncounters } from "@/hooks/queries/useEncounters";
+import { useQueryClient } from "@tanstack/react-query";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
 
 const STATUS_BADGE: Record<string, string> = {
   ORDERED: "bg-blue-100 text-blue-700",
   COLLECTED: "bg-yellow-100 text-yellow-700",
   RESULTED: "bg-green-100 text-green-700",
-  CANCELLED: "bg-gray-100 text-gray-600" };
+  REVIEWED: "bg-purple-100 text-purple-700",
+  CANCELLED: "bg-gray-100 text-gray-600",
+};
 
 const PRIORITY_BADGE: Record<string, string> = {
   STAT: "bg-red-100 text-red-700",
@@ -60,6 +63,7 @@ export default function OrdersPage() {
     (e) => e.attributes.status === "IN_PROGRESS" || e.attributes.status === "ACTIVE"
   );
 
+  const queryClient = useQueryClient();
   const { data: ordersData, isLoading } = useLabOrders(patientId);
   const createOrder = useCreateLabOrder();
   const collectOrder = useCollectLabOrder();
@@ -462,8 +466,19 @@ export default function OrdersPage() {
                               </button>
                             )}
                             {order.attributes.status === "RESULTED" && (
-                              <span className="text-xs text-green-600 flex items-center gap-1 justify-end">
-                                <CheckCircle2 className="w-3 h-3" /> Complete
+                              <button
+                                onClick={async () => {
+                                  await apiClient.post(`/internal/v1/lab-orders/${order.id}/acknowledge`);
+                                  queryClient.invalidateQueries({ queryKey: ["lab-orders"] });
+                                }}
+                                className="px-2.5 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded hover:bg-purple-200 transition-colors"
+                              >
+                                Acknowledge
+                              </button>
+                            )}
+                            {order.attributes.status === "REVIEWED" && (
+                              <span className="text-xs text-purple-600 flex items-center gap-1 justify-end">
+                                <CheckCircle2 className="w-3 h-3" /> Reviewed
                               </span>
                             )}
                           </td>

@@ -369,6 +369,72 @@ public class LabOrdersController {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * Acknowledge a lab order result (clinician review).
+     * POST /internal/v1/lab-orders/{id}/acknowledge
+     *
+     * Transitions the order to REVIEWED status and delegates to OROS.
+     */
+    @PostMapping("/{id}/acknowledge")
+    @Transactional
+    public ResponseEntity<Map<String, Object>> acknowledgeLabOrder(
+            @PathVariable UUID id,
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.POD_ID) String podId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
+            @RequestBody(required = false) Map<String, Object> body) {
+
+        LabOrder order = labOrderRepository.findByIdAndTenantId(id, tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException("Lab order not found: " + id));
+
+        if (!"RESULTED".equals(order.getStatus())) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", Map.of("code", "INVALID_STATE", "message",
+                            "Cannot acknowledge order in status: " + order.getStatus())));
+        }
+
+        // Update local status to REVIEWED
+        jdbcTemplate.update(
+                "UPDATE lab_orders SET status = 'REVIEWED', updated_at = ? WHERE id = ? AND tenant_id = ?",
+                OffsetDateTime.now(), id, tenantId);
+
+        String notes = body != null && body.containsKey("notes") ? (String) body.get("notes") : null;
+
+        // Delegate to OROS
+        List<Map<String, Object>> orosRows = jdbcTemplate.queryForList(
+                "SELECT oros_order_id FROM lab_orders WHERE id = ? AND tenant_id = ?", id, tenantId);
+        if (!orosRows.isEmpty() && orosRows.get(0).get("oros_order_id") != null) {
+            try {
+                orosClient.acknowledgeOrder(
+                        orosRows.get(0).get("oros_order_id").toString(), "CLINICIAN", notes);
+                log.info("OROS acknowledgement posted for order={}", id);
+            } catch (Exception e) {
+                log.warn("OROS acknowledgement failed (non-blocking): {}", e.getMessage());
+            }
+        }
+
+        outboxService.writeOutboxEvent(
+                "impilo.experience.lab-order.acknowledged.v1",
+                correlationId, requestId,
+                idempotencyKey != null ? idempotencyKey : requestId,
+                tenantId, podId,
+                "LabOrder", id.toString(),
+                Map.of("order_id", id.toString(), "status", "REVIEWED"),
+                Map.of()
+        );
+
+        // Re-fetch to return updated state
+        LabOrder updated = labOrderRepository.findByIdAndTenantId(id, tenantId)
+                .orElse(order);
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", toResource(updated));
+        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
+        return ResponseEntity.ok(response);
+    }
+
     @PostMapping("/{id}/cancel")
     @Transactional
     public ResponseEntity<Map<String, Object>> cancelLabOrder(

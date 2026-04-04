@@ -86,6 +86,18 @@ export function useCollectLabOrder() {
   });
 }
 
+export function useAcknowledgeLabOrder() {
+  const queryClient = useQueryClient();
+
+  return useMutation<LabOrderResponse, unknown, { id: string; notes?: string }>({
+    mutationFn: ({ id, notes }: { id: string; notes?: string }) =>
+      apiClient.post<LabOrderResponse>(`/internal/v1/lab-orders/${id}/acknowledge`, notes ? { notes } : undefined),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["lab-orders"] });
+    },
+  });
+}
+
 export function useCancelLabOrder() {
   const queryClient = useQueryClient();
 

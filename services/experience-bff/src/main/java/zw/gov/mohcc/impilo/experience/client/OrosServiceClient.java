@@ -118,6 +118,25 @@ public class OrosServiceClient {
     }
 
     /**
+     * Acknowledge an order result in OROS.
+     *
+     * @param orderId the OROS order ID
+     * @param ackType DEPARTMENT, CLINICIAN, or CRITICAL
+     * @param notes   optional acknowledgement notes
+     * @return the acknowledgement response
+     */
+    public JsonNode acknowledgeOrder(String orderId, String ackType, String notes) {
+        String url = baseUrl + "/v1/orders/" + orderId + "/ack";
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("ackType", ackType);
+        if (notes != null) body.put("notes", notes);
+
+        log.info("OROS: Acknowledging order={}, type={}", orderId, ackType);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
      * Get results for an OROS order.
      *
      * @param orderId the OROS order ID
