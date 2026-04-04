@@ -1,22 +1,22 @@
 "use client";
 
 /**
- * Home — Role-aware dashboard with contextual quick actions,
- * active shift/facility context, and recent encounter activity.
- * Route: /home | pageTitle: "Home"
+ * Home — Role-aware dashboard with workplace hub, professional stats,
+ * module categories, and recent activity.
  *
  * Lovable reference: ModuleHome with WorkplaceSelectionHub,
- * MyProfessionalHub, PersonalHub, and ExpandableCategoryCards.
- * Simplified for runtime: role-filtered quick actions + real data.
+ * MyProfessionalHub (Dashboard/Affiliations/Schedule/Credentials),
+ * and ExpandableCategoryCards.
  */
 
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Users, BookOpen, BarChart3, Clock, ArrowRight, Building2,
   Activity, Receipt, Pill, Calendar, Shield, Stethoscope,
-  ClipboardList, UserPlus, Package, Settings, FileText,
-  MapPin, Loader2,
+  ClipboardList, Package, Settings, FileText, MapPin, Loader2,
+  ChevronRight, Video, ShoppingCart, Database, AlertTriangle,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
@@ -30,112 +30,136 @@ import { useFacilities, type FacilityResource } from "@/hooks/queries/useFacilit
 import { useProviderLicenses, hasActiveLicense } from "@/hooks/queries/useLicenses";
 import { apiClient } from "@/lib/api-client";
 
-interface QuickAction {
-  title: string;
+// ── Module category types ────────────────────────────────────────
+interface ModuleItem {
+  label: string;
   description: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   color: string;
+  requiresClinical?: boolean;
+  requiresAdmin?: boolean;
+  requiresFinance?: boolean;
+  requiresDispenser?: boolean;
+}
+
+interface ModuleCategory {
+  id: string;
+  title: string;
+  icon: React.ComponentType<{ className?: string }>;
+  color: string;
+  modules: ModuleItem[];
+}
+
+// ── Module categories (aligned to Lovable ExpandableCategoryCards) ──
+function getModuleCategories(roles: {
+  isClinical: boolean; isAdmin: boolean; isFinance: boolean; isDispenser: boolean;
+}): ModuleCategory[] {
+  const cats: ModuleCategory[] = [];
+
+  if (roles.isClinical) {
+    cats.push({
+      id: "clinical",
+      title: "Clinical Care",
+      icon: Stethoscope,
+      color: "bg-blue-500",
+      modules: [
+        { label: "Patient Queue", description: "Waiting patients & triage", href: "/queue", icon: Users, color: "bg-blue-100 text-blue-600" },
+        { label: "Patient Search", description: "Find patients by name or ID", href: "/queue/search", icon: Users, color: "bg-gray-100 text-gray-600" },
+        { label: "Scheduling", description: "Appointments & booking", href: "/scheduling", icon: Calendar, color: "bg-cyan-100 text-cyan-600" },
+        { label: "Telemedicine", description: "Virtual consultations", href: "/telemedicine", icon: Video, color: "bg-teal-100 text-teal-600" },
+        { label: "Shift Handoff", description: "Care continuity reports", href: "/shift/handover", icon: Clock, color: "bg-amber-100 text-amber-600" },
+      ],
+    });
+  }
+
+  if (roles.isClinical || roles.isDispenser) {
+    cats.push({
+      id: "orders",
+      title: "Orders & Pharmacy",
+      icon: Pill,
+      color: "bg-green-500",
+      modules: [
+        ...(roles.isDispenser ? [
+          { label: "Pharmacy", description: "Dispensing & medication tracking", href: "/pharmacy", icon: Pill, color: "bg-green-100 text-green-600" },
+          { label: "Prescriptions", description: "View pending prescriptions", href: "/pharmacy/prescriptions", icon: FileText, color: "bg-blue-100 text-blue-600" },
+          { label: "Stock", description: "Pharmacy stock levels", href: "/pharmacy/stock", icon: Package, color: "bg-amber-100 text-amber-600" },
+        ] : []),
+        ...(roles.isClinical ? [
+          { label: "Walk-in Registration", description: "New patient intake", href: "/queue/walk-in", icon: Users, color: "bg-orange-100 text-orange-600" },
+        ] : []),
+      ],
+    });
+  }
+
+  if (roles.isFinance) {
+    cats.push({
+      id: "finance",
+      title: "Finance & Billing",
+      icon: Receipt,
+      color: "bg-emerald-500",
+      modules: [
+        { label: "Billing", description: "Bills & invoices", href: "/finance/billing", icon: FileText, color: "bg-blue-100 text-blue-600" },
+        { label: "Payments", description: "Payment tracking", href: "/finance/payments", icon: Receipt, color: "bg-green-100 text-green-600" },
+        { label: "Claims", description: "Insurance claims", href: "/finance/claims", icon: ClipboardList, color: "bg-purple-100 text-purple-600" },
+        { label: "Tariffs", description: "Tariff schedules", href: "/finance/tariffs", icon: BarChart3, color: "bg-amber-100 text-amber-600" },
+      ],
+    });
+  }
+
+  cats.push({
+    id: "registry",
+    title: "Registries & Reference",
+    icon: Database,
+    color: "bg-indigo-500",
+    modules: [
+      { label: "Providers", description: "Provider registry", href: "/registry/providers", icon: Stethoscope, color: "bg-teal-100 text-teal-600" },
+      { label: "Facilities", description: "Facility registry", href: "/registry/facilities", icon: Building2, color: "bg-purple-100 text-purple-600" },
+      { label: "Products", description: "Product catalogue", href: "/registry/products", icon: Package, color: "bg-orange-100 text-orange-600" },
+      { label: "Terminology", description: "ICD, SNOMED, LOINC", href: "/registry/terminology", icon: BookOpen, color: "bg-blue-100 text-blue-600" },
+    ],
+  });
+
+  cats.push({
+    id: "operations",
+    title: "Operations & Inventory",
+    icon: Package,
+    color: "bg-orange-500",
+    modules: [
+      { label: "Inventory", description: "Stock management", href: "/inventory", icon: Package, color: "bg-orange-100 text-orange-600" },
+      { label: "Marketplace", description: "Health products & vendors", href: "/marketplace", icon: ShoppingCart, color: "bg-purple-100 text-purple-600" },
+      { label: "Reports", description: "Analytics & dashboards", href: "/reports", icon: BarChart3, color: "bg-indigo-100 text-indigo-600" },
+    ],
+  });
+
+  if (roles.isAdmin) {
+    cats.push({
+      id: "admin",
+      title: "Governance & Admin",
+      icon: Shield,
+      color: "bg-slate-600",
+      modules: [
+        { label: "User Management", description: "Users, roles & policies", href: "/admin/users", icon: Users, color: "bg-red-100 text-red-600" },
+        { label: "Audit Trail", description: "System audit logs", href: "/admin/audit", icon: ClipboardList, color: "bg-amber-100 text-amber-600" },
+        { label: "System Settings", description: "Configuration & security", href: "/admin", icon: Settings, color: "bg-gray-100 text-gray-600" },
+      ],
+    });
+  }
+
+  return cats;
 }
 
 export default function HomePage() {
   const user = useAuthStore((s) => s.user);
   const facility = useFacilityStore((s) => s.facility);
   const shift = useShiftStore((s) => s.shift);
-  const { isClinical, isPrescriber, isDispenser, isQueueManager, isAdmin, isFinance } = useRoleGroup();
+  const roleGroup = useRoleGroup();
+  const { isClinical, isAdmin, isFinance, isDispenser } = roleGroup;
+  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
 
   const greeting = getGreeting();
-
-  // Build role-aware quick actions
-  const actions: QuickAction[] = [];
-  if (isQueueManager) {
-    actions.push({
-      title: "Patient Queue",
-      description: "Open the patient queue dashboard",
-      href: "/queue",
-      icon: Users,
-      color: "bg-blue-100 text-blue-600",
-    });
-  }
-  if (isClinical) {
-    actions.push({
-      title: "Scheduling",
-      description: "View and manage appointments",
-      href: "/scheduling",
-      icon: Calendar,
-      color: "bg-cyan-100 text-cyan-600",
-    });
-  }
-  if (isPrescriber) {
-    actions.push({
-      title: "Orders & Results",
-      description: "Place and review clinical orders",
-      href: "/queue",
-      icon: ClipboardList,
-      color: "bg-purple-100 text-purple-600",
-    });
-  }
-  if (isDispenser) {
-    actions.push({
-      title: "Pharmacy",
-      description: "Dispense medications and manage stock",
-      href: "/pharmacy",
-      icon: Pill,
-      color: "bg-green-100 text-green-600",
-    });
-  }
-  if (isFinance) {
-    actions.push({
-      title: "Finance",
-      description: "Billing, payments, and claims",
-      href: "/finance",
-      icon: Receipt,
-      color: "bg-emerald-100 text-emerald-600",
-    });
-  }
-  if (isAdmin) {
-    actions.push({
-      title: "Administration",
-      description: "User management, roles, and audit",
-      href: "/admin",
-      icon: Shield,
-      color: "bg-red-100 text-red-600",
-    });
-  }
-  // Always available
-  actions.push(
-    {
-      title: "Registry",
-      description: "Providers, facilities, and terminology",
-      href: "/registry",
-      icon: BookOpen,
-      color: "bg-amber-100 text-amber-600",
-    },
-    {
-      title: "Reports",
-      description: "Clinical and operational reports",
-      href: "/reports",
-      icon: BarChart3,
-      color: "bg-indigo-100 text-indigo-600",
-    },
-    {
-      title: "Settings",
-      description: "Account, security, and preferences",
-      href: "/settings",
-      icon: Settings,
-      color: "bg-gray-100 text-gray-600",
-    },
-  );
-
   const router = useRouter();
   const hasWorkContext = !!facility;
-
-  // Fetch license data for clinical providers
-  const { data: licenseData } = useProviderLicenses(
-    isClinical ? user?.id : undefined
-  );
-  const licenses = licenseData?.data ?? [];
-  const licenseActive = licenses.length === 0 || hasActiveLicense(licenses);
 
   // Fetch facilities for workplace selection hub
   const { data: facilitiesData, isLoading: facilitiesLoading } = useFacilities();
@@ -149,19 +173,33 @@ export default function HomePage() {
       facilityType: f.attributes.facilityType,
       capabilities: f.attributes.capabilities ?? [],
     });
-    // Set work mode to clinical when selecting a facility for clinical work
     useWorkModeStore.getState().setMode("clinical");
     router.push("/workspace");
   }
 
-  // Fetch recent encounters if clinical
+  // Fetch license data for clinical providers
+  const { data: licenseData } = useProviderLicenses(isClinical ? user?.id : undefined);
+  const licenses = licenseData?.data ?? [];
+  const licenseActive = licenses.length === 0 || hasActiveLicense(licenses);
+
+  // Fetch recent encounters
   const { data: recentEncounters } = useQuery<{ data: Array<{ id: string; attributes: Record<string, unknown> }> }>({
     queryKey: ["home-recent-encounters"],
     queryFn: () => apiClient.get("/internal/v1/encounters?size=5"),
     enabled: isClinical,
   });
-
   const encounters = recentEncounters?.data ?? [];
+
+  // Fetch today's appointments
+  const { data: appointmentsData } = useQuery<{ data: Array<{ id: string; attributes: Record<string, unknown> }> }>({
+    queryKey: ["home-today-appointments"],
+    queryFn: () => apiClient.get("/internal/v1/appointments?size=5"),
+    enabled: isClinical,
+  });
+  const appointments = appointmentsData?.data ?? [];
+
+  // Module categories
+  const categories = getModuleCategories({ isClinical, isAdmin, isFinance, isDispenser });
 
   return (
     <AppLayout>
@@ -175,9 +213,7 @@ export default function HomePage() {
                   {greeting}, {user?.displayName ?? "User"}
                 </h2>
                 <p className="text-sm text-gray-500 mt-1">
-                  {user?.roles?.length
-                    ? user.roles.join(" · ")
-                    : "Welcome to Impilo vNext"}
+                  {user?.roles?.length ? user.roles.join(" · ") : "Welcome to Impilo vNext"}
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -206,10 +242,7 @@ export default function HomePage() {
               {shift && (
                 <div className="flex items-center gap-2 text-sm text-gray-600 bg-green-50 px-3 py-1.5 rounded-lg">
                   <Activity className="w-4 h-4 text-green-500" />
-                  <span>
-                    Shift active since{" "}
-                    {new Date(shift.startedAt).toLocaleTimeString()}
-                  </span>
+                  <span>Shift active since {new Date(shift.startedAt).toLocaleTimeString()}</span>
                 </div>
               )}
               {!shift && !facility && (
@@ -219,10 +252,7 @@ export default function HomePage() {
                 </div>
               )}
               {facility && !shift && (
-                <Link
-                  href="/shift"
-                  className="flex items-center gap-2 text-sm text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition-colors"
-                >
+                <Link href="/shift" className="flex items-center gap-2 text-sm text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition-colors">
                   <Clock className="w-4 h-4" />
                   <span>Start a shift</span>
                   <ArrowRight className="w-3 h-3" />
@@ -231,17 +261,14 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Workplace Selection Hub — shown when no facility selected */}
+          {/* Workplace Selection Hub — when no facility */}
           {!hasWorkContext && (
             <div className="bg-white rounded-lg border-2 border-blue-200 p-6">
               <div className="flex items-center gap-2 mb-4">
                 <MapPin className="w-5 h-5 text-blue-600" />
                 <h3 className="text-base font-semibold text-gray-900">Where are you working from?</h3>
               </div>
-              <p className="text-sm text-gray-500 mb-4">
-                Select your facility to begin clinical, operational, or administrative work.
-              </p>
-
+              <p className="text-sm text-gray-500 mb-4">Select your facility to begin clinical, operational, or administrative work.</p>
               {facilitiesLoading ? (
                 <div className="flex items-center gap-2 py-6 justify-center">
                   <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
@@ -251,70 +278,48 @@ export default function HomePage() {
                 <div className="text-center py-6">
                   <Building2 className="w-8 h-8 text-gray-300 mx-auto mb-2" />
                   <p className="text-sm text-gray-400">No facilities available</p>
-                  <Link
-                    href="/facility"
-                    className="mt-2 inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
-                  >
+                  <Link href="/facility" className="mt-2 inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800">
                     Browse all facilities <ArrowRight className="w-3 h-3" />
                   </Link>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                   {facilities.slice(0, 6).map((f) => (
-                    <button
-                      key={f.id}
-                      onClick={() => selectFacility(f)}
-                      className="text-left bg-gray-50 rounded-lg border border-gray-200 p-4 hover:border-blue-300 hover:bg-blue-50 transition-all group"
-                    >
+                    <button key={f.id} onClick={() => selectFacility(f)}
+                      className="text-left bg-gray-50 rounded-lg border border-gray-200 p-4 hover:border-blue-300 hover:bg-blue-50 transition-all group">
                       <div className="flex items-start gap-3">
                         <Building2 className="w-5 h-5 text-gray-400 group-hover:text-blue-500 shrink-0 mt-0.5" />
                         <div>
-                          <p className="text-sm font-medium text-gray-900 group-hover:text-blue-700">
-                            {f.attributes.name}
-                          </p>
-                          <p className="text-xs text-gray-500 mt-0.5">
-                            {f.attributes.facilityType} &middot; {f.attributes.code}
-                          </p>
+                          <p className="text-sm font-medium text-gray-900 group-hover:text-blue-700">{f.attributes.name}</p>
+                          <p className="text-xs text-gray-500 mt-0.5">{f.attributes.facilityType} &middot; {f.attributes.code}</p>
                         </div>
                       </div>
                     </button>
                   ))}
                   {facilities.length > 6 && (
-                    <Link
-                      href="/facility"
-                      className="flex items-center justify-center gap-1 text-sm text-blue-600 hover:text-blue-800 p-4 border border-dashed border-gray-300 rounded-lg hover:border-blue-300 transition-colors"
-                    >
+                    <Link href="/facility" className="flex items-center justify-center gap-1 text-sm text-blue-600 hover:text-blue-800 p-4 border border-dashed border-gray-300 rounded-lg hover:border-blue-300 transition-colors">
                       View all {facilities.length} facilities <ArrowRight className="w-3 h-3" />
                     </Link>
                   )}
                 </div>
               )}
-
-              {/* Non-facility work modes */}
               {(isAdmin || isFinance) && (
                 <div className="mt-4 pt-4 border-t border-gray-200">
                   <p className="text-xs text-gray-500 mb-2">Or work without a facility context:</p>
                   <div className="flex flex-wrap gap-2">
                     {isAdmin && (
-                      <button
-                        onClick={() => { useWorkModeStore.getState().setMode("admin"); router.push("/admin"); }}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-                      >
+                      <button onClick={() => { useWorkModeStore.getState().setMode("admin"); router.push("/admin"); }}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
                         <Shield className="w-3.5 h-3.5" /> Administration
                       </button>
                     )}
                     {isFinance && (
-                      <button
-                        onClick={() => { useWorkModeStore.getState().setMode("finance"); router.push("/finance"); }}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-                      >
+                      <button onClick={() => { useWorkModeStore.getState().setMode("finance"); router.push("/finance"); }}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
                         <Receipt className="w-3.5 h-3.5" /> Finance
                       </button>
                     )}
-                    <Link
-                      href="/reports"
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-                    >
+                    <Link href="/reports" className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
                       <BarChart3 className="w-3.5 h-3.5" /> Reports
                     </Link>
                   </div>
@@ -323,92 +328,65 @@ export default function HomePage() {
             </div>
           )}
 
-          {/* Quick Actions */}
-          <div>
-            <h3 className="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">
-              Quick Actions
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {actions.map((action) => {
-                const Icon = action.icon;
-                return (
-                  <Link
-                    key={action.href + action.title}
-                    href={action.href}
-                    className="bg-white rounded-lg border border-gray-200 p-5 hover:border-blue-300 hover:shadow-md transition-all group"
-                  >
-                    <div className="flex items-start gap-3">
-                      <div
-                        className={`w-10 h-10 rounded-lg ${action.color} flex items-center justify-center shrink-0`}
-                      >
-                        <Icon className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <h4 className="font-medium text-gray-900 text-sm group-hover:text-blue-600 transition-colors">
-                          {action.title}
-                        </h4>
-                        <p className="text-xs text-gray-500 mt-0.5">{action.description}</p>
-                      </div>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Recent Encounters (clinical users only) */}
-          {isClinical && (
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
-                  Recent Encounters
-                </h3>
-                <Link href="/queue" className="text-xs text-blue-600 hover:text-blue-800">
-                  View Queue →
-                </Link>
-              </div>
+          {/* Professional Dashboard — stats + schedule (Lovable MyProfessionalHub) */}
+          {isClinical && hasWorkContext && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Today's Schedule */}
               <div className="bg-white rounded-lg border border-gray-200">
-                {encounters.length === 0 ? (
-                  <div className="p-8 text-center">
-                    <Stethoscope className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                    <p className="text-gray-400 text-sm">No recent encounters</p>
-                    <p className="text-gray-400 text-xs mt-1">
-                      Encounters from your shifts will appear here.
-                    </p>
+                <div className="px-5 py-3 border-b flex items-center justify-between">
+                  <h3 className="text-sm font-medium text-gray-900">Today&apos;s Schedule</h3>
+                  <Link href="/scheduling" className="text-xs text-blue-600 hover:text-blue-800">View All →</Link>
+                </div>
+                {appointments.length === 0 ? (
+                  <div className="p-6 text-center">
+                    <Calendar className="w-6 h-6 text-gray-300 mx-auto mb-1" />
+                    <p className="text-xs text-gray-400">No appointments today</p>
                   </div>
                 ) : (
                   <div className="divide-y divide-gray-100">
-                    {encounters.map((enc) => {
+                    {appointments.slice(0, 4).map((apt) => (
+                      <div key={apt.id} className="px-5 py-2.5 flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-gray-900">{(apt.attributes.appointment_type as string) ?? "Appointment"}</p>
+                          <p className="text-xs text-gray-500">{apt.attributes.start_time ? new Date(apt.attributes.start_time as string).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"}</p>
+                        </div>
+                        <span className={`px-2 py-0.5 text-xs rounded-full ${apt.attributes.status === "CONFIRMED" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"}`}>
+                          {(apt.attributes.status as string) ?? "—"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Recent Encounters */}
+              <div className="bg-white rounded-lg border border-gray-200">
+                <div className="px-5 py-3 border-b flex items-center justify-between">
+                  <h3 className="text-sm font-medium text-gray-900">Recent Encounters</h3>
+                  <Link href="/queue" className="text-xs text-blue-600 hover:text-blue-800">Queue →</Link>
+                </div>
+                {encounters.length === 0 ? (
+                  <div className="p-6 text-center">
+                    <Stethoscope className="w-6 h-6 text-gray-300 mx-auto mb-1" />
+                    <p className="text-xs text-gray-400">No recent encounters</p>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-gray-100">
+                    {encounters.slice(0, 4).map((enc) => {
                       const a = enc.attributes;
-                      const status = (a.status as string) ?? "";
-                      const isActive = status === "IN_PROGRESS" || status === "ACTIVE";
+                      const isActive = a.status === "IN_PROGRESS" || a.status === "ACTIVE";
                       return (
-                        <Link
-                          key={enc.id}
-                          href={`/ehr/${a.patient_id}/encounter/${enc.id}`}
-                          className="flex items-center justify-between px-5 py-3 hover:bg-gray-50 transition-colors"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className={`w-2 h-2 rounded-full ${isActive ? "bg-green-500" : "bg-gray-300"}`} />
+                        <Link key={enc.id} href={`/ehr/${a.patient_id}/encounter/${enc.id}`}
+                          className="flex items-center justify-between px-5 py-2.5 hover:bg-gray-50 transition-colors">
+                          <div className="flex items-center gap-2">
+                            <div className={`w-1.5 h-1.5 rounded-full ${isActive ? "bg-green-500" : "bg-gray-300"}`} />
                             <div>
-                              <p className="text-sm font-medium text-gray-900">
-                                {((a.encounter_type as string) ?? "Encounter").replace(/_/g, " ")}
-                              </p>
-                              <p className="text-xs text-gray-500">
-                                {a.started_at
-                                  ? new Date(a.started_at as string).toLocaleString()
-                                  : "—"}
-                              </p>
+                              <p className="text-sm text-gray-900">{((a.encounter_type as string) ?? "Encounter").replace(/_/g, " ")}</p>
+                              <p className="text-xs text-gray-500">{a.started_at ? new Date(a.started_at as string).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"}</p>
                             </div>
                           </div>
-                          <span
-                            className={`px-2 py-0.5 text-xs rounded-full font-medium ${
-                              isActive
-                                ? "bg-green-100 text-green-700"
-                                : "bg-gray-100 text-gray-600"
-                            }`}
-                          >
-                            {status.replace(/_/g, " ")}
+                          <span className={`px-2 py-0.5 text-xs rounded-full ${isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"}`}>
+                            {(a.status as string)?.replace(/_/g, " ") ?? "—"}
                           </span>
                         </Link>
                       );
@@ -419,37 +397,75 @@ export default function HomePage() {
             </div>
           )}
 
-          {/* Finance Summary (finance users only) */}
+          {/* Module Categories (Lovable ExpandableCategoryCards) */}
+          <div>
+            <h3 className="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">Modules</h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+              {categories.map((cat) => {
+                const CatIcon = cat.icon;
+                const isExpanded = expandedCategory === cat.id;
+                return (
+                  <div key={cat.id}>
+                    <button
+                      onClick={() => setExpandedCategory(isExpanded ? null : cat.id)}
+                      className={`w-full text-left rounded-lg border p-4 transition-all ${
+                        isExpanded ? "border-blue-300 bg-blue-50 shadow-sm" : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-9 h-9 rounded-lg ${cat.color} flex items-center justify-center shrink-0`}>
+                          <CatIcon className="w-4.5 h-4.5 text-white" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">{cat.title}</p>
+                          <p className="text-xs text-gray-500">{cat.modules.length} modules</p>
+                        </div>
+                      </div>
+                    </button>
+                    {isExpanded && (
+                      <div className="mt-2 bg-white rounded-lg border border-gray-200 p-3 space-y-1">
+                        {cat.modules.map((mod) => {
+                          const ModIcon = mod.icon;
+                          return (
+                            <Link key={mod.href + mod.label} href={mod.href}
+                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors group">
+                              <div className={`w-7 h-7 rounded ${mod.color} flex items-center justify-center shrink-0`}>
+                                <ModIcon className="w-3.5 h-3.5" />
+                              </div>
+                              <div className="min-w-0">
+                                <p className="text-sm text-gray-900 group-hover:text-blue-600">{mod.label}</p>
+                                <p className="text-xs text-gray-500 truncate">{mod.description}</p>
+                              </div>
+                              <ChevronRight className="w-3.5 h-3.5 text-gray-400 shrink-0 ml-auto" />
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Finance Overview (finance users only) */}
           {isFinance && (
             <div>
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
-                  Finance Overview
-                </h3>
-                <Link href="/finance" className="text-xs text-blue-600 hover:text-blue-800">
-                  Finance Dashboard →
-                </Link>
+                <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Finance Overview</h3>
+                <Link href="/finance" className="text-xs text-blue-600 hover:text-blue-800">Finance Dashboard →</Link>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Link href="/finance/billing" className="bg-white rounded-lg border border-gray-200 p-4 hover:border-blue-300 transition-colors">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Receipt className="w-4 h-4 text-blue-500" />
-                    <span className="text-sm font-medium text-gray-900">Billing</span>
-                  </div>
+                  <div className="flex items-center gap-2 mb-2"><Receipt className="w-4 h-4 text-blue-500" /><span className="text-sm font-medium text-gray-900">Billing</span></div>
                   <p className="text-xs text-gray-500">View and manage bills</p>
                 </Link>
                 <Link href="/finance/payments" className="bg-white rounded-lg border border-gray-200 p-4 hover:border-blue-300 transition-colors">
-                  <div className="flex items-center gap-2 mb-2">
-                    <FileText className="w-4 h-4 text-green-500" />
-                    <span className="text-sm font-medium text-gray-900">Payments</span>
-                  </div>
+                  <div className="flex items-center gap-2 mb-2"><FileText className="w-4 h-4 text-green-500" /><span className="text-sm font-medium text-gray-900">Payments</span></div>
                   <p className="text-xs text-gray-500">Track payment status</p>
                 </Link>
                 <Link href="/finance/claims" className="bg-white rounded-lg border border-gray-200 p-4 hover:border-blue-300 transition-colors">
-                  <div className="flex items-center gap-2 mb-2">
-                    <ClipboardList className="w-4 h-4 text-purple-500" />
-                    <span className="text-sm font-medium text-gray-900">Claims</span>
-                  </div>
+                  <div className="flex items-center gap-2 mb-2"><ClipboardList className="w-4 h-4 text-purple-500" /><span className="text-sm font-medium text-gray-900">Claims</span></div>
                   <p className="text-xs text-gray-500">Insurance claim tracking</p>
                 </Link>
               </div>
