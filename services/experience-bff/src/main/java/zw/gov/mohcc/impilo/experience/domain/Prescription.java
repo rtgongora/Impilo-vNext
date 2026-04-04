@@ -55,9 +55,22 @@ public class Prescription {
     protected Prescription() {}
 
     public void dispense(String dispensedBy) {
+        if ("DISPENSED".equals(this.status) || "CANCELLED".equals(this.status)) {
+            throw new IllegalStateException(
+                    "Cannot dispense prescription in status: " + this.status);
+        }
         this.dispensedBy = dispensedBy;
         this.dispensedAt = OffsetDateTime.now();
         this.status = "DISPENSED";
+        this.updatedAt = OffsetDateTime.now();
+    }
+
+    public void cancel() {
+        if ("DISPENSED".equals(this.status) || "CANCELLED".equals(this.status)) {
+            throw new IllegalStateException(
+                    "Cannot cancel prescription in status: " + this.status);
+        }
+        this.status = "CANCELLED";
         this.updatedAt = OffsetDateTime.now();
     }
 

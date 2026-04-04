@@ -1,0 +1,72 @@
+package zw.gov.mohcc.impilo.experience.client;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
+import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.UUID;
+
+/**
+ * HTTP client for the Pharmacy sovereign service.
+ *
+ * <p>Delegates dispense operations to the pharmacy-service, which manages
+ * the canonical dispense lifecycle including accept, pick, partial dispense,
+ * complete dispense, and backorder workflows.</p>
+ */
+@Component
+public class PharmacyServiceClient {
+
+    private static final Logger log = LoggerFactory.getLogger(PharmacyServiceClient.class);
+
+    private final RestTemplate restTemplate;
+    private final String baseUrl;
+
+    public PharmacyServiceClient(RestTemplate serviceRestTemplate,
+                                 ServiceClientConfig.ServiceEndpoints endpoints) {
+        this.restTemplate = serviceRestTemplate;
+        this.baseUrl = endpoints.pharmacyBaseUrl();
+    }
+
+    /**
+     * Get dispense orders for a patient by CPID.
+     */
+    public JsonNode getPatientDispenseOrders(String cpid) {
+        String url = baseUrl + "/v1/dispense-orders/patient/" + cpid;
+        log.debug("Pharmacy: Getting dispense orders for patient={}", cpid);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Complete a dispense order.
+     */
+    public JsonNode completeDispense(UUID dispenseOrderId) {
+        String url = baseUrl + "/v1/dispense-orders/" + dispenseOrderId + "/complete";
+        log.info("Pharmacy: Completing dispense order={}", dispenseOrderId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, null, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Get the pharmacy worklist for a facility.
+     */
+    public JsonNode getWorklist(String facilityId, String status) {
+        StringBuilder url = new StringBuilder(baseUrl + "/v1/worklists?facilityId=" + facilityId);
+        if (status != null) url.append("&status=").append(status);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url.toString(), JsonNode.class);
+        return extractData(response);
+    }
+
+    private JsonNode extractData(ResponseEntity<JsonNode> response) {
+        if (response.getBody() != null && response.getBody().has("data")) {
+            return response.getBody().get("data");
+        }
+        return response.getBody();
+    }
+}

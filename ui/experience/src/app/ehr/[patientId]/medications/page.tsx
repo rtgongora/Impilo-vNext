@@ -288,18 +288,31 @@ export default function MedicationsPage() {
                           </p>
                         </div>
                         {isPending && (
-                          <button
-                            onClick={() => handleDispense(rx.id)}
-                            disabled={dispensing === rx.id}
-                            className="px-3 py-1.5 bg-purple-100 text-purple-700 text-xs font-medium rounded-lg hover:bg-purple-200 disabled:opacity-50 transition-colors flex items-center gap-1"
-                          >
-                            {dispensing === rx.id ? (
-                              <Loader2 className="w-3 h-3 animate-spin" />
-                            ) : (
-                              <CheckCircle2 className="w-3 h-3" />
-                            )}
-                            Dispense
-                          </button>
+                          <div className="flex flex-col gap-1">
+                            <button
+                              onClick={() => handleDispense(rx.id)}
+                              disabled={dispensing === rx.id}
+                              className="px-3 py-1.5 bg-purple-100 text-purple-700 text-xs font-medium rounded-lg hover:bg-purple-200 disabled:opacity-50 transition-colors flex items-center gap-1"
+                            >
+                              {dispensing === rx.id ? (
+                                <Loader2 className="w-3 h-3 animate-spin" />
+                              ) : (
+                                <CheckCircle2 className="w-3 h-3" />
+                              )}
+                              Dispense
+                            </button>
+                            <button
+                              onClick={async () => {
+                                try {
+                                  await apiClient.post(`/internal/v1/pharmacy/prescriptions/${rx.id}/cancel`);
+                                  queryClient.invalidateQueries({ queryKey: ["prescriptions", { patientId }] });
+                                } catch { /* handled */ }
+                              }}
+                              className="px-3 py-1.5 bg-red-50 text-red-600 text-xs font-medium rounded-lg hover:bg-red-100 transition-colors"
+                            >
+                              Cancel
+                            </button>
+                          </div>
                         )}
                       </div>
                     </div>

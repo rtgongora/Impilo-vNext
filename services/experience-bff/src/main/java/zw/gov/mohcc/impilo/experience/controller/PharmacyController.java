@@ -223,6 +223,43 @@ public class PharmacyController {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * Cancel a prescription.
+     * POST /internal/v1/pharmacy/prescriptions/{id}/cancel
+     */
+    @PostMapping("/prescriptions/{id}/cancel")
+    @Transactional
+    public ResponseEntity<Map<String, Object>> cancelPrescription(
+            @PathVariable UUID id,
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.POD_ID) String podId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey) {
+
+        Prescription prescription = prescriptionRepository.findById(id)
+                .filter(p -> p.getTenantId().equals(tenantId))
+                .orElseThrow(() -> new ResourceNotFoundException("Prescription not found: " + id));
+
+        prescription.cancel();
+        prescriptionRepository.save(prescription);
+
+        outboxService.writeOutboxEvent(
+                "impilo.experience.pharmacy.cancelled.v1",
+                correlationId, requestId,
+                idempotencyKey != null ? idempotencyKey : requestId,
+                tenantId, podId,
+                "Prescription", id.toString(),
+                Map.of("prescription_id", id.toString(), "status", "CANCELLED"),
+                Map.of()
+        );
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", toResource(prescription));
+        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
+        return ResponseEntity.ok(response);
+    }
+
     private Map<String, Object> toResource(Prescription p) {
         Map<String, Object> attributes = new LinkedHashMap<>();
         attributes.put("facility_id", p.getFacilityId());
@@ -239,6 +276,22 @@ public class PharmacyController {
         attributes.put("dispensed_at", p.getDispensedAt());
         attributes.put("created_at", p.getCreatedAt());
         attributes.put("updated_at", p.getUpdatedAt());
+
+        // V13 fields — read via JDBC since JPA entity may not have them mapped
+        try {
+            List<Map<String, Object>> extraRows = jdbcTemplate.queryForList(
+                    "SELECT route, instructions, indication, generic_name FROM prescriptions WHERE id = ?",
+                    p.getId());
+            if (!extraRows.isEmpty()) {
+                Map<String, Object> extra = extraRows.get(0);
+                attributes.put("route", extra.get("route"));
+                attributes.put("instructions", extra.get("instructions"));
+                attributes.put("indication", extra.get("indication"));
+                attributes.put("generic_name", extra.get("generic_name"));
+            }
+        } catch (Exception e) {
+            // V13 columns may not exist yet during migration
+        }
 
         Map<String, Object> resource = new LinkedHashMap<>();
         resource.put("id", p.getId().toString());
