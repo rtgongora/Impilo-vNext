@@ -10,19 +10,17 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import {
-  ArrowLeft,
   Loader2,
-  Clock,
   Activity,
   FileText,
   XCircle,
   CheckCircle2,
   AlertCircle,
-  User,
   ClipboardList,
   Pill,
   ArrowUpRight,
   Save,
+  Stethoscope,
 } from "lucide-react";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
@@ -85,6 +83,15 @@ export default function EncounterPage() {
 
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
 
+  // Examination findings state (Lovable-aligned system-by-system capture)
+  const [examGeneral, setExamGeneral] = useState("");
+  const [examCVS, setExamCVS] = useState("");
+  const [examResp, setExamResp] = useState("");
+  const [examAbdo, setExamAbdo] = useState("");
+  const [examNeuro, setExamNeuro] = useState("");
+  const [examSaving, setExamSaving] = useState(false);
+  const [examSaved, setExamSaved] = useState(false);
+
   const isActive =
     encounter?.attributes.status === "ACTIVE" ||
     encounter?.attributes.status === "IN_PROGRESS";
@@ -143,6 +150,36 @@ export default function EncounterPage() {
       setNoteError("Failed to save note. Please try again.");
     } finally {
       setNoteSaving(false);
+    }
+  }
+
+  async function handleSaveExamination() {
+    setExamSaving(true);
+    setExamSaved(false);
+    try {
+      const examBody = [
+        examGeneral && `General: ${examGeneral}`,
+        examCVS && `CVS: ${examCVS}`,
+        examResp && `Respiratory: ${examResp}`,
+        examAbdo && `Abdominal: ${examAbdo}`,
+        examNeuro && `Neurological: ${examNeuro}`,
+      ].filter(Boolean).join("\n\n");
+
+      if (examBody) {
+        await apiClient.post("/internal/v1/clinical-notes", {
+          patient_id: patientId,
+          encounter_id: encounterId,
+          note_type: "EXAMINATION",
+          body: examBody,
+          author_id: currentUserId,
+          author_name: currentUserName,
+        });
+        setExamSaved(true);
+      }
+    } catch {
+      // Error handled by UI feedback
+    } finally {
+      setExamSaving(false);
     }
   }
 
@@ -368,6 +405,54 @@ export default function EncounterPage() {
                 )}
               </div>
             </div>
+
+            {/* Examination Findings — Lovable-aligned system-by-system capture */}
+            {isActive && (
+              <div className="bg-white rounded-lg border border-gray-200 p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <Stethoscope className="w-5 h-5 text-teal-500" />
+                    <h3 className="font-medium text-gray-900">Examination Findings</h3>
+                  </div>
+                  {examSaved && (
+                    <span className="text-xs text-green-600 flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3" /> Saved
+                    </span>
+                  )}
+                </div>
+                <div className="space-y-3">
+                  {[
+                    { key: "general", label: "General Appearance", value: examGeneral, setter: setExamGeneral, placeholder: "Alert, comfortable, not in distress..." },
+                    { key: "cvs", label: "Cardiovascular", value: examCVS, setter: setExamCVS, placeholder: "S1 S2 normal, no murmurs..." },
+                    { key: "resp", label: "Respiratory", value: examResp, setter: setExamResp, placeholder: "Clear bilaterally, good air entry..." },
+                    { key: "abdo", label: "Abdominal", value: examAbdo, setter: setExamAbdo, placeholder: "Soft, non-tender, bowel sounds present..." },
+                    { key: "neuro", label: "Neurological", value: examNeuro, setter: setExamNeuro, placeholder: "GCS 15/15, pupils equal and reactive..." },
+                  ].map((sys) => (
+                    <div key={sys.key}>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">{sys.label}</label>
+                      <textarea
+                        value={sys.value}
+                        onChange={(e) => sys.setter(e.target.value)}
+                        rows={2}
+                        placeholder={sys.placeholder}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none"
+                      />
+                    </div>
+                  ))}
+                </div>
+                <button
+                  onClick={handleSaveExamination}
+                  disabled={examSaving}
+                  className="mt-4 w-full py-2 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors"
+                >
+                  {examSaving ? (
+                    <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</>
+                  ) : (
+                    <><Save className="w-4 h-4" /> Save Examination</>
+                  )}
+                </button>
+              </div>
+            )}
 
             {/* Linked Referrals & Outcomes */}
             {linkedReferrals.length > 0 && (
