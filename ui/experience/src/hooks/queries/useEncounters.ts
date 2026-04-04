@@ -16,6 +16,9 @@ export interface EncounterResource {
     startedAt: string;
     closedAt: string | null;
     encounterType: string;
+    costa_bill_id?: string;
+    discharge_type?: string;
+    discharged_at?: string;
     [key: string]: unknown;
   };
 }
