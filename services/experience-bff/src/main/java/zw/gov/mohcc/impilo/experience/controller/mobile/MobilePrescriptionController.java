@@ -2,7 +2,6 @@ package zw.gov.mohcc.impilo.experience.controller.mobile;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -224,7 +223,6 @@ public class MobilePrescriptionController {
             @RequestBody(required = false) CancelPrescriptionRequest request) {
 
         OffsetDateTime now = OffsetDateTime.now();
-        String reason = request != null && request.reason() != null ? request.reason() : "Cancelled by provider";
 
         int updated = jdbcTemplate.update("""
             UPDATE prescriptions
@@ -237,7 +235,7 @@ public class MobilePrescriptionController {
         }
 
         outboxService.writeOutboxEvent(
-                "impilo.experience.prescription.cancelled.v1",
+                "impilo.experience.pharmacy.cancelled.v1",
                 correlationId,
                 requestId,
                 idempotencyKey != null ? idempotencyKey : requestId,
@@ -247,16 +245,16 @@ public class MobilePrescriptionController {
                 id.toString(),
                 Map.of(
                         "prescription_id", id.toString(),
-                        "status", "CANCELLED",
-                        "cancel_reason", reason
+                        "status", "CANCELLED"
                 ),
                 Map.of()
         );
 
         List<Map<String, Object>> rows = jdbcTemplate.queryForList("""
-            SELECT id, encounter_id, patient_id, medication_name, medication_code,
-                   dosage, frequency, route, duration_days, instructions, quantity,
-                   status, prescribed_at, cancelled_at, cancel_reason, created_at, updated_at
+            SELECT id, encounter_id, patient_id, facility_id, medication_name,
+                   generic_name, dosage, frequency, route, duration, instructions,
+                   indication, quantity, status, prescribed_by,
+                   dispensed_by, dispensed_at, created_at, updated_at
             FROM prescriptions
             WHERE id = ? AND tenant_id = ?
             """, id, tenantId);
