@@ -11,6 +11,10 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import com.fasterxml.jackson.databind.JsonNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import zw.gov.mohcc.impilo.experience.client.DocumentServiceClient;
 import zw.gov.mohcc.impilo.experience.domain.ClinicalDocument;
 import zw.gov.mohcc.impilo.experience.repository.ClinicalDocumentRepository;
 import zw.gov.mohcc.impilo.experience.service.OutboxService;
@@ -22,21 +26,29 @@ import java.util.*;
  * Clinical document management endpoints.
  * GET  /internal/v1/clinical-documents?patient_id= — list documents for patient (paged).
  * POST /internal/v1/clinical-documents — create document entry (metadata only).
+ *
+ * <p>When a document has a document_object_id (V15 bridge column), the response
+ * includes a download_url generated from the document-service's pre-signed URL.</p>
  */
 @RestController
 @RequestMapping("/internal/v1/clinical-documents")
 public class ClinicalDocumentsController {
 
+    private static final Logger log = LoggerFactory.getLogger(ClinicalDocumentsController.class);
+
     private final ClinicalDocumentRepository clinicalDocumentRepository;
     private final OutboxService outboxService;
     private final JdbcTemplate jdbcTemplate;
+    private final DocumentServiceClient documentServiceClient;
 
     public ClinicalDocumentsController(ClinicalDocumentRepository clinicalDocumentRepository,
                                        OutboxService outboxService,
-                                       JdbcTemplate jdbcTemplate) {
+                                       JdbcTemplate jdbcTemplate,
+                                       DocumentServiceClient documentServiceClient) {
         this.clinicalDocumentRepository = clinicalDocumentRepository;
         this.outboxService = outboxService;
         this.jdbcTemplate = jdbcTemplate;
+        this.documentServiceClient = documentServiceClient;
     }
 
     public record CreateDocumentRequest(
@@ -178,6 +190,26 @@ public class ClinicalDocumentsController {
         attributes.put("status", d.getStatus());
         attributes.put("created_at", d.getCreatedAt());
         attributes.put("updated_at", d.getUpdatedAt());
+
+        // V15 bridge: include document_object_id and download URL if available
+        try {
+            List<Map<String, Object>> objRows = jdbcTemplate.queryForList(
+                    "SELECT document_object_id FROM clinical_documents WHERE id = ?", d.getId());
+            if (!objRows.isEmpty() && objRows.get(0).get("document_object_id") != null) {
+                UUID objectId = (UUID) objRows.get(0).get("document_object_id");
+                attributes.put("document_object_id", objectId.toString());
+                try {
+                    JsonNode signedUrl = documentServiceClient.getSignedUrl(objectId);
+                    if (signedUrl != null && signedUrl.has("url")) {
+                        attributes.put("download_url", signedUrl.get("url").asText());
+                    }
+                } catch (Exception e) {
+                    log.debug("Could not generate download URL for object {}: {}", objectId, e.getMessage());
+                }
+            }
+        } catch (Exception e) {
+            // V15 column may not exist yet
+        }
 
         Map<String, Object> resource = new LinkedHashMap<>();
         resource.put("id", d.getId().toString());

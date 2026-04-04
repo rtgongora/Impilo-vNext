@@ -33,15 +33,17 @@ public class ServiceClientConfig {
             String pharmacyBaseUrl,
             String vitoBaseUrl,
             String tusoBaseUrl,
-            String varapiBaseUrl
+            String varapiBaseUrl,
+            String documentStoreBaseUrl
     ) {
         public ServiceEndpoints {
             if (pctBaseUrl == null) pctBaseUrl = "http://localhost:8088";
             if (orosBaseUrl == null) orosBaseUrl = "http://localhost:8089";
-            if (pharmacyBaseUrl == null) pharmacyBaseUrl = "http://localhost:8091";
+            if (pharmacyBaseUrl == null) pharmacyBaseUrl = "http://localhost:8096";
             if (vitoBaseUrl == null) vitoBaseUrl = "http://localhost:8082";
             if (tusoBaseUrl == null) tusoBaseUrl = "http://localhost:8084";
             if (varapiBaseUrl == null) varapiBaseUrl = "http://localhost:8083";
+            if (documentStoreBaseUrl == null) documentStoreBaseUrl = "http://localhost:8093";
         }
     }
 
