@@ -21,10 +21,22 @@ export interface ReferralResource {
     clinicalSummary: string | null;
     referredBy: string;
     referredByName: string;
+    receivingFacilityId: string | null;
+    receivingFacilityName: string | null;
+    responseNotes: string | null;
+    respondedAt: string | null;
+    acceptedAt: string | null;
     scheduledAt: string | null;
     completedAt: string | null;
     outcome: string | null;
     createdAt: string;
+    // snake_case aliases from API response
+    receiving_facility_id?: string | null;
+    receiving_facility_name?: string | null;
+    response_notes?: string | null;
+    responded_at?: string | null;
+    accepted_at?: string | null;
+    encounter_id?: string;
   };
 }
 

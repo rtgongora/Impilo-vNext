@@ -38,7 +38,8 @@ public class CitizenTelehealthController {
             @NotBlank String reason,
             String preferredDate,
             String sessionType,
-            String providerId
+            String providerId,
+            String referralId
     ) {}
 
     @GetMapping("/sessions")
@@ -57,7 +58,7 @@ public class CitizenTelehealthController {
 
         StringBuilder sql = new StringBuilder("""
             SELECT id, provider_id, provider_name, session_type, status,
-                   scheduled_at, started_at, ended_at, room_url, notes, reason
+                   scheduled_at, started_at, ended_at, room_url, notes, reason, referral_id
             FROM citizen_telehealth_sessions WHERE tenant_id = ? AND patient_id = ?
             """);
         List<Object> params = new ArrayList<>(List.of(tenantId, patientId));
@@ -95,7 +96,7 @@ public class CitizenTelehealthController {
 
         List<Map<String, Object>> rows = jdbcTemplate.queryForList("""
             SELECT id, provider_id, provider_name, session_type, status,
-                   scheduled_at, started_at, ended_at, room_url, notes, reason
+                   scheduled_at, started_at, ended_at, room_url, notes, reason, referral_id
             FROM citizen_telehealth_sessions WHERE id = ? AND tenant_id = ?
             """, id, tenantId);
 
@@ -128,17 +129,19 @@ public class CitizenTelehealthController {
         jdbcTemplate.update("""
             INSERT INTO citizen_telehealth_sessions
                 (id, tenant_id, patient_id, provider_id, provider_name, session_type,
-                 status, scheduled_at, reason, room_url, created_at, updated_at)
-            VALUES (?, ?, ?, ?::uuid, 'Assigned Provider', ?, 'REQUESTED', ?, ?, ?, ?, ?)
+                 status, scheduled_at, reason, room_url, referral_id, created_at, updated_at)
+            VALUES (?, ?, ?, ?::uuid, 'Assigned Provider', ?, 'REQUESTED', ?, ?, ?, ?::uuid, ?, ?)
             """, sessionId, tenantId, patientId,
                 body.providerId(), sessionType, scheduledAt, body.reason(),
-                "session-" + sessionId, now, now);
+                "session-" + sessionId, body.referralId(),
+                now, now);
 
         outboxService.writeOutboxEvent(
                 "impilo.experience.citizen.teleconsult-requested.v1",
                 correlationId, requestId, requestId, tenantId, podId,
                 "TelehealthSession", sessionId.toString(),
-                Map.of("session_id", sessionId.toString(), "type", sessionType, "status", "REQUESTED"),
+                Map.of("session_id", sessionId.toString(), "type", sessionType, "status", "REQUESTED",
+                        "referral_id", body.referralId() != null ? body.referralId() : ""),
                 Map.of());
 
         Map<String, Object> data = new LinkedHashMap<>();
@@ -182,7 +185,7 @@ public class CitizenTelehealthController {
 
         List<Map<String, Object>> rows = jdbcTemplate.queryForList("""
             SELECT id, provider_id, provider_name, session_type, status,
-                   scheduled_at, started_at, ended_at, room_url, notes, reason
+                   scheduled_at, started_at, ended_at, room_url, notes, reason, referral_id
             FROM citizen_telehealth_sessions WHERE id = ? AND tenant_id = ?
             """, id, tenantId);
 
@@ -253,6 +256,7 @@ public class CitizenTelehealthController {
         r.put("endedAt", row.get("ended_at"));
         r.put("roomUrl", row.get("room_url"));
         r.put("notes", row.get("notes"));
+        r.put("referralId", row.get("referral_id") != null ? row.get("referral_id").toString() : null);
         return r;
     }
 }

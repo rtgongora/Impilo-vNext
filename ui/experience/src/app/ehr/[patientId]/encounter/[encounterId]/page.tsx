@@ -28,6 +28,7 @@ import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { useEncounter, useCloseEncounter } from "@/hooks/queries/useEncounters";
 import { usePatient } from "@/hooks/queries/usePatients";
+import { useReferrals, type ReferralResource } from "@/hooks/queries/useReferrals";
 import { apiClient } from "@/lib/api-client";
 
 export default function EncounterPage() {
@@ -38,7 +39,18 @@ export default function EncounterPage() {
 
   const { data: encounterData, isLoading: isLoadingEncounter } = useEncounter(encounterId);
   const { data: patientData } = usePatient(patientId);
+  const { data: referralsData } = useReferrals(patientId);
   const closeEncounter = useCloseEncounter();
+
+  // Filter referrals linked to this encounter or with responses
+  const linkedReferrals = (referralsData?.data ?? []).filter(
+    (r: ReferralResource) =>
+      r.attributes.encounterId === encounterId ||
+      r.attributes.encounter_id === encounterId
+  );
+  const respondedReferrals = linkedReferrals.filter(
+    (r: ReferralResource) => r.attributes.status === "RESPONDED" || r.attributes.status === "COMPLETED"
+  );
 
   const currentUserId = user?.id ?? "system";
   const currentUserName = user?.displayName ?? user?.email ?? "Provider";
@@ -383,6 +395,85 @@ export default function EncounterPage() {
                 )}
               </div>
             </div>
+
+            {/* Linked Referrals & Outcomes */}
+            {linkedReferrals.length > 0 && (
+              <div className="bg-white rounded-lg border border-gray-200 p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <ArrowUpRight className="w-5 h-5 text-orange-500" />
+                  <h3 className="font-medium text-gray-900">
+                    Linked Referrals ({linkedReferrals.length})
+                  </h3>
+                  {respondedReferrals.length > 0 && (
+                    <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-purple-100 text-purple-700">
+                      {respondedReferrals.length} response{respondedReferrals.length !== 1 ? "s" : ""} received
+                    </span>
+                  )}
+                </div>
+                <div className="space-y-3">
+                  {linkedReferrals.map((ref: ReferralResource) => {
+                    const a = ref.attributes;
+                    const hasResponse = a.response_notes || a.responseNotes;
+                    const responseText = a.response_notes ?? a.responseNotes ?? "";
+                    const outcomeText = a.outcome ?? "";
+                    const respondedAt = a.responded_at ?? a.respondedAt;
+
+                    return (
+                      <div
+                        key={ref.id}
+                        className={`p-3 rounded-lg border ${
+                          hasResponse ? "border-purple-200 bg-purple-50" : "border-gray-200 bg-gray-50"
+                        }`}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium text-gray-900">
+                                {ref.attributes.specialty || ref.attributes.referralType}
+                              </span>
+                              <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${
+                                ref.attributes.status === "RESPONDED" ? "bg-purple-100 text-purple-700" :
+                                ref.attributes.status === "COMPLETED" ? "bg-green-100 text-green-700" :
+                                ref.attributes.status === "ACCEPTED" ? "bg-blue-100 text-blue-700" :
+                                "bg-yellow-100 text-yellow-700"
+                              }`}>
+                                {ref.attributes.status}
+                              </span>
+                            </div>
+                            <p className="text-xs text-gray-500 mt-0.5">
+                              To: {ref.attributes.referredTo}
+                              {ref.attributes.referredToFacility && ` at ${ref.attributes.referredToFacility}`}
+                            </p>
+                          </div>
+                          <Link
+                            href={`/ehr/${patientId}/referrals`}
+                            className="text-xs text-blue-600 hover:text-blue-800"
+                          >
+                            View all
+                          </Link>
+                        </div>
+                        {hasResponse && (
+                          <div className="mt-2 pt-2 border-t border-purple-200">
+                            <p className="text-xs font-semibold text-purple-700">Specialist Response:</p>
+                            <p className="text-sm text-purple-900 mt-0.5">{responseText}</p>
+                            {outcomeText && (
+                              <p className="text-xs text-purple-700 mt-1">
+                                <span className="font-medium">Outcome:</span> {outcomeText}
+                              </p>
+                            )}
+                            {respondedAt && (
+                              <p className="text-xs text-purple-500 mt-0.5">
+                                {new Date(String(respondedAt)).toLocaleString()}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Close Encounter */}
             {isActive && (

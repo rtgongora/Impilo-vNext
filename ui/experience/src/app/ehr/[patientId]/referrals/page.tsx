@@ -340,17 +340,20 @@ export default function ReferralsPage() {
                         )}
                         {/* Response return loop — show receiving facility response */}
                         {(referral.attributes.status === "RESPONDED" || referral.attributes.status === "COMPLETED") &&
-                          (referral.attributes as Record<string, unknown>).response_notes && (
+                          (referral.attributes.response_notes || referral.attributes.responseNotes) && (
                           <div className="mt-3 p-3 bg-purple-50 border border-purple-200 rounded-lg">
                             <p className="text-xs font-semibold text-purple-700 mb-1">
                               Response from receiving facility
+                              {(referral.attributes.receivingFacilityName || referral.attributes.receiving_facility_name) && (
+                                <span className="font-normal"> ({referral.attributes.receivingFacilityName ?? referral.attributes.receiving_facility_name})</span>
+                              )}
                             </p>
                             <p className="text-sm text-purple-900">
-                              {String((referral.attributes as Record<string, unknown>).response_notes)}
+                              {referral.attributes.response_notes ?? referral.attributes.responseNotes}
                             </p>
-                            {(referral.attributes as Record<string, unknown>).responded_at && (
+                            {(referral.attributes.responded_at || referral.attributes.respondedAt) && (
                               <p className="text-xs text-purple-500 mt-1">
-                                Responded: {new Date(String((referral.attributes as Record<string, unknown>).responded_at)).toLocaleString()}
+                                Responded: {new Date(referral.attributes.responded_at ?? referral.attributes.respondedAt ?? "").toLocaleString()}
                               </p>
                             )}
                           </div>
