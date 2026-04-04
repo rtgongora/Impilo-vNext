@@ -13,6 +13,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
+import { useRoleGroup } from "@/hooks/useRoleGroup";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useEncounters } from "@/hooks/queries/useEncounters";
@@ -64,6 +65,7 @@ export default function MedicationsPage() {
   const { user } = useAuthStore();
   const facility = useFacilityStore((s) => s.facility);
   const queryClient = useQueryClient();
+  const { isPrescriber, isDispenser } = useRoleGroup();
   const { data: encountersData } = useEncounters(patientId);
   const activeEncounter = (encountersData?.data ?? []).find(
     (e) => e.attributes.status === "IN_PROGRESS" || e.attributes.status === "ACTIVE"
@@ -159,6 +161,7 @@ export default function MedicationsPage() {
                   Prescriptions ({prescriptions.length})
                 </h2>
               </div>
+              {isPrescriber && (
               <button
                 onClick={() => setShowForm((v) => !v)}
                 className="inline-flex items-center gap-1.5 px-3 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors"
@@ -166,6 +169,7 @@ export default function MedicationsPage() {
                 <Plus className="w-4 h-4" />
                 Prescribe
               </button>
+              )}
             </div>
 
             {/* Prescribing Form */}

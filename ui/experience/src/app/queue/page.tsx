@@ -12,6 +12,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useQueueEntries, useCallPatient } from "@/hooks/queries/useQueue";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
+import { useRoleGroup } from "@/hooks/useRoleGroup";
 
 const PRIORITY_LABELS: Record<string, { label: string; className: string }> = {
   EMERGENCY: { label: "Emergency", className: "bg-red-100 text-red-700" },
@@ -45,6 +46,7 @@ export default function QueuePage() {
   const facility = useFacilityStore((s) => s.facility);
   const { data, isLoading } = useQueueEntries({ facilityId: facility?.id });
   const callPatient = useCallPatient();
+  const { isQueueManager } = useRoleGroup();
 
   const entries = data?.data ?? [];
 
@@ -77,6 +79,7 @@ export default function QueuePage() {
             >
               Incoming Referrals
             </Link>
+            {isQueueManager && (
             <Link
               href="/queue/walk-in"
               className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
@@ -84,6 +87,7 @@ export default function QueuePage() {
               <UserPlus className="w-4 h-4" />
               Walk-in Registration
             </Link>
+            )}
           </div>
         </div>
 

@@ -16,6 +16,7 @@ import {
   useCreateEncounter,
   type EncounterResource } from "@/hooks/queries/useEncounters";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
+import { useRoleGroup } from "@/hooks/useRoleGroup";
 
 /* ------------------------------------------------------------------ */
 /*  Badge helpers                                                      */
@@ -51,6 +52,7 @@ export default function EncountersPage() {
   const patientId = params.patientId;
 
   const facility = useFacilityStore((s) => s.facility);
+  const { isClinical } = useRoleGroup();
   const { data: encountersData, isLoading } = useEncounters(patientId);
   const createEncounter = useCreateEncounter();
 
@@ -102,6 +104,7 @@ export default function EncountersPage() {
                   Encounters ({encounters.length})
                 </h2>
               </div>
+              {isClinical && (
               <button
                 type="button"
                 onClick={() => setShowForm((prev) => !prev)}
@@ -110,6 +113,7 @@ export default function EncountersPage() {
                 <Plus className="w-4 h-4" />
                 Start Encounter
               </button>
+              )}
             </div>
 
             {/* Start Encounter form */}
