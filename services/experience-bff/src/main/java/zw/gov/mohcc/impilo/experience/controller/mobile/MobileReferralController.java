@@ -115,6 +115,107 @@ public class MobileReferralController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    /**
+     * Accept a referral from the mobile provider app.
+     * POST /internal/v1/mobile/provider/referrals/{id}/accept
+     */
+    @PostMapping("/{id}/accept")
+    @Transactional
+    public ResponseEntity<Map<String, Object>> acceptReferral(
+            @PathVariable UUID id,
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.POD_ID) String podId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
+            @RequestBody(required = false) Map<String, Object> body) {
+
+        OffsetDateTime now = OffsetDateTime.now();
+        String facilityId = body != null ? (String) body.get("facility_id") : null;
+        String facilityName = body != null ? (String) body.get("facility_name") : null;
+
+        int updated = jdbcTemplate.update("""
+            UPDATE referrals SET status = 'ACCEPTED',
+                receiving_facility_id = COALESCE(?::uuid, receiving_facility_id),
+                receiving_facility_name = COALESCE(?, receiving_facility_name),
+                accepted_at = ?, updated_at = ?
+            WHERE id = ? AND tenant_id = ? AND status = 'PENDING'
+            """, facilityId, facilityName, now, now, id, tenantId);
+
+        if (updated == 0) {
+            return ResponseEntity.status(404).body(Map.of(
+                    "error", Map.of("code", "NOT_FOUND", "message", "Pending referral not found: " + id)));
+        }
+
+        outboxService.writeOutboxEvent(
+                "impilo.experience.referral.accepted.v1",
+                correlationId, requestId,
+                idempotencyKey != null ? idempotencyKey : requestId,
+                tenantId, podId,
+                "Referral", id.toString(),
+                Map.of("referral_id", id.toString(), "status", "ACCEPTED"),
+                Map.of()
+        );
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", Map.of("id", id.toString(), "status", "ACCEPTED"));
+        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Respond to a referral from the mobile provider app.
+     * POST /internal/v1/mobile/provider/referrals/{id}/respond
+     */
+    @PostMapping("/{id}/respond")
+    @Transactional
+    public ResponseEntity<Map<String, Object>> respondReferral(
+            @PathVariable UUID id,
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.POD_ID) String podId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
+            @RequestBody Map<String, Object> body) {
+
+        OffsetDateTime now = OffsetDateTime.now();
+        String responseNotes = body != null ? (String) body.get("response_notes") : null;
+        String outcome = body != null ? (String) body.get("outcome") : null;
+
+        if (responseNotes == null || responseNotes.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", Map.of("code", "VALIDATION", "message", "response_notes is required")));
+        }
+
+        int updated = jdbcTemplate.update("""
+            UPDATE referrals SET status = 'RESPONDED',
+                response_notes = ?, outcome = COALESCE(?, outcome),
+                responded_at = ?, updated_at = ?
+            WHERE id = ? AND tenant_id = ? AND status IN ('PENDING', 'ACCEPTED')
+            """, responseNotes, outcome, now, now, id, tenantId);
+
+        if (updated == 0) {
+            return ResponseEntity.status(404).body(Map.of(
+                    "error", Map.of("code", "NOT_FOUND", "message", "Actionable referral not found: " + id)));
+        }
+
+        outboxService.writeOutboxEvent(
+                "impilo.experience.referral.responded.v1",
+                correlationId, requestId,
+                idempotencyKey != null ? idempotencyKey : requestId,
+                tenantId, podId,
+                "Referral", id.toString(),
+                Map.of("referral_id", id.toString(), "status", "RESPONDED",
+                        "outcome", outcome != null ? outcome : ""),
+                Map.of()
+        );
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", Map.of("id", id.toString(), "status", "RESPONDED", "outcome", outcome));
+        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping
     public ResponseEntity<Map<String, Object>> listReferrals(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,

@@ -16,6 +16,7 @@ import {
   useCreateEncounter,
   type EncounterResource,
 } from "@/hooks/queries/useEncounters";
+import { useFacilityStore } from "@/hooks/useFacilityStore";
 
 /* ------------------------------------------------------------------ */
 /*  Badge helpers                                                      */
@@ -45,6 +46,7 @@ export default function EncountersPage() {
   const router = useRouter();
   const patientId = params.patientId;
 
+  const facility = useFacilityStore((s) => s.facility);
   const { data: encountersData, isLoading } = useEncounters(patientId);
   const createEncounter = useCreateEncounter();
 
@@ -62,7 +64,7 @@ export default function EncountersPage() {
     createEncounter.mutate(
       {
         patientId,
-        facilityId: "current-facility",
+        facilityId: facility?.id ?? "",
         encounterType: form.encounter_type,
         chief_complaint: form.chief_complaint.trim() || undefined,
       },

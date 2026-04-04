@@ -18,6 +18,7 @@ import {
   ChevronRight,
   User,
   LogOut,
+  Video,
 } from "lucide-react";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
@@ -28,6 +29,7 @@ const EHR_ACTIONS = [
   { label: "Payments", href: "/finance/billing", icon: CreditCard },
   { label: "Orders", href: "", icon: ClipboardList, dynamic: true },
   { label: "Referrals", href: "", icon: ArrowRightLeft, dynamic: true },
+  { label: "Teleconsult", href: "/telemedicine", icon: Video },
   { label: "Shift Handoff", href: "/shift/handover", icon: Timer },
 ] as const;
 

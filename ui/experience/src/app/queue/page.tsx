@@ -57,13 +57,21 @@ export default function QueuePage() {
             <Users className="w-4 h-4" />
             <span>{entries.length} patient{entries.length !== 1 ? "s" : ""} in queue</span>
           </div>
-          <Link
-            href="/queue/walk-in"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            <UserPlus className="w-4 h-4" />
-            Walk-in Registration
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/queue/incoming-referrals"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-purple-50 text-purple-700 text-sm font-medium rounded-lg hover:bg-purple-100 transition-colors"
+            >
+              Incoming Referrals
+            </Link>
+            <Link
+              href="/queue/walk-in"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <UserPlus className="w-4 h-4" />
+              Walk-in Registration
+            </Link>
+          </div>
         </div>
 
         {isLoading ? (

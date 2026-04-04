@@ -89,6 +89,7 @@ public class ReferralsController {
             result = referralRepository.findAll(pageable);
         }
 
+
         List<Map<String, Object>> data = result.getContent().stream()
                 .map(this::toResource)
                 .toList();
@@ -103,6 +104,103 @@ public class ReferralsController {
                         "size", result.getSize(),
                         "total_elements", result.getTotalElements(),
                         "total_pages", result.getTotalPages()
+                )
+        ));
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * List incoming referrals for a receiving facility.
+     * GET /internal/v1/referrals/incoming?facility_id=
+     */
+    @GetMapping("/incoming")
+    public ResponseEntity<Map<String, Object>> listIncomingReferrals(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestParam(name = "facility_id") String facilityId,
+            @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+
+        int limit = Math.min(size, 100);
+        int offset = page * limit;
+
+        StringBuilder sql = new StringBuilder("""
+            SELECT id, tenant_id, patient_id, encounter_id, referral_type, specialty,
+                   referred_to, referred_to_facility, reason, urgency, status,
+                   clinical_summary, referred_by, referred_by_name,
+                   receiving_facility_id, receiving_facility_name,
+                   response_notes, responded_at, accepted_at,
+                   scheduled_at, completed_at, outcome, created_at, updated_at
+            FROM referrals
+            WHERE tenant_id = ? AND (
+                referred_to_facility = ? OR receiving_facility_id = ?::uuid
+            )
+            """);
+        StringBuilder countSql = new StringBuilder(
+                "SELECT count(*) FROM referrals WHERE tenant_id = ? AND (referred_to_facility = ? OR receiving_facility_id = ?::uuid)");
+
+        List<Object> params = new ArrayList<>(List.of(tenantId, facilityId, facilityId));
+        List<Object> countParams = new ArrayList<>(List.of(tenantId, facilityId, facilityId));
+
+        if (status != null) {
+            sql.append(" AND status = ?");
+            countSql.append(" AND status = ?");
+            params.add(status);
+            countParams.add(status);
+        }
+
+        sql.append(" ORDER BY created_at DESC LIMIT ? OFFSET ?");
+        params.add(limit);
+        params.add(offset);
+
+        List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql.toString(), params.toArray());
+        Long total = jdbcTemplate.queryForObject(countSql.toString(), Long.class, countParams.toArray());
+
+        List<Map<String, Object>> data = rows.stream().map(row -> {
+            Map<String, Object> attributes = new LinkedHashMap<>();
+            attributes.put("patient_id", row.get("patient_id"));
+            attributes.put("encounter_id", row.get("encounter_id"));
+            attributes.put("referral_type", row.get("referral_type"));
+            attributes.put("specialty", row.get("specialty"));
+            attributes.put("referred_to", row.get("referred_to"));
+            attributes.put("referred_to_facility", row.get("referred_to_facility"));
+            attributes.put("reason", row.get("reason"));
+            attributes.put("urgency", row.get("urgency"));
+            attributes.put("status", row.get("status"));
+            attributes.put("clinical_summary", row.get("clinical_summary"));
+            attributes.put("referred_by", row.get("referred_by"));
+            attributes.put("referred_by_name", row.get("referred_by_name"));
+            attributes.put("receiving_facility_id", row.get("receiving_facility_id"));
+            attributes.put("receiving_facility_name", row.get("receiving_facility_name"));
+            attributes.put("response_notes", row.get("response_notes"));
+            attributes.put("responded_at", row.get("responded_at"));
+            attributes.put("accepted_at", row.get("accepted_at"));
+            attributes.put("scheduled_at", row.get("scheduled_at"));
+            attributes.put("completed_at", row.get("completed_at"));
+            attributes.put("outcome", row.get("outcome"));
+            attributes.put("created_at", row.get("created_at"));
+            attributes.put("updated_at", row.get("updated_at"));
+
+            Map<String, Object> resource = new LinkedHashMap<>();
+            resource.put("id", row.get("id").toString());
+            resource.put("type", "Referral");
+            resource.put("attributes", attributes);
+            return resource;
+        }).toList();
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", data);
+        response.put("meta", Map.of(
+                "request_id", requestId,
+                "correlation_id", correlationId,
+                "page", Map.of(
+                        "number", page,
+                        "size", limit,
+                        "total_elements", total != null ? total : 0L,
+                        "total_pages", total != null ? (int) Math.ceil((double) total / limit) : 0
                 )
         ));
 

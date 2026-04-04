@@ -30,6 +30,7 @@ import {
   DoorOpen,
   Activity,
   User,
+  Video,
 } from "lucide-react";
 
 interface MenuSection {
@@ -76,6 +77,7 @@ const MENU_SECTIONS: MenuSection[] = [
     title: "Consults & Referrals",
     items: [
       { label: "Referrals", segment: "referrals", icon: ArrowRightLeft },
+      { label: "Teleconsults", segment: "teleconsults", icon: Video },
       { label: "Documents", segment: "documents", icon: FileText },
     ],
   },

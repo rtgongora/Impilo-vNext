@@ -72,13 +72,15 @@ export default function WalkInPage() {
         return;
       }
 
+      const patientCpid = selectedPatient?.attributes?.cpid ?? undefined;
       await apiClient.post<ApiResponse<QueueEntryResource>>(
         "/internal/v1/queue/entries",
         {
-          patientId,
-          facilityId: facility.id,
-          priority: 3,
-          queueType: "WALK_IN",
+          patient_id: patientId,
+          facility_id: facility.id,
+          priority: "NORMAL",
+          queue_type: "WALK_IN",
+          patient_cpid: patientCpid,
         },
       );
 

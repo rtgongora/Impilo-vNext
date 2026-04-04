@@ -338,6 +338,23 @@ export default function ReferralsPage() {
                             <span className="font-medium">Outcome:</span> {referral.attributes.outcome}
                           </p>
                         )}
+                        {/* Response return loop — show receiving facility response */}
+                        {(referral.attributes.status === "RESPONDED" || referral.attributes.status === "COMPLETED") &&
+                          (referral.attributes as Record<string, unknown>).response_notes && (
+                          <div className="mt-3 p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                            <p className="text-xs font-semibold text-purple-700 mb-1">
+                              Response from receiving facility
+                            </p>
+                            <p className="text-sm text-purple-900">
+                              {String((referral.attributes as Record<string, unknown>).response_notes)}
+                            </p>
+                            {(referral.attributes as Record<string, unknown>).responded_at && (
+                              <p className="text-xs text-purple-500 mt-1">
+                                Responded: {new Date(String((referral.attributes as Record<string, unknown>).responded_at)).toLocaleString()}
+                              </p>
+                            )}
+                          </div>
+                        )}
                       </div>
                       <div className="flex flex-col items-end gap-2 shrink-0">
                         <div className="flex items-center gap-2">
@@ -361,6 +378,14 @@ export default function ReferralsPage() {
                         <span className="text-xs text-gray-400">
                           {new Date(referral.attributes.createdAt).toLocaleDateString()}
                         </span>
+                        {referral.attributes.status === "RESPONDED" && (
+                          <Link
+                            href={`/ehr/${patientId}/referrals`}
+                            className="text-xs text-purple-600 font-medium"
+                          >
+                            Response received
+                          </Link>
+                        )}
                       </div>
                     </div>
                   </div>

@@ -5,7 +5,7 @@
  * Route: /ehr/[patientId] | pageTitle: "Patient Chart"
  */
 
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   User,
@@ -23,7 +23,8 @@ import {
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { usePatient } from "@/hooks/queries/usePatients";
-import { useEncounters } from "@/hooks/queries/useEncounters";
+import { useEncounters, useCreateEncounter } from "@/hooks/queries/useEncounters";
+import { useFacilityStore } from "@/hooks/useFacilityStore";
 
 const CHART_SECTIONS = [
   { label: "Vitals", href: "vitals", icon: Activity, color: "bg-red-100 text-red-600" },
@@ -40,10 +41,13 @@ const CHART_SECTIONS = [
 
 export default function PatientChartPage() {
   const params = useParams<{ patientId: string }>();
+  const router = useRouter();
   const patientId = params.patientId;
+  const facility = useFacilityStore((s) => s.facility);
 
   const { data: patientData, isLoading: isLoadingPatient } = usePatient(patientId);
   const { data: encountersData } = useEncounters(patientId);
+  const createEncounter = useCreateEncounter();
 
   const patient = patientData?.data;
   const encounters = encountersData?.data ?? [];
@@ -92,13 +96,42 @@ export default function PatientChartPage() {
                     <span>CPID: {patient.attributes.cpid}</span>
                   </div>
                 </div>
-                {activeEncounter && (
+                {activeEncounter ? (
                   <Link
                     href={`/ehr/${patientId}/encounter/${activeEncounter.id}`}
                     className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors shrink-0"
                   >
                     Active Encounter
                   </Link>
+                ) : (
+                  <button
+                    onClick={() => {
+                      if (!facility) return;
+                      createEncounter.mutate(
+                        {
+                          patientId,
+                          facilityId: facility.id,
+                          encounterType: "OUTPATIENT",
+                        },
+                        {
+                          onSuccess: (data) => {
+                            const newId = data?.data?.id;
+                            if (newId) {
+                              router.push(`/ehr/${patientId}/encounter/${newId}`);
+                            }
+                          },
+                        },
+                      );
+                    }}
+                    disabled={createEncounter.isPending || !facility}
+                    className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors shrink-0 flex items-center gap-1.5"
+                  >
+                    {createEncounter.isPending ? (
+                      <><Loader2 className="w-4 h-4 animate-spin" /> Starting...</>
+                    ) : (
+                      <><Activity className="w-4 h-4" /> Start Encounter</>
+                    )}
+                  </button>
                 )}
               </div>
             </div>
