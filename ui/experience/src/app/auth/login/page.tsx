@@ -81,8 +81,13 @@ export default function LoginPage() {
           );
           router.push("/home");
         },
-        onError: () => {
-          setError("Invalid email or password. Please try again.");
+        onError: (err: unknown) => {
+          const status = (err as { status?: number })?.status;
+          if (status === 503) {
+            setError("Authentication service is temporarily unavailable. Please try again later.");
+          } else {
+            setError("Invalid email or password. Please try again.");
+          }
         },
       }
     );

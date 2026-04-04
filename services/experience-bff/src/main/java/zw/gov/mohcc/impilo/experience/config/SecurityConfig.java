@@ -1,5 +1,8 @@
 package zw.gov.mohcc.impilo.experience.config;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
@@ -9,6 +12,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
 
@@ -20,61 +24,62 @@ import java.util.Map;
 /**
  * Security configuration with Keycloak JWT validation.
  *
- * <p>Uses Spring Security OAuth2 Resource Server to validate JWT tokens
- * against the Keycloak JWKS endpoint (automatic RS256 signature verification
- * and expiration checking).</p>
+ * <p>When a JwtDecoder bean is available (production/integration): enforces
+ * RS256 signature verification, expiration checking, and path-based RBAC.
+ * When no JwtDecoder bean exists (dev with OAuth2 auto-config excluded):
+ * falls back to permitAll() with a prominent warning log.</p>
  *
- * <p>Path-based access rules:</p>
+ * <p>Path-based access rules (production mode):</p>
  * <ul>
- *   <li>Auth endpoints (/internal/v1/auth/**) — public (login/register/refresh)</li>
- *   <li>Admin endpoints (/internal/v1/admin/**) — ADMIN role group required</li>
- *   <li>Finance endpoints (/internal/v1/finance/**) — FINANCE role group required</li>
+ *   <li>Auth endpoints (/internal/v1/auth/**) — public</li>
+ *   <li>Admin endpoints (/internal/v1/admin/**) — ADMIN role group</li>
+ *   <li>Finance endpoints (/internal/v1/finance/**) — FINANCE role group</li>
  *   <li>Actuator/health — public</li>
  *   <li>All other endpoints — authenticated (valid JWT required)</li>
  * </ul>
- *
- * <p>A custom JwtAuthenticationConverter extracts Keycloak realm_access.roles
- * as Spring Security GrantedAuthority objects (prefixed with ROLE_).</p>
  */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
+    private static final Logger log = LoggerFactory.getLogger(SecurityConfig.class);
+
+    @Autowired(required = false)
+    private JwtDecoder jwtDecoder;
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth
-                // Public endpoints — no authentication required
-                .requestMatchers("/internal/v1/auth/**").permitAll()
-                .requestMatchers("/actuator/**").permitAll()
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
-                // Admin endpoints — require ADMIN role group
-                .requestMatchers("/internal/v1/admin/**").hasAnyRole(
-                        "SYSTEM_ADMIN", "FACILITY_ADMIN", "DEVELOPER")
-
-                // Finance endpoints — require FINANCE role group
-                .requestMatchers("/internal/v1/finance/**").hasAnyRole(
-                        "SYSTEM_ADMIN", "FACILITY_ADMIN", "FINANCE")
-
-                // All other endpoints — require valid JWT (any authenticated user)
-                .anyRequest().authenticated()
-            )
-            .oauth2ResourceServer(oauth2 -> oauth2
-                .jwt(jwt -> jwt.jwtAuthenticationConverter(keycloakJwtConverter()))
-            );
+        if (jwtDecoder != null) {
+            // Production mode: full JWT validation + RBAC
+            log.info("JWT validation ENABLED — enforcing role-based access control");
+            http
+                .authorizeHttpRequests(auth -> auth
+                    .requestMatchers("/internal/v1/auth/**").permitAll()
+                    .requestMatchers("/actuator/**").permitAll()
+                    .requestMatchers("/internal/v1/admin/**").hasAnyRole(
+                            "SYSTEM_ADMIN", "FACILITY_ADMIN", "DEVELOPER")
+                    .requestMatchers("/internal/v1/finance/**").hasAnyRole(
+                            "SYSTEM_ADMIN", "FACILITY_ADMIN", "FINANCE")
+                    .anyRequest().authenticated()
+                )
+                .oauth2ResourceServer(oauth2 -> oauth2
+                    .jwt(jwt -> jwt.jwtAuthenticationConverter(keycloakJwtConverter()))
+                );
+        } else {
+            // Dev mode: OAuth2 auto-config excluded, no JwtDecoder available
+            log.warn("SECURITY: JWT validation DISABLED — no JwtDecoder bean found. "
+                    + "All endpoints are open. This is acceptable only in development. "
+                    + "Ensure OAuth2ResourceServerAutoConfiguration is NOT excluded in production.");
+            http.authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
+        }
 
         return http.build();
     }
 
-    /**
-     * Converts Keycloak realm_access.roles from the JWT into Spring Security
-     * GrantedAuthority objects with the ROLE_ prefix.
-     *
-     * <p>Keycloak stores realm roles in the claim path: realm_access → roles (array).
-     * Spring Security's hasRole("X") checks for "ROLE_X" in the authorities.</p>
-     */
     @Bean
     public JwtAuthenticationConverter keycloakJwtConverter() {
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
@@ -89,7 +94,6 @@ public class SecurityConfig {
     static class KeycloakRealmRoleConverter implements Converter<Jwt, Collection<GrantedAuthority>> {
 
         @Override
-        @SuppressWarnings("unchecked")
         public Collection<GrantedAuthority> convert(Jwt jwt) {
             List<GrantedAuthority> authorities = new ArrayList<>();
 
@@ -99,7 +103,6 @@ public class SecurityConfig {
                 if (rolesObj instanceof List<?> roles) {
                     for (Object role : roles) {
                         String r = role.toString();
-                        // Skip Keycloak default roles
                         if (!r.startsWith("default-roles-")
                                 && !r.equals("offline_access")
                                 && !r.equals("uma_authorization")) {
