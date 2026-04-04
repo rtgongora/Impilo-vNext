@@ -34,7 +34,8 @@ public class ServiceClientConfig {
             String vitoBaseUrl,
             String tusoBaseUrl,
             String varapiBaseUrl,
-            String documentStoreBaseUrl
+            String documentStoreBaseUrl,
+            String costaBaseUrl
     ) {
         public ServiceEndpoints {
             if (pctBaseUrl == null) pctBaseUrl = "http://localhost:8088";
@@ -44,6 +45,7 @@ public class ServiceClientConfig {
             if (tusoBaseUrl == null) tusoBaseUrl = "http://localhost:8084";
             if (varapiBaseUrl == null) varapiBaseUrl = "http://localhost:8083";
             if (documentStoreBaseUrl == null) documentStoreBaseUrl = "http://localhost:8093";
+            if (costaBaseUrl == null) costaBaseUrl = "http://localhost:8101";
         }
     }
 

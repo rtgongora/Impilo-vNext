@@ -41,6 +41,7 @@ impilo:
     tuso-base-url: ${TUSO_BASE_URL:http://localhost:8084}
     varapi-base-url: ${VARAPI_BASE_URL:http://localhost:8083}
     document-store-base-url: ${DOCUMENT_STORE_BASE_URL:http://localhost:8093}
+    costa-base-url: ${COSTA_BASE_URL:http://localhost:8101}
 
 logging:
   level:
