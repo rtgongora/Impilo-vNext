@@ -33,17 +33,23 @@ public class MobilePrescriptionController {
         this.outboxService = outboxService;
     }
 
+    /**
+     * Mobile prescription request — uses canonical V3+V13 schema columns.
+     */
     public record CreatePrescriptionRequest(
-            @NotBlank String encounter_id,
             @NotBlank String patient_id,
+            String encounter_id,
+            String facility_id,
             @NotBlank String medication_name,
-            String medication_code,
+            String generic_name,
             @NotBlank String dosage,
+            String route,
             @NotBlank String frequency,
-            @NotBlank String route,
-            @NotNull Integer duration_days,
+            String duration,
+            Integer quantity,
             String instructions,
-            Integer quantity
+            String indication,
+            @NotBlank String prescribed_by
     ) {}
 
     public record CancelPrescriptionRequest(
@@ -65,19 +71,38 @@ public class MobilePrescriptionController {
 
         jdbcTemplate.update("""
             INSERT INTO prescriptions
-                (id, tenant_id, encounter_id, patient_id, medication_name, medication_code,
-                 dosage, frequency, route, duration_days, instructions, quantity,
-                 status, prescribed_at, created_at, updated_at)
-            VALUES (?, ?, ?::uuid, ?::uuid, ?, ?, ?, ?, ?, ?, ?, ?, 'ACTIVE', ?, ?, ?)
+                (id, tenant_id, facility_id, patient_id, encounter_id, medication_name,
+                 generic_name, dosage, route, frequency, duration, quantity, instructions,
+                 indication, status, prescribed_by, created_at, updated_at)
+            VALUES (?, ?, ?::uuid, ?::uuid, ?::uuid, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'PENDING', ?, ?, ?)
             """,
-                prescriptionId, tenantId, request.encounter_id(), request.patient_id(),
-                request.medication_name(), request.medication_code(),
-                request.dosage(), request.frequency(), request.route(),
-                request.duration_days(), request.instructions(), request.quantity(),
-                now, now, now);
+                prescriptionId, tenantId, request.facility_id(), request.patient_id(),
+                request.encounter_id(), request.medication_name(),
+                request.generic_name(), request.dosage(), request.route(),
+                request.frequency(), request.duration(), request.quantity(),
+                request.instructions(), request.indication(),
+                request.prescribed_by(), now, now);
+
+        // Enriched outbox event — matches web PharmacyController pattern
+        Map<String, Object> eventPayload = new LinkedHashMap<>();
+        eventPayload.put("prescription_id", prescriptionId.toString());
+        eventPayload.put("patient_id", request.patient_id());
+        eventPayload.put("facility_id", request.facility_id());
+        eventPayload.put("encounter_id", request.encounter_id());
+        eventPayload.put("medication_name", request.medication_name());
+        eventPayload.put("generic_name", request.generic_name());
+        eventPayload.put("dosage", request.dosage());
+        eventPayload.put("route", request.route());
+        eventPayload.put("frequency", request.frequency());
+        eventPayload.put("duration", request.duration());
+        eventPayload.put("quantity", request.quantity());
+        eventPayload.put("instructions", request.instructions());
+        eventPayload.put("indication", request.indication());
+        eventPayload.put("prescribed_by", request.prescribed_by());
+        eventPayload.put("status", "PENDING");
 
         outboxService.writeOutboxEvent(
-                "impilo.experience.prescription.created.v1",
+                "impilo.experience.pharmacy.prescribed.v1",
                 correlationId,
                 requestId,
                 idempotencyKey != null ? idempotencyKey : requestId,
@@ -85,29 +110,25 @@ public class MobilePrescriptionController {
                 podId,
                 "Prescription",
                 prescriptionId.toString(),
-                Map.of(
-                        "prescription_id", prescriptionId.toString(),
-                        "encounter_id", request.encounter_id(),
-                        "patient_id", request.patient_id(),
-                        "medication_name", request.medication_name(),
-                        "status", "ACTIVE"
-                ),
+                eventPayload,
                 Map.of()
         );
 
         Map<String, Object> attributes = new LinkedHashMap<>();
-        attributes.put("encounter_id", request.encounter_id());
         attributes.put("patient_id", request.patient_id());
+        attributes.put("facility_id", request.facility_id());
+        attributes.put("encounter_id", request.encounter_id());
         attributes.put("medication_name", request.medication_name());
-        attributes.put("medication_code", request.medication_code());
+        attributes.put("generic_name", request.generic_name());
         attributes.put("dosage", request.dosage());
-        attributes.put("frequency", request.frequency());
         attributes.put("route", request.route());
-        attributes.put("duration_days", request.duration_days());
-        attributes.put("instructions", request.instructions());
+        attributes.put("frequency", request.frequency());
+        attributes.put("duration", request.duration());
         attributes.put("quantity", request.quantity());
-        attributes.put("status", "ACTIVE");
-        attributes.put("prescribed_at", now);
+        attributes.put("instructions", request.instructions());
+        attributes.put("indication", request.indication());
+        attributes.put("prescribed_by", request.prescribed_by());
+        attributes.put("status", "PENDING");
         attributes.put("created_at", now);
 
         Map<String, Object> response = new LinkedHashMap<>();
@@ -142,12 +163,13 @@ public class MobilePrescriptionController {
 
         if (encounterId != null) {
             rows = jdbcTemplate.queryForList("""
-                SELECT id, encounter_id, patient_id, medication_name, medication_code,
-                       dosage, frequency, route, duration_days, instructions, quantity,
-                       status, prescribed_at, cancelled_at, cancel_reason, created_at, updated_at
+                SELECT id, encounter_id, patient_id, facility_id, medication_name,
+                       generic_name, dosage, frequency, route, duration, instructions,
+                       indication, quantity, status, prescribed_by,
+                       dispensed_by, dispensed_at, created_at, updated_at
                 FROM prescriptions
                 WHERE tenant_id = ? AND encounter_id = ?::uuid
-                ORDER BY prescribed_at DESC
+                ORDER BY created_at DESC
                 LIMIT ? OFFSET ?
                 """, tenantId, encounterId, limit, offset);
             total = jdbcTemplate.queryForObject("""
@@ -155,12 +177,13 @@ public class MobilePrescriptionController {
                 """, Long.class, tenantId, encounterId);
         } else if (patientId != null) {
             rows = jdbcTemplate.queryForList("""
-                SELECT id, encounter_id, patient_id, medication_name, medication_code,
-                       dosage, frequency, route, duration_days, instructions, quantity,
-                       status, prescribed_at, cancelled_at, cancel_reason, created_at, updated_at
+                SELECT id, encounter_id, patient_id, facility_id, medication_name,
+                       generic_name, dosage, frequency, route, duration, instructions,
+                       indication, quantity, status, prescribed_by,
+                       dispensed_by, dispensed_at, created_at, updated_at
                 FROM prescriptions
                 WHERE tenant_id = ? AND patient_id = ?::uuid
-                ORDER BY prescribed_at DESC
+                ORDER BY created_at DESC
                 LIMIT ? OFFSET ?
                 """, tenantId, patientId, limit, offset);
             total = jdbcTemplate.queryForObject("""
@@ -205,9 +228,9 @@ public class MobilePrescriptionController {
 
         int updated = jdbcTemplate.update("""
             UPDATE prescriptions
-            SET status = 'CANCELLED', cancelled_at = ?, cancel_reason = ?, updated_at = ?
-            WHERE id = ? AND tenant_id = ? AND status = 'ACTIVE'
-            """, now, reason, now, id, tenantId);
+            SET status = 'CANCELLED', updated_at = ?
+            WHERE id = ? AND tenant_id = ? AND status IN ('PENDING', 'ACTIVE')
+            """, now, id, tenantId);
 
         if (updated == 0) {
             throw new ResourceNotFoundException("Active prescription not found: " + id);
@@ -250,20 +273,22 @@ public class MobilePrescriptionController {
 
     private Map<String, Object> toResource(Map<String, Object> row) {
         Map<String, Object> attributes = new LinkedHashMap<>();
-        attributes.put("encounter_id", row.get("encounter_id"));
         attributes.put("patient_id", row.get("patient_id"));
+        attributes.put("facility_id", row.get("facility_id"));
+        attributes.put("encounter_id", row.get("encounter_id"));
         attributes.put("medication_name", row.get("medication_name"));
-        attributes.put("medication_code", row.get("medication_code"));
+        attributes.put("generic_name", row.get("generic_name"));
         attributes.put("dosage", row.get("dosage"));
-        attributes.put("frequency", row.get("frequency"));
         attributes.put("route", row.get("route"));
-        attributes.put("duration_days", row.get("duration_days"));
-        attributes.put("instructions", row.get("instructions"));
+        attributes.put("frequency", row.get("frequency"));
+        attributes.put("duration", row.get("duration"));
         attributes.put("quantity", row.get("quantity"));
+        attributes.put("instructions", row.get("instructions"));
+        attributes.put("indication", row.get("indication"));
         attributes.put("status", row.get("status"));
-        attributes.put("prescribed_at", row.get("prescribed_at"));
-        attributes.put("cancelled_at", row.get("cancelled_at"));
-        attributes.put("cancel_reason", row.get("cancel_reason"));
+        attributes.put("prescribed_by", row.get("prescribed_by"));
+        attributes.put("dispensed_by", row.get("dispensed_by"));
+        attributes.put("dispensed_at", row.get("dispensed_at"));
         attributes.put("created_at", row.get("created_at"));
         attributes.put("updated_at", row.get("updated_at"));
 
