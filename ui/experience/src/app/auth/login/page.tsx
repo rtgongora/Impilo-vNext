@@ -59,7 +59,10 @@ export default function LoginPage() {
       { email: email.trim(), password },
       {
         onSuccess: (res) => {
-          const { token, user } = res.data.attributes;
+          const attrs = res.data.attributes;
+          const { token, user } = attrs;
+          const refreshToken = (attrs as Record<string, unknown>).refreshToken as string | undefined;
+          const expiresAt = (attrs as Record<string, unknown>).expiresAt as string | undefined;
           setAuth(
             {
               id: user.id,
@@ -72,7 +75,9 @@ export default function LoginPage() {
                 | "CITIZEN"
                 | "SYSTEM",
             },
-            token
+            token,
+            refreshToken,
+            expiresAt
           );
           router.push("/home");
         },

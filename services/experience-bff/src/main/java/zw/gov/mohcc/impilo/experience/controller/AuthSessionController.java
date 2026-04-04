@@ -89,6 +89,7 @@ public class AuthSessionController {
             if (kcResponse.getStatusCode().is2xxSuccessful() && kcResponse.getBody() != null) {
                 JsonNode tokenData = kcResponse.getBody();
                 String accessToken = tokenData.get("access_token").asText();
+                String refreshToken = tokenData.has("refresh_token") ? tokenData.get("refresh_token").asText() : null;
                 int expiresIn = tokenData.has("expires_in") ? tokenData.get("expires_in").asInt() : 28800;
 
                 // Decode JWT payload (base64 middle segment)
@@ -115,7 +116,7 @@ public class AuthSessionController {
 
                 log.info("Keycloak login successful: user={}, email={}, roles={}", userId, userEmail, roles);
 
-                return buildLoginResponse(accessToken, expiresIn, userId, userEmail, displayName, roles, actorType, requestId, correlationId);
+                return buildLoginResponse(accessToken, refreshToken, expiresIn, userId, userEmail, displayName, roles, actorType, requestId, correlationId);
             }
         } catch (org.springframework.web.client.HttpClientErrorException e) {
             if (e.getStatusCode() == HttpStatus.UNAUTHORIZED) {
@@ -132,7 +133,7 @@ public class AuthSessionController {
         log.warn("Using local session fallback for: {}", email);
         String fallbackToken = UUID.randomUUID().toString();
         String fallbackUserId = UUID.nameUUIDFromBytes(email.getBytes()).toString();
-        return buildLoginResponse(fallbackToken, 28800, fallbackUserId, email, email,
+        return buildLoginResponse(fallbackToken, null, 28800, fallbackUserId, email, email,
                 List.of("CLINICIAN"), "PROVIDER", requestId, correlationId);
     }
 
@@ -151,6 +152,81 @@ public class AuthSessionController {
         ));
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Refresh session token using Keycloak refresh_token grant.
+     */
+    @PostMapping("/refresh")
+    public ResponseEntity<Map<String, Object>> refresh(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody Map<String, Object> body) {
+
+        String refreshToken = body.getOrDefault("refreshToken", "").toString();
+        if (refreshToken.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", Map.of("code", "VALIDATION", "message", "refreshToken is required")));
+        }
+
+        try {
+            String tokenUrl = keycloakUrl + "/realms/" + realm + "/protocol/openid-connect/token";
+
+            MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
+            formData.add("grant_type", "refresh_token");
+            formData.add("client_id", clientId);
+            formData.add("refresh_token", refreshToken);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+            ResponseEntity<JsonNode> kcResponse = restTemplate.exchange(
+                    tokenUrl, HttpMethod.POST,
+                    new HttpEntity<>(formData, headers),
+                    JsonNode.class);
+
+            if (kcResponse.getStatusCode().is2xxSuccessful() && kcResponse.getBody() != null) {
+                JsonNode tokenData = kcResponse.getBody();
+                String newAccessToken = tokenData.get("access_token").asText();
+                String newRefreshToken = tokenData.has("refresh_token") ? tokenData.get("refresh_token").asText() : null;
+                int expiresIn = tokenData.has("expires_in") ? tokenData.get("expires_in").asInt() : 28800;
+
+                String[] parts = newAccessToken.split("\\.");
+                String payloadJson = new String(Base64.getUrlDecoder().decode(parts[1]));
+                JsonNode claims = new com.fasterxml.jackson.databind.ObjectMapper().readTree(payloadJson);
+
+                String userId = claims.has("sub") ? claims.get("sub").asText() : "";
+                String userEmail = claims.has("email") ? claims.get("email").asText() : "";
+                String displayName = claims.has("name") ? claims.get("name").asText()
+                        : claims.has("preferred_username") ? claims.get("preferred_username").asText() : userEmail;
+
+                List<String> roles = new ArrayList<>();
+                if (claims.has("realm_access") && claims.get("realm_access").has("roles")) {
+                    for (JsonNode role : claims.get("realm_access").get("roles")) {
+                        String r = role.asText();
+                        if (!r.startsWith("default-roles-") && !r.equals("offline_access") && !r.equals("uma_authorization")) {
+                            roles.add(r);
+                        }
+                    }
+                }
+
+                String actorType = determineActorType(roles);
+                log.info("Token refreshed for user={}", userId);
+
+                return buildLoginResponse(newAccessToken, newRefreshToken, expiresIn, userId, userEmail,
+                        displayName, roles, actorType, requestId, correlationId);
+            }
+        } catch (org.springframework.web.client.HttpClientErrorException e) {
+            log.info("Token refresh failed: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                    "error", Map.of("code", "REFRESH_FAILED", "message", "Session expired. Please log in again.")));
+        } catch (Exception e) {
+            log.warn("Keycloak refresh failed: {}", e.getMessage());
+        }
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                "error", Map.of("code", "REFRESH_FAILED", "message", "Unable to refresh session")));
     }
 
     @GetMapping("/session")
@@ -173,7 +249,7 @@ public class AuthSessionController {
     // ── Helpers ──────────────────────────────────────────────────
 
     private ResponseEntity<Map<String, Object>> buildLoginResponse(
-            String token, int expiresIn, String userId, String email,
+            String token, String refreshToken, int expiresIn, String userId, String email,
             String displayName, List<String> roles, String actorType,
             String requestId, String correlationId) {
 
@@ -188,7 +264,9 @@ public class AuthSessionController {
 
         Map<String, Object> attributes = new LinkedHashMap<>();
         attributes.put("token", token);
+        if (refreshToken != null) attributes.put("refreshToken", refreshToken);
         attributes.put("expiresAt", expiresAt.toString());
+        attributes.put("expiresIn", expiresIn);
         attributes.put("user", user);
 
         Map<String, Object> response = new LinkedHashMap<>();

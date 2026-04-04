@@ -1,10 +1,14 @@
 /**
- * Experience UI — API Client with v1.1 Header Injection
+ * Experience UI — API Client with v1.1 Header Injection and Token Refresh
  *
  * Every outbound request to the Experience-BFF carries the mandatory v1.1 headers:
  *   X-Tenant-ID, X-Pod-ID, X-Request-ID, X-Correlation-ID
  *
  * Command requests (POST/PUT/PATCH) also carry Idempotency-Key.
+ *
+ * On 401 responses, attempts a single token refresh via the BFF /auth/refresh
+ * endpoint before failing. If refresh succeeds, retries the original request
+ * with the new token. If refresh fails, clears auth and redirects to login.
  */
 
 const BFF_BASE_URL = process.env.NEXT_PUBLIC_BFF_URL || "http://localhost:8160";
@@ -32,6 +36,9 @@ export interface ApiError {
     correlation_id: string;
   };
 }
+
+// Refresh state to prevent concurrent refresh attempts
+let refreshPromise: Promise<boolean> | null = null;
 
 function getV11Headers(): Record<string, string> {
   const headers: Record<string, string> = {
@@ -81,6 +88,78 @@ function getAuthToken(): string | null {
   return null;
 }
 
+function getRefreshToken(): string | null {
+  if (typeof window !== "undefined") {
+    return sessionStorage.getItem("exp:refresh_token");
+  }
+  return null;
+}
+
+/**
+ * Attempt to refresh the session token using the refresh_token.
+ * Returns true if refresh succeeded, false otherwise.
+ * Uses a singleton promise to prevent concurrent refresh attempts.
+ */
+async function attemptRefresh(): Promise<boolean> {
+  const refreshToken = getRefreshToken();
+  if (!refreshToken) return false;
+
+  // If a refresh is already in progress, wait for it
+  if (refreshPromise) return refreshPromise;
+
+  refreshPromise = (async () => {
+    try {
+      const headers = getV11Headers();
+      headers["Idempotency-Key"] = crypto.randomUUID();
+      // Don't send the expired token for the refresh call
+      delete headers["Authorization"];
+
+      const response = await fetch(`${BFF_BASE_URL}/internal/v1/auth/refresh`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ refreshToken }),
+      });
+
+      if (!response.ok) return false;
+
+      const data = await response.json();
+      const attrs = data?.data?.attributes;
+      if (!attrs?.token) return false;
+
+      // Update session storage with new tokens
+      sessionStorage.setItem("exp:auth_token", attrs.token);
+      if (attrs.refreshToken) sessionStorage.setItem("exp:refresh_token", attrs.refreshToken);
+      if (attrs.expiresAt) sessionStorage.setItem("exp:expires_at", attrs.expiresAt);
+      if (attrs.user) sessionStorage.setItem("exp:auth_user", JSON.stringify(attrs.user));
+
+      return true;
+    } catch {
+      return false;
+    } finally {
+      refreshPromise = null;
+    }
+  })();
+
+  return refreshPromise;
+}
+
+/**
+ * Clear auth state and redirect to login.
+ */
+function handleAuthFailure(): void {
+  if (typeof window !== "undefined") {
+    sessionStorage.removeItem("exp:auth_token");
+    sessionStorage.removeItem("exp:auth_user");
+    sessionStorage.removeItem("exp:refresh_token");
+    sessionStorage.removeItem("exp:expires_at");
+
+    // Only redirect if not already on auth page
+    if (!window.location.pathname.startsWith("/auth")) {
+      window.location.href = "/auth/login";
+    }
+  }
+}
+
 async function request<T>(
   method: string,
   path: string,
@@ -97,6 +176,38 @@ async function request<T>(
     headers,
     body: body ? JSON.stringify(body) : undefined,
   });
+
+  if (response.status === 401 && !path.includes("/auth/")) {
+    // Attempt token refresh
+    const refreshed = await attemptRefresh();
+    if (refreshed) {
+      // Retry the original request with the new token
+      const retryHeaders = getV11Headers();
+      if (["POST", "PUT", "PATCH"].includes(method)) {
+        retryHeaders["Idempotency-Key"] = crypto.randomUUID();
+      }
+      const retryResponse = await fetch(`${BFF_BASE_URL}${path}`, {
+        method,
+        headers: retryHeaders,
+        body: body ? JSON.stringify(body) : undefined,
+      });
+
+      if (retryResponse.ok) {
+        return retryResponse.json();
+      }
+
+      if (retryResponse.status === 401) {
+        handleAuthFailure();
+      }
+
+      const errorBody = await retryResponse.json().catch(() => null);
+      throw { status: retryResponse.status, ...(errorBody || {}) };
+    }
+
+    // Refresh failed — clear auth and redirect
+    handleAuthFailure();
+    throw { status: 401, error: { code: "SESSION_EXPIRED", message: "Session expired" } };
+  }
 
   if (!response.ok) {
     const errorBody = await response.json().catch(() => null);
