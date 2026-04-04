@@ -8,6 +8,7 @@
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { useAuthStore } from "@/hooks/useAuthStore";
 import {
   ArrowLeft,
   Loader2,
@@ -33,10 +34,14 @@ export default function EncounterPage() {
   const params = useParams<{ patientId: string; encounterId: string }>();
   const router = useRouter();
   const { patientId, encounterId } = params;
+  const { user } = useAuthStore();
 
   const { data: encounterData, isLoading: isLoadingEncounter } = useEncounter(encounterId);
   const { data: patientData } = usePatient(patientId);
   const closeEncounter = useCloseEncounter();
+
+  const currentUserId = user?.id ?? "system";
+  const currentUserName = user?.displayName ?? user?.email ?? "Provider";
 
   const encounter = encounterData?.data;
   const patient = patientData?.data;
@@ -80,7 +85,7 @@ export default function EncounterPage() {
       await apiClient.post("/internal/v1/vitals", {
         patient_id: patientId,
         encounter_id: encounterId,
-        recorded_by: "current-user",
+        recorded_by: currentUserId,
         systolic: systolic ? Number(systolic) : null,
         diastolic: diastolic ? Number(diastolic) : null,
         heart_rate: heartRate ? Number(heartRate) : null,
@@ -113,8 +118,8 @@ export default function EncounterPage() {
         assessment: assessment || null,
         plan: plan || null,
         body: noteBody || null,
-        author_id: "current-user",
-        author_name: "Current User",
+        author_id: currentUserId,
+        author_name: currentUserName,
       });
       setNoteSaved(true);
       setSubjective("");
@@ -205,6 +210,17 @@ export default function EncounterPage() {
                       </>
                     )}
                   </div>
+                  {(encounter.attributes as Record<string, unknown>).pct_journey_id && (
+                    <div className="flex items-center gap-2 mt-1 text-xs text-gray-400">
+                      <span>Journey: {String((encounter.attributes as Record<string, unknown>).pct_journey_id)}</span>
+                      {(encounter.attributes as Record<string, unknown>).pct_encounter_ref && (
+                        <>
+                          <span className="text-gray-300">|</span>
+                          <span>PCT Ref: {String((encounter.attributes as Record<string, unknown>).pct_encounter_ref)}</span>
+                        </>
+                      )}
+                    </div>
+                  )}
                 </div>
                 {/* Quick action links */}
                 {isActive && (

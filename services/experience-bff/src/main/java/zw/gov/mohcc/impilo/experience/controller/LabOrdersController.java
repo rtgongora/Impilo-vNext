@@ -1,7 +1,10 @@
 package zw.gov.mohcc.impilo.experience.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -11,6 +14,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.OrosServiceClient;
 import zw.gov.mohcc.impilo.experience.domain.LabOrder;
 import zw.gov.mohcc.impilo.experience.repository.LabOrderRepository;
 import zw.gov.mohcc.impilo.experience.service.OutboxService;
@@ -31,16 +35,21 @@ import java.util.*;
 @RequestMapping("/internal/v1/lab-orders")
 public class LabOrdersController {
 
+    private static final Logger log = LoggerFactory.getLogger(LabOrdersController.class);
+
     private final LabOrderRepository labOrderRepository;
     private final OutboxService outboxService;
     private final JdbcTemplate jdbcTemplate;
+    private final OrosServiceClient orosClient;
 
     public LabOrdersController(LabOrderRepository labOrderRepository,
                                OutboxService outboxService,
-                               JdbcTemplate jdbcTemplate) {
+                               JdbcTemplate jdbcTemplate,
+                               OrosServiceClient orosClient) {
         this.labOrderRepository = labOrderRepository;
         this.outboxService = outboxService;
         this.jdbcTemplate = jdbcTemplate;
+        this.orosClient = orosClient;
     }
 
     public record CreateLabOrderRequest(
@@ -53,7 +62,9 @@ public class LabOrdersController {
             String clinical_notes,
             @NotBlank String ordered_by,
             String ordered_by_name,
-            String facility_id
+            String facility_id,
+            String patient_cpid,
+            String pct_encounter_ref
     ) {}
 
     @GetMapping
@@ -167,6 +178,37 @@ public class LabOrdersController {
                 Map.of()
         );
 
+        // Delegate to OROS: place the order in the sovereign order orchestration service
+        String orosOrderId = null;
+        if (request.patient_cpid() != null && !request.patient_cpid().isBlank()) {
+            try {
+                List<Map<String, Object>> items = List.of(Map.of(
+                        "code", request.test_code() != null ? request.test_code() : request.test_name(),
+                        "displayName", request.test_name(),
+                        "quantity", 1
+                ));
+                JsonNode orosData = orosClient.placeOrder(
+                        "LAB",
+                        request.priority() != null ? request.priority() : "ROUTINE",
+                        request.patient_cpid(),
+                        request.pct_encounter_ref(),
+                        request.clinical_notes(),
+                        items);
+                if (orosData != null && orosData.has("orderId")) {
+                    orosOrderId = orosData.get("orderId").asText();
+                }
+                log.info("OROS order placed: {} for BFF lab order {}", orosOrderId, orderId);
+
+                if (orosOrderId != null) {
+                    jdbcTemplate.update(
+                            "UPDATE lab_orders SET oros_order_id = ? WHERE id = ?",
+                            orosOrderId, orderId);
+                }
+            } catch (Exception e) {
+                log.warn("OROS order delegation failed (non-blocking): {}", e.getMessage());
+            }
+        }
+
         Map<String, Object> attributes = new LinkedHashMap<>();
         attributes.put("patient_id", request.patient_id());
         attributes.put("encounter_id", request.encounter_id());
@@ -182,6 +224,9 @@ public class LabOrdersController {
         attributes.put("facility_id", request.facility_id());
         attributes.put("created_at", now);
         attributes.put("updated_at", now);
+        if (orosOrderId != null) {
+            attributes.put("oros_order_id", orosOrderId);
+        }
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", Map.of(

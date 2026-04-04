@@ -1,8 +1,11 @@
 package zw.gov.mohcc.impilo.experience.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -12,6 +15,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 import zw.gov.mohcc.impilo.experience.domain.QueueEntry;
 import zw.gov.mohcc.impilo.experience.repository.QueueEntryRepository;
 import zw.gov.mohcc.impilo.experience.service.OutboxService;
@@ -30,16 +34,21 @@ import java.util.*;
 @RequestMapping("/internal/v1/queue")
 public class QueueController {
 
+    private static final Logger log = LoggerFactory.getLogger(QueueController.class);
+
     private final QueueEntryRepository queueEntryRepository;
     private final OutboxService outboxService;
     private final JdbcTemplate jdbcTemplate;
+    private final PctServiceClient pctClient;
 
     public QueueController(QueueEntryRepository queueEntryRepository,
                            OutboxService outboxService,
-                           JdbcTemplate jdbcTemplate) {
+                           JdbcTemplate jdbcTemplate,
+                           PctServiceClient pctClient) {
         this.queueEntryRepository = queueEntryRepository;
         this.outboxService = outboxService;
         this.jdbcTemplate = jdbcTemplate;
+        this.pctClient = pctClient;
     }
 
     public record CreateQueueEntryRequest(
@@ -47,7 +56,10 @@ public class QueueController {
             @NotBlank String facility_id,
             @NotBlank String queue_type,
             String priority,
-            String reason
+            String reason,
+            String patient_cpid,
+            String referral_source,
+            String referral_id
     ) {}
 
     @GetMapping("/entries")
@@ -111,6 +123,18 @@ public class QueueController {
                 request.reason(),
                 now, now, now);
 
+        // Store patient_cpid for later PCT delegation
+        String cpid = request.patient_cpid();
+        if (cpid == null || cpid.isBlank()) {
+            // Resolve CPID from patients table
+            List<Map<String, Object>> cpidRows = jdbcTemplate.queryForList(
+                    "SELECT cpid FROM patients WHERE id = ?::uuid AND tenant_id = ?",
+                    request.patient_id(), tenantId);
+            if (!cpidRows.isEmpty() && cpidRows.get(0).get("cpid") != null) {
+                cpid = cpidRows.get(0).get("cpid").toString();
+            }
+        }
+
         outboxService.writeOutboxEvent(
                 "impilo.experience.queue.entry-created.v1",
                 correlationId,
@@ -130,6 +154,31 @@ public class QueueController {
                 Map.of()
         );
 
+        // Delegate to PCT: start a journey so the sovereign service tracks this visit
+        String pctJourneyId = null;
+        if (cpid != null && !cpid.isBlank()) {
+            try {
+                JsonNode journeyData = pctClient.startJourney(
+                        cpid,
+                        UUID.fromString(request.facility_id()),
+                        request.referral_source(),
+                        request.referral_id());
+                if (journeyData != null && journeyData.has("journeyId")) {
+                    pctJourneyId = journeyData.get("journeyId").asText();
+                }
+                log.info("PCT journey started: {} for queue entry {}", pctJourneyId, entryId);
+
+                // Persist the PCT journey reference
+                if (pctJourneyId != null) {
+                    jdbcTemplate.update(
+                            "UPDATE queue_entries SET pct_journey_id = ? WHERE id = ?",
+                            pctJourneyId, entryId);
+                }
+            } catch (Exception e) {
+                log.warn("PCT journey delegation failed (non-blocking): {}", e.getMessage());
+            }
+        }
+
         Map<String, Object> attributes = new LinkedHashMap<>();
         attributes.put("patient_id", request.patient_id());
         attributes.put("facility_id", request.facility_id());
@@ -139,6 +188,9 @@ public class QueueController {
         attributes.put("status", "WAITING");
         attributes.put("arrival_time", now);
         attributes.put("created_at", now);
+        if (pctJourneyId != null) {
+            attributes.put("pct_journey_id", pctJourneyId);
+        }
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", Map.of(

@@ -21,6 +21,7 @@ import {
   useReferrals,
   useCreateReferral,
 } from "@/hooks/queries/useReferrals";
+import { useAuthStore } from "@/hooks/useAuthStore";
 
 const URGENCY_BADGE: Record<string, string> = {
   ROUTINE: "bg-blue-100 text-blue-700",
@@ -31,6 +32,7 @@ const URGENCY_BADGE: Record<string, string> = {
 const STATUS_BADGE: Record<string, string> = {
   PENDING: "bg-yellow-100 text-yellow-700",
   ACCEPTED: "bg-blue-100 text-blue-700",
+  RESPONDED: "bg-purple-100 text-purple-700",
   COMPLETED: "bg-green-100 text-green-700",
   DECLINED: "bg-gray-100 text-gray-600",
 };
@@ -50,9 +52,13 @@ const EMPTY_FORM = {
 export default function ReferralsPage() {
   const params = useParams<{ patientId: string }>();
   const { patientId } = params;
+  const { user } = useAuthStore();
 
   const { data: referralsData, isLoading } = useReferrals(patientId);
   const createReferral = useCreateReferral();
+
+  const currentUserId = user?.id ?? "";
+  const currentUserName = user?.displayName ?? user?.email ?? "";
 
   const referrals = referralsData?.data ?? [];
 
@@ -327,6 +333,11 @@ export default function ReferralsPage() {
                         <p className="text-sm text-gray-500 line-clamp-2">
                           {referral.attributes.reason}
                         </p>
+                        {referral.attributes.outcome && (
+                          <p className="text-sm text-green-700 mt-1">
+                            <span className="font-medium">Outcome:</span> {referral.attributes.outcome}
+                          </p>
+                        )}
                       </div>
                       <div className="flex flex-col items-end gap-2 shrink-0">
                         <div className="flex items-center gap-2">

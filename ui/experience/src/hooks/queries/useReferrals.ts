@@ -84,3 +84,41 @@ export function useCompleteReferral() {
     },
   });
 }
+
+interface AcceptReferralPayload {
+  id: string;
+  receiving_facility_id?: string;
+  receiving_facility_name?: string;
+  scheduled_at?: string;
+  notes?: string;
+}
+
+interface RespondReferralPayload {
+  id: string;
+  response_notes: string;
+  outcome?: string;
+}
+
+export function useAcceptReferral() {
+  const queryClient = useQueryClient();
+
+  return useMutation<ReferralResponse, unknown, AcceptReferralPayload>({
+    mutationFn: ({ id, ...rest }: AcceptReferralPayload) =>
+      apiClient.post<ReferralResponse>(`/internal/v1/referrals/${id}/accept`, rest),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["referrals"] });
+    },
+  });
+}
+
+export function useRespondReferral() {
+  const queryClient = useQueryClient();
+
+  return useMutation<ReferralResponse, unknown, RespondReferralPayload>({
+    mutationFn: ({ id, ...rest }: RespondReferralPayload) =>
+      apiClient.post<ReferralResponse>(`/internal/v1/referrals/${id}/respond`, rest),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["referrals"] });
+    },
+  });
+}

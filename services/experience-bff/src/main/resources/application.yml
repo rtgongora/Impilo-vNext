@@ -32,6 +32,15 @@ management:
     health:
       show-details: when-authorized
 
+impilo:
+  services:
+    pct-base-url: ${PCT_BASE_URL:http://localhost:8088}
+    oros-base-url: ${OROS_BASE_URL:http://localhost:8089}
+    pharmacy-base-url: ${PHARMACY_BASE_URL:http://localhost:8091}
+    vito-base-url: ${VITO_BASE_URL:http://localhost:8082}
+    tuso-base-url: ${TUSO_BASE_URL:http://localhost:8084}
+    varapi-base-url: ${VARAPI_BASE_URL:http://localhost:8083}
+
 logging:
   level:
     zw.gov.mohcc.impilo: INFO

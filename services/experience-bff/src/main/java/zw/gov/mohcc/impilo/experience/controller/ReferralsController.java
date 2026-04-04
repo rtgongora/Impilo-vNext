@@ -59,6 +59,18 @@ public class ReferralsController {
             String outcome
     ) {}
 
+    public record AcceptReferralRequest(
+            String receiving_facility_id,
+            String receiving_facility_name,
+            String scheduled_at,
+            String notes
+    ) {}
+
+    public record RespondReferralRequest(
+            @NotBlank String response_notes,
+            String outcome
+    ) {}
+
     @GetMapping
     public ResponseEntity<Map<String, Object>> listReferrals(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
@@ -239,6 +251,122 @@ public class ReferralsController {
                 "correlation_id", correlationId
         ));
 
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Accept a referral at the receiving facility.
+     * POST /internal/v1/referrals/{id}/accept
+     */
+    @PostMapping("/{id}/accept")
+    @Transactional
+    public ResponseEntity<Map<String, Object>> acceptReferral(
+            @PathVariable UUID id,
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.POD_ID) String podId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
+            @Valid @RequestBody AcceptReferralRequest request) {
+
+        OffsetDateTime now = OffsetDateTime.now();
+
+        int updated = jdbcTemplate.update("""
+            UPDATE referrals SET status = 'ACCEPTED',
+                receiving_facility_id = ?::uuid,
+                receiving_facility_name = ?,
+                scheduled_at = ?,
+                accepted_at = ?,
+                updated_at = ?
+            WHERE id = ? AND tenant_id = ? AND status = 'PENDING'
+            """,
+                request.receiving_facility_id(),
+                request.receiving_facility_name(),
+                request.scheduled_at() != null ? OffsetDateTime.parse(request.scheduled_at()) : null,
+                now, now, id, tenantId);
+
+        if (updated == 0) {
+            throw new ResourceNotFoundException("Pending referral not found: " + id);
+        }
+
+        outboxService.writeOutboxEvent(
+                "impilo.experience.referral.accepted.v1",
+                correlationId, requestId,
+                idempotencyKey != null ? idempotencyKey : requestId,
+                tenantId, podId,
+                "Referral", id.toString(),
+                Map.of(
+                        "referral_id", id.toString(),
+                        "receiving_facility_id", request.receiving_facility_id() != null ? request.receiving_facility_id() : "",
+                        "receiving_facility_name", request.receiving_facility_name() != null ? request.receiving_facility_name() : "",
+                        "status", "ACCEPTED"
+                ),
+                Map.of()
+        );
+
+        Referral referral = referralRepository.findByIdAndTenantId(id, tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException("Referral not found: " + id));
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", toResource(referral));
+        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Record a response from the receiving facility (outcome/notes from specialist).
+     * POST /internal/v1/referrals/{id}/respond
+     */
+    @PostMapping("/{id}/respond")
+    @Transactional
+    public ResponseEntity<Map<String, Object>> respondReferral(
+            @PathVariable UUID id,
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.POD_ID) String podId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
+            @Valid @RequestBody RespondReferralRequest request) {
+
+        OffsetDateTime now = OffsetDateTime.now();
+
+        int updated = jdbcTemplate.update("""
+            UPDATE referrals SET status = 'RESPONDED',
+                response_notes = ?,
+                outcome = COALESCE(?, outcome),
+                responded_at = ?,
+                updated_at = ?
+            WHERE id = ? AND tenant_id = ? AND status IN ('ACCEPTED', 'PENDING')
+            """,
+                request.response_notes(),
+                request.outcome(),
+                now, now, id, tenantId);
+
+        if (updated == 0) {
+            throw new ResourceNotFoundException("Accepted referral not found: " + id);
+        }
+
+        outboxService.writeOutboxEvent(
+                "impilo.experience.referral.responded.v1",
+                correlationId, requestId,
+                idempotencyKey != null ? idempotencyKey : requestId,
+                tenantId, podId,
+                "Referral", id.toString(),
+                Map.of(
+                        "referral_id", id.toString(),
+                        "response_notes", request.response_notes(),
+                        "outcome", request.outcome() != null ? request.outcome() : "",
+                        "status", "RESPONDED"
+                ),
+                Map.of()
+        );
+
+        Referral referral = referralRepository.findByIdAndTenantId(id, tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException("Referral not found: " + id));
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", toResource(referral));
+        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return ResponseEntity.ok(response);
     }
 

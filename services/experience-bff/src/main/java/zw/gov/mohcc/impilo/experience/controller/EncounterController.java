@@ -1,7 +1,10 @@
 package zw.gov.mohcc.impilo.experience.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -11,6 +14,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 import zw.gov.mohcc.impilo.experience.domain.Encounter;
 import zw.gov.mohcc.impilo.experience.repository.EncounterRepository;
 import zw.gov.mohcc.impilo.experience.service.OutboxService;
@@ -29,23 +33,30 @@ import java.util.*;
 @RequestMapping("/internal/v1/encounters")
 public class EncounterController {
 
+    private static final Logger log = LoggerFactory.getLogger(EncounterController.class);
+
     private final EncounterRepository encounterRepository;
     private final OutboxService outboxService;
     private final JdbcTemplate jdbcTemplate;
+    private final PctServiceClient pctClient;
 
     public EncounterController(EncounterRepository encounterRepository,
                                OutboxService outboxService,
-                               JdbcTemplate jdbcTemplate) {
+                               JdbcTemplate jdbcTemplate,
+                               PctServiceClient pctClient) {
         this.encounterRepository = encounterRepository;
         this.outboxService = outboxService;
         this.jdbcTemplate = jdbcTemplate;
+        this.pctClient = pctClient;
     }
 
     public record CreateEncounterRequest(
             @NotBlank String patient_id,
             @NotBlank String facility_id,
             @NotBlank String encounter_type,
-            String chief_complaint
+            String chief_complaint,
+            String pct_journey_id,
+            String patient_cpid
     ) {}
 
     public record CloseEncounterRequest(
@@ -162,6 +173,28 @@ public class EncounterController {
                 Map.of()
         );
 
+        // Delegate to PCT: start encounter in the sovereign service
+        String pctEncounterRef = null;
+        if (request.pct_journey_id() != null && !request.pct_journey_id().isBlank()) {
+            try {
+                JsonNode pctEncounter = pctClient.startEncounter(
+                        request.pct_journey_id(), request.encounter_type());
+                if (pctEncounter != null && pctEncounter.has("encounterRef")) {
+                    pctEncounterRef = pctEncounter.get("encounterRef").asText();
+                }
+                log.info("PCT encounter started: ref={} for BFF encounter {}",
+                        pctEncounterRef, encounterId);
+
+                // Persist the PCT encounter reference and journey ID
+                jdbcTemplate.update("""
+                    UPDATE encounters SET pct_encounter_ref = ?, pct_journey_id = ?
+                    WHERE id = ? AND tenant_id = ?
+                    """, pctEncounterRef, request.pct_journey_id(), encounterId, tenantId);
+            } catch (Exception e) {
+                log.warn("PCT encounter delegation failed (non-blocking): {}", e.getMessage());
+            }
+        }
+
         Map<String, Object> attributes = new LinkedHashMap<>();
         attributes.put("patient_id", request.patient_id());
         attributes.put("facility_id", request.facility_id());
@@ -170,6 +203,12 @@ public class EncounterController {
         attributes.put("status", "IN_PROGRESS");
         attributes.put("started_at", now);
         attributes.put("created_at", now);
+        if (pctEncounterRef != null) {
+            attributes.put("pct_encounter_ref", pctEncounterRef);
+        }
+        if (request.pct_journey_id() != null) {
+            attributes.put("pct_journey_id", request.pct_journey_id());
+        }
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", Map.of(
@@ -252,6 +291,26 @@ public class EncounterController {
                 request.discharged_by()
         );
         encounterRepository.save(encounter);
+
+        // Delegate to PCT: start discharge workflow in sovereign service
+        String pctJourneyId = encounter.getNotes(); // stored as notes if linked
+        if (pctJourneyId == null || pctJourneyId.isBlank()) {
+            // Try to find PCT journey from encounter metadata via JDBC
+            List<Map<String, Object>> metaRows = jdbcTemplate.queryForList(
+                    "SELECT pct_journey_id FROM encounters WHERE id = ? AND tenant_id = ?",
+                    id, tenantId);
+            if (!metaRows.isEmpty() && metaRows.get(0).get("pct_journey_id") != null) {
+                pctJourneyId = metaRows.get(0).get("pct_journey_id").toString();
+            }
+        }
+        if (pctJourneyId != null && !pctJourneyId.isBlank()) {
+            try {
+                pctClient.startDischarge(pctJourneyId, request.discharge_type());
+                log.info("PCT discharge started for journey={} from encounter={}", pctJourneyId, id);
+            } catch (Exception e) {
+                log.warn("PCT discharge delegation failed (non-blocking): {}", e.getMessage());
+            }
+        }
 
         outboxService.writeOutboxEvent(
                 "impilo.experience.encounter.discharged.v1",
