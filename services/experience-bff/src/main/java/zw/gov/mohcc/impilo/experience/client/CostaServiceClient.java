@@ -8,6 +8,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 /**
  * HTTP client for the COSTA (Costing Engine) sovereign service.
  *
@@ -27,6 +30,24 @@ public class CostaServiceClient {
                               ServiceClientConfig.ServiceEndpoints endpoints) {
         this.restTemplate = serviceRestTemplate;
         this.baseUrl = endpoints.costaBaseUrl();
+    }
+
+    /**
+     * Create a bill draft for an encounter.
+     *
+     * @param encounterId the BFF encounter ID
+     * @param billType    bill type (ENCOUNTER, ESTIMATE, MARKETPLACE, OUTREACH)
+     * @return the created bill draft from COSTA, or null on failure
+     */
+    public JsonNode createBillDraft(String encounterId, String billType) {
+        String url = baseUrl + "/costa/v1/bills/draft";
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("encounterId", encounterId);
+        if (billType != null) body.put("billType", billType);
+
+        log.info("COSTA: Creating bill draft for encounter={}, type={}", encounterId, billType);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
     }
 
     /**
