@@ -223,7 +223,16 @@ export function ZoneNavigation() {
   const { facility } = useFacilityStore();
   const { workspace } = useWorkspaceStore();
   const { shift } = useShiftStore();
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return sessionStorage.getItem("exp:sidebar-collapsed") === "true";
+  });
+
+  function toggleCollapsed() {
+    const next = !collapsed;
+    setCollapsed(next);
+    sessionStorage.setItem("exp:sidebar-collapsed", String(next));
+  }
 
   const context = getContextFromPath(pathname);
   const sections = getNavSections(context);
@@ -239,7 +248,7 @@ export function ZoneNavigation() {
           </Link>
         )}
         <button
-          onClick={() => setCollapsed(!collapsed)}
+          onClick={toggleCollapsed}
           className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded transition-colors"
           title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
@@ -311,7 +320,7 @@ export function ZoneNavigation() {
       <div className="border-t border-gray-700 p-3 space-y-1">
         {collapsed ? (
           <>
-            <Link href="/facility" title={facility ? facility.name : "Select Facility"} className="block text-center">
+            <Link href="/home" title={facility ? facility.name : "Select Facility"} className="block text-center">
               <Building2 className={`w-4 h-4 mx-auto ${facility ? "text-gray-400" : "text-yellow-500"}`} />
             </Link>
             {shift && <Activity className="w-4 h-4 mx-auto text-green-400" />}
@@ -323,7 +332,7 @@ export function ZoneNavigation() {
                 <span className="text-gray-500">Facility:</span> {facility.name}
               </Link>
             ) : (
-              <Link href="/facility" className="block text-xs text-yellow-500 hover:text-yellow-400">
+              <Link href="/home" className="block text-xs text-yellow-500 hover:text-yellow-400">
                 Select Facility
               </Link>
             )}
