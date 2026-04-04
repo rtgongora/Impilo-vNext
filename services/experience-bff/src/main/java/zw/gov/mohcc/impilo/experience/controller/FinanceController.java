@@ -25,6 +25,8 @@ import java.util.Map;
  *   <li>GET /internal/v1/finance/billing/{id} — single bill detail</li>
  *   <li>GET /internal/v1/finance/tariffs — list tariffs</li>
  *   <li>GET /internal/v1/finance/payments — list payments</li>
+ *   <li>GET /internal/v1/finance/claims — list insurance claim packs</li>
+ *   <li>GET /internal/v1/finance/claims/{id} — claim detail with line items and adjudication history</li>
  * </ul>
  */
 @RestController
@@ -212,6 +214,48 @@ public class FinanceController {
                 } catch (Exception billErr) {
                     log.warn("Failed to enrich claim with bill lines: {}", billErr.getMessage());
                 }
+
+                // Enrich with adjudication history from bill audit trail
+                try {
+                    JsonNode auditData = costaClient.getBillAudit(billId);
+                    ArrayNode adjudicationHistory = objectMapper.createArrayNode();
+
+                    // Map approvals from audit data
+                    if (auditData != null && auditData.has("approvals")) {
+                        for (JsonNode approval : auditData.get("approvals")) {
+                            ObjectNode event = objectMapper.createObjectNode();
+                            event.put("date", textOrEmpty(approval, "createdAt"));
+                            event.put("status", mapApprovalStatusToAdjudication(
+                                    textOrDefault(approval, "status", "PENDING")));
+                            event.put("notes", textOrDefault(approval, "note", ""));
+                            event.put("adjudicator", textOrDefault(approval, "approverActorId", "System"));
+                            adjudicationHistory.add(event);
+                        }
+                    }
+
+                    // Add the claim's own status as the latest event
+                    ObjectNode claimEvent = objectMapper.createObjectNode();
+                    claimEvent.put("date", textOrEmpty(costaData, "createdAt"));
+                    claimEvent.put("status", "SUBMITTED");
+                    claimEvent.put("notes", "Claim pack created");
+                    claimEvent.put("adjudicator", "System");
+                    adjudicationHistory.add(claimEvent);
+
+                    if (costaData.has("sentAt") && !costaData.get("sentAt").isNull()) {
+                        ObjectNode sentEvent = objectMapper.createObjectNode();
+                        sentEvent.put("date", costaData.get("sentAt").asText());
+                        sentEvent.put("status", "SUBMITTED");
+                        sentEvent.put("notes", "Claim sent to insurer");
+                        sentEvent.put("adjudicator", "System");
+                        adjudicationHistory.add(sentEvent);
+                    }
+
+                    resource.withObject("/attributes").set("adjudicationHistory", adjudicationHistory);
+                } catch (Exception auditErr) {
+                    log.warn("Failed to enrich claim with adjudication history: {}", auditErr.getMessage());
+                    resource.withObject("/attributes").set("adjudicationHistory",
+                            objectMapper.createArrayNode());
+                }
             }
 
             return ResponseEntity.ok(Map.of("data", resource));
@@ -371,6 +415,19 @@ public class FinanceController {
             case "ACKNOWLEDGED" -> "ADJUDICATED";
             case "REJECTED", "FAILED" -> "REJECTED";
             default -> costaStatus;
+        };
+    }
+
+    /**
+     * Maps COSTA ApprovalStatus to the adjudication status the claims UI understands.
+     */
+    private String mapApprovalStatusToAdjudication(String approvalStatus) {
+        if (approvalStatus == null) return "SUBMITTED";
+        return switch (approvalStatus) {
+            case "PENDING" -> "SUBMITTED";
+            case "APPROVED" -> "ADJUDICATED";
+            case "REJECTED" -> "REJECTED";
+            default -> approvalStatus;
         };
     }
 
