@@ -1,13 +1,17 @@
 package zw.gov.mohcc.impilo.experience.controller.mobile;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.OrosServiceClient;
 import zw.gov.mohcc.impilo.experience.controller.ResourceNotFoundException;
 import zw.gov.mohcc.impilo.experience.service.OutboxService;
 
@@ -25,12 +29,17 @@ import java.util.*;
 @RequestMapping("/internal/v1/mobile/provider/labs")
 public class MobileLabController {
 
+    private static final Logger log = LoggerFactory.getLogger(MobileLabController.class);
+
     private final JdbcTemplate jdbcTemplate;
     private final OutboxService outboxService;
+    private final OrosServiceClient orosClient;
 
-    public MobileLabController(JdbcTemplate jdbcTemplate, OutboxService outboxService) {
+    public MobileLabController(JdbcTemplate jdbcTemplate, OutboxService outboxService,
+                               OrosServiceClient orosClient) {
         this.jdbcTemplate = jdbcTemplate;
         this.outboxService = outboxService;
+        this.orosClient = orosClient;
     }
 
     public record CreateLabOrderRequest(
@@ -93,6 +102,35 @@ public class MobileLabController {
                 Map.of()
         );
 
+        // Delegate to OROS sovereign service
+        String orosOrderId = null;
+        try {
+            // Resolve patient CPID for OROS
+            List<Map<String, Object>> cpidRows = jdbcTemplate.queryForList(
+                    "SELECT cpid FROM patients WHERE id = ?::uuid AND tenant_id = ?",
+                    request.patient_id(), tenantId);
+            String cpid = (!cpidRows.isEmpty() && cpidRows.get(0).get("cpid") != null)
+                    ? cpidRows.get(0).get("cpid").toString() : null;
+            if (cpid != null) {
+                List<Map<String, Object>> items = List.of(Map.of(
+                        "code", request.test_code(),
+                        "displayName", request.test_name(),
+                        "quantity", 1
+                ));
+                JsonNode orosData = orosClient.placeOrder(
+                        "LAB", priority, cpid, request.encounter_id(),
+                        request.clinical_notes(), items);
+                if (orosData != null && orosData.has("orderId")) {
+                    orosOrderId = orosData.get("orderId").asText();
+                    jdbcTemplate.update("UPDATE lab_orders SET oros_order_id = ? WHERE id = ?",
+                            orosOrderId, labOrderId);
+                }
+                log.info("OROS order placed from mobile: {} for lab order {}", orosOrderId, labOrderId);
+            }
+        } catch (Exception e) {
+            log.warn("OROS delegation from mobile lab failed (non-blocking): {}", e.getMessage());
+        }
+
         Map<String, Object> attributes = new LinkedHashMap<>();
         attributes.put("encounter_id", request.encounter_id());
         attributes.put("patient_id", request.patient_id());
@@ -104,6 +142,7 @@ public class MobileLabController {
         attributes.put("status", "ORDERED");
         attributes.put("ordered_at", now);
         attributes.put("created_at", now);
+        if (orosOrderId != null) attributes.put("oros_order_id", orosOrderId);
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", Map.of(
