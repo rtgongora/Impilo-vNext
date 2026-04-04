@@ -65,9 +65,24 @@ public class BillService {
         this.objectMapper = objectMapper;
     }
 
+    /**
+     * Create a draft bill for an encounter. If a DRAFT or ACCUMULATING bill
+     * already exists for this encounter, returns the existing bill instead
+     * of creating a duplicate (idempotent behavior).
+     */
     @Transactional
     public BillHeaderEntity createDraft(String encounterId, String msikaOrderId, BillType billType) {
         TrustContext ctx = TrustContextHolder.require();
+
+        // Check for existing active bill to prevent duplicates
+        if (encounterId != null) {
+            BillHeaderEntity existing = findActiveBillForEncounter(encounterId);
+            if (existing != null) {
+                log.info("Bill {} already exists for encounter {}, returning existing",
+                        existing.getBillId(), encounterId);
+                return existing;
+            }
+        }
 
         BillHeaderEntity bill = new BillHeaderEntity();
         bill.setBillId(UlidGenerator.generate());
