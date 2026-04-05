@@ -36,7 +36,10 @@ public class ServiceClientConfig {
             String varapiBaseUrl,
             String documentStoreBaseUrl,
             String costaBaseUrl,
-            String coverageBaseUrl
+            String coverageBaseUrl,
+            String surveillanceBaseUrl,
+            String campaignsBaseUrl,
+            String indawoBaseUrl
     ) {
         public ServiceEndpoints {
             if (pctBaseUrl == null) pctBaseUrl = "http://localhost:8088";
@@ -48,6 +51,9 @@ public class ServiceClientConfig {
             if (documentStoreBaseUrl == null) documentStoreBaseUrl = "http://localhost:8093";
             if (costaBaseUrl == null) costaBaseUrl = "http://localhost:8101";
             if (coverageBaseUrl == null) coverageBaseUrl = "http://localhost:8140";
+            if (surveillanceBaseUrl == null) surveillanceBaseUrl = "http://localhost:8180";
+            if (campaignsBaseUrl == null) campaignsBaseUrl = "http://localhost:8190";
+            if (indawoBaseUrl == null) indawoBaseUrl = "http://localhost:8150";
         }
     }
 

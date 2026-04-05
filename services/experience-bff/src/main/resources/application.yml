@@ -51,6 +51,9 @@ impilo:
     document-store-base-url: ${DOCUMENT_STORE_BASE_URL:http://localhost:8093}
     costa-base-url: ${COSTA_BASE_URL:http://localhost:8101}
     coverage-base-url: ${COVERAGE_BASE_URL:http://localhost:8140}
+    surveillance-base-url: ${SURVEILLANCE_BASE_URL:http://localhost:8180}
+    campaigns-base-url: ${CAMPAIGNS_BASE_URL:http://localhost:8190}
+    indawo-base-url: ${INDAWO_BASE_URL:http://localhost:8150}
 
 logging:
   level:

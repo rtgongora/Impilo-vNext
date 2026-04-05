@@ -142,6 +142,22 @@ function getModuleCategories(roles: {
 
   if (roles.isAdmin) {
     cats.push({
+      id: "public-health",
+      title: "Public Health",
+      icon: Shield,
+      color: "bg-amber-600",
+      modules: [
+        { label: "PH Operations", description: "Surveillance & response hub", href: "/public-health", icon: Shield, color: "bg-amber-100 text-amber-600" },
+        { label: "Surveillance", description: "Disease surveillance & eIDSR", href: "/public-health?tab=surveillance", icon: Shield, color: "bg-red-100 text-red-600" },
+        { label: "Outbreaks", description: "Outbreak management", href: "/public-health?tab=outbreaks", icon: Shield, color: "bg-red-100 text-red-600" },
+        { label: "Campaigns", description: "Immunization & outreach", href: "/public-health?tab=campaigns", icon: Shield, color: "bg-green-100 text-green-600" },
+        { label: "INDAWO Sites", description: "Premises registry", href: "/public-health?tab=sites", icon: Shield, color: "bg-emerald-100 text-emerald-600" },
+      ],
+    });
+  }
+
+  if (roles.isAdmin) {
+    cats.push({
       id: "omnichannel",
       title: "Omnichannel & Access",
       icon: Shield,
