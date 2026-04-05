@@ -128,6 +128,14 @@ function getNavSections(context: PageContext): NavSection[] {
             { label: "Tenants", href: "/admin/tenants", icon: Layers, requiredRoles: ADMIN_ROLES },
           ],
         },
+        {
+          title: "Identity",
+          items: [
+            { label: "ID Services", href: "/id-services", icon: Shield, requiredRoles: ADMIN_ROLES },
+            { label: "Bed Admin", href: "/admin/beds", icon: Building2, requiredRoles: ADMIN_ROLES },
+            { label: "Queue Config", href: "/admin/queues", icon: Users, requiredRoles: ADMIN_ROLES },
+          ],
+        },
       ];
     case "finance":
       return [{

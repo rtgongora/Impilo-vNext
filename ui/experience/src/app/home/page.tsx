@@ -124,6 +124,22 @@ function getModuleCategories(roles: {
     ],
   });
 
+  if (roles.isAdmin) {
+    cats.push({
+      id: "identity",
+      title: "Identity Services",
+      icon: Shield,
+      color: "bg-indigo-500",
+      modules: [
+        { label: "ID Services Hub", description: "Generate, validate & recover IDs", href: "/id-services", icon: Shield, color: "bg-indigo-100 text-indigo-600" },
+        { label: "Patient PHID", description: "Generate patient health IDs", href: "/id-services?tab=generate", icon: Users, color: "bg-blue-100 text-blue-600" },
+        { label: "Provider ID", description: "Healthcare worker IDs", href: "/id-services?tab=generate", icon: Stethoscope, color: "bg-teal-100 text-teal-600" },
+        { label: "ID Validation", description: "Verify ID authenticity", href: "/id-services?tab=validate", icon: Shield, color: "bg-green-100 text-green-600" },
+        { label: "ID Recovery", description: "Recover lost IDs", href: "/id-services?tab=recovery", icon: Shield, color: "bg-amber-100 text-amber-600" },
+      ],
+    });
+  }
+
   cats.push({
     id: "operations",
     title: "Operations & Inventory",

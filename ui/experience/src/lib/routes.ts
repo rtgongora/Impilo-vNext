@@ -49,6 +49,9 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/auth/logout", zone: "auth", layout: "auth", sidebar: "main", guard: "none", pageTitle: "Signing Out", navLabel: "Sign Out" },
 
   // ── Zone: Home ──────────────────────────────────────────────────
+  // ── Zone: Identity Services ──────────────────────────────────────
+  { path: "/id-services", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Identity Services", navLabel: "ID Services", navZone: "professional" },
+
   // ── Zone: Kiosk (public) ─────────────────────────────────────────
   { path: "/kiosk", zone: "auth", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Self Check-In", navLabel: "Kiosk" },
 
@@ -179,7 +182,7 @@ export const ROUTES: RouteDefinition[] = [
 ];
 
 // Total route count assertion
-export const EXPECTED_ROUTE_COUNT = 106;
+export const EXPECTED_ROUTE_COUNT = 107;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary
