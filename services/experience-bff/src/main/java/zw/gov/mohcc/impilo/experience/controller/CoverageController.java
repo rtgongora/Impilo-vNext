@@ -150,4 +150,35 @@ public class CoverageController {
             return ResponseEntity.ok(Map.of("data", new Object[0], "meta", Map.of("request_id", requestId)));
         }
     }
+
+    // ── Membership ───────────────────────────────────────────────
+
+    @PostMapping("/members")
+    public ResponseEntity<Map<String, Object>> enrollMember(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody Map<String, Object> body) {
+        try {
+            JsonNode data = coverageClient.enrollMember(body);
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", data != null ? data : Map.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            log.error("Member enrollment failed: {}", e.getMessage());
+            return ResponseEntity.status(400).body(Map.of("error", Map.of("code", "ENROLL_FAILED", "message", e.getMessage())));
+        }
+    }
+
+    @GetMapping("/members")
+    public ResponseEntity<Map<String, Object>> listMembers(
+            @RequestParam(required = false, name = "plan_id") String planId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode data = planId != null ? coverageClient.listMembers(planId) : coverageClient.listPlans();
+            return ResponseEntity.ok(Map.of("data", data != null ? data : new Object[0],
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            return ResponseEntity.ok(Map.of("data", new Object[0], "meta", Map.of("request_id", requestId)));
+        }
+    }
 }

@@ -75,6 +75,17 @@ public class CoverageServiceClient {
         return extractData(restTemplate.getForEntity(url, JsonNode.class));
     }
 
+    public JsonNode enrollMember(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/coverage/members";
+        log.info("COVERAGE: Enrolling member");
+        return extractData(restTemplate.postForEntity(url, body, JsonNode.class));
+    }
+
+    public JsonNode listMembers(String planId) {
+        String url = baseUrl + "/internal/v1/coverage/members?plan_id=" + planId;
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
     public JsonNode listRemittances() {
         String url = baseUrl + "/internal/v1/coverage/remittances";
         return extractData(restTemplate.getForEntity(url, JsonNode.class));

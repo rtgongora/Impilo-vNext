@@ -10,20 +10,25 @@ import { useState, type FormEvent } from "react";
 import {
   Shield, UserCheck, FileText, DollarSign, Briefcase,
   Loader2, CheckCircle2, AlertCircle, Search, Plus, Clock,
+  Users, CreditCard, Scale, ShieldCheck,
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
 
-type ActiveTab = "dashboard" | "schemes" | "eligibility" | "claims" | "settlement";
+type ActiveTab = "dashboard" | "schemes" | "membership" | "eligibility" | "preauth" | "claims" | "contributions" | "settlement" | "appeals";
 
 const TABS: { key: ActiveTab; label: string; icon: typeof Shield }[] = [
   { key: "dashboard", label: "Dashboard", icon: Shield },
   { key: "schemes", label: "Schemes", icon: Briefcase },
+  { key: "membership", label: "Membership", icon: Users },
   { key: "eligibility", label: "Eligibility", icon: UserCheck },
+  { key: "preauth", label: "Pre-Auth", icon: ShieldCheck },
   { key: "claims", label: "Claims", icon: FileText },
+  { key: "contributions", label: "Contributions", icon: CreditCard },
   { key: "settlement", label: "Settlement", icon: DollarSign },
+  { key: "appeals", label: "Appeals", icon: Scale },
 ];
 
 export default function CoveragePage() {
@@ -48,9 +53,13 @@ export default function CoveragePage() {
 
         {activeTab === "dashboard" && <DashboardTab />}
         {activeTab === "schemes" && <SchemesTab />}
+        {activeTab === "membership" && <MembershipTab />}
         {activeTab === "eligibility" && <EligibilityTab />}
+        {activeTab === "preauth" && <PreauthTab />}
         {activeTab === "claims" && <ClaimsTab />}
+        {activeTab === "contributions" && <ContributionsTab />}
         {activeTab === "settlement" && <SettlementTab />}
+        {activeTab === "appeals" && <AppealsTab />}
       </PageShell>
     </AppLayout>
   );
@@ -300,6 +309,176 @@ function SettlementTab() {
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+// ── MEMBERSHIP TAB ───────────────────────────────────────────────
+function MembershipTab() {
+  const [showForm, setShowForm] = useState(false);
+  const queryClient = useQueryClient();
+  const enroll = useMutation({
+    mutationFn: (body: Record<string, string>) => apiClient.post("/internal/v1/coverage/members", body),
+    onSuccess: () => { setShowForm(false); queryClient.invalidateQueries({ queryKey: ["coverage-members"] }); },
+  });
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-base font-semibold text-gray-900">Membership Administration</h3>
+        <button onClick={() => setShowForm(!showForm)}
+          className="inline-flex items-center gap-1.5 px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">
+          <Plus className="w-4 h-4" /> Enroll Member
+        </button>
+      </div>
+      {showForm && (
+        <div className="bg-white rounded-lg border border-blue-200 p-5 space-y-3">
+          <h4 className="text-sm font-semibold text-gray-900">New Member Enrollment</h4>
+          <div className="grid grid-cols-2 gap-3">
+            <input type="text" placeholder="Client ID (CPID)" className="px-3 py-2 text-sm border border-gray-300 rounded-lg" id="mem-client" />
+            <input type="text" placeholder="Plan ID" className="px-3 py-2 text-sm border border-gray-300 rounded-lg" id="mem-plan" />
+            <input type="text" placeholder="Member Number" className="px-3 py-2 text-sm border border-gray-300 rounded-lg" id="mem-number" />
+            <select className="px-3 py-2 text-sm border border-gray-300 rounded-lg" id="mem-rel">
+              <option value="SELF">Self</option><option value="SPOUSE">Spouse</option>
+              <option value="CHILD">Child</option><option value="DEPENDENT">Dependent</option>
+            </select>
+          </div>
+          <div className="flex gap-2">
+            <button onClick={() => setShowForm(false)} className="flex-1 py-2 bg-gray-100 text-gray-700 text-sm rounded-lg">Cancel</button>
+            <button onClick={() => {
+              const clientId = (document.getElementById("mem-client") as HTMLInputElement)?.value;
+              const planId = (document.getElementById("mem-plan") as HTMLInputElement)?.value;
+              const memberNumber = (document.getElementById("mem-number") as HTMLInputElement)?.value;
+              const relationship = (document.getElementById("mem-rel") as HTMLSelectElement)?.value;
+              enroll.mutate({ clientId, planId, memberNumber, relationship });
+            }} disabled={enroll.isPending}
+              className="flex-1 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50">
+              {enroll.isPending ? "Enrolling..." : "Enroll"}
+            </button>
+          </div>
+          {enroll.isSuccess && <p className="text-xs text-green-600">Member enrolled successfully.</p>}
+          {enroll.isError && <p className="text-xs text-red-600">Enrollment failed.</p>}
+        </div>
+      )}
+      <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
+        <Users className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+        <p className="text-gray-400 text-sm">Search by plan or member to view enrollments</p>
+      </div>
+    </div>
+  );
+}
+
+// ── PREAUTH TAB ──────────────────────────────────────────────────
+function PreauthTab() {
+  const [showForm, setShowForm] = useState(false);
+  const create = useMutation({
+    mutationFn: (body: Record<string, string>) => apiClient.post("/internal/v1/coverage/preauth", body),
+    onSuccess: () => setShowForm(false),
+  });
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-base font-semibold text-gray-900">Pre-Authorization Requests</h3>
+        <button onClick={() => setShowForm(!showForm)}
+          className="inline-flex items-center gap-1.5 px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">
+          <Plus className="w-4 h-4" /> New Pre-Auth
+        </button>
+      </div>
+      {showForm && (
+        <div className="bg-white rounded-lg border border-blue-200 p-5 space-y-3">
+          <h4 className="text-sm font-semibold text-gray-900">Pre-Authorization Request</h4>
+          <div className="grid grid-cols-2 gap-3">
+            <input type="text" placeholder="Coverage ID" className="px-3 py-2 text-sm border border-gray-300 rounded-lg" id="pa-coverage" />
+            <input type="text" placeholder="Request Type (e.g., SURGERY)" className="px-3 py-2 text-sm border border-gray-300 rounded-lg" id="pa-type" />
+            <input type="text" placeholder="Facility ID" className="px-3 py-2 text-sm border border-gray-300 rounded-lg" id="pa-facility" />
+            <input type="text" placeholder="Provider ID" className="px-3 py-2 text-sm border border-gray-300 rounded-lg" id="pa-provider" />
+          </div>
+          <textarea placeholder="Clinical information and justification..." rows={3} id="pa-clinical"
+            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg" />
+          <div className="flex gap-2">
+            <button onClick={() => setShowForm(false)} className="flex-1 py-2 bg-gray-100 text-gray-700 text-sm rounded-lg">Cancel</button>
+            <button onClick={() => {
+              const coverageId = (document.getElementById("pa-coverage") as HTMLInputElement)?.value;
+              const requestType = (document.getElementById("pa-type") as HTMLInputElement)?.value;
+              const facilityId = (document.getElementById("pa-facility") as HTMLInputElement)?.value;
+              const providerId = (document.getElementById("pa-provider") as HTMLInputElement)?.value;
+              const clinicalInfo = (document.getElementById("pa-clinical") as HTMLTextAreaElement)?.value;
+              create.mutate({ coverageId, requestType, facilityId, providerId, clinicalInfo });
+            }} disabled={create.isPending}
+              className="flex-1 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50">
+              {create.isPending ? "Submitting..." : "Submit Pre-Auth"}
+            </button>
+          </div>
+          {create.isSuccess && <p className="text-xs text-green-600">Pre-authorization submitted.</p>}
+        </div>
+      )}
+      <div className="bg-white rounded-lg border border-gray-200 p-5">
+        <p className="text-sm text-gray-500">Lifecycle: <span className="font-mono text-xs">PENDING → APPROVED / DENIED → EXPIRED</span></p>
+      </div>
+    </div>
+  );
+}
+
+// ── CONTRIBUTIONS TAB ────────────────────────────────────────────
+function ContributionsTab() {
+  return (
+    <div className="space-y-4">
+      <h3 className="text-base font-semibold text-gray-900">Contributions & Premiums</h3>
+      <p className="text-sm text-gray-500">Track member premium payments, contribution periods, and payment status.</p>
+      <div className="bg-white rounded-lg border border-gray-200 p-5">
+        <div className="grid grid-cols-4 gap-4 mb-4">
+          {([["PAID", "green"], ["DUE", "amber"], ["OVERDUE", "red"], ["WAIVED", "gray"]] as const).map(([status, color]) => (
+            <div key={status} className={`bg-${color}-50 rounded-lg p-3 text-center`}>
+              <p className={`text-lg font-bold text-${color}-700`}>—</p>
+              <p className={`text-[10px] text-${color}-600`}>{status}</p>
+            </div>
+          ))}
+        </div>
+        <p className="text-xs text-gray-400">Lifecycle: DUE → PAID / OVERDUE → WAIVED / REFUNDED</p>
+      </div>
+      <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
+        <CreditCard className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+        <p className="text-gray-400 text-sm">No contribution records yet</p>
+      </div>
+    </div>
+  );
+}
+
+// ── APPEALS TAB ──────────────────────────────────────────────────
+function AppealsTab() {
+  const [showForm, setShowForm] = useState(false);
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-base font-semibold text-gray-900">Claims Appeals</h3>
+        <button onClick={() => setShowForm(!showForm)}
+          className="inline-flex items-center gap-1.5 px-3 py-2 bg-amber-600 text-white text-sm font-medium rounded-lg hover:bg-amber-700">
+          <Plus className="w-4 h-4" /> File Appeal
+        </button>
+      </div>
+      {showForm && (
+        <div className="bg-white rounded-lg border border-amber-200 p-5 space-y-3">
+          <h4 className="text-sm font-semibold text-gray-900">New Appeal</h4>
+          <div className="grid grid-cols-2 gap-3">
+            <input type="text" placeholder="Claim ID" className="px-3 py-2 text-sm border border-gray-300 rounded-lg" />
+            <input type="text" placeholder="Coverage ID (optional)" className="px-3 py-2 text-sm border border-gray-300 rounded-lg" />
+          </div>
+          <textarea placeholder="Appeal reason and supporting evidence..." rows={3}
+            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg" />
+          <div className="flex gap-2">
+            <button onClick={() => setShowForm(false)} className="flex-1 py-2 bg-gray-100 text-gray-700 text-sm rounded-lg">Cancel</button>
+            <button className="flex-1 py-2 bg-amber-600 text-white text-sm rounded-lg hover:bg-amber-700">Submit Appeal</button>
+          </div>
+        </div>
+      )}
+      <div className="bg-white rounded-lg border border-gray-200 p-5">
+        <p className="text-sm text-gray-500">Appeal workflow: <span className="font-mono text-xs">PENDING → UNDER_REVIEW → UPHELD / OVERTURNED / PARTIAL</span></p>
+      </div>
+      <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
+        <Scale className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+        <p className="text-gray-400 text-sm">No appeals filed</p>
+      </div>
     </div>
   );
 }
