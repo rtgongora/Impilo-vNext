@@ -526,6 +526,42 @@ export default function HomePage() {
             </div>
           )}
 
+          {/* Communication Noticeboard (Lovable ModuleHome) */}
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2">
+                <ClipboardList className="w-5 h-5 text-blue-600" />
+                Communication Noticeboard
+              </h3>
+              <Link href="/communication" className="text-xs text-blue-600 hover:text-blue-800">
+                View All →
+              </Link>
+            </div>
+            <div className="flex flex-wrap gap-2 mb-3">
+              <Link href="/communication?tab=messages"
+                className="inline-flex items-center gap-2 px-5 py-3 text-sm font-medium border border-gray-200 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-colors">
+                <FileText className="w-5 h-5 text-blue-600" />
+                Messages
+              </Link>
+              <Link href="/communication?tab=pages"
+                className="inline-flex items-center gap-2 px-5 py-3 text-sm font-medium border border-gray-200 rounded-lg hover:bg-amber-50 hover:border-amber-300 transition-colors">
+                <AlertTriangle className="w-5 h-5 text-amber-500" />
+                Pages
+              </Link>
+              <Link href="/communication?tab=calls"
+                className="inline-flex items-center gap-2 px-5 py-3 text-sm font-medium border border-gray-200 rounded-lg hover:bg-green-50 hover:border-green-300 transition-colors">
+                <Video className="w-5 h-5 text-green-600" />
+                Calls
+              </Link>
+              <Link href="/scheduling/noticeboard"
+                className="inline-flex items-center gap-2 px-5 py-3 text-sm font-medium border border-gray-200 rounded-lg hover:bg-purple-50 hover:border-purple-300 transition-colors">
+                <Globe className="w-5 h-5 text-purple-600" />
+                Noticeboard
+              </Link>
+            </div>
+            <AnnouncementsBanner />
+          </div>
+
           {/* Module Categories (Lovable ExpandableCategoryCards) */}
           <div>
             <h3 className="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">Modules</h3>
@@ -852,6 +888,73 @@ export default function HomePage() {
         </div>
       </PageShell>
     </AppLayout>
+  );
+}
+
+/** Compact announcements banner showing pinned/urgent items from the noticeboard */
+function AnnouncementsBanner() {
+  const { data } = useQuery<{ data: Array<Record<string, unknown>>; stats: Record<string, number> }>({
+    queryKey: ["announcements-banner"],
+    queryFn: () => apiClient.get("/internal/v1/communication/announcements?size=3"),
+    staleTime: 60_000,
+  });
+  const items = data?.data ?? [];
+  const stats = data?.stats;
+
+  if (items.length === 0) {
+    return (
+      <div className="flex items-center gap-2 py-2 text-sm text-gray-400">
+        <Clock className="w-4 h-4" />
+        No active announcements
+      </div>
+    );
+  }
+
+  const priorityColors: Record<string, string> = {
+    urgent: "bg-red-100 text-red-700 border-red-200",
+    high: "bg-orange-100 text-orange-700 border-orange-200",
+    normal: "bg-blue-100 text-blue-700 border-blue-200",
+    low: "bg-gray-100 text-gray-600 border-gray-200",
+  };
+
+  return (
+    <div className="space-y-2">
+      {stats && (
+        <div className="flex items-center gap-4 text-xs text-gray-500">
+          <span>{stats.total ?? 0} active</span>
+          {(stats.pinned ?? 0) > 0 && <span className="text-amber-600">{stats.pinned} pinned</span>}
+          {(stats.urgent ?? 0) > 0 && <span className="text-red-600">{stats.urgent} urgent</span>}
+        </div>
+      )}
+      {items.slice(0, 3).map((a) => (
+        <Link
+          key={a.id as string}
+          href="/scheduling/noticeboard"
+          className={`flex items-start gap-3 p-3 rounded-lg border text-left transition-colors hover:shadow-sm ${
+            a.priority === "urgent" ? "border-red-200 bg-red-50" : a.is_pinned ? "border-amber-200 bg-amber-50" : "border-gray-200 bg-gray-50"
+          }`}
+        >
+          <div className="shrink-0 mt-0.5">
+            {a.priority === "urgent" ? (
+              <AlertTriangle className="w-4 h-4 text-red-500" />
+            ) : a.is_pinned ? (
+              <Shield className="w-4 h-4 text-amber-500" />
+            ) : (
+              <Activity className="w-4 h-4 text-blue-500" />
+            )}
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-medium text-gray-900 truncate">{a.title as string}</p>
+              <span className={`px-1.5 py-0.5 text-[10px] font-medium rounded ${priorityColors[(a.priority as string) ?? "normal"]}`}>
+                {a.priority as string}
+              </span>
+            </div>
+            <p className="text-xs text-gray-500 line-clamp-1 mt-0.5">{a.content as string}</p>
+          </div>
+        </Link>
+      ))}
+    </div>
   );
 }
 
