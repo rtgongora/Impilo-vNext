@@ -36,13 +36,27 @@ services:
       DB_USER: impilo
       DB_PASSWORD: impilo
       SPRING_PROFILES_ACTIVE: default
+      SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
+      # Sovereign service URLs (docker-compose networking)
+      PCT_BASE_URL: http://host.docker.internal:8088
+      OROS_BASE_URL: http://host.docker.internal:8089
+      PHARMACY_BASE_URL: http://host.docker.internal:8096
+      VITO_BASE_URL: http://host.docker.internal:8082
+      TUSO_BASE_URL: http://host.docker.internal:8084
+      VARAPI_BASE_URL: http://host.docker.internal:8083
+      DOCUMENT_STORE_BASE_URL: http://host.docker.internal:8093
+      COSTA_BASE_URL: http://host.docker.internal:8101
+      COVERAGE_BASE_URL: http://host.docker.internal:8140
+      SURVEILLANCE_BASE_URL: http://host.docker.internal:8180
+      CAMPAIGNS_BASE_URL: http://host.docker.internal:8190
+      INDAWO_BASE_URL: http://host.docker.internal:8150
     ports:
       - "8160:8160"
     depends_on:
       experience-db:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:8160/health || exit 1"]
+      test: ["CMD-SHELL", "curl -sf http://localhost:8160/actuator/health || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 10

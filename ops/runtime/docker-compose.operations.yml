@@ -293,6 +293,22 @@ services:
       DB_USER: ${POSTGRES_USER:-impilo}
       DB_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
       SPRING_PROFILES_ACTIVE: default
+      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_REALM: ${KEYCLOAK_REALM:-impilo}
+      # Sovereign service URLs (compose networking)
+      PCT_BASE_URL: http://pct:8088
+      OROS_BASE_URL: http://oros:8089
+      PHARMACY_BASE_URL: http://pharmacy:8097
+      VITO_BASE_URL: http://vito:8082
+      TUSO_BASE_URL: http://tuso:8084
+      VARAPI_BASE_URL: http://varapi:8083
+      DOCUMENT_STORE_BASE_URL: http://document-service:8093
+      COSTA_BASE_URL: http://costing-engine:8101
+      COVERAGE_BASE_URL: ${COVERAGE_BASE_URL:-http://localhost:8140}
+      SURVEILLANCE_BASE_URL: ${SURVEILLANCE_BASE_URL:-http://localhost:8180}
+      CAMPAIGNS_BASE_URL: ${CAMPAIGNS_BASE_URL:-http://localhost:8190}
+      INDAWO_BASE_URL: ${INDAWO_BASE_URL:-http://localhost:8150}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
     ports:
       - "8160:8160"
     depends_on:

@@ -107,6 +107,32 @@ static_resources:
                         - match: { prefix: "/external/v1/" }
                           route: { cluster: tshepo_service }
 
+                        # ── Pharmacy ──
+                        - match: { prefix: "/api/v1/pharmacy" }
+                          route: { cluster: pharmacy_service }
+                        - match: { prefix: "/api/v1/prescriptions" }
+                          route: { cluster: pharmacy_service }
+
+                        # ── Mushex (Finance/Payments) ──
+                        - match: { prefix: "/api/v1/payments" }
+                          route: { cluster: mushex_service }
+                        - match: { prefix: "/api/v1/refunds" }
+                          route: { cluster: mushex_service }
+
+                        # ── Costing Engine (COSTA) ──
+                        - match: { prefix: "/api/v1/bills" }
+                          route: { cluster: costa_service }
+                        - match: { prefix: "/api/v1/tariffs" }
+                          route: { cluster: costa_service }
+
+                        # ── Ubomi (Inpatient/Beds) ──
+                        - match: { prefix: "/api/v1/wards" }
+                          route: { cluster: ubomi_service }
+                        - match: { prefix: "/api/v1/beds" }
+                          route: { cluster: ubomi_service }
+                        - match: { prefix: "/api/v1/admissions" }
+                          route: { cluster: ubomi_service }
+
                         # ── Experience BFF ──
                         - match: { prefix: "/bff/" }
                           route: { cluster: experience_bff }
@@ -236,6 +262,50 @@ static_resources:
               - endpoint:
                   address:
                     socket_address: { address: oros, port_value: 8089 }
+
+    # ── Pharmacy ──
+    - name: pharmacy_service
+      type: STRICT_DNS
+      load_assignment:
+        cluster_name: pharmacy_service
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: pharmacy, port_value: 8097 }
+
+    # ── Mushex (Finance/Payments) ──
+    - name: mushex_service
+      type: STRICT_DNS
+      load_assignment:
+        cluster_name: mushex_service
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: mushex, port_value: 8102 }
+
+    # ── COSTA (Costing Engine) ──
+    - name: costa_service
+      type: STRICT_DNS
+      load_assignment:
+        cluster_name: costa_service
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: costing-engine, port_value: 8101 }
+
+    # ── Ubomi (Inpatient) ──
+    - name: ubomi_service
+      type: STRICT_DNS
+      load_assignment:
+        cluster_name: ubomi_service
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: ubomi, port_value: 8087 }
 
     # ── Experience BFF ──
     - name: experience_bff

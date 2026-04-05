@@ -119,6 +119,63 @@ scrape_configs:
           plane: supply
           service: iot-ingestion
 
+  # ── Experience Platform ──
+  - job_name: experience-bff
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['experience-bff:8160']
+        labels:
+          plane: experience
+          service: experience-bff
+
+  - job_name: pharmacy
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['pharmacy:8097']
+        labels:
+          plane: clinical
+          service: pharmacy
+
+  - job_name: inventory
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['inventory:8098']
+        labels:
+          plane: supply
+          service: inventory
+
+  - job_name: mushex
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['mushex:8102']
+        labels:
+          plane: finance
+          service: mushex
+
+  - job_name: costing-engine
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['costing-engine:8101']
+        labels:
+          plane: finance
+          service: costing-engine
+
+  - job_name: ubomi
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['ubomi:8087']
+        labels:
+          plane: clinical
+          service: ubomi
+
+  - job_name: msika
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['msika:8086']
+        labels:
+          plane: supply
+          service: msika
+
   # ── OTel Collector self-metrics ──
   - job_name: otel-collector
     static_configs:
