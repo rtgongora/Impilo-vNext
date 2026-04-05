@@ -354,7 +354,7 @@ export function ZoneNavigation() {
           <>
             <div className="flex items-center gap-1.5 mb-1">
               <span className={`w-1.5 h-1.5 rounded-full ${WORK_MODE_COLORS[workMode]}`} />
-              <span className="text-[10px] uppercase tracking-wider text-gray-500 font-semibold">
+              <span className="text-[10px] uppercase tracking-wider text-gray-500 font-semibold truncate">
                 {WORK_MODE_LABELS[workMode]}
               </span>
             </div>

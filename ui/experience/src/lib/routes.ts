@@ -54,6 +54,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/home/notifications", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Notifications", navLabel: "Notifications", navZone: "life" },
   { path: "/home/profile", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Profile", navLabel: "Profile", navZone: "life" },
   { path: "/home/preferences", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Preferences", navLabel: "Preferences", navZone: "life" },
+  { path: "/home/credentials", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Credentials & CPD", navLabel: "Credentials", navZone: "professional" },
 
   // ── Zone: Facility Selection ────────────────────────────────────
   { path: "/facility", zone: "facility", layout: "app", sidebar: "facility", guard: "auth", pageTitle: "Select Facility", navLabel: "Facilities" },
@@ -168,7 +169,7 @@ export const ROUTES: RouteDefinition[] = [
 ];
 
 // Total route count assertion
-export const EXPECTED_ROUTE_COUNT = 100;
+export const EXPECTED_ROUTE_COUNT = 101;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

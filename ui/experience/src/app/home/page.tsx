@@ -159,7 +159,14 @@ export default function HomePage() {
   const roleGroup = useRoleGroup();
   const { isClinical, isAdmin, isFinance, isDispenser, isCitizen } = roleGroup;
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<HomeTab>("work");
+  const [activeTab, setActiveTab] = useState<HomeTab>(() => {
+    if (typeof window === "undefined") return "work";
+    return (sessionStorage.getItem("exp:home-tab") as HomeTab) || "work";
+  });
+  function switchTab(tab: HomeTab) {
+    setActiveTab(tab);
+    sessionStorage.setItem("exp:home-tab", tab);
+  }
 
   const greeting = getGreeting();
   const router = useRouter();
@@ -267,15 +274,15 @@ export default function HomePage() {
 
           {/* Tab Switcher (Lovable 3-tab: Work / Professional / Personal) */}
           <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
-            <button onClick={() => setActiveTab("work")}
+            <button onClick={() => switchTab("work")}
               className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === "work" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
               <Briefcase className="w-4 h-4" /> Work
             </button>
-            <button onClick={() => setActiveTab("professional")}
+            <button onClick={() => switchTab("professional")}
               className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === "professional" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
               <Stethoscope className="w-4 h-4" /> Professional
             </button>
-            <button onClick={() => setActiveTab("personal")}
+            <button onClick={() => switchTab("personal")}
               className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === "personal" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
               <Heart className="w-4 h-4" /> Personal
             </button>
@@ -643,9 +650,9 @@ export default function HomePage() {
                     <Video className="w-6 h-6 text-green-600" />
                     <span className="text-xs font-medium text-gray-900">Video Call</span>
                   </Link>
-                  <Link href="/pharmacy/prescriptions" className="flex flex-col items-center gap-2 p-4 rounded-lg bg-amber-50 border border-amber-200 hover:border-amber-400 transition-colors text-center">
+                  <Link href="/home/notifications" className="flex flex-col items-center gap-2 p-4 rounded-lg bg-amber-50 border border-amber-200 hover:border-amber-400 transition-colors text-center">
                     <Pill className="w-6 h-6 text-amber-600" />
-                    <span className="text-xs font-medium text-gray-900">Refill Rx</span>
+                    <span className="text-xs font-medium text-gray-900">My Medications</span>
                   </Link>
                   <Link href="/home/notifications" className="flex flex-col items-center gap-2 p-4 rounded-lg bg-purple-50 border border-purple-200 hover:border-purple-400 transition-colors text-center">
                     <FileText className="w-6 h-6 text-purple-600" />
