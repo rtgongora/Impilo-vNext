@@ -101,6 +101,7 @@ function getNavSections(context: PageContext): NavSection[] {
             { label: "Scheduled", href: "/queue/scheduled", icon: Calendar, requiredRoles: QUEUE_ROLES },
             { label: "Patient Search", href: "/queue/search", icon: Search, requiredRoles: QUEUE_ROLES },
             { label: "Walk-in", href: "/queue/walk-in", icon: UserPlus, requiredRoles: QUEUE_ROLES },
+            { label: "Bed Management", href: "/beds", icon: Building2, requiredRoles: CLINICAL_ROLES },
           ],
         },
       ];

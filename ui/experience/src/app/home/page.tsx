@@ -72,6 +72,7 @@ function getModuleCategories(roles: {
         { label: "Scheduling", description: "Appointments & booking", href: "/scheduling", icon: Calendar, color: "bg-cyan-100 text-cyan-600" },
         { label: "Telemedicine", description: "Virtual consultations", href: "/telemedicine", icon: Video, color: "bg-teal-100 text-teal-600" },
         { label: "Shift Handoff", description: "Care continuity reports", href: "/shift/handover", icon: Clock, color: "bg-amber-100 text-amber-600" },
+        { label: "Bed Management", description: "Ward beds & occupancy", href: "/beds", icon: Building2, color: "bg-purple-100 text-purple-600" },
       ],
     });
   }

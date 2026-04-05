@@ -419,6 +419,107 @@ public class QueueController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/entries/{id}/no-show")
+    @Transactional
+    public ResponseEntity<Map<String, Object>> markNoShow(
+            @PathVariable UUID id,
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+
+        OffsetDateTime now = OffsetDateTime.now();
+        int updated = jdbcTemplate.update("""
+            UPDATE queue_entries SET status = 'NO_SHOW', no_show_at = ?, updated_at = ?
+            WHERE id = ? AND tenant_id = ? AND status IN ('WAITING', 'CALLED')
+            """, now, now, id, tenantId);
+        if (updated == 0) throw new ResourceNotFoundException("Queue entry not found or not in callable state: " + id);
+
+        outboxService.writeOutboxEvent(
+                "impilo.experience.queue.entry-noshow.v1", correlationId, requestId,
+                requestId, tenantId, "", "QueueEntry", id.toString(),
+                Map.of("queue_entry_id", id.toString(), "status", "NO_SHOW"), Map.of());
+
+        return ResponseEntity.ok(Map.of(
+                "data", Map.of("id", id.toString(), "status", "NO_SHOW"),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+
+    @PostMapping("/entries/{id}/transfer")
+    @Transactional
+    public ResponseEntity<Map<String, Object>> transferEntry(
+            @PathVariable UUID id,
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody Map<String, String> body) {
+
+        String targetFacilityId = body.get("targetFacilityId");
+        String reason = body.getOrDefault("reason", "");
+        OffsetDateTime now = OffsetDateTime.now();
+
+        jdbcTemplate.update("""
+            UPDATE queue_entries SET status = 'TRANSFERRED', transferred_to = ?::uuid,
+                transfer_reason = ?, updated_at = ?
+            WHERE id = ? AND tenant_id = ?
+            """, targetFacilityId, reason, now, id, tenantId);
+
+        outboxService.writeOutboxEvent(
+                "impilo.experience.queue.entry-transferred.v1", correlationId, requestId,
+                requestId, tenantId, "", "QueueEntry", id.toString(),
+                Map.of("queue_entry_id", id.toString(), "status", "TRANSFERRED",
+                        "target_facility_id", targetFacilityId != null ? targetFacilityId : ""),
+                Map.of());
+
+        return ResponseEntity.ok(Map.of(
+                "data", Map.of("id", id.toString(), "status", "TRANSFERRED"),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+
+    @PostMapping("/entries/stats")
+    public ResponseEntity<Map<String, Object>> getQueueStats(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody Map<String, String> body) {
+
+        String facilityId = body.get("facilityId");
+
+        Map<String, Object> stats = new LinkedHashMap<>();
+        if (facilityId != null) {
+            List<Map<String, Object>> counts = jdbcTemplate.queryForList("""
+                SELECT status, COUNT(*) as count,
+                       AVG(EXTRACT(EPOCH FROM (COALESCE(called_at, now()) - arrival_time))) as avg_wait_seconds
+                FROM queue_entries
+                WHERE tenant_id = ? AND facility_id = ?::uuid
+                    AND created_at >= CURRENT_DATE
+                GROUP BY status
+                """, tenantId, facilityId);
+
+            long waiting = 0, called = 0, inService = 0, completed = 0, noShow = 0;
+            double avgWait = 0;
+            for (Map<String, Object> row : counts) {
+                String status = row.get("status").toString();
+                long count = ((Number) row.get("count")).longValue();
+                switch (status) {
+                    case "WAITING" -> { waiting = count; avgWait = row.get("avg_wait_seconds") != null ? ((Number) row.get("avg_wait_seconds")).doubleValue() : 0; }
+                    case "CALLED" -> called = count;
+                    case "IN_SERVICE", "SEEN" -> inService = count;
+                    case "COMPLETED" -> completed = count;
+                    case "NO_SHOW" -> noShow = count;
+                }
+            }
+            stats.put("waiting", waiting);
+            stats.put("called", called);
+            stats.put("inService", inService);
+            stats.put("completed", completed);
+            stats.put("noShow", noShow);
+            stats.put("avgWaitSeconds", Math.round(avgWait));
+        }
+
+        return ResponseEntity.ok(Map.of("data", stats,
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+
     private Map<String, Object> toResource(QueueEntry q) {
         Map<String, Object> attributes = new LinkedHashMap<>();
         attributes.put("facility_id", q.getFacilityId());

@@ -7,12 +7,14 @@
 
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Users, Loader2, UserPlus, Clock, AlertTriangle } from "lucide-react";
+import { Users, Loader2, UserPlus, Clock, AlertTriangle, XCircle, ArrowRightLeft } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useQueueEntries, useCallPatient } from "@/hooks/queries/useQueue";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useRoleGroup } from "@/hooks/useRoleGroup";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api-client";
 
 const PRIORITY_LABELS: Record<string, { label: string; className: string }> = {
   EMERGENCY: { label: "Emergency", className: "bg-red-100 text-red-700" },
@@ -38,7 +40,12 @@ const STATUS_STYLES: Record<string, string> = {
   WAITING: "bg-yellow-100 text-yellow-700",
   CALLED: "bg-blue-100 text-blue-700",
   IN_PROGRESS: "bg-green-100 text-green-700",
+  IN_SERVICE: "bg-green-100 text-green-700",
+  SEEN: "bg-green-100 text-green-700",
   COMPLETED: "bg-gray-100 text-gray-600",
+  NO_SHOW: "bg-red-100 text-red-600",
+  TRANSFERRED: "bg-purple-100 text-purple-600",
+  CANCELLED: "bg-gray-100 text-gray-400",
 };
 
 export default function QueuePage() {
@@ -47,6 +54,20 @@ export default function QueuePage() {
   const { data, isLoading } = useQueueEntries({ facilityId: facility?.id });
   const callPatient = useCallPatient();
   const { isQueueManager } = useRoleGroup();
+  const queryClient = useQueryClient();
+
+  // Queue stats for supervisor summary
+  const { data: statsData } = useQuery<{ data: Record<string, number> }>({
+    queryKey: ["queue-stats", facility?.id],
+    queryFn: () => apiClient.post("/internal/v1/queue/entries/stats", { facilityId: facility?.id }),
+    enabled: !!facility?.id,
+  });
+  const stats = statsData?.data ?? {};
+
+  const markNoShow = useMutation({
+    mutationFn: (entryId: string) => apiClient.post(`/internal/v1/queue/entries/${entryId}/no-show`),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["queue-entries"] }); queryClient.invalidateQueries({ queryKey: ["queue-stats"] }); },
+  });
 
   const entries = data?.data ?? [];
 
@@ -67,6 +88,32 @@ export default function QueuePage() {
         title="Patient Queue"
         subtitle={facility ? `${facility.name}` : "Current queue entries"}
       >
+        {/* Supervisor Stats Bar */}
+        {facility && (
+          <div className="mb-4 grid grid-cols-5 gap-2">
+            <div className="bg-amber-50 rounded-lg border border-amber-200 p-2.5 text-center">
+              <p className="text-lg font-bold text-amber-700">{stats.waiting ?? 0}</p>
+              <p className="text-[10px] text-amber-600 uppercase">Waiting</p>
+            </div>
+            <div className="bg-blue-50 rounded-lg border border-blue-200 p-2.5 text-center">
+              <p className="text-lg font-bold text-blue-700">{stats.called ?? 0}</p>
+              <p className="text-[10px] text-blue-600 uppercase">Called</p>
+            </div>
+            <div className="bg-green-50 rounded-lg border border-green-200 p-2.5 text-center">
+              <p className="text-lg font-bold text-green-700">{stats.inService ?? 0}</p>
+              <p className="text-[10px] text-green-600 uppercase">In Service</p>
+            </div>
+            <div className="bg-gray-50 rounded-lg border border-gray-200 p-2.5 text-center">
+              <p className="text-lg font-bold text-gray-700">{stats.completed ?? 0}</p>
+              <p className="text-[10px] text-gray-500 uppercase">Completed</p>
+            </div>
+            <div className="bg-purple-50 rounded-lg border border-purple-200 p-2.5 text-center">
+              <p className="text-lg font-bold text-purple-700">{stats.avgWaitSeconds ? Math.round((stats.avgWaitSeconds) / 60) : 0}m</p>
+              <p className="text-[10px] text-purple-600 uppercase">Avg Wait</p>
+            </div>
+          </div>
+        )}
+
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2 text-sm text-gray-500">
             <Users className="w-4 h-4" />
@@ -192,6 +239,16 @@ export default function QueuePage() {
                           >
                             Open Chart
                           </Link>
+                        )}
+                        {(entry.attributes.status === "WAITING" || entry.attributes.status === "CALLED") && (
+                          <button
+                            onClick={() => markNoShow.mutate(entry.id)}
+                            disabled={markNoShow.isPending}
+                            className="ml-1 px-2 py-1.5 text-red-600 hover:bg-red-50 text-xs font-medium rounded-md transition-colors"
+                            title="Mark as no-show"
+                          >
+                            <XCircle className="w-3.5 h-3.5" />
+                          </button>
                         )}
                       </td>
                     </tr>
