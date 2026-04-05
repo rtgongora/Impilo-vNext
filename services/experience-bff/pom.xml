@@ -78,6 +78,12 @@
             <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
         </dependency>
 
+        <!-- Spring Kafka -->
+        <dependency>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka</artifactId>
+        </dependency>
+
         <!-- Tech Companion (v1.1 enforcement) -->
         <dependency>
             <groupId>zw.gov.mohcc.impilo</groupId>
