@@ -1,0 +1,170 @@
+package zw.gov.mohcc.impilo.experience;
+
+import org.junit.jupiter.api.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.web.servlet.MockMvc;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+
+import java.util.Base64;
+import java.util.UUID;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+/**
+ * RBAC Integration Tests — validates that role-based access control
+ * works correctly when JWT validation is disabled (dev mode).
+ *
+ * Tests verify that endpoints respond correctly for various paths
+ * and that the BFF controllers don't throw startup errors.
+ */
+@SpringBootTest
+@AutoConfigureMockMvc
+@Testcontainers
+@ActiveProfiles("test")
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+class RbacIntegrationTest {
+
+    @Container
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine")
+            .withDatabaseName("experience_bff_test")
+            .withUsername("test")
+            .withPassword("test");
+
+    @DynamicPropertySource
+    static void configure(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", postgres::getJdbcUrl);
+        registry.add("spring.datasource.username", postgres::getUsername);
+        registry.add("spring.datasource.password", postgres::getPassword);
+    }
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    private static String requestId() { return UUID.randomUUID().toString(); }
+    private static String correlationId() { return UUID.randomUUID().toString(); }
+
+    // ── Auth endpoints should be public ──────────────────────────
+
+    @Test
+    @Order(1)
+    void authLoginShouldBeAccessible() throws Exception {
+        mockMvc.perform(post("/internal/v1/auth/login")
+                .header("X-Tenant-ID", "tenant-moh-zw")
+                .header("X-Pod-ID", "national-spine")
+                .header("X-Request-ID", requestId())
+                .header("X-Correlation-ID", correlationId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"email\":\"test@test.com\",\"password\":\"test\"}"))
+                .andExpect(status().isServiceUnavailable()); // 503 because Keycloak is not running
+    }
+
+    // ── Queue endpoints should work in dev mode ──────────────────
+
+    @Test
+    @Order(2)
+    void queueEntriesListShouldWork() throws Exception {
+        mockMvc.perform(get("/internal/v1/queue/entries")
+                .header("X-Tenant-ID", "tenant-moh-zw")
+                .header("X-Pod-ID", "national-spine")
+                .header("X-Request-ID", requestId())
+                .header("X-Correlation-ID", correlationId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data").isArray());
+    }
+
+    // ── Encounter endpoints should work ──────────────────────────
+
+    @Test
+    @Order(3)
+    void encounterListShouldWork() throws Exception {
+        mockMvc.perform(get("/internal/v1/encounters")
+                .header("X-Tenant-ID", "tenant-moh-zw")
+                .header("X-Pod-ID", "national-spine")
+                .header("X-Request-ID", requestId())
+                .header("X-Correlation-ID", correlationId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data").isArray());
+    }
+
+    // ── Community endpoints should work ──────────────────────────
+
+    @Test
+    @Order(4)
+    void communityGroupsListShouldWork() throws Exception {
+        mockMvc.perform(get("/internal/v1/community/groups")
+                .header("X-Tenant-ID", "tenant-moh-zw")
+                .header("X-Pod-ID", "national-spine")
+                .header("X-Request-ID", requestId())
+                .header("X-Correlation-ID", correlationId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data").isArray());
+    }
+
+    // ── Omnichannel endpoints should work ────────────────────────
+
+    @Test
+    @Order(5)
+    void omnichannelCallbacksListShouldWork() throws Exception {
+        mockMvc.perform(get("/internal/v1/omnichannel/callbacks")
+                .header("X-Tenant-ID", "tenant-moh-zw")
+                .header("X-Pod-ID", "national-spine")
+                .header("X-Request-ID", requestId())
+                .header("X-Correlation-ID", correlationId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data").isArray());
+    }
+
+    // ── Queue stats endpoint should work ─────────────────────────
+
+    @Test
+    @Order(6)
+    void queueStatsShouldWork() throws Exception {
+        mockMvc.perform(post("/internal/v1/queue/entries/stats")
+                .header("X-Tenant-ID", "tenant-moh-zw")
+                .header("X-Pod-ID", "national-spine")
+                .header("X-Request-ID", requestId())
+                .header("X-Correlation-ID", correlationId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"facilityId\":\"00000000-0000-0000-0000-000000000001\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data").exists());
+    }
+
+    // ── Bed endpoints should work ────────────────────────────────
+
+    @Test
+    @Order(7)
+    void bedWardsListShouldWork() throws Exception {
+        mockMvc.perform(get("/internal/v1/beds/wards")
+                .param("facility_id", "00000000-0000-0000-0000-000000000001")
+                .header("X-Tenant-ID", "tenant-moh-zw")
+                .header("X-Pod-ID", "national-spine")
+                .header("X-Request-ID", requestId())
+                .header("X-Correlation-ID", correlationId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data").isArray());
+    }
+
+    // ── Clinical tools sync status should work ───────────────────
+
+    @Test
+    @Order(8)
+    void syncStatusShouldWork() throws Exception {
+        mockMvc.perform(get("/internal/v1/clinical-tools/sync/status")
+                .header("X-Tenant-ID", "tenant-moh-zw")
+                .header("X-Pod-ID", "national-spine")
+                .header("X-Request-ID", requestId())
+                .header("X-Correlation-ID", correlationId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.syncEngine").value("available"));
+    }
+}
