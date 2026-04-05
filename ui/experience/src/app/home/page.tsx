@@ -199,6 +199,21 @@ function getModuleCategories(roles: {
     ],
   });
 
+  if (roles.isClinical) {
+    cats.push({
+      id: "clinical-tools",
+      title: "Clinical Tools",
+      icon: Shield,
+      color: "bg-pink-500",
+      modules: [
+        { label: "Voice Dictation", description: "Speech-to-text for notes", href: "/clinical-tools", icon: Shield, color: "bg-pink-100 text-pink-600" },
+        { label: "Offline Sync", description: "Sync status & conflicts", href: "/clinical-tools?tab=offline", icon: Shield, color: "bg-blue-100 text-blue-600" },
+        { label: "Documents", description: "Document management", href: "/clinical-tools?tab=documents", icon: FileText, color: "bg-blue-100 text-blue-600" },
+        { label: "CDS Alerts", description: "Clinical decision support", href: "/clinical-tools?tab=cds", icon: Shield, color: "bg-red-100 text-red-600" },
+      ],
+    });
+  }
+
   if (roles.isAdmin) {
     cats.push({
       id: "admin",

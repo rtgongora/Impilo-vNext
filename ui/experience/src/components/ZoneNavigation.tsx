@@ -102,6 +102,7 @@ function getNavSections(context: PageContext): NavSection[] {
             { label: "Patient Search", href: "/queue/search", icon: Search, requiredRoles: QUEUE_ROLES },
             { label: "Walk-in", href: "/queue/walk-in", icon: UserPlus, requiredRoles: QUEUE_ROLES },
             { label: "Bed Management", href: "/beds", icon: Building2, requiredRoles: CLINICAL_ROLES },
+            { label: "Clinical Tools", href: "/clinical-tools", icon: Activity, requiredRoles: CLINICAL_ROLES },
           ],
         },
       ];

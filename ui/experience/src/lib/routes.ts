@@ -49,6 +49,9 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/auth/logout", zone: "auth", layout: "auth", sidebar: "main", guard: "none", pageTitle: "Signing Out", navLabel: "Sign Out" },
 
   // ── Zone: Home ──────────────────────────────────────────────────
+  // ── Zone: Clinical Tools ────────────────────────────────────────
+  { path: "/clinical-tools", zone: "queue", layout: "app", sidebar: "queue", guard: "shift", pageTitle: "Clinical Tools", navLabel: "Tools", navZone: "work" },
+
   // ── Zone: Public Health ─────────────────────────────────────────
   { path: "/public-health", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Public Health", navLabel: "Public Health", navZone: "professional" },
 
@@ -191,7 +194,7 @@ export const ROUTES: RouteDefinition[] = [
 ];
 
 // Total route count assertion
-export const EXPECTED_ROUTE_COUNT = 110;
+export const EXPECTED_ROUTE_COUNT = 111;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary
