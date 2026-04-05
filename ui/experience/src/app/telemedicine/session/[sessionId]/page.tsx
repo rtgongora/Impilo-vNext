@@ -344,6 +344,41 @@ export default function TelemedicineSessionPage() {
               </div>
             )}
 
+            {/* Completion Note — Findings, Assessment, Plan */}
+            {isActive && session?.attributes.encounter_id && (
+              <div className="bg-white rounded-lg border border-indigo-200 p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <FileText className="w-5 h-5 text-indigo-600" />
+                  <h3 className="text-sm font-semibold text-gray-900">Consultation Completion Note</h3>
+                </div>
+                <p className="text-xs text-gray-500 mb-3">
+                  Document your findings, assessment, and recommended plan for the referring provider.
+                </p>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Findings</label>
+                    <textarea rows={2} placeholder="Key findings from this consultation..."
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Assessment & Plan</label>
+                    <textarea rows={2} placeholder="Clinical assessment and recommended management plan..."
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Follow-up Required</label>
+                    <select className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                      <option value="NONE">No follow-up needed</option>
+                      <option value="REVIEW">Review in clinic</option>
+                      <option value="REPEAT_TELECONSULT">Repeat teleconsult</option>
+                      <option value="ADMIT">Recommend admission</option>
+                      <option value="REFER_FURTHER">Refer to another specialist</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* End Session */}
             {isActive && (
               <div className="bg-white rounded-lg border border-gray-200 p-5">

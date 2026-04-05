@@ -28,7 +28,8 @@ import {
   User,
   Building2,
   ArrowUpRight,
-  Activity } from "lucide-react";
+  Activity,
+  FileText } from "lucide-react";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { usePatient } from "@/hooks/queries/usePatients";
@@ -468,21 +469,31 @@ export default function ConsultsPage() {
                   {/* Quick Connect — Lovable pattern */}
                   <div className="pt-4 border-t border-gray-200">
                     <p className="text-sm font-medium text-gray-900 mb-3">Quick Connect</p>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-5 gap-2">
                       <button onClick={() => handleScheduleTeleconsult("VIDEO")} disabled={createSession.isPending || !facility}
                         className="flex flex-col items-center justify-center gap-1 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors">
                         <Video className="w-5 h-5" />
-                        <span className="text-xs">Video Call</span>
+                        <span className="text-xs">Video</span>
                       </button>
                       <button onClick={() => handleScheduleTeleconsult("AUDIO")} disabled={createSession.isPending || !facility}
                         className="flex flex-col items-center justify-center gap-1 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors">
                         <Phone className="w-5 h-5" />
-                        <span className="text-xs">Audio Call</span>
+                        <span className="text-xs">Audio</span>
                       </button>
                       <button onClick={() => handleScheduleTeleconsult("CHAT")} disabled={createSession.isPending || !facility}
                         className="flex flex-col items-center justify-center gap-1 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors">
                         <MessageSquare className="w-5 h-5" />
                         <span className="text-xs">Chat</span>
+                      </button>
+                      <button onClick={() => handleScheduleTeleconsult("ASYNC_REVIEW")} disabled={createSession.isPending || !facility}
+                        className="flex flex-col items-center justify-center gap-1 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors">
+                        <FileText className="w-5 h-5" />
+                        <span className="text-xs">Async</span>
+                      </button>
+                      <button onClick={() => handleScheduleTeleconsult("CASE_REVIEW")} disabled={createSession.isPending || !facility}
+                        className="flex flex-col items-center justify-center gap-1 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors">
+                        <Users className="w-5 h-5" />
+                        <span className="text-xs">Board</span>
                       </button>
                     </div>
                   </div>

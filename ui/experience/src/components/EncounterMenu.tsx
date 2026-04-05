@@ -80,6 +80,7 @@ const MENU_SECTIONS: MenuSection[] = [
     title: "Consults & Referrals",
     items: [
       { label: "Consults", description: "Specialist consultations and referrals", segment: "consults", icon: ArrowRightLeft },
+      { label: "Teleconsults", description: "Video, audio, and chat sessions", segment: "teleconsults", icon: Video },
       { label: "Documents", description: "Clinical documents and attachments", segment: "documents", icon: FileText },
     ],
   },
@@ -170,6 +171,14 @@ export function EncounterMenu() {
           </div>
         ))}
       </nav>
+
+      {/* Last Saved Indicator */}
+      <div className="mt-auto border-t px-3 py-2">
+        <div className="flex items-center gap-1.5 text-[10px] text-gray-400">
+          <div className="w-1.5 h-1.5 rounded-full bg-green-400" />
+          <span>Auto-saved</span>
+        </div>
+      </div>
     </aside>
   );
 }

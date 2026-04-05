@@ -16,6 +16,8 @@ import {
   Calendar,
   User,
   AlertCircle,
+  ArrowDownLeft,
+  ArrowUpRight,
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
@@ -56,6 +58,34 @@ export default function TelemedicinePage() {
   return (
     <AppLayout>
       <PageShell title="Telemedicine Hub" subtitle="Manage telemedicine and teleconsult sessions">
+        {/* Incoming / Outgoing Quick Summary */}
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <div className="bg-blue-50 rounded-lg border border-blue-200 p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <ArrowDownLeft className="w-5 h-5 text-blue-600" />
+              <h3 className="text-sm font-semibold text-blue-900">Incoming Consults</h3>
+            </div>
+            <p className="text-xs text-blue-700 mb-2">
+              {sessions.filter((s) => s.attributes.session_type === "VIDEO" || s.attributes.session_type === "AUDIO").length} sessions awaiting you
+            </p>
+            <Link href="/queue/incoming-referrals" className="text-xs text-blue-600 hover:text-blue-800 font-medium">
+              View Incoming Referrals →
+            </Link>
+          </div>
+          <div className="bg-green-50 rounded-lg border border-green-200 p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <ArrowUpRight className="w-5 h-5 text-green-600" />
+              <h3 className="text-sm font-semibold text-green-900">Outgoing Consults</h3>
+            </div>
+            <p className="text-xs text-green-700 mb-2">
+              {sessions.filter((s) => s.attributes.status === "SCHEDULED").length} sessions scheduled by you
+            </p>
+            <Link href="/queue" className="text-xs text-green-600 hover:text-green-800 font-medium">
+              View Queue →
+            </Link>
+          </div>
+        </div>
+
         {/* Tabs */}
         <div className="flex gap-1 mb-6 border-b border-gray-200">
           {tabs.map((tab) => (
