@@ -67,12 +67,16 @@ function getModuleCategories(roles: {
       icon: Stethoscope,
       color: "bg-blue-500",
       modules: [
-        { label: "Patient Queue", description: "Waiting patients & triage", href: "/queue", icon: Users, color: "bg-blue-100 text-blue-600" },
+        { label: "Clinical Hub", description: "All 10 clinical modules", href: "/clinical", icon: Stethoscope, color: "bg-blue-100 text-blue-600" },
+        { label: "Patient Queue", description: "Waiting patients & triage", href: "/queue", icon: Users, color: "bg-orange-100 text-orange-600" },
         { label: "Patient Search", description: "Find patients by name or ID", href: "/queue/search", icon: Users, color: "bg-gray-100 text-gray-600" },
+        { label: "Bed Management", description: "Ward status & admissions", href: "/beds", icon: Building2, color: "bg-purple-100 text-purple-600" },
         { label: "Scheduling", description: "Appointments & booking", href: "/scheduling", icon: Calendar, color: "bg-cyan-100 text-cyan-600" },
         { label: "Telemedicine", description: "Virtual consultations", href: "/telemedicine", icon: Video, color: "bg-teal-100 text-teal-600" },
         { label: "Shift Handoff", description: "Care continuity reports", href: "/shift/handover", icon: Clock, color: "bg-amber-100 text-amber-600" },
-        { label: "Bed Management", description: "Ward beds & occupancy", href: "/beds", icon: Building2, color: "bg-purple-100 text-purple-600" },
+        { label: "Discharge & Exit", description: "Discharges, deaths & exits", href: "/queue", icon: Users, color: "bg-amber-100 text-amber-600" },
+        { label: "Control Tower", description: "Real-time facility ops", href: "/queue", icon: BarChart3, color: "bg-rose-100 text-rose-600" },
+        { label: "Operations", description: "Shifts, roster & workforce", href: "/shift", icon: Clock, color: "bg-cyan-100 text-cyan-600" },
       ],
     });
   }

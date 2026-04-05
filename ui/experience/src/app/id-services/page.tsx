@@ -70,12 +70,24 @@ export default function IdServicesPage() {
 
 // ── GENERATE TAB ─────────────────────────────────────────────────
 function GenerateTab() {
-  const [idType, setIdType] = useState<"patient" | "provider" | "facility">("patient");
-  const [givenName, setGivenName] = useState("");
+  return (
+    <div className="grid grid-cols-3 gap-4">
+      <IdGenerationCard type="patient" label="Patient PHID" format="DDDSDDDX" icon={User} color="blue" />
+      <IdGenerationCard type="provider" label="Provider ID" format="VARAPI-YYYY-PP" icon={Stethoscope} color="teal" />
+      <IdGenerationCard type="facility" label="Facility ID" format="THUSO-PP-NNNNNN" icon={Building2} color="purple" />
+    </div>
+  );
+}
+
+function IdGenerationCard({ type, label, format, icon: Icon, color }: {
+  type: string; label: string; format: string;
+  icon: React.ComponentType<{ className?: string }>; color: string;
+}) {
+  const [name, setName] = useState("");
   const [familyName, setFamilyName] = useState("");
-  const [dateOfBirth, setDateOfBirth] = useState("");
-  const [gender, setGender] = useState("MALE");
+  const [dob, setDob] = useState("");
   const [province, setProvince] = useState("HA");
+  const [email, setEmail] = useState("");
   const [generatedIds, setGeneratedIds] = useState<Record<string, string> | null>(null);
 
   const register = useMutation({
@@ -84,112 +96,81 @@ function GenerateTab() {
     onSuccess: (res) => {
       const data = res?.data ?? {};
       const ids: Record<string, string> = {};
-      if (data.cpid) ids["CPID"] = String(data.cpid);
-      if (data.phid) ids["PHID"] = String(data.phid);
-      if (data.healthId) ids["Health ID"] = String(data.healthId);
-      if (data.clientRegistryId) ids["Client Registry ID"] = String(data.clientRegistryId);
-      if (data.shrId) ids["SHR ID"] = String(data.shrId);
-      // Fallback: show whatever came back
-      if (Object.keys(ids).length === 0) {
-        for (const [k, v] of Object.entries(data)) {
-          if (typeof v === "string" || typeof v === "number") ids[k] = String(v);
-        }
+      for (const [k, v] of Object.entries(data)) {
+        if (v != null && typeof v !== "object") ids[k] = String(v);
       }
-      if (Object.keys(ids).length === 0) ids["ID"] = "Generated successfully";
+      if (Object.keys(ids).length === 0) ids["ID"] = "Generated";
       setGeneratedIds(ids);
     },
   });
 
-  function handleGenerate(e: FormEvent) {
-    e.preventDefault();
-    setGeneratedIds(null);
-    register.mutate({ givenName, familyName, dateOfBirth, gender, province, idType });
-  }
-
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-3 gap-3">
-        {([["patient", "Patient PHID", "DDDSDDDX format", User], ["provider", "Provider ID", "VARAPI-YYYY-PP format", Stethoscope], ["facility", "Facility ID", "THUSO-PP-NNNNNN format", Building2]] as const).map(([type, label, format, Icon]) => (
-          <button key={type} onClick={() => { setIdType(type as "patient" | "provider" | "facility"); setGeneratedIds(null); }}
-            className={`flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-colors ${
-              idType === type ? "border-blue-500 bg-blue-50 text-blue-700" : "border-gray-200 text-gray-600 hover:border-gray-300"
-            }`}>
-            <Icon className="w-6 h-6" />
-            <span className="text-sm font-medium">{label}</span>
-            <span className="text-[10px] text-gray-400 font-mono">{format}</span>
-          </button>
-        ))}
+    <div className={`bg-white rounded-lg border-2 border-${color}-200 p-5 space-y-3`}>
+      <div className="flex items-center gap-2 mb-1">
+        <div className={`w-8 h-8 rounded-lg bg-${color}-100 flex items-center justify-center`}>
+          <Icon className={`w-4 h-4 text-${color}-600`} />
+        </div>
+        <div>
+          <h4 className="text-sm font-semibold text-gray-900">{label}</h4>
+          <p className="text-[10px] font-mono text-gray-400">{format}</p>
+        </div>
       </div>
 
-      <form onSubmit={handleGenerate} className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
-        <h3 className="text-base font-semibold text-gray-900">Generate {idType === "patient" ? "Patient PHID" : idType === "provider" ? "Provider ID" : "Facility ID"}</h3>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">{idType === "facility" ? "Facility Name" : "Given Name"}</label>
-            <input type="text" value={givenName} onChange={(e) => setGivenName(e.target.value)} required className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg" />
-          </div>
-          {idType !== "facility" && (
-            <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Family Name</label>
-              <input type="text" value={familyName} onChange={(e) => setFamilyName(e.target.value)} required className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg" />
-            </div>
-          )}
-          {(idType === "provider" || idType === "facility") && (
-            <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Province</label>
-              <select value={province} onChange={(e) => setProvince(e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg">
-                {PROVINCES.map((p) => <option key={p.code} value={p.code}>{p.label} ({p.code})</option>)}
-              </select>
-            </div>
-          )}
-          {idType === "patient" && (
-            <>
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Date of Birth</label>
-                <input type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} required className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg" />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Gender</label>
-                <select value={gender} onChange={(e) => setGender(e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg">
-                  <option value="MALE">Male</option><option value="FEMALE">Female</option><option value="OTHER">Other</option>
-                </select>
-              </div>
-            </>
-          )}
-        </div>
-        <button type="submit" disabled={register.isPending} className="w-full py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2">
-          {register.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
-          Generate ID
-        </button>
-        <p className="text-[10px] text-center text-gray-400">Cryptographically secure · Biometric linking available</p>
-      </form>
+      <div className="space-y-2">
+        <input type="text" value={name} onChange={(e) => setName(e.target.value)}
+          placeholder={type === "facility" ? "Facility name" : "Given name"}
+          className="w-full px-2.5 py-1.5 text-xs border border-gray-300 rounded-lg" />
+        {type !== "facility" && (
+          <input type="text" value={familyName} onChange={(e) => setFamilyName(e.target.value)}
+            placeholder="Family name" className="w-full px-2.5 py-1.5 text-xs border border-gray-300 rounded-lg" />
+        )}
+        {(type === "provider" || type === "facility") && (
+          <select value={province} onChange={(e) => setProvince(e.target.value)}
+            className="w-full px-2.5 py-1.5 text-xs border border-gray-300 rounded-lg">
+            {PROVINCES.map((p) => <option key={p.code} value={p.code}>{p.label}</option>)}
+          </select>
+        )}
+        {type === "patient" && (
+          <input type="date" value={dob} onChange={(e) => setDob(e.target.value)}
+            className="w-full px-2.5 py-1.5 text-xs border border-gray-300 rounded-lg" />
+        )}
+      </div>
+
+      <button onClick={() => { setGeneratedIds(null); register.mutate({ givenName: name, familyName, dateOfBirth: dob, province, idType: type }); }}
+        disabled={register.isPending || !name}
+        className={`w-full py-2 bg-${color}-600 text-white text-xs font-medium rounded-lg hover:bg-${color}-700 disabled:opacity-50 flex items-center justify-center gap-1`}>
+        {register.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <UserPlus className="w-3 h-3" />}
+        Generate
+      </button>
 
       {generatedIds && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-5">
-          <div className="flex items-center gap-2 mb-3">
-            <CheckCircle2 className="w-5 h-5 text-green-600" />
-            <h4 className="text-sm font-semibold text-green-800">Identity Generated</h4>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            {Object.entries(generatedIds).map(([label, value]) => (
-              <div key={label} className="bg-white rounded-lg border border-green-200 p-3 flex items-center justify-between">
-                <div>
-                  <p className="text-[10px] text-gray-500 uppercase">{label}</p>
-                  <p className="text-sm font-mono font-bold text-gray-900">{value}</p>
-                </div>
-                <button onClick={() => copyToClipboard(value)} className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded" title="Copy">
-                  <Copy className="w-3.5 h-3.5" />
-                </button>
+        <div className="bg-green-50 border border-green-200 rounded-lg p-3 space-y-1.5">
+          {Object.entries(generatedIds).map(([k, v]) => (
+            <div key={k} className="flex items-center justify-between">
+              <div>
+                <p className="text-[9px] text-gray-500 uppercase">{k}</p>
+                <p className="text-xs font-mono font-bold text-gray-900">{v}</p>
               </div>
-            ))}
-          </div>
+              <button onClick={() => copyToClipboard(v)} className="p-1 text-gray-400 hover:text-gray-600">
+                <Copy className="w-3 h-3" />
+              </button>
+            </div>
+          ))}
         </div>
       )}
-      {register.isError && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
-          <AlertCircle className="w-4 h-4 text-red-500" /><p className="text-sm text-red-700">Generation failed.</p>
+
+      {/* Email delivery */}
+      {generatedIds && (
+        <div className="flex gap-1">
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+            placeholder="Email to send" className="flex-1 px-2 py-1 text-[10px] border border-gray-300 rounded" />
+          <button className="px-2 py-1 text-[10px] bg-gray-100 text-gray-600 rounded hover:bg-gray-200">
+            <Mail className="w-3 h-3" />
+          </button>
         </div>
       )}
+
+      <p className="text-[9px] text-center text-gray-400">Cryptographically secure · Biometric linking available</p>
     </div>
   );
 }
