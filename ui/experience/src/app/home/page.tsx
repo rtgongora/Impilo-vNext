@@ -140,6 +140,22 @@ function getModuleCategories(roles: {
     });
   }
 
+  if (roles.isAdmin) {
+    cats.push({
+      id: "coverage",
+      title: "Coverage & Financing",
+      icon: Shield,
+      color: "bg-violet-500",
+      modules: [
+        { label: "Coverage Hub", description: "Schemes, eligibility & claims", href: "/coverage", icon: Shield, color: "bg-violet-100 text-violet-600" },
+        { label: "Eligibility Check", description: "Real-time coverage verification", href: "/coverage?tab=eligibility", icon: Users, color: "bg-green-100 text-green-600" },
+        { label: "Claims", description: "Submit and track claims", href: "/coverage?tab=claims", icon: FileText, color: "bg-purple-100 text-purple-600" },
+        { label: "Settlement", description: "Remittance & payouts", href: "/coverage?tab=settlement", icon: Receipt, color: "bg-emerald-100 text-emerald-600" },
+        { label: "Schemes", description: "Plan administration", href: "/coverage?tab=schemes", icon: Shield, color: "bg-blue-100 text-blue-600" },
+      ],
+    });
+  }
+
   cats.push({
     id: "operations",
     title: "Operations & Inventory",

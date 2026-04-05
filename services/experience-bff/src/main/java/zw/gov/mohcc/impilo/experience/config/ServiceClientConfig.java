@@ -35,7 +35,8 @@ public class ServiceClientConfig {
             String tusoBaseUrl,
             String varapiBaseUrl,
             String documentStoreBaseUrl,
-            String costaBaseUrl
+            String costaBaseUrl,
+            String coverageBaseUrl
     ) {
         public ServiceEndpoints {
             if (pctBaseUrl == null) pctBaseUrl = "http://localhost:8088";
@@ -46,6 +47,7 @@ public class ServiceClientConfig {
             if (varapiBaseUrl == null) varapiBaseUrl = "http://localhost:8083";
             if (documentStoreBaseUrl == null) documentStoreBaseUrl = "http://localhost:8093";
             if (costaBaseUrl == null) costaBaseUrl = "http://localhost:8101";
+            if (coverageBaseUrl == null) coverageBaseUrl = "http://localhost:8140";
         }
     }
 

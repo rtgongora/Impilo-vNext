@@ -50,6 +50,7 @@ impilo:
     varapi-base-url: ${VARAPI_BASE_URL:http://localhost:8083}
     document-store-base-url: ${DOCUMENT_STORE_BASE_URL:http://localhost:8093}
     costa-base-url: ${COSTA_BASE_URL:http://localhost:8101}
+    coverage-base-url: ${COVERAGE_BASE_URL:http://localhost:8140}
 
 logging:
   level:
