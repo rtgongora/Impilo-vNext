@@ -24,7 +24,7 @@ import { useAuthStore } from "@/hooks/useAuthStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useWorkspaceStore } from "@/hooks/useWorkspaceStore";
 import { useShiftStore } from "@/hooks/useShiftStore";
-import { useWorkModeStore, type WorkMode } from "@/hooks/useWorkModeStore";
+import { useWorkModeStore, type WorkMode, WORK_MODE_LABELS } from "@/hooks/useWorkModeStore";
 
 // ── Work mode indicator colors ───────────────────────────────────
 const WORK_MODE_COLORS: Record<WorkMode, string> = {
@@ -33,6 +33,9 @@ const WORK_MODE_COLORS: Record<WorkMode, string> = {
   admin: "bg-red-400",
   finance: "bg-blue-400",
   oversight: "bg-purple-400",
+  independent_practice: "bg-amber-400",
+  emergency_response: "bg-red-500",
+  community_outreach: "bg-teal-400",
   general: "bg-gray-400",
 };
 
@@ -352,7 +355,7 @@ export function ZoneNavigation() {
             <div className="flex items-center gap-1.5 mb-1">
               <span className={`w-1.5 h-1.5 rounded-full ${WORK_MODE_COLORS[workMode]}`} />
               <span className="text-[10px] uppercase tracking-wider text-gray-500 font-semibold">
-                {workMode} mode
+                {WORK_MODE_LABELS[workMode]}
               </span>
             </div>
             {facility ? (

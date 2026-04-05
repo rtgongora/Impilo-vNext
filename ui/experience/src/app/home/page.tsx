@@ -17,6 +17,7 @@ import {
   Activity, Receipt, Pill, Calendar, Shield, Stethoscope,
   ClipboardList, Package, Settings, FileText, MapPin, Loader2,
   ChevronRight, Video, ShoppingCart, Database, AlertTriangle,
+  Briefcase, Heart, Globe, Siren, Award, GraduationCap, User,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
@@ -149,13 +150,16 @@ function getModuleCategories(roles: {
   return cats;
 }
 
+type HomeTab = "work" | "professional" | "personal";
+
 export default function HomePage() {
   const user = useAuthStore((s) => s.user);
   const facility = useFacilityStore((s) => s.facility);
   const shift = useShiftStore((s) => s.shift);
   const roleGroup = useRoleGroup();
-  const { isClinical, isAdmin, isFinance, isDispenser } = roleGroup;
+  const { isClinical, isAdmin, isFinance, isDispenser, isCitizen } = roleGroup;
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<HomeTab>("work");
 
   const greeting = getGreeting();
   const router = useRouter();
@@ -260,6 +264,25 @@ export default function HomePage() {
               )}
             </div>
           </div>
+
+          {/* Tab Switcher (Lovable 3-tab: Work / Professional / Personal) */}
+          <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
+            <button onClick={() => setActiveTab("work")}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === "work" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
+              <Briefcase className="w-4 h-4" /> Work
+            </button>
+            <button onClick={() => setActiveTab("professional")}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === "professional" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
+              <Stethoscope className="w-4 h-4" /> Professional
+            </button>
+            <button onClick={() => setActiveTab("personal")}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === "personal" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
+              <Heart className="w-4 h-4" /> Personal
+            </button>
+          </div>
+
+          {/* ═══ WORK TAB ═══ */}
+          {activeTab === "work" && (<>
 
           {/* Workplace Selection Hub — when no facility */}
           {!hasWorkContext && (
@@ -471,6 +494,205 @@ export default function HomePage() {
               </div>
             </div>
           )}
+
+          </>)}
+
+          {/* ═══ PROFESSIONAL TAB ═══ */}
+          {activeTab === "professional" && (
+            <div className="space-y-6">
+              {/* Credentials & License */}
+              <div className="bg-white rounded-lg border border-gray-200 p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2">
+                    <Award className="w-5 h-5 text-blue-600" /> Credentials & License
+                  </h3>
+                  <Link href="/home/credentials" className="text-xs text-blue-600 hover:text-blue-800">
+                    Full Details →
+                  </Link>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* License Card */}
+                  <div className={`rounded-lg border p-4 ${licenseActive ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"}`}>
+                    <p className="text-xs text-gray-500 mb-1">Professional License</p>
+                    <p className={`text-sm font-semibold ${licenseActive ? "text-green-700" : "text-red-700"}`}>
+                      {licenseActive ? "Active" : "Requires Attention"}
+                    </p>
+                    {licenses.length > 0 && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        {licenses.length} license{licenses.length > 1 ? "s" : ""} on record
+                      </p>
+                    )}
+                  </div>
+                  {/* CPD Card */}
+                  <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                    <p className="text-xs text-gray-500 mb-1">CPD Progress</p>
+                    <p className="text-sm font-semibold text-gray-900">Current Cycle</p>
+                    <div className="mt-2 bg-gray-200 rounded-full h-2">
+                      <div className="bg-blue-500 rounded-full h-2" style={{ width: "72%" }} />
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">18/25 points earned</p>
+                  </div>
+                  {/* Certifications Card */}
+                  <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                    <p className="text-xs text-gray-500 mb-1">Certifications</p>
+                    <div className="space-y-1.5 mt-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-gray-700">BLS Provider</span>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-100 text-green-700">Valid</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-gray-700">ACLS Provider</span>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-700">Expiring</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Affiliations */}
+              <div className="bg-white rounded-lg border border-gray-200 p-6">
+                <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2 mb-4">
+                  <Building2 className="w-5 h-5 text-purple-600" /> Affiliations
+                </h3>
+                {facilities.length === 0 ? (
+                  <p className="text-sm text-gray-400">No facility affiliations found.</p>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {facilities.slice(0, 4).map((f) => (
+                      <div key={f.id} className="flex items-center justify-between bg-gray-50 rounded-lg border border-gray-200 p-3">
+                        <div className="flex items-center gap-2">
+                          <Building2 className="w-4 h-4 text-gray-400" />
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">{f.attributes.name}</p>
+                            <p className="text-xs text-gray-500">{f.attributes.facilityType}</p>
+                          </div>
+                        </div>
+                        <button onClick={() => selectFacility(f)}
+                          className="text-xs text-blue-600 hover:text-blue-800 font-medium">
+                          Start Shift →
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* License-Based Work Modes */}
+              {isClinical && (
+                <div className="bg-white rounded-lg border border-gray-200 p-6">
+                  <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2 mb-4">
+                    <Globe className="w-5 h-5 text-teal-600" /> Independent & Field Work
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <button onClick={() => {
+                      useWorkModeStore.getState().setMode("independent_practice", {
+                        licenseNumber: licenses[0]?.licenseNumber ?? "",
+                        licenseCategory: licenses[0]?.cadre ?? user?.roles?.[0] ?? "",
+                      });
+                      router.push("/queue");
+                    }}
+                      className="text-left bg-amber-50 rounded-lg border border-amber-200 p-4 hover:border-amber-400 transition-all group">
+                      <Briefcase className="w-5 h-5 text-amber-600 mb-2" />
+                      <p className="text-sm font-medium text-gray-900 group-hover:text-amber-700">Independent Practice</p>
+                      <p className="text-xs text-gray-500 mt-0.5">Work under your own license without facility context</p>
+                    </button>
+                    <button onClick={() => {
+                      useWorkModeStore.getState().setMode("emergency_response", {
+                        licenseNumber: licenses[0]?.licenseNumber ?? "",
+                        licenseCategory: licenses[0]?.cadre ?? user?.roles?.[0] ?? "",
+                      });
+                      router.push("/queue");
+                    }}
+                      className="text-left bg-red-50 rounded-lg border border-red-200 p-4 hover:border-red-400 transition-all group">
+                      <Siren className="w-5 h-5 text-red-600 mb-2" />
+                      <p className="text-sm font-medium text-gray-900 group-hover:text-red-700">Emergency Response</p>
+                      <p className="text-xs text-gray-500 mt-0.5">Emergency work under license authority</p>
+                    </button>
+                    <button onClick={() => {
+                      useWorkModeStore.getState().setMode("community_outreach", {
+                        licenseNumber: licenses[0]?.licenseNumber ?? "",
+                        licenseCategory: licenses[0]?.cadre ?? user?.roles?.[0] ?? "",
+                      });
+                      router.push("/queue");
+                    }}
+                      className="text-left bg-teal-50 rounded-lg border border-teal-200 p-4 hover:border-teal-400 transition-all group">
+                      <Heart className="w-5 h-5 text-teal-600 mb-2" />
+                      <p className="text-sm font-medium text-gray-900 group-hover:text-teal-700">Community Outreach</p>
+                      <p className="text-xs text-gray-500 mt-0.5">Community health program work</p>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ═══ PERSONAL TAB ═══ */}
+          {activeTab === "personal" && (
+            <div className="space-y-6">
+              {/* My Health Quick Actions */}
+              <div className="bg-white rounded-lg border border-gray-200 p-6">
+                <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2 mb-4">
+                  <Heart className="w-5 h-5 text-pink-600" /> My Health
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <Link href="/scheduling" className="flex flex-col items-center gap-2 p-4 rounded-lg bg-blue-50 border border-blue-200 hover:border-blue-400 transition-colors text-center">
+                    <Calendar className="w-6 h-6 text-blue-600" />
+                    <span className="text-xs font-medium text-gray-900">Book Visit</span>
+                  </Link>
+                  <Link href="/telemedicine" className="flex flex-col items-center gap-2 p-4 rounded-lg bg-green-50 border border-green-200 hover:border-green-400 transition-colors text-center">
+                    <Video className="w-6 h-6 text-green-600" />
+                    <span className="text-xs font-medium text-gray-900">Video Call</span>
+                  </Link>
+                  <Link href="/pharmacy/prescriptions" className="flex flex-col items-center gap-2 p-4 rounded-lg bg-amber-50 border border-amber-200 hover:border-amber-400 transition-colors text-center">
+                    <Pill className="w-6 h-6 text-amber-600" />
+                    <span className="text-xs font-medium text-gray-900">Refill Rx</span>
+                  </Link>
+                  <Link href="/home/notifications" className="flex flex-col items-center gap-2 p-4 rounded-lg bg-purple-50 border border-purple-200 hover:border-purple-400 transition-colors text-center">
+                    <FileText className="w-6 h-6 text-purple-600" />
+                    <span className="text-xs font-medium text-gray-900">Messages</span>
+                  </Link>
+                </div>
+              </div>
+
+              {/* Personal Links */}
+              <div className="bg-white rounded-lg border border-gray-200 p-6">
+                <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2 mb-4">
+                  <User className="w-5 h-5 text-gray-600" /> Account & Settings
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <Link href="/home/profile" className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 border border-gray-200 hover:border-blue-300 transition-colors">
+                    <User className="w-5 h-5 text-gray-400" />
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Profile</p>
+                      <p className="text-xs text-gray-500">View and edit your profile</p>
+                    </div>
+                  </Link>
+                  <Link href="/home/preferences" className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 border border-gray-200 hover:border-blue-300 transition-colors">
+                    <Settings className="w-5 h-5 text-gray-400" />
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Preferences</p>
+                      <p className="text-xs text-gray-500">Language, notifications, display</p>
+                    </div>
+                  </Link>
+                  <Link href="/settings/security" className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 border border-gray-200 hover:border-blue-300 transition-colors">
+                    <Shield className="w-5 h-5 text-gray-400" />
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Security & Privacy</p>
+                      <p className="text-xs text-gray-500">Password, MFA, sessions</p>
+                    </div>
+                  </Link>
+                  <Link href="/marketplace" className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 border border-gray-200 hover:border-blue-300 transition-colors">
+                    <ShoppingCart className="w-5 h-5 text-gray-400" />
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Health Marketplace</p>
+                      <p className="text-xs text-gray-500">Browse products & services</p>
+                    </div>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
+
         </div>
       </PageShell>
     </AppLayout>

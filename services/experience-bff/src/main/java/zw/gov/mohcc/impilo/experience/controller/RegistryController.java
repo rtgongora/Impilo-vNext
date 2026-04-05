@@ -168,6 +168,28 @@ public class RegistryController {
         }
     }
 
+    /**
+     * GET /internal/v1/registry/providers/{id}/affiliations
+     *
+     * Fetches council affiliations for a provider from VARAPI.
+     */
+    @GetMapping("/providers/{id}/affiliations")
+    public ResponseEntity<Map<String, Object>> getProviderAffiliations(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode affiliations = varapiClient.getProviderCouncilAffiliations(id);
+            return ResponseEntity.ok(Map.of(
+                    "data", affiliations != null ? affiliations : new Object[0],
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            return ResponseEntity.ok(Map.of(
+                    "data", new Object[0],
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
+    }
+
     private Map<String, Object> toFacilityResource(Facility f) {
         Map<String, Object> attributes = new LinkedHashMap<>();
         attributes.put("name", f.getName());

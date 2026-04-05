@@ -1,26 +1,54 @@
 /**
  * Work Mode Store — tracks the user's active work context mode.
  *
- * Modes derive from the user's Keycloak roles and current selections:
+ * 9 modes covering the full Lovable WorkplaceSelectionHub parity:
+ *
+ * Facility-based:
  * - clinical: Direct patient care at a facility (CLINICIAN, NURSE)
  * - pharmacy: Dispensing/stock work (PHARMACIST)
+ *
+ * Non-facility:
  * - admin: System administration (SYSTEM_ADMIN, FACILITY_ADMIN, DEVELOPER)
  * - finance: Billing, payments, claims (FINANCE)
  * - oversight: Cross-facility oversight (SYSTEM_ADMIN without facility)
+ *
+ * License-based (independent of facility):
+ * - independent_practice: Private practice under own license
+ * - emergency_response: Emergency work under license authority
+ * - community_outreach: Community health program work
+ *
+ * Default:
  * - general: Default for users without a specific mode
  *
- * Persists to sessionStorage. The mode is set explicitly when the user
- * selects their work context (workplace hub or sidebar navigation).
+ * Persists to sessionStorage. Mode set explicitly from workplace hub
+ * or auto-synced from URL context.
  */
 
 import { create } from "zustand";
 
-export type WorkMode = "clinical" | "pharmacy" | "admin" | "finance" | "oversight" | "general";
+export type WorkMode =
+  | "clinical"
+  | "pharmacy"
+  | "admin"
+  | "finance"
+  | "oversight"
+  | "independent_practice"
+  | "emergency_response"
+  | "community_outreach"
+  | "general";
+
+/** Metadata for the active work mode when license-based */
+export interface WorkModeContext {
+  licenseNumber?: string;
+  licenseCategory?: string;
+  practiceName?: string;
+  programName?: string;
+}
 
 interface WorkModeState {
   mode: WorkMode;
-  setMode: (mode: WorkMode) => void;
-  /** Derive the best initial mode from user roles */
+  context: WorkModeContext;
+  setMode: (mode: WorkMode, context?: WorkModeContext) => void;
   deriveFromRoles: (roles: string[]) => void;
 }
 
@@ -29,12 +57,25 @@ function loadMode(): WorkMode {
   return (sessionStorage.getItem("exp:work_mode") as WorkMode) || "general";
 }
 
+function loadContext(): WorkModeContext {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = sessionStorage.getItem("exp:work_mode_context");
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
 export const useWorkModeStore = create<WorkModeState>((set) => ({
   mode: loadMode(),
+  context: loadContext(),
 
-  setMode: (mode) => {
+  setMode: (mode, context) => {
     sessionStorage.setItem("exp:work_mode", mode);
-    set({ mode });
+    const ctx = context ?? {};
+    sessionStorage.setItem("exp:work_mode_context", JSON.stringify(ctx));
+    set({ mode, context: ctx });
   },
 
   deriveFromRoles: (roles) => {
@@ -44,8 +85,21 @@ export const useWorkModeStore = create<WorkModeState>((set) => ({
     if (roles.includes("FINANCE")) derived = "finance";
     if (roles.includes("PHARMACIST")) derived = "pharmacy";
     if (roles.includes("CLINICIAN") || roles.includes("NURSE")) derived = "clinical";
-    // Most specific role wins (clinical > pharmacy > finance > admin > oversight)
     sessionStorage.setItem("exp:work_mode", derived);
-    set({ mode: derived });
+    sessionStorage.setItem("exp:work_mode_context", "{}");
+    set({ mode: derived, context: {} });
   },
 }));
+
+/** Labels for display */
+export const WORK_MODE_LABELS: Record<WorkMode, string> = {
+  clinical: "Clinical",
+  pharmacy: "Pharmacy",
+  admin: "Administration",
+  finance: "Finance",
+  oversight: "Oversight",
+  independent_practice: "Independent Practice",
+  emergency_response: "Emergency Response",
+  community_outreach: "Community Outreach",
+  general: "General",
+};
