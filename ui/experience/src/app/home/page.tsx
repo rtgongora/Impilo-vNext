@@ -650,7 +650,7 @@ export default function HomePage() {
                     <Video className="w-6 h-6 text-green-600" />
                     <span className="text-xs font-medium text-gray-900">Video Call</span>
                   </Link>
-                  <Link href="/home/notifications" className="flex flex-col items-center gap-2 p-4 rounded-lg bg-amber-50 border border-amber-200 hover:border-amber-400 transition-colors text-center">
+                  <Link href="/home/medications" className="flex flex-col items-center gap-2 p-4 rounded-lg bg-amber-50 border border-amber-200 hover:border-amber-400 transition-colors text-center">
                     <Pill className="w-6 h-6 text-amber-600" />
                     <span className="text-xs font-medium text-gray-900">My Medications</span>
                   </Link>
@@ -697,12 +697,58 @@ export default function HomePage() {
                   </Link>
                 </div>
               </div>
+
+              {/* Community Feed */}
+              <FeedSection />
             </div>
           )}
 
         </div>
       </PageShell>
     </AppLayout>
+  );
+}
+
+/** Community feed section using existing citizen feed infrastructure */
+function FeedSection() {
+  const { data } = useQuery<{ data: Array<{ id: string; attributes: Record<string, unknown> }> }>({
+    queryKey: ["personal-feed"],
+    queryFn: () => apiClient.get("/internal/v1/mobile/citizen/feed?size=5"),
+  });
+  const items = data?.data ?? [];
+
+  return (
+    <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2 mb-4">
+        <Users className="w-5 h-5 text-purple-600" /> Community & Updates
+      </h3>
+      {items.length === 0 ? (
+        <p className="text-sm text-gray-400">No community updates yet.</p>
+      ) : (
+        <div className="space-y-3">
+          {items.map((item) => (
+            <div key={item.id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+              <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center shrink-0">
+                <FileText className="w-4 h-4 text-purple-500" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-gray-900 truncate">
+                  {(item.attributes.title as string) ?? "Update"}
+                </p>
+                <p className="text-xs text-gray-500 line-clamp-2">
+                  {(item.attributes.body as string) ?? ""}
+                </p>
+                {item.attributes.published_at && (
+                  <p className="text-xs text-gray-400 mt-1">
+                    {new Date(item.attributes.published_at as string).toLocaleDateString()}
+                  </p>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 

@@ -53,7 +53,7 @@ public class QueueController {
 
     public record CreateQueueEntryRequest(
             @NotBlank String patient_id,
-            @NotBlank String facility_id,
+            String facility_id,
             @NotBlank String queue_type,
             String priority,
             String reason,

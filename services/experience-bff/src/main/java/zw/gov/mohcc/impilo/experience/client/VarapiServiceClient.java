@@ -59,6 +59,16 @@ public class VarapiServiceClient {
         return extractData(response);
     }
 
+    /**
+     * Get CPD summary for a provider.
+     */
+    public JsonNode getProviderCpdSummary(String providerId) {
+        String url = baseUrl + "/v1/internal/providers/" + providerId + "/cpd/summary";
+        log.info("VARAPI: Getting CPD summary for provider={}", providerId);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) {
             return response.getBody().get("data");

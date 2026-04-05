@@ -190,6 +190,28 @@ public class RegistryController {
         }
     }
 
+    /**
+     * GET /internal/v1/registry/providers/{id}/cpd
+     *
+     * Fetches CPD summary (cycles, earned/required points) from VARAPI.
+     */
+    @GetMapping("/providers/{id}/cpd")
+    public ResponseEntity<Map<String, Object>> getProviderCpd(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode cpd = varapiClient.getProviderCpdSummary(id);
+            return ResponseEntity.ok(Map.of(
+                    "data", cpd != null ? cpd : Map.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            return ResponseEntity.ok(Map.of(
+                    "data", Map.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
+    }
+
     private Map<String, Object> toFacilityResource(Facility f) {
         Map<String, Object> attributes = new LinkedHashMap<>();
         attributes.put("name", f.getName());
