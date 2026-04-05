@@ -49,6 +49,9 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/auth/logout", zone: "auth", layout: "auth", sidebar: "main", guard: "none", pageTitle: "Signing Out", navLabel: "Sign Out" },
 
   // ── Zone: Home ──────────────────────────────────────────────────
+  // ── Zone: Omnichannel ───────────────────────────────────────────
+  { path: "/omnichannel", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Omnichannel Hub", navLabel: "Omnichannel", navZone: "professional" },
+
   // ── Zone: Coverage ──────────────────────────────────────────────
   { path: "/coverage", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Coverage Operations", navLabel: "Coverage", navZone: "professional" },
 
@@ -185,7 +188,7 @@ export const ROUTES: RouteDefinition[] = [
 ];
 
 // Total route count assertion
-export const EXPECTED_ROUTE_COUNT = 108;
+export const EXPECTED_ROUTE_COUNT = 109;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

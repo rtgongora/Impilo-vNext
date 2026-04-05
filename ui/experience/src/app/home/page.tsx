@@ -142,6 +142,21 @@ function getModuleCategories(roles: {
 
   if (roles.isAdmin) {
     cats.push({
+      id: "omnichannel",
+      title: "Omnichannel & Access",
+      icon: Shield,
+      color: "bg-teal-500",
+      modules: [
+        { label: "Omnichannel Hub", description: "All channels in one view", href: "/omnichannel", icon: Shield, color: "bg-teal-100 text-teal-600" },
+        { label: "SMS Journeys", description: "Text-based health interactions", href: "/omnichannel?tab=sms", icon: FileText, color: "bg-amber-100 text-amber-600" },
+        { label: "Callbacks", description: "Human handoff queue", href: "/omnichannel?tab=callbacks", icon: Users, color: "bg-rose-100 text-rose-600" },
+        { label: "Disclosure Rules", description: "Channel data policies", href: "/omnichannel?tab=disclosure", icon: Shield, color: "bg-indigo-100 text-indigo-600" },
+      ],
+    });
+  }
+
+  if (roles.isAdmin) {
+    cats.push({
       id: "coverage",
       title: "Coverage & Financing",
       icon: Shield,
