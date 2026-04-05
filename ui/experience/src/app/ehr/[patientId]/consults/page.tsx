@@ -47,6 +47,8 @@ import {
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
+import { ReferralPackageBuilder } from "@/components/ReferralPackageBuilder";
+import { useQuery } from "@tanstack/react-query";
 
 // ────────────────────────────────────────────────────────────
 // Status / Priority badge helpers
@@ -84,7 +86,30 @@ export default function ConsultsPage() {
   const { data: referralsData, isLoading: loadingReferrals } = useReferrals(patientId);
   const { data: teleData, isLoading: loadingTele } = useTelemedicineSessions();
 
+  // Clinical data for ReferralPackageBuilder
+  const { data: allergiesData } = useQuery<{ data: Array<{ attributes: Record<string, unknown> }> }>({
+    queryKey: ["consult-allergies", patientId],
+    queryFn: () => apiClient.get(`/internal/v1/allergies?patient_id=${patientId}`),
+    enabled: !!patientId,
+  });
+  const { data: conditionsData } = useQuery<{ data: Array<{ attributes: Record<string, unknown> }> }>({
+    queryKey: ["consult-conditions", patientId],
+    queryFn: () => apiClient.get(`/internal/v1/conditions?patient_id=${patientId}`),
+    enabled: !!patientId,
+  });
+  const { data: medsData } = useQuery<{ data: Array<{ attributes: Record<string, unknown> }> }>({
+    queryKey: ["consult-meds", patientId],
+    queryFn: () => apiClient.get(`/internal/v1/pharmacy/prescriptions?patient_id=${patientId}`),
+    enabled: !!patientId,
+  });
+  const patientAllergies = (allergiesData?.data ?? []).map((a) => (a.attributes.allergen as string) ?? "").filter(Boolean);
+  const patientConditions = (conditionsData?.data ?? []).map((c) => (c.attributes.condition_name as string) ?? "").filter(Boolean);
+  const patientMedications = (medsData?.data ?? []).map((m) => (m.attributes.medication_name as string) ?? "").filter(Boolean);
+
   const patient = patientData?.data;
+  const patientName = (patient?.attributes as Record<string, unknown>)?.displayName as string
+    ?? (patient?.attributes as Record<string, unknown>)?.givenName as string ?? "Patient";
+  const patientDob = (patient?.attributes as Record<string, unknown>)?.dateOfBirth as string | undefined;
   const encounters = encountersData?.data ?? [];
   const activeEncounter = encounters.find(
     (e) => e.attributes.status === "IN_PROGRESS" || e.attributes.status === "ACTIVE"
@@ -117,70 +142,6 @@ export default function ConsultsPage() {
   const [activeTab, setActiveTab] = useState<ActiveTab>("referrals");
   const [showNewReferral, setShowNewReferral] = useState(false);
   const [showNewConsult, setShowNewConsult] = useState(false);
-
-  // ── New Referral form state ──────────────────────────────
-  const [refForm, setRefForm] = useState({
-    referral_type: "SPECIALIST",
-    specialty: "",
-    referred_to: "",
-    referred_to_facility: "",
-    reason: "",
-    urgency: "ROUTINE",
-    clinical_summary: "" });
-
-  function handleCreateReferral() {
-    createReferral.mutate(
-      {
-        patientId,
-        encounterId: activeEncounter?.id ?? "",
-        referralType: refForm.referral_type,
-        specialty: refForm.specialty,
-        referredTo: refForm.referred_to,
-        referredToFacility: refForm.referred_to_facility,
-        reason: refForm.reason,
-        urgency: refForm.urgency,
-        clinicalSummary: refForm.clinical_summary || null },
-      {
-        onSuccess: () => {
-          setRefForm({
-            referral_type: "SPECIALIST",
-            specialty: "",
-            referred_to: "",
-            referred_to_facility: "",
-            reason: "",
-            urgency: "ROUTINE",
-            clinical_summary: "" });
-          setShowNewReferral(false);
-        } }
-    );
-  }
-
-  function handleCreateConsult() {
-    createReferral.mutate(
-      {
-        patientId,
-        encounterId: activeEncounter?.id ?? "",
-        referralType: "CONSULTATION",
-        specialty: refForm.specialty,
-        referredTo: refForm.referred_to,
-        referredToFacility: refForm.referred_to_facility,
-        reason: refForm.reason,
-        urgency: refForm.urgency,
-        clinicalSummary: refForm.clinical_summary || null },
-      {
-        onSuccess: () => {
-          setRefForm({
-            referral_type: "SPECIALIST",
-            specialty: "",
-            referred_to: "",
-            referred_to_facility: "",
-            reason: "",
-            urgency: "ROUTINE",
-            clinical_summary: "" });
-          setShowNewConsult(false);
-        } }
-    );
-  }
 
   function handleScheduleTeleconsult(mode: string) {
     if (!facility) return;
@@ -297,15 +258,28 @@ export default function ConsultsPage() {
                   </div>
 
                   {showNewConsult && (
-                    <ReferralForm
-                      form={refForm}
-                      setForm={setRefForm}
-                      onSubmit={handleCreateConsult}
+                    <ReferralPackageBuilder
+                      patientName={patientName}
+                      patientDob={patientDob}
+                      conditions={patientConditions}
+                      allergies={patientAllergies}
+                      medications={patientMedications}
+                      referralType="CONSULTATION"
+                      onSubmit={(data) => {
+                        createReferral.mutate({
+                          patientId,
+                          encounterId: activeEncounter?.id ?? "",
+                          referralType: "CONSULTATION",
+                          specialty: data.specialty,
+                          referredTo: data.referred_to,
+                          referredToFacility: data.referred_to_facility,
+                          reason: data.reason,
+                          urgency: data.urgency,
+                          clinicalSummary: data.clinical_summary,
+                        }, { onSuccess: () => setShowNewConsult(false) });
+                      }}
                       onCancel={() => setShowNewConsult(false)}
                       isPending={createReferral.isPending}
-                      isError={createReferral.isError}
-                      typeLabel="Consultation"
-                      typeValue="CONSULTATION"
                     />
                   )}
 
@@ -340,16 +314,28 @@ export default function ConsultsPage() {
                   </div>
 
                   {showNewReferral && (
-                    <ReferralForm
-                      form={refForm}
-                      setForm={setRefForm}
-                      onSubmit={handleCreateReferral}
+                    <ReferralPackageBuilder
+                      patientName={patientName}
+                      patientDob={patientDob}
+                      conditions={patientConditions}
+                      allergies={patientAllergies}
+                      medications={patientMedications}
+                      referralType="SPECIALIST"
+                      onSubmit={(data) => {
+                        createReferral.mutate({
+                          patientId,
+                          encounterId: activeEncounter?.id ?? "",
+                          referralType: data.referral_type,
+                          specialty: data.specialty,
+                          referredTo: data.referred_to,
+                          referredToFacility: data.referred_to_facility,
+                          reason: data.reason,
+                          urgency: data.urgency,
+                          clinicalSummary: data.clinical_summary,
+                        }, { onSuccess: () => setShowNewReferral(false) });
+                      }}
                       onCancel={() => setShowNewReferral(false)}
                       isPending={createReferral.isPending}
-                      isError={createReferral.isError}
-                      typeLabel="Referral"
-                      typeValue={refForm.referral_type}
-                      showTypeSelector
                     />
                   )}
 
@@ -674,69 +660,3 @@ function TeleconsultCard({ session }: { session: TelemedicineSession }) {
   );
 }
 
-function ReferralForm({ form, setForm, onSubmit, onCancel, isPending, isError, typeLabel, typeValue, showTypeSelector }: {
-  form: Record<string, string>; setForm: (fn: (prev: Record<string, string>) => Record<string, string>) => void;
-  onSubmit: () => void; onCancel: () => void; isPending: boolean; isError: boolean;
-  typeLabel: string; typeValue: string; showTypeSelector?: boolean;
-}) {
-  return (
-    <div className="bg-white rounded-lg border border-gray-200 p-5">
-      <h3 className="font-medium text-gray-900 mb-4">New {typeLabel}</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {showTypeSelector && (
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Referral Type</label>
-            <select value={form.referral_type} onChange={(e) => setForm((f) => ({ ...f, referral_type: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
-              <option value="SPECIALIST">Specialist</option>
-              <option value="FACILITY">Facility</option>
-              <option value="EMERGENCY">Emergency</option>
-            </select>
-          </div>
-        )}
-        <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">Specialty</label>
-          <input type="text" value={form.specialty} onChange={(e) => setForm((f) => ({ ...f, specialty: e.target.value }))} placeholder="e.g. Cardiology" required
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">Referred To</label>
-          <input type="text" value={form.referred_to} onChange={(e) => setForm((f) => ({ ...f, referred_to: e.target.value }))} placeholder="Provider or department" required
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">Facility</label>
-          <input type="text" value={form.referred_to_facility} onChange={(e) => setForm((f) => ({ ...f, referred_to_facility: e.target.value }))} placeholder="Receiving facility" required
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">Urgency</label>
-          <select value={form.urgency} onChange={(e) => setForm((f) => ({ ...f, urgency: e.target.value }))}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
-            <option value="ROUTINE">Routine</option>
-            <option value="URGENT">Urgent</option>
-            <option value="EMERGENCY">Emergency</option>
-          </select>
-        </div>
-      </div>
-      <div className="mt-3">
-        <label className="block text-xs font-medium text-gray-600 mb-1">Reason</label>
-        <textarea value={form.reason} onChange={(e) => setForm((f) => ({ ...f, reason: e.target.value }))} rows={2} required placeholder="Reason for referral..."
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
-      </div>
-      <div className="mt-3">
-        <label className="block text-xs font-medium text-gray-600 mb-1">Clinical Summary</label>
-        <textarea value={form.clinical_summary} onChange={(e) => setForm((f) => ({ ...f, clinical_summary: e.target.value }))} rows={2} placeholder="Relevant clinical context..."
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
-      </div>
-      <div className="flex gap-3 mt-4">
-        <button onClick={onCancel} className="flex-1 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors">Cancel</button>
-        <button onClick={onSubmit} disabled={isPending || !form.specialty || !form.reason}
-          className="flex-1 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors">
-          {isPending ? <><Loader2 className="w-4 h-4 animate-spin" /> Submitting...</> : <><CheckCircle2 className="w-4 h-4" /> Submit {typeLabel}</>}
-        </button>
-      </div>
-      {isError && <p className="mt-2 text-sm text-red-600 text-center">Failed to create. Please try again.</p>}
-    </div>
-  );
-}
