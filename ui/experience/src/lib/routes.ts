@@ -49,6 +49,10 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/auth/logout", zone: "auth", layout: "auth", sidebar: "main", guard: "none", pageTitle: "Signing Out", navLabel: "Sign Out" },
 
   // ── Zone: Home ──────────────────────────────────────────────────
+  // ── Zone: Kiosk (public) ─────────────────────────────────────────
+  { path: "/kiosk", zone: "auth", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Self Check-In", navLabel: "Kiosk" },
+
+  // ── Zone: Home ──────────────────────────────────────────────────
   { path: "/", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Home", navLabel: "Home", navZone: "life" },
   { path: "/home", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Home", navLabel: "Home", navZone: "life" },
   { path: "/home/notifications", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Notifications", navLabel: "Notifications", navZone: "life" },
@@ -111,6 +115,8 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/admin/federation", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Federation", navLabel: "Federation", navZone: "professional" },
   { path: "/admin/tenants", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Tenant Management", navLabel: "Tenants", navZone: "professional" },
   { path: "/admin/break-glass", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Break Glass Log", navLabel: "Break Glass", navZone: "professional" },
+  { path: "/admin/beds", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Bed & Ward Admin", navLabel: "Beds", navZone: "professional" },
+  { path: "/admin/queues", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Queue Configuration", navLabel: "Queues", navZone: "professional" },
 
   // ── Zone: Registry ──────────────────────────────────────────────
   { path: "/registry", zone: "registry", layout: "app", sidebar: "registry", guard: "auth", pageTitle: "Registry Hub", navLabel: "Registry", navZone: "professional" },
@@ -173,7 +179,7 @@ export const ROUTES: RouteDefinition[] = [
 ];
 
 // Total route count assertion
-export const EXPECTED_ROUTE_COUNT = 103;
+export const EXPECTED_ROUTE_COUNT = 106;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

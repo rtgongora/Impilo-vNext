@@ -43,6 +43,7 @@ const STATUS_STYLES: Record<string, string> = {
   IN_SERVICE: "bg-green-100 text-green-700",
   SEEN: "bg-green-100 text-green-700",
   COMPLETED: "bg-gray-100 text-gray-600",
+  PAUSED: "bg-amber-100 text-amber-700",
   NO_SHOW: "bg-red-100 text-red-600",
   TRANSFERRED: "bg-purple-100 text-purple-600",
   CANCELLED: "bg-gray-100 text-gray-400",
@@ -66,6 +67,14 @@ export default function QueuePage() {
 
   const markNoShow = useMutation({
     mutationFn: (entryId: string) => apiClient.post(`/internal/v1/queue/entries/${entryId}/no-show`),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["queue-entries"] }); queryClient.invalidateQueries({ queryKey: ["queue-stats"] }); },
+  });
+  const pauseEntry = useMutation({
+    mutationFn: (entryId: string) => apiClient.post(`/internal/v1/queue/entries/${entryId}/pause`),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["queue-entries"] }); queryClient.invalidateQueries({ queryKey: ["queue-stats"] }); },
+  });
+  const resumeEntry = useMutation({
+    mutationFn: (entryId: string) => apiClient.post(`/internal/v1/queue/entries/${entryId}/resume`),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["queue-entries"] }); queryClient.invalidateQueries({ queryKey: ["queue-stats"] }); },
   });
 
@@ -248,6 +257,25 @@ export default function QueuePage() {
                             title="Mark as no-show"
                           >
                             <XCircle className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                        {(entry.attributes.status === "CALLED" || entry.attributes.status === "IN_SERVICE" || entry.attributes.status === "SEEN") && (
+                          <button
+                            onClick={() => pauseEntry.mutate(entry.id)}
+                            disabled={pauseEntry.isPending}
+                            className="ml-1 px-2 py-1.5 text-amber-600 hover:bg-amber-50 text-xs font-medium rounded-md transition-colors"
+                            title="Pause service"
+                          >
+                            Pause
+                          </button>
+                        )}
+                        {entry.attributes.status === "PAUSED" && (
+                          <button
+                            onClick={() => resumeEntry.mutate(entry.id)}
+                            disabled={resumeEntry.isPending}
+                            className="px-3 py-1.5 bg-green-600 text-white text-xs font-medium rounded-md hover:bg-green-700 transition-colors"
+                          >
+                            Resume
                           </button>
                         )}
                       </td>

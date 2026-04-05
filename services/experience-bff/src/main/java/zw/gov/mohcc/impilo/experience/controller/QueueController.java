@@ -475,6 +475,80 @@ public class QueueController {
                 "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 
+    @PostMapping("/entries/{id}/pause")
+    @Transactional
+    public ResponseEntity<Map<String, Object>> pauseEntry(
+            @PathVariable UUID id,
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+
+        OffsetDateTime now = OffsetDateTime.now();
+        int updated = jdbcTemplate.update("""
+            UPDATE queue_entries SET status = 'PAUSED', updated_at = ?
+            WHERE id = ? AND tenant_id = ? AND status IN ('CALLED', 'IN_SERVICE', 'SEEN')
+            """, now, id, tenantId);
+        if (updated == 0) throw new ResourceNotFoundException("Queue entry not found or not in pausable state: " + id);
+
+        return ResponseEntity.ok(Map.of(
+                "data", Map.of("id", id.toString(), "status", "PAUSED"),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+
+    @PostMapping("/entries/{id}/resume")
+    @Transactional
+    public ResponseEntity<Map<String, Object>> resumeEntry(
+            @PathVariable UUID id,
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+
+        OffsetDateTime now = OffsetDateTime.now();
+        int updated = jdbcTemplate.update("""
+            UPDATE queue_entries SET status = 'IN_SERVICE', updated_at = ?
+            WHERE id = ? AND tenant_id = ? AND status = 'PAUSED'
+            """, now, id, tenantId);
+        if (updated == 0) throw new ResourceNotFoundException("Queue entry not found or not paused: " + id);
+
+        return ResponseEntity.ok(Map.of(
+                "data", Map.of("id", id.toString(), "status", "IN_SERVICE"),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+
+    @GetMapping("/definitions")
+    public ResponseEntity<Map<String, Object>> listQueueDefinitions(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestParam(required = false, name = "facility_id") UUID facilityId) {
+
+        List<Map<String, Object>> rows;
+        if (facilityId != null) {
+            rows = jdbcTemplate.queryForList(
+                    "SELECT * FROM queue_definitions WHERE tenant_id = ? AND facility_id = ? AND is_active = true ORDER BY name",
+                    tenantId, facilityId);
+        } else {
+            rows = jdbcTemplate.queryForList(
+                    "SELECT * FROM queue_definitions WHERE tenant_id = ? AND is_active = true ORDER BY name",
+                    tenantId);
+        }
+
+        List<Map<String, Object>> data = rows.stream().map(row -> {
+            Map<String, Object> attrs = new LinkedHashMap<>();
+            attrs.put("name", row.get("name"));
+            attrs.put("serviceType", row.get("service_type"));
+            attrs.put("queueType", row.get("queue_type"));
+            attrs.put("slaTargetMinutes", row.get("sla_target_minutes"));
+            attrs.put("maxCapacity", row.get("max_capacity"));
+            attrs.put("operatingHours", row.get("operating_hours"));
+            attrs.put("routingRules", row.get("routing_rules"));
+            return Map.<String, Object>of("id", row.get("id").toString(), "type", "queue-definition", "attributes", attrs);
+        }).toList();
+
+        return ResponseEntity.ok(Map.of("data", data,
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+
     @PostMapping("/entries/stats")
     public ResponseEntity<Map<String, Object>> getQueueStats(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
