@@ -1,0 +1,138 @@
+{
+  "common": {
+    "appName": "Impilo",
+    "loading": "Kuri kurodha...",
+    "error": "Pane dambudziko rakaitika",
+    "retry": "Edza zvakare",
+    "save": "Sevha",
+    "cancel": "Kanzura",
+    "confirm": "Simbisa",
+    "delete": "Bvisa",
+    "edit": "Gadziridza",
+    "create": "Gadzira",
+    "search": "Tsvaga",
+    "filter": "Sefa",
+    "export": "Budisa",
+    "back": "Dzokera",
+    "next": "Mberi",
+    "submit": "Tumira",
+    "close": "Vhara",
+    "yes": "Hongu",
+    "no": "Kwete",
+    "noResults": "Hapana zvawanikwa",
+    "viewAll": "Ona Zvose",
+    "status": "Mamiriro",
+    "actions": "Zviito",
+    "details": "Ruzivo"
+  },
+  "nav": {
+    "home": "Kumba",
+    "queue": "Mutsara",
+    "encounters": "Misangano",
+    "pharmacy": "Mushonga",
+    "labs": "Maekisami",
+    "beds": "Mibhedha",
+    "finance": "Mari",
+    "coverage": "Inishuwarenzi",
+    "idServices": "Mazita eVanhu",
+    "omnichannel": "Nzira dzeMashoko",
+    "publicHealth": "Hutano hweNyika",
+    "clinicalTools": "Zvomirapirwo",
+    "community": "Nharaunda",
+    "admin": "Kudzora",
+    "settings": "Masetingi"
+  },
+  "auth": {
+    "login": "Pinda",
+    "logout": "Buda",
+    "email": "Imeyiri",
+    "password": "Pasiwedhi",
+    "forgotPassword": "Wakanganwa pasiwedhi?",
+    "sessionExpired": "Nguva yako yapera. Ndokumbira upinde zvakare."
+  },
+  "queue": {
+    "title": "Mutsara weVarwere",
+    "waiting": "Vakamirira",
+    "inProgress": "Vari kurapwa",
+    "completed": "Vapedza",
+    "addWalkIn": "Wedzera Asvika",
+    "callNext": "Dana Anotevera",
+    "averageWait": "Kumirira Kwepakati",
+    "priority": "Kukoshesa",
+    "urgent": "Zvinokurumidza",
+    "normal": "Zvakajairika",
+    "low": "Zvishoma"
+  },
+  "encounter": {
+    "title": "Misangano",
+    "newEncounter": "Musangano Mutsva",
+    "chiefComplaint": "Chirwere Chikuru",
+    "vitals": "Maonero Emuviri",
+    "diagnosis": "Chirwere",
+    "prescriptions": "Mushonga Wakanyorwa",
+    "labOrders": "Maekisami Akadanwa",
+    "notes": "Zvinyorwa",
+    "referral": "Kutumidzira",
+    "closeEncounter": "Pedzisa Musangano"
+  },
+  "pharmacy": {
+    "title": "Mushonga",
+    "prescriptions": "Mushonga Wakanyorwa",
+    "dispense": "Ipa Mushonga",
+    "pending": "Yakamirira",
+    "dispensed": "Yakapihwa",
+    "inventory": "Zviri Mundiro"
+  },
+  "finance": {
+    "title": "Mari",
+    "bills": "Mabhiri",
+    "payments": "Mibhadharo",
+    "claims": "Zvikumbiro",
+    "settlement": "Kuripa",
+    "totalBilled": "Mabhiri Ose",
+    "totalPaid": "Yakabhadharwa Yose",
+    "outstanding": "Yakasara"
+  },
+  "coverage": {
+    "title": "Inishuwarenzi",
+    "schemes": "Marongero",
+    "membership": "Nhengo",
+    "eligibility": "Kukodzera",
+    "preAuth": "Mvumo Yekutanga",
+    "appeals": "Kukwidza Nyaya"
+  },
+  "publicHealth": {
+    "title": "Hutano hweNyika",
+    "surveillance": "Kuongorora",
+    "outbreaks": "Zvirwere Zvakapararira",
+    "campaigns": "Mikana yeHutano",
+    "inspections": "Kuongorora"
+  },
+  "beds": {
+    "title": "Mibhedha",
+    "wards": "Mawodhi",
+    "available": "Aripo",
+    "occupied": "Ane Murwere",
+    "reserved": "Akachengetwa",
+    "maintenance": "Ari Kugadzirwa"
+  },
+  "clinical": {
+    "bloodPressure": "Kudhinda kweRopa",
+    "heartRate": "Kubhuroka kweMoyo",
+    "temperature": "Kupisa kweMuviri",
+    "weight": "Uremu",
+    "height": "Urefu",
+    "oxygenSaturation": "Okisijeni muRopa",
+    "respiratoryRate": "Kufema",
+    "bmi": "BMI"
+  },
+  "time": {
+    "today": "Nhasi",
+    "yesterday": "Nezuro",
+    "thisWeek": "Vhiki Rino",
+    "thisMonth": "Mwedzi Uno",
+    "minutes": "maminitsi",
+    "hours": "maawa",
+    "days": "mazuva"
+  }
+}

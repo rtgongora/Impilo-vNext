@@ -1,0 +1,182 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": "impilo-experience-bff",
+    "title": "Impilo vNext — Experience BFF",
+    "description": "Experience BFF service metrics: endpoints, outbox, upstream latency",
+    "tags": ["impilo", "experience", "bff"],
+    "timezone": "browser",
+    "refresh": "30s",
+    "time": { "from": "now-1h", "to": "now" },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Request Rate by Endpoint Group",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "sum(rate(http_server_requests_seconds_count{service=\"experience-bff\"}[5m])) by (uri)",
+            "legendFormat": "{{uri}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": { "unit": "reqps" }
+        }
+      },
+      {
+        "id": 2,
+        "title": "Response Time (p50/p95/p99)",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, sum(rate(http_server_requests_seconds_bucket{service=\"experience-bff\"}[5m])) by (le))",
+            "legendFormat": "p50"
+          },
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{service=\"experience-bff\"}[5m])) by (le))",
+            "legendFormat": "p95"
+          },
+          {
+            "expr": "histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket{service=\"experience-bff\"}[5m])) by (le))",
+            "legendFormat": "p99"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": { "unit": "s" }
+        }
+      },
+      {
+        "id": 3,
+        "title": "Error Rate (4xx/5xx)",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "sum(rate(http_server_requests_seconds_count{service=\"experience-bff\", status=~\"4..\"}[5m]))",
+            "legendFormat": "4xx"
+          },
+          {
+            "expr": "sum(rate(http_server_requests_seconds_count{service=\"experience-bff\", status=~\"5..\"}[5m]))",
+            "legendFormat": "5xx"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": { "unit": "reqps" }
+        }
+      },
+      {
+        "id": 4,
+        "title": "Outbox Pending Events",
+        "type": "stat",
+        "gridPos": { "h": 4, "w": 6, "x": 12, "y": 8 },
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "impilo_outbox_pending_count{service=\"experience-bff\"}",
+            "legendFormat": "pending"
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "DB Connection Pool",
+        "type": "gauge",
+        "gridPos": { "h": 4, "w": 6, "x": 18, "y": 8 },
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "hikaricp_connections_active{service=\"experience-bff\"} / hikaricp_connections_max{service=\"experience-bff\"} * 100",
+            "legendFormat": "pool usage %"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": { "unit": "percent", "max": 100, "thresholds": { "steps": [
+            { "color": "green", "value": 0 },
+            { "color": "yellow", "value": 70 },
+            { "color": "red", "value": 90 }
+          ]}}
+        }
+      },
+      {
+        "id": 6,
+        "title": "JVM Memory (Heap)",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "jvm_memory_used_bytes{service=\"experience-bff\", area=\"heap\"} / 1048576",
+            "legendFormat": "used (MB)"
+          },
+          {
+            "expr": "jvm_memory_max_bytes{service=\"experience-bff\", area=\"heap\"} / 1048576",
+            "legendFormat": "max (MB)"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": { "unit": "decmbytes" }
+        }
+      },
+      {
+        "id": 7,
+        "title": "Kafka Consumer Lag",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "kafka_consumer_records_lag_max{group=\"experience-bff\"}",
+            "legendFormat": "{{topic}} lag"
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Upstream Service Latency",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(http_client_requests_seconds_bucket{service=\"experience-bff\"}[5m])) by (le, uri))",
+            "legendFormat": "{{uri}} p95"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": { "unit": "s" }
+        }
+      },
+      {
+        "id": 9,
+        "title": "Active Users (Queue Entries Today)",
+        "type": "stat",
+        "gridPos": { "h": 4, "w": 6, "x": 0, "y": 24 },
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "impilo_queue_entries_today_total{service=\"experience-bff\"}",
+            "legendFormat": "today"
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Encounters Created Today",
+        "type": "stat",
+        "gridPos": { "h": 4, "w": 6, "x": 6, "y": 24 },
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "impilo_encounters_created_today_total{service=\"experience-bff\"}",
+            "legendFormat": "today"
+          }
+        ]
+      }
+    ]
+  }
+}
