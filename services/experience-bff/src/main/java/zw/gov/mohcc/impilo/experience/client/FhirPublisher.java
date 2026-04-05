@@ -170,6 +170,51 @@ public class FhirPublisher {
         publishResource("DiagnosticReport", reportId, resource);
     }
 
+    /**
+     * Publish an ImagingStudy resource from a PACS study event.
+     * Links the DICOM study to the patient (via CPID) and the originating encounter.
+     */
+    public void publishImagingStudy(String cpid, String studyId, String studyInstanceUid,
+                                     String modality, String description, int numberOfSeries,
+                                     int numberOfInstances, String encounterId, String tenantId) {
+        Map<String, Object> resource = new LinkedHashMap<>();
+        resource.put("resourceType", "ImagingStudy");
+        resource.put("id", studyId);
+        resource.put("status", "available");
+        resource.put("subject", Map.of("reference", "Patient/" + cpid));
+        if (encounterId != null && !encounterId.isEmpty()) {
+            resource.put("encounter", Map.of("reference", "Encounter/" + encounterId));
+        }
+        resource.put("started", java.time.OffsetDateTime.now().toString());
+        resource.put("numberOfSeries", numberOfSeries);
+        resource.put("numberOfInstances", numberOfInstances);
+        resource.put("description", description != null ? description : "");
+
+        // Modality coding
+        resource.put("modality", List.of(Map.of(
+                "system", "http://dicom.nema.org/resources/ontology/DCM",
+                "code", modality != null ? modality : "OT")));
+
+        // Series with endpoint reference to our PACS proxy
+        resource.put("series", List.of(Map.of(
+                "uid", studyInstanceUid,
+                "modality", Map.of(
+                        "system", "http://dicom.nema.org/resources/ontology/DCM",
+                        "code", modality != null ? modality : "OT"),
+                "numberOfInstances", numberOfInstances)));
+
+        // Endpoint reference for WADO-RS retrieval via BFF proxy
+        resource.put("endpoint", List.of(Map.of(
+                "reference", "Endpoint/impilo-pacs-wado-rs")));
+
+        resource.put("meta", Map.of(
+                "tag", List.of(Map.of(
+                        "system", "http://impilo.gov.zw/fhir/tenant",
+                        "code", tenantId))));
+
+        publishResource("ImagingStudy", studyId, resource);
+    }
+
     private void publishResource(String resourceType, String id, Map<String, Object> resource) {
         try {
             String json = objectMapper.writeValueAsString(resource);

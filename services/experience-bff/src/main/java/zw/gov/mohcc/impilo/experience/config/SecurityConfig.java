@@ -146,6 +146,10 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.POST, "/internal/v1/appointments/**")
                             .hasAnyRole(CLINICAL_ROLES)
 
+                    // ── PACS / DICOM viewer ──────────────────────────────
+                    .requestMatchers("/internal/v1/pacs/**")
+                            .hasAnyRole(CLINICAL_ROLES)
+
                     // ── Mobile provider clinical operations ───────────────
                     .requestMatchers(HttpMethod.POST, "/internal/v1/mobile/provider/encounters/**")
                             .hasAnyRole(CLINICAL_ROLES)

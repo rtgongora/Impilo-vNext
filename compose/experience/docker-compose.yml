@@ -50,6 +50,9 @@ services:
       SURVEILLANCE_BASE_URL: http://host.docker.internal:8180
       CAMPAIGNS_BASE_URL: http://host.docker.internal:8190
       INDAWO_BASE_URL: http://host.docker.internal:8150
+      ORTHANC_BASE_URL: http://host.docker.internal:8042
+      ORTHANC_DICOMWEB_URL: http://host.docker.internal:8042/dicom-web
+      FHIR_BASE_URL: http://host.docker.internal:8090/fhir
     ports:
       - "8160:8160"
     depends_on:

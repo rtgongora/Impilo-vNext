@@ -31,6 +31,7 @@ import {
   Activity,
   User,
   Video,
+  MonitorDot,
 } from "lucide-react";
 
 interface MenuItem {
@@ -74,6 +75,7 @@ const MENU_SECTIONS: MenuSection[] = [
       { label: "Medications", description: "Prescriptions and formulary", segment: "medications", icon: Pill },
       { label: "Orders", description: "Lab orders and imaging", segment: "orders", icon: ClipboardList },
       { label: "Results", description: "Lab and diagnostic results", segment: "results", icon: FlaskConical },
+      { label: "Imaging", description: "DICOM viewer and PACS", segment: "imaging", icon: MonitorDot },
     ],
   },
   {

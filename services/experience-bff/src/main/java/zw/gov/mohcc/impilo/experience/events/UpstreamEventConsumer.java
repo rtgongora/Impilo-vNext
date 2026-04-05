@@ -151,6 +151,23 @@ public class UpstreamEventConsumer {
         }
     }
 
+    // ── PACS Events: imaging study lifecycle ───────────────────────
+
+    @KafkaListener(topics = "pacs.study.available", groupId = "experience-bff")
+    public void onPacsStudyAvailable(String payload) {
+        try {
+            JsonNode node = objectMapper.readTree(payload);
+            String studyUid = node.path("studyInstanceUid").asText();
+            String modality = node.path("modality").asText();
+            String patientId = node.path("patientId").asText();
+            String orderId = node.path("orderId").asText();
+            log.info("PACS study available: studyUid={}, modality={}, patientId={}, orderId={}",
+                    studyUid, modality, patientId, orderId);
+        } catch (Exception e) {
+            log.error("Failed to process pacs.study.available: {}", e.getMessage());
+        }
+    }
+
     // ── Surveillance Events ─────────────────────────────────────────
 
     @KafkaListener(topics = "surv.case.reported", groupId = "experience-bff")
