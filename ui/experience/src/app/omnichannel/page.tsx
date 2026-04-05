@@ -212,10 +212,11 @@ function UssdTab() {
   const { data } = useQuery<{ data: Array<Record<string, unknown>> }>({
     queryKey: ["omni-ussd"], queryFn: () => apiClient.get("/internal/v1/omnichannel/ussd-menus"),
   });
+  const menus = data?.data ?? [];
   return (
     <div className="space-y-4">
       <h3 className="text-base font-semibold text-gray-900">USSD Menu Definitions</h3>
-      <p className="text-sm text-gray-500">Feature-phone access — no data connection needed. Define menu trees for USSD short codes.</p>
+      <p className="text-sm text-gray-500">Feature-phone access — no data connection needed. {menus.length > 0 ? `${menus.length} menus configured.` : "Showing example menu structure."}</p>
       <div className="bg-white rounded-lg border p-5">
         <p className="text-sm text-gray-500 mb-3">USSD flow example:</p>
         <div className="bg-gray-50 rounded-lg p-4 font-mono text-xs space-y-1">
@@ -256,10 +257,11 @@ function IvrTab() {
   const { data } = useQuery<{ data: Array<Record<string, unknown>> }>({
     queryKey: ["omni-ivr"], queryFn: () => apiClient.get("/internal/v1/omnichannel/ivr-flows"),
   });
+  const flows = data?.data ?? [];
   return (
     <div className="space-y-4">
       <h3 className="text-base font-semibold text-gray-900">IVR / Voice Flows</h3>
-      <p className="text-sm text-gray-500">Voice-guided access for patients who prefer phone interaction or have limited literacy.</p>
+      <p className="text-sm text-gray-500">Voice-guided access. {flows.length > 0 ? `${flows.length} flows configured.` : "Showing example flow structure."}</p>
       <div className="bg-white rounded-lg border p-5">
         <p className="text-sm text-gray-500 mb-3">IVR flow example:</p>
         <div className="bg-gray-50 rounded-lg p-4 text-xs space-y-1">

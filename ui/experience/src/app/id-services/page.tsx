@@ -164,7 +164,8 @@ function IdGenerationCard({ type, label, format, icon: Icon, color }: {
         <div className="flex gap-1">
           <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
             placeholder="Email to send" className="flex-1 px-2 py-1 text-[10px] border border-gray-300 rounded" />
-          <button className="px-2 py-1 text-[10px] bg-gray-100 text-gray-600 rounded hover:bg-gray-200">
+          <button onClick={() => { if (email && generatedIds) { navigator.clipboard.writeText(Object.entries(generatedIds).map(([k,v]) => `${k}: ${v}`).join("\n")); alert(`IDs copied. Send to ${email} via your email client.`); } }}
+            className="px-2 py-1 text-[10px] bg-gray-100 text-gray-600 rounded hover:bg-gray-200" title="Copy IDs for email">
             <Mail className="w-3 h-3" />
           </button>
         </div>

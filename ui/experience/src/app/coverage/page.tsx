@@ -485,14 +485,19 @@ function AppealsTab() {
         <div className="bg-white rounded-lg border border-amber-200 p-5 space-y-3">
           <h4 className="text-sm font-semibold text-gray-900">New Appeal</h4>
           <div className="grid grid-cols-2 gap-3">
-            <input type="text" placeholder="Claim ID" className="px-3 py-2 text-sm border border-gray-300 rounded-lg" />
-            <input type="text" placeholder="Coverage ID (optional)" className="px-3 py-2 text-sm border border-gray-300 rounded-lg" />
+            <input type="text" placeholder="Claim ID" id="appeal-claim" className="px-3 py-2 text-sm border border-gray-300 rounded-lg" />
+            <input type="text" placeholder="Coverage ID (optional)" id="appeal-coverage" className="px-3 py-2 text-sm border border-gray-300 rounded-lg" />
           </div>
-          <textarea placeholder="Appeal reason and supporting evidence..." rows={3}
+          <textarea placeholder="Appeal reason and supporting evidence..." rows={3} id="appeal-reason"
             className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg" />
           <div className="flex gap-2">
             <button onClick={() => setShowForm(false)} className="flex-1 py-2 bg-gray-100 text-gray-700 text-sm rounded-lg">Cancel</button>
-            <button className="flex-1 py-2 bg-amber-600 text-white text-sm rounded-lg hover:bg-amber-700">Submit Appeal</button>
+            <button onClick={() => {
+              const claimId = (document.getElementById("appeal-claim") as HTMLInputElement)?.value;
+              const coverageId = (document.getElementById("appeal-coverage") as HTMLInputElement)?.value;
+              const reason = (document.getElementById("appeal-reason") as HTMLTextAreaElement)?.value;
+              if (claimId && reason) apiClient.post("/internal/v1/coverage/claims", { coverageId, claimType: "APPEAL", totalAmount: "0", facilityId: claimId }).then(() => setShowForm(false));
+            }} className="flex-1 py-2 bg-amber-600 text-white text-sm rounded-lg hover:bg-amber-700">Submit Appeal</button>
           </div>
         </div>
       )}
