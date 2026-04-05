@@ -18,6 +18,7 @@ import {
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useRoleGroup } from "@/hooks/useRoleGroup";
 import { useEncounters } from "@/hooks/queries/useEncounters";
+import { VitalsTrendPanel } from "@/components/VitalsTrendChart";
 
 export default function VitalsPage() {
   const params = useParams<{ patientId: string }>();
@@ -122,6 +123,11 @@ export default function VitalsPage() {
               </button>
               )}
             </div>
+
+            {/* Vitals Trend Charts */}
+            {vitals.length >= 2 && (
+              <VitalsTrendPanel vitals={vitals.map((v) => ({ attributes: v.attributes as Record<string, unknown> }))} />
+            )}
 
             {/* New vitals form */}
             {showForm && (

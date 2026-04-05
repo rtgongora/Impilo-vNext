@@ -27,6 +27,8 @@ import {
 } from "lucide-react";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
+import { ClinicalAlerts } from "@/components/ClinicalAlerts";
+import { useClinicalAlerts } from "@/hooks/useClinicalAlerts";
 import { useEncounter, useCloseEncounter } from "@/hooks/queries/useEncounters";
 import { usePatient } from "@/hooks/queries/usePatients";
 import { useReferrals, type ReferralResource } from "@/hooks/queries/useReferrals";
@@ -52,6 +54,31 @@ export default function EncounterPage() {
     enabled: !!encounterId,
   });
   const existingTriage = (triageData?.data ?? [])[0] ?? null;
+
+  // Fetch patient clinical data for CDS alerts
+  const { data: allergiesData } = useQuery<{ data: Array<{ attributes: Record<string, unknown> }> }>({
+    queryKey: ["cds-allergies", patientId], queryFn: () => apiClient.get(`/internal/v1/allergies?patient_id=${patientId}`), enabled: !!patientId });
+  const { data: conditionsData } = useQuery<{ data: Array<{ attributes: Record<string, unknown> }> }>({
+    queryKey: ["cds-conditions", patientId], queryFn: () => apiClient.get(`/internal/v1/conditions?patient_id=${patientId}`), enabled: !!patientId });
+  const { data: medsData } = useQuery<{ data: Array<{ attributes: Record<string, unknown> }> }>({
+    queryKey: ["cds-meds", patientId], queryFn: () => apiClient.get(`/internal/v1/pharmacy/prescriptions?patient_id=${patientId}`), enabled: !!patientId });
+  const { data: vitalsData } = useQuery<{ data: Array<{ attributes: Record<string, unknown> }> }>({
+    queryKey: ["cds-vitals", patientId], queryFn: () => apiClient.get(`/internal/v1/vitals?patient_id=${patientId}&size=1`), enabled: !!patientId });
+
+  const latestVitals = (vitalsData?.data ?? [])[0]?.attributes;
+  const clinicalAlerts = useClinicalAlerts({
+    allergies: (allergiesData?.data ?? []).map((a) => a.attributes as { allergen?: string; severity?: string; status?: string }),
+    conditions: (conditionsData?.data ?? []).map((c) => c.attributes as { condition_name?: string; icd_code?: string; clinical_status?: string; severity?: string }),
+    medications: (medsData?.data ?? []).map((m) => m.attributes as { medication_name?: string; status?: string }),
+    vitals: latestVitals ? {
+      systolic: latestVitals.systolic as number | undefined,
+      diastolic: latestVitals.diastolic as number | undefined,
+      heart_rate: latestVitals.heart_rate as number | undefined,
+      temperature: latestVitals.temperature as number | undefined,
+      oxygen_saturation: latestVitals.oxygen_saturation as number | undefined,
+      respiratory_rate: latestVitals.respiratory_rate as number | undefined,
+    } : undefined,
+  });
 
   // Filter referrals linked to this encounter or with responses
   const linkedReferrals = (referralsData?.data ?? []).filter(
@@ -287,6 +314,9 @@ export default function EncounterPage() {
           </div>
         ) : (
           <div className="space-y-6">
+            {/* Clinical Decision Support Alerts */}
+            <ClinicalAlerts alerts={clinicalAlerts} />
+
             {/* Encounter Context Bar */}
             <div className="bg-white rounded-lg border border-gray-200 p-4">
               <div className="flex items-center justify-between">
