@@ -212,6 +212,28 @@ public class RegistryController {
         }
     }
 
+    /**
+     * GET /internal/v1/registry/providers/{id}/privileges
+     *
+     * Fetches provider-facility privileges (affiliations) from VARAPI.
+     */
+    @GetMapping("/providers/{id}/privileges")
+    public ResponseEntity<Map<String, Object>> getProviderPrivileges(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode privileges = varapiClient.getProviderPrivileges(id);
+            return ResponseEntity.ok(Map.of(
+                    "data", privileges != null ? privileges : new Object[0],
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            return ResponseEntity.ok(Map.of(
+                    "data", new Object[0],
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
+    }
+
     private Map<String, Object> toFacilityResource(Facility f) {
         Map<String, Object> attributes = new LinkedHashMap<>();
         attributes.put("name", f.getName());

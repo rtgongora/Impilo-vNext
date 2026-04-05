@@ -29,6 +29,8 @@ import { useRoleGroup } from "@/hooks/useRoleGroup";
 import { useWorkModeStore } from "@/hooks/useWorkModeStore";
 import { useFacilities, type FacilityResource } from "@/hooks/queries/useFacilities";
 import { useProviderLicenses, hasActiveLicense } from "@/hooks/queries/useLicenses";
+import { useProviderPrivileges } from "@/hooks/queries/useProviderPrivileges";
+import { useCommunityGroups, useJoinGroup } from "@/hooks/queries/useCommunity";
 import { apiClient } from "@/lib/api-client";
 
 // ── Module category types ────────────────────────────────────────
@@ -175,6 +177,20 @@ export default function HomePage() {
   // Fetch facilities for workplace selection hub
   const { data: facilitiesData, isLoading: facilitiesLoading } = useFacilities();
   const facilities: FacilityResource[] = facilitiesData?.data ?? [];
+
+  // Fetch provider privileges (facility affiliations) from VARAPI
+  const { data: privilegesData } = useProviderPrivileges(isClinical ? user?.id : undefined);
+  const privileges = privilegesData?.data ?? [];
+
+  // Fetch license data
+  const { data: licenseData } = useProviderLicenses(isClinical ? user?.id : undefined);
+  const licenses = licenseData?.data ?? [];
+  const licenseActive = licenses.length === 0 || hasActiveLicense(licenses);
+
+  // Community groups for Personal tab
+  const { data: groupsData } = useCommunityGroups();
+  const communityGroups = groupsData?.data ?? [];
+  const joinGroup = useJoinGroup();
 
   function selectFacility(f: FacilityResource) {
     useFacilityStore.getState().setFacility({
@@ -556,14 +572,29 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* Affiliations */}
+              {/* Affiliations (from VARAPI privileges or facility list fallback) */}
               <div className="bg-white rounded-lg border border-gray-200 p-6">
                 <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2 mb-4">
-                  <Building2 className="w-5 h-5 text-purple-600" /> Affiliations
+                  <Building2 className="w-5 h-5 text-purple-600" /> Facility Affiliations
                 </h3>
-                {facilities.length === 0 ? (
-                  <p className="text-sm text-gray-400">No facility affiliations found.</p>
-                ) : (
+                {privileges.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {privileges.slice(0, 6).map((priv, idx) => (
+                      <div key={idx} className="flex items-center justify-between bg-gray-50 rounded-lg border border-gray-200 p-3">
+                        <div className="flex items-center gap-2">
+                          <Building2 className="w-4 h-4 text-gray-400" />
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">Facility {priv.facilityId?.slice(0, 8)}</p>
+                            <p className="text-xs text-gray-500">{priv.privilegeType} · {priv.scope}</p>
+                          </div>
+                        </div>
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${
+                          priv.status === "APPROVED" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"
+                        }`}>{priv.status}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : facilities.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {facilities.slice(0, 4).map((f) => (
                       <div key={f.id} className="flex items-center justify-between bg-gray-50 rounded-lg border border-gray-200 p-3">
@@ -581,6 +612,8 @@ export default function HomePage() {
                       </div>
                     ))}
                   </div>
+                ) : (
+                  <p className="text-sm text-gray-400">No facility affiliations found.</p>
                 )}
               </div>
 
@@ -696,6 +729,36 @@ export default function HomePage() {
                     </div>
                   </Link>
                 </div>
+              </div>
+
+              {/* Community Groups */}
+              <div className="bg-white rounded-lg border border-gray-200 p-6">
+                <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2 mb-4">
+                  <Users className="w-5 h-5 text-purple-600" /> Communities
+                </h3>
+                {communityGroups.length === 0 ? (
+                  <p className="text-sm text-gray-400">No community groups available yet.</p>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {communityGroups.slice(0, 4).map((group) => (
+                      <div key={group.id} className="flex items-center justify-between bg-gray-50 rounded-lg border border-gray-200 p-3">
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">{group.attributes.name}</p>
+                          <p className="text-xs text-gray-500">
+                            {group.attributes.groupType} · {group.attributes.memberCount} members
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => joinGroup.mutate({ groupId: group.id, memberId: user?.id ?? "" })}
+                          disabled={joinGroup.isPending}
+                          className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                        >
+                          Join
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Community Feed */}

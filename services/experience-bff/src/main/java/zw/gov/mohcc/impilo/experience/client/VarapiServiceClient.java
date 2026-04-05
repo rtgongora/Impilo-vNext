@@ -60,6 +60,16 @@ public class VarapiServiceClient {
     }
 
     /**
+     * Get privileges (facility affiliations) for a provider.
+     */
+    public JsonNode getProviderPrivileges(String providerId) {
+        String url = baseUrl + "/v1/internal/providers/" + providerId + "/privileges";
+        log.info("VARAPI: Getting privileges for provider={}", providerId);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
      * Get CPD summary for a provider.
      */
     public JsonNode getProviderCpdSummary(String providerId) {
