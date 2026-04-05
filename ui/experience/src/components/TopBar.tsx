@@ -21,6 +21,7 @@ import {
   Video,
 } from "lucide-react";
 import { useAuthStore } from "@/hooks/useAuthStore";
+import { useRoleGroup } from "@/hooks/useRoleGroup";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useShiftStore } from "@/hooks/useShiftStore";
 
@@ -36,7 +37,8 @@ const EHR_ACTIONS = [
 export function TopBar() {
   const params = useParams();
   const pathname = usePathname();
-  const { user, hasRole } = useAuthStore();
+  const { user } = useAuthStore();
+  const { isFinance, isDispenser } = useRoleGroup();
   const { facility } = useFacilityStore();
   const { shift } = useShiftStore();
 
@@ -88,11 +90,9 @@ export function TopBar() {
           const Icon = action.icon;
           if (!href) return null;
           // Finance links require finance-capable role
-          if (action.href.startsWith("/finance") &&
-              !hasRole("SYSTEM_ADMIN") && !hasRole("FACILITY_ADMIN") && !hasRole("FINANCE")) return null;
+          if (action.href.startsWith("/finance") && !isFinance) return null;
           // Pharmacy links require dispenser-capable role
-          if (action.href.startsWith("/pharmacy") &&
-              !hasRole("PHARMACIST") && !hasRole("FACILITY_ADMIN") && !hasRole("SYSTEM_ADMIN") && !hasRole("DEVELOPER")) return null;
+          if (action.href.startsWith("/pharmacy") && !isDispenser) return null;
           return (
             <Link
               key={action.label}

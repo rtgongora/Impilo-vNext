@@ -100,12 +100,14 @@ export default function QueuePage() {
           <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
             <Users className="w-10 h-10 text-gray-300 mx-auto mb-3" />
             <p className="text-gray-400 text-sm">No patients in queue</p>
+            {isQueueManager && (
             <Link
               href="/queue/walk-in"
               className="mt-3 inline-block text-sm text-blue-600 hover:text-blue-800"
             >
               Register a walk-in patient
             </Link>
+            )}
           </div>
         ) : (
           <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
