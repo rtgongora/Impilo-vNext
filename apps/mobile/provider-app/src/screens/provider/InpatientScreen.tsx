@@ -18,16 +18,18 @@ import { NEWS2ScoringScreen } from "./NEWS2ScoringScreen";
 import { ResuscitationScreen } from "./ResuscitationScreen";
 import { APGARScreen } from "./APGARScreen";
 import { DischargeClearanceScreen } from "./DischargeClearanceScreen";
+import { CarePlanDetailScreen } from "./CarePlanDetailScreen";
+import { TraumaScreen } from "./TraumaScreen";
 
-type InpatientTab = "care" | "fluid" | "emergency" | "resus" | "ews" | "apgar" | "admit" | "rounds" | "obs" | "transfer" | "clearance";
+type InpatientTab = "care" | "fluid" | "emergency" | "resus" | "trauma" | "ews" | "apgar" | "admit" | "rounds" | "obs" | "transfer" | "clearance";
 
 const TABS: { id: InpatientTab; label: string }[] = [
   { id: "care", label: "Care Plans" }, { id: "fluid", label: "Fluid I/O" },
   { id: "emergency", label: "Emergency" }, { id: "resus", label: "Resus" },
-  { id: "ews", label: "NEWS2" }, { id: "apgar", label: "APGAR" },
-  { id: "admit", label: "Admissions" }, { id: "rounds", label: "Rounds" },
-  { id: "obs", label: "Observations" }, { id: "transfer", label: "Transfers" },
-  { id: "clearance", label: "Discharge" },
+  { id: "trauma", label: "Trauma" }, { id: "ews", label: "NEWS2" },
+  { id: "apgar", label: "APGAR" }, { id: "admit", label: "Admissions" },
+  { id: "rounds", label: "Rounds" }, { id: "obs", label: "Observations" },
+  { id: "transfer", label: "Transfers" }, { id: "clearance", label: "Discharge" },
 ];
 
 export function InpatientScreen() {
@@ -43,7 +45,7 @@ export function InpatientScreen() {
         ))}
       </ScrollView>
       <ScrollView style={s.content} contentContainerStyle={s.pad}>
-        {tab === "care" && <CarePlansPanel />}
+        {tab === "care" && <CarePlanDetailScreen />}
         {tab === "fluid" && <FluidBalancePanel />}
         {tab === "emergency" && <EmergencyPanel />}
         {tab === "ews" && <NEWS2ScoringScreen />}
@@ -52,6 +54,7 @@ export function InpatientScreen() {
         {tab === "obs" && <ObservationsPanel />}
         {tab === "transfer" && <TransfersPanel />}
         {tab === "resus" && <ResuscitationScreen />}
+        {tab === "trauma" && <TraumaScreen />}
         {tab === "apgar" && <APGARScreen />}
         {tab === "clearance" && <DischargeClearanceScreen />}
       </ScrollView>
@@ -100,16 +103,53 @@ function FluidBalancePanel() {
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["fluid"] }); setForm({ ...form, volumeMl: "", description: "" }); },
   });
   const summary = (data as Record<string, unknown>)?.summary as Record<string, number> | undefined;
+  const records = ((data as Record<string, unknown>)?.data ?? []) as Array<Record<string, unknown>>;
+  const intakeRecords = records.filter((r) => r.entry_type === "INTAKE");
+  const outputRecords = records.filter((r) => r.entry_type === "OUTPUT");
+
+  // Category totals
+  const intakeByCat: Record<string, number> = {};
+  intakeRecords.forEach((r) => { const c = String(r.category); intakeByCat[c] = (intakeByCat[c] ?? 0) + (r.volume_ml as number); });
+  const outputByCat: Record<string, number> = {};
+  outputRecords.forEach((r) => { const c = String(r.category); outputByCat[c] = (outputByCat[c] ?? 0) + (r.volume_ml as number); });
+
   return (
     <View style={s.section}>
       <Text style={s.title}>Fluid Balance</Text>
       {summary && (
         <View style={s.statsRow}>
-          <View style={[s.statCard, { borderLeftColor: "#3B82F6" }]}><Text style={s.statNum}>{summary.totalIntake}ml</Text><Text style={s.statLabel}>Intake</Text></View>
-          <View style={[s.statCard, { borderLeftColor: "#F59E0B" }]}><Text style={s.statNum}>{summary.totalOutput}ml</Text><Text style={s.statLabel}>Output</Text></View>
-          <View style={[s.statCard, { borderLeftColor: summary.balance >= 0 ? "#22C55E" : "#DC2626" }]}><Text style={s.statNum}>{summary.balance}ml</Text><Text style={s.statLabel}>Balance</Text></View>
+          <View style={[s.statCard, { borderLeftColor: "#3B82F6" }]}><Text style={{ fontSize: 12, color: "#3B82F6" }}>💧</Text><Text style={s.statNum}>{summary.totalIntake}ml</Text><Text style={s.statLabel}>Total Intake</Text></View>
+          <View style={[s.statCard, { borderLeftColor: "#F59E0B" }]}><Text style={{ fontSize: 12, color: "#F59E0B" }}>📈</Text><Text style={s.statNum}>{summary.totalOutput}ml</Text><Text style={s.statLabel}>Total Output</Text></View>
+          <View style={[s.statCard, { borderLeftColor: summary.balance >= 0 ? "#22C55E" : "#DC2626" }]}><Text style={{ fontSize: 12 }}>⚖️</Text><Text style={[s.statNum, { color: summary.balance >= 0 ? "#22C55E" : "#DC2626" }]}>{summary.balance > 0 ? "+" : ""}{summary.balance}ml</Text><Text style={s.statLabel}>Net Balance</Text></View>
         </View>
       )}
+
+      {/* 2-column breakdown */}
+      <View style={s.row}>
+        <View style={{ flex: 1, gap: 4 }}>
+          <Text style={{ fontSize: 13, fontWeight: "700", color: "#3B82F6" }}>INTAKE</Text>
+          {Object.entries(intakeByCat).map(([cat, vol]) => (
+            <View key={cat} style={{ flexDirection: "row", justifyContent: "space-between" }}>
+              <Text style={{ fontSize: 12, color: "#374151" }}>{cat}</Text>
+              <Text style={{ fontSize: 12, fontWeight: "600", color: "#111827", fontVariant: ["tabular-nums"] }}>{vol}ml</Text>
+            </View>
+          ))}
+          {Object.keys(intakeByCat).length === 0 && <Text style={{ fontSize: 11, color: "#9CA3AF" }}>No intake recorded</Text>}
+        </View>
+        <View style={{ width: 1, backgroundColor: "#E5E7EB" }} />
+        <View style={{ flex: 1, gap: 4 }}>
+          <Text style={{ fontSize: 13, fontWeight: "700", color: "#F59E0B" }}>OUTPUT</Text>
+          {Object.entries(outputByCat).map(([cat, vol]) => (
+            <View key={cat} style={{ flexDirection: "row", justifyContent: "space-between" }}>
+              <Text style={{ fontSize: 12, color: "#374151" }}>{cat}</Text>
+              <Text style={{ fontSize: 12, fontWeight: "600", color: "#111827", fontVariant: ["tabular-nums"] }}>{vol}ml</Text>
+            </View>
+          ))}
+          {Object.keys(outputByCat).length === 0 && <Text style={{ fontSize: 11, color: "#9CA3AF" }}>No output recorded</Text>}
+        </View>
+      </View>
+
+      {/* Record entry */}
       <View style={s.row}>
         {["INTAKE", "OUTPUT"].map((t) => <Button key={t} label={t} size="small" variant={form.entryType === t ? "default" : "outline"} onPress={() => setForm({ ...form, entryType: t })} />)}
       </View>
@@ -120,8 +160,11 @@ function FluidBalancePanel() {
           </TouchableOpacity>
         )}
       </View>
-      <TextInput style={s.input} placeholder="Volume (ml)" value={form.volumeMl} onChangeText={(v) => setForm({ ...form, volumeMl: v })} keyboardType="numeric" />
-      <Button label="Record" onPress={() => mutation.mutate()} disabled={!form.volumeMl || mutation.isPending} />
+      <View style={s.row}>
+        <TextInput style={[s.input, { flex: 2 }]} placeholder="Volume (ml)" value={form.volumeMl} onChangeText={(v) => setForm({ ...form, volumeMl: v })} keyboardType="numeric" />
+        <TextInput style={[s.input, { flex: 3 }]} placeholder="Description (optional)" value={form.description} onChangeText={(v) => setForm({ ...form, description: v })} />
+      </View>
+      <Button label="Record Entry" onPress={() => mutation.mutate()} disabled={!form.volumeMl || mutation.isPending} />
     </View>
   );
 }
