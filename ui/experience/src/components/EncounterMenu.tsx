@@ -32,6 +32,14 @@ import {
   User,
   Video,
   MonitorDot,
+  Target,
+  Users,
+  Scissors,
+  TrendingUp,
+  Heart,
+  Home,
+  Shield,
+  Brain,
 } from "lucide-react";
 
 interface MenuItem {
@@ -76,6 +84,26 @@ const MENU_SECTIONS: MenuSection[] = [
       { label: "Orders", description: "Lab orders and imaging", segment: "orders", icon: ClipboardList },
       { label: "Results", description: "Lab and diagnostic results", segment: "results", icon: FlaskConical },
       { label: "Imaging", description: "DICOM viewer and PACS", segment: "imaging", icon: MonitorDot },
+      { label: "Care Plans", description: "Goals and interventions", segment: "care-plans", icon: Target },
+      { label: "Care Team", description: "Assigned providers", segment: "care-team", icon: Users },
+      { label: "Goals", description: "Patient health goals", segment: "goals", icon: Target },
+    ],
+  },
+  {
+    title: "History & Context",
+    items: [
+      { label: "Family History", description: "Hereditary risk factors", segment: "family-history", icon: Heart },
+      { label: "Social History", description: "Social determinants of health", segment: "social-history", icon: Home },
+      { label: "Functional Status", description: "ADL and IADL assessments", segment: "functional-status", icon: Activity },
+      { label: "Advance Directives", description: "DNR, living will, POA", segment: "advance-directives", icon: Shield },
+    ],
+  },
+  {
+    title: "Clinical Depth",
+    items: [
+      { label: "Procedures", description: "Past and scheduled procedures", segment: "procedures", icon: Scissors },
+      { label: "Growth Chart", description: "Paediatric growth tracking", segment: "growth-chart", icon: TrendingUp },
+      { label: "Assessments", description: "Standardized scoring tools", segment: "assessments", icon: Brain },
     ],
   },
   {

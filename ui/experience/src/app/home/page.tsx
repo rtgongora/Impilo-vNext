@@ -75,7 +75,7 @@ function getModuleCategories(roles: {
         { label: "Telemedicine", description: "Virtual consultations", href: "/telemedicine", icon: Video, color: "bg-teal-100 text-teal-600" },
         { label: "Shift Handoff", description: "Care continuity reports", href: "/shift/handover", icon: Clock, color: "bg-amber-100 text-amber-600" },
         { label: "Discharge & Exit", description: "Discharges, deaths & exits", href: "/queue", icon: Users, color: "bg-amber-100 text-amber-600" },
-        { label: "Control Tower", description: "Real-time facility ops", href: "/queue", icon: BarChart3, color: "bg-rose-100 text-rose-600" },
+        { label: "Control Tower", description: "Real-time facility ops", href: "/clinical/control-tower", icon: BarChart3, color: "bg-rose-100 text-rose-600" },
         { label: "Operations", description: "Shifts, roster & workforce", href: "/shift", icon: Clock, color: "bg-cyan-100 text-cyan-600" },
       ],
     });
@@ -210,7 +210,7 @@ function getModuleCategories(roles: {
       icon: Shield,
       color: "bg-pink-500",
       modules: [
-        { label: "Voice Dictation", description: "Speech-to-text for notes", href: "/clinical-tools", icon: Shield, color: "bg-pink-100 text-pink-600" },
+        { label: "Voice Dictation", description: "Speech-to-text for notes", href: "/clinical/dictation", icon: Shield, color: "bg-pink-100 text-pink-600" },
         { label: "Offline Sync", description: "Sync status & conflicts", href: "/clinical-tools?tab=offline", icon: Shield, color: "bg-blue-100 text-blue-600" },
         { label: "Documents", description: "Document management", href: "/clinical-tools?tab=documents", icon: FileText, color: "bg-blue-100 text-blue-600" },
         { label: "CDS Alerts", description: "Clinical decision support", href: "/clinical-tools?tab=cds", icon: Shield, color: "bg-red-100 text-red-600" },
