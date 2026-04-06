@@ -7,21 +7,25 @@
  * Bridges to data-governance-service via experience-bff.
  */
 
-import { useState } from "react";
+import { ReactNode, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import {
-  Shield, Database, Scale, BookOpen, ClipboardList, Plus, Loader2, X, Trash2, CheckCircle, XCircle,
+  Shield, Database, Scale, BookOpen, ClipboardList, Plus, Loader2, X, Trash2, CheckCircle, XCircle, Bot,
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 
-type TabId = "datasets" | "rules" | "decisions" | "policy" | "audit";
+type TabId = "overview" | "datasets" | "rules" | "decisions" | "policy" | "audit";
 
 export default function AiGovernancePage() {
-  const [tab, setTab] = useState<TabId>("datasets");
+  const searchParams = useSearchParams();
+  const initialTab = (searchParams.get("tab") as TabId) ?? "overview";
+  const [tab, setTab] = useState<TabId>(initialTab);
 
   const tabs: { id: TabId; label: string; icon: typeof Database }[] = [
+    { id: "overview", label: "Overview", icon: Shield },
     { id: "datasets", label: "Datasets", icon: Database },
     { id: "rules", label: "Rules", icon: Scale },
     { id: "decisions", label: "Decisions", icon: Shield },
@@ -32,22 +36,24 @@ export default function AiGovernancePage() {
   return (
     <AppLayout>
       <PageShell title="AI Governance" icon={<Shield className="w-5 h-5" />}>
-        <p className="text-sm text-gray-500 mb-4">Manage data governance controls, access rules, and AI operational oversight</p>
+        <p className="text-sm text-gray-500 mb-4">Governance controls, policy, audit, and access decisioning for AI-enabled workflows</p>
 
-        {/* Overview cards */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+        {/* Tab bar */}
+        <div className="flex gap-1 mb-6 border-b border-gray-200 overflow-x-auto">
           {tabs.map((t) => {
             const Icon = t.icon;
             return (
               <button key={t.id} onClick={() => setTab(t.id)}
-                className={`p-4 rounded-lg border text-left transition-all ${tab === t.id ? "border-blue-500 bg-blue-50" : "border-gray-200 bg-white hover:border-gray-300"}`}>
-                <Icon className={`w-5 h-5 mb-2 ${tab === t.id ? "text-blue-600" : "text-gray-400"}`} />
-                <p className={`text-sm font-medium ${tab === t.id ? "text-blue-700" : "text-gray-700"}`}>{t.label}</p>
+                className={`flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                  tab === t.id ? "border-cyan-600 text-cyan-600" : "border-transparent text-gray-500 hover:text-gray-700"
+                }`}>
+                <Icon className="w-4 h-4" /> {t.label}
               </button>
             );
           })}
         </div>
 
+        {tab === "overview" && <OverviewTab />}
         {tab === "datasets" && <DatasetsTab />}
         {tab === "rules" && <RulesTab />}
         {tab === "decisions" && <DecisionsTab />}
@@ -55,6 +61,51 @@ export default function AiGovernancePage() {
         {tab === "audit" && <AuditTab />}
       </PageShell>
     </AppLayout>
+  );
+}
+
+// ── Overview Tab ────────────────────────────────────────────────────
+
+function OverviewTab() {
+  const { data: datasetsData, isLoading: ld } = useQuery<{ data: Array<Record<string, unknown>> }>({
+    queryKey: ["ai-gov-datasets"], queryFn: () => apiClient.get("/internal/v1/ai-governance/datasets"),
+  });
+  const { data: rulesData, isLoading: lr } = useQuery<{ data: Array<Record<string, unknown>> }>({
+    queryKey: ["ai-gov-rules"], queryFn: () => apiClient.get("/internal/v1/ai-governance/rules"),
+  });
+  const { data: auditData, isLoading: la } = useQuery<{ data: Array<Record<string, unknown>> }>({
+    queryKey: ["ai-gov-audit"], queryFn: () => apiClient.get("/internal/v1/ai-governance/audit?page=0&size=20"),
+  });
+
+  const datasets = datasetsData?.data ?? [];
+  const rules = rulesData?.data ?? [];
+  const audit = auditData?.data ?? [];
+  const activeRules = useMemo(() => rules.filter((r) => r.active !== false).length, [rules]);
+
+  if (ld || lr || la) return <div className="py-10 flex justify-center"><Loader2 className="w-6 h-6 animate-spin text-gray-400" /></div>;
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-cyan-50 rounded-lg border border-cyan-200 p-4 text-sm text-cyan-900">
+        <strong>AI Governance posture:</strong> This module is backed by live data-governance and audit services for dataset controls, policy publication, and runtime access decisioning.
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <StatCard label="Registered datasets" value={String(datasets.length)} icon={<Database className="w-5 h-5 text-cyan-700" />} />
+        <StatCard label="Active governance rules" value={String(activeRules)} icon={<Scale className="w-5 h-5 text-indigo-700" />} />
+        <StatCard label="Recent audit events" value={String(audit.length)} icon={<BookOpen className="w-5 h-5 text-amber-700" />} />
+        <StatCard label="AI oversight status" value="Live" icon={<Bot className="w-5 h-5 text-green-700" />} />
+      </div>
+    </div>
+  );
+}
+
+function StatCard({ label, value, icon }: { label: string; value: string; icon: ReactNode }) {
+  return (
+    <div className="bg-white rounded-lg border border-gray-200 p-4">
+      <div className="flex items-center justify-between mb-2">{icon}</div>
+      <p className="text-2xl font-bold text-gray-900">{value}</p>
+      <p className="text-xs text-gray-500">{label}</p>
+    </div>
   );
 }
 

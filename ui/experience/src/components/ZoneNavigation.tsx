@@ -64,7 +64,7 @@ type PageContext = "home" | "clinical" | "admin" | "finance" | "pharmacy" | "reg
 // ── Context detection ────────────────────────────────────────────
 function getContextFromPath(pathname: string): PageContext {
   if (pathname.startsWith("/ehr") || pathname.startsWith("/queue") || pathname.startsWith("/scheduling") || pathname.startsWith("/telemedicine")) return "clinical";
-  if (pathname.startsWith("/admin")) return "admin";
+  if (pathname.startsWith("/admin") || pathname.startsWith("/ai-governance") || pathname.startsWith("/id-services") || pathname.startsWith("/coverage") || pathname.startsWith("/public-health") || pathname.startsWith("/omnichannel")) return "admin";
   if (pathname.startsWith("/finance")) return "finance";
   if (pathname.startsWith("/pharmacy")) return "pharmacy";
   if (pathname.startsWith("/registry")) return "registry";

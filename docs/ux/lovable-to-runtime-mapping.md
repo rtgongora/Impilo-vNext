@@ -329,7 +329,7 @@ These exist in Lovable but have no runtime equivalent. All are **out of scope** 
 |-------------|-------|-------------------|--------|--------|
 | `Communication.tsx` | `/communication` | (not implemented) | **missing** | out of scope |
 | `CoverageOperations.tsx` | `/coverage` | (not implemented) | **missing** | out of scope |
-| `AIGovernance.tsx` | `/ai-governance` | (not implemented) | **missing** | out of scope |
+| `AIGovernance.tsx` | `/ai-governance` | `/ai-governance` (Experience UI + Experience-BFF + data-governance-service bridge) | **supportable_now** | preserve and extend |
 | `OmnichannelHub.tsx` | `/omnichannel` | (not implemented) | **missing** | out of scope |
 | `PublicHealthOps.tsx` | `/public-health` | (not implemented) | **missing** | out of scope |
 | `Landela.tsx` | `/landela` | (not implemented) | **missing** | out of scope |

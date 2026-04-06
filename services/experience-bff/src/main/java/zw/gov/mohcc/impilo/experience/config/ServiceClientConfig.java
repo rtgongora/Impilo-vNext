@@ -39,7 +39,8 @@ public class ServiceClientConfig {
             String coverageBaseUrl,
             String surveillanceBaseUrl,
             String campaignsBaseUrl,
-            String indawoBaseUrl
+            String indawoBaseUrl,
+            String dataGovernanceBaseUrl
     ) {
         public ServiceEndpoints {
             if (pctBaseUrl == null) pctBaseUrl = "http://localhost:8088";
@@ -54,6 +55,7 @@ public class ServiceClientConfig {
             if (surveillanceBaseUrl == null) surveillanceBaseUrl = "http://localhost:8180";
             if (campaignsBaseUrl == null) campaignsBaseUrl = "http://localhost:8190";
             if (indawoBaseUrl == null) indawoBaseUrl = "http://localhost:8150";
+            if (dataGovernanceBaseUrl == null) dataGovernanceBaseUrl = "http://localhost:8220";
         }
     }
 
