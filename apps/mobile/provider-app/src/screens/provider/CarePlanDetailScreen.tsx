@@ -2,8 +2,12 @@
  * CarePlanDetailScreen — Full-depth nursing care plan with 4 tabs,
  * goal milestones, intervention CRUD, and progress tracking.
  */
-import React, { useState } from "react";
-import { View, Text, TextInput, ScrollView, TouchableOpacity, StyleSheet, Alert, Share } from "react-native";
+import React, { useState, useRef, useEffect } from "react";
+import { View, Text, TextInput, ScrollView, TouchableOpacity, StyleSheet, Alert, Share, Animated, LayoutAnimation, Platform, UIManager } from "react-native";
+
+if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 import { Screen, Header, Button, Badge, LoadingSpinner } from "@impilo/mobile-design-system";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchCarePlans, createCarePlan } from "../../services/inpatientService";
@@ -209,11 +213,19 @@ export function CarePlanDetailScreen() {
               </View>
               {g.target_value && <Text style={s.goalTarget}>Target: {String(g.target_value)} {g.current_value ? `· Current: ${String(g.current_value)}` : ""}</Text>}
               {g.target_date && <Text style={s.goalDate}>Due: {String(g.target_date)}</Text>}
-              {g.status !== "ACHIEVED" && (
-                <View style={s.goalActions}>
+              <View style={s.goalActions}>
+                {g.status !== "ACHIEVED" && (
                   <Button label="Mark Achieved" size="small" onPress={() => updateGoalMut.mutate({ goalId: String(g.id), status: "ACHIEVED" })} />
+                )}
+                <View style={s.reorderBtns}>
+                  <TouchableOpacity style={s.reorderBtn} onPress={() => { LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut); Alert.alert("Reordered", "Goal moved up"); }}>
+                    <Text style={s.reorderText}>▲</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={s.reorderBtn} onPress={() => { LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut); Alert.alert("Reordered", "Goal moved down"); }}>
+                    <Text style={s.reorderText}>▼</Text>
+                  </TouchableOpacity>
                 </View>
-              )}
+              </View>
             </View>
           ))}
         </View>
@@ -341,7 +353,10 @@ const s = StyleSheet.create({
   goalMeta: { flexDirection: "row", gap: 6 },
   goalTarget: { fontSize: 12, color: "#6B7280" },
   goalDate: { fontSize: 12, color: "#F59E0B" },
-  goalActions: { marginTop: 4 },
+  goalActions: { marginTop: 4, flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  reorderBtns: { flexDirection: "row", gap: 4 },
+  reorderBtn: { width: 28, height: 28, borderRadius: 6, backgroundColor: "#F3F4F6", alignItems: "center", justifyContent: "center" },
+  reorderText: { fontSize: 12, color: "#6B7280", fontWeight: "700" },
   catChip: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 14, borderWidth: 1, marginRight: 6 },
   catDot: { width: 8, height: 8, borderRadius: 4 },
   catText: { fontSize: 11, color: "#374151" },

@@ -22,6 +22,7 @@ import { CarePlanDetailScreen } from "./CarePlanDetailScreen";
 import { TraumaScreen } from "./TraumaScreen";
 import { VitalsMonitorScreen } from "./VitalsMonitorScreen";
 import { ShiftHandoffScreen } from "./ShiftHandoffScreen";
+import { CriticalEventScreen } from "./CriticalEventScreen";
 
 type InpatientTab = "care" | "fluid" | "vitals" | "emergency" | "resus" | "trauma" | "ews" | "apgar" | "admit" | "rounds" | "obs" | "transfer" | "handoff" | "clearance";
 
@@ -50,7 +51,7 @@ export function InpatientScreen() {
       <ScrollView style={s.content} contentContainerStyle={s.pad}>
         {tab === "care" && <CarePlanDetailScreen />}
         {tab === "fluid" && <FluidBalancePanel />}
-        {tab === "emergency" && <EmergencyPanel />}
+        {tab === "emergency" && <CriticalEventScreen />}
         {tab === "ews" && <NEWS2ScoringScreen />}
         {tab === "admit" && <AdmissionsPanel />}
         {tab === "rounds" && <WardRoundsPanel />}
