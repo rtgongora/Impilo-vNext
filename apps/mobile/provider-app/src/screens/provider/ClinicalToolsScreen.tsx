@@ -13,12 +13,15 @@ import {
 } from "../../services/queueService";
 import { useEncounterStore } from "../../stores/encounterStore";
 
-type ToolTab = "soap" | "drugs" | "orders" | "care" | "mar" | "cds" | "paging" | "barcode" | "workspaces";
+import { InpatientScreen } from "./InpatientScreen";
+
+type ToolTab = "soap" | "drugs" | "orders" | "care" | "mar" | "cds" | "paging" | "barcode" | "workspaces" | "inpatient";
 
 const TABS: { id: ToolTab; label: string }[] = [
   { id: "soap", label: "SOAP" }, { id: "drugs", label: "Drug Check" }, { id: "orders", label: "Order Sets" },
   { id: "care", label: "Care Plan" }, { id: "mar", label: "MAR" }, { id: "cds", label: "CDS" },
   { id: "paging", label: "Paging" }, { id: "barcode", label: "Barcode" }, { id: "workspaces", label: "Specialty" },
+  { id: "inpatient", label: "Inpatient" },
 ];
 
 export function ClinicalToolsScreen() {
@@ -42,6 +45,7 @@ export function ClinicalToolsScreen() {
         {tab === "paging" && <PagingPanel />}
         {tab === "barcode" && <BarcodePanel />}
         {tab === "workspaces" && <SpecialtyPanel />}
+        {tab === "inpatient" && <InpatientScreen />}
       </ScrollView>
     </Screen>
   );
