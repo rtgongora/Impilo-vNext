@@ -12,6 +12,7 @@
  */
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -139,7 +140,9 @@ export default function ConsultsPage() {
   const joinSession = useJoinTelemedicineSession();
   const createSession = useCreateTelemedicineSession();
 
-  const [activeTab, setActiveTab] = useState<ActiveTab>("referrals");
+  const searchParams = useSearchParams();
+  const initialTab = (searchParams.get("tab") as ActiveTab) ?? "referrals";
+  const [activeTab, setActiveTab] = useState<ActiveTab>(initialTab);
   const [showNewReferral, setShowNewReferral] = useState(false);
   const [showNewConsult, setShowNewConsult] = useState(false);
 

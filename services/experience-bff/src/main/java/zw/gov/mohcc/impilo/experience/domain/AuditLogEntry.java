@@ -38,6 +38,21 @@ public class AuditLogEntry {
 
     protected AuditLogEntry() {}
 
+    public static AuditLogEntry create(String tenantId, String actorId, String action,
+                                        String resourceType, String resourceId,
+                                        String details, String ipAddress) {
+        AuditLogEntry e = new AuditLogEntry();
+        e.tenantId = tenantId;
+        e.actorId = actorId;
+        e.action = action;
+        e.resourceType = resourceType;
+        e.resourceId = resourceId;
+        e.details = details;
+        e.ipAddress = ipAddress;
+        e.occurredAt = OffsetDateTime.now();
+        return e;
+    }
+
     public UUID getId() { return id; }
     public String getTenantId() { return tenantId; }
     public String getActorId() { return actorId; }

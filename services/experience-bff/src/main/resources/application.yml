@@ -68,6 +68,8 @@ impilo:
     orthanc-base-url: ${ORTHANC_BASE_URL:http://localhost:8042}
     orthanc-dicomweb-url: ${ORTHANC_DICOMWEB_URL:http://localhost:8042/dicom-web}
     data-governance-base-url: ${DATA_GOVERNANCE_BASE_URL:http://localhost:8220}
+    landela-base-url: ${LANDELA_BASE_URL:http://localhost:8092}
+    notification-base-url: ${NOTIFICATION_BASE_URL:http://localhost:8200}
 
 logging:
   level:

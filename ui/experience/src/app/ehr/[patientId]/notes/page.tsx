@@ -5,8 +5,8 @@
  * Route: /ehr/[patientId]/notes | pageTitle: "Clinical Notes"
  */
 
-import { useParams } from "next/navigation";
-import { useState } from "react";
+import { useParams, useSearchParams } from "next/navigation";
+import { useState, useMemo } from "react";
 import { FileText, Plus, Loader2, CheckCircle2} from "lucide-react";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
@@ -37,13 +37,22 @@ export default function ClinicalNotesPage() {
   const createNote = useCreateNote();
   const signNote = useSignNote();
 
+  const searchParams = useSearchParams();
+  const noteTypeFilter = searchParams.get("noteType");
+
   const [showForm, setShowForm] = useState(false);
+  const [filterType, setFilterType] = useState<string>(noteTypeFilter ?? "");
   const [form, setForm] = useState({
     ...EMPTY_FORM,
+    noteType: noteTypeFilter ?? "PROGRESS",
     authorId: user?.id ?? "",
     authorName: user?.displayName ?? user?.email ?? "" });
 
-  const notes = notesData?.data ?? [];
+  const allNotes = notesData?.data ?? [];
+  const notes = useMemo(
+    () => filterType ? allNotes.filter((n) => n.attributes.noteType === filterType) : allNotes,
+    [allNotes, filterType]
+  );
 
   function handleFieldChange(
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,

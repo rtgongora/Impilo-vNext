@@ -119,6 +119,78 @@ public class AiGovernanceController {
         return proxyPost(dataGovernanceUrl + "/external/v1/exports", body, requestId, correlationId, HttpStatus.OK);
     }
 
+    // ── Grants ───────────────────────────────────────────────────────
+
+    @PostMapping("/grants")
+    public ResponseEntity<Map<String, Object>> createGrant(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody Map<String, Object> body) {
+        return proxyPost(dataGovernanceUrl + "/internal/v1/governance/grants", body, requestId, correlationId, HttpStatus.CREATED);
+    }
+
+    @PostMapping("/grants/revoke")
+    public ResponseEntity<Map<String, Object>> revokeGrant(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody Map<String, Object> body) {
+        return proxyPost(dataGovernanceUrl + "/internal/v1/governance/grants/revoke", body, requestId, correlationId, HttpStatus.OK);
+    }
+
+    // ── Snapshots ───────────────────────────────────────────────────
+
+    @GetMapping("/snapshots/datasets")
+    public ResponseEntity<Map<String, Object>> snapshotDatasets(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return proxyGet(dataGovernanceUrl + "/internal/v1/snapshots/datasets", requestId, correlationId);
+    }
+
+    @GetMapping("/snapshots/policies")
+    public ResponseEntity<Map<String, Object>> snapshotPolicies(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return proxyGet(dataGovernanceUrl + "/internal/v1/snapshots/policies", requestId, correlationId);
+    }
+
+    // ── Incidents (AI safety via audit_log) ─────────────────────────
+
+    @GetMapping("/incidents")
+    public ResponseEntity<Map<String, Object>> listIncidents(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        PageRequest pageable = PageRequest.of(0, 50, Sort.by("occurredAt").descending());
+        Page<AuditLogEntry> result = auditLogRepository.findByTenantId(tenantId, pageable);
+        List<Map<String, Object>> incidents = result.getContent().stream()
+                .filter(e -> "AI_INCIDENT".equals(e.getResourceType()))
+                .map(this::toAuditResource)
+                .toList();
+        return ResponseEntity.ok(metaEnvelope(incidents, requestId, correlationId));
+    }
+
+    @PostMapping("/incidents")
+    public ResponseEntity<Map<String, Object>> reportIncident(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody Map<String, Object> body) {
+        // Log AI incident as audit entry with resource_type=AI_INCIDENT
+        AuditLogEntry entry = AuditLogEntry.create(
+                tenantId,
+                body.getOrDefault("actorId", "system").toString(),
+                body.getOrDefault("action", "AI_INCIDENT_REPORTED").toString(),
+                "AI_INCIDENT",
+                body.getOrDefault("resourceId", "").toString(),
+                body.getOrDefault("details", "{}").toString(),
+                body.getOrDefault("ipAddress", "").toString());
+        auditLogRepository.save(entry);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(metaEnvelope(Map.of("id", entry.getId(), "status", "REPORTED"), requestId, correlationId));
+    }
+
+    // ── Audit ───────────────────────────────────────────────────────
+
     @GetMapping("/audit")
     public ResponseEntity<Map<String, Object>> listAuditTrail(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,

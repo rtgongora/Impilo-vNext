@@ -36,7 +36,10 @@ const CHART_SECTIONS = [
   { label: "Notes", href: "notes", icon: FileText, color: "bg-indigo-100 text-indigo-600" },
   { label: "Immunizations", href: "immunizations", icon: Syringe, color: "bg-teal-100 text-teal-600" },
   { label: "Encounters", href: "encounters", icon: Clock, color: "bg-cyan-100 text-cyan-600" },
+  { label: "Consults", href: "consults", icon: FileText, color: "bg-rose-100 text-rose-600" },
+  { label: "Teleconsults", href: "consults?tab=teleconsults", icon: Clock, color: "bg-violet-100 text-violet-600" },
   { label: "Timeline", href: "timeline", icon: Clock, color: "bg-gray-100 text-gray-600" },
+  { label: "Discharge", href: "discharge", icon: Clock, color: "bg-amber-100 text-amber-600" },
 ] as const;
 
 export default function PatientChartPage() {
