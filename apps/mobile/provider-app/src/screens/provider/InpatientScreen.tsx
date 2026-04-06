@@ -14,14 +14,20 @@ import {
   recordObservation, fetchObservations, requestTransfer, listTransfers,
 } from "../../services/inpatientService";
 import { useEncounterStore } from "../../stores/encounterStore";
+import { NEWS2ScoringScreen } from "./NEWS2ScoringScreen";
+import { ResuscitationScreen } from "./ResuscitationScreen";
+import { APGARScreen } from "./APGARScreen";
+import { DischargeClearanceScreen } from "./DischargeClearanceScreen";
 
-type InpatientTab = "care" | "fluid" | "emergency" | "ews" | "admit" | "rounds" | "obs" | "transfer";
+type InpatientTab = "care" | "fluid" | "emergency" | "resus" | "ews" | "apgar" | "admit" | "rounds" | "obs" | "transfer" | "clearance";
 
 const TABS: { id: InpatientTab; label: string }[] = [
   { id: "care", label: "Care Plans" }, { id: "fluid", label: "Fluid I/O" },
-  { id: "emergency", label: "Emergency" }, { id: "ews", label: "EWS" },
+  { id: "emergency", label: "Emergency" }, { id: "resus", label: "Resus" },
+  { id: "ews", label: "NEWS2" }, { id: "apgar", label: "APGAR" },
   { id: "admit", label: "Admissions" }, { id: "rounds", label: "Rounds" },
   { id: "obs", label: "Observations" }, { id: "transfer", label: "Transfers" },
+  { id: "clearance", label: "Discharge" },
 ];
 
 export function InpatientScreen() {
@@ -40,11 +46,14 @@ export function InpatientScreen() {
         {tab === "care" && <CarePlansPanel />}
         {tab === "fluid" && <FluidBalancePanel />}
         {tab === "emergency" && <EmergencyPanel />}
-        {tab === "ews" && <EWSPanel />}
+        {tab === "ews" && <NEWS2ScoringScreen />}
         {tab === "admit" && <AdmissionsPanel />}
         {tab === "rounds" && <WardRoundsPanel />}
         {tab === "obs" && <ObservationsPanel />}
         {tab === "transfer" && <TransfersPanel />}
+        {tab === "resus" && <ResuscitationScreen />}
+        {tab === "apgar" && <APGARScreen />}
+        {tab === "clearance" && <DischargeClearanceScreen />}
       </ScrollView>
     </Screen>
   );
