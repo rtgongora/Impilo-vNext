@@ -3,7 +3,7 @@
  * goal milestones, intervention CRUD, and progress tracking.
  */
 import React, { useState } from "react";
-import { View, Text, TextInput, ScrollView, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import { View, Text, TextInput, ScrollView, TouchableOpacity, StyleSheet, Alert, Share } from "react-native";
 import { Screen, Header, Button, Badge, LoadingSpinner } from "@impilo/mobile-design-system";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchCarePlans, createCarePlan } from "../../services/inpatientService";
@@ -109,7 +109,15 @@ export function CarePlanDetailScreen() {
   return (
     <View style={s.section}>
       <TouchableOpacity onPress={() => setSelectedPlan(null)}><Text style={s.backLink}>← Back to Plans</Text></TouchableOpacity>
-      <Text style={s.title}>{String(selectedPlan.title)}</Text>
+      <View style={s.headerRow}>
+        <Text style={s.title}>{String(selectedPlan.title)}</Text>
+        <TouchableOpacity onPress={async () => {
+          const text = `Care Plan: ${selectedPlan.title}\nGoals: ${goals.length}\nInterventions: ${interventions.length}\nProgress: ${progressPct}%`;
+          try { await Share.share({ message: text, title: "Care Plan" }); } catch {}
+        }} style={{ padding: 6, backgroundColor: "#F3F4F6", borderRadius: 6 }}>
+          <Text style={{ fontSize: 12, color: "#374151" }}>📤 Share</Text>
+        </TouchableOpacity>
+      </View>
 
       {/* Progress bar */}
       <View style={s.progressCard}>
