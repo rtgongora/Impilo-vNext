@@ -138,6 +138,7 @@ function getNavSections(context: PageContext): NavSection[] {
             { label: "Omnichannel", href: "/omnichannel", icon: Users, requiredRoles: ADMIN_ROLES },
             { label: "Bed Admin", href: "/admin/beds", icon: Building2, requiredRoles: ADMIN_ROLES },
             { label: "Queue Config", href: "/admin/queues", icon: Users, requiredRoles: ADMIN_ROLES },
+            { label: "AI Governance", href: "/ai-governance", icon: Shield, requiredRoles: ADMIN_ROLES },
           ],
         },
       ];

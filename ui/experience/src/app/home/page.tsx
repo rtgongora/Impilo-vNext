@@ -228,6 +228,7 @@ function getModuleCategories(roles: {
         { label: "User Management", description: "Users, roles & policies", href: "/admin/users", icon: Users, color: "bg-red-100 text-red-600" },
         { label: "Audit Trail", description: "System audit logs", href: "/admin/audit", icon: ClipboardList, color: "bg-amber-100 text-amber-600" },
         { label: "System Settings", description: "Configuration & security", href: "/admin", icon: Settings, color: "bg-gray-100 text-gray-600" },
+        { label: "AI Governance", description: "Data governance & AI oversight", href: "/ai-governance", icon: Shield, color: "bg-indigo-100 text-indigo-600" },
       ],
     });
   }
