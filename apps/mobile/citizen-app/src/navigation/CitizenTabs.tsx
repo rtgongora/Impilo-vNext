@@ -13,7 +13,7 @@ import type { CitizenTab } from "../types";
 
 import { HomeScreen } from "../screens/HomeScreen";
 import { PersonalScreen } from "../screens/personal/PersonalScreen";
-import { SocialFeedScreen } from "../screens/social/SocialFeedScreen";
+import { SocialHubScreen } from "../screens/social/SocialHubScreen";
 import { MarketplaceScreen } from "../screens/marketplace/MarketplaceScreen";
 import { MessagingInboxScreen } from "../screens/messaging/MessagingInboxScreen";
 import { TelehealthListScreen } from "../screens/telehealth/TelehealthListScreen";
@@ -21,7 +21,7 @@ import { TelehealthListScreen } from "../screens/telehealth/TelehealthListScreen
 const TAB_SCREENS: Record<CitizenTab, React.FC> = {
   home: HomeScreen,
   personal: PersonalScreen,
-  social: SocialFeedScreen,
+  social: SocialHubScreen,
   marketplace: MarketplaceScreen,
   messaging: MessagingInboxScreen,
   telehealth: TelehealthListScreen,

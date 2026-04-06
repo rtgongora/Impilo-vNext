@@ -16,29 +16,47 @@ import { SettingsSection } from "./SettingsSection";
 import { RecordsScreen } from "./RecordsScreen";
 import { RemindersScreen } from "./RemindersScreen";
 import { HealthTimelineScreen } from "./HealthTimelineScreen";
+import { HealthIdSection } from "./HealthIdSection";
+import { WellnessSection } from "./WellnessSection";
+import { WalletSection } from "./WalletSection";
+import { EmergencySOSSection } from "./EmergencySOSSection";
+import { MonitoringSection } from "./MonitoringSection";
+import { QueueStatusSection } from "./QueueStatusSection";
 
-type PersonalTab = "profile" | "appointments" | "prescriptions" | "results" | "records" | "reminders" | "timeline" | "coverage" | "settings";
+type PersonalTab = "profile" | "health-id" | "appointments" | "prescriptions" | "results" | "records" | "reminders" | "timeline" | "wellness" | "wallet" | "monitoring" | "queue" | "sos" | "coverage" | "settings";
 
 const PERSONAL_TABS: TabItem[] = [
   { id: "profile", label: "Profile", icon: "user" },
+  { id: "health-id", label: "Health ID", icon: "credit-card" },
   { id: "appointments", label: "Appointments", icon: "calendar" },
   { id: "prescriptions", label: "Rx", icon: "pill" },
   { id: "results", label: "Results", icon: "clipboard" },
   { id: "records", label: "Records", icon: "file-text" },
-  { id: "reminders", label: "Reminders", icon: "bell" },
   { id: "timeline", label: "Timeline", icon: "clock" },
+  { id: "wellness", label: "Wellness", icon: "activity" },
+  { id: "wallet", label: "Wallet", icon: "credit-card" },
+  { id: "monitoring", label: "Devices", icon: "bluetooth" },
+  { id: "queue", label: "Queue", icon: "list" },
+  { id: "sos", label: "SOS", icon: "alert-circle" },
+  { id: "reminders", label: "Reminders", icon: "bell" },
   { id: "coverage", label: "Coverage", icon: "shield" },
   { id: "settings", label: "Settings", icon: "settings" },
 ];
 
 const SECTIONS: Record<PersonalTab, React.FC> = {
   profile: ProfileSection,
+  "health-id": HealthIdSection,
   appointments: AppointmentsSection,
   prescriptions: PrescriptionsSection,
   results: ResultsSection,
   records: RecordsScreen,
   reminders: RemindersScreen,
   timeline: HealthTimelineScreen,
+  wellness: WellnessSection,
+  wallet: WalletSection,
+  monitoring: MonitoringSection,
+  queue: QueueStatusSection,
+  sos: EmergencySOSSection,
   coverage: CoverageSection,
   settings: SettingsSection,
 };

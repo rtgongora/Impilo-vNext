@@ -224,3 +224,175 @@ export interface TimelineEntry {
   provider?: string;
   metadata?: Record<string, unknown>;
 }
+
+/* ── Health ID ── */
+
+export interface HealthId {
+  id: string;
+  healthIdNumber: string;
+  status: string;
+  issuedAt: string;
+  expiresAt?: string;
+  qrCodeData?: string;
+  photoUrl?: string;
+  bloodType?: string;
+  allergiesSummary?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+}
+
+/* ── Wellness ── */
+
+export interface WellnessActivity {
+  id: string;
+  activityDate: string;
+  steps: number;
+  caloriesBurned: number;
+  activeMinutes: number;
+  distanceKm: number;
+  sleepHours?: number;
+  sleepQuality?: string;
+  waterMl: number;
+}
+
+export interface WellnessVital {
+  id: string;
+  vitalType: string;
+  value: number;
+  unit: string;
+  measuredAt: string;
+  source: string;
+  notes?: string;
+}
+
+export interface MoodEntry {
+  id: string;
+  moodScore: number;
+  energyLevel?: number;
+  stressLevel?: number;
+  notes?: string;
+  loggedAt: string;
+}
+
+export interface WellnessChallenge {
+  id: string;
+  title: string;
+  description?: string;
+  challengeType: string;
+  targetValue: number;
+  targetUnit: string;
+  startDate: string;
+  endDate: string;
+  participantCount: number;
+  status: string;
+}
+
+/* ── Health Wallet ── */
+
+export interface HealthWallet {
+  id: string;
+  balance: number;
+  currency: string;
+  status: string;
+}
+
+export interface WalletTransaction {
+  id: string;
+  transactionType: string;
+  amount: number;
+  currency: string;
+  description?: string;
+  reference?: string;
+  status: string;
+  createdAt: string;
+}
+
+/* ── Emergency SOS ── */
+
+export interface EmergencyContact {
+  id: string;
+  name: string;
+  relationship: string;
+  phone: string;
+  isPrimary: boolean;
+}
+
+/* ── Remote Monitoring ── */
+
+export interface MonitoringDevice {
+  id: string;
+  deviceName: string;
+  deviceType: string;
+  manufacturer?: string;
+  model?: string;
+  connectionType: string;
+  status: string;
+  lastSyncAt?: string;
+  batteryLevel?: number;
+}
+
+/* ── Queue Status ── */
+
+export interface QueueTicket {
+  id: string;
+  facilityName: string;
+  ticketNumber: string;
+  serviceType: string;
+  status: string;
+  position?: number;
+  estimatedWait?: number;
+  joinedAt: string;
+  calledAt?: string;
+}
+
+/* ── Clubs ── */
+
+export interface WellnessClub {
+  id: string;
+  name: string;
+  description?: string;
+  clubType: string;
+  category: string;
+  memberCount: number;
+  maxMembers?: number;
+  isPublic: boolean;
+  meetingSchedule?: string;
+  location?: string;
+  imageUrl?: string;
+  status: string;
+}
+
+/* ── Professional Pages ── */
+
+export interface ProfessionalPage {
+  id: string;
+  displayName: string;
+  title?: string;
+  specialty?: string;
+  bio?: string;
+  photoUrl?: string;
+  facilityName?: string;
+  yearsExperience?: number;
+  rating?: number;
+  reviewCount: number;
+  isAccepting: boolean;
+  consultationFee?: number;
+  currency?: string;
+}
+
+/* ── Crowdfunding ── */
+
+export interface CrowdfundingCampaign {
+  id: string;
+  title: string;
+  story: string;
+  category: string;
+  goalAmount: number;
+  raisedAmount: number;
+  currency: string;
+  donorCount: number;
+  imageUrl?: string;
+  status: string;
+  verified: boolean;
+  endsAt?: string;
+}
