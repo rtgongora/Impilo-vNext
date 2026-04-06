@@ -12,13 +12,17 @@ import { PatientLookupScreen } from "../screens/provider/PatientLookupScreen";
 import { ActivityFeedScreen } from "../screens/provider/ActivityFeedScreen";
 import { ResultsViewScreen } from "../screens/provider/ResultsViewScreen";
 import { ProfessionalProfileScreen } from "../screens/provider/ProfessionalProfileScreen";
+import { QueueManagementScreen } from "../screens/provider/QueueManagementScreen";
+import { BedManagementScreen } from "../screens/provider/BedManagementScreen";
+import { PharmacyDispensingScreen } from "../screens/provider/PharmacyDispensingScreen";
+import { ClinicalToolsScreen } from "../screens/provider/ClinicalToolsScreen";
 import { useAppStore } from "../stores/appStore";
 
 const TABS = [
   { key: "dashboard", label: "Worklist", icon: "clipboard" },
   { key: "patients", label: "Patients", icon: "users" },
-  { key: "results", label: "Results", icon: "flask" },
-  { key: "activity", label: "Activity", icon: "activity" },
+  { key: "queue", label: "Queue", icon: "list" },
+  { key: "tools", label: "Tools", icon: "briefcase" },
   { key: "professional", label: "Profile", icon: "user" },
 ] as const;
 
@@ -40,8 +44,10 @@ export function ProviderTabs() {
         return <PatientLookupScreen />;
       case "results":
         return <ResultsViewScreen />;
-      case "activity":
-        return <ActivityFeedScreen />;
+      case "queue":
+        return <QueueManagementScreen />;
+      case "tools":
+        return <ClinicalToolsScreen />;
       case "professional":
         return <ProfessionalProfileScreen />;
       default:

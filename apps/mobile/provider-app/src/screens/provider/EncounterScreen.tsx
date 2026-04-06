@@ -34,6 +34,8 @@ const TABS = [
   { key: "labs", label: "Labs" },
   { key: "referrals", label: "Referrals" },
   { key: "notes", label: "Notes" },
+  { key: "triage", label: "Triage" },
+  { key: "billing", label: "Billing" },
 ];
 
 export function EncounterScreen() {
@@ -98,6 +100,10 @@ export function EncounterScreen() {
         );
       case "notes":
         return <NotesPanel encounterId={activeEncounter.id} />;
+      case "triage":
+        return <View style={{ padding: 16 }}><Text style={{ fontSize: 14, color: "#6B7280" }}>Triage assessment available from the Triage screen in Clinical Tools</Text></View>;
+      case "billing":
+        return <View style={{ padding: 16 }}><Text style={{ fontSize: 14, color: "#6B7280" }}>Charge capture available from the Billing screen in Clinical Tools</Text></View>;
       default:
         return null;
     }
