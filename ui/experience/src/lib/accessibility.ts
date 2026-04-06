@@ -7,7 +7,16 @@
  * - Skip navigation link support
  * - Keyboard navigation helpers
  * - Color contrast utilities
+ * - Tailwind class merge utility
  */
+
+/**
+ * Merge and deduplicate Tailwind CSS class names.
+ * A lightweight alternative to clsx + tailwind-merge.
+ */
+export function cn(...inputs: (string | undefined | null | false)[]): string {
+  return inputs.filter(Boolean).join(" ");
+}
 
 /**
  * Announce a message to screen readers via a live region.
