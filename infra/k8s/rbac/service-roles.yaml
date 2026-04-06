@@ -1,0 +1,92 @@
+---
+# ClusterRole for Impilo microservices — minimal permissions
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: impilo-service-role
+  labels:
+    part-of: impilo-vnext
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "watch"]
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get"]
+  - apiGroups: [""]
+    resources: ["services", "endpoints"]
+    verbs: ["get", "list"]
+---
+# Role for trust plane (TSHEPO) — needs leader election
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: tshepo-leader-election
+  namespace: impilo-trust
+rules:
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    verbs: ["get", "create", "update"]
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "create", "update"]
+---
+# RoleBinding for trust plane services
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: tshepo-leader-election-binding
+  namespace: impilo-trust
+subjects:
+  - kind: ServiceAccount
+    name: tshepo-service
+    namespace: impilo-trust
+roleRef:
+  kind: Role
+  name: tshepo-leader-election
+  apiGroup: rbac.authorization.k8s.io
+---
+# RoleBinding for clinical namespace
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: clinical-service-binding
+  namespace: impilo-clinical
+subjects:
+  - kind: Group
+    name: system:serviceaccounts:impilo-clinical
+    apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: impilo-service-role
+  apiGroup: rbac.authorization.k8s.io
+---
+# RoleBinding for ops namespace
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ops-service-binding
+  namespace: impilo-ops
+subjects:
+  - kind: Group
+    name: system:serviceaccounts:impilo-ops
+    apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: impilo-service-role
+  apiGroup: rbac.authorization.k8s.io
+---
+# RoleBinding for finance namespace
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: finance-service-binding
+  namespace: impilo-finance
+subjects:
+  - kind: Group
+    name: system:serviceaccounts:impilo-finance
+    apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: impilo-service-role
+  apiGroup: rbac.authorization.k8s.io

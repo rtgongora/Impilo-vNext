@@ -1,0 +1,6 @@
+apiVersion: v2
+name: impilo-service
+description: "Reusable Helm chart library for Impilo vNext Spring Boot microservices"
+type: library
+version: 0.1.0
+appVersion: "0.1.0"

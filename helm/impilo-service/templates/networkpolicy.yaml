@@ -1,0 +1,88 @@
+{{- if .Values.networkPolicy.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "impilo-service.fullname" . }}
+  labels:
+    {{- include "impilo-service.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "impilo-service.selectorLabels" . | nindent 6 }}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Allow traffic from Envoy gateway
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              plane: integration-ops
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: envoy
+      ports:
+        - port: http
+          protocol: TCP
+    # Allow Prometheus scraping
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              plane: integration-ops
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: prometheus
+      ports:
+        - port: http
+          protocol: TCP
+    {{- with .Values.networkPolicy.ingress }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  egress:
+    # Allow DNS resolution
+    - to:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+    # Allow PostgreSQL
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              plane: integration-ops
+      ports:
+        - port: 5432
+          protocol: TCP
+    # Allow Redis
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              plane: integration-ops
+      ports:
+        - port: 6379
+          protocol: TCP
+    # Allow Kafka
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              plane: integration-ops
+      ports:
+        - port: 9092
+          protocol: TCP
+    # Allow Keycloak for token validation
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              plane: trust-governance
+      ports:
+        - port: 8080
+          protocol: TCP
+    {{- with .Values.networkPolicy.egress }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+{{- end }}

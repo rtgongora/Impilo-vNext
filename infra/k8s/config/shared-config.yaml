@@ -1,0 +1,119 @@
+---
+# Shared ConfigMap for all Impilo services — common environment variables
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: impilo-shared-config
+  namespace: impilo-ops
+  labels:
+    part-of: impilo-vnext
+data:
+  SPRING_PROFILES_ACTIVE: "production"
+  SPRING_KAFKA_BOOTSTRAP_SERVERS: "kafka.impilo-data.svc.cluster.local:9092"
+  SPRING_DATA_REDIS_HOST: "redis.impilo-data.svc.cluster.local"
+  SPRING_DATA_REDIS_PORT: "6379"
+  SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "https://auth.impilo.gov.zw/realms/impilo"
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.impilo-monitoring.svc.cluster.local:4317"
+  OTEL_SERVICE_NAME: "impilo-service"
+  MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: "health,prometheus,info"
+  MANAGEMENT_ENDPOINT_HEALTH_PROBES_ENABLED: "true"
+  MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: "always"
+---
+# Trust plane configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: trust-config
+  namespace: impilo-trust
+  labels:
+    part-of: impilo-vnext
+data:
+  TSHEPO_SERVICE_URL: "http://tshepo-service.impilo-trust.svc.cluster.local:8081"
+  TSHEPO_AUTHZ_URL: "http://tshepo-authz.impilo-trust.svc.cluster.local:8081"
+  TSHEPO_AUDIT_URL: "http://tshepo-audit.impilo-trust.svc.cluster.local:8183"
+  TSHEPO_CONSENT_URL: "http://tshepo-consent.impilo-trust.svc.cluster.local:8182"
+  TSHEPO_IDENTITY_URL: "http://tshepo-identity.impilo-trust.svc.cluster.local:8181"
+  TSHEPO_KEYS_URL: "http://tshepo-keys.impilo-trust.svc.cluster.local:8184"
+  OPA_URL: "http://opa.impilo-ops.svc.cluster.local:8181"
+---
+# Registry spine configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: registry-config
+  namespace: impilo-registry
+  labels:
+    part-of: impilo-vnext
+data:
+  VITO_SERVICE_URL: "http://vito-service.impilo-registry.svc.cluster.local:8082"
+  VARAPI_SERVICE_URL: "http://varapi-service.impilo-registry.svc.cluster.local:8083"
+  TUSO_SERVICE_URL: "http://tuso-service.impilo-registry.svc.cluster.local:8084"
+  ZIBO_SERVICE_URL: "http://zibo-service.impilo-registry.svc.cluster.local:8085"
+  PRODUCT_REGISTRY_URL: "http://product-registry.impilo-registry.svc.cluster.local:8080"
+---
+# Clinical execution configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: clinical-config
+  namespace: impilo-clinical
+  labels:
+    part-of: impilo-vnext
+data:
+  PCT_SERVICE_URL: "http://pct-service.impilo-clinical.svc.cluster.local:8088"
+  OROS_SERVICE_URL: "http://oros-service.impilo-clinical.svc.cluster.local:8089"
+  BUTANO_SERVICE_URL: "http://butano-service.impilo-clinical.svc.cluster.local:8090"
+  PHARMACY_SERVICE_URL: "http://pharmacy-service.impilo-clinical.svc.cluster.local:8096"
+  INVENTORY_SERVICE_URL: "http://inventory-service.impilo-clinical.svc.cluster.local:8098"
+  INPATIENT_SERVICE_URL: "http://inpatient-service.impilo-clinical.svc.cluster.local:8080"
+  PACS_ORTHANC_URL: "http://orthanc.impilo-clinical.svc.cluster.local:8042"
+---
+# Database connection strings (references — actual credentials in Secrets)
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: database-config
+  namespace: impilo-data
+  labels:
+    part-of: impilo-vnext
+data:
+  POSTGRES_HOST: "postgresql.impilo-data.svc.cluster.local"
+  POSTGRES_PORT: "5432"
+  TSHEPO_DB: "tshepo"
+  VITO_DB: "vito"
+  VARAPI_DB: "varapi"
+  TUSO_DB: "tuso"
+  ZIBO_DB: "zibo"
+  PCT_DB: "pct"
+  OROS_DB: "oros"
+  BUTANO_DB: "butano"
+  MUSHEX_DB: "mushex"
+  PHARMACY_DB: "pharmacy"
+  INVENTORY_DB: "inventory"
+  EXPERIENCE_BFF_DB: "experience_bff"
+---
+# Experience BFF service URLs
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: experience-bff-config
+  namespace: impilo-ops
+  labels:
+    part-of: impilo-vnext
+data:
+  EXPERIENCE_BFF_PORT: "8160"
+  TSHEPO_BASE_URL: "http://tshepo-service.impilo-trust.svc.cluster.local:8081"
+  VITO_BASE_URL: "http://vito-service.impilo-registry.svc.cluster.local:8082"
+  VARAPI_BASE_URL: "http://varapi-service.impilo-registry.svc.cluster.local:8083"
+  TUSO_BASE_URL: "http://tuso-service.impilo-registry.svc.cluster.local:8084"
+  ZIBO_BASE_URL: "http://zibo-service.impilo-registry.svc.cluster.local:8085"
+  PCT_BASE_URL: "http://pct-service.impilo-clinical.svc.cluster.local:8088"
+  OROS_BASE_URL: "http://oros-service.impilo-clinical.svc.cluster.local:8089"
+  BUTANO_BASE_URL: "http://butano-service.impilo-clinical.svc.cluster.local:8090"
+  MUSHEX_BASE_URL: "http://mushex-service.impilo-finance.svc.cluster.local:8087"
+  PHARMACY_BASE_URL: "http://pharmacy-service.impilo-clinical.svc.cluster.local:8096"
+  INVENTORY_BASE_URL: "http://inventory-service.impilo-clinical.svc.cluster.local:8098"
+  ORTHANC_BASE_URL: "http://orthanc.impilo-clinical.svc.cluster.local:8042"
+  NOTIFICATION_BASE_URL: "http://notification-service.impilo-ops.svc.cluster.local:8080"
+  DATA_GOVERNANCE_BASE_URL: "http://data-governance.impilo-ops.svc.cluster.local:8220"
+  LANDELA_BASE_URL: "http://landela-adapter.impilo-ops.svc.cluster.local:8092"

@@ -1,0 +1,14 @@
+# TSHEPO production overrides — trust plane requires higher availability
+replicaCount: 3
+resources:
+  requests:
+    cpu: "1"
+    memory: 2Gi
+  limits:
+    cpu: "4"
+    memory: 4Gi
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 15
+  targetCPUUtilizationPercentage: 60

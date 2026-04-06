@@ -1,0 +1,151 @@
+---
+# Default deny all ingress in trust namespace
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: impilo-trust
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+---
+# Allow Envoy gateway to reach TSHEPO ext_authz
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-envoy-to-tshepo
+  namespace: impilo-trust
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: tshepo
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              plane: integration-ops
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: envoy
+      ports:
+        - port: 8081
+          protocol: TCP
+  policyTypes:
+    - Ingress
+---
+# Allow inter-service communication within clinical namespace
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-clinical-internal
+  namespace: impilo-clinical
+spec:
+  podSelector: {}
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              plane: clinical-execution
+      ports:
+        - protocol: TCP
+    # Allow Envoy gateway
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              plane: integration-ops
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: envoy
+      ports:
+        - protocol: TCP
+  policyTypes:
+    - Ingress
+---
+# Allow Experience BFF to reach all backend services
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-bff-to-backends
+  namespace: impilo-ops
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: experience-bff
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              part-of: impilo-vnext
+      ports:
+        - protocol: TCP
+    # Allow DNS
+    - to:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - port: 53
+          protocol: UDP
+  policyTypes:
+    - Egress
+---
+# Allow monitoring namespace to scrape all services
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-prometheus-scrape
+  namespace: impilo-clinical
+spec:
+  podSelector: {}
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              plane: observability
+      ports:
+        - protocol: TCP
+  policyTypes:
+    - Ingress
+---
+# Default deny in finance (sensitive data)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: impilo-finance
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+---
+# Allow Envoy and BFF to reach finance services
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-envoy-and-bff
+  namespace: impilo-finance
+spec:
+  podSelector: {}
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              plane: integration-ops
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: envoy
+      ports:
+        - protocol: TCP
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              plane: integration-ops
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: experience-bff
+      ports:
+        - protocol: TCP
+  policyTypes:
+    - Ingress

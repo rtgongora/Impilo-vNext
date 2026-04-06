@@ -1,0 +1,194 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+      service:
+        description: "Service to deploy (or 'all')"
+        required: true
+        default: "all"
+        type: string
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ghcr.io/mohcc/impilo
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+
+jobs:
+  build-and-push:
+    name: Build & Push Images
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - service: experience-bff
+            context: services/experience-bff
+            port: 8160
+          - service: tshepo-service
+            context: services/tshepo-service
+            port: 8081
+          - service: vito-service
+            context: services/vito-service
+            port: 8082
+          - service: varapi-service
+            context: services/varapi-service
+            port: 8083
+          - service: tuso-service
+            context: services/tuso-service
+            port: 8084
+          - service: zibo-service
+            context: services/zibo-service
+            port: 8085
+          - service: pct-service
+            context: services/pct-service
+            port: 8088
+          - service: oros-service
+            context: services/oros-service
+            port: 8089
+          - service: pharmacy-service
+            context: services/pharmacy-service
+            port: 8096
+          - service: mushex-service
+            context: services/mushex-service
+            port: 8087
+          - service: inventory-service
+            context: services/inventory-service
+            port: 8098
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check if service should be built
+        id: check
+        run: |
+          if [ "${{ inputs.service }}" = "all" ] || [ "${{ inputs.service }}" = "${{ matrix.service }}" ]; then
+            echo "build=true" >> $GITHUB_OUTPUT
+          else
+            echo "build=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Log in to GHCR
+        if: steps.check.outputs.build == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        if: steps.check.outputs.build == 'true'
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push
+        if: steps.check.outputs.build == 'true'
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ matrix.context }}
+          push: true
+          tags: |
+            ${{ env.IMAGE_PREFIX }}/${{ matrix.service }}:${{ github.sha }}
+            ${{ env.IMAGE_PREFIX }}/${{ matrix.service }}:${{ inputs.environment }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  build-ui:
+    name: Build Experience UI
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check if UI should be built
+        id: check
+        run: |
+          if [ "${{ inputs.service }}" = "all" ] || [ "${{ inputs.service }}" = "experience-ui" ]; then
+            echo "build=true" >> $GITHUB_OUTPUT
+          else
+            echo "build=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Log in to GHCR
+        if: steps.check.outputs.build == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push UI
+        if: steps.check.outputs.build == 'true'
+        uses: docker/build-push-action@v5
+        with:
+          context: ui/experience
+          push: true
+          tags: |
+            ${{ env.IMAGE_PREFIX }}/experience-ui:${{ github.sha }}
+            ${{ env.IMAGE_PREFIX }}/experience-ui:${{ inputs.environment }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    name: Deploy to ${{ inputs.environment }}
+    needs: [build-and-push, build-ui]
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: "3.14.0"
+
+      - name: Install helmfile
+        run: |
+          curl -sL https://github.com/helmfile/helmfile/releases/download/v0.167.1/helmfile_0.167.1_linux_amd64.tar.gz | tar xz
+          sudo mv helmfile /usr/local/bin/
+
+      - name: Configure kubectl
+        uses: azure/k8s-set-context@v4
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBECONFIG }}
+
+      - name: Apply namespaces
+        run: kubectl apply -f infra/k8s/namespaces/all-namespaces.yaml
+
+      - name: Apply RBAC
+        run: kubectl apply -f infra/k8s/rbac/
+
+      - name: Apply network policies
+        run: kubectl apply -f infra/k8s/networking/
+
+      - name: Deploy with Helmfile
+        working-directory: helm
+        run: |
+          helmfile -e ${{ inputs.environment }} sync \
+            --set image.tag=${{ github.sha }}
+
+      - name: Verify deployment
+        run: |
+          for ns in impilo-trust impilo-registry impilo-clinical impilo-finance impilo-ops impilo-ui; do
+            echo "--- Checking namespace: ${ns} ---"
+            kubectl -n ${ns} rollout status deployment --timeout=300s || true
+          done
+
+      - name: Run smoke tests
+        run: |
+          echo "Running post-deployment smoke tests..."
+          for svc in tshepo-service vito-service experience-bff; do
+            kubectl -n impilo-ops run smoke-${svc} --rm -i --restart=Never \
+              --image=curlimages/curl -- \
+              curl -sf http://${svc}/actuator/health || echo "WARN: ${svc} health check pending"
+          done

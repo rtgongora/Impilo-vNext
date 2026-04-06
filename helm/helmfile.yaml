@@ -1,0 +1,194 @@
+# Helmfile — declarative Helm chart orchestration for Impilo vNext
+# Usage: helmfile -e <environment> sync
+# Environments: dev, staging, production
+
+environments:
+  dev:
+    values:
+      - environments/dev.yaml
+  staging:
+    values:
+      - environments/staging.yaml
+  production:
+    values:
+      - environments/production.yaml
+
+repositories: []
+
+releases:
+  # ── Layer 0: Trust & Governance ──────────────────────────────────
+  - name: tshepo-authz
+    namespace: impilo-trust
+    chart: ./tshepo-authz
+    values:
+      - ./tshepo-authz/values.yaml
+      - environments/{{ .Environment.Name }}/tshepo.yaml
+
+  - name: tshepo-identity
+    namespace: impilo-trust
+    chart: ./tshepo-identity
+    values:
+      - ./tshepo-identity/values.yaml
+
+  - name: tshepo-audit
+    namespace: impilo-trust
+    chart: ./tshepo-audit
+    values:
+      - ./tshepo-audit/values.yaml
+
+  - name: tshepo-consent
+    namespace: impilo-trust
+    chart: ./tshepo-consent
+    values:
+      - ./tshepo-consent/values.yaml
+
+  - name: tshepo-keys
+    namespace: impilo-trust
+    chart: ./tshepo-keys
+    values:
+      - ./tshepo-keys/values.yaml
+
+  - name: tshepo-offline
+    namespace: impilo-trust
+    chart: ./tshepo-offline
+    values:
+      - ./tshepo-offline/values.yaml
+
+  # ── Layer 1: Registry Spine ──────────────────────────────────────
+  - name: vito
+    namespace: impilo-registry
+    chart: ../services/vito-service/helm/vito
+    needs:
+      - impilo-trust/tshepo-authz
+    values:
+      - ../services/vito-service/helm/vito/values.yaml
+
+  - name: varapi
+    namespace: impilo-registry
+    chart: ../services/varapi-service/helm/varapi
+    needs:
+      - impilo-trust/tshepo-authz
+    values:
+      - ../services/varapi-service/helm/varapi/values.yaml
+
+  - name: tuso
+    namespace: impilo-registry
+    chart: ../services/tuso-service/helm/tuso
+    values:
+      - ../services/tuso-service/helm/tuso/values.yaml
+
+  - name: zibo
+    namespace: impilo-registry
+    chart: ../services/zibo-service/helm/zibo
+    values:
+      - ../services/zibo-service/helm/zibo/values.yaml
+
+  - name: product-registry
+    namespace: impilo-registry
+    chart: ../services/product-registry-service/helm/product-registry
+    values:
+      - ../services/product-registry-service/helm/product-registry/values.yaml
+
+  # ── Layer 2: Clinical Execution ──────────────────────────────────
+  - name: pct
+    namespace: impilo-clinical
+    chart: ../services/pct-service/helm/pct
+    needs:
+      - impilo-registry/vito
+    values:
+      - ../services/pct-service/helm/pct/values.yaml
+
+  - name: oros
+    namespace: impilo-clinical
+    chart: ../services/oros-service/helm/oros
+    needs:
+      - impilo-registry/vito
+    values:
+      - ../services/oros-service/helm/oros/values.yaml
+
+  - name: butano
+    namespace: impilo-clinical
+    chart: ./butano
+    values:
+      - ./butano/values.yaml
+
+  - name: pharmacy
+    namespace: impilo-clinical
+    chart: ../services/pharmacy-service/helm/pharmacy
+    values:
+      - ../services/pharmacy-service/helm/pharmacy/values.yaml
+
+  - name: inventory
+    namespace: impilo-clinical
+    chart: ../services/inventory-service/helm/inventory
+    values:
+      - ../services/inventory-service/helm/inventory/values.yaml
+
+  - name: inpatient
+    namespace: impilo-clinical
+    chart: ../services/inpatient-service/helm/inpatient
+    values:
+      - ../services/inpatient-service/helm/inpatient/values.yaml
+
+  # ── Layer 3: Finance ─────────────────────────────────────────────
+  - name: mushex
+    namespace: impilo-finance
+    chart: ../services/mushex-service/helm/mushex
+    needs:
+      - impilo-registry/vito
+    values:
+      - ../services/mushex-service/helm/mushex/values.yaml
+
+  - name: costing
+    namespace: impilo-finance
+    chart: ../services/costing-engine-service/helm/costing
+    values:
+      - ../services/costing-engine-service/helm/costing/values.yaml
+
+  # ── Layer 4: Operations ──────────────────────────────────────────
+  - name: msika
+    namespace: impilo-ops
+    chart: ../services/msika-service/helm/msika
+    values:
+      - ../services/msika-service/helm/msika/values.yaml
+
+  - name: msika-flow
+    namespace: impilo-ops
+    chart: ../services/msika-flow-service/helm/msika-flow
+    values:
+      - ../services/msika-flow-service/helm/msika-flow/values.yaml
+
+  - name: notification
+    namespace: impilo-ops
+    chart: ../services/notification-service/helm/notification
+    values:
+      - ../services/notification-service/helm/notification/values.yaml
+
+  - name: document
+    namespace: impilo-ops
+    chart: ../services/document-service/helm/document
+    values:
+      - ../services/document-service/helm/document/values.yaml
+
+  - name: integration-hub
+    namespace: impilo-ops
+    chart: ../services/integration-hub/helm/integration-hub
+    values:
+      - ../services/integration-hub/helm/integration-hub/values.yaml
+
+  - name: jobs
+    namespace: impilo-ops
+    chart: ../services/jobs-service/helm/jobs
+    values:
+      - ../services/jobs-service/helm/jobs/values.yaml
+
+  # ── Layer 5: Experience ──────────────────────────────────────────
+  - name: experience-bff
+    namespace: impilo-ops
+    chart: ../services/experience-bff/helm/experience-bff
+    needs:
+      - impilo-trust/tshepo-authz
+      - impilo-registry/vito
+      - impilo-clinical/pct
+    values:
+      - ../services/experience-bff/helm/experience-bff/values.yaml

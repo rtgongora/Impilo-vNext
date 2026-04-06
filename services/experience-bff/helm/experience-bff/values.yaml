@@ -1,0 +1,55 @@
+replicaCount: 2
+
+image:
+  repository: ghcr.io/mohcc/impilo/experience-bff
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 8160
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 1Gi
+  limits:
+    cpu: "2"
+    memory: 2Gi
+
+env:
+  SPRING_DATASOURCE_URL: jdbc:postgresql://postgresql.impilo-data.svc.cluster.local:5432/experience_bff
+  SPRING_DATASOURCE_USERNAME: impilo
+  SPRING_DATA_REDIS_HOST: redis.impilo-data.svc.cluster.local
+  SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka.impilo-data.svc.cluster.local:9092
+  SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://auth.impilo.gov.zw/realms/impilo
+  TSHEPO_BASE_URL: http://tshepo-service.impilo-trust.svc.cluster.local:8081
+  VITO_BASE_URL: http://vito-service.impilo-registry.svc.cluster.local:8082
+  VARAPI_BASE_URL: http://varapi-service.impilo-registry.svc.cluster.local:8083
+  TUSO_BASE_URL: http://tuso-service.impilo-registry.svc.cluster.local:8084
+  ZIBO_BASE_URL: http://zibo-service.impilo-registry.svc.cluster.local:8085
+  PCT_BASE_URL: http://pct-service.impilo-clinical.svc.cluster.local:8088
+  OROS_BASE_URL: http://oros-service.impilo-clinical.svc.cluster.local:8089
+  BUTANO_BASE_URL: http://butano-service.impilo-clinical.svc.cluster.local:8090
+  MUSHEX_BASE_URL: http://mushex-service.impilo-finance.svc.cluster.local:8087
+  ORTHANC_BASE_URL: http://orthanc.impilo-clinical.svc.cluster.local:8042
+
+livenessProbe:
+  httpGet:
+    path: /actuator/health/liveness
+    port: 8160
+  initialDelaySeconds: 60
+  periodSeconds: 15
+
+readinessProbe:
+  httpGet:
+    path: /actuator/health/readiness
+    port: 8160
+  initialDelaySeconds: 30
+  periodSeconds: 10
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 8
+  targetCPUUtilizationPercentage: 70

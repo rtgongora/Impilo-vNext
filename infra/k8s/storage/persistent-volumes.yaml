@@ -1,0 +1,102 @@
+---
+# PostgreSQL persistent volume claim
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgresql-data
+  namespace: impilo-data
+  labels:
+    app: postgresql
+    part-of: impilo-vnext
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: managed-premium
+  resources:
+    requests:
+      storage: 100Gi
+---
+# Redis persistent volume claim
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-data
+  namespace: impilo-data
+  labels:
+    app: redis
+    part-of: impilo-vnext
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: managed-premium
+  resources:
+    requests:
+      storage: 10Gi
+---
+# Kafka persistent volume claim (per-broker)
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: kafka-data-0
+  namespace: impilo-data
+  labels:
+    app: kafka
+    part-of: impilo-vnext
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: managed-premium
+  resources:
+    requests:
+      storage: 50Gi
+---
+# MinIO persistent volume claim
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: minio-data
+  namespace: impilo-data
+  labels:
+    app: minio
+    part-of: impilo-vnext
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: managed-premium
+  resources:
+    requests:
+      storage: 50Gi
+---
+# HAPI FHIR Lucene index storage
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: butano-lucene-index
+  namespace: impilo-clinical
+  labels:
+    app: butano
+    part-of: impilo-vnext
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: managed-premium
+  resources:
+    requests:
+      storage: 20Gi
+---
+# Orthanc DICOM storage
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: orthanc-dicom-data
+  namespace: impilo-clinical
+  labels:
+    app: orthanc
+    part-of: impilo-vnext
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: managed-premium
+  resources:
+    requests:
+      storage: 200Gi
