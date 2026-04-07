@@ -675,21 +675,42 @@ function ExaminationPanel() {
 // Main Component
 // ---------------------------------------------------------------------------
 
-export function AssessmentSection() {
-  const [activeTab, setActiveTab] = useState<"triage" | "history" | "examination">("triage");
+import { useCadreFormConfig } from "@/hooks/useCadreFormConfig";
+import { CadreHistoryForm } from "@/components/ehr/CadreHistoryForm";
+import { CadreExamForm } from "@/components/ehr/CadreExamForm";
 
-  const tabs = [
-    { key: "triage" as const, label: "Triage", icon: Shield },
-    { key: "history" as const, label: "History", icon: FileText },
-    { key: "examination" as const, label: "Examination", icon: Stethoscope },
+type AssessmentTab = "triage" | "history" | "examination" | "cadre-history" | "cadre-exam";
+
+export function AssessmentSection() {
+  const cadreConfig = useCadreFormConfig();
+  const isSimplified = cadreConfig.complexity === "simplified";
+  const isComprehensive = cadreConfig.complexity === "comprehensive";
+
+  const [activeTab, setActiveTab] = useState<AssessmentTab>(isSimplified ? "cadre-history" : "triage");
+
+  const tabs: { key: AssessmentTab; label: string; icon: React.ElementType; show: boolean }[] = [
+    { key: "triage", label: "Triage", icon: Shield, show: !isSimplified },
+    { key: "cadre-history", label: cadreConfig.labels.historyTabLabel, icon: FileText, show: true },
+    { key: "cadre-exam", label: cadreConfig.labels.examTabLabel, icon: Stethoscope, show: true },
+    { key: "history", label: "History Review", icon: ClipboardList, show: !isSimplified },
+    { key: "examination", label: "Full Exam", icon: Activity, show: isComprehensive },
   ];
+
+  const visibleTabs = tabs.filter(t => t.show);
 
   return (
     <div className="space-y-4">
+      {/* Cadre Context Badges */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600 capitalize">{cadreConfig.cadre} &middot; {cadreConfig.complexity}</span>
+        <span className="px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700 capitalize">{cadreConfig.visitType} visit</span>
+        <span className={`px-2 py-0.5 rounded text-xs font-medium capitalize ${cadreConfig.acuity === "red" ? "bg-red-100 text-red-700" : cadreConfig.acuity === "orange" ? "bg-amber-100 text-amber-700" : cadreConfig.acuity === "yellow" ? "bg-yellow-100 text-yellow-700" : "bg-green-100 text-green-700"}`}>{cadreConfig.acuity} acuity</span>
+      </div>
+
       {/* Tab bar */}
       <div className="border-b border-gray-200">
         <nav className="flex gap-1">
-          {tabs.map((tab) => {
+          {visibleTabs.map((tab) => {
             const Icon = tab.icon;
             return (
               <button
@@ -711,6 +732,8 @@ export function AssessmentSection() {
 
       {/* Tab content */}
       {activeTab === "triage" && <TriagePanel />}
+      {activeTab === "cadre-history" && <CadreHistoryForm config={cadreConfig} />}
+      {activeTab === "cadre-exam" && <CadreExamForm config={cadreConfig} />}
       {activeTab === "history" && <HistoryPanel />}
       {activeTab === "examination" && <ExaminationPanel />}
     </div>
