@@ -249,14 +249,18 @@ function DoctorHistoryForm({ config, onSave }: { config: CadreFormConfig; onSave
   const [selectedConditions, setSelectedConditions] = useState<typeof ICD10_CONDITIONS[number][]>([]);
   const [conditionSearch, setConditionSearch] = useState("");
   const [checkedItems, setCheckedItems] = useState<Record<string, string[]>>({});
-  const [savedEntries, setSavedEntries] = useState<{ section: string; time: Date }[]>([]);
+  const [savedEntries, setSavedEntries] = useState<{ section: string; data: Record<string, string>; checkedItems: Record<string, string[]>; time: Date }[]>([]);
 
   const update = (key: string, val: string) => setFormData(prev => ({ ...prev, [key]: val }));
   const toggleCheck = (group: string, item: string) => {
     setCheckedItems(prev => { const c = prev[group] || []; return { ...prev, [group]: c.includes(item) ? c.filter(i => i !== item) : [...c, item] }; });
   };
   const filteredConditions = ICD10_CONDITIONS.filter(c => c.display.toLowerCase().includes(conditionSearch.toLowerCase()) || c.code.toLowerCase().includes(conditionSearch.toLowerCase()));
-  const saveSection = () => { setSavedEntries(prev => [...prev, { section: activeSection, time: new Date() }]); };
+  const isSectionSaved = (sectionId: string) => savedEntries.some(e => e.section === sectionId);
+  const saveSection = () => {
+    setSavedEntries(prev => [...prev, { section: activeSection, data: { ...formData }, checkedItems: { ...checkedItems }, time: new Date() }]);
+    onSave?.({ section: activeSection, formData: { ...formData }, selectedConditions, checkedItems: { ...checkedItems } });
+  };
 
   const sections = [
     { id: "hpi", label: "HPI", icon: FileText },
@@ -288,11 +292,17 @@ function DoctorHistoryForm({ config, onSave }: { config: CadreFormConfig; onSave
           <div className="flex gap-1.5 flex-wrap">
             {sections.map(s => {
               const Icon = s.icon;
-              const isSaved = savedEntries.some(e => e.section === s.id);
+              const saved = isSectionSaved(s.id);
               return (
                 <button key={s.id} type="button" onClick={() => setActiveSection(s.id)}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors ${activeSection === s.id ? "bg-blue-600 text-white" : isSaved ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
-                  {isSaved ? <CheckCircle2 className="w-4 h-4" /> : <Icon className="w-4 h-4" />} {s.label}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors ${
+                    activeSection === s.id
+                      ? "bg-blue-600 text-white"
+                      : saved
+                        ? "bg-green-100 text-green-700 border border-green-300"
+                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}>
+                  {saved ? <CheckCircle2 className="w-4 h-4" /> : <Icon className="w-4 h-4" />} {s.label}
                 </button>
               );
             })}
@@ -301,27 +311,63 @@ function DoctorHistoryForm({ config, onSave }: { config: CadreFormConfig; onSave
           {/* HPI — SOCRATES */}
           {activeSection === "hpi" && (
             <div className="bg-white rounded-lg border p-4">
-              <div className="flex items-center justify-between mb-3"><h3 className="text-base font-semibold text-gray-900">History of Present Illness</h3><span className="px-2 py-0.5 rounded text-[10px] font-medium bg-gray-100 text-gray-500">SOCRATES Format</span></div>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-base font-semibold text-gray-900">History of Present Illness</h3>
+                <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-gray-100 text-gray-500">SOCRATES Format</span>
+              </div>
               <div className="grid grid-cols-2 gap-3">
-                <SelectField label="Site" value={formData.hpi_site || ""} onChange={v => update("hpi_site", v)} options={["Head", "Neck", "Chest", "Abdomen", "Back", "Upper limb", "Lower limb", "Generalised", "Pelvic", "Flank", "Epigastric", "Retrosternal"]} />
-                <SelectField label="Onset" value={formData.hpi_onset || ""} onChange={v => update("hpi_onset", v)} options={["Sudden (<minutes)", "Acute (<hours)", "Subacute (days)", "Gradual (weeks)", "Chronic (months)"]} />
-                <SelectField label="Character" value={formData.hpi_character || ""} onChange={v => update("hpi_character", v)} options={["Sharp", "Dull", "Burning", "Cramping", "Stabbing", "Throbbing", "Pressure", "Tearing", "Colicky", "Aching"]} />
-                <SelectField label="Radiation" value={formData.hpi_radiation || ""} onChange={v => update("hpi_radiation", v)} options={["None", "To arm (L)", "To arm (R)", "To back", "To jaw", "To shoulder", "To groin", "To leg", "Diffuse"]} />
-                <SelectField label="Timing" value={formData.hpi_timing || ""} onChange={v => update("hpi_timing", v)} options={["Constant", "Intermittent", "Worse at night", "Worse in morning", "Post-prandial", "On exertion", "At rest", "Episodic"]} />
-                <SelectField label="Severity (0-10)" value={formData.hpi_severity || ""} onChange={v => update("hpi_severity", v)} options={Array.from({ length: 11 }, (_, i) => `${i}/10 — ${i <= 3 ? "Mild" : i <= 6 ? "Moderate" : "Severe"}`)} />
+                <SelectField label="Site" value={formData.hpi_site || ""} onChange={v => update("hpi_site", v)}
+                  options={["Head", "Neck", "Chest", "Abdomen", "Back", "Upper limb", "Lower limb",
+                    "Generalised", "Pelvic", "Flank", "Epigastric", "Retrosternal"]} />
+                <SelectField label="Onset" value={formData.hpi_onset || ""} onChange={v => update("hpi_onset", v)}
+                  options={["Sudden (<minutes)", "Acute (<hours)", "Subacute (days)", "Gradual (weeks)", "Chronic (months)"]} />
+                <SelectField label="Character" value={formData.hpi_character || ""} onChange={v => update("hpi_character", v)}
+                  options={["Sharp", "Dull", "Burning", "Cramping", "Stabbing", "Throbbing",
+                    "Pressure", "Tearing", "Colicky", "Aching"]} />
+                <SelectField label="Radiation" value={formData.hpi_radiation || ""} onChange={v => update("hpi_radiation", v)}
+                  options={["None", "To arm (L)", "To arm (R)", "To back", "To jaw",
+                    "To shoulder", "To groin", "To leg", "Diffuse"]} />
+                <SelectField label="Timing" value={formData.hpi_timing || ""} onChange={v => update("hpi_timing", v)}
+                  options={["Constant", "Intermittent", "Worse at night", "Worse in morning",
+                    "Post-prandial", "On exertion", "At rest", "Episodic"]} />
+                <SelectField label="Severity (0-10)" value={formData.hpi_severity || ""} onChange={v => update("hpi_severity", v)}
+                  options={Array.from({ length: 11 }, (_, i) => `${i}/10 — ${i <= 3 ? "Mild" : i <= 6 ? "Moderate" : "Severe"}`)} />
+
+                {/* Associated Symptoms — 4-column pill toggle grid */}
                 <div className="col-span-2">
                   <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Associated Symptoms</label>
                   <div className="grid grid-cols-4 gap-1.5 mt-1.5">
-                    {["Nausea", "Vomiting", "Fever", "Chills", "Sweating", "Weight loss", "Anorexia", "Fatigue", "Dyspnoea", "Palpitations", "Dizziness", "Syncope"].map(s => {
-                      const checked = (checkedItems.associated || []).includes(s);
-                      return <button key={s} type="button" onClick={() => toggleCheck("associated", s)} className={`p-2 rounded text-xs font-medium transition-all ${checked ? "bg-blue-50 border border-blue-200" : "bg-gray-50 border border-transparent hover:bg-gray-100"}`}>{s}</button>;
+                    {["Nausea", "Vomiting", "Fever", "Chills", "Sweating", "Weight loss",
+                      "Anorexia", "Fatigue", "Dyspnoea", "Palpitations", "Dizziness", "Syncope",
+                    ].map(s => {
+                      const active = (checkedItems.associated || []).includes(s);
+                      return (
+                        <button key={s} type="button" onClick={() => toggleCheck("associated", s)}
+                          className={`p-2 rounded text-xs font-medium transition-all ${
+                            active
+                              ? "bg-blue-50 border border-blue-200 text-blue-700"
+                              : "bg-gray-50 border border-transparent hover:bg-gray-100 text-gray-600"
+                          }`}>
+                          {s}
+                        </button>
+                      );
                     })}
                   </div>
                 </div>
-                <SelectField label="Exacerbating Factors" value={formData.hpi_exacerbating || ""} onChange={v => update("hpi_exacerbating", v)} options={["Movement", "Breathing", "Eating", "Lying flat", "Coughing", "Exercise", "Stress", "Cold", "Nothing specific"]} />
-                <SelectField label="Relieving Factors" value={formData.hpi_relieving || ""} onChange={v => update("hpi_relieving", v)} options={["Rest", "Analgesics", "Antacids", "Sitting up", "Heat", "Cold", "Food", "Nothing helps"]} />
+
+                <SelectField label="Exacerbating Factors" value={formData.hpi_exacerbating || ""} onChange={v => update("hpi_exacerbating", v)}
+                  options={["Movement", "Breathing", "Eating", "Lying flat", "Coughing",
+                    "Exercise", "Stress", "Cold", "Nothing specific"]} />
+                <SelectField label="Relieving Factors" value={formData.hpi_relieving || ""} onChange={v => update("hpi_relieving", v)}
+                  options={["Rest", "Analgesics", "Antacids", "Sitting up", "Heat",
+                    "Cold", "Food", "Nothing helps"]} />
               </div>
-              <div className="flex justify-end mt-4"><button type="button" onClick={saveSection} className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Save HPI</button></div>
+              <div className="flex justify-end mt-4">
+                <button type="button" onClick={saveSection}
+                  className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4" /> Save HPI
+                </button>
+              </div>
             </div>
           )}
 
