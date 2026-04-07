@@ -64,6 +64,25 @@ const ICD10_CONDITIONS = [
   { code: "O80", display: "Single Spontaneous Delivery", category: "Obstetric" },
   { code: "P07", display: "Disorders Related to Short Gestation/Low Birth Weight", category: "Perinatal" },
   { code: "R50", display: "Fever of Unknown Origin", category: "Symptoms" },
+  { code: "J18", display: "Community-Acquired Pneumonia", category: "Respiratory" },
+  { code: "I26", display: "Pulmonary Embolism", category: "Respiratory" },
+  { code: "I82", display: "Deep Vein Thrombosis", category: "Cardiovascular" },
+  { code: "I63", display: "Ischaemic Stroke", category: "Neurological" },
+  { code: "G43", display: "Migraine", category: "Neurological" },
+  { code: "B50", display: "Plasmodium Falciparum Malaria", category: "Infectious" },
+  { code: "A41", display: "Sepsis", category: "Infectious" },
+  { code: "G03", display: "Bacterial Meningitis", category: "Infectious" },
+  { code: "K27", display: "Peptic Ulcer Disease", category: "Gastrointestinal" },
+  { code: "K81", display: "Acute Cholecystitis", category: "Gastrointestinal" },
+  { code: "K35", display: "Acute Appendicitis", category: "Gastrointestinal" },
+  { code: "K74", display: "Cirrhosis of Liver", category: "Gastrointestinal" },
+  { code: "E03", display: "Hypothyroidism", category: "Endocrine" },
+  { code: "E10.1", display: "Diabetic Ketoacidosis", category: "Endocrine" },
+  { code: "O14", display: "Pre-eclampsia", category: "Obstetric" },
+  { code: "O72", display: "Postpartum Haemorrhage", category: "Obstetric" },
+  { code: "O00", display: "Ectopic Pregnancy", category: "Obstetric" },
+  { code: "M15", display: "Osteoarthritis", category: "Musculoskeletal" },
+  { code: "M10", display: "Gout", category: "Musculoskeletal" },
 ];
 
 type ToolTab = "drugs" | "interactions" | "calculators" | "conditions";
@@ -83,6 +102,12 @@ export function MedscapeTools({ open, onClose }: MedscapeToolsProps) {
   const [calcAge, setCalcAge] = useState("");
   const [calcCreatinine, setCalcCreatinine] = useState("");
   const [calcSex, setCalcSex] = useState<"male" | "female">("male");
+  // Wells DVT Score
+  const [wellsItems, setWellsItems] = useState<string[]>([]);
+  // CHA2DS2-VASc
+  const [chadItems, setChadItems] = useState<string[]>([]);
+  // CURB-65
+  const [curbItems, setCurbItems] = useState<string[]>([]);
 
   const filteredDrugs = useMemo(() => DRUG_DATABASE.filter(d =>
     d.name.toLowerCase().includes(drugSearch.toLowerCase()) ||
@@ -253,6 +278,65 @@ export function MedscapeTools({ open, onClose }: MedscapeToolsProps) {
                   <div><label className="text-[10px] text-gray-500">Sex</label><select value={calcSex} onChange={e => setCalcSex(e.target.value as "male"|"female")} className="w-full px-2 py-1.5 text-sm border rounded"><option value="male">Male</option><option value="female">Female</option></select></div>
                 </div>
                 {gfr !== null && <div className="mt-2 p-2 bg-blue-50 rounded text-center"><span className="text-lg font-bold text-blue-700">{gfr}</span><span className="text-xs text-blue-600 ml-1">mL/min/1.73m²</span><p className="text-[10px] text-blue-500">{gfr >= 90 ? "G1 Normal" : gfr >= 60 ? "G2 Mild" : gfr >= 45 ? "G3a Mild-Moderate" : gfr >= 30 ? "G3b Moderate-Severe" : gfr >= 15 ? "G4 Severe" : "G5 Kidney Failure"}</p></div>}
+              </div>
+              {/* Wells DVT Score */}
+              <div className="border rounded-lg p-3">
+                <h4 className="text-sm font-semibold text-gray-900 mb-2">Wells DVT Score</h4>
+                {[
+                  { id: "cancer", label: "Active cancer (within 6 months)", pts: 1 },
+                  { id: "paralysis", label: "Paralysis, paresis, or recent cast", pts: 1 },
+                  { id: "bedridden", label: "Bedridden >3 days or surgery within 12 weeks", pts: 1 },
+                  { id: "tenderness", label: "Localised tenderness along deep veins", pts: 1 },
+                  { id: "swelling", label: "Entire leg swollen", pts: 1 },
+                  { id: "calf", label: "Calf swelling >3cm compared to other leg", pts: 1 },
+                  { id: "pitting", label: "Pitting oedema (symptomatic leg only)", pts: 1 },
+                  { id: "collateral", label: "Collateral superficial veins (non-varicose)", pts: 1 },
+                  { id: "previous", label: "Previously documented DVT", pts: 1 },
+                  { id: "alternative", label: "Alternative diagnosis equally likely", pts: -2 },
+                ].map(item => (
+                  <label key={item.id} className="flex items-center justify-between px-2 py-1.5 rounded hover:bg-gray-50 cursor-pointer">
+                    <div className="flex items-center gap-2"><input type="checkbox" checked={wellsItems.includes(item.id)} onChange={() => setWellsItems(prev => prev.includes(item.id) ? prev.filter(x => x !== item.id) : [...prev, item.id])} className="rounded border-gray-300 text-blue-600" /><span className="text-xs text-gray-700">{item.label}</span></div>
+                    <span className="text-xs text-gray-400">{item.pts > 0 ? `+${item.pts}` : item.pts}</span>
+                  </label>
+                ))}
+                {wellsItems.length > 0 && (() => { const score = wellsItems.reduce((sum, id) => sum + ({ cancer: 1, paralysis: 1, bedridden: 1, tenderness: 1, swelling: 1, calf: 1, pitting: 1, collateral: 1, previous: 1, alternative: -2 }[id] || 0), 0); return <div className="mt-2 p-2 bg-blue-50 rounded text-center"><span className="text-lg font-bold text-blue-700">{score}</span><p className="text-[10px] text-blue-500">{score >= 3 ? "High probability" : score >= 1 ? "Moderate probability" : "Low probability"}</p></div>; })()}
+              </div>
+              {/* CHA2DS2-VASc */}
+              <div className="border rounded-lg p-3">
+                <h4 className="text-sm font-semibold text-gray-900 mb-2">CHA₂DS₂-VASc Score</h4>
+                {[
+                  { id: "chf", label: "CHF / LV dysfunction", pts: 1 },
+                  { id: "htn", label: "Hypertension", pts: 1 },
+                  { id: "age75", label: "Age ≥75", pts: 2 },
+                  { id: "dm", label: "Diabetes mellitus", pts: 1 },
+                  { id: "stroke", label: "Stroke / TIA / thromboembolism", pts: 2 },
+                  { id: "vasc", label: "Vascular disease (MI, PAD, aortic plaque)", pts: 1 },
+                  { id: "age65", label: "Age 65-74", pts: 1 },
+                  { id: "female", label: "Sex category (female)", pts: 1 },
+                ].map(item => (
+                  <label key={item.id} className="flex items-center justify-between px-2 py-1.5 rounded hover:bg-gray-50 cursor-pointer">
+                    <div className="flex items-center gap-2"><input type="checkbox" checked={chadItems.includes(item.id)} onChange={() => setChadItems(prev => prev.includes(item.id) ? prev.filter(x => x !== item.id) : [...prev, item.id])} className="rounded border-gray-300 text-blue-600" /><span className="text-xs text-gray-700">{item.label}</span></div>
+                    <span className="text-xs text-gray-400">+{item.pts}</span>
+                  </label>
+                ))}
+                {chadItems.length > 0 && (() => { const pts: Record<string, number> = { chf: 1, htn: 1, age75: 2, dm: 1, stroke: 2, vasc: 1, age65: 1, female: 1 }; const score = chadItems.reduce((sum, id) => sum + (pts[id] || 0), 0); return <div className="mt-2 p-2 bg-blue-50 rounded text-center"><span className="text-lg font-bold text-blue-700">{score}</span><p className="text-[10px] text-blue-500">{score >= 2 ? "Anticoagulation recommended" : score === 1 ? "Consider anticoagulation" : "No anticoagulation needed"}</p></div>; })()}
+              </div>
+              {/* CURB-65 */}
+              <div className="border rounded-lg p-3">
+                <h4 className="text-sm font-semibold text-gray-900 mb-2">CURB-65 (Pneumonia Severity)</h4>
+                {[
+                  { id: "confusion", label: "Confusion (AMT ≤8 or new disorientation)", pts: 1 },
+                  { id: "urea", label: "Urea >7 mmol/L", pts: 1 },
+                  { id: "rr", label: "Respiratory rate ≥30/min", pts: 1 },
+                  { id: "bp", label: "BP: systolic <90 or diastolic ≤60", pts: 1 },
+                  { id: "age65c", label: "Age ≥65", pts: 1 },
+                ].map(item => (
+                  <label key={item.id} className="flex items-center justify-between px-2 py-1.5 rounded hover:bg-gray-50 cursor-pointer">
+                    <div className="flex items-center gap-2"><input type="checkbox" checked={curbItems.includes(item.id)} onChange={() => setCurbItems(prev => prev.includes(item.id) ? prev.filter(x => x !== item.id) : [...prev, item.id])} className="rounded border-gray-300 text-blue-600" /><span className="text-xs text-gray-700">{item.label}</span></div>
+                    <span className="text-xs text-gray-400">+1</span>
+                  </label>
+                ))}
+                {curbItems.length > 0 && (() => { const score = curbItems.length; return <div className="mt-2 p-2 bg-blue-50 rounded text-center"><span className="text-lg font-bold text-blue-700">{score}</span><p className="text-[10px] text-blue-500">{score >= 3 ? "Severe — consider ICU" : score === 2 ? "Moderate — consider admission" : "Mild — consider outpatient"}</p></div>; })()}
               </div>
             </div>
           )}
