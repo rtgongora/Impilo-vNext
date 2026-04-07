@@ -26,6 +26,9 @@ import {
   CheckCircle2,
   Thermometer,
   Shield,
+  TestTube,
+  Clock,
+  ClipboardList,
 } from "lucide-react";
 
 // ---------------------------------------------------------------------------
@@ -678,22 +681,33 @@ function ExaminationPanel() {
 import { useCadreFormConfig } from "@/hooks/useCadreFormConfig";
 import { CadreHistoryForm } from "@/components/ehr/CadreHistoryForm";
 import { CadreExamForm } from "@/components/ehr/CadreExamForm";
+import { VitalsRecorder } from "@/components/clinical/VitalsRecorder";
+import { LabResultsSystem } from "@/components/lab/LabResultsSystem";
+import { PatientTimeline } from "@/components/timeline/PatientTimeline";
+import { ClerkingTemplateSelector } from "@/components/ehr/clerking/ClerkingTemplateSelector";
+import { ClerkingFormEditor } from "@/components/ehr/clerking/ClerkingFormEditor";
+import { CLERKING_TEMPLATES, type ClerkingTemplate } from "@/data/clerkingTemplates";
 
-type AssessmentTab = "triage" | "history" | "examination" | "cadre-history" | "cadre-exam";
+type AssessmentTab = "triage" | "vitals" | "clerking" | "cadre-history" | "cadre-exam" | "history" | "examination" | "labs" | "timeline";
 
 export function AssessmentSection() {
   const cadreConfig = useCadreFormConfig();
   const isSimplified = cadreConfig.complexity === "simplified";
   const isComprehensive = cadreConfig.complexity === "comprehensive";
+  const [selectedTemplate, setSelectedTemplate] = useState<ClerkingTemplate | null>(null);
 
   const [activeTab, setActiveTab] = useState<AssessmentTab>(isSimplified ? "cadre-history" : "triage");
 
   const tabs: { key: AssessmentTab; label: string; icon: React.ElementType; show: boolean }[] = [
     { key: "triage", label: "Triage", icon: Shield, show: !isSimplified },
+    { key: "vitals", label: "Record Vitals", icon: Heart, show: !isSimplified },
+    { key: "clerking", label: "Clerking", icon: ClipboardList, show: isComprehensive },
     { key: "cadre-history", label: cadreConfig.labels.historyTabLabel, icon: FileText, show: true },
     { key: "cadre-exam", label: cadreConfig.labels.examTabLabel, icon: Stethoscope, show: true },
     { key: "history", label: "History Review", icon: ClipboardList, show: !isSimplified },
     { key: "examination", label: "Full Exam", icon: Activity, show: isComprehensive },
+    { key: "labs", label: "Labs", icon: TestTube, show: !isSimplified },
+    { key: "timeline", label: "Timeline", icon: Clock, show: true },
   ];
 
   const visibleTabs = tabs.filter(t => t.show);
@@ -732,10 +746,18 @@ export function AssessmentSection() {
 
       {/* Tab content */}
       {activeTab === "triage" && <TriagePanel />}
+      {activeTab === "vitals" && <VitalsRecorder />}
+      {activeTab === "clerking" && (
+        selectedTemplate
+          ? <ClerkingFormEditor template={selectedTemplate} onBack={() => setSelectedTemplate(null)} />
+          : <ClerkingTemplateSelector onSelect={setSelectedTemplate} />
+      )}
       {activeTab === "cadre-history" && <CadreHistoryForm config={cadreConfig} />}
       {activeTab === "cadre-exam" && <CadreExamForm config={cadreConfig} />}
       {activeTab === "history" && <HistoryPanel />}
       {activeTab === "examination" && <ExaminationPanel />}
+      {activeTab === "labs" && <LabResultsSystem />}
+      {activeTab === "timeline" && <PatientTimeline />}
     </div>
   );
 }
