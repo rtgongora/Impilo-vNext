@@ -54,8 +54,8 @@ const SYMPTOM_CHECKLIST = [
 interface CadreHistoryFormProps { config: CadreFormConfig; onSave?: (data: Record<string, unknown>) => void; }
 
 export function CadreHistoryForm({ config, onSave }: CadreHistoryFormProps) {
-  if (config.complexityLevel === "simplified") return <CHWHistoryScreen config={config} onSave={onSave} />;
-  if (config.complexityLevel === "focused") return <NursingHistoryForm config={config} onSave={onSave} />;
+  if (config.complexity === "simplified") return <CHWHistoryScreen config={config} onSave={onSave} />;
+  if (config.complexity === "focused") return <NursingHistoryForm config={config} onSave={onSave} />;
   return <DoctorHistoryForm config={config} onSave={onSave} />;
 }
 
