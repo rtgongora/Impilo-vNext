@@ -184,6 +184,7 @@ export function ClinicalToolsMenu({ complexity = "comprehensive" }: ClinicalTool
       {/* Tool Sheet Overlay */}
       {activeToolId && (
         <MedscapeTools
+          open={true}
           toolId={activeToolId}
           complexity={complexity}
           onClose={() => setActiveToolId(null)}

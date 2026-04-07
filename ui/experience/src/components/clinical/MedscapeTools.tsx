@@ -105,11 +105,19 @@ const ICD10_CONDITIONS = [
 
 type ToolTab = "drugs" | "interactions" | "calculators" | "conditions";
 
-interface MedscapeToolsProps { open: boolean; onClose: () => void; }
+interface MedscapeToolsProps { open: boolean; onClose: () => void; toolId?: string | null; complexity?: string; }
 
-export function MedscapeTools({ open, onClose }: MedscapeToolsProps) {
+function resolveInitialTab(toolId?: string | null): ToolTab {
+  if (!toolId) return "drugs";
+  if (toolId.startsWith("calc-")) return "calculators";
+  if (toolId.startsWith("drug-interaction") || toolId.startsWith("drug-allergy") || toolId.startsWith("food-drug")) return "interactions";
+  if (toolId.startsWith("disease") || toolId.startsWith("icd")) return "conditions";
+  return "drugs";
+}
+
+export function MedscapeTools({ open, onClose, toolId }: MedscapeToolsProps) {
   const { currentMedications, allergies, activeConditions, recentVitals } = usePatientContext();
-  const [activeTab, setActiveTab] = useState<ToolTab>("drugs");
+  const [activeTab, setActiveTab] = useState<ToolTab>(resolveInitialTab(toolId));
   const [drugSearch, setDrugSearch] = useState("");
   const [selectedDrug, setSelectedDrug] = useState<Drug | null>(null);
   const [interactionDrugs, setInteractionDrugs] = useState<string[]>([]);
@@ -127,6 +135,8 @@ export function MedscapeTools({ open, onClose }: MedscapeToolsProps) {
   const [chadItems, setChadItems] = useState<string[]>([]);
   // CURB-65
   const [curbItems, setCurbItems] = useState<string[]>([]);
+  // qSOFA
+  const [qsofaItems, setQsofaItems] = useState<string[]>([]);
 
   const filteredDrugs = useMemo(() => DRUG_DATABASE.filter(d =>
     d.name.toLowerCase().includes(drugSearch.toLowerCase()) ||
@@ -390,6 +400,21 @@ export function MedscapeTools({ open, onClose }: MedscapeToolsProps) {
                   </label>
                 ))}
                 {curbItems.length > 0 && (() => { const score = curbItems.length; return <div className="mt-2 p-2 bg-blue-50 rounded text-center"><span className="text-lg font-bold text-blue-700">{score}</span><p className="text-[10px] text-blue-500">{score >= 3 ? "Severe — consider ICU" : score === 2 ? "Moderate — consider admission" : "Mild — consider outpatient"}</p></div>; })()}
+              </div>
+              {/* qSOFA Score */}
+              <div className="border rounded-lg p-3">
+                <h4 className="text-sm font-semibold text-gray-900 mb-2">qSOFA (Quick Sepsis Assessment)</h4>
+                {[
+                  { id: "sbp", label: "Systolic BP ≤100 mmHg", pts: 1 },
+                  { id: "rr", label: "Respiratory rate ≥22/min", pts: 1 },
+                  { id: "gcs", label: "Altered mental status (GCS <15)", pts: 1 },
+                ].map(item => (
+                  <label key={item.id} className="flex items-center justify-between px-2 py-1.5 rounded hover:bg-gray-50 cursor-pointer">
+                    <div className="flex items-center gap-2"><input type="checkbox" checked={qsofaItems.includes(item.id)} onChange={() => setQsofaItems(prev => prev.includes(item.id) ? prev.filter(x => x !== item.id) : [...prev, item.id])} className="rounded border-gray-300 text-blue-600" /><span className="text-xs text-gray-700">{item.label}</span></div>
+                    <span className="text-xs text-gray-400">+1</span>
+                  </label>
+                ))}
+                {qsofaItems.length > 0 && <div className="mt-2 p-2 bg-blue-50 rounded text-center"><span className="text-lg font-bold text-blue-700">{qsofaItems.length}</span><p className="text-[10px] text-blue-500">{qsofaItems.length >= 2 ? "Sepsis likely — assess organ dysfunction (full SOFA)" : "Low risk — monitor clinically"}</p></div>}
               </div>
             </div>
           )}
