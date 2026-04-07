@@ -10,13 +10,15 @@ import { StockManagementPanel } from './StockManagementPanel';
 import { HRShiftsPanel } from './HRShiftsPanel';
 import { BillingPanel } from './BillingPanel';
 
-export type WorkspaceOpsType = 'clinical' | 'admin' | 'support';
+export type WorkspaceOpsType = 'clinical' | 'admin' | 'support' | 'pharmacy' | 'lab' | 'radiology';
 
 type OpsTab = 'dashboard' | 'stock' | 'hr-shifts' | 'billing' | 'settings';
 
 interface WorkspaceOpsHubProps {
-  workspaceName?: string;
-  workspaceType?: WorkspaceOpsType;
+  /** Required: name of the current workspace */
+  workspaceName: string;
+  /** Required: type determines visible tabs and header styling */
+  workspaceType: WorkspaceOpsType;
   facilityName?: string;
   onBack?: () => void;
   visibleTabs?: OpsTab[];
@@ -26,6 +28,9 @@ const WORKSPACE_TYPE_TABS: Record<WorkspaceOpsType, OpsTab[]> = {
   clinical: ['dashboard', 'stock', 'hr-shifts', 'billing'],
   admin: ['dashboard', 'hr-shifts', 'billing', 'stock', 'settings'],
   support: ['dashboard', 'stock', 'hr-shifts', 'settings'],
+  pharmacy: ['dashboard', 'stock', 'billing'],
+  lab: ['dashboard', 'stock', 'hr-shifts'],
+  radiology: ['dashboard', 'stock', 'hr-shifts', 'billing'],
 };
 
 const TAB_CONFIG: Record<OpsTab, { label: string; icon: React.ComponentType<{ className?: string }> }> = {
@@ -40,11 +45,14 @@ const WORKSPACE_TYPE_META: Record<WorkspaceOpsType, { icon: React.ComponentType<
   clinical: { icon: Stethoscope, color: 'bg-blue-500', label: 'Clinical Workspace' },
   admin: { icon: Shield, color: 'bg-amber-500', label: 'Administration Workspace' },
   support: { icon: Headphones, color: 'bg-green-500', label: 'Support Services Workspace' },
+  pharmacy: { icon: Package, color: 'bg-emerald-500', label: 'Pharmacy Workspace' },
+  lab: { icon: BarChart3, color: 'bg-purple-500', label: 'Laboratory Workspace' },
+  radiology: { icon: Building2, color: 'bg-cyan-500', label: 'Radiology Workspace' },
 };
 
 export function WorkspaceOpsHub({
-  workspaceName = 'Workspace',
-  workspaceType = 'clinical',
+  workspaceName,
+  workspaceType,
   facilityName,
   onBack,
   visibleTabs,
