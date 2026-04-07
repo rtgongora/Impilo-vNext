@@ -4,7 +4,7 @@ import { useState } from 'react';
 import {
   Bell, BellOff, MessageSquare, ClipboardList, Megaphone,
   AlertTriangle, CheckCircle, Clock, ArrowRight, Send, X,
-  Volume2, VolumeX, Shield, ArrowRightLeft, Info,
+  Volume2, VolumeX, Shield, ArrowRightLeft, Info, Phone,
 } from 'lucide-react';
 
 // ─── Types ───
@@ -80,6 +80,8 @@ const FILTER_TABS: { id: FilterCategory; label: string; icon?: React.ComponentTy
 
 // ─── Component ───
 
+type PanelView = 'list' | 'compose' | 'page';
+
 export function NotificationsCommsHub() {
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState<FilterCategory>('all');
@@ -87,11 +89,52 @@ export function NotificationsCommsHub() {
   const [isMuted, setIsMuted] = useState(false);
   const [replyTo, setReplyTo] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
+  const [panelView, setPanelView] = useState<PanelView>('list');
+  // Compose state
+  const [composeRecipient, setComposeRecipient] = useState('');
+  const [composeSubject, setComposeSubject] = useState('');
+  const [composeBody, setComposeBody] = useState('');
+  const [composePriority, setComposePriority] = useState<Priority>('normal');
+  // Page state
+  const [pageRecipient, setPageRecipient] = useState('');
+  const [pageUrgency, setPageUrgency] = useState<'routine' | 'urgent' | 'stat'>('routine');
+  const [pageMessage, setPageMessage] = useState('');
+  const [pageCallback, setPageCallback] = useState('');
 
   const unreadCount = notifications.filter(n => !n.read).length;
   const hasCritical = notifications.some(n => !n.read && (n.priority === 'critical' || n.priority === 'high'));
   const filtered = filter === 'all' ? notifications : notifications.filter(n => n.category === filter);
   const unreadMessages = notifications.filter(n => n.category === 'message' && !n.read).length;
+
+  // Per-category unread counts
+  const categoryUnread: Record<string, number> = {
+    alert: notifications.filter(n => n.category === 'alert' && !n.read).length,
+    handoff: notifications.filter(n => n.category === 'handoff' && !n.read).length,
+    message: notifications.filter(n => n.category === 'message' && !n.read).length,
+    announcement: notifications.filter(n => n.category === 'announcement' && !n.read).length,
+    system: notifications.filter(n => n.category === 'system' && !n.read).length,
+  };
+
+  const handleSendMessage = () => {
+    if (!composeRecipient || !composeBody) return;
+    setNotifications(prev => [{
+      id: `sent-${Date.now()}`, category: 'message' as const, priority: composePriority, title: composeSubject || 'Message', body: composeBody,
+      timestamp: 'Just now', read: true, sender: 'You → ' + composeRecipient, workspaceScoped: false,
+    }, ...prev]);
+    setComposeRecipient(''); setComposeSubject(''); setComposeBody(''); setComposePriority('normal');
+    setPanelView('list');
+  };
+
+  const handleSendPage = () => {
+    if (!pageRecipient || !pageMessage) return;
+    setNotifications(prev => [{
+      id: `page-${Date.now()}`, category: 'alert' as const, priority: pageUrgency === 'stat' ? 'critical' as const : pageUrgency === 'urgent' ? 'high' as const : 'normal' as const,
+      title: `Page: ${pageRecipient}`, body: pageMessage + (pageCallback ? ` [Callback: ${pageCallback}]` : ''),
+      timestamp: 'Just now', read: true, sender: 'You', workspaceScoped: false,
+    }, ...prev]);
+    setPageRecipient(''); setPageMessage(''); setPageCallback(''); setPageUrgency('routine');
+    setPanelView('list');
+  };
 
   const markRead = (id: string) => {
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
@@ -174,15 +217,63 @@ export function NotificationsCommsHub() {
                   >
                     {Icon && <Icon className="h-3 w-3" />}
                     {tab.label}
-                    {tab.id === 'message' && unreadMessages > 0 && (
+                    {tab.id !== 'all' && (categoryUnread[tab.id] || 0) > 0 && (
                       <span className="ml-0.5 h-4 min-w-[1rem] px-0.5 rounded-full bg-blue-600 text-white text-[9px] flex items-center justify-center">
-                        {unreadMessages}
+                        {categoryUnread[tab.id]}
                       </span>
                     )}
                   </button>
                 );
               })}
             </div>
+
+            {/* Action buttons */}
+            <div className="flex gap-2 px-3 py-2 border-b border-gray-200">
+              <button onClick={() => setPanelView(panelView === 'compose' ? 'list' : 'compose')} className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${panelView === 'compose' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+                <Send className="w-3 h-3" /> New Message
+              </button>
+              <button onClick={() => setPanelView(panelView === 'page' ? 'list' : 'page')} className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${panelView === 'page' ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+                <Phone className="w-3 h-3" /> Send Page
+              </button>
+            </div>
+
+            {/* Compose Message Panel */}
+            {panelView === 'compose' && (
+              <div className="p-3 border-b border-gray-200 bg-blue-50/30 space-y-2">
+                <h4 className="text-xs font-semibold text-gray-700">New Message</h4>
+                <input value={composeRecipient} onChange={e => setComposeRecipient(e.target.value)} placeholder="To (name or role)..." className="w-full px-2.5 py-1.5 text-xs border rounded-lg" />
+                <input value={composeSubject} onChange={e => setComposeSubject(e.target.value)} placeholder="Subject (optional)" className="w-full px-2.5 py-1.5 text-xs border rounded-lg" />
+                <textarea value={composeBody} onChange={e => setComposeBody(e.target.value)} placeholder="Message..." rows={3} className="w-full px-2.5 py-1.5 text-xs border rounded-lg" />
+                <div className="flex items-center justify-between">
+                  <select value={composePriority} onChange={e => setComposePriority(e.target.value as Priority)} className="px-2 py-1 text-xs border rounded">
+                    <option value="low">Low</option><option value="normal">Normal</option><option value="high">High</option><option value="critical">Critical</option>
+                  </select>
+                  <div className="flex gap-2">
+                    <button onClick={() => setPanelView('list')} className="px-3 py-1.5 text-xs text-gray-500 hover:bg-gray-100 rounded">Cancel</button>
+                    <button onClick={handleSendMessage} disabled={!composeRecipient || !composeBody} className="px-3 py-1.5 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-1"><Send className="w-3 h-3" /> Send</button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Send Page Panel */}
+            {panelView === 'page' && (
+              <div className="p-3 border-b border-gray-200 bg-amber-50/30 space-y-2">
+                <h4 className="text-xs font-semibold text-gray-700">Clinical Page</h4>
+                <input value={pageRecipient} onChange={e => setPageRecipient(e.target.value)} placeholder="Page to (Dr. Name / On-call team)..." className="w-full px-2.5 py-1.5 text-xs border rounded-lg" />
+                <div className="flex gap-2">
+                  {(['routine', 'urgent', 'stat'] as const).map(u => (
+                    <button key={u} onClick={() => setPageUrgency(u)} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${pageUrgency === u ? u === 'stat' ? 'bg-red-100 text-red-700' : u === 'urgent' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'}`}>{u.toUpperCase()}</button>
+                  ))}
+                </div>
+                <textarea value={pageMessage} onChange={e => setPageMessage(e.target.value)} placeholder="Message..." rows={2} className="w-full px-2.5 py-1.5 text-xs border rounded-lg" />
+                <input value={pageCallback} onChange={e => setPageCallback(e.target.value)} placeholder="Callback number (optional)" className="w-full px-2.5 py-1.5 text-xs border rounded-lg" />
+                <div className="flex justify-end gap-2">
+                  <button onClick={() => setPanelView('list')} className="px-3 py-1.5 text-xs text-gray-500 hover:bg-gray-100 rounded">Cancel</button>
+                  <button onClick={handleSendPage} disabled={!pageRecipient || !pageMessage} className="px-3 py-1.5 text-xs bg-amber-600 text-white rounded-lg hover:bg-amber-700 disabled:opacity-50 flex items-center gap-1"><Phone className="w-3 h-3" /> Send Page</button>
+                </div>
+              </div>
+            )}
 
             {/* Notification list */}
             <div className="max-h-[380px] overflow-y-auto divide-y divide-gray-100">
