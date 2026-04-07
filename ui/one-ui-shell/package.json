@@ -19,7 +19,7 @@
     "@radix-ui/react-dropdown-menu": "^2.1.1",
     "@radix-ui/react-navigation-menu": "^1.2.0",
     "@radix-ui/react-toast": "^1.2.1",
-    "shared-ui": "workspace:*"
+    "shared-ui": "file:../shared-ui"
   },
   "devDependencies": {
     "typescript": "~5.5.4",

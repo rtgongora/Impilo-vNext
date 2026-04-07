@@ -19,6 +19,13 @@
     </description>
 
     <dependencies>
+        <!-- Impilo shared-core (transitively pulls security-baseline) -->
+        <dependency>
+            <groupId>zw.gov.mohcc.impilo</groupId>
+            <artifactId>shared-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- Web -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

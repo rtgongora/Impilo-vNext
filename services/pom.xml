@@ -45,6 +45,9 @@
     </properties>
 
     <modules>
+        <!-- Build order: libs first, then shared-core, then services -->
+        <module>../libs/shared-kernel-java</module>
+        <module>../libs/security-baseline</module>
         <module>shared-core</module>
         <module>tshepo-service</module>
         <module>vito-service</module>

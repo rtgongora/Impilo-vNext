@@ -18,7 +18,16 @@
     "pharmacy-web",
     "inventory-web",
     "support-console",
-    "developer-console"
+    "developer-console",
+    "costa-console",
+    "experience",
+    "msika-web",
+    "msika-flow-ops",
+    "msika-flow-portal",
+    "msika-flow-vendor",
+    "mushex-finance-console",
+    "mushex-ops-console",
+    "mushex-payer-portal"
   ],
   "scripts": {
     "dev:shell": "npm -w one-ui-shell run dev",
@@ -38,6 +47,10 @@
     "build": "turbo run build",
     "lint": "turbo run lint",
     "type-check": "turbo run type-check"
+  },
+  "overrides": {
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
   },
   "devDependencies": {
     "turbo": "^2.1.0",

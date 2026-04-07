@@ -15,7 +15,7 @@
     "react-dom": "18.3.1",
     "zustand": "5.0.2",
     "@tanstack/react-query": "5.62.0",
-    "shared-ui": "workspace:*"
+    "shared-ui": "file:../shared-ui"
   },
   "devDependencies": {
     "typescript": "5.5.4",

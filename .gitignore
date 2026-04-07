@@ -28,6 +28,7 @@ hs_err_pid*
 .env
 .env.local
 .env.*.local
+.env.server
 *.pem
 *.key
 credentials.json
