@@ -27,26 +27,87 @@ function usePatientContext() {
 // ── Drug Database ──────────────────────────────────────────
 interface Drug {
   name: string; genericName: string; drugClass: string; route: string;
+  schedule: string; indication: string; dosing: string;
   commonDoses: string[]; sideEffects: string[]; contraindications: string[];
   interactions: string[]; pregnancyCategory: string;
 }
 
 const DRUG_DATABASE: Drug[] = [
-  { name: "Metformin", genericName: "Metformin HCl", drugClass: "Biguanide", route: "Oral", commonDoses: ["500mg BD", "850mg BD", "1000mg BD"], sideEffects: ["Nausea", "Diarrhoea", "Lactic acidosis (rare)"], contraindications: ["eGFR <30", "Hepatic impairment", "Acute MI"], interactions: ["Contrast dye", "Alcohol"], pregnancyCategory: "B" },
-  { name: "Amlodipine", genericName: "Amlodipine besylate", drugClass: "CCB (Dihydropyridine)", route: "Oral", commonDoses: ["5mg OD", "10mg OD"], sideEffects: ["Peripheral oedema", "Headache", "Flushing"], contraindications: ["Severe aortic stenosis", "Cardiogenic shock"], interactions: ["Simvastatin (max 20mg)", "CYP3A4 inhibitors"], pregnancyCategory: "C" },
-  { name: "Enalapril", genericName: "Enalapril maleate", drugClass: "ACE Inhibitor", route: "Oral", commonDoses: ["5mg OD", "10mg BD", "20mg BD"], sideEffects: ["Dry cough", "Hyperkalaemia", "Angioedema"], contraindications: ["Pregnancy", "Bilateral renal artery stenosis", "History of angioedema"], interactions: ["K+ supplements", "NSAIDs", "Lithium"], pregnancyCategory: "D" },
-  { name: "Hydrochlorothiazide", genericName: "Hydrochlorothiazide", drugClass: "Thiazide Diuretic", route: "Oral", commonDoses: ["12.5mg OD", "25mg OD"], sideEffects: ["Hypokalaemia", "Hyperuricaemia", "Photosensitivity"], contraindications: ["Anuria", "Severe renal impairment"], interactions: ["Lithium", "Digoxin", "NSAIDs"], pregnancyCategory: "B" },
-  { name: "Amoxicillin", genericName: "Amoxicillin trihydrate", drugClass: "Penicillin", route: "Oral", commonDoses: ["250mg TDS", "500mg TDS", "1g TDS"], sideEffects: ["Diarrhoea", "Rash", "Nausea"], contraindications: ["Penicillin allergy"], interactions: ["Methotrexate", "Warfarin"], pregnancyCategory: "B" },
-  { name: "Paracetamol", genericName: "Acetaminophen", drugClass: "Analgesic/Antipyretic", route: "Oral/IV/Rectal", commonDoses: ["500mg-1g Q4-6H", "Max 4g/day"], sideEffects: ["Hepatotoxicity (overdose)", "Rare allergic reactions"], contraindications: ["Severe hepatic impairment"], interactions: ["Warfarin (high doses)", "Alcohol"], pregnancyCategory: "B" },
-  { name: "Omeprazole", genericName: "Omeprazole", drugClass: "PPI", route: "Oral", commonDoses: ["20mg OD", "40mg OD"], sideEffects: ["Headache", "Diarrhoea", "B12 deficiency (long-term)"], contraindications: ["Rilpivirine co-admin"], interactions: ["Clopidogrel", "Methotrexate", "Diazepam"], pregnancyCategory: "C" },
-  { name: "Atorvastatin", genericName: "Atorvastatin calcium", drugClass: "HMG-CoA Reductase Inhibitor", route: "Oral", commonDoses: ["10mg OD", "20mg OD", "40mg OD", "80mg OD"], sideEffects: ["Myalgia", "Elevated LFTs", "Rhabdomyolysis (rare)"], contraindications: ["Active liver disease", "Pregnancy"], interactions: ["Clarithromycin", "Grapefruit", "Gemfibrozil"], pregnancyCategory: "X" },
-  { name: "Tenofovir/Lamivudine/Dolutegravir", genericName: "TLD", drugClass: "Antiretroviral (NRTI+INSTI)", route: "Oral", commonDoses: ["1 tablet OD"], sideEffects: ["Weight gain", "Insomnia", "Renal toxicity (tenofovir)"], contraindications: ["CrCl <50 (tenofovir)", "Co-admin with dofetilide"], interactions: ["Rifampicin (double DTG dose)", "Antacids (separate by 2h)"], pregnancyCategory: "B" },
-  { name: "Rifampicin", genericName: "Rifampicin", drugClass: "Rifamycin", route: "Oral", commonDoses: ["450mg OD (<50kg)", "600mg OD (≥50kg)"], sideEffects: ["Orange discolouration of fluids", "Hepatotoxicity", "Thrombocytopaenia"], contraindications: ["Jaundice", "Porphyria"], interactions: ["Warfarin", "OCP", "Dolutegravir", "Protease inhibitors"], pregnancyCategory: "C" },
-  { name: "Ceftriaxone", genericName: "Ceftriaxone sodium", drugClass: "Third-Gen Cephalosporin", route: "IV/IM", commonDoses: ["1g OD IV", "2g OD IV (severe)"], sideEffects: ["Diarrhoea", "Rash", "Biliary sludge", "Phlebitis"], contraindications: ["Cephalosporin allergy", "Neonates with jaundice", "IV calcium co-admin in neonates"], interactions: ["Calcium-containing IV solutions", "Warfarin"], pregnancyCategory: "B" },
-  { name: "Salbutamol", genericName: "Salbutamol sulphate", drugClass: "Short-Acting Beta-2 Agonist", route: "Inhaled/Nebulised/IV", commonDoses: ["2-4 puffs PRN", "2.5-5mg nebulised Q4-6H"], sideEffects: ["Tremor", "Tachycardia", "Hypokalaemia", "Palpitations"], contraindications: ["Hypertrophic cardiomyopathy"], interactions: ["Beta-blockers (antagonism)", "Digoxin"], pregnancyCategory: "C" },
-  { name: "Morphine", genericName: "Morphine sulphate", drugClass: "Opioid Analgesic", route: "Oral/IV/IM/SC", commonDoses: ["2.5-10mg IV Q4H PRN", "10-30mg PO Q4H"], sideEffects: ["Respiratory depression", "Nausea", "Constipation", "Sedation", "Pruritus"], contraindications: ["Respiratory depression", "Acute abdomen (relative)", "Head injury with raised ICP"], interactions: ["Benzodiazepines (respiratory depression)", "MAOIs", "CNS depressants"], pregnancyCategory: "C" },
-  { name: "Warfarin", genericName: "Warfarin sodium", drugClass: "Vitamin K Antagonist", route: "Oral", commonDoses: ["Start 5mg OD, titrate to INR 2-3"], sideEffects: ["Bleeding", "Skin necrosis (rare)", "Purple toe syndrome (rare)"], contraindications: ["Active bleeding", "Pregnancy (1st/3rd trimester)", "Severe liver disease"], interactions: ["NSAIDs", "Amiodarone", "Rifampicin", "Cranberry juice", "Numerous others"], pregnancyCategory: "X" },
-  { name: "Cotrimoxazole", genericName: "Sulfamethoxazole/Trimethoprim", drugClass: "Sulfonamide Antibiotic", route: "Oral/IV", commonDoses: ["960mg BD (treatment)", "480mg OD (prophylaxis)"], sideEffects: ["Rash", "GI upset", "Stevens-Johnson (rare)", "Bone marrow suppression"], contraindications: ["Sulfa allergy", "Severe renal impairment", "Megaloblastic anaemia due to folate deficiency"], interactions: ["Methotrexate", "Warfarin", "Phenytoin"], pregnancyCategory: "D" },
+  { name: "Metformin", genericName: "Metformin HCl", drugClass: "Biguanide", route: "Oral",
+    schedule: "Prescription", indication: "Type 2 diabetes mellitus; first-line agent for glycaemic control",
+    dosing: "500 mg BD initially, titrate to max 1000 mg BD. Take with meals.",
+    commonDoses: ["500mg BD", "850mg BD", "1000mg BD"], sideEffects: ["Nausea", "Diarrhoea", "Abdominal pain", "Lactic acidosis (rare)", "Vitamin B12 deficiency"],
+    contraindications: ["eGFR <30 mL/min", "Metabolic acidosis", "Severe hepatic impairment", "Acute decompensated HF"], interactions: ["Contrast dye (withhold 48h)", "Alcohol (lactic acidosis risk)", "Carbonic anhydrase inhibitors"], pregnancyCategory: "B" },
+  { name: "Amlodipine", genericName: "Amlodipine besylate", drugClass: "CCB (Dihydropyridine)", route: "Oral",
+    schedule: "Prescription", indication: "Hypertension, chronic stable angina, vasospastic angina",
+    dosing: "5 mg OD initially, max 10 mg OD",
+    commonDoses: ["5mg OD", "10mg OD"], sideEffects: ["Peripheral oedema", "Dizziness", "Flushing", "Palpitations", "Fatigue"],
+    contraindications: ["Severe aortic stenosis", "Cardiogenic shock", "Unstable angina"], interactions: ["Simvastatin (max 20mg)", "CYP3A4 inhibitors", "Cyclosporine"], pregnancyCategory: "C" },
+  { name: "Enalapril", genericName: "Enalapril maleate", drugClass: "ACE Inhibitor", route: "Oral",
+    schedule: "Prescription", indication: "Hypertension, heart failure, diabetic nephropathy",
+    dosing: "5 mg OD initially, titrate to 10-20 mg BD. Monitor renal function and K+.",
+    commonDoses: ["5mg OD", "10mg BD", "20mg BD"], sideEffects: ["Dry cough", "Hyperkalaemia", "Angioedema", "Dizziness", "Renal impairment"],
+    contraindications: ["Pregnancy", "Bilateral renal artery stenosis", "History of angioedema"], interactions: ["K+ supplements", "NSAIDs", "Lithium", "Aliskiren"], pregnancyCategory: "D" },
+  { name: "Hydrochlorothiazide", genericName: "Hydrochlorothiazide", drugClass: "Thiazide Diuretic", route: "Oral",
+    schedule: "Prescription", indication: "Hypertension, oedema in heart failure, nephrotic syndrome",
+    dosing: "12.5-25 mg OD in the morning. Monitor electrolytes.",
+    commonDoses: ["12.5mg OD", "25mg OD"], sideEffects: ["Hypokalaemia", "Hyperuricaemia", "Photosensitivity", "Hyponatraemia"],
+    contraindications: ["Anuria", "Severe renal impairment", "Addison's disease"], interactions: ["Lithium", "Digoxin", "NSAIDs"], pregnancyCategory: "B" },
+  { name: "Amoxicillin", genericName: "Amoxicillin trihydrate", drugClass: "Penicillin Antibiotic", route: "Oral",
+    schedule: "Prescription", indication: "Bacterial infections: otitis media, pneumonia, UTI, H. pylori eradication",
+    dosing: "250-500 mg TDS or 1 g TDS for severe infections. Complete the course.",
+    commonDoses: ["250mg TDS", "500mg TDS", "1g TDS"], sideEffects: ["Diarrhoea", "Rash", "Nausea", "Candidiasis"],
+    contraindications: ["Penicillin allergy", "Infectious mononucleosis (rash risk)"], interactions: ["Methotrexate", "Warfarin", "OCP (reduced efficacy)"], pregnancyCategory: "B" },
+  { name: "Paracetamol", genericName: "Acetaminophen", drugClass: "Analgesic/Antipyretic", route: "Oral/IV/Rectal",
+    schedule: "OTC/Prescription", indication: "Mild-moderate pain, fever reduction, osteoarthritis",
+    dosing: "500 mg-1 g Q4-6H. Max 4 g/day (2 g/day in hepatic impairment).",
+    commonDoses: ["500mg-1g Q4-6H", "Max 4g/day"], sideEffects: ["Hepatotoxicity (overdose)", "Rare allergic reactions", "Thrombocytopaenia (rare)"],
+    contraindications: ["Severe hepatic impairment", "Active liver disease"], interactions: ["Warfarin (high doses)", "Alcohol", "Isoniazid"], pregnancyCategory: "B" },
+  { name: "Omeprazole", genericName: "Omeprazole", drugClass: "Proton Pump Inhibitor", route: "Oral",
+    schedule: "Prescription", indication: "GORD, peptic ulcer disease, H. pylori eradication, Zollinger-Ellison",
+    dosing: "20 mg OD for maintenance, 40 mg OD for active ulcer. Take before breakfast.",
+    commonDoses: ["20mg OD", "40mg OD"], sideEffects: ["Headache", "Diarrhoea", "B12 deficiency (long-term)", "Hypomagnesaemia", "C. diff risk"],
+    contraindications: ["Rilpivirine co-admin"], interactions: ["Clopidogrel (reduced efficacy)", "Methotrexate", "Diazepam"], pregnancyCategory: "C" },
+  { name: "Atorvastatin", genericName: "Atorvastatin calcium", drugClass: "HMG-CoA Reductase Inhibitor", route: "Oral",
+    schedule: "Prescription", indication: "Hyperlipidaemia, primary prevention of CVD, secondary prevention post-ACS",
+    dosing: "10-20 mg OD initially, max 80 mg OD. Take at any time of day.",
+    commonDoses: ["10mg OD", "20mg OD", "40mg OD", "80mg OD"], sideEffects: ["Myalgia", "Elevated LFTs", "Rhabdomyolysis (rare)", "Diabetes risk"],
+    contraindications: ["Active liver disease", "Pregnancy", "Breastfeeding"], interactions: ["Clarithromycin", "Grapefruit", "Gemfibrozil", "Ciclosporin"], pregnancyCategory: "X" },
+  { name: "Tenofovir/Lamivudine/Dolutegravir", genericName: "TLD", drugClass: "Antiretroviral (NRTI+INSTI)", route: "Oral",
+    schedule: "Prescription", indication: "HIV-1 infection — first-line ART per WHO and Zimbabwe guidelines",
+    dosing: "1 tablet OD. No food restriction. Double DTG dose if on rifampicin.",
+    commonDoses: ["1 tablet OD"], sideEffects: ["Weight gain", "Insomnia", "Renal toxicity (tenofovir)", "Hepatotoxicity"],
+    contraindications: ["CrCl <50 (tenofovir)", "Co-admin with dofetilide"], interactions: ["Rifampicin (double DTG dose)", "Antacids (separate by 2h)", "Iron/calcium supplements"], pregnancyCategory: "B" },
+  { name: "Rifampicin", genericName: "Rifampicin", drugClass: "Rifamycin Antibiotic", route: "Oral",
+    schedule: "Prescription", indication: "Tuberculosis (all forms), leprosy, serious staphylococcal infections",
+    dosing: "450 mg OD (<50 kg) or 600 mg OD (≥50 kg). Take on empty stomach.",
+    commonDoses: ["450mg OD (<50kg)", "600mg OD (≥50kg)"], sideEffects: ["Orange discolouration of fluids", "Hepatotoxicity", "Thrombocytopaenia", "Flu-like syndrome"],
+    contraindications: ["Jaundice", "Porphyria", "Concurrent ritonavir/saquinavir"], interactions: ["Warfarin", "OCP", "Dolutegravir", "Protease inhibitors", "Many CYP3A4 substrates"], pregnancyCategory: "C" },
+  { name: "Ceftriaxone", genericName: "Ceftriaxone sodium", drugClass: "Third-Gen Cephalosporin", route: "IV/IM",
+    schedule: "Prescription", indication: "Serious bacterial infections: meningitis, pneumonia, UTI, gonorrhoea, sepsis",
+    dosing: "1 g OD IV/IM. 2 g OD for meningitis/severe sepsis. Max 4 g/day.",
+    commonDoses: ["1g OD IV", "2g OD IV (severe)"], sideEffects: ["Diarrhoea", "Rash", "Biliary sludge", "Phlebitis", "C. diff"],
+    contraindications: ["Cephalosporin allergy", "Neonates with jaundice", "IV calcium co-admin in neonates"], interactions: ["Calcium-containing IV solutions", "Warfarin"], pregnancyCategory: "B" },
+  { name: "Salbutamol", genericName: "Salbutamol sulphate", drugClass: "Short-Acting Beta-2 Agonist", route: "Inhaled/Nebulised/IV",
+    schedule: "Prescription", indication: "Acute bronchospasm in asthma and COPD, acute hyperkalaemia",
+    dosing: "2-4 puffs MDI PRN via spacer. Nebulised: 2.5-5 mg Q4-6H.",
+    commonDoses: ["2-4 puffs PRN", "2.5-5mg nebulised Q4-6H"], sideEffects: ["Tremor", "Tachycardia", "Hypokalaemia", "Palpitations"],
+    contraindications: ["Hypertrophic cardiomyopathy"], interactions: ["Beta-blockers (antagonism)", "Digoxin", "Theophylline"], pregnancyCategory: "C" },
+  { name: "Morphine", genericName: "Morphine sulphate", drugClass: "Opioid Analgesic", route: "Oral/IV/IM/SC",
+    schedule: "Schedule 7 (Controlled)", indication: "Severe pain, acute MI, pulmonary oedema, palliative care",
+    dosing: "2.5-10 mg IV Q4H PRN (titrate). PO: 10-30 mg Q4H. Reduce in elderly/renal impairment.",
+    commonDoses: ["2.5-10mg IV Q4H PRN", "10-30mg PO Q4H"], sideEffects: ["Respiratory depression", "Nausea", "Constipation", "Sedation", "Pruritus", "Dependence"],
+    contraindications: ["Respiratory depression", "Acute abdomen (relative)", "Head injury with raised ICP", "Paralytic ileus"], interactions: ["Benzodiazepines (resp depression)", "MAOIs (serotonin syndrome)", "CNS depressants"], pregnancyCategory: "C" },
+  { name: "Warfarin", genericName: "Warfarin sodium", drugClass: "Vitamin K Antagonist", route: "Oral",
+    schedule: "Prescription", indication: "DVT/PE treatment and prophylaxis, AF stroke prevention, prosthetic heart valves",
+    dosing: "Start 5 mg OD, titrate to target INR 2-3 (2.5-3.5 for mechanical valves). Check INR regularly.",
+    commonDoses: ["Start 5mg OD, titrate to INR 2-3"], sideEffects: ["Bleeding", "Skin necrosis (rare)", "Purple toe syndrome (rare)", "Teratogenicity"],
+    contraindications: ["Active bleeding", "Pregnancy (1st/3rd trimester)", "Severe liver disease", "Recent neurosurgery"], interactions: ["NSAIDs", "Amiodarone", "Rifampicin", "Cranberry juice", "Numerous others"], pregnancyCategory: "X" },
+  { name: "Cotrimoxazole", genericName: "Sulfamethoxazole/Trimethoprim", drugClass: "Sulfonamide Antibiotic", route: "Oral/IV",
+    schedule: "Prescription", indication: "PJP prophylaxis (HIV), UTI, toxoplasmosis, Nocardia, Isospora",
+    dosing: "960 mg BD for treatment, 480 mg OD for prophylaxis. Ensure adequate hydration.",
+    commonDoses: ["960mg BD (treatment)", "480mg OD (prophylaxis)"], sideEffects: ["Rash", "GI upset", "Stevens-Johnson (rare)", "Bone marrow suppression", "Hyperkalaemia"],
+    contraindications: ["Sulfa allergy", "Severe renal impairment", "Megaloblastic anaemia due to folate deficiency"], interactions: ["Methotrexate", "Warfarin", "Phenytoin", "ACE inhibitors (hyperkalaemia)"], pregnancyCategory: "D" },
 ];
 
 // ── Interaction Database ─────────────────────────────────
@@ -246,16 +307,7 @@ export function MedscapeTools({ open, onClose, toolId }: MedscapeToolsProps) {
                 <input value={drugSearch} onChange={e => setDrugSearch(e.target.value)} placeholder="Search drugs by name or class..." className="w-full pl-10 pr-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
               {selectedDrug ? (
-                <div className="space-y-3">
-                  <button onClick={() => setSelectedDrug(null)} className="text-xs text-blue-600 hover:underline">&larr; Back to list</button>
-                  <h3 className="text-base font-semibold text-gray-900">{selectedDrug.name}</h3>
-                  <p className="text-xs text-gray-500">{selectedDrug.genericName} &middot; {selectedDrug.drugClass} &middot; {selectedDrug.route} &middot; Pregnancy: {selectedDrug.pregnancyCategory}</p>
-                  <div className="space-y-2">
-                    {[{ l: "Common Doses", items: selectedDrug.commonDoses, c: "bg-blue-50 text-blue-700" }, { l: "Side Effects", items: selectedDrug.sideEffects, c: "bg-amber-50 text-amber-700" }, { l: "Contraindications", items: selectedDrug.contraindications, c: "bg-red-50 text-red-700" }, { l: "Interactions", items: selectedDrug.interactions, c: "bg-purple-50 text-purple-700" }].map(s => (
-                      <div key={s.l}><p className="text-[10px] font-semibold text-gray-400 uppercase mb-1">{s.l}</p><div className="flex flex-wrap gap-1">{s.items.map(i => <span key={i} className={`px-2 py-0.5 rounded text-xs ${s.c}`}>{i}</span>)}</div></div>
-                    ))}
-                  </div>
-                </div>
+                <DrugMonograph drug={selectedDrug} onBack={() => setSelectedDrug(null)} isCurrentMed={isCurrentMed(selectedDrug)} hasAllergyConflict={hasAllergyConflict(selectedDrug)} />
               ) : (
                 <div className="space-y-1">
                   {filteredDrugs.map(d => {
@@ -282,6 +334,12 @@ export function MedscapeTools({ open, onClose, toolId }: MedscapeToolsProps) {
 
           {activeTab === "interactions" && (
             <div className="p-4 space-y-3">
+              {/* Auto-load patient medications */}
+              {currentMedications.length > 0 && interactionDrugs.length === 0 && (
+                <button onClick={() => { setInteractionDrugs([...currentMedications]); }} className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-blue-50 border border-blue-200 rounded-lg text-sm font-medium text-blue-700 hover:bg-blue-100 transition-colors">
+                  <User className="w-4 h-4" /> Load patient&apos;s {currentMedications.length} active medications
+                </button>
+              )}
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input value={interactionSearch} onChange={e => setInteractionSearch(e.target.value)} placeholder="Add drug to check..." className="w-full pl-10 pr-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
@@ -437,6 +495,80 @@ export function MedscapeTools({ open, onClose, toolId }: MedscapeToolsProps) {
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+// ── Drug Monograph Detail View ─────────────────────────
+function DrugMonograph({ drug, onBack, isCurrentMed, hasAllergyConflict }: {
+  drug: Drug; onBack: () => void; isCurrentMed: boolean; hasAllergyConflict: boolean;
+}) {
+  const [monographTab, setMonographTab] = useState<"overview" | "dosing" | "safety" | "interactions">("overview");
+
+  return (
+    <div className="p-4 space-y-4">
+      <button onClick={onBack} className="text-xs text-blue-600 hover:underline">&larr; Back to results</button>
+
+      {hasAllergyConflict && (
+        <div className="p-3 rounded-lg bg-red-50 border border-red-200 flex items-start gap-2">
+          <AlertTriangle className="h-4 w-4 text-red-600 mt-0.5 shrink-0" />
+          <div><p className="text-sm font-semibold text-red-800">Allergy Alert</p><p className="text-xs text-red-700">This patient has a known allergy that may conflict with this medication. Review before prescribing.</p></div>
+        </div>
+      )}
+
+      <div>
+        <div className="flex items-center gap-2">
+          <h2 className="text-lg font-bold text-gray-900">{drug.name}</h2>
+          {isCurrentMed && <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded text-[10px] font-medium">Patient is on this medication</span>}
+        </div>
+        <p className="text-sm text-gray-500">{drug.genericName}</p>
+        <div className="flex gap-2 mt-2">
+          <span className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded text-xs">{drug.drugClass}</span>
+          <span className="px-2 py-0.5 border border-gray-200 text-gray-600 rounded text-xs">{drug.schedule}</span>
+          <span className="px-2 py-0.5 border border-gray-200 text-gray-600 rounded text-[10px]">{drug.route}</span>
+        </div>
+      </div>
+
+      {/* Monograph tabs */}
+      <div className="border-b">
+        <div className="flex">
+          {(["overview", "dosing", "safety", "interactions"] as const).map(tab => (
+            <button key={tab} onClick={() => setMonographTab(tab)} className={`px-3 py-2 text-xs font-medium border-b-2 capitalize transition-colors ${monographTab === tab ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-700"}`}>{tab}</button>
+          ))}
+        </div>
+      </div>
+
+      {monographTab === "overview" && (
+        <div className="space-y-3">
+          <div className="border rounded-lg p-3"><h4 className="text-sm font-semibold text-gray-900 mb-1">Indication</h4><p className="text-sm text-gray-700">{drug.indication}</p></div>
+          <div className="border rounded-lg p-3"><h4 className="text-sm font-semibold text-gray-900 mb-1">Pregnancy</h4><p className="text-sm text-gray-700">Category {drug.pregnancyCategory}</p></div>
+          <div className="border rounded-lg p-3"><h4 className="text-sm font-semibold text-gray-900 mb-1">Common Doses</h4><div className="flex flex-wrap gap-1">{drug.commonDoses.map(d => <span key={d} className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-xs">{d}</span>)}</div></div>
+        </div>
+      )}
+
+      {monographTab === "dosing" && (
+        <div className="border rounded-lg p-3"><h4 className="text-sm font-semibold text-gray-900 mb-2">Dosing</h4><p className="text-sm text-gray-700 whitespace-pre-line">{drug.dosing}</p></div>
+      )}
+
+      {monographTab === "safety" && (
+        <div className="space-y-3">
+          <div className="border rounded-lg p-3">
+            <h4 className="text-sm font-semibold text-gray-900 mb-2">Contraindications</h4>
+            <ul className="space-y-1">{drug.contraindications.map(c => <li key={c} className="text-sm flex items-start gap-2"><AlertTriangle className="h-3.5 w-3.5 text-red-500 mt-0.5 shrink-0" />{c}</li>)}</ul>
+          </div>
+          <div className="border rounded-lg p-3">
+            <h4 className="text-sm font-semibold text-gray-900 mb-2">Side Effects</h4>
+            <div className="flex flex-wrap gap-1.5">{drug.sideEffects.map(s => <span key={s} className="px-2 py-0.5 bg-amber-50 text-amber-700 rounded text-xs">{s}</span>)}</div>
+          </div>
+        </div>
+      )}
+
+      {monographTab === "interactions" && (
+        <div className="border rounded-lg p-3">
+          <h4 className="text-sm font-semibold text-gray-900 mb-2">Known Interactions</h4>
+          <ul className="space-y-1.5">{drug.interactions.map(i => <li key={i} className="text-sm flex items-start gap-2"><AlertCircle className="h-3.5 w-3.5 text-amber-500 mt-0.5 shrink-0" />{i}</li>)}</ul>
+        </div>
+      )}
     </div>
   );
 }
