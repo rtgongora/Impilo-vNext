@@ -13,6 +13,7 @@ import {
   FlaskConical, Headphones, HelpCircle,
 } from "lucide-react";
 import { useRoleGroup } from "@/hooks/useRoleGroup";
+import { useAuthStore } from "@/hooks/useAuthStore";
 
 type ProviderRole = "physician" | "specialist" | "registrar" | "consultant" | "nurse" | "midwife" | "chw" | "pharmacist" | "radiologist" | "pathologist";
 
@@ -69,13 +70,36 @@ const categoryConfig: Record<string, { label: string; color: string }> = {
 
 const categoryOrder = ["pill-id", "guidelines", "procedures", "cases", "podcasts", "sop", "protocol", "guide", "checklist"];
 
+// Map user roles to Lovable ProviderRole for reference filtering
+function resolveProviderRole(roles: string[]): ProviderRole {
+  const lowerRoles = roles.map(r => r.toLowerCase());
+  if (lowerRoles.some(r => r.includes("consultant"))) return "consultant";
+  if (lowerRoles.some(r => r.includes("specialist"))) return "specialist";
+  if (lowerRoles.some(r => r.includes("registrar"))) return "registrar";
+  if (lowerRoles.some(r => r.includes("physician") || r.includes("doctor") || r === "clinical")) return "physician";
+  if (lowerRoles.some(r => r.includes("midwife") || r.includes("midwifery"))) return "midwife";
+  if (lowerRoles.some(r => r.includes("nurse"))) return "nurse";
+  if (lowerRoles.some(r => r.includes("pharmacist") || r.includes("dispenser"))) return "pharmacist";
+  if (lowerRoles.some(r => r.includes("radiolog"))) return "radiologist";
+  if (lowerRoles.some(r => r.includes("patholog"))) return "pathologist";
+  if (lowerRoles.some(r => r.includes("chw") || r.includes("community"))) return "chw";
+  return "physician"; // default fallback
+}
+
 export function ClinicalReferences() {
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
   const { isClinical } = useRoleGroup();
+  const user = useAuthStore((s) => s.user);
 
-  const filtered = clinicalReferences.filter(
+  const providerRole = resolveProviderRole(user?.roles ?? []);
+
+  // Filter by role first (security), then by search query
+  const roleFiltered = clinicalReferences.filter(
+    (ref) => ref.roles.includes(providerRole)
+  );
+  const filtered = roleFiltered.filter(
     (ref) =>
       ref.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
       ref.description.toLowerCase().includes(searchQuery.toLowerCase())
@@ -104,7 +128,7 @@ export function ClinicalReferences() {
           <div className="absolute left-0 top-full mt-1 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50 overflow-hidden">
             <div className="p-3 pb-2">
               <h3 className="font-semibold text-sm text-gray-900">References, SOPs & Learning</h3>
-              <p className="text-xs text-gray-500">{filtered.length} resources available</p>
+              <p className="text-xs text-gray-500">{filtered.length} of {roleFiltered.length} resources for your role</p>
             </div>
 
             <div className="px-3 pb-2">
