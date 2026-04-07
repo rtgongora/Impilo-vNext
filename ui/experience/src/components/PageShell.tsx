@@ -8,11 +8,12 @@
 interface PageShellProps {
   title: string;
   subtitle?: string;
+  icon?: React.ReactNode;
   emptyStateLabel?: string;
   children?: React.ReactNode;
 }
 
-export function PageShell({ title, subtitle, emptyStateLabel, children }: PageShellProps) {
+export function PageShell({ title, subtitle, icon, emptyStateLabel, children }: PageShellProps) {
   return (
     <div>
       <div className="mb-6">
