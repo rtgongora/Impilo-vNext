@@ -9,7 +9,20 @@ import { useState, useMemo, useCallback } from "react";
 import {
   Pill, Search, AlertTriangle, AlertCircle, Info, X, Plus, Trash2,
   Stethoscope, ClipboardList, Calculator, BookOpen, ChevronRight,
+  User, FileWarning,
 } from "lucide-react";
+
+// ── Patient Context (mock — in production fetched from encounter) ──
+function usePatientContext() {
+  const currentMedications = ["Metformin", "Amlodipine", "Hydrochlorothiazide"];
+  const allergies = ["Penicillin", "Sulfa drugs"];
+  const activeConditions = [
+    { name: "Type 2 Diabetes Mellitus", icd10: "E11" },
+    { name: "Essential Hypertension", icd10: "I10" },
+  ];
+  const recentVitals = { weight: 72, height: 165, serumCreatinine: 1.1, age: 65 };
+  return { currentMedications, allergies, activeConditions, recentVitals };
+}
 
 // ── Drug Database ──────────────────────────────────────────
 interface Drug {
@@ -29,6 +42,11 @@ const DRUG_DATABASE: Drug[] = [
   { name: "Atorvastatin", genericName: "Atorvastatin calcium", drugClass: "HMG-CoA Reductase Inhibitor", route: "Oral", commonDoses: ["10mg OD", "20mg OD", "40mg OD", "80mg OD"], sideEffects: ["Myalgia", "Elevated LFTs", "Rhabdomyolysis (rare)"], contraindications: ["Active liver disease", "Pregnancy"], interactions: ["Clarithromycin", "Grapefruit", "Gemfibrozil"], pregnancyCategory: "X" },
   { name: "Tenofovir/Lamivudine/Dolutegravir", genericName: "TLD", drugClass: "Antiretroviral (NRTI+INSTI)", route: "Oral", commonDoses: ["1 tablet OD"], sideEffects: ["Weight gain", "Insomnia", "Renal toxicity (tenofovir)"], contraindications: ["CrCl <50 (tenofovir)", "Co-admin with dofetilide"], interactions: ["Rifampicin (double DTG dose)", "Antacids (separate by 2h)"], pregnancyCategory: "B" },
   { name: "Rifampicin", genericName: "Rifampicin", drugClass: "Rifamycin", route: "Oral", commonDoses: ["450mg OD (<50kg)", "600mg OD (≥50kg)"], sideEffects: ["Orange discolouration of fluids", "Hepatotoxicity", "Thrombocytopaenia"], contraindications: ["Jaundice", "Porphyria"], interactions: ["Warfarin", "OCP", "Dolutegravir", "Protease inhibitors"], pregnancyCategory: "C" },
+  { name: "Ceftriaxone", genericName: "Ceftriaxone sodium", drugClass: "Third-Gen Cephalosporin", route: "IV/IM", commonDoses: ["1g OD IV", "2g OD IV (severe)"], sideEffects: ["Diarrhoea", "Rash", "Biliary sludge", "Phlebitis"], contraindications: ["Cephalosporin allergy", "Neonates with jaundice", "IV calcium co-admin in neonates"], interactions: ["Calcium-containing IV solutions", "Warfarin"], pregnancyCategory: "B" },
+  { name: "Salbutamol", genericName: "Salbutamol sulphate", drugClass: "Short-Acting Beta-2 Agonist", route: "Inhaled/Nebulised/IV", commonDoses: ["2-4 puffs PRN", "2.5-5mg nebulised Q4-6H"], sideEffects: ["Tremor", "Tachycardia", "Hypokalaemia", "Palpitations"], contraindications: ["Hypertrophic cardiomyopathy"], interactions: ["Beta-blockers (antagonism)", "Digoxin"], pregnancyCategory: "C" },
+  { name: "Morphine", genericName: "Morphine sulphate", drugClass: "Opioid Analgesic", route: "Oral/IV/IM/SC", commonDoses: ["2.5-10mg IV Q4H PRN", "10-30mg PO Q4H"], sideEffects: ["Respiratory depression", "Nausea", "Constipation", "Sedation", "Pruritus"], contraindications: ["Respiratory depression", "Acute abdomen (relative)", "Head injury with raised ICP"], interactions: ["Benzodiazepines (respiratory depression)", "MAOIs", "CNS depressants"], pregnancyCategory: "C" },
+  { name: "Warfarin", genericName: "Warfarin sodium", drugClass: "Vitamin K Antagonist", route: "Oral", commonDoses: ["Start 5mg OD, titrate to INR 2-3"], sideEffects: ["Bleeding", "Skin necrosis (rare)", "Purple toe syndrome (rare)"], contraindications: ["Active bleeding", "Pregnancy (1st/3rd trimester)", "Severe liver disease"], interactions: ["NSAIDs", "Amiodarone", "Rifampicin", "Cranberry juice", "Numerous others"], pregnancyCategory: "X" },
+  { name: "Cotrimoxazole", genericName: "Sulfamethoxazole/Trimethoprim", drugClass: "Sulfonamide Antibiotic", route: "Oral/IV", commonDoses: ["960mg BD (treatment)", "480mg OD (prophylaxis)"], sideEffects: ["Rash", "GI upset", "Stevens-Johnson (rare)", "Bone marrow suppression"], contraindications: ["Sulfa allergy", "Severe renal impairment", "Megaloblastic anaemia due to folate deficiency"], interactions: ["Methotrexate", "Warfarin", "Phenytoin"], pregnancyCategory: "D" },
 ];
 
 // ── Interaction Database ─────────────────────────────────
@@ -90,6 +108,7 @@ type ToolTab = "drugs" | "interactions" | "calculators" | "conditions";
 interface MedscapeToolsProps { open: boolean; onClose: () => void; }
 
 export function MedscapeTools({ open, onClose }: MedscapeToolsProps) {
+  const { currentMedications, allergies, activeConditions, recentVitals } = usePatientContext();
   const [activeTab, setActiveTab] = useState<ToolTab>("drugs");
   const [drugSearch, setDrugSearch] = useState("");
   const [selectedDrug, setSelectedDrug] = useState<Drug | null>(null);
@@ -114,6 +133,16 @@ export function MedscapeTools({ open, onClose }: MedscapeToolsProps) {
     d.genericName.toLowerCase().includes(drugSearch.toLowerCase()) ||
     d.drugClass.toLowerCase().includes(drugSearch.toLowerCase())
   ), [drugSearch]);
+
+  // Allergy conflict detection
+  const hasAllergyConflict = useCallback((drug: Drug) => {
+    const lowerAllergies = allergies.map(a => a.toLowerCase());
+    if (lowerAllergies.includes("penicillin") && drug.drugClass.toLowerCase().includes("penicillin")) return true;
+    if (lowerAllergies.includes("sulfa drugs") && drug.name.toLowerCase().includes("sulfa")) return true;
+    return drug.contraindications.some(c => lowerAllergies.some(a => c.toLowerCase().includes(a)));
+  }, [allergies]);
+
+  const isCurrentMed = useCallback((drug: Drug) => currentMedications.includes(drug.name), [currentMedications]);
 
   const filteredConditions = useMemo(() => ICD10_CONDITIONS.filter(c =>
     c.display.toLowerCase().includes(conditionSearch.toLowerCase()) ||
@@ -189,6 +218,19 @@ export function MedscapeTools({ open, onClose }: MedscapeToolsProps) {
         <div className="flex-1 overflow-y-auto">
           {activeTab === "drugs" && (
             <div className="p-4 space-y-3">
+              {/* Patient Context Banners */}
+              {currentMedications.length > 0 && (
+                <div className="p-2.5 rounded-lg bg-blue-50 border border-blue-100">
+                  <div className="flex items-center gap-1.5 mb-1"><User className="h-3.5 w-3.5 text-blue-600" /><span className="text-[10px] font-semibold text-blue-600 uppercase tracking-wider">Current Medications</span></div>
+                  <div className="flex flex-wrap gap-1">{currentMedications.map(m => <span key={m} className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-[10px] font-medium">{m}</span>)}</div>
+                </div>
+              )}
+              {allergies.length > 0 && (
+                <div className="p-2.5 rounded-lg bg-red-50 border border-red-100">
+                  <div className="flex items-center gap-1.5 mb-1"><FileWarning className="h-3.5 w-3.5 text-red-600" /><span className="text-[10px] font-semibold text-red-600 uppercase tracking-wider">Known Allergies</span></div>
+                  <div className="flex flex-wrap gap-1">{allergies.map(a => <span key={a} className="px-2 py-0.5 bg-red-100 text-red-700 rounded text-[10px] font-medium">{a}</span>)}</div>
+                </div>
+              )}
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input value={drugSearch} onChange={e => setDrugSearch(e.target.value)} placeholder="Search drugs by name or class..." className="w-full pl-10 pr-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
@@ -206,12 +248,23 @@ export function MedscapeTools({ open, onClose }: MedscapeToolsProps) {
                 </div>
               ) : (
                 <div className="space-y-1">
-                  {filteredDrugs.map(d => (
-                    <button key={d.name} onClick={() => setSelectedDrug(d)} className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 text-left">
-                      <div><p className="text-sm font-medium text-gray-900">{d.name}</p><p className="text-xs text-gray-500">{d.drugClass} &middot; {d.route}</p></div>
+                  {filteredDrugs.map(d => {
+                    const allergyFlag = hasAllergyConflict(d);
+                    const currentMedFlag = isCurrentMed(d);
+                    return (
+                    <button key={d.name} onClick={() => setSelectedDrug(d)} className={`w-full flex items-center justify-between p-3 rounded-lg text-left transition-colors ${allergyFlag ? "bg-red-50 border border-red-200 hover:bg-red-100" : "hover:bg-gray-50"}`}>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-medium text-gray-900">{d.name}</p>
+                          {currentMedFlag && <span className="px-1.5 py-0 bg-blue-100 text-blue-700 rounded text-[9px] font-medium">CURRENT</span>}
+                          {allergyFlag && <span className="px-1.5 py-0 bg-red-100 text-red-700 rounded text-[9px] font-medium flex items-center gap-0.5"><AlertTriangle className="w-3 h-3" />ALLERGY</span>}
+                        </div>
+                        <p className="text-xs text-gray-500">{d.drugClass} &middot; {d.route}</p>
+                      </div>
                       <ChevronRight className="w-4 h-4 text-gray-400" />
                     </button>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
