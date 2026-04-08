@@ -15,15 +15,15 @@ import { useRouter } from "next/navigation";
 import {
   Users, BookOpen, BarChart3, Clock, ArrowRight, Building2,
   Activity, Receipt, Pill, Calendar, Shield, Stethoscope,
-  ClipboardList, Package, Settings, FileText, MapPin, Loader2,
+  ClipboardList, Package, Settings, FileText, MapPin,
   ChevronRight, Video, ShoppingCart, Database, AlertTriangle,
   Briefcase, Heart, Globe, Siren, Award, GraduationCap, User,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
+import { WorkplaceSelectionHub } from "@/components/home/WorkplaceSelectionHub";
 import { PageShell } from "@/components/PageShell";
 import { useAuthStore } from "@/hooks/useAuthStore";
-import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useShiftStore } from "@/hooks/useShiftStore";
 import { useRoleGroup } from "@/hooks/useRoleGroup";
 import { useWorkModeStore } from "@/hooks/useWorkModeStore";
@@ -32,6 +32,7 @@ import { useProviderLicenses, hasActiveLicense } from "@/hooks/queries/useLicens
 import { useProviderPrivileges } from "@/hooks/queries/useProviderPrivileges";
 import { useCommunityGroups, useJoinGroup } from "@/hooks/queries/useCommunity";
 import { apiClient } from "@/lib/api-client";
+import { useExperienceEntry } from "@/providers/ExperienceEntryProvider";
 
 // ── Module category types ────────────────────────────────────────
 interface ModuleItem {
@@ -251,10 +252,10 @@ type HomeTab = "work" | "professional" | "personal";
 
 export default function HomePage() {
   const user = useAuthStore((s) => s.user);
-  const facility = useFacilityStore((s) => s.facility);
   const shift = useShiftStore((s) => s.shift);
   const roleGroup = useRoleGroup();
-  const { isClinical, isAdmin, isFinance, isDispenser, isCitizen } = roleGroup;
+  const { isClinical, isAdmin, isFinance, isDispenser } = roleGroup;
+  const { facility, selectFacility, enterMode } = useExperienceEntry();
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<HomeTab>(() => {
     if (typeof window === "undefined") return "work";
@@ -287,16 +288,32 @@ export default function HomePage() {
   const communityGroups = groupsData?.data ?? [];
   const joinGroup = useJoinGroup();
 
-  function selectFacility(f: FacilityResource) {
-    useFacilityStore.getState().setFacility({
-      id: f.id,
-      name: f.attributes.name,
-      code: f.attributes.code,
-      facilityType: f.attributes.facilityType,
-      capabilities: f.attributes.capabilities ?? [],
+  function handleFacilitySelect(facilityResource: FacilityResource) {
+    selectFacility(
+      {
+        id: facilityResource.id,
+        name: facilityResource.attributes.name,
+        code: facilityResource.attributes.code,
+        facilityType: facilityResource.attributes.facilityType,
+        capabilities: facilityResource.attributes.capabilities ?? [],
+      },
+      {
+        mode: "clinical",
+        nextPath: "/workspace",
+      }
+    );
+  }
+
+  function enterFacilityFreeMode(mode: "admin" | "finance", nextPath: string) {
+    enterMode(mode, nextPath);
+  }
+
+  function enterIndependentMode(mode: "independent_practice" | "emergency_response" | "community_outreach") {
+    useWorkModeStore.getState().setMode(mode, {
+      licenseNumber: licenses[0]?.licenseNumber ?? "",
+      licenseCategory: licenses[0]?.cadre ?? user?.roles?.[0] ?? "",
     });
-    useWorkModeStore.getState().setMode("clinical");
-    router.push("/workspace");
+    router.push("/queue");
   }
 
   // Fetch recent encounters
@@ -386,11 +403,11 @@ export default function HomePage() {
             </button>
             <button onClick={() => switchTab("professional")}
               className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === "professional" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
-              <Stethoscope className="w-4 h-4" /> Professional
+              <Stethoscope className="w-4 h-4" /> My Professional
             </button>
             <button onClick={() => switchTab("personal")}
               className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === "personal" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
-              <Heart className="w-4 h-4" /> Personal
+              <Heart className="w-4 h-4" /> My Life
             </button>
           </div>
 
@@ -399,69 +416,36 @@ export default function HomePage() {
 
           {/* Workplace Selection Hub — when no facility */}
           {!hasWorkContext && (
-            <div className="bg-white rounded-lg border-2 border-blue-200 p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <MapPin className="w-5 h-5 text-blue-600" />
-                <h3 className="text-base font-semibold text-gray-900">Where are you working from?</h3>
-              </div>
-              <p className="text-sm text-gray-500 mb-4">Select your facility to begin clinical, operational, or administrative work.</p>
-              {facilitiesLoading ? (
-                <div className="flex items-center gap-2 py-6 justify-center">
-                  <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
-                  <span className="text-sm text-gray-500">Loading facilities...</span>
-                </div>
-              ) : facilities.length === 0 ? (
-                <div className="text-center py-6">
-                  <Building2 className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                  <p className="text-sm text-gray-400">No facilities available</p>
-                  <Link href="/facility" className="mt-2 inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800">
-                    Browse all facilities <ArrowRight className="w-3 h-3" />
-                  </Link>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {facilities.slice(0, 6).map((f) => (
-                    <button key={f.id} onClick={() => selectFacility(f)}
-                      className="text-left bg-gray-50 rounded-lg border border-gray-200 p-4 hover:border-blue-300 hover:bg-blue-50 transition-all group">
-                      <div className="flex items-start gap-3">
-                        <Building2 className="w-5 h-5 text-gray-400 group-hover:text-blue-500 shrink-0 mt-0.5" />
-                        <div>
-                          <p className="text-sm font-medium text-gray-900 group-hover:text-blue-700">{f.attributes.name}</p>
-                          <p className="text-xs text-gray-500 mt-0.5">{f.attributes.facilityType} &middot; {f.attributes.code}</p>
-                        </div>
-                      </div>
-                    </button>
-                  ))}
-                  {facilities.length > 6 && (
-                    <Link href="/facility" className="flex items-center justify-center gap-1 text-sm text-blue-600 hover:text-blue-800 p-4 border border-dashed border-gray-300 rounded-lg hover:border-blue-300 transition-colors">
-                      View all {facilities.length} facilities <ArrowRight className="w-3 h-3" />
-                    </Link>
-                  )}
-                </div>
-              )}
-              {(isAdmin || isFinance) && (
-                <div className="mt-4 pt-4 border-t border-gray-200">
-                  <p className="text-xs text-gray-500 mb-2">Or work without a facility context:</p>
-                  <div className="flex flex-wrap gap-2">
-                    {isAdmin && (
-                      <button onClick={() => { useWorkModeStore.getState().setMode("admin"); router.push("/admin"); }}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
-                        <Shield className="w-3.5 h-3.5" /> Administration
-                      </button>
-                    )}
-                    {isFinance && (
-                      <button onClick={() => { useWorkModeStore.getState().setMode("finance"); router.push("/finance"); }}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
-                        <Receipt className="w-3.5 h-3.5" /> Finance
-                      </button>
-                    )}
-                    <Link href="/reports" className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
-                      <BarChart3 className="w-3.5 h-3.5" /> Reports
-                    </Link>
-                  </div>
-                </div>
-              )}
-            </div>
+            <WorkplaceSelectionHub
+              facilities={facilities}
+              isLoading={facilitiesLoading}
+              onSelectFacility={handleFacilitySelect}
+              maxVisible={6}
+              modeActions={[
+                ...(isAdmin
+                  ? [{
+                      label: "Administration",
+                      description: "Enter the operational oversight surface without binding to a facility first.",
+                      icon: Shield,
+                      onClick: () => enterFacilityFreeMode("admin", "/admin"),
+                    }]
+                  : []),
+                ...(isFinance
+                  ? [{
+                      label: "Finance",
+                      description: "Jump into claims, billing, and payment orchestration from a finance-first workflow.",
+                      icon: Receipt,
+                      onClick: () => enterFacilityFreeMode("finance", "/finance"),
+                    }]
+                  : []),
+                {
+                  label: "Reports",
+                  description: "Review cross-cutting reporting and performance signals before entering a work context.",
+                  icon: BarChart3,
+                  href: "/reports",
+                },
+              ]}
+            />
           )}
 
           {/* Professional Dashboard — stats + schedule (Lovable MyProfessionalHub) */}
@@ -731,7 +715,7 @@ export default function HomePage() {
                             <p className="text-xs text-gray-500">{f.attributes.facilityType}</p>
                           </div>
                         </div>
-                        <button onClick={() => selectFacility(f)}
+                        <button onClick={() => handleFacilitySelect(f)}
                           className="text-xs text-blue-600 hover:text-blue-800 font-medium">
                           Start Shift →
                         </button>
@@ -750,37 +734,19 @@ export default function HomePage() {
                     <Globe className="w-5 h-5 text-teal-600" /> Independent & Field Work
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <button onClick={() => {
-                      useWorkModeStore.getState().setMode("independent_practice", {
-                        licenseNumber: licenses[0]?.licenseNumber ?? "",
-                        licenseCategory: licenses[0]?.cadre ?? user?.roles?.[0] ?? "",
-                      });
-                      router.push("/queue");
-                    }}
+                    <button onClick={() => enterIndependentMode("independent_practice")}
                       className="text-left bg-amber-50 rounded-lg border border-amber-200 p-4 hover:border-amber-400 transition-all group">
                       <Briefcase className="w-5 h-5 text-amber-600 mb-2" />
                       <p className="text-sm font-medium text-gray-900 group-hover:text-amber-700">Independent Practice</p>
                       <p className="text-xs text-gray-500 mt-0.5">Work under your own license without facility context</p>
                     </button>
-                    <button onClick={() => {
-                      useWorkModeStore.getState().setMode("emergency_response", {
-                        licenseNumber: licenses[0]?.licenseNumber ?? "",
-                        licenseCategory: licenses[0]?.cadre ?? user?.roles?.[0] ?? "",
-                      });
-                      router.push("/queue");
-                    }}
+                    <button onClick={() => enterIndependentMode("emergency_response")}
                       className="text-left bg-red-50 rounded-lg border border-red-200 p-4 hover:border-red-400 transition-all group">
                       <Siren className="w-5 h-5 text-red-600 mb-2" />
                       <p className="text-sm font-medium text-gray-900 group-hover:text-red-700">Emergency Response</p>
                       <p className="text-xs text-gray-500 mt-0.5">Emergency work under license authority</p>
                     </button>
-                    <button onClick={() => {
-                      useWorkModeStore.getState().setMode("community_outreach", {
-                        licenseNumber: licenses[0]?.licenseNumber ?? "",
-                        licenseCategory: licenses[0]?.cadre ?? user?.roles?.[0] ?? "",
-                      });
-                      router.push("/queue");
-                    }}
+                    <button onClick={() => enterIndependentMode("community_outreach")}
                       className="text-left bg-teal-50 rounded-lg border border-teal-200 p-4 hover:border-teal-400 transition-all group">
                       <Heart className="w-5 h-5 text-teal-600 mb-2" />
                       <p className="text-sm font-medium text-gray-900 group-hover:text-teal-700">Community Outreach</p>

@@ -12,6 +12,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { type ReactNode, useEffect, useState } from "react";
 import { AuthGuardProvider } from "./AuthGuardProvider";
+import { ExperienceEntryProvider } from "./ExperienceEntryProvider";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useWorkspaceStore } from "@/hooks/useWorkspaceStore";
@@ -83,7 +84,9 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <StoreHydrator>
-        <AuthGuardProvider>{children}</AuthGuardProvider>
+        <ExperienceEntryProvider>
+          <AuthGuardProvider>{children}</AuthGuardProvider>
+        </ExperienceEntryProvider>
       </StoreHydrator>
     </QueryClientProvider>
   );

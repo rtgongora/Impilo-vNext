@@ -13,7 +13,7 @@ import { useAuthStore } from "@/hooks/useAuthStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useWorkspaceStore } from "@/hooks/useWorkspaceStore";
 import { useShiftStore } from "@/hooks/useShiftStore";
-import { ROUTES, type GuardType } from "@/lib/routes";
+import { matchRouteDefinition } from "@/lib/routes";
 
 /**
  * Map abstract role-group names used in routes.ts to concrete Keycloak roles.
@@ -35,20 +35,6 @@ export function matchesRequiredRole(hasRole: (r: string) => boolean, requiredRol
   return hasRole(requiredRole);
 }
 
-function findRouteGuard(pathname: string): { guard: GuardType; requiredRole?: string } | null {
-  // Try exact match first, then pattern match
-  for (const route of ROUTES) {
-    const pattern = route.path
-      .replace(/\[(\w+)\]/g, "[^/]+")
-      .replace(/\//g, "\\/");
-    const regex = new RegExp(`^${pattern}$`);
-    if (regex.test(pathname)) {
-      return { guard: route.guard, requiredRole: route.requiredRole };
-    }
-  }
-  return null;
-}
-
 export function AuthGuardProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -58,7 +44,7 @@ export function AuthGuardProvider({ children }: { children: ReactNode }) {
   const { hasShift } = useShiftStore();
 
   useEffect(() => {
-    const routeInfo = findRouteGuard(pathname);
+    const routeInfo = matchRouteDefinition(pathname);
     if (!routeInfo) return;
 
     const { guard, requiredRole } = routeInfo;

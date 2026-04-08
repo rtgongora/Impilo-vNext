@@ -25,6 +25,8 @@ const EXPECTED_SECTIONS = [
   "Assessment",
   "Problems & Diagnoses",
   "Care & Management",
+  "History & Context",
+  "Clinical Depth",
   "Consults & Referrals",
   "Visit Outcome",
 ];
@@ -95,8 +97,10 @@ describe("EncounterMenu", () => {
       "Summary", "Timeline",
       "Vitals", "Conditions", "History",
       "Allergies", "Immunizations",
-      "Medications", "Orders", "Results", "Imaging",
-      "Consults", "Teleconsults", "Documents",
+      "Medications", "Orders", "Results", "Imaging", "Care Plans", "Care Team", "Goals",
+      "Family History", "Social History", "Functional Status", "Advance Directives",
+      "Procedures", "Growth Chart", "Assessments",
+      "Consults", "Documents",
       "Notes", "Discharge",
     ];
 

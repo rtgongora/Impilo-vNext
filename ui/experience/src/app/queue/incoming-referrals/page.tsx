@@ -1,28 +1,27 @@
 "use client";
 
 /**
- * Incoming Referrals — Receiving facility view of referrals sent to this facility.
+ * Incoming Referrals - Receiving facility view of referrals sent to this facility.
  * Allows accept, respond with outcome, and schedule teleconsult.
  * Route: /queue/incoming-referrals | pageTitle: "Incoming Referrals"
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
-  ArrowLeft,
-  ArrowDownLeft,
-  Loader2,
-  CheckCircle2,
   AlertCircle,
+  ArrowDownLeft,
+  ArrowLeft,
+  CheckCircle2,
   Clock,
+  Loader2,
   MessageSquare,
-  Video,
   User,
+  Video,
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
-import { useAuthStore } from "@/hooks/useAuthStore";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
 
 interface IncomingReferral {
@@ -63,7 +62,6 @@ const STATUS_BADGE: Record<string, string> = {
 
 export default function IncomingReferralsPage() {
   const facility = useFacilityStore((s) => s.facility);
-  const { user } = useAuthStore();
 
   const [referrals, setReferrals] = useState<IncomingReferral[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -72,22 +70,40 @@ export default function IncomingReferralsPage() {
   const [responseOutcome, setResponseOutcome] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Fetch incoming referrals
-  useState(() => {
+  useEffect(() => {
     if (!facility) {
+      setReferrals([]);
       setIsLoading(false);
       return;
     }
+
+    let isCancelled = false;
+    setIsLoading(true);
+
     apiClient
       .get<ApiResponse<IncomingReferral[]>>(
-        `/internal/v1/referrals/incoming?facility_id=${encodeURIComponent(facility.id)}`
+        `/internal/v1/referrals/incoming?facility_id=${encodeURIComponent(facility.id)}`,
       )
       .then((res) => {
-        setReferrals(res.data ?? []);
+        if (!isCancelled) {
+          setReferrals(res.data ?? []);
+        }
       })
-      .catch(() => {})
-      .finally(() => setIsLoading(false));
-  });
+      .catch(() => {
+        if (!isCancelled) {
+          setReferrals([]);
+        }
+      })
+      .finally(() => {
+        if (!isCancelled) {
+          setIsLoading(false);
+        }
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [facility]);
 
   async function handleAccept(referralId: string) {
     if (!facility) return;
@@ -98,13 +114,13 @@ export default function IncomingReferralsPage() {
         receiving_facility_name: facility.name,
       });
       setReferrals((prev) =>
-        prev.map((r) =>
-          r.id === referralId ? { ...r, attributes: { ...r.attributes, status: "ACCEPTED" } } : r
-        )
+        prev.map((referral) =>
+          referral.id === referralId
+            ? { ...referral, attributes: { ...referral.attributes, status: "ACCEPTED" } }
+            : referral,
+        ),
       );
       setActiveAction(null);
-    } catch {
-      // Error handled by UI
     } finally {
       setIsSubmitting(false);
     }
@@ -118,17 +134,22 @@ export default function IncomingReferralsPage() {
         outcome: responseOutcome || null,
       });
       setReferrals((prev) =>
-        prev.map((r) =>
-          r.id === referralId
-            ? { ...r, attributes: { ...r.attributes, status: "RESPONDED", response_notes: responseNotes } }
-            : r
-        )
+        prev.map((referral) =>
+          referral.id === referralId
+            ? {
+                ...referral,
+                attributes: {
+                  ...referral.attributes,
+                  status: "RESPONDED",
+                  response_notes: responseNotes,
+                },
+              }
+            : referral,
+        ),
       );
       setActiveAction(null);
       setResponseNotes("");
       setResponseOutcome("");
-    } catch {
-      // Error handled by UI
     } finally {
       setIsSubmitting(false);
     }
@@ -136,158 +157,196 @@ export default function IncomingReferralsPage() {
 
   return (
     <AppLayout>
-      <PageShell title="Incoming Referrals" subtitle={facility ? `Referrals sent to ${facility.name}` : "Select a facility first"}>
+      <PageShell
+        title="Incoming Referrals"
+        subtitle={facility ? `Referrals sent to ${facility.name}` : "Select a facility first"}
+      >
         <div className="mb-4">
           <Link
             href="/queue"
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            className="inline-flex items-center gap-1 text-sm text-gray-500 transition-colors hover:text-gray-700"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="h-4 w-4" />
             Back to queue
           </Link>
         </div>
 
         {!facility ? (
-          <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-            <AlertCircle className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-400 text-sm">Please select a facility first</p>
-            <Link href="/facility" className="mt-2 inline-block text-sm text-blue-600 hover:text-blue-800">
+          <div className="rounded-lg border border-gray-200 bg-white p-12 text-center">
+            <AlertCircle className="mx-auto mb-3 h-10 w-10 text-gray-300" />
+            <p className="text-sm text-gray-500">Please select a facility first</p>
+            <Link
+              href="/facility"
+              className="mt-2 inline-block text-sm text-blue-600 hover:text-blue-800"
+            >
               Select Facility
             </Link>
           </div>
         ) : isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+            <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
             <span className="ml-2 text-sm text-gray-500">Loading incoming referrals...</span>
           </div>
         ) : referrals.length === 0 ? (
-          <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-            <ArrowDownLeft className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-400 text-sm">No incoming referrals</p>
+          <div className="rounded-lg border border-gray-200 bg-white p-12 text-center">
+            <ArrowDownLeft className="mx-auto mb-3 h-10 w-10 text-gray-300" />
+            <p className="text-sm text-gray-500">No incoming referrals</p>
           </div>
         ) : (
           <div className="space-y-4">
             {referrals.map((referral) => {
-              const a = referral.attributes;
-              const urgencyStyle = URGENCY_BADGE[a.urgency] ?? "bg-gray-100 text-gray-600";
-              const statusStyle = STATUS_BADGE[a.status] ?? "bg-gray-100 text-gray-600";
-              const isActionable = a.status === "PENDING" || a.status === "ACCEPTED";
+              const attrs = referral.attributes;
+              const urgencyStyle = URGENCY_BADGE[attrs.urgency] ?? "bg-gray-100 text-gray-600";
+              const statusStyle = STATUS_BADGE[attrs.status] ?? "bg-gray-100 text-gray-600";
+              const isActionable = attrs.status === "PENDING" || attrs.status === "ACCEPTED";
 
               return (
-                <div key={referral.id} className="bg-white rounded-lg border border-gray-200 p-5">
+                <div key={referral.id} className="rounded-lg border border-gray-200 bg-white p-5">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="text-sm font-semibold text-gray-900">{a.specialty}</h3>
-                        <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${urgencyStyle}`}>{a.urgency}</span>
-                        <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${statusStyle}`}>{a.status}</span>
-                      </div>
-                      <p className="text-sm text-gray-700 mb-1">
-                        <span className="font-medium">From:</span> {a.referred_by_name}
-                        {a.referred_to_facility && <span className="text-gray-500"> at {a.referred_to_facility}</span>}
-                      </p>
-                      <p className="text-sm text-gray-600">{a.reason}</p>
-                      {a.clinical_summary && (
-                        <p className="text-xs text-gray-500 mt-1 line-clamp-2">{a.clinical_summary}</p>
-                      )}
-                      <div className="flex items-center gap-3 mt-2 text-xs text-gray-400">
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
-                          {new Date(a.created_at).toLocaleString()}
+                      <div className="mb-1 flex items-center gap-2">
+                        <h3 className="text-sm font-semibold text-gray-900">{attrs.specialty}</h3>
+                        <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${urgencyStyle}`}>
+                          {attrs.urgency}
                         </span>
-                        {a.patient_id && (
-                          <Link href={`/ehr/${a.patient_id}`} className="text-blue-600 hover:text-blue-800 flex items-center gap-1">
-                            <User className="w-3 h-3" /> View Patient
+                        <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusStyle}`}>
+                          {attrs.status}
+                        </span>
+                      </div>
+
+                      <p className="mb-1 text-sm text-gray-700">
+                        <span className="font-medium">From:</span> {attrs.referred_by_name}
+                        {attrs.referred_to_facility && (
+                          <span className="text-gray-500"> at {attrs.referred_to_facility}</span>
+                        )}
+                      </p>
+
+                      <p className="text-sm text-gray-600">{attrs.reason}</p>
+
+                      {attrs.clinical_summary && (
+                        <p className="mt-1 line-clamp-2 text-xs text-gray-500">
+                          {attrs.clinical_summary}
+                        </p>
+                      )}
+
+                      <div className="mt-2 flex items-center gap-3 text-xs text-gray-400">
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {new Date(attrs.created_at).toLocaleString()}
+                        </span>
+                        {attrs.patient_id && (
+                          <Link
+                            href={`/ehr/${attrs.patient_id}`}
+                            className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
+                          >
+                            <User className="h-3 w-3" />
+                            View Patient
                           </Link>
                         )}
                       </div>
 
-                      {/* Response notes if already responded */}
-                      {a.response_notes && (
-                        <div className="mt-3 p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                      {attrs.response_notes && (
+                        <div className="mt-3 rounded-lg border border-purple-200 bg-purple-50 p-3">
                           <p className="text-xs font-medium text-purple-700">Response:</p>
-                          <p className="text-sm text-purple-900">{a.response_notes}</p>
+                          <p className="text-sm text-purple-900">{attrs.response_notes}</p>
                         </div>
                       )}
                     </div>
 
-                    {/* Action buttons */}
                     {isActionable && (
-                      <div className="flex flex-col gap-2 shrink-0">
-                        {a.status === "PENDING" && (
+                      <div className="flex shrink-0 flex-col gap-2">
+                        {attrs.status === "PENDING" && (
                           <button
+                            type="button"
                             onClick={() => handleAccept(referral.id)}
                             disabled={isSubmitting}
-                            className="px-4 py-2 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center gap-1"
+                            className="flex items-center gap-1 rounded-lg bg-blue-600 px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
                           >
-                            <CheckCircle2 className="w-3 h-3" /> Accept
+                            <CheckCircle2 className="h-3 w-3" />
+                            Accept
                           </button>
                         )}
-                        {(a.status === "PENDING" || a.status === "ACCEPTED") && (
-                          <button
-                            onClick={() => setActiveAction({ id: referral.id, type: "respond" })}
-                            className="px-4 py-2 bg-purple-600 text-white text-xs font-medium rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-1"
-                          >
-                            <MessageSquare className="w-3 h-3" /> Respond
-                          </button>
-                        )}
-                        <Link
-                          href={`/telemedicine`}
-                          className="px-4 py-2 bg-green-600 text-white text-xs font-medium rounded-lg hover:bg-green-700 transition-colors flex items-center gap-1 text-center"
+                        <button
+                          type="button"
+                          onClick={() => setActiveAction({ id: referral.id, type: "respond" })}
+                          className="flex items-center gap-1 rounded-lg bg-purple-600 px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-purple-700"
                         >
-                          <Video className="w-3 h-3" /> Teleconsult
+                          <MessageSquare className="h-3 w-3" />
+                          Respond
+                        </button>
+                        <Link
+                          href={`/telemedicine?patientId=${encodeURIComponent(attrs.patient_id)}&referralId=${encodeURIComponent(referral.id)}`}
+                          className="flex items-center justify-center gap-1 rounded-lg bg-green-600 px-4 py-2 text-center text-xs font-medium text-white transition-colors hover:bg-green-700"
+                        >
+                          <Video className="h-3 w-3" />
+                          Teleconsult
                         </Link>
                       </div>
                     )}
                   </div>
 
-                  {/* Respond form */}
                   {activeAction?.id === referral.id && activeAction.type === "respond" && (
-                    <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                      <h4 className="text-sm font-medium text-gray-900 mb-3">Respond to Referral</h4>
+                    <div className="mt-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
+                      <h4 className="mb-3 text-sm font-medium text-gray-900">Respond to Referral</h4>
                       <div className="space-y-3">
                         <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">Response Notes</label>
+                          <label className="mb-1 block text-xs font-medium text-gray-600">
+                            Response Notes
+                          </label>
                           <textarea
                             value={responseNotes}
-                            onChange={(e) => setResponseNotes(e.target.value)}
+                            onChange={(event) => setResponseNotes(event.target.value)}
                             rows={3}
                             required
                             placeholder="Assessment findings, recommendations, treatment provided..."
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+                            className="w-full resize-none rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                           />
                         </div>
                         <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">Outcome</label>
+                          <label className="mb-1 block text-xs font-medium text-gray-600">
+                            Outcome
+                          </label>
                           <select
                             value={responseOutcome}
-                            onChange={(e) => setResponseOutcome(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            onChange={(event) => setResponseOutcome(event.target.value)}
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                           >
                             <option value="">Select outcome...</option>
                             <option value="TREATED">Treated - Patient managed</option>
                             <option value="ADMITTED">Admitted - Ongoing care</option>
-                            <option value="FURTHER_REFERRAL">Further Referral needed</option>
+                            <option value="FURTHER_REFERRAL">Further referral needed</option>
                             <option value="RETURNED">Returned to referring facility</option>
-                            <option value="FOLLOW_UP_REQUIRED">Follow-up Required</option>
+                            <option value="FOLLOW_UP_REQUIRED">Follow-up required</option>
                           </select>
                         </div>
                         <div className="flex gap-3">
                           <button
-                            onClick={() => { setActiveAction(null); setResponseNotes(""); setResponseOutcome(""); }}
-                            className="flex-1 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors"
+                            type="button"
+                            onClick={() => {
+                              setActiveAction(null);
+                              setResponseNotes("");
+                              setResponseOutcome("");
+                            }}
+                            className="flex-1 rounded-lg bg-gray-100 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200"
                           >
                             Cancel
                           </button>
                           <button
+                            type="button"
                             onClick={() => handleRespond(referral.id)}
                             disabled={isSubmitting || !responseNotes.trim()}
-                            className="flex-1 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors"
+                            className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-purple-600 py-2 text-sm font-medium text-white transition-colors hover:bg-purple-700 disabled:opacity-50"
                           >
                             {isSubmitting ? (
-                              <><Loader2 className="w-4 h-4 animate-spin" /> Submitting...</>
+                              <>
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                Submitting...
+                              </>
                             ) : (
-                              <><CheckCircle2 className="w-4 h-4" /> Submit Response</>
+                              <>
+                                <CheckCircle2 className="h-4 w-4" />
+                                Submit Response
+                              </>
                             )}
                           </button>
                         </div>

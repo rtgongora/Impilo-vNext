@@ -10,36 +10,38 @@
 
 import { type ReactNode } from "react";
 import Link from "next/link";
-import { ZoneNavigation } from "./ZoneNavigation";
+import { ExperienceSidebar } from "./navigation/ExperienceSidebar";
 import { useAuthStore } from "@/hooks/useAuthStore";
-import { useFacilityStore } from "@/hooks/useFacilityStore";
-import { useWorkspaceStore } from "@/hooks/useWorkspaceStore";
-import { useShiftStore } from "@/hooks/useShiftStore";
+import { useExperienceEntry } from "@/providers/ExperienceEntryProvider";
 
 export function AppLayout({ children }: { children: ReactNode }) {
   const { user, isAuthenticated } = useAuthStore();
-  const { facility } = useFacilityStore();
-  const { workspace } = useWorkspaceStore();
-  const { shift } = useShiftStore();
+  const { facility, workspace, shiftActive } = useExperienceEntry();
 
   return (
     <div className="flex h-screen bg-gray-50">
-      <ZoneNavigation />
+      <ExperienceSidebar />
       <div className="flex-1 flex flex-col min-w-0">
         <header className="h-14 border-b bg-white px-6 flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-3 text-sm text-gray-500">
+          <div className="ml-12 flex items-center gap-3 text-sm text-gray-500 md:ml-0">
             {facility && (
-              <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-xs font-medium">
+              <Link
+                href="/facility"
+                className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700"
+              >
                 {facility.name}
-              </span>
+              </Link>
             )}
             {workspace && (
-              <span className="bg-green-50 text-green-700 px-2 py-0.5 rounded text-xs font-medium">
+              <Link
+                href="/workspace"
+                className="rounded-full bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700"
+              >
                 {workspace.name}
-              </span>
+              </Link>
             )}
-            {shift && (
-              <span className="bg-amber-50 text-amber-700 px-2 py-0.5 rounded text-xs font-medium">
+            {shiftActive && (
+              <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700">
                 Shift Active
               </span>
             )}

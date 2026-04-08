@@ -22,7 +22,7 @@ describe("Route Registry", () => {
   it("has the expected number of routes", () => {
     expect(ROUTES).toHaveLength(EXPECTED_ROUTE_COUNT);
     expect(ROUTE_COUNT).toBe(EXPECTED_ROUTE_COUNT);
-    expect(ROUTES).toHaveLength(112);
+    expect(ROUTES).toHaveLength(135);
   });
 
   it("has no duplicate paths", () => {

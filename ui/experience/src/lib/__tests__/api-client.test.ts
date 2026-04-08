@@ -236,6 +236,61 @@ describe("apiClient", () => {
     expect(options.headers["X-Pod-ID"]).toBe("pod-custom");
   });
 
+  it("attaches actor and purpose headers from session state", async () => {
+    sessionStorageMock.setItem(
+      "exp:auth_user",
+      JSON.stringify({ id: "user-123", actorType: "PROVIDER" }),
+    );
+    sessionStorageMock.setItem("exp:purpose_of_use", "OPERATIONS");
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ data: {} }),
+    });
+
+    await apiClient.get("/internal/v1/test");
+
+    const [, options] = mockFetch.mock.calls[0];
+    expect(options.headers["X-Actor-ID"]).toBe("user-123");
+    expect(options.headers["X-Actor-Type"]).toBe("PROVIDER");
+    expect(options.headers["X-Purpose-Of-Use"]).toBe("OPERATIONS");
+  });
+
+  it("derives purpose of use from work mode when no explicit purpose is stored", async () => {
+    sessionStorageMock.setItem("exp:work_mode", "finance");
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ data: {} }),
+    });
+
+    await apiClient.get("/internal/v1/test");
+
+    const [, options] = mockFetch.mock.calls[0];
+    expect(options.headers["X-Purpose-Of-Use"]).toBe("PAYMENT");
+  });
+
+  it("attaches facility, workspace, and shift headers from stored experience context", async () => {
+    sessionStorageMock.setItem("exp:facility", JSON.stringify({ id: "facility-1" }));
+    sessionStorageMock.setItem("exp:workspace", JSON.stringify({ id: "workspace-1" }));
+    sessionStorageMock.setItem("exp:shift", JSON.stringify({ id: "shift-1" }));
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ data: {} }),
+    });
+
+    await apiClient.get("/internal/v1/test");
+
+    const [, options] = mockFetch.mock.calls[0];
+    expect(options.headers["X-Facility-ID"]).toBe("facility-1");
+    expect(options.headers["X-Workspace-ID"]).toBe("workspace-1");
+    expect(options.headers["X-Shift-ID"]).toBe("shift-1");
+  });
+
   it("throws on non-OK responses", async () => {
     mockFetch.mockResolvedValueOnce({
       ok: false,

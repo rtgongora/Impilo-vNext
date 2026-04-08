@@ -30,7 +30,6 @@ import {
   DoorOpen,
   Activity,
   User,
-  Video,
   MonitorDot,
   Target,
   Users,
@@ -109,8 +108,7 @@ const MENU_SECTIONS: MenuSection[] = [
   {
     title: "Consults & Referrals",
     items: [
-      { label: "Consults", description: "Specialist consultations and referrals", segment: "consults", icon: ArrowRightLeft },
-      { label: "Teleconsults", description: "Video, audio, and chat sessions", segment: "teleconsults", icon: Video },
+      { label: "Consults", description: "Consultations, referrals, and teleconsults", segment: "consults", icon: ArrowRightLeft },
       { label: "Documents", description: "Clinical documents and attachments", segment: "documents", icon: FileText },
     ],
   },

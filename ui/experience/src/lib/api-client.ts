@@ -54,7 +54,54 @@ function getV11Headers(): Record<string, string> {
     headers["Authorization"] = `Bearer ${token}`;
   }
 
+  const authUser = getStoredAuthUser();
+  if (authUser?.id) {
+    headers["X-Actor-ID"] = authUser.id;
+  }
+  if (authUser?.actorType) {
+    headers["X-Actor-Type"] = authUser.actorType;
+  }
+
+  headers["X-Purpose-Of-Use"] = getPurposeOfUse();
+
+  const facilityId = getContextId("exp:facility");
+  if (facilityId) {
+    headers["X-Facility-ID"] = facilityId;
+  }
+
+  const workspaceId = getContextId("exp:workspace");
+  if (workspaceId) {
+    headers["X-Workspace-ID"] = workspaceId;
+  }
+
+  const shiftId = getContextId("exp:shift");
+  if (shiftId) {
+    headers["X-Shift-ID"] = shiftId;
+  }
+
   return headers;
+}
+
+function getStoredJson<T>(key: string): T | null {
+  if (typeof window === "undefined") return null;
+
+  const raw = sessionStorage.getItem(key);
+  if (!raw) return null;
+
+  try {
+    return JSON.parse(raw) as T;
+  } catch {
+    return null;
+  }
+}
+
+function getStoredAuthUser(): { id?: string; actorType?: string } | null {
+  return getStoredJson<{ id?: string; actorType?: string }>("exp:auth_user");
+}
+
+function getContextId(key: string): string | null {
+  const context = getStoredJson<{ id?: string }>(key);
+  return context?.id ?? null;
 }
 
 function getTenantId(): string {
@@ -93,6 +140,30 @@ function getRefreshToken(): string | null {
     return sessionStorage.getItem("exp:refresh_token");
   }
   return null;
+}
+
+function getPurposeOfUse(): string {
+  if (typeof window !== "undefined") {
+    const stored = sessionStorage.getItem("exp:purpose_of_use");
+    if (stored) return stored;
+
+    const workMode = sessionStorage.getItem("exp:work_mode");
+    switch (workMode) {
+      case "finance":
+        return "PAYMENT";
+      case "admin":
+      case "oversight":
+        return "OPERATIONS";
+      case "community_outreach":
+        return "PUBLIC_HEALTH";
+      case "emergency_response":
+        return "EMERGENCY";
+      default:
+        return "TREATMENT";
+    }
+  }
+
+  return "TREATMENT";
 }
 
 /**

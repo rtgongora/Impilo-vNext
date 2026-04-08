@@ -85,7 +85,10 @@ export default function ConsultsPage() {
   const { data: patientData } = usePatient(patientId);
   const { data: encountersData } = useEncounters(patientId);
   const { data: referralsData, isLoading: loadingReferrals } = useReferrals(patientId);
-  const { data: teleData, isLoading: loadingTele } = useTelemedicineSessions();
+  const { data: teleData, isLoading: loadingTele } = useTelemedicineSessions({
+    patientId,
+    facilityId: facility?.id,
+  });
 
   // Clinical data for ReferralPackageBuilder
   const { data: allergiesData } = useQuery<{ data: Array<{ attributes: Record<string, unknown> }> }>({
@@ -294,7 +297,7 @@ export default function ConsultsPage() {
                         key={c.id}
                         referral={c}
                         patientId={patientId}
-                        onJoin={(id) => router.push(`/telemedicine/session/${id}`)}
+                        onJoin={(id) => router.push(`/telemedicine?patientId=${patientId}&referralId=${id}`)}
                         onComplete={(id) => completeReferral.mutate({ id })}
                       />
                     ))
@@ -350,7 +353,7 @@ export default function ConsultsPage() {
                         key={r.id}
                         referral={r}
                         patientId={patientId}
-                        onJoin={(id) => router.push(`/telemedicine/session/${id}`)}
+                        onJoin={(id) => router.push(`/telemedicine?patientId=${patientId}&referralId=${id}`)}
                         onComplete={(id) => completeReferral.mutate({ id })}
                         showWorkflowStage
                       />

@@ -36,6 +36,9 @@ public class MobileTelemedicineController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(required = false, name = "provider_id") String providerId,
+            @RequestParam(required = false, name = "patient_id") String patientId,
+            @RequestParam(required = false, name = "facility_id") String facilityId,
+            @RequestParam(required = false, name = "referral_id") String referralId,
             @RequestParam(required = false) String status,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -63,6 +66,24 @@ public class MobileTelemedicineController {
             countSql.append(" AND provider_id = ?");
             params.add(providerId);
             countParams.add(providerId);
+        }
+        if (patientId != null) {
+            sql.append(" AND patient_id = ?::uuid");
+            countSql.append(" AND patient_id = ?::uuid");
+            params.add(patientId);
+            countParams.add(patientId);
+        }
+        if (facilityId != null) {
+            sql.append(" AND facility_id = ?::uuid");
+            countSql.append(" AND facility_id = ?::uuid");
+            params.add(facilityId);
+            countParams.add(facilityId);
+        }
+        if (referralId != null) {
+            sql.append(" AND referral_id = ?::uuid");
+            countSql.append(" AND referral_id = ?::uuid");
+            params.add(referralId);
+            countParams.add(referralId);
         }
         if (status != null) {
             sql.append(" AND status = ?");

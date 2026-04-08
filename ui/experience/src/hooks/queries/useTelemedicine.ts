@@ -45,10 +45,16 @@ type SessionResponse = ApiResponse<TelemedicineSession>;
 
 export function useTelemedicineSessions(params?: {
   providerId?: string;
+  patientId?: string;
+  facilityId?: string;
+  referralId?: string;
   status?: string;
 }) {
   const queryParams = new URLSearchParams();
   if (params?.providerId) queryParams.set("provider_id", params.providerId);
+  if (params?.patientId) queryParams.set("patient_id", params.patientId);
+  if (params?.facilityId) queryParams.set("facility_id", params.facilityId);
+  if (params?.referralId) queryParams.set("referral_id", params.referralId);
   if (params?.status) queryParams.set("status", params.status);
   const qs = queryParams.toString();
 

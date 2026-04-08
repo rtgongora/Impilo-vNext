@@ -25,6 +25,7 @@ import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useWorkspaceStore } from "@/hooks/useWorkspaceStore";
 import { useShiftStore } from "@/hooks/useShiftStore";
 import { useWorkModeStore, type WorkMode, WORK_MODE_LABELS } from "@/hooks/useWorkModeStore";
+export { ExperienceSidebar as ZoneNavigation } from "@/components/navigation/ExperienceSidebar";
 
 // ── Work mode indicator colors ───────────────────────────────────
 const WORK_MODE_COLORS: Record<WorkMode, string> = {
@@ -246,7 +247,7 @@ function getNavSections(context: PageContext): NavSection[] {
 }
 
 // ── Component ────────────────────────────────────────────────────
-export function ZoneNavigation() {
+export function LegacyZoneNavigation() {
   const pathname = usePathname();
   const { hasRole } = useAuthStore();
   const { facility } = useFacilityStore();

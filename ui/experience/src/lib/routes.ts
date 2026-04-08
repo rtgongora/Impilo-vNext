@@ -127,7 +127,9 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/ehr/[patientId]/encounters", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Encounters", navLabel: "Encounters", navZone: "work" },
   { path: "/ehr/[patientId]/encounter/[encounterId]", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Encounter", navLabel: "Encounter", navZone: "work" },
   { path: "/ehr/[patientId]/immunizations", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Immunizations", navLabel: "Immunizations", navZone: "work" },
+  { path: "/ehr/[patientId]/consults", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Consults & Referrals", navLabel: "Consults", navZone: "work" },
   { path: "/ehr/[patientId]/referrals", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Referrals", navLabel: "Referrals", navZone: "work" },
+  { path: "/ehr/[patientId]/teleconsults", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Teleconsults", navLabel: "Teleconsults", navZone: "work" },
   { path: "/ehr/[patientId]/timeline", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Timeline", navLabel: "Timeline", navZone: "work" },
   { path: "/ehr/[patientId]/discharge", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Discharge", navLabel: "Discharge", navZone: "work" },
   { path: "/ehr/[patientId]/care-plans", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Care Plans", navLabel: "Care Plans", navZone: "work" },
@@ -219,12 +221,28 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/settings/notifications", zone: "settings", layout: "app", sidebar: "settings", guard: "auth", pageTitle: "Notification Preferences", navLabel: "Notifications", navZone: "professional" },
   { path: "/settings/display", zone: "settings", layout: "app", sidebar: "settings", guard: "auth", pageTitle: "Display Settings", navLabel: "Display", navZone: "professional" },
   { path: "/settings/integrations", zone: "settings", layout: "app", sidebar: "settings", guard: "auth", pageTitle: "Integrations", navLabel: "Integrations", navZone: "professional" },
+  { path: "/telemedicine", zone: "queue", layout: "app", sidebar: "queue", guard: "shift", pageTitle: "Telemedicine Hub", navLabel: "Telemedicine", navZone: "work" },
+  { path: "/telemedicine/session/[sessionId]", zone: "queue", layout: "app", sidebar: "queue", guard: "shift", pageTitle: "Telemedicine Session", navLabel: "Session", navZone: "work" },
 ];
 
 // Total route count assertion
-export const EXPECTED_ROUTE_COUNT = 131;
+export const EXPECTED_ROUTE_COUNT = 135;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary
 export const ZONES = [...new Set(ROUTES.map((r) => r.zone))];
 export const ZONE_COUNT = ZONES.length;
+
+export function matchRouteDefinition(pathname: string): RouteDefinition | null {
+  for (const route of ROUTES) {
+    const pattern = route.path
+      .replace(/\[(\w+)\]/g, "[^/]+")
+      .replace(/\//g, "\\/");
+    const regex = new RegExp(`^${pattern}$`);
+    if (regex.test(pathname)) {
+      return route;
+    }
+  }
+
+  return null;
+}

@@ -1,0 +1,327 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import type { LucideIcon } from "lucide-react";
+import {
+  Activity,
+  Bell,
+  BriefcaseBusiness,
+  Building2,
+  Calendar,
+  ClipboardList,
+  CreditCard,
+  FileBarChart2,
+  Heart,
+  LayoutDashboard,
+  Menu,
+  Package,
+  Pill,
+  Shield,
+  Stethoscope,
+  User,
+  Users,
+  Wallet,
+  X,
+} from "lucide-react";
+import { useAuthStore } from "@/hooks/useAuthStore";
+import { WORK_MODE_LABELS } from "@/hooks/useWorkModeStore";
+import { useExperienceEntry } from "@/providers/ExperienceEntryProvider";
+
+interface SidebarItem {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  requiredRoles?: string[];
+}
+
+interface SidebarZone {
+  id: "work" | "professional" | "life";
+  label: string;
+  items: SidebarItem[];
+}
+
+const ADMIN_ROLES = ["SYSTEM_ADMIN", "FACILITY_ADMIN", "DEVELOPER"];
+const FINANCE_ROLES = ["SYSTEM_ADMIN", "FACILITY_ADMIN", "FINANCE"];
+const CLINICAL_ROLES = ["CLINICIAN", "NURSE", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"];
+const QUEUE_ROLES = ["CLINICIAN", "NURSE", "SUPPORT_AGENT", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"];
+const DISPENSER_ROLES = ["PHARMACIST", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"];
+
+const ZONES: SidebarZone[] = [
+  {
+    id: "work",
+    label: "Work",
+    items: [
+      { href: "/clinical", label: "Clinical Hub", icon: Stethoscope, requiredRoles: CLINICAL_ROLES },
+      { href: "/queue", label: "Queue", icon: Users, requiredRoles: QUEUE_ROLES },
+      { href: "/scheduling", label: "Scheduling", icon: Calendar, requiredRoles: CLINICAL_ROLES },
+      { href: "/pharmacy", label: "Pharmacy", icon: Pill, requiredRoles: DISPENSER_ROLES },
+      { href: "/inventory", label: "Inventory", icon: Package },
+      { href: "/marketplace", label: "Marketplace", icon: BriefcaseBusiness },
+      { href: "/finance", label: "Finance", icon: Wallet, requiredRoles: FINANCE_ROLES },
+    ],
+  },
+  {
+    id: "professional",
+    label: "My Professional",
+    items: [
+      { href: "/home/credentials", label: "Credentials", icon: ClipboardList },
+      { href: "/registry", label: "Registry", icon: Building2 },
+      { href: "/reports", label: "Reports", icon: FileBarChart2 },
+      { href: "/admin", label: "Administration", icon: Shield, requiredRoles: ADMIN_ROLES },
+      { href: "/settings", label: "Settings", icon: CreditCard },
+    ],
+  },
+  {
+    id: "life",
+    label: "My Life",
+    items: [
+      { href: "/home", label: "Home", icon: LayoutDashboard },
+      { href: "/home/notifications", label: "Notifications", icon: Bell },
+      { href: "/home/profile", label: "Profile", icon: User },
+      { href: "/home/preferences", label: "Preferences", icon: Heart },
+      { href: "/home/medications", label: "Medications", icon: Pill },
+    ],
+  },
+];
+
+const ENTRY_STEPS = [
+  { key: "auth", label: "Sign in" },
+  { key: "facility", label: "Facility" },
+  { key: "workspace", label: "Workspace" },
+  { key: "shift", label: "Shift" },
+] as const;
+
+function matchesPath(pathname: string, href: string) {
+  if (href === "/home") {
+    return pathname === "/" || pathname === "/home" || pathname.startsWith("/home/");
+  }
+
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+export function ExperienceSidebar() {
+  const pathname = usePathname();
+  const { user, hasRole } = useAuthStore();
+  const { currentRoute, facility, workspace, stage, shiftActive, workMode } = useExperienceEntry();
+  const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setCollapsed(sessionStorage.getItem("exp:sidebar-collapsed") === "true");
+  }, []);
+
+  function toggleCollapsed() {
+    const next = !collapsed;
+    setCollapsed(next);
+    sessionStorage.setItem("exp:sidebar-collapsed", String(next));
+  }
+
+  const visibleZones = ZONES.map((zone) => ({
+    ...zone,
+    items: zone.items.filter((item) => {
+      if (!item.requiredRoles) return true;
+      return item.requiredRoles.some((role) => hasRole(role));
+    }),
+  })).filter((zone) => zone.items.length > 0);
+
+  const shellClasses = collapsed ? "w-[88px]" : "w-[320px]";
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setMobileOpen(true)}
+        className="fixed left-4 top-4 z-40 inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-700 shadow-sm md:hidden"
+        aria-label="Open navigation"
+      >
+        <Menu className="h-5 w-5" />
+      </button>
+
+      {mobileOpen && (
+        <button
+          type="button"
+          className="fixed inset-0 z-40 bg-slate-950/40 md:hidden"
+          aria-label="Close navigation overlay"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
+      <aside
+        data-sidebar
+        className={[
+          "fixed inset-y-0 left-0 z-50 flex h-screen flex-col border-r border-slate-200 bg-[linear-gradient(180deg,#0f172a_0%,#111827_100%)] text-slate-200 transition-transform duration-200 md:static md:translate-x-0",
+          shellClasses,
+          mobileOpen ? "translate-x-0" : "-translate-x-full",
+        ].join(" ")}
+      >
+        <div className="flex items-center justify-between border-b border-white/10 px-4 py-4">
+          {!collapsed && (
+            <div className="min-w-0">
+              <Link href="/home" className="block truncate text-sm font-semibold text-white">
+                Impilo Experience
+              </Link>
+              <p className="mt-1 text-xs text-slate-400">
+                One Experience Layer
+              </p>
+            </div>
+          )}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={toggleCollapsed}
+              className="hidden rounded-xl border border-white/10 px-3 py-2 text-xs text-slate-300 transition hover:bg-white/5 md:inline-flex"
+            >
+              {collapsed ? "Expand" : "Collapse"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobileOpen(false)}
+              className="inline-flex rounded-xl border border-white/10 p-2 text-slate-300 transition hover:bg-white/5 md:hidden"
+              aria-label="Close navigation"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+
+        {!collapsed && (
+          <div className="border-b border-white/10 px-4 py-4">
+            <div className="rounded-3xl border border-white/10 bg-white/5 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-[11px] uppercase tracking-[0.24em] text-slate-400">
+                    Experience Entry
+                  </p>
+                  <p className="mt-2 text-sm font-semibold text-white">
+                    {currentRoute?.pageTitle ?? "Workspace"}
+                  </p>
+                </div>
+                <span className="rounded-full bg-emerald-400/15 px-2.5 py-1 text-[11px] font-semibold text-emerald-300">
+                  {WORK_MODE_LABELS[workMode]}
+                </span>
+              </div>
+              <div className="mt-4 grid grid-cols-2 gap-2">
+                {ENTRY_STEPS.map((entry) => {
+                  const done =
+                    entry.key === "auth"
+                      ? stage !== "auth"
+                      : entry.key === "facility"
+                        ? Boolean(facility)
+                        : entry.key === "workspace"
+                          ? Boolean(workspace)
+                          : shiftActive;
+
+                  return (
+                    <div
+                      key={entry.key}
+                      className={[
+                        "rounded-2xl border px-3 py-2 text-xs",
+                        done
+                          ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-200"
+                          : "border-white/10 bg-slate-950/20 text-slate-400",
+                      ].join(" ")}
+                    >
+                      {entry.label}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="flex-1 overflow-y-auto px-3 py-4">
+          {visibleZones.map((zone) => (
+            <section key={zone.id} className="mb-6">
+              {!collapsed && (
+                <p className="mb-2 px-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+                  {zone.label}
+                </p>
+              )}
+              <div className="space-y-1">
+                {zone.items.map((item) => {
+                  const active = matchesPath(pathname, item.href);
+                  const Icon = item.icon;
+
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setMobileOpen(false)}
+                      title={collapsed ? item.label : undefined}
+                      className={[
+                        "group flex items-center gap-3 rounded-2xl px-3 py-3 text-sm transition",
+                        active
+                          ? "bg-white text-slate-950 shadow-sm"
+                          : "text-slate-300 hover:bg-white/10 hover:text-white",
+                        collapsed ? "justify-center" : "",
+                      ].join(" ")}
+                    >
+                      <Icon className="h-4 w-4 shrink-0" />
+                      {!collapsed && <span className="truncate">{item.label}</span>}
+                    </Link>
+                  );
+                })}
+              </div>
+            </section>
+          ))}
+        </div>
+
+        <div className="border-t border-white/10 px-4 py-4">
+          {!collapsed ? (
+            <div className="space-y-2 rounded-3xl border border-white/10 bg-white/5 p-4">
+              <div>
+                <p className="text-[11px] uppercase tracking-[0.24em] text-slate-500">
+                  Active Context
+                </p>
+                <p className="mt-2 truncate text-sm font-medium text-white">
+                  {user?.displayName ?? user?.email ?? "Impilo user"}
+                </p>
+              </div>
+              <div className="space-y-1 text-xs text-slate-300">
+                <p className="truncate">
+                  Facility: {facility?.name ?? "Not selected"}
+                </p>
+                <p className="truncate">
+                  Workspace: {workspace?.name ?? "Not selected"}
+                </p>
+                <p className={shiftActive ? "text-emerald-300" : "text-amber-300"}>
+                  {shiftActive ? "Shift active" : "Shift not started"}
+                </p>
+              </div>
+              <div className="flex gap-2 pt-1">
+                <Link
+                  href="/facility"
+                  className="inline-flex rounded-xl border border-white/10 px-3 py-2 text-xs text-slate-200 transition hover:bg-white/10"
+                >
+                  Facility
+                </Link>
+                <Link
+                  href="/workspace"
+                  className="inline-flex rounded-xl border border-white/10 px-3 py-2 text-xs text-slate-200 transition hover:bg-white/10"
+                >
+                  Workspace
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-3">
+              <Link href="/facility" title={facility?.name ?? "Facility"} className="rounded-2xl border border-white/10 p-3 text-slate-200 transition hover:bg-white/10">
+                <Building2 className="h-4 w-4" />
+              </Link>
+              <Link href="/workspace" title={workspace?.name ?? "Workspace"} className="rounded-2xl border border-white/10 p-3 text-slate-200 transition hover:bg-white/10">
+                <BriefcaseBusiness className="h-4 w-4" />
+              </Link>
+              <div className={shiftActive ? "rounded-full bg-emerald-400 p-1" : "rounded-full bg-amber-400 p-1"}>
+                <Activity className="h-3 w-3 text-slate-950" />
+              </div>
+            </div>
+          )}
+        </div>
+      </aside>
+    </>
+  );
+}
