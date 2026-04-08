@@ -22,6 +22,7 @@ import {
   AlertCircle,
   Save,
   Calendar,
+  ArrowRightLeft,
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
@@ -32,6 +33,20 @@ import {
 } from "@/hooks/queries/useTelemedicine";
 import { apiClient } from "@/lib/api-client";
 import { useAuthStore } from "@/hooks/useAuthStore";
+import { useRespondReferral } from "@/hooks/queries/useReferrals";
+import {
+  buildTeleconsultCompletionBody,
+  COORDINATION_COPY,
+  formatTeleconsultFollowUpLabel,
+  mapTeleconsultFollowUpToOutcome,
+} from "@/lib/consult-workflows";
+
+type FollowUpOption =
+  | "NONE"
+  | "REVIEW"
+  | "REPEAT_TELECONSULT"
+  | "ADMIT"
+  | "REFER_FURTHER";
 
 export default function TelemedicineSessionPage() {
   const params = useParams<{ sessionId: string }>();
@@ -42,6 +57,7 @@ export default function TelemedicineSessionPage() {
   const { data, isLoading } = useTelemedicineSessions();
   const joinSession = useJoinTelemedicineSession();
   const endSession = useEndTelemedicineSession();
+  const respondReferral = useRespondReferral();
 
   const session = data?.data?.find((s) => s.id === sessionId);
   const attrs = session?.attributes;
@@ -64,6 +80,12 @@ export default function TelemedicineSessionPage() {
   const [noteBody, setNoteBody] = useState("");
   const [noteSaving, setNoteSaving] = useState(false);
   const [noteSaved, setNoteSaved] = useState(false);
+  const [completionFindings, setCompletionFindings] = useState("");
+  const [completionPlan, setCompletionPlan] = useState("");
+  const [completionFollowUp, setCompletionFollowUp] = useState<FollowUpOption>("NONE");
+  const [completionSaving, setCompletionSaving] = useState(false);
+  const [completionSaved, setCompletionSaved] = useState(false);
+  const [completionError, setCompletionError] = useState<string | null>(null);
 
   function handleJoin() {
     joinSession.mutate({ id: sessionId });
@@ -74,6 +96,10 @@ export default function TelemedicineSessionPage() {
       { id: sessionId, notes: sessionNotes || undefined },
       {
         onSuccess: () => {
+          if (attrs?.referral_id && attrs.patient_id) {
+            router.push(`/ehr/${attrs.patient_id}/consults?tab=referrals`);
+            return;
+          }
           router.push("/telemedicine");
         },
       }
@@ -121,6 +147,61 @@ export default function TelemedicineSessionPage() {
       // Error handled by UI feedback
     } finally {
       setNoteSaving(false);
+    }
+  }
+
+  async function handleSaveCompletionNote() {
+    if (!attrs?.patient_id || !attrs?.encounter_id) return;
+
+    setCompletionSaving(true);
+    setCompletionSaved(false);
+    setCompletionError(null);
+
+    const findings = completionFindings.trim();
+    const plan = completionPlan.trim();
+    const followUpLabel = formatTeleconsultFollowUpLabel(completionFollowUp);
+    const body = buildTeleconsultCompletionBody({
+      findings,
+      plan,
+      followUpLabel,
+      referralId: attrs.referral_id,
+      sessionType: attrs.session_type,
+    });
+
+    try {
+      await apiClient.post("/internal/v1/clinical-notes", {
+        patient_id: attrs.patient_id,
+        encounter_id: attrs.encounter_id,
+        note_type: "CONSULTATION",
+        objective: findings || null,
+        assessment: plan || null,
+        plan: followUpLabel,
+        body,
+        author_id: user?.id ?? "system",
+        author_name: user?.displayName ?? user?.email ?? "Provider",
+      });
+
+      if (attrs.referral_id) {
+        await respondReferral.mutateAsync({
+          id: attrs.referral_id,
+          response_notes: body,
+          outcome: mapTeleconsultFollowUpToOutcome(completionFollowUp),
+        });
+      }
+
+      setCompletionSaved(true);
+      setSessionNotes((current) => current || body);
+      setCompletionFindings("");
+      setCompletionPlan("");
+      setCompletionFollowUp("NONE");
+    } catch {
+      setCompletionError(
+        attrs.referral_id
+          ? "The consultation note or referral response could not be saved."
+          : "The consultation completion note could not be saved.",
+      );
+    } finally {
+      setCompletionSaving(false);
     }
   }
 
@@ -176,10 +257,13 @@ export default function TelemedicineSessionPage() {
                   </div>
                   <div className="flex items-center gap-4 mt-3 text-sm text-gray-500">
                     {attrs.patient_id && (
-                      <span className="flex items-center gap-1">
+                      <Link
+                        href={`/ehr/${attrs.patient_id}`}
+                        className="flex items-center gap-1 text-blue-600 hover:text-blue-800 transition-colors"
+                      >
                         <User className="w-4 h-4" />
                         Patient: {attrs.patient_id.substring(0, 8)}...
-                      </span>
+                      </Link>
                     )}
                     {attrs.scheduled_at && (
                       <span className="flex items-center gap-1">
@@ -191,6 +275,11 @@ export default function TelemedicineSessionPage() {
                       <span className="flex items-center gap-1">
                         <Clock className="w-4 h-4" />
                         Started: {new Date(attrs.started_at).toLocaleTimeString()}
+                      </span>
+                    )}
+                    {attrs.referral_id && (
+                      <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">
+                        Referral-linked
                       </span>
                     )}
                   </div>
@@ -220,6 +309,53 @@ export default function TelemedicineSessionPage() {
                 </div>
               )}
             </div>
+
+            {attrs.referral_id && (
+              <div className={`rounded-2xl border p-5 ${
+                completionSaved
+                  ? "border-emerald-200 bg-emerald-50"
+                  : "border-amber-200 bg-amber-50"
+              }`}>
+                <div className="flex items-start gap-3">
+                  <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${
+                    completionSaved ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
+                  }`}>
+                    <ArrowRightLeft className="h-4 w-4" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-gray-900">{COORDINATION_COPY.loopClosureHandoff}</p>
+                    <p className="mt-1 text-sm text-gray-700">
+                      This teleconsult is feeding a live referral loop. Save the completion note to return specialist guidance, then end the session and continue in the patient consults workspace.
+                    </p>
+                    <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                      <div className={`rounded-xl px-3 py-2 text-xs font-medium ${
+                        completionSaved ? "bg-white text-emerald-700" : "bg-white text-amber-700"
+                      }`}>
+                        1. Completion note {completionSaved ? "saved" : "pending"}
+                      </div>
+                      <div className={`rounded-xl px-3 py-2 text-xs font-medium ${
+                        completionSaved ? "bg-white text-emerald-700" : "bg-white text-slate-600"
+                      }`}>
+                        2. Referral response {completionSaved ? "sent" : "waiting on note"}
+                      </div>
+                      <div className="rounded-xl bg-white px-3 py-2 text-xs font-medium text-slate-600">
+                        3. Final loop closure happens in Consults
+                      </div>
+                    </div>
+                    {completionSaved && attrs.patient_id && (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <Link
+                          href={`/ehr/${attrs.patient_id}/consults?tab=referrals`}
+                          className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-800"
+                        >
+                          Open Consults
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* In-session tools — only visible when session is active */}
             {isActive && attrs.encounter_id && (
@@ -347,9 +483,19 @@ export default function TelemedicineSessionPage() {
             {/* Completion Note — Findings, Assessment, Plan */}
             {isActive && session?.attributes.encounter_id && (
               <div className="bg-white rounded-lg border border-indigo-200 p-5">
-                <div className="flex items-center gap-2 mb-3">
-                  <FileText className="w-5 h-5 text-indigo-600" />
-                  <h3 className="text-sm font-semibold text-gray-900">Consultation Completion Note</h3>
+                <div className="flex items-center justify-between gap-3 mb-3">
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-5 h-5 text-indigo-600" />
+                    <h3 className="text-sm font-semibold text-gray-900">Consultation Completion Note</h3>
+                  </div>
+                  {completionSaved && (
+                    <span className="text-xs text-green-600 flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3" />
+                      {attrs.referral_id
+                        ? COORDINATION_COPY.noteAndReturnedResponseSaved
+                        : COORDINATION_COPY.completionNoteSaved}
+                    </span>
+                  )}
                 </div>
                 <p className="text-xs text-gray-500 mb-3">
                   Document your findings, assessment, and recommended plan for the referring provider.
@@ -357,17 +503,29 @@ export default function TelemedicineSessionPage() {
                 <div className="space-y-3">
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">Findings</label>
-                    <textarea rows={2} placeholder="Key findings from this consultation..."
+                    <textarea
+                      rows={2}
+                      value={completionFindings}
+                      onChange={(e) => setCompletionFindings(e.target.value)}
+                      placeholder="Key findings from this consultation..."
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none" />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">Assessment & Plan</label>
-                    <textarea rows={2} placeholder="Clinical assessment and recommended management plan..."
+                    <textarea
+                      rows={2}
+                      value={completionPlan}
+                      onChange={(e) => setCompletionPlan(e.target.value)}
+                      placeholder="Clinical assessment and recommended management plan..."
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none" />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">Follow-up Required</label>
-                    <select className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                    <select
+                      value={completionFollowUp}
+                      onChange={(e) => setCompletionFollowUp(e.target.value as FollowUpOption)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    >
                       <option value="NONE">No follow-up needed</option>
                       <option value="REVIEW">Review in clinic</option>
                       <option value="REPEAT_TELECONSULT">Repeat teleconsult</option>
@@ -375,6 +533,36 @@ export default function TelemedicineSessionPage() {
                       <option value="REFER_FURTHER">Refer to another specialist</option>
                     </select>
                   </div>
+                  {attrs.referral_id && (
+                    <p className="rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
+                      Saving this note will also send the specialist response back through the linked referral.
+                    </p>
+                  )}
+                  {completionError && (
+                    <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">
+                      {completionError}
+                    </p>
+                  )}
+                  <button
+                    onClick={handleSaveCompletionNote}
+                    disabled={
+                      completionSaving ||
+                      (!completionFindings.trim() && !completionPlan.trim())
+                    }
+                    className="w-full py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors"
+                  >
+                    {completionSaving ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Saving completion note...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-4 h-4" />
+                        Save Completion Note
+                      </>
+                    )}
+                  </button>
                 </div>
               </div>
             )}
@@ -409,6 +597,11 @@ export default function TelemedicineSessionPage() {
                     <p className="text-sm text-gray-700 text-center">
                       End this telemedicine session? This will record the duration and notes.
                     </p>
+                    {attrs.referral_id && !completionSaved && (
+                      <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                        The linked referral handoff has not been saved from this session yet. You can still end the session, but the referral response will remain incomplete until the completion note is recorded.
+                      </p>
+                    )}
                     <div className="flex gap-3">
                       <button
                         onClick={() => setShowEndConfirm(false)}

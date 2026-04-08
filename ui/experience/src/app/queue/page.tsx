@@ -5,9 +5,21 @@
  * Route: /queue | pageTitle: "Patient Queue"
  */
 
+import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Users, Loader2, UserPlus, Clock, AlertTriangle, XCircle, ArrowRightLeft } from "lucide-react";
+import {
+  Users,
+  Loader2,
+  UserPlus,
+  Clock,
+  AlertTriangle,
+  XCircle,
+  ArrowRightLeft,
+  PlayCircle,
+  ClipboardCheck,
+  PauseCircle,
+} from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useQueueEntries, useCallPatient } from "@/hooks/queries/useQueue";
@@ -15,6 +27,7 @@ import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useRoleGroup } from "@/hooks/useRoleGroup";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { COORDINATION_COPY } from "@/lib/consult-workflows";
 
 const PRIORITY_LABELS: Record<string, { label: string; className: string }> = {
   EMERGENCY: { label: "Emergency", className: "bg-red-100 text-red-700" },
@@ -79,16 +92,73 @@ export default function QueuePage() {
   });
 
   const entries = data?.data ?? [];
+  const waitingEntries = useMemo(
+    () => entries.filter((entry) => entry.attributes.status === "WAITING"),
+    [entries],
+  );
+  const inHandoffEntries = useMemo(
+    () =>
+      entries.filter((entry) =>
+        ["CALLED", "IN_PROGRESS", "IN_SERVICE", "SEEN"].includes(entry.attributes.status),
+      ),
+    [entries],
+  );
+  const exceptionEntries = useMemo(
+    () =>
+      entries.filter((entry) =>
+        ["PAUSED", "NO_SHOW", "TRANSFERRED", "CANCELLED"].includes(entry.attributes.status),
+      ),
+    [entries],
+  );
 
   function handleCall(entryId: string, patientId: string) {
     callPatient.mutate(
       { id: entryId },
       {
         onSuccess: () => {
-          router.push(`/ehr/${patientId}`);
+          router.push(`/ehr/${patientId}?entry=queue`);
         },
       },
     );
+  }
+
+  function renderLaneAction(entry: (typeof entries)[number]) {
+    if (entry.attributes.status === "WAITING") {
+      return (
+        <button
+          onClick={() => handleCall(entry.id, entry.attributes.patientId)}
+          disabled={callPatient.isPending}
+          className="rounded-xl bg-blue-600 px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+        >
+          {COORDINATION_COPY.startEncounterHandoff}
+        </button>
+      );
+    }
+
+    if (["CALLED", "IN_PROGRESS", "IN_SERVICE", "SEEN"].includes(entry.attributes.status)) {
+      return (
+        <Link
+          href={`/ehr/${entry.attributes.patientId}?entry=queue`}
+          className="rounded-xl bg-green-600 px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-green-700"
+        >
+          {COORDINATION_COPY.openEncounterHandoff}
+        </Link>
+      );
+    }
+
+    if (entry.attributes.status === "PAUSED") {
+      return (
+        <button
+          onClick={() => resumeEntry.mutate(entry.id)}
+          disabled={resumeEntry.isPending}
+          className="rounded-xl bg-green-600 px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-green-700 disabled:opacity-50"
+        >
+          {COORDINATION_COPY.resumeEncounterHandoff}
+        </button>
+      );
+    }
+
+    return null;
   }
 
   return (
@@ -97,54 +167,69 @@ export default function QueuePage() {
         title="Patient Queue"
         subtitle={facility ? `${facility.name}` : "Current queue entries"}
       >
-        {/* Supervisor Stats Bar */}
         {facility && (
-          <div className="mb-4 grid grid-cols-5 gap-2">
-            <div className="bg-amber-50 rounded-lg border border-amber-200 p-2.5 text-center">
-              <p className="text-lg font-bold text-amber-700">{stats.waiting ?? 0}</p>
-              <p className="text-[10px] text-amber-600 uppercase">Waiting</p>
+          <div className="mb-5 grid gap-3 lg:grid-cols-[minmax(0,1.5fr)_repeat(4,minmax(0,1fr))]">
+            <div className="rounded-3xl border border-slate-200 bg-[linear-gradient(135deg,#fffaf0_0%,#ffffff_55%,#eff6ff_100%)] p-5 shadow-sm">
+              <div className="flex items-start gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-100 text-amber-700">
+                  <ArrowRightLeft className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-slate-900">{COORDINATION_COPY.coordinationWorkboard}</p>
+                  <p className="mt-1 text-sm text-slate-600">
+                    The queue now mirrors the same workflow language as referrals and chart handoff:
+                    call the next patient, move the handoff into chart, then track pauses and exceptions
+                    without losing the thread.
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Link
+                      href="/queue/incoming-referrals"
+                      className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-800"
+                    >
+                      <ArrowRightLeft className="h-4 w-4" />
+                      Incoming Referrals
+                    </Link>
+                    {isQueueManager && (
+                      <Link
+                        href="/queue/walk-in"
+                        className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+                      >
+                        <UserPlus className="h-4 w-4" />
+                        Walk-in Registration
+                      </Link>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="bg-blue-50 rounded-lg border border-blue-200 p-2.5 text-center">
-              <p className="text-lg font-bold text-blue-700">{stats.called ?? 0}</p>
-              <p className="text-[10px] text-blue-600 uppercase">Called</p>
+            <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">Ready now</p>
+              <p className="mt-2 text-2xl font-semibold text-amber-700">{stats.waiting ?? waitingEntries.length}</p>
+              <p className="mt-1 text-xs text-slate-500">Patients ready to be called from the waiting flow.</p>
             </div>
-            <div className="bg-green-50 rounded-lg border border-green-200 p-2.5 text-center">
-              <p className="text-lg font-bold text-green-700">{stats.inService ?? 0}</p>
-              <p className="text-[10px] text-green-600 uppercase">In Service</p>
+            <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">In handoff</p>
+              <p className="mt-2 text-2xl font-semibold text-blue-700">{(stats.called ?? 0) + (stats.inService ?? 0)}</p>
+              <p className="mt-1 text-xs text-slate-500">Patients already called or actively in service.</p>
             </div>
-            <div className="bg-gray-50 rounded-lg border border-gray-200 p-2.5 text-center">
-              <p className="text-lg font-bold text-gray-700">{stats.completed ?? 0}</p>
-              <p className="text-[10px] text-gray-500 uppercase">Completed</p>
+            <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">Completed</p>
+              <p className="mt-2 text-2xl font-semibold text-green-700">{stats.completed ?? 0}</p>
+              <p className="mt-1 text-xs text-slate-500">Finished visits kept visible for operational pacing.</p>
             </div>
-            <div className="bg-purple-50 rounded-lg border border-purple-200 p-2.5 text-center">
-              <p className="text-lg font-bold text-purple-700">{stats.avgWaitSeconds ? Math.round((stats.avgWaitSeconds) / 60) : 0}m</p>
-              <p className="text-[10px] text-purple-600 uppercase">Avg Wait</p>
+            <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">Avg wait</p>
+              <p className="mt-2 text-2xl font-semibold text-purple-700">
+                {stats.avgWaitSeconds ? Math.round((stats.avgWaitSeconds) / 60) : 0}m
+              </p>
+              <p className="mt-1 text-xs text-slate-500">Current pacing signal across the live queue board.</p>
             </div>
           </div>
         )}
 
-        <div className="mb-4 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sm text-gray-500">
-            <Users className="w-4 h-4" />
-            <span>{entries.length} patient{entries.length !== 1 ? "s" : ""} in queue</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Link
-              href="/queue/incoming-referrals"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-purple-50 text-purple-700 text-sm font-medium rounded-lg hover:bg-purple-100 transition-colors"
-            >
-              Incoming Referrals
-            </Link>
-            {isQueueManager && (
-            <Link
-              href="/queue/walk-in"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              <UserPlus className="w-4 h-4" />
-              Walk-in Registration
-            </Link>
-            )}
-          </div>
+        <div className="mb-4 flex items-center gap-2 text-sm text-gray-500">
+          <Users className="w-4 h-4" />
+          <span>{entries.length} patient{entries.length !== 1 ? "s" : ""} in queue</span>
         </div>
 
         {isLoading ? (
@@ -166,8 +251,123 @@ export default function QueuePage() {
             )}
           </div>
         ) : (
-          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-            <table className="w-full text-sm">
+          <div className="space-y-5">
+            <div className="grid gap-4 xl:grid-cols-3">
+              {[
+                {
+                  key: "ready",
+                  title: COORDINATION_COPY.needsActionNow,
+                  description: "Patients currently waiting for first contact from the queue team.",
+                  icon: PlayCircle,
+                  iconClassName: "bg-amber-100 text-amber-700",
+                  entries: waitingEntries,
+                },
+                {
+                  key: "handoff",
+                  title: COORDINATION_COPY.trackingInProgress,
+                  description: "Patients already called or actively moving through chart and service handoff.",
+                  icon: ClipboardCheck,
+                  iconClassName: "bg-blue-100 text-blue-700",
+                  entries: inHandoffEntries,
+                },
+                {
+                  key: "exceptions",
+                  title: COORDINATION_COPY.needsAttention,
+                  description: "Paused visits, no-shows, and other exceptions that need queue communication.",
+                  icon: PauseCircle,
+                  iconClassName: "bg-rose-100 text-rose-700",
+                  entries: exceptionEntries,
+                },
+              ].map((lane) => (
+                <div key={lane.key} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+                  <div className="flex items-start gap-3">
+                    <div className={`flex h-11 w-11 items-center justify-center rounded-2xl ${lane.iconClassName}`}>
+                      <lane.icon className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900">{lane.title}</p>
+                      <p className="mt-1 text-sm text-slate-600">{lane.description}</p>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 space-y-3">
+                    {lane.entries.length === 0 ? (
+                      <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-sm text-slate-500">
+                        No patients in this workflow lane right now.
+                      </div>
+                    ) : (
+                      lane.entries.slice(0, 3).map((entry) => {
+                        const priorityKey = String(entry.attributes.priority);
+                        const priority = PRIORITY_LABELS[priorityKey] ?? {
+                          label: priorityKey,
+                          className: "bg-gray-100 text-gray-600",
+                        };
+                        const triageCat =
+                          (entry.attributes as Record<string, unknown>).triage_category as string ??
+                          (entry.attributes as Record<string, unknown>).triageCategory as string;
+                        const patientName =
+                          (entry.attributes as Record<string, unknown>).patientName as string ??
+                          entry.attributes.patientId;
+
+                        return (
+                          <div key={entry.id} className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
+                            <div className="flex flex-wrap items-start justify-between gap-2">
+                              <div>
+                                <p className="text-sm font-semibold text-slate-900">{patientName}</p>
+                                <p className="mt-1 text-xs text-slate-500">
+                                  Queued {new Date(entry.attributes.queuedAt).toLocaleTimeString()}
+                                </p>
+                              </div>
+                              <div className="flex flex-wrap gap-2 text-xs">
+                                {triageCat ? (
+                                  <span className={`inline-flex h-6 w-6 items-center justify-center rounded-full font-bold ${
+                                    TRIAGE_CATEGORY_STYLES[triageCat] ?? "bg-slate-200 text-slate-700"
+                                  }`}>
+                                    {triageCat.charAt(0)}
+                                  </span>
+                                ) : null}
+                                <span className={`rounded-full px-2.5 py-1 font-medium ${priority.className}`}>
+                                  {priority.label}
+                                </span>
+                                <span className={`rounded-full px-2.5 py-1 font-medium ${
+                                  STATUS_STYLES[entry.attributes.status] ?? "bg-gray-100 text-gray-600"
+                                }`}>
+                                  {entry.attributes.status}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="mt-3 flex flex-wrap gap-2">
+                              {renderLaneAction(entry)}
+                              {(entry.attributes.status === "WAITING" || entry.attributes.status === "CALLED") && (
+                                <button
+                                  onClick={() => markNoShow.mutate(entry.id)}
+                                  disabled={markNoShow.isPending}
+                                  className="rounded-xl border border-rose-200 bg-white px-3 py-2 text-xs font-medium text-rose-600 transition-colors hover:bg-rose-50 disabled:opacity-50"
+                                >
+                                  Mark No-show
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+              <div className="border-b border-slate-200 bg-slate-50/80 px-4 py-3">
+                <p className="text-sm font-semibold text-slate-900">Full queue board</p>
+                <p className="mt-1 text-sm text-slate-600">
+                  Detailed operational view for auditing status, timing, and direct queue actions
+                  across every patient in the facility flow.
+                </p>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
               <thead>
                 <tr className="border-b bg-gray-50">
                   <th className="text-left px-4 py-3 font-medium text-gray-600">Patient</th>
@@ -243,7 +443,7 @@ export default function QueuePage() {
                         )}
                         {entry.attributes.status === "CALLED" && (
                           <Link
-                            href={`/ehr/${entry.attributes.patientId}`}
+                            href={`/ehr/${entry.attributes.patientId}?entry=queue`}
                             className="px-3 py-1.5 bg-green-600 text-white text-xs font-medium rounded-md hover:bg-green-700 transition-colors inline-block"
                           >
                             Open Chart
@@ -283,7 +483,9 @@ export default function QueuePage() {
                   );
                 })}
               </tbody>
-            </table>
+                </table>
+              </div>
+            </div>
           </div>
         )}
       </PageShell>

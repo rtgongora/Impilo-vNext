@@ -5,7 +5,8 @@
  * Route: /ehr/[patientId] | pageTitle: "Patient Chart"
  */
 
-import { useParams, useRouter } from "next/navigation";
+import { useEffect, useMemo } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   User,
@@ -19,12 +20,19 @@ import {
   Syringe,
   Clock,
   ArrowLeft,
+  PlayCircle,
+  ArrowRightLeft,
+  Video,
 } from "lucide-react";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { usePatient } from "@/hooks/queries/usePatients";
 import { useEncounters, useCreateEncounter } from "@/hooks/queries/useEncounters";
+import { useReferrals } from "@/hooks/queries/useReferrals";
+import { useClinicalNotes } from "@/hooks/queries/useClinicalNotes";
+import { useTelemedicineSessions } from "@/hooks/queries/useTelemedicine";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
+import { isReferralReceivingHere, parseConsultationCoordinationMeta } from "@/lib/consult-workflows";
 
 const CHART_SECTIONS = [
   { label: "Vitals", href: "vitals", icon: Activity, color: "bg-red-100 text-red-600" },
@@ -45,18 +53,46 @@ const CHART_SECTIONS = [
 export default function PatientChartPage() {
   const params = useParams<{ patientId: string }>();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const patientId = params.patientId;
   const facility = useFacilityStore((s) => s.facility);
 
   const { data: patientData, isLoading: isLoadingPatient } = usePatient(patientId);
   const { data: encountersData } = useEncounters(patientId);
+  const { data: referralsData } = useReferrals(patientId);
+  const { data: notesData } = useClinicalNotes(patientId);
+  const { data: telemedicineData } = useTelemedicineSessions({ patientId, facilityId: facility?.id });
   const createEncounter = useCreateEncounter();
 
   const patient = patientData?.data;
   const encounters = encountersData?.data ?? [];
+  const referrals = referralsData?.data ?? [];
+  const clinicalNotes = notesData?.data ?? [];
+  const telemedicineSessions = telemedicineData?.data ?? [];
   const activeEncounter = encounters.find(
     (e) => e.attributes.status === "ACTIVE" || e.attributes.status === "IN_PROGRESS",
   );
+  const queueEntry = searchParams.get("entry") === "queue";
+
+  const coordinationPulse = useMemo(() => {
+    const closureReady = referrals.filter((referral) => referral.attributes.status === "RESPONDED").length;
+    const receivingHere = referrals.filter((referral) => isReferralReceivingHere(referral, facility)).length;
+    const activeTeleconsults = telemedicineSessions.filter(
+      (session) => session.attributes.status === "IN_PROGRESS" || session.attributes.status === "SCHEDULED",
+    ).length;
+    const referralLoopUpdates = clinicalNotes.filter(
+      (note) =>
+        note.attributes.noteType === "CONSULTATION" &&
+        parseConsultationCoordinationMeta(note.attributes.body).hasReferralLoopUpdate,
+    ).length;
+
+    return { closureReady, receivingHere, activeTeleconsults, referralLoopUpdates };
+  }, [clinicalNotes, facility, referrals, telemedicineSessions]);
+
+  useEffect(() => {
+    if (!queueEntry || !activeEncounter) return;
+    router.replace(`/ehr/${patientId}/encounter/${activeEncounter.id}?entry=queue`);
+  }, [activeEncounter, patientId, queueEntry, router]);
 
   return (
     <EHRLayout>
@@ -83,6 +119,117 @@ export default function PatientChartPage() {
           </div>
         ) : (
           <div className="space-y-6">
+            {activeEncounter && (
+              <div className="bg-gradient-to-r from-green-50 via-white to-blue-50 border border-green-200 rounded-xl p-5">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center shrink-0">
+                      <PlayCircle className="w-6 h-6 text-green-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-green-800">
+                        Active encounter workspace ready
+                      </p>
+                      <p className="mt-1 text-sm text-gray-600">
+                        {activeEncounter.attributes.encounterType} is already in progress for this patient.
+                        Continue in the live encounter workspace or stay in the longitudinal chart.
+                      </p>
+                      <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                        <span className="rounded-full bg-green-100 px-2.5 py-1 font-medium text-green-700">
+                          {activeEncounter.attributes.status}
+                        </span>
+                        <span className="rounded-full bg-white px-2.5 py-1 text-gray-600 border border-gray-200">
+                          Started {new Date(activeEncounter.attributes.startedAt).toLocaleString()}
+                        </span>
+                        {queueEntry && (
+                          <span className="rounded-full bg-blue-100 px-2.5 py-1 font-medium text-blue-700">
+                            Entered from queue
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2 shrink-0">
+                    <Link
+                      href={`/ehr/${patientId}/encounter/${activeEncounter.id}`}
+                      className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors"
+                    >
+                      Resume Encounter
+                    </Link>
+                    <Link
+                      href={`/ehr/${patientId}/summary`}
+                      className="px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+                    >
+                      Open Summary
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="rounded-3xl border border-slate-200 bg-[linear-gradient(135deg,#f8fbff_0%,#eef6ff_45%,#fffaf5_100%)] p-5 shadow-sm">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div className="space-y-2">
+                  <div className="inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1 text-xs font-medium text-slate-600">
+                    <ArrowRightLeft className="h-3.5 w-3.5 text-blue-600" />
+                    Care coordination pulse
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-900">Consult and teleconsult outcomes are visible from the chart</h3>
+                    <p className="mt-1 max-w-2xl text-sm text-slate-600">
+                      Referral responses, teleconsult activity, and returned specialist guidance are now surfaced here so the chart can signal the next coordination action before you open the deeper workspace.
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    <Link
+                      href={`/ehr/${patientId}/consults?tab=referrals`}
+                      className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-800"
+                    >
+                      <ArrowRightLeft className="h-4 w-4" />
+                      Open Consults
+                    </Link>
+                    <Link
+                      href={`/ehr/${patientId}/consults?tab=teleconsults`}
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+                    >
+                      <Video className="h-4 w-4" />
+                      Teleconsults
+                    </Link>
+                    <Link
+                      href={`/ehr/${patientId}/notes`}
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+                    >
+                      <FileText className="h-4 w-4" />
+                      Notes Evidence
+                    </Link>
+                  </div>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2 xl:w-[28rem]">
+                  <div className="rounded-2xl border border-white/70 bg-white/80 p-4">
+                    <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">Loop closures ready</p>
+                    <p className="mt-2 text-2xl font-semibold text-purple-700">{coordinationPulse.closureReady}</p>
+                    <p className="mt-1 text-xs text-slate-500">Referral responses waiting for final review or closure.</p>
+                  </div>
+                  <div className="rounded-2xl border border-white/70 bg-white/80 p-4">
+                    <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">Receiving context</p>
+                    <p className="mt-2 text-2xl font-semibold text-blue-700">{coordinationPulse.receivingHere}</p>
+                    <p className="mt-1 text-xs text-slate-500">Referrals where this facility is currently on the receiving side.</p>
+                  </div>
+                  <div className="rounded-2xl border border-white/70 bg-white/80 p-4">
+                    <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">Teleconsult activity</p>
+                    <p className="mt-2 text-2xl font-semibold text-emerald-700">{coordinationPulse.activeTeleconsults}</p>
+                    <p className="mt-1 text-xs text-slate-500">Scheduled or active virtual consult sessions linked to this patient.</p>
+                  </div>
+                  <div className="rounded-2xl border border-white/70 bg-white/80 p-4">
+                    <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">Returned guidance</p>
+                    <p className="mt-2 text-2xl font-semibold text-indigo-700">{coordinationPulse.referralLoopUpdates}</p>
+                    <p className="mt-1 text-xs text-slate-500">Consultation notes that include referral-loop updates from teleconsult or specialist review.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Patient Summary Card */}
             <div className="bg-white rounded-lg border border-gray-200 p-5">
               <div className="flex items-start gap-4">
@@ -104,7 +251,7 @@ export default function PatientChartPage() {
                     href={`/ehr/${patientId}/encounter/${activeEncounter.id}`}
                     className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors shrink-0"
                   >
-                    Active Encounter
+                    Resume Encounter
                   </Link>
                 ) : (
                   <button

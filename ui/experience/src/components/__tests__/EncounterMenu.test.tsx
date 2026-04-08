@@ -5,10 +5,30 @@ import { EncounterMenu } from "../EncounterMenu";
 // Mock Next.js navigation hooks
 const mockUseParams = vi.fn();
 const mockUsePathname = vi.fn();
+const mockUsePatient = vi.fn();
+const mockUseEncounters = vi.fn();
+const mockUseClinicalNotes = vi.fn();
+const mockUseVitals = vi.fn();
 
 vi.mock("next/navigation", () => ({
   useParams: () => mockUseParams(),
   usePathname: () => mockUsePathname(),
+}));
+
+vi.mock("@/hooks/queries/usePatients", () => ({
+  usePatient: () => mockUsePatient(),
+}));
+
+vi.mock("@/hooks/queries/useEncounters", () => ({
+  useEncounters: () => mockUseEncounters(),
+}));
+
+vi.mock("@/hooks/queries/useClinicalNotes", () => ({
+  useClinicalNotes: () => mockUseClinicalNotes(),
+}));
+
+vi.mock("@/hooks/queries/useVitals", () => ({
+  useVitals: () => mockUseVitals(),
 }));
 
 // Mock next/link to render a plain anchor
@@ -31,9 +51,65 @@ const EXPECTED_SECTIONS = [
   "Visit Outcome",
 ];
 
+function getLinkByHref(href: string) {
+  const link = document.querySelector(`a[href="${href}"]`);
+  if (!(link instanceof HTMLAnchorElement)) {
+    throw new Error(`Expected link for href ${href}`);
+  }
+  return link;
+}
+
 describe("EncounterMenu", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockUsePatient.mockReturnValue({
+      data: {
+        data: {
+          attributes: {
+            displayName: "Jane Doe",
+            cpid: "CPID-001",
+          },
+        },
+      },
+    });
+    mockUseEncounters.mockReturnValue({
+      data: {
+        data: [
+          {
+            id: "enc-1",
+            attributes: {
+              status: "ACTIVE",
+              encounterType: "OUTPATIENT",
+              startedAt: new Date().toISOString(),
+              closedAt: null,
+            },
+          },
+        ],
+      },
+    });
+    mockUseClinicalNotes.mockReturnValue({
+      data: {
+        data: [
+          {
+            attributes: {
+              createdAt: new Date().toISOString(),
+              signedAt: null,
+            },
+          },
+        ],
+      },
+    });
+    mockUseVitals.mockReturnValue({
+      data: {
+        data: [
+          {
+            attributes: {
+              recordedAt: new Date().toISOString(),
+            },
+          },
+        ],
+      },
+    });
   });
 
   it("returns null when no patientId is present", () => {
@@ -70,6 +146,8 @@ describe("EncounterMenu", () => {
     render(<EncounterMenu />);
     expect(screen.getByText("Encounter Record")).toBeInTheDocument();
     expect(screen.getByText("Clinical Documentation")).toBeInTheDocument();
+    expect(screen.getByText("Jane Doe")).toBeInTheDocument();
+    expect(screen.getByText("CPID-001")).toBeInTheDocument();
   });
 
   it("renders Patient Chart and Encounters links", () => {
@@ -105,7 +183,7 @@ describe("EncounterMenu", () => {
     ];
 
     for (const item of expectedItems) {
-      expect(screen.getByText(item)).toBeInTheDocument();
+      expect(screen.getAllByText(item).length).toBeGreaterThan(0);
     }
   });
 
@@ -115,7 +193,7 @@ describe("EncounterMenu", () => {
 
     render(<EncounterMenu />);
 
-    const vitalsLink = screen.getByText("Vitals").closest("a");
+    const vitalsLink = getLinkByHref("/ehr/P-001/vitals");
     expect(vitalsLink?.className).toContain("bg-blue-50");
     expect(vitalsLink?.className).toContain("text-blue-700");
   });
@@ -126,7 +204,7 @@ describe("EncounterMenu", () => {
 
     render(<EncounterMenu />);
 
-    const summaryLink = screen.getByText("Summary").closest("a");
+    const summaryLink = getLinkByHref("/ehr/P-001/summary");
     expect(summaryLink?.className).toContain("text-gray-600");
     expect(summaryLink?.className).not.toContain("bg-blue-50");
   });
@@ -137,18 +215,27 @@ describe("EncounterMenu", () => {
 
     render(<EncounterMenu />);
 
-    const summaryLink = screen.getByText("Summary").closest("a");
+    const summaryLink = getLinkByHref("/ehr/P-042/summary");
     expect(summaryLink).toHaveAttribute("href", "/ehr/P-042/summary");
 
-    const medicationsLink = screen.getByText("Medications").closest("a");
+    const medicationsLink = getLinkByHref("/ehr/P-042/medications");
     expect(medicationsLink).toHaveAttribute("href", "/ehr/P-042/medications");
   });
 
-  it("renders the auto-saved indicator", () => {
+  it("renders the live workspace and save-state indicator", () => {
     mockUseParams.mockReturnValue({ patientId: "P-001" });
     mockUsePathname.mockReturnValue("/ehr/P-001/summary");
 
     render(<EncounterMenu />);
-    expect(screen.getByText("Auto-saved")).toBeInTheDocument();
+    expect(screen.getByText("Workspace live")).toBeInTheDocument();
+    expect(screen.getByText(/Last saved/)).toBeInTheDocument();
+  });
+
+  it("renders the active item description in the workspace header", () => {
+    mockUseParams.mockReturnValue({ patientId: "P-001" });
+    mockUsePathname.mockReturnValue("/ehr/P-001/summary");
+
+    render(<EncounterMenu />);
+    expect(screen.getAllByText("Patient summary and status").length).toBeGreaterThan(0);
   });
 });

@@ -5,18 +5,22 @@
  * Route: /ehr/[patientId]/encounters | pageTitle: "Encounters"
  */
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ClipboardList, Plus, Loader2, Receipt } from "lucide-react";
+import { ClipboardList, Plus, Loader2, Receipt, ArrowRightLeft, Video, FileText } from "lucide-react";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import {
   useEncounters,
   useCreateEncounter,
   type EncounterResource } from "@/hooks/queries/useEncounters";
+import { useReferrals } from "@/hooks/queries/useReferrals";
+import { useClinicalNotes } from "@/hooks/queries/useClinicalNotes";
+import { useTelemedicineSessions } from "@/hooks/queries/useTelemedicine";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useRoleGroup } from "@/hooks/useRoleGroup";
+import { isReferralReceivingHere, parseConsultationCoordinationMeta } from "@/lib/consult-workflows";
 
 /* ------------------------------------------------------------------ */
 /*  Badge helpers                                                      */
@@ -54,9 +58,34 @@ export default function EncountersPage() {
   const facility = useFacilityStore((s) => s.facility);
   const { isClinical } = useRoleGroup();
   const { data: encountersData, isLoading } = useEncounters(patientId);
+  const { data: referralsData } = useReferrals(patientId);
+  const { data: notesData } = useClinicalNotes(patientId);
+  const { data: telemedicineData } = useTelemedicineSessions({ patientId, facilityId: facility?.id });
   const createEncounter = useCreateEncounter();
 
   const encounters: EncounterResource[] = encountersData?.data ?? [];
+  const referrals = referralsData?.data ?? [];
+  const clinicalNotes = notesData?.data ?? [];
+  const telemedicineSessions = telemedicineData?.data ?? [];
+  const activeEncounter = encounters.find(
+    (encounter) => encounter.attributes.status === "ACTIVE" || encounter.attributes.status === "IN_PROGRESS",
+  );
+  const coordinationPulse = useMemo(() => {
+    const openReferrals = referrals.filter(
+      (referral) => referral.attributes.status !== "COMPLETED" && referral.attributes.status !== "CANCELLED",
+    ).length;
+    const receivingHere = referrals.filter((referral) => isReferralReceivingHere(referral, facility)).length;
+    const teleconsultActivity = telemedicineSessions.filter(
+      (session) => session.attributes.status === "SCHEDULED" || session.attributes.status === "IN_PROGRESS",
+    ).length;
+    const returnedGuidance = clinicalNotes.filter(
+      (note) =>
+        note.attributes.noteType === "CONSULTATION" &&
+        parseConsultationCoordinationMeta(note.attributes.body).hasReferralLoopUpdate,
+    ).length;
+
+    return { openReferrals, receivingHere, teleconsultActivity, returnedGuidance };
+  }, [clinicalNotes, facility, referrals, telemedicineSessions]);
 
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ ...EMPTY_FORM });
@@ -96,6 +125,75 @@ export default function EncountersPage() {
           </div>
         ) : (
           <div className="space-y-6">
+            <div className="rounded-3xl border border-slate-200 bg-[linear-gradient(135deg,#f8fbff_0%,#eef6ff_45%,#fffaf5_100%)] p-5 shadow-sm">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div className="space-y-2">
+                  <div className="inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1 text-xs font-medium text-slate-600">
+                    <ArrowRightLeft className="h-3.5 w-3.5 text-blue-600" />
+                    Encounter coordination
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-900">Encounter history now carries consult and teleconsult context</h3>
+                    <p className="mt-1 max-w-2xl text-sm text-slate-600">
+                      Past and active encounters stay connected to open referrals, returned specialist guidance, and teleconsult activity so handoffs remain visible during chart review.
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    <Link
+                      href={`/ehr/${patientId}/consults?tab=referrals`}
+                      className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-800"
+                    >
+                      <ArrowRightLeft className="h-4 w-4" />
+                      Consults
+                    </Link>
+                    <Link
+                      href={`/ehr/${patientId}/consults?tab=teleconsults`}
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+                    >
+                      <Video className="h-4 w-4" />
+                      Teleconsults
+                    </Link>
+                    <Link
+                      href={`/ehr/${patientId}/notes`}
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+                    >
+                      <FileText className="h-4 w-4" />
+                      Notes Evidence
+                    </Link>
+                  </div>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2 xl:w-[28rem]">
+                  <div className="rounded-2xl border border-white/70 bg-white/80 p-4">
+                    <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">Open referrals</p>
+                    <p className="mt-2 text-2xl font-semibold text-purple-700">{coordinationPulse.openReferrals}</p>
+                    <p className="mt-1 text-xs text-slate-500">Referrals still moving across encounter history.</p>
+                  </div>
+                  <div className="rounded-2xl border border-white/70 bg-white/80 p-4">
+                    <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">Receiving here</p>
+                    <p className="mt-2 text-2xl font-semibold text-blue-700">{coordinationPulse.receivingHere}</p>
+                    <p className="mt-1 text-xs text-slate-500">Handoffs where this facility is the current receiver.</p>
+                  </div>
+                  <div className="rounded-2xl border border-white/70 bg-white/80 p-4">
+                    <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">Teleconsult activity</p>
+                    <p className="mt-2 text-2xl font-semibold text-emerald-700">{coordinationPulse.teleconsultActivity}</p>
+                    <p className="mt-1 text-xs text-slate-500">Scheduled or live virtual sessions tied to this chart.</p>
+                  </div>
+                  <div className="rounded-2xl border border-white/70 bg-white/80 p-4">
+                    <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">Returned guidance</p>
+                    <p className="mt-2 text-2xl font-semibold text-indigo-700">{coordinationPulse.returnedGuidance}</p>
+                    <p className="mt-1 text-xs text-slate-500">Consultation notes with structured referral-loop updates.</p>
+                  </div>
+                </div>
+              </div>
+
+              {activeEncounter && (
+                <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                  Active encounter in progress: open the live encounter workspace for immediate charting, or stay here to review historical encounter context.
+                </div>
+              )}
+            </div>
+
             {/* Header row with action button */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">

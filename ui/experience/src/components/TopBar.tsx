@@ -82,6 +82,15 @@ export function TopBar() {
         </span>
       ))}
 
+      {pathname.startsWith("/ehr") && (
+        <Link
+          href="/queue"
+          className="ml-2 hidden md:inline-flex items-center gap-1.5 rounded-md border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900"
+        >
+          Queue
+        </Link>
+      )}
+
       <div className="flex-1" />
 
       <nav className="flex items-center gap-1">

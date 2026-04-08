@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
 import {
   Activity,
+  ArrowUpRight,
   Bell,
   BriefcaseBusiness,
   Building2,
@@ -40,6 +41,17 @@ interface SidebarZone {
   id: "work" | "professional" | "life";
   label: string;
   items: SidebarItem[];
+}
+
+interface SidebarSpotlight {
+  title: string;
+  description: string;
+  tone: string;
+  actions: Array<{
+    href: string;
+    label: string;
+    icon: LucideIcon;
+  }>;
 }
 
 const ADMIN_ROLES = ["SYSTEM_ADMIN", "FACILITY_ADMIN", "DEVELOPER"];
@@ -101,6 +113,54 @@ function matchesPath(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
+function getSidebarSpotlight(pathname: string): SidebarSpotlight {
+  if (pathname.startsWith("/ehr") || pathname.startsWith("/queue") || pathname.startsWith("/telemedicine")) {
+    return {
+      title: "Clinical coordination",
+      description: "Stay in the patient workflow with quick access to queue, consults, and telemedicine.",
+      tone: "border-emerald-400/20 bg-emerald-400/10 text-emerald-100",
+      actions: [
+        { href: "/queue", label: "Queue", icon: Users },
+        { href: "/telemedicine", label: "Telemedicine", icon: Stethoscope },
+      ],
+    };
+  }
+
+  if (pathname.startsWith("/finance")) {
+    return {
+      title: "Finance operations",
+      description: "Billing, payments, and claims are grouped together for faster revenue-cycle work.",
+      tone: "border-sky-400/20 bg-sky-400/10 text-sky-100",
+      actions: [
+        { href: "/finance/billing", label: "Billing", icon: CreditCard },
+        { href: "/finance/payments", label: "Payments", icon: Wallet },
+      ],
+    };
+  }
+
+  if (pathname.startsWith("/registry") || pathname.startsWith("/admin") || pathname.startsWith("/reports")) {
+    return {
+      title: "Professional oversight",
+      description: "Reference, governance, and reporting tools are available from one professional context.",
+      tone: "border-violet-400/20 bg-violet-400/10 text-violet-100",
+      actions: [
+        { href: "/registry", label: "Registry", icon: Building2 },
+        { href: "/reports", label: "Reports", icon: FileBarChart2 },
+      ],
+    };
+  }
+
+  return {
+    title: "One Experience Layer",
+    description: "Move between work, professional, and personal contexts without losing your current facility and workspace state.",
+    tone: "border-white/10 bg-white/5 text-slate-100",
+    actions: [
+      { href: "/home", label: "Home", icon: LayoutDashboard },
+      { href: "/facility", label: "Facility", icon: Building2 },
+    ],
+  };
+}
+
 export function ExperienceSidebar() {
   const pathname = usePathname();
   const { user, hasRole } = useAuthStore();
@@ -119,13 +179,23 @@ export function ExperienceSidebar() {
     sessionStorage.setItem("exp:sidebar-collapsed", String(next));
   }
 
-  const visibleZones = ZONES.map((zone) => ({
+  const orderedZones = [...ZONES].sort((left, right) => {
+    const activeZone = currentRoute?.navZone;
+    if (!activeZone) return 0;
+    if (left.id === activeZone) return -1;
+    if (right.id === activeZone) return 1;
+    return 0;
+  });
+
+  const visibleZones = orderedZones.map((zone) => ({
     ...zone,
     items: zone.items.filter((item) => {
       if (!item.requiredRoles) return true;
       return item.requiredRoles.some((role) => hasRole(role));
     }),
   })).filter((zone) => zone.items.length > 0);
+  const spotlight = getSidebarSpotlight(pathname);
+  const activeZoneId = currentRoute?.navZone;
 
   const shellClasses = collapsed ? "w-[88px]" : "w-[320px]";
 
@@ -233,13 +303,50 @@ export function ExperienceSidebar() {
           </div>
         )}
 
+        {!collapsed && (
+          <div className="border-b border-white/10 px-4 py-4">
+            <div className={`rounded-3xl border p-4 ${spotlight.tone}`}>
+              <p className="text-[11px] uppercase tracking-[0.24em] text-slate-400">
+                Context Spotlight
+              </p>
+              <p className="mt-2 text-sm font-semibold text-white">{spotlight.title}</p>
+              <p className="mt-1 text-xs leading-5 text-slate-300">{spotlight.description}</p>
+              <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                {spotlight.actions.map((action) => {
+                  const Icon = action.icon;
+                  return (
+                    <Link
+                      key={action.href}
+                      href={action.href}
+                      className="inline-flex items-center justify-between rounded-2xl border border-white/10 bg-slate-950/20 px-3 py-2 text-xs font-medium text-slate-100 transition hover:bg-white/10"
+                    >
+                      <span className="inline-flex items-center gap-2">
+                        <Icon className="h-3.5 w-3.5" />
+                        {action.label}
+                      </span>
+                      <ArrowUpRight className="h-3.5 w-3.5 text-slate-400" />
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="flex-1 overflow-y-auto px-3 py-4">
           {visibleZones.map((zone) => (
             <section key={zone.id} className="mb-6">
               {!collapsed && (
-                <p className="mb-2 px-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
-                  {zone.label}
-                </p>
+                <div className="mb-2 flex items-center justify-between px-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+                    {zone.label}
+                  </p>
+                  {activeZoneId === zone.id && (
+                    <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-medium text-slate-300">
+                      Active
+                    </span>
+                  )}
+                </div>
               )}
               <div className="space-y-1">
                 {zone.items.map((item) => {

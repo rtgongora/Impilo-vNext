@@ -9,6 +9,7 @@
  * dashboard layout. Patient demographics are in the PatientBanner.
  */
 
+import { useMemo } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -21,13 +22,26 @@ import {
   Stethoscope,
   ShieldAlert,
   Clock,
+  ArrowRightLeft,
+  Video,
+  ClipboardCheck,
 } from "lucide-react";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { usePatient } from "@/hooks/queries/usePatients";
 import { useEncounters } from "@/hooks/queries/useEncounters";
+import { useReferrals } from "@/hooks/queries/useReferrals";
+import { useClinicalNotes } from "@/hooks/queries/useClinicalNotes";
+import { useTelemedicineSessions } from "@/hooks/queries/useTelemedicine";
+import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
+import {
+  getReferralFacilityName,
+  getReferralStageCopy,
+  isReferralReceivingHere,
+  parseConsultationCoordinationMeta,
+} from "@/lib/consult-workflows";
 
 interface GenericResource {
   id: string;
@@ -38,9 +52,13 @@ interface GenericResource {
 export default function PatientSummaryPage() {
   const params = useParams<{ patientId: string }>();
   const patientId = params.patientId;
+  const facility = useFacilityStore((s) => s.facility);
 
   const { data: patientData, isLoading: loadingPatient } = usePatient(patientId);
   const { data: encountersData } = useEncounters(patientId);
+  const { data: referralsData } = useReferrals(patientId);
+  const { data: notesData } = useClinicalNotes(patientId);
+  const { data: telemedicineData } = useTelemedicineSessions({ patientId, facilityId: facility?.id });
 
   const { data: allergiesData } = useQuery<ApiResponse<GenericResource[]>>({
     queryKey: ["allergies", { patientId }],
@@ -68,6 +86,9 @@ export default function PatientSummaryPage() {
 
   const patient = patientData?.data;
   const encounters = encountersData?.data ?? [];
+  const referrals = referralsData?.data ?? [];
+  const clinicalNotes = notesData?.data ?? [];
+  const telemedicineSessions = telemedicineData?.data ?? [];
   const allergies = (allergiesData?.data ?? []);
   const conditions = (conditionsData?.data ?? []);
   const medications = (medsData?.data ?? []);
@@ -85,6 +106,35 @@ export default function PatientSummaryPage() {
     (m) => m.attributes.status === "PENDING" || m.attributes.status === "ACTIVE"
   );
   const latestVitals = vitals.length > 0 ? vitals[0] : null;
+  const coordinationPulse = useMemo(() => {
+    const closureReady = referrals.filter((referral) => referral.attributes.status === "RESPONDED").length;
+    const receivingHere = referrals.filter((referral) => isReferralReceivingHere(referral, facility)).length;
+    const activeTeleconsults = telemedicineSessions.filter(
+      (session) => session.attributes.status === "IN_PROGRESS" || session.attributes.status === "SCHEDULED",
+    ).length;
+    const referralLoopUpdates = clinicalNotes.filter(
+      (note) =>
+        note.attributes.noteType === "CONSULTATION" &&
+        parseConsultationCoordinationMeta(note.attributes.body).hasReferralLoopUpdate,
+    ).length;
+
+    return { closureReady, receivingHere, activeTeleconsults, referralLoopUpdates };
+  }, [clinicalNotes, facility, referrals, telemedicineSessions]);
+  const referralHighlights = useMemo(
+    () =>
+      [...referrals]
+        .sort((left, right) => {
+          const leftTime = new Date(
+            left.attributes.respondedAt ?? left.attributes.acceptedAt ?? left.attributes.createdAt,
+          ).getTime();
+          const rightTime = new Date(
+            right.attributes.respondedAt ?? right.attributes.acceptedAt ?? right.attributes.createdAt,
+          ).getTime();
+          return rightTime - leftTime;
+        })
+        .slice(0, 3),
+    [referrals],
+  );
 
   return (
     <EHRLayout>
@@ -127,6 +177,132 @@ export default function PatientSummaryPage() {
                 </div>
               </div>
             )}
+
+            <div className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
+              <div className="rounded-3xl border border-slate-200 bg-[linear-gradient(135deg,#f8fbff_0%,#eef6ff_45%,#fffaf5_100%)] p-5 shadow-sm">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                  <div className="space-y-2">
+                    <div className="inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1 text-xs font-medium text-slate-600">
+                      <ArrowRightLeft className="h-3.5 w-3.5 text-blue-600" />
+                      Coordination snapshot
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-slate-900">Consult and teleconsult outcomes stay visible in summary</h3>
+                      <p className="mt-1 max-w-2xl text-sm text-slate-600">
+                        This summary now carries the live referral loop, receiving context, and returned guidance signals so clinicians can see what needs action before diving deeper into consults or notes.
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      <Link
+                        href={`/ehr/${patientId}/consults?tab=referrals`}
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-800"
+                      >
+                        <ArrowRightLeft className="h-4 w-4" />
+                        Open Consults
+                      </Link>
+                      <Link
+                        href={`/ehr/${patientId}/consults?tab=teleconsults`}
+                        className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+                      >
+                        <Video className="h-4 w-4" />
+                        Teleconsults
+                      </Link>
+                      <Link
+                        href={`/ehr/${patientId}/notes`}
+                        className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+                      >
+                        <FileText className="h-4 w-4" />
+                        Notes Evidence
+                      </Link>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-2 xl:w-[28rem]">
+                    <div className="rounded-2xl border border-white/70 bg-white/80 p-4">
+                      <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">Loop closures ready</p>
+                      <p className="mt-2 text-2xl font-semibold text-purple-700">{coordinationPulse.closureReady}</p>
+                      <p className="mt-1 text-xs text-slate-500">Responses back in chart and ready for final closure.</p>
+                    </div>
+                    <div className="rounded-2xl border border-white/70 bg-white/80 p-4">
+                      <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">Receiving context</p>
+                      <p className="mt-2 text-2xl font-semibold text-blue-700">{coordinationPulse.receivingHere}</p>
+                      <p className="mt-1 text-xs text-slate-500">Referrals where this facility is acting on the receiving side.</p>
+                    </div>
+                    <div className="rounded-2xl border border-white/70 bg-white/80 p-4">
+                      <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">Teleconsult activity</p>
+                      <p className="mt-2 text-2xl font-semibold text-emerald-700">{coordinationPulse.activeTeleconsults}</p>
+                      <p className="mt-1 text-xs text-slate-500">Scheduled or live virtual consult sessions for this patient.</p>
+                    </div>
+                    <div className="rounded-2xl border border-white/70 bg-white/80 p-4">
+                      <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">Returned guidance</p>
+                      <p className="mt-2 text-2xl font-semibold text-indigo-700">{coordinationPulse.referralLoopUpdates}</p>
+                      <p className="mt-1 text-xs text-slate-500">Consultation notes that already include structured loop updates.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-100 text-indigo-700">
+                    <ClipboardCheck className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-slate-900">Recent referral movement</p>
+                    <p className="mt-1 text-sm text-slate-600">
+                      The latest coordination steps stay visible here so the summary can act as a handoff board, not just a chart snapshot.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-4 space-y-3">
+                  {referralHighlights.length === 0 ? (
+                    <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-sm text-slate-500">
+                      No referrals or teleconsult loop activity yet for this patient.
+                    </div>
+                  ) : (
+                    referralHighlights.map((referral) => {
+                      const stage = getReferralStageCopy(
+                        referral.attributes.status,
+                        isReferralReceivingHere(referral, facility),
+                      );
+
+                      return (
+                        <div key={referral.id} className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
+                          <div className="flex flex-wrap items-start justify-between gap-2">
+                            <div>
+                              <p className="text-sm font-semibold text-slate-900">
+                                {referral.attributes.specialty} referral
+                              </p>
+                              <p className="mt-1 text-sm text-slate-600">{referral.attributes.reason}</p>
+                            </div>
+                            <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                              stage.tone === "amber"
+                                ? "bg-amber-100 text-amber-700"
+                                : stage.tone === "blue"
+                                  ? "bg-blue-100 text-blue-700"
+                                  : stage.tone === "purple"
+                                    ? "bg-purple-100 text-purple-700"
+                                    : stage.tone === "green"
+                                      ? "bg-green-100 text-green-700"
+                                      : "bg-slate-100 text-slate-600"
+                            }`}>
+                              {stage.title}
+                            </span>
+                          </div>
+                          <p className="mt-2 text-sm text-slate-600">{stage.detail}</p>
+                          <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-500">
+                            <span className="rounded-full bg-white px-2.5 py-1">{getReferralFacilityName(referral)}</span>
+                            <span className="rounded-full bg-white px-2.5 py-1">{referral.attributes.status}</span>
+                            <span className="rounded-full bg-white px-2.5 py-1">{referral.attributes.urgency}</span>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+            </div>
 
             {/* Latest Vitals */}
             {latestVitals && (

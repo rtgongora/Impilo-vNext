@@ -5,23 +5,31 @@
  * Route: /ehr/[patientId]/timeline | pageTitle: "Timeline"
  */
 
+import Link from "next/link";
+import { useMemo } from "react";
 import { useParams } from "next/navigation";
 import {
   Clock,
   Loader2,
   Stethoscope,
   HeartPulse,
-  FileText,
   ClipboardList,
   FlaskConical,
   ArrowRightLeft,
   Pill,
-  Syringe } from "lucide-react";
+  Syringe,
+  Video,
+  FileText } from "lucide-react";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import {
   useTimeline,
   type TimelineEntryResource } from "@/hooks/queries/useTimeline";
+import { useReferrals } from "@/hooks/queries/useReferrals";
+import { useClinicalNotes } from "@/hooks/queries/useClinicalNotes";
+import { useTelemedicineSessions } from "@/hooks/queries/useTelemedicine";
+import { useFacilityStore } from "@/hooks/useFacilityStore";
+import { isReferralReceivingHere, parseConsultationCoordinationMeta } from "@/lib/consult-workflows";
 
 /* ------------------------------------------------------------------ */
 /*  Event type color mapping                                           */
@@ -85,9 +93,30 @@ const DEFAULT_CONFIG = {
 export default function TimelinePage() {
   const params = useParams<{ patientId: string }>();
   const patientId = params.patientId;
+  const facility = useFacilityStore((s) => s.facility);
 
   const { data: timelineData, isLoading } = useTimeline(patientId);
+  const { data: referralsData } = useReferrals(patientId);
+  const { data: notesData } = useClinicalNotes(patientId);
+  const { data: telemedicineData } = useTelemedicineSessions({ patientId, facilityId: facility?.id });
   const entries: TimelineEntryResource[] = timelineData?.data ?? [];
+  const referrals = referralsData?.data ?? [];
+  const clinicalNotes = notesData?.data ?? [];
+  const telemedicineSessions = telemedicineData?.data ?? [];
+  const coordinationPulse = useMemo(() => {
+    const referralEvents = entries.filter((entry) => entry.attributes.eventType === "REFERRAL").length;
+    const receivingHere = referrals.filter((referral) => isReferralReceivingHere(referral, facility)).length;
+    const returnedGuidance = clinicalNotes.filter(
+      (note) =>
+        note.attributes.noteType === "CONSULTATION" &&
+        parseConsultationCoordinationMeta(note.attributes.body).hasReferralLoopUpdate,
+    ).length;
+    const teleconsultActivity = telemedicineSessions.filter(
+      (session) => session.attributes.status === "SCHEDULED" || session.attributes.status === "IN_PROGRESS",
+    ).length;
+
+    return { referralEvents, receivingHere, returnedGuidance, teleconsultActivity };
+  }, [clinicalNotes, entries, facility, referrals, telemedicineSessions]);
 
   return (
     <EHRLayout>
@@ -100,6 +129,69 @@ export default function TimelinePage() {
           </div>
         ) : (
           <div className="space-y-6">
+            <div className="rounded-3xl border border-slate-200 bg-[linear-gradient(135deg,#f8fbff_0%,#eef6ff_45%,#fffaf5_100%)] p-5 shadow-sm">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div className="space-y-2">
+                  <div className="inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1 text-xs font-medium text-slate-600">
+                    <ArrowRightLeft className="h-3.5 w-3.5 text-blue-600" />
+                    Coordination timeline
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-900">Referral and teleconsult movement stays visible in the timeline</h3>
+                    <p className="mt-1 max-w-2xl text-sm text-slate-600">
+                      The clinical timeline now sits beside live coordination counts so chart review still shows where consult loops are active, returned, or waiting on the current facility.
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    <Link
+                      href={`/ehr/${patientId}/consults?tab=referrals`}
+                      className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-800"
+                    >
+                      <ArrowRightLeft className="h-4 w-4" />
+                      Consults
+                    </Link>
+                    <Link
+                      href={`/ehr/${patientId}/consults?tab=teleconsults`}
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+                    >
+                      <Video className="h-4 w-4" />
+                      Teleconsults
+                    </Link>
+                    <Link
+                      href={`/ehr/${patientId}/notes`}
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+                    >
+                      <FileText className="h-4 w-4" />
+                      Notes Evidence
+                    </Link>
+                  </div>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2 xl:w-[28rem]">
+                  <div className="rounded-2xl border border-white/70 bg-white/80 p-4">
+                    <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">Referral events</p>
+                    <p className="mt-2 text-2xl font-semibold text-orange-700">{coordinationPulse.referralEvents}</p>
+                    <p className="mt-1 text-xs text-slate-500">Referral milestones already represented in the timeline.</p>
+                  </div>
+                  <div className="rounded-2xl border border-white/70 bg-white/80 p-4">
+                    <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">Receiving here</p>
+                    <p className="mt-2 text-2xl font-semibold text-blue-700">{coordinationPulse.receivingHere}</p>
+                    <p className="mt-1 text-xs text-slate-500">Open handoffs where this facility is the receiver.</p>
+                  </div>
+                  <div className="rounded-2xl border border-white/70 bg-white/80 p-4">
+                    <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">Teleconsult activity</p>
+                    <p className="mt-2 text-2xl font-semibold text-emerald-700">{coordinationPulse.teleconsultActivity}</p>
+                    <p className="mt-1 text-xs text-slate-500">Scheduled or live virtual consult sessions tied to the patient.</p>
+                  </div>
+                  <div className="rounded-2xl border border-white/70 bg-white/80 p-4">
+                    <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">Returned guidance</p>
+                    <p className="mt-2 text-2xl font-semibold text-indigo-700">{coordinationPulse.returnedGuidance}</p>
+                    <p className="mt-1 text-xs text-slate-500">Consultation notes that include structured loop updates.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Header */}
             <div className="flex items-center gap-2">
               <Clock className="w-5 h-5 text-blue-500" />

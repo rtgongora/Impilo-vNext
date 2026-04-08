@@ -22,10 +22,12 @@ import {
   ChevronDown,
   ChevronUp,
   Clock,
+  FileText,
   MapPin,
   Shield,
   ShieldAlert,
   Stethoscope,
+  Video,
 } from "lucide-react";
 import { usePatient } from "@/hooks/queries/usePatients";
 import { useEncounters } from "@/hooks/queries/useEncounters";
@@ -50,7 +52,10 @@ const SEVERITY_COLORS: Record<string, string> = {
 export function PatientBanner() {
   const params = useParams();
   const patientId = params?.patientId as string | undefined;
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return sessionStorage.getItem("exp:patient-banner-expanded") === "true";
+  });
 
   const { data: patientData } = usePatient(patientId ?? "");
   const { data: encountersData } = useEncounters(patientId ?? "");
@@ -110,6 +115,14 @@ export function PatientBanner() {
   const genderChar =
     attrs.gender === "female" ? "F" : attrs.gender === "male" ? "M" : "O";
 
+  function toggleExpanded(next: boolean | ((current: boolean) => boolean)) {
+    const resolved = typeof next === "function" ? next(expanded) : next;
+    setExpanded(resolved);
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("exp:patient-banner-expanded", String(resolved));
+    }
+  }
+
   return (
     <div className="bg-white border-b border-gray-200">
       {/* Compact Banner — Always Visible */}
@@ -159,7 +172,7 @@ export function PatientBanner() {
           <div className="flex items-center gap-2">
             {hasAllergies ? (
               <button
-                onClick={() => setExpanded(true)}
+                onClick={() => toggleExpanded(true)}
                 className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border cursor-pointer transition-colors hover:opacity-80 ${
                   hasSevere
                     ? "bg-red-50 border-red-200"
@@ -242,9 +255,32 @@ export function PatientBanner() {
               </span>
             )}
 
+            <div className="hidden xl:flex items-center gap-2">
+              <Link
+                href={`/ehr/${patientId}/summary`}
+                className="px-2.5 py-1.5 text-xs font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                Summary
+              </Link>
+              <Link
+                href={`/ehr/${patientId}/consults`}
+                className="px-2.5 py-1.5 text-xs font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors flex items-center gap-1"
+              >
+                <Video className="w-3 h-3" />
+                Consults
+              </Link>
+              <Link
+                href={`/ehr/${patientId}/notes`}
+                className="px-2.5 py-1.5 text-xs font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors flex items-center gap-1"
+              >
+                <FileText className="w-3 h-3" />
+                Notes
+              </Link>
+            </div>
+
             {/* Expand/Collapse */}
             <button
-              onClick={() => setExpanded((v) => !v)}
+              onClick={() => toggleExpanded((v) => !v)}
               className="px-2 py-1.5 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors flex items-center gap-1"
             >
               {expanded ? (
