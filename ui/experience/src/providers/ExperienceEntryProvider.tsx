@@ -4,13 +4,21 @@ import {
   createContext,
   type ReactNode,
   useContext,
+  useMemo,
 } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { type FacilityContext, useFacilityStore } from "@/hooks/useFacilityStore";
+import { useOperationalContextStore } from "@/hooks/useOperationalContextStore";
 import { useShiftStore } from "@/hooks/useShiftStore";
 import { type WorkMode, useWorkModeStore } from "@/hooks/useWorkModeStore";
 import { type WorkspaceContext, useWorkspaceStore } from "@/hooks/useWorkspaceStore";
+import {
+  buildAvailableOperationalModes,
+  type FacilityWorkSubcontext,
+  type OperationalMode,
+  type RegistryAdminSubtype,
+} from "@/lib/operational-context";
 import { matchRouteDefinition, type RouteDefinition } from "@/lib/routes";
 
 export type ExperienceEntryStage = "auth" | "facility" | "workspace" | "shift" | "ready";
@@ -34,6 +42,14 @@ interface ExperienceEntryContextValue {
   workspace: WorkspaceContext | null;
   shiftActive: boolean;
   workMode: WorkMode;
+  /** Top-level operational context (single login, many hats). */
+  operationalMode: OperationalMode;
+  availableOperationalModes: OperationalMode[];
+  setOperationalMode: (mode: OperationalMode) => void;
+  facilityWorkSubcontext: FacilityWorkSubcontext | null;
+  setFacilityWorkSubcontext: (sub: FacilityWorkSubcontext | null) => void;
+  registryAdminSubtype: RegistryAdminSubtype | null;
+  setRegistryAdminSubtype: (sub: RegistryAdminSubtype | null) => void;
   selectFacility: (facility: FacilityContext, options?: SelectFacilityOptions) => void;
   selectWorkspace: (workspace: WorkspaceContext, options?: SelectWorkspaceOptions) => void;
   enterMode: (mode: WorkMode, nextPath: string) => void;
@@ -74,6 +90,24 @@ export function ExperienceEntryProvider({ children }: { children: ReactNode }) {
   const endShift = useShiftStore((s) => s.endShift);
   const workMode = useWorkModeStore((s) => s.mode);
   const setWorkMode = useWorkModeStore((s) => s.setMode);
+
+  const user = useAuthStore((s) => s.user);
+  const operationalMode = useOperationalContextStore((s) => s.operationalMode);
+  const setOperationalModeStore = useOperationalContextStore((s) => s.setOperationalMode);
+  const facilityWorkSubcontext = useOperationalContextStore((s) => s.facilityWorkSubcontext);
+  const setFacilityWorkSubcontext = useOperationalContextStore((s) => s.setFacilityWorkSubcontext);
+  const registryAdminSubtype = useOperationalContextStore((s) => s.registryAdminSubtype);
+  const setRegistryAdminSubtype = useOperationalContextStore((s) => s.setRegistryAdminSubtype);
+
+  const availableOperationalModes = useMemo(
+    () => buildAvailableOperationalModes(user),
+    [user],
+  );
+
+  function setOperationalMode(next: OperationalMode) {
+    if (!availableOperationalModes.includes(next)) return;
+    setOperationalModeStore(next);
+  }
 
   const currentRoute = matchRouteDefinition(pathname);
   const stage = getExperienceEntryStage({
@@ -137,6 +171,13 @@ export function ExperienceEntryProvider({ children }: { children: ReactNode }) {
         workspace,
         shiftActive: hasShift,
         workMode,
+        operationalMode,
+        availableOperationalModes,
+        setOperationalMode,
+        facilityWorkSubcontext,
+        setFacilityWorkSubcontext,
+        registryAdminSubtype,
+        setRegistryAdminSubtype,
         selectFacility,
         selectWorkspace,
         enterMode,

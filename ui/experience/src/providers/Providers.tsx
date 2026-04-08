@@ -15,6 +15,7 @@ import { AuthGuardProvider } from "./AuthGuardProvider";
 import { ExperienceEntryProvider } from "./ExperienceEntryProvider";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
+import { useOperationalContextStore } from "@/hooks/useOperationalContextStore";
 import { useWorkspaceStore } from "@/hooks/useWorkspaceStore";
 import { useShiftStore } from "@/hooks/useShiftStore";
 
@@ -34,6 +35,7 @@ function StoreHydrator({ children }: { children: ReactNode }) {
       if (token && userStr) {
         const user = JSON.parse(userStr);
         setAuth(user, token);
+        useOperationalContextStore.getState().ensureDefaultFromUser(user);
       }
 
       const facilityStr = sessionStorage.getItem("exp:facility");

@@ -6,9 +6,11 @@
  */
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { ArrowLeft, Loader2, HeartHandshake, AlertCircle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
+import { RegistryPlaneContextBar } from "@/components/experience/RegistryPlaneContextBar";
 import { PageShell } from "@/components/PageShell";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
 
@@ -43,6 +45,8 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 export default function ConsentPage() {
+  const searchParams = useSearchParams();
+  const fromRegistryAdmin = searchParams.get("from") === "registry-admin";
   const { data, isLoading, error } = useConsent();
 
   const consents = data?.data ?? [];
@@ -53,13 +57,14 @@ export default function ConsentPage() {
         title="Consent Management"
         subtitle="Manage patient consent directives"
       >
+        <RegistryPlaneContextBar />
         <div className="mb-4">
           <Link
-            href="/admin"
+            href={fromRegistryAdmin ? "/registry/trust" : "/admin"}
             className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to administration
+            {fromRegistryAdmin ? "Back to trust hub" : "Back to administration"}
           </Link>
         </div>
 

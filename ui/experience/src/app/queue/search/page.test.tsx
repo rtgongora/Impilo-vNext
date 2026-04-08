@@ -4,6 +4,14 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import PatientSearchPage from "./page";
 
+let workflow: string | null = null;
+
+vi.mock("next/navigation", () => ({
+  useSearchParams: () => ({
+    get: (key: string) => (key === "workflow" ? workflow : null),
+  }),
+}));
+
 vi.mock("@/components/AppLayout", () => ({
   AppLayout: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }));
@@ -47,6 +55,7 @@ vi.mock("@/hooks/queries/usePatients", () => ({
 describe("PatientSearchPage", () => {
   it("offers direct queue continuity from search results", async () => {
     const user = userEvent.setup();
+    workflow = null;
 
     render(<PatientSearchPage />);
 
@@ -59,6 +68,27 @@ describe("PatientSearchPage", () => {
     expect(screen.getByRole("link", { name: "Add to Queue" })).toHaveAttribute(
       "href",
       "/queue/walk-in?patientId=patient-1",
+    );
+  });
+
+  it("routes LIMS entry through direct orders and results handoff", async () => {
+    const user = userEvent.setup();
+    workflow = "lims";
+
+    render(<PatientSearchPage />);
+
+    expect(screen.getByText("Find the right patient, then continue into laboratory orders and results")).toBeInTheDocument();
+
+    await user.type(screen.getByPlaceholderText("Search by name, CPID, national ID, or date of birth..."), "Tariro");
+    await user.click(screen.getByRole("button", { name: "Search" }));
+
+    expect(await screen.findByRole("link", { name: "Orders & Results" })).toHaveAttribute(
+      "href",
+      "/ehr/patient-1/orders?entry=lims",
+    );
+    expect(screen.getByRole("link", { name: "Results" })).toHaveAttribute(
+      "href",
+      "/ehr/patient-1/results?entry=lims",
     );
   });
 });

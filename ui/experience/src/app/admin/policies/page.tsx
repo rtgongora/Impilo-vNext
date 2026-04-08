@@ -6,9 +6,11 @@
  */
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { ArrowLeft, Loader2, ScrollText, AlertCircle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
+import { OrganizationPlaneContextBar } from "@/components/experience/OrganizationPlaneContextBar";
 import { PageShell } from "@/components/PageShell";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
 
@@ -40,6 +42,8 @@ const EFFECT_STYLES: Record<string, string> = {
 };
 
 export default function PoliciesPage() {
+  const searchParams = useSearchParams();
+  const fromOrgAdmin = searchParams.get("from") === "organization-admin";
   const { data, isLoading, error } = usePolicies();
 
   const policies = data?.data ?? [];
@@ -50,13 +54,14 @@ export default function PoliciesPage() {
         title="Policy Management"
         subtitle="Configure ABAC policies and access rules"
       >
+        <OrganizationPlaneContextBar />
         <div className="mb-4">
           <Link
-            href="/admin"
+            href={fromOrgAdmin ? "/organization-admin" : "/admin"}
             className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to administration
+            {fromOrgAdmin ? "Back to organization administration" : "Back to administration"}
           </Link>
         </div>
 

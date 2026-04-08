@@ -6,8 +6,10 @@
  */
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { User, ShieldCheck, Monitor, Bell, Plug } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
+import { OrganizationPlaneContextBar } from "@/components/experience/OrganizationPlaneContextBar";
 import { PageShell } from "@/components/PageShell";
 
 const SETTINGS_SECTIONS = [
@@ -49,19 +51,24 @@ const SETTINGS_SECTIONS = [
 ] as const;
 
 export default function SettingsPage() {
+  const searchParams = useSearchParams();
+  const fromOrg = searchParams.get("from") === "organization-admin";
+  const withPlane = (href: string) => (fromOrg ? `${href}?from=organization-admin` : href);
+
   return (
     <AppLayout>
       <PageShell
         title="Settings"
         subtitle="Configure your account and preferences"
       >
+        <OrganizationPlaneContextBar />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {SETTINGS_SECTIONS.map((section) => {
             const Icon = section.icon;
             return (
               <Link
                 key={section.href}
-                href={section.href}
+                href={withPlane(section.href)}
                 className="bg-white rounded-lg border border-gray-200 p-5 hover:border-blue-300 hover:shadow-md transition-all group"
               >
                 <div className="flex items-start gap-3">

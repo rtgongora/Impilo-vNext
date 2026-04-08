@@ -7,8 +7,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { ArrowLeft, Search, Loader2, UserCheck } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
+import { RegistryPlaneContextBar } from "@/components/experience/RegistryPlaneContextBar";
 import { PageShell } from "@/components/PageShell";
 import { useProviders } from "@/hooks/queries/useRegistry";
 
@@ -20,6 +22,8 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 export default function ProvidersPage() {
+  const searchParams = useSearchParams();
+  const fromRegistryAdmin = searchParams.get("from") === "registry-admin";
   const [search, setSearch] = useState("");
   const { data, isLoading } = useProviders(search ? { search } : undefined);
 
@@ -31,13 +35,14 @@ export default function ProvidersPage() {
         title="Provider Registry"
         subtitle="Registered healthcare providers"
       >
+        <RegistryPlaneContextBar />
         <div className="mb-4">
           <Link
-            href="/registry"
+            href={fromRegistryAdmin ? "/registry-admin" : "/registry"}
             className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to registry hub
+            {fromRegistryAdmin ? "Back to registry administration" : "Back to registry hub"}
           </Link>
         </div>
 

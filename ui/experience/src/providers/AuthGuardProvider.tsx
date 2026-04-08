@@ -20,6 +20,15 @@ import { matchRouteDefinition } from "@/lib/routes";
  * Must stay aligned with backend SecurityConfig.java role-group arrays.
  */
 export const ROLE_GROUPS: Record<string, string[]> = {
+  /** Sovereign registry / HIE governance plane — distinct from facility org admin. */
+  REGISTRY_ADMIN: ["SYSTEM_ADMIN", "HIE_ADMIN"],
+  /** Facility and enterprise operations (includes finance operators). */
+  ORGANIZATION_ADMIN: ["SYSTEM_ADMIN", "FACILITY_ADMIN", "DEVELOPER", "FINANCE"],
+  /**
+   * Identity + trust operations: facility/developers plus HIE registry operators.
+   * Used for id-services and selected trust admin routes so HIE_ADMIN can reach real tooling.
+   */
+  ADMIN_OR_HIE: ["SYSTEM_ADMIN", "HIE_ADMIN", "FACILITY_ADMIN", "DEVELOPER"],
   ADMIN: ["SYSTEM_ADMIN", "FACILITY_ADMIN", "DEVELOPER"],
   FINANCE: ["SYSTEM_ADMIN", "FACILITY_ADMIN", "FINANCE"],
   CLINICAL: ["CLINICIAN", "NURSE", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"],

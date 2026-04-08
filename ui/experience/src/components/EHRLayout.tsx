@@ -14,6 +14,7 @@
 
 import { useState, type ReactNode } from "react";
 import { TopBar } from "./TopBar";
+import { OperationalContextStrip } from "./experience/OperationalContextStrip";
 import { PatientBanner } from "./PatientBanner";
 import { EncounterMenu } from "./EncounterMenu";
 import { PanelLeft, PanelRight } from "lucide-react";
@@ -33,6 +34,7 @@ export function EHRLayout({ children }: { children: ReactNode }) {
   return (
     <div className="flex flex-col h-screen bg-gray-50">
       <TopBar />
+      <OperationalContextStrip />
       <PatientBanner />
       <div className={`flex flex-1 min-h-0 ${menuRight ? "flex-row-reverse" : "flex-row"}`}>
         <div className="relative">

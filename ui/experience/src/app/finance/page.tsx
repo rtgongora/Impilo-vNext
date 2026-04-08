@@ -9,6 +9,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Receipt, FileText, CreditCard, BookOpen, ClipboardList, User } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
+import { OrganizationPlaneContextBar } from "@/components/experience/OrganizationPlaneContextBar";
 import { PageShell } from "@/components/PageShell";
 import { WorkflowHeader } from "@/components/workflow/WorkflowHeader";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
@@ -50,11 +51,13 @@ export default function FinancePage() {
   const patientId = searchParams.get("patientId");
   const encounterId = searchParams.get("encounterId");
   const source = searchParams.get("source");
+  const fromPlane = searchParams.get("from");
   const handoffParams = new URLSearchParams();
 
   if (patientId) handoffParams.set("patientId", patientId);
   if (encounterId) handoffParams.set("encounterId", encounterId);
   if (source) handoffParams.set("source", source);
+  if (fromPlane) handoffParams.set("from", fromPlane);
 
   const withHandoff = (href: string) => {
     const query = handoffParams.toString();
@@ -77,6 +80,7 @@ export default function FinancePage() {
         title="Finance Dashboard"
         subtitle="Financial management and revenue cycle"
       >
+        <OrganizationPlaneContextBar />
         <div className="space-y-6">
           <WorkflowHeader
             badge="Revenue follow-through"

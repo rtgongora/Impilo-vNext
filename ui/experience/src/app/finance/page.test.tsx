@@ -14,6 +14,10 @@ vi.mock("next/navigation", () => ({
   }),
 }));
 
+vi.mock("@/components/experience/OrganizationPlaneContextBar", () => ({
+  OrganizationPlaneContextBar: () => null,
+}));
+
 vi.mock("@/components/AppLayout", () => ({
   AppLayout: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }));

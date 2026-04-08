@@ -67,7 +67,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/coverage", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Coverage Operations", navLabel: "Coverage", navZone: "professional" },
 
   // ── Zone: Identity Services ──────────────────────────────────────
-  { path: "/id-services", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Identity Services", navLabel: "ID Services", navZone: "professional" },
+  { path: "/id-services", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN_OR_HIE", pageTitle: "Identity Services", navLabel: "ID Services", navZone: "professional" },
   { path: "/ai-governance", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "AI Governance", navLabel: "AI Governance", navZone: "professional" },
   { path: "/access", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Access Channels", navLabel: "Access", navZone: "professional" },
 
@@ -97,8 +97,9 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/shift/handover", zone: "shift", layout: "app", sidebar: "shift", guard: "shift", pageTitle: "Shift Handover", navLabel: "Handover" },
 
   // ── Zone: Scheduling ─────────────────────────────────────────────
-  { path: "/scheduling/roster", zone: "queue", layout: "app", sidebar: "queue", guard: "shift", pageTitle: "Staff Roster", navLabel: "Roster", navZone: "work" },
-  { path: "/scheduling/on-call", zone: "queue", layout: "app", sidebar: "queue", guard: "shift", pageTitle: "On-Call Schedule", navLabel: "On-Call", navZone: "work" },
+  { path: "/scheduling/roster", zone: "queue", layout: "app", sidebar: "queue", guard: "workspace", pageTitle: "Staff Roster", navLabel: "Roster", navZone: "work" },
+  { path: "/scheduling/on-call", zone: "queue", layout: "app", sidebar: "queue", guard: "workspace", pageTitle: "On-Call Schedule", navLabel: "On-Call", navZone: "work" },
+  { path: "/scheduling/noticeboard", zone: "queue", layout: "app", sidebar: "queue", guard: "workspace", pageTitle: "Provider Noticeboard", navLabel: "Noticeboard", navZone: "work" },
 
   // ── Zone: Communication ────────────────────────────────────────
   { path: "/communication/secure-messaging", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Secure Messaging", navLabel: "Messaging", navZone: "work" },
@@ -151,10 +152,10 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/admin/policies", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Policy Management", navLabel: "Policies", navZone: "professional" },
   { path: "/admin/audit", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Audit Trail", navLabel: "Audit", navZone: "professional" },
   { path: "/admin/audit/[id]", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Audit Entry", navLabel: "Audit Detail", navZone: "professional" },
-  { path: "/admin/consent", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Consent Management", navLabel: "Consent", navZone: "professional" },
+  { path: "/admin/consent", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN_OR_HIE", pageTitle: "Consent Management", navLabel: "Consent", navZone: "professional" },
   { path: "/admin/devices", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Device Management", navLabel: "Devices", navZone: "professional" },
-  { path: "/admin/keys", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Key Management", navLabel: "Keys", navZone: "professional" },
-  { path: "/admin/federation", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Federation", navLabel: "Federation", navZone: "professional" },
+  { path: "/admin/keys", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN_OR_HIE", pageTitle: "Key Management", navLabel: "Keys", navZone: "professional" },
+  { path: "/admin/federation", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN_OR_HIE", pageTitle: "Federation", navLabel: "Federation", navZone: "professional" },
   { path: "/admin/tenants", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Tenant Management", navLabel: "Tenants", navZone: "professional" },
   { path: "/admin/break-glass", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Break Glass Log", navLabel: "Break Glass", navZone: "professional" },
   { path: "/admin/beds", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Bed & Ward Admin", navLabel: "Beds", navZone: "professional" },
@@ -163,7 +164,15 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/admin/system-monitor", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "System Monitor", navLabel: "System Monitor", navZone: "professional" },
   { path: "/admin/integration-status", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Integration Status", navLabel: "Integrations", navZone: "professional" },
 
+  // ── Administrative plane landings (operational context: registry_admin / organization_admin) ──
+  { path: "/registry-admin", zone: "admin", layout: "app", sidebar: "registry", guard: "role", requiredRole: "REGISTRY_ADMIN", pageTitle: "Registry Administration", navLabel: "Registry Admin", navZone: "professional" },
+  { path: "/organization-admin", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ORGANIZATION_ADMIN", pageTitle: "Organization Administration", navLabel: "Org Admin", navZone: "professional" },
+  { path: "/organization-admin/facility", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ORGANIZATION_ADMIN", pageTitle: "Facility Administration", navLabel: "Org Facility", navZone: "professional" },
+  { path: "/organization-admin/staffing", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ORGANIZATION_ADMIN", pageTitle: "Staffing & Scheduling", navLabel: "Org Staffing", navZone: "professional" },
+
   // ── Zone: Registry ──────────────────────────────────────────────
+  { path: "/registry/clients", zone: "registry", layout: "app", sidebar: "registry", guard: "role", requiredRole: "REGISTRY_ADMIN", pageTitle: "Client Registry", navLabel: "Client Registry", navZone: "professional" },
+  { path: "/registry/trust", zone: "registry", layout: "app", sidebar: "registry", guard: "role", requiredRole: "REGISTRY_ADMIN", pageTitle: "Trust & Federation", navLabel: "Trust", navZone: "professional" },
   { path: "/registry", zone: "registry", layout: "app", sidebar: "registry", guard: "auth", pageTitle: "Registry Hub", navLabel: "Registry", navZone: "professional" },
   { path: "/registry/providers", zone: "registry", layout: "app", sidebar: "registry", guard: "auth", pageTitle: "Provider Registry", navLabel: "Providers", navZone: "professional" },
   { path: "/registry/providers/[id]", zone: "registry", layout: "app", sidebar: "registry", guard: "auth", pageTitle: "Provider Profile", navLabel: "Provider", navZone: "professional" },
@@ -226,7 +235,7 @@ export const ROUTES: RouteDefinition[] = [
 ];
 
 // Total route count assertion
-export const EXPECTED_ROUTE_COUNT = 135;
+export const EXPECTED_ROUTE_COUNT = 142;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

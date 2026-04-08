@@ -9,6 +9,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Clock, Users, Activity, LogOut, AlertTriangle } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
+import { FacilityWorkClusterRibbon } from "@/components/experience/FacilityWorkClusterRibbon";
 import { PageShell } from "@/components/PageShell";
 import { useShiftStore } from "@/hooks/useShiftStore";
 import { useAuthStore } from "@/hooks/useAuthStore";
@@ -70,6 +71,7 @@ export default function ActiveShiftPage() {
   return (
     <AppLayout>
       <PageShell title="Active Shift" subtitle="Your current shift details">
+        <FacilityWorkClusterRibbon shiftExpected activeEncounterCount={activeEncounters.length} />
         <div className="max-w-2xl space-y-6">
           {/* Shift Info */}
           <div className="bg-white rounded-lg border border-gray-200 p-5">

@@ -6,9 +6,13 @@
  */
 
 import { useState } from "react";
-import { Calendar, Loader2, ChevronLeft, ChevronRight, Send, Users } from "lucide-react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { ArrowLeft, Calendar, Loader2, ChevronLeft, ChevronRight, Send, Users } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
+import { FacilityWorkClusterRibbon } from "@/components/experience/FacilityWorkClusterRibbon";
+import { OrganizationPlaneContextBar } from "@/components/experience/OrganizationPlaneContextBar";
 import { PageShell } from "@/components/PageShell";
 import { apiClient } from "@/lib/api-client";
 
@@ -63,6 +67,8 @@ const SHIFT_STYLES: Record<ShiftType, string> = {
 const SHIFT_OPTIONS: ShiftType[] = ["Day", "Night", "Off", "Leave", "On-Call"];
 
 export default function RosterPage() {
+  const searchParams = useSearchParams();
+  const fromOrgAdmin = searchParams.get("from") === "organization-admin";
   const { data, isLoading } = useQuery({
     queryKey: ["roster"],
     queryFn: async () => ({ staff: MOCK_STAFF, roster: MOCK_ROSTER }),
@@ -83,6 +89,18 @@ export default function RosterPage() {
   return (
     <AppLayout>
       <PageShell title="Staff Roster" subtitle="Weekly roster management and shift assignment">
+        <OrganizationPlaneContextBar />
+        {fromOrgAdmin && (
+          <div className="mb-4">
+            <Link
+              href="/organization-admin/staffing?from=organization-admin"
+              className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            >
+              <ArrowLeft className="h-4 w-4" /> Back to staffing hub
+            </Link>
+          </div>
+        )}
+        <FacilityWorkClusterRibbon shiftExpected={false} />
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="w-6 h-6 animate-spin text-gray-400" />

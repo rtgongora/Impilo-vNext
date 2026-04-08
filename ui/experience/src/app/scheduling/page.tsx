@@ -11,7 +11,9 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
+  ArrowLeft,
   CalendarDays,
   Plus,
   Loader2,
@@ -30,6 +32,8 @@ import {
   CalendarRange,
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
+import { FacilityWorkClusterRibbon } from "@/components/experience/FacilityWorkClusterRibbon";
+import { OrganizationPlaneContextBar } from "@/components/experience/OrganizationPlaneContextBar";
 import { PageShell } from "@/components/PageShell";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
@@ -103,6 +107,8 @@ function getMonday(d: Date): Date {
 }
 
 export default function SchedulingPage() {
+  const searchParams = useSearchParams();
+  const fromOrgAdmin = searchParams.get("from") === "organization-admin";
   const { user } = useAuthStore();
   const facility = useFacilityStore((s) => s.facility);
   const [viewMode, setViewMode] = useState<ViewMode>("list");
@@ -264,6 +270,43 @@ export default function SchedulingPage() {
   return (
     <AppLayout>
       <PageShell title="Scheduling" subtitle={facility ? `Appointments at ${facility.name}` : "Select a facility"}>
+        <OrganizationPlaneContextBar />
+        {fromOrgAdmin && (
+          <div className="mb-4">
+            <Link
+              href="/organization-admin/staffing?from=organization-admin"
+              className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            >
+              <ArrowLeft className="h-4 w-4" /> Back to staffing hub
+            </Link>
+          </div>
+        )}
+        <FacilityWorkClusterRibbon shiftExpected={false} />
+
+        <div className="mb-5 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-slate-600">
+          <span className="font-medium text-slate-700">Scheduling cluster</span>
+          <Link
+            href={fromOrgAdmin ? "/scheduling/roster?from=organization-admin" : "/scheduling/roster"}
+            className="text-sky-700 hover:underline"
+          >
+            Roster
+          </Link>
+          <Link
+            href={fromOrgAdmin ? "/scheduling/on-call?from=organization-admin" : "/scheduling/on-call"}
+            className="text-sky-700 hover:underline"
+          >
+            On-call
+          </Link>
+          <Link
+            href={fromOrgAdmin ? "/scheduling/noticeboard?from=organization-admin" : "/scheduling/noticeboard"}
+            className="text-sky-700 hover:underline"
+          >
+            Noticeboard
+          </Link>
+          <Link href="/shift/active" className="text-sky-700 hover:underline">
+            Active shift
+          </Link>
+        </div>
 
         {/* View Toggle + Create */}
         <div className="flex items-center justify-between mb-5">

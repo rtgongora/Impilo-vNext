@@ -11,6 +11,7 @@
 import { type ReactNode } from "react";
 import Link from "next/link";
 import { ExperienceSidebar } from "./navigation/ExperienceSidebar";
+import { OperationalContextStrip } from "./experience/OperationalContextStrip";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useExperienceEntry } from "@/providers/ExperienceEntryProvider";
 
@@ -67,6 +68,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
             )}
           </div>
         </header>
+        <OperationalContextStrip />
         <main className="flex-1 overflow-auto p-6">{children}</main>
       </div>
     </div>

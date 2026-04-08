@@ -22,7 +22,6 @@ describe("Route Registry", () => {
   it("has the expected number of routes", () => {
     expect(ROUTES).toHaveLength(EXPECTED_ROUTE_COUNT);
     expect(ROUTE_COUNT).toBe(EXPECTED_ROUTE_COUNT);
-    expect(ROUTES).toHaveLength(135);
   });
 
   it("has no duplicate paths", () => {
@@ -115,6 +114,40 @@ describe("Route Registry", () => {
     expect(ehrRoutes.length).toBeGreaterThan(0);
     for (const route of ehrRoutes) {
       expect(route.layout).toBe("ehr");
+    }
+  });
+
+  it("registry administration plane entry routes require REGISTRY_ADMIN", () => {
+    const paths = ["/registry-admin", "/registry/clients", "/registry/trust"];
+    for (const p of paths) {
+      const route = ROUTES.find((r) => r.path === p);
+      expect(route?.guard).toBe("role");
+      expect(route?.requiredRole).toBe("REGISTRY_ADMIN");
+    }
+  });
+
+  it("identity and federation admin surfaces use ADMIN_OR_HIE for HIE reachability", () => {
+    const paths = ["/id-services", "/admin/federation", "/admin/keys", "/admin/consent"];
+    for (const p of paths) {
+      const route = ROUTES.find((r) => r.path === p);
+      expect(route?.guard).toBe("role");
+      expect(route?.requiredRole).toBe("ADMIN_OR_HIE");
+    }
+  });
+
+  it("organization administration hubs require ORGANIZATION_ADMIN", () => {
+    const paths = ["/organization-admin", "/organization-admin/facility", "/organization-admin/staffing"];
+    for (const p of paths) {
+      const route = ROUTES.find((r) => r.path === p);
+      expect(route?.guard).toBe("role");
+      expect(route?.requiredRole).toBe("ORGANIZATION_ADMIN");
+    }
+  });
+
+  it("scheduling roster and on-call use workspace guard (admin staffing without clinical shift)", () => {
+    for (const p of ["/scheduling/roster", "/scheduling/on-call", "/scheduling/noticeboard"]) {
+      const route = ROUTES.find((r) => r.path === p);
+      expect(route?.guard).toBe("workspace");
     }
   });
 });

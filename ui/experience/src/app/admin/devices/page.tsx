@@ -6,9 +6,11 @@
  */
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { ArrowLeft, Loader2, Smartphone, AlertCircle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
+import { OrganizationPlaneContextBar } from "@/components/experience/OrganizationPlaneContextBar";
 import { PageShell } from "@/components/PageShell";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
 
@@ -41,6 +43,8 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 export default function DevicesPage() {
+  const searchParams = useSearchParams();
+  const fromOrgAdmin = searchParams.get("from") === "organization-admin";
   const { data, isLoading, error } = useDevices();
 
   const devices = data?.data ?? [];
@@ -51,13 +55,14 @@ export default function DevicesPage() {
         title="Device Management"
         subtitle="Register and manage trusted devices"
       >
+        <OrganizationPlaneContextBar />
         <div className="mb-4">
           <Link
-            href="/admin"
+            href={fromOrgAdmin ? "/organization-admin" : "/admin"}
             className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to administration
+            {fromOrgAdmin ? "Back to organization administration" : "Back to administration"}
           </Link>
         </div>
 

@@ -7,8 +7,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Loader2, AlertTriangle, Building2, Search } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { ArrowLeft, Loader2, AlertTriangle, Building2, Search } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
+import { RegistryPlaneContextBar } from "@/components/experience/RegistryPlaneContextBar";
 import { PageShell } from "@/components/PageShell";
 import { useFacilities } from "@/hooks/queries/useFacilities";
 
@@ -19,6 +21,8 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 export default function FacilityRegistryPage() {
+  const searchParams = useSearchParams();
+  const fromRegistryAdmin = searchParams.get("from") === "registry-admin";
   const [searchTerm, setSearchTerm] = useState("");
   const { data, isLoading, error } = useFacilities({
     search: searchTerm || undefined,
@@ -29,6 +33,16 @@ export default function FacilityRegistryPage() {
   return (
     <AppLayout>
       <PageShell title="Facility Registry" subtitle="Browse registered healthcare facilities">
+        <RegistryPlaneContextBar />
+        <div className="mb-4">
+          <Link
+            href={fromRegistryAdmin ? "/registry-admin" : "/registry"}
+            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            {fromRegistryAdmin ? "Back to registry administration" : "Back to registry hub"}
+          </Link>
+        </div>
         {/* Search */}
         <div className="mb-6">
           <div className="relative max-w-md">

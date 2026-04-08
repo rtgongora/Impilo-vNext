@@ -6,9 +6,23 @@
  */
 
 import { useState } from "react";
-import { Phone, Loader2, ChevronLeft, ChevronRight, ArrowRightLeft, User, Clock, AlertTriangle } from "lucide-react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import {
+  ArrowLeft,
+  Phone,
+  Loader2,
+  ChevronLeft,
+  ChevronRight,
+  ArrowRightLeft,
+  User,
+  Clock,
+  AlertTriangle,
+} from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
+import { FacilityWorkClusterRibbon } from "@/components/experience/FacilityWorkClusterRibbon";
+import { OrganizationPlaneContextBar } from "@/components/experience/OrganizationPlaneContextBar";
 import { PageShell } from "@/components/PageShell";
 import { apiClient } from "@/lib/api-client";
 
@@ -58,6 +72,8 @@ const SPECIALTY_COLORS: Record<string, string> = {
 };
 
 export default function OnCallPage() {
+  const searchParams = useSearchParams();
+  const fromOrgAdmin = searchParams.get("from") === "organization-admin";
   const { data, isLoading } = useQuery({
     queryKey: ["on-call"],
     queryFn: async () => ({ schedule: MOCK_SCHEDULE, swaps: MOCK_SWAPS }),
@@ -75,6 +91,18 @@ export default function OnCallPage() {
   return (
     <AppLayout>
       <PageShell title="On-Call Schedule" subtitle="On-call assignments, rotations, and swap management">
+        <OrganizationPlaneContextBar />
+        {fromOrgAdmin && (
+          <div className="mb-4">
+            <Link
+              href="/organization-admin/staffing?from=organization-admin"
+              className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            >
+              <ArrowLeft className="h-4 w-4" /> Back to staffing hub
+            </Link>
+          </div>
+        )}
+        <FacilityWorkClusterRibbon shiftExpected={false} />
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="w-6 h-6 animate-spin text-gray-400" />

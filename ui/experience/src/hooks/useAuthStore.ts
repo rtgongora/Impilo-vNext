@@ -6,6 +6,8 @@
  */
 
 import { create } from "zustand";
+import { OPERATIONAL_CONTEXT_SESSION_KEYS } from "@/lib/operational-context";
+import { useOperationalContextStore } from "@/hooks/useOperationalContextStore";
 
 export interface AuthUser {
   id: string;
@@ -61,7 +63,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       sessionStorage.removeItem("exp:auth_user");
       sessionStorage.removeItem("exp:refresh_token");
       sessionStorage.removeItem("exp:expires_at");
+      for (const key of OPERATIONAL_CONTEXT_SESSION_KEYS) {
+        sessionStorage.removeItem(key);
+      }
     }
+    useOperationalContextStore.getState().reset();
     set({ user: null, token: null, refreshToken: null, expiresAt: null, isAuthenticated: false });
   },
 

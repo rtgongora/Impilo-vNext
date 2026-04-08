@@ -6,8 +6,10 @@
  */
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { FileText, Building2, BarChart3, Wrench } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
+import { OrganizationPlaneContextBar } from "@/components/experience/OrganizationPlaneContextBar";
 import { PageShell } from "@/components/PageShell";
 
 const REPORT_CATEGORIES = [
@@ -42,14 +44,19 @@ const REPORT_CATEGORIES = [
 ];
 
 export default function ReportsHubPage() {
+  const searchParams = useSearchParams();
+  const fromOrg = searchParams.get("from") === "organization-admin";
+  const withPlane = (href: string) => (fromOrg ? `${href}?from=organization-admin` : href);
+
   return (
     <AppLayout>
       <PageShell title="Reports" subtitle="Generate and view reports across your facility">
+        <OrganizationPlaneContextBar />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {REPORT_CATEGORIES.map((cat) => (
             <Link
               key={cat.href}
-              href={cat.href}
+              href={withPlane(cat.href)}
               className="bg-white rounded-lg border border-gray-200 p-5 hover:border-blue-300 hover:shadow-md transition-all group"
             >
               <div className="flex items-start gap-4">

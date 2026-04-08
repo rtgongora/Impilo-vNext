@@ -7,8 +7,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Loader2, AlertTriangle, BookOpen, Search } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { ArrowLeft, Loader2, AlertTriangle, BookOpen, Search } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
+import { RegistryPlaneContextBar } from "@/components/experience/RegistryPlaneContextBar";
 import { PageShell } from "@/components/PageShell";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
@@ -34,6 +36,8 @@ const SYSTEMS = [
 ];
 
 export default function TerminologyBrowserPage() {
+  const searchParams = useSearchParams();
+  const fromRegistryAdmin = searchParams.get("from") === "registry-admin";
   const [searchTerm, setSearchTerm] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [system, setSystem] = useState("");
@@ -61,6 +65,16 @@ export default function TerminologyBrowserPage() {
   return (
     <AppLayout>
       <PageShell title="Terminology Browser" subtitle="Search ICD codes, SNOMED concepts, and drug codes">
+        <RegistryPlaneContextBar />
+        <div className="mb-4">
+          <Link
+            href={fromRegistryAdmin ? "/registry-admin" : "/registry"}
+            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            {fromRegistryAdmin ? "Back to registry administration" : "Back to registry hub"}
+          </Link>
+        </div>
         {/* Search */}
         <div className="mb-6 flex gap-3">
           <div className="relative flex-1">

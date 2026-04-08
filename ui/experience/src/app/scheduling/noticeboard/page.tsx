@@ -10,11 +10,14 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   Megaphone, Bell, BookOpen, Calendar, AlertTriangle, Clock,
   Pin, Plus, CheckCircle, Loader2, ArrowLeft, X,
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
+import { FacilityWorkClusterRibbon } from "@/components/experience/FacilityWorkClusterRibbon";
+import { OrganizationPlaneContextBar } from "@/components/experience/OrganizationPlaneContextBar";
 import { PageShell } from "@/components/PageShell";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
@@ -51,6 +54,8 @@ interface Announcement {
 }
 
 export default function ProviderNoticeboardPage() {
+  const searchParams = useSearchParams();
+  const fromOrgAdmin = searchParams.get("from") === "organization-admin";
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("all");
   const [showCreate, setShowCreate] = useState(false);
@@ -95,6 +100,18 @@ export default function ProviderNoticeboardPage() {
   return (
     <AppLayout>
       <PageShell title="Provider Noticeboard" icon={<Megaphone className="w-5 h-5" />}>
+        <OrganizationPlaneContextBar />
+        {fromOrgAdmin && (
+          <div className="mb-4">
+            <Link
+              href="/organization-admin/staffing?from=organization-admin"
+              className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            >
+              <ArrowLeft className="h-4 w-4" /> Back to staffing hub
+            </Link>
+          </div>
+        )}
+        <FacilityWorkClusterRibbon shiftExpected={false} />
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <Link href="/home" className="p-2 hover:bg-gray-100 rounded-lg transition-colors">

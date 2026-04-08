@@ -7,6 +7,7 @@
  */
 
 import { useState, type FormEvent } from "react";
+import { RegistryPlaneContextBar } from "@/components/experience/RegistryPlaneContextBar";
 import {
   Shield, UserPlus, Search, RefreshCw, Layers, BookOpen,
   Loader2, CheckCircle2, AlertCircle, User, Building2, Stethoscope,
@@ -44,6 +45,7 @@ export default function IdServicesPage() {
   return (
     <AppLayout>
       <PageShell title="Identity Services" subtitle="Generate, validate, and recover health IDs">
+        <RegistryPlaneContextBar />
         <div className="flex gap-1 mb-6 border-b border-gray-200">
           {TABS.map((tab) => {
             const Icon = tab.icon;

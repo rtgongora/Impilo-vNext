@@ -9,21 +9,23 @@
  * and ExpandableCategoryCards.
  */
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Users, BookOpen, BarChart3, Clock, ArrowRight, Building2,
   Activity, Receipt, Pill, Calendar, Shield, Stethoscope,
   ClipboardList, Package, Settings, FileText, MapPin,
   ChevronRight, Video, ShoppingCart, Database, AlertTriangle,
-  Briefcase, Heart, Globe, Siren, Award, GraduationCap, User,
+  Briefcase, Heart, Globe, Siren, Award, GraduationCap, User, ShieldCheck, UserCog,
+  MessageSquare, Radio, TestTube2, Scan,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
 import { WorkplaceSelectionHub } from "@/components/home/WorkplaceSelectionHub";
 import { PageShell } from "@/components/PageShell";
 import { useAuthStore } from "@/hooks/useAuthStore";
+import { useOperationalContextStore } from "@/hooks/useOperationalContextStore";
 import { useShiftStore } from "@/hooks/useShiftStore";
 import { useRoleGroup } from "@/hooks/useRoleGroup";
 import { useWorkModeStore } from "@/hooks/useWorkModeStore";
@@ -61,41 +63,45 @@ function getModuleCategories(roles: {
 }): ModuleCategory[] {
   const cats: ModuleCategory[] = [];
 
-  if (roles.isClinical) {
+  if (roles.isClinical || roles.isDispenser) {
     cats.push({
       id: "clinical",
-      title: "Clinical Care",
+      title: "Clinical Care & Orders",
       icon: Stethoscope,
       color: "bg-blue-500",
       modules: [
-        { label: "Clinical Hub", description: "All 10 clinical modules", href: "/clinical", icon: Stethoscope, color: "bg-blue-100 text-blue-600" },
-        { label: "Patient Queue", description: "Waiting patients & triage", href: "/queue", icon: Users, color: "bg-orange-100 text-orange-600" },
-        { label: "Patient Search", description: "Find patients by name or ID", href: "/queue/search", icon: Users, color: "bg-gray-100 text-gray-600" },
-        { label: "Bed Management", description: "Ward status & admissions", href: "/beds", icon: Building2, color: "bg-purple-100 text-purple-600" },
-        { label: "Scheduling", description: "Appointments & booking", href: "/scheduling", icon: Calendar, color: "bg-cyan-100 text-cyan-600" },
-        { label: "Telemedicine", description: "Virtual consultations", href: "/telemedicine", icon: Video, color: "bg-teal-100 text-teal-600" },
-        { label: "Shift Handoff", description: "Care continuity reports", href: "/shift/handover", icon: Clock, color: "bg-amber-100 text-amber-600" },
-        { label: "Discharge & Exit", description: "Discharges, deaths & exits", href: "/queue", icon: Users, color: "bg-amber-100 text-amber-600" },
-        { label: "Control Tower", description: "Real-time facility ops", href: "/clinical/control-tower", icon: BarChart3, color: "bg-rose-100 text-rose-600" },
-        { label: "Operations", description: "Shifts, roster & workforce", href: "/shift", icon: Clock, color: "bg-cyan-100 text-cyan-600" },
+        ...(roles.isClinical ? [
+          { label: "Clinical Hub", description: "All 10 clinical modules", href: "/clinical", icon: Stethoscope, color: "bg-blue-100 text-blue-600" },
+          { label: "Queues & Wards", description: "Intake, triage, waiting, and ward status", href: "/queue", icon: Users, color: "bg-orange-100 text-orange-600" },
+          { label: "Walk-in Registration", description: "Register a patient directly into queue flow", href: "/queue/walk-in", icon: Users, color: "bg-amber-100 text-amber-600" },
+          { label: "Bookings & Appointments", description: "Scheduling, waitlist, and planned arrivals", href: "/scheduling", icon: Calendar, color: "bg-cyan-100 text-cyan-600" },
+          { label: "Referrals", description: "Telemedicine and referral coordination", href: "/telemedicine", icon: Video, color: "bg-teal-100 text-teal-600" },
+          { label: "Laboratory (LIMS)", description: "Select a chart, then continue into orders and results", href: "/queue/search?workflow=lims", icon: TestTube2, color: "bg-violet-100 text-violet-700" },
+          { label: "Imaging (PACS)", description: "Select a chart, then continue into imaging review", href: "/queue/search?workflow=pacs", icon: Scan, color: "bg-rose-100 text-rose-700" },
+        ] : []),
+        ...(roles.isClinical || roles.isDispenser ? [
+          { label: "Pharmacy & Rx", description: "Prescriptions, dispensing, and stock follow-through", href: "/pharmacy", icon: Pill, color: "bg-green-100 text-green-600" },
+        ] : []),
       ],
     });
   }
 
-  if (roles.isClinical || roles.isDispenser) {
+  if (roles.isClinical || roles.isAdmin) {
     cats.push({
-      id: "orders",
-      title: "Orders & Pharmacy",
-      icon: Pill,
-      color: "bg-green-500",
+      id: "facility-ops",
+      title: "Facility Operations",
+      icon: Clock,
+      color: "bg-rose-500",
       modules: [
-        ...(roles.isDispenser ? [
-          { label: "Pharmacy", description: "Dispensing & medication tracking", href: "/pharmacy", icon: Pill, color: "bg-green-100 text-green-600" },
-          { label: "Prescriptions", description: "View pending prescriptions", href: "/pharmacy/prescriptions", icon: FileText, color: "bg-blue-100 text-blue-600" },
-          { label: "Stock", description: "Pharmacy stock levels", href: "/pharmacy/stock", icon: Package, color: "bg-amber-100 text-amber-600" },
-        ] : []),
         ...(roles.isClinical ? [
-          { label: "Walk-in Registration", description: "New patient intake", href: "/queue/walk-in", icon: Users, color: "bg-orange-100 text-orange-600" },
+          { label: "Shift Handoff", description: "Care continuity reports", href: "/shift/handover", icon: Clock, color: "bg-amber-100 text-amber-600" },
+        ] : []),
+        { label: "Control Tower", description: "Real-time facility operations", href: "/clinical/control-tower", icon: BarChart3, color: "bg-rose-100 text-rose-600" },
+        { label: "Operations & Roster", description: "Shifts, roster, and workforce visibility", href: "/shift", icon: Clock, color: "bg-cyan-100 text-cyan-600" },
+        { label: "Communication Hub", description: "Messages, pages, and calls", href: "/communication", icon: MessageSquare, color: "bg-blue-100 text-blue-600" },
+        { label: "Provider Noticeboard", description: "Announcements and staffing updates", href: "/scheduling/noticeboard", icon: ClipboardList, color: "bg-purple-100 text-purple-600" },
+        ...(roles.isAdmin ? [
+          { label: "Omnichannel Hub", description: "SMS, callbacks, disclosure, and access channels", href: "/omnichannel", icon: Radio, color: "bg-teal-100 text-teal-600" },
         ] : []),
       ],
     });
@@ -163,21 +169,6 @@ function getModuleCategories(roles: {
 
   if (roles.isAdmin) {
     cats.push({
-      id: "omnichannel",
-      title: "Omnichannel & Access",
-      icon: Shield,
-      color: "bg-teal-500",
-      modules: [
-        { label: "Omnichannel Hub", description: "All channels in one view", href: "/omnichannel", icon: Shield, color: "bg-teal-100 text-teal-600" },
-        { label: "SMS Journeys", description: "Text-based health interactions", href: "/omnichannel?tab=sms", icon: FileText, color: "bg-amber-100 text-amber-600" },
-        { label: "Callbacks", description: "Human handoff queue", href: "/omnichannel?tab=callbacks", icon: Users, color: "bg-rose-100 text-rose-600" },
-        { label: "Disclosure Rules", description: "Channel data policies", href: "/omnichannel?tab=disclosure", icon: Shield, color: "bg-indigo-100 text-indigo-600" },
-      ],
-    });
-  }
-
-  if (roles.isAdmin) {
-    cats.push({
       id: "coverage",
       title: "Coverage & Financing",
       icon: Shield,
@@ -194,7 +185,7 @@ function getModuleCategories(roles: {
 
   cats.push({
     id: "operations",
-    title: "Operations & Inventory",
+    title: "Supply & Marketplace",
     icon: Package,
     color: "bg-orange-500",
     modules: [
@@ -255,7 +246,16 @@ export default function HomePage() {
   const shift = useShiftStore((s) => s.shift);
   const roleGroup = useRoleGroup();
   const { isClinical, isAdmin, isFinance, isDispenser } = roleGroup;
-  const { facility, selectFacility, enterMode } = useExperienceEntry();
+  const { facility, selectFacility, enterMode, operationalMode, availableOperationalModes } =
+    useExperienceEntry();
+  const pathname = usePathname();
+  const homeContextSyncPass = useRef(false);
+
+  useEffect(() => {
+    if (pathname !== "/home" && pathname !== "/") {
+      homeContextSyncPass.current = false;
+    }
+  }, [pathname]);
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<HomeTab>(() => {
     if (typeof window === "undefined") return "work";
@@ -264,7 +264,46 @@ export default function HomePage() {
   function switchTab(tab: HomeTab) {
     setActiveTab(tab);
     sessionStorage.setItem("exp:home-tab", tab);
+    const { setOperationalMode, operationalMode: currentOp } = useOperationalContextStore.getState();
+    if (tab === "personal") {
+      setOperationalMode("my_life");
+    } else if (tab === "professional") {
+      setOperationalMode("my_professional");
+    } else if (tab === "work") {
+      if (currentOp === "registry_admin" || currentOp === "organization_admin") return;
+      setOperationalMode("facility_work");
+    }
   }
+
+  // Home only: first pass lets remembered tab correct mismatched mode; later passes sync tab from strip.
+  useEffect(() => {
+    if (pathname !== "/home" && pathname !== "/") return;
+    const store = useOperationalContextStore.getState();
+    if (!homeContextSyncPass.current) {
+      homeContextSyncPass.current = true;
+      if (activeTab === "personal" && store.operationalMode !== "my_life") {
+        store.setOperationalMode("my_life");
+      } else if (activeTab === "professional" && store.operationalMode !== "my_professional") {
+        store.setOperationalMode("my_professional");
+      } else if (
+        activeTab === "work" &&
+        (store.operationalMode === "my_life" || store.operationalMode === "my_professional")
+      ) {
+        store.setOperationalMode("facility_work");
+      }
+      return;
+    }
+    if (operationalMode === "my_life") {
+      setActiveTab("personal");
+      sessionStorage.setItem("exp:home-tab", "personal");
+    } else if (operationalMode === "my_professional") {
+      setActiveTab("professional");
+      sessionStorage.setItem("exp:home-tab", "professional");
+    } else {
+      setActiveTab("work");
+      sessionStorage.setItem("exp:home-tab", "work");
+    }
+  }, [pathname, activeTab, operationalMode]);
 
   const greeting = getGreeting();
   const router = useRouter();
@@ -289,6 +328,7 @@ export default function HomePage() {
   const joinGroup = useJoinGroup();
 
   function handleFacilitySelect(facilityResource: FacilityResource) {
+    useOperationalContextStore.getState().setOperationalMode("facility_work");
     selectFacility(
       {
         id: facilityResource.id,
@@ -305,10 +345,12 @@ export default function HomePage() {
   }
 
   function enterFacilityFreeMode(mode: "admin" | "finance", nextPath: string) {
+    useOperationalContextStore.getState().setOperationalMode("organization_admin");
     enterMode(mode, nextPath);
   }
 
   function enterIndependentMode(mode: "independent_practice" | "emergency_response" | "community_outreach") {
+    useOperationalContextStore.getState().setOperationalMode("facility_work");
     useWorkModeStore.getState().setMode(mode, {
       licenseNumber: licenses[0]?.licenseNumber ?? "",
       licenseCategory: licenses[0]?.cadre ?? user?.roles?.[0] ?? "",
@@ -334,6 +376,14 @@ export default function HomePage() {
 
   // Module categories
   const categories = getModuleCategories({ isClinical, isAdmin, isFinance, isDispenser });
+  const workQuickActions = [
+    { label: "EHR", href: "/queue/search", icon: Stethoscope, color: "bg-red-100 text-red-600" },
+    { label: "Dashboard", href: "/queue", icon: ClipboardList, color: "bg-blue-100 text-blue-600" },
+    { label: "Prescribe", href: "/pharmacy", icon: Pill, color: "bg-emerald-100 text-emerald-600" },
+    { label: "LIMS", href: "/queue/search?workflow=lims", icon: TestTube2, color: "bg-violet-100 text-violet-700" },
+    { label: "PACS", href: "/queue/search?workflow=pacs", icon: Scan, color: "bg-rose-100 text-rose-700" },
+    { label: "Bookings", href: "/scheduling", icon: Calendar, color: "bg-orange-100 text-orange-600" },
+  ];
 
   return (
     <AppLayout>
@@ -448,6 +498,35 @@ export default function HomePage() {
             />
           )}
 
+          {hasWorkContext && (isClinical || isDispenser) && (
+            <div className="bg-white rounded-lg border border-gray-200 p-4">
+              <div className="mb-3 flex items-center justify-between">
+                <h3 className="flex items-center gap-2 text-base font-semibold text-gray-900">
+                  <ClipboardList className="w-5 h-5 text-amber-500" />
+                  Quick Access
+                </h3>
+                <p className="text-xs text-gray-500">Use chart-aware shortcuts for the next clinical action</p>
+              </div>
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+                {workQuickActions.map((action) => {
+                  const ActionIcon = action.icon;
+                  return (
+                    <Link
+                      key={action.label}
+                      href={action.href}
+                      className="flex flex-col items-center justify-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-4 py-4 text-center transition-colors hover:border-blue-300 hover:bg-white"
+                    >
+                      <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${action.color}`}>
+                        <ActionIcon className="h-5 w-5" />
+                      </div>
+                      <span className="text-sm font-medium text-gray-900">{action.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Professional Dashboard — stats + schedule (Lovable MyProfessionalHub) */}
           {isClinical && hasWorkContext && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -521,8 +600,8 @@ export default function HomePage() {
           <div className="bg-white rounded-lg border border-gray-200 p-4">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2">
-                <ClipboardList className="w-5 h-5 text-blue-600" />
-                Communication Noticeboard
+                <MessageSquare className="w-5 h-5 text-blue-600" />
+                Communication & Access
               </h3>
               <Link href="/communication" className="text-xs text-blue-600 hover:text-blue-800">
                 View All →
@@ -543,6 +622,11 @@ export default function HomePage() {
                 className="inline-flex items-center gap-2 px-5 py-3 text-sm font-medium border border-gray-200 rounded-lg hover:bg-green-50 hover:border-green-300 transition-colors">
                 <Video className="w-5 h-5 text-green-600" />
                 Calls
+              </Link>
+              <Link href="/omnichannel"
+                className="inline-flex items-center gap-2 px-5 py-3 text-sm font-medium border border-gray-200 rounded-lg hover:bg-teal-50 hover:border-teal-300 transition-colors">
+                <Radio className="w-5 h-5 text-teal-600" />
+                Omnichannel
               </Link>
               <Link href="/scheduling/noticeboard"
                 className="inline-flex items-center gap-2 px-5 py-3 text-sm font-medium border border-gray-200 rounded-lg hover:bg-purple-50 hover:border-purple-300 transition-colors">
@@ -633,6 +717,41 @@ export default function HomePage() {
           {/* ═══ PROFESSIONAL TAB ═══ */}
           {activeTab === "professional" && (
             <div className="space-y-6">
+              {(availableOperationalModes.includes("registry_admin") ||
+                availableOperationalModes.includes("organization_admin")) && (
+                <div className="rounded-xl border border-slate-200 bg-gradient-to-r from-slate-50 to-white p-5">
+                  <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                    <Shield className="w-4 h-4 text-amber-700" />
+                    Administrative planes
+                  </h3>
+                  <p className="mt-1 text-xs text-gray-600 max-w-2xl">
+                    Enter sovereign registry governance or organization operations explicitly — separate from
+                    Facility Work (facility → workspace → shift). These match the context strip at the top of
+                    the shell.
+                  </p>
+                  <div className="mt-4 flex flex-wrap gap-3">
+                    {availableOperationalModes.includes("registry_admin") && (
+                      <Link
+                        href="/registry-admin"
+                        className="inline-flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm font-medium text-amber-950 hover:border-amber-400 transition-colors"
+                      >
+                        <ShieldCheck className="h-4 w-4" />
+                        Registry administration
+                      </Link>
+                    )}
+                    {availableOperationalModes.includes("organization_admin") && (
+                      <Link
+                        href="/organization-admin"
+                        className="inline-flex items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-4 py-2.5 text-sm font-medium text-violet-950 hover:border-violet-400 transition-colors"
+                      >
+                        <UserCog className="h-4 w-4" />
+                        Organization administration
+                      </Link>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Credentials & License */}
               <div className="bg-white rounded-lg border border-gray-200 p-6">
                 <div className="flex items-center justify-between mb-4">

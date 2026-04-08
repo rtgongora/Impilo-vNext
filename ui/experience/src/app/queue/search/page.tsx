@@ -7,7 +7,8 @@
 
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
-import { ArrowLeft, ArrowRightLeft, Loader2, Search, User, UserPlus } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { ArrowLeft, ArrowRightLeft, Loader2, Scan, Search, TestTube2, User, UserPlus } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { QueueWorkspaceHeader } from "@/components/queue/QueueWorkspaceHeader";
@@ -15,10 +16,60 @@ import { usePatients, type PatientResource } from "@/hooks/queries/usePatients";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { getPatientDisplayName, getPatientQueueSummary } from "@/lib/queue-workflows";
 
+type SearchWorkflow = "default" | "lims" | "pacs";
+
+const SEARCH_WORKFLOW_COPY: Record<
+  SearchWorkflow,
+  {
+    badge: string;
+    title: string;
+    description: string;
+    metricDetail: string;
+    primaryActionLabel: string;
+    primaryActionHref: (patientId: string) => string;
+    secondaryActionLabel: string;
+    secondaryActionHref: (patientId: string) => string;
+  }
+> = {
+  default: {
+    badge: "Queue search",
+    title: "Find the right patient, then route directly into chart or registration",
+    description: "Search now carries the active facility context so the queue team can decide whether to open the chart, register a walk-in, or continue searching without losing the thread.",
+    metricDetail: "Search the longitudinal record before creating a new queue visit.",
+    primaryActionLabel: "Open Chart",
+    primaryActionHref: (patientId) => `/ehr/${patientId}?entry=search`,
+    secondaryActionLabel: "Add to Queue",
+    secondaryActionHref: (patientId) => `/queue/walk-in?patientId=${patientId}`,
+  },
+  lims: {
+    badge: "LIMS entry",
+    title: "Find the right patient, then continue into laboratory orders and results",
+    description: "Laboratory work stays chart-aware in vNext: use search to pick the patient, then move straight into orders or result review without dropping facility context.",
+    metricDetail: "Use search to reach the right chart before placing orders or reviewing results.",
+    primaryActionLabel: "Orders & Results",
+    primaryActionHref: (patientId) => `/ehr/${patientId}/orders?entry=lims`,
+    secondaryActionLabel: "Results",
+    secondaryActionHref: (patientId) => `/ehr/${patientId}/results?entry=lims`,
+  },
+  pacs: {
+    badge: "PACS entry",
+    title: "Find the right patient, then continue into imaging review",
+    description: "Imaging entry also stays chart-aware here: pick the patient first, then jump directly into PACS review or the chart without opening a disconnected workspace.",
+    metricDetail: "Search before imaging review so the viewer stays anchored to the right chart and encounter thread.",
+    primaryActionLabel: "Imaging / PACS",
+    primaryActionHref: (patientId) => `/ehr/${patientId}/imaging?entry=pacs`,
+    secondaryActionLabel: "Open Chart",
+    secondaryActionHref: (patientId) => `/ehr/${patientId}?entry=search`,
+  },
+};
+
 export default function PatientSearchPage() {
+  const searchParams = useSearchParams();
   const facility = useFacilityStore((state) => state.facility);
   const [searchTerm, setSearchTerm] = useState("");
   const [searchSubmitted, setSearchSubmitted] = useState("");
+  const workflow = (searchParams.get("workflow") as SearchWorkflow | null) ?? "default";
+  const workflowCopy = SEARCH_WORKFLOW_COPY[workflow] ?? SEARCH_WORKFLOW_COPY.default;
 
   const { data: patientsData, isLoading } = usePatients(
     searchSubmitted ? { search: searchSubmitted } : undefined,
@@ -36,20 +87,24 @@ export default function PatientSearchPage() {
       <PageShell title="Patient Search" subtitle={facility ? `${facility.name}` : "Search by name, CPID, national ID, or date of birth"}>
         <div className="space-y-6">
           <QueueWorkspaceHeader
-            badge="Queue search"
+            badge={workflowCopy.badge}
             badgeIcon={Search}
-            title="Find the right patient, then route directly into chart or registration"
-            description="Search now carries the active facility context so the queue team can decide whether to open the chart, register a walk-in, or continue searching without losing the thread."
+            title={workflowCopy.title}
+            description={workflowCopy.description}
             facilityName={facility?.name}
             actions={[
               { href: "/queue", label: "Queue Workboard", icon: ArrowRightLeft },
-              { href: "/queue/walk-in", label: "Walk-in Registration", icon: UserPlus, tone: "secondary" },
+              ...(workflow === "default"
+                ? [{ href: "/queue/walk-in", label: "Walk-in Registration", icon: UserPlus, tone: "secondary" as const }]
+                : workflow === "lims"
+                  ? [{ href: "/queue/search?workflow=pacs", label: "Imaging / PACS", icon: Scan, tone: "secondary" as const }]
+                  : [{ href: "/queue/search?workflow=lims", label: "Laboratory / LIMS", icon: TestTube2, tone: "secondary" as const }]),
             ]}
             metrics={[
               {
                 label: "Results",
                 value: String(patients.length),
-                detail: searchSubmitted ? `Matches for "${searchSubmitted}" in the patient directory.` : "Search the longitudinal record before creating a new queue visit.",
+                detail: searchSubmitted ? `Matches for "${searchSubmitted}" in the patient directory.` : workflowCopy.metricDetail,
               },
             ]}
           />
@@ -125,16 +180,16 @@ export default function PatientSearchPage() {
                       <td className="px-4 py-3 text-right">
                         <div className="flex justify-end gap-2">
                           <Link
-                            href={`/ehr/${patient.id}?entry=search`}
+                            href={workflowCopy.primaryActionHref(patient.id)}
                             className="inline-block rounded-xl bg-blue-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-blue-700"
                           >
-                            Open Chart
+                            {workflowCopy.primaryActionLabel}
                           </Link>
                           <Link
-                            href={`/queue/walk-in?patientId=${patient.id}`}
+                            href={workflowCopy.secondaryActionHref(patient.id)}
                             className="inline-block rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-50"
                           >
-                            Add to Queue
+                            {workflowCopy.secondaryActionLabel}
                           </Link>
                         </div>
                       </td>

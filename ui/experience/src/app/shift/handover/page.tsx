@@ -16,6 +16,7 @@ import {
   ListChecks,
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
+import { FacilityWorkClusterRibbon } from "@/components/experience/FacilityWorkClusterRibbon";
 import { PageShell } from "@/components/PageShell";
 import { useShiftStore } from "@/hooks/useShiftStore";
 import { useQueueEntries } from "@/hooks/queries/useQueue";
@@ -73,6 +74,7 @@ export default function ShiftHandoverPage() {
   return (
     <AppLayout>
       <PageShell title="Shift Handover" subtitle="Review pending items and complete your handover">
+        <FacilityWorkClusterRibbon shiftExpected activeEncounterCount={activeEntries.length} />
         <div className="max-w-2xl space-y-6">
           {/* Pending Items */}
           <div className="bg-white rounded-lg border border-gray-200 p-5">

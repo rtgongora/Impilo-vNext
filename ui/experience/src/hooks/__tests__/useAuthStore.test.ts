@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { useAuthStore, type AuthUser } from "../useAuthStore";
+import { useOperationalContextStore } from "../useOperationalContextStore";
 
 // Mock sessionStorage
 const sessionStorageMock = (() => {
@@ -34,6 +35,7 @@ describe("useAuthStore", () => {
       expiresAt: null,
       isAuthenticated: false,
     });
+    useOperationalContextStore.getState().reset();
     sessionStorageMock.clear();
     vi.clearAllMocks();
   });
@@ -102,6 +104,9 @@ describe("useAuthStore", () => {
     expect(sessionStorageMock.removeItem).toHaveBeenCalledWith("exp:auth_user");
     expect(sessionStorageMock.removeItem).toHaveBeenCalledWith("exp:refresh_token");
     expect(sessionStorageMock.removeItem).toHaveBeenCalledWith("exp:expires_at");
+    expect(sessionStorageMock.removeItem).toHaveBeenCalledWith("exp:operational_mode");
+    expect(sessionStorageMock.removeItem).toHaveBeenCalledWith("exp:facility_work_subcontext");
+    expect(sessionStorageMock.removeItem).toHaveBeenCalledWith("exp:registry_admin_subtype");
   });
 
   it("hasRole returns true for assigned roles", () => {
