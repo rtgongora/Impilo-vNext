@@ -8,21 +8,76 @@
  * which creates a triage record and updates queue priority from acuity.
  */
 
-import { useState } from "react";
-import { Loader2, AlertTriangle, Stethoscope, Clock, CheckCircle2, Save } from "lucide-react";
+import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import {
+  AlertTriangle,
+  ArrowRightLeft,
+  CheckCircle2,
+  ClipboardCheck,
+  Clock,
+  Loader2,
+  Save,
+  Stethoscope,
+  UserPlus,
+} from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
-import { useQueueEntries, type QueueEntryResource } from "@/hooks/queries/useQueue";
+import { QueueWorkspaceHeader } from "@/components/queue/QueueWorkspaceHeader";
+import { useCallPatient, useQueueEntries, type QueueEntryResource } from "@/hooks/queries/useQueue";
 import { useAuthStore } from "@/hooks/useAuthStore";
+import { useFacilityStore } from "@/hooks/useFacilityStore";
+import { useRoleGroup } from "@/hooks/useRoleGroup";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
+import { COORDINATION_COPY } from "@/lib/consult-workflows";
+import {
+  formatQueueDateTime,
+  formatQueueWaitTime,
+  getQueuePatientId,
+  getQueuePatientName,
+  getQueueQueuedAt,
+  getQueueReason,
+  getQueueTriageCategory,
+  QUEUE_TRIAGE_STYLES,
+} from "@/lib/queue-workflows";
 
 const ACUITY_LEVELS = [
-  { level: 1, label: "Red", desc: "Resuscitation", color: "border-red-400 bg-red-50 text-red-700", active: "border-red-500 bg-red-100 ring-2 ring-red-300" },
-  { level: 2, label: "Orange", desc: "Emergency", color: "border-orange-400 bg-orange-50 text-orange-700", active: "border-orange-500 bg-orange-100 ring-2 ring-orange-300" },
-  { level: 3, label: "Yellow", desc: "Urgent", color: "border-yellow-400 bg-yellow-50 text-yellow-700", active: "border-yellow-500 bg-yellow-100 ring-2 ring-yellow-300" },
-  { level: 4, label: "Green", desc: "Standard", color: "border-green-400 bg-green-50 text-green-700", active: "border-green-500 bg-green-100 ring-2 ring-green-300" },
-  { level: 5, label: "Blue", desc: "Non-urgent", color: "border-blue-400 bg-blue-50 text-blue-700", active: "border-blue-500 bg-blue-100 ring-2 ring-blue-300" },
+  {
+    level: 1,
+    label: "Red",
+    desc: "Resuscitation",
+    color: "border-red-400 bg-red-50 text-red-700",
+    active: "border-red-500 bg-red-100 ring-2 ring-red-300",
+  },
+  {
+    level: 2,
+    label: "Orange",
+    desc: "Emergency",
+    color: "border-orange-400 bg-orange-50 text-orange-700",
+    active: "border-orange-500 bg-orange-100 ring-2 ring-orange-300",
+  },
+  {
+    level: 3,
+    label: "Yellow",
+    desc: "Urgent",
+    color: "border-yellow-400 bg-yellow-50 text-yellow-700",
+    active: "border-yellow-500 bg-yellow-100 ring-2 ring-yellow-300",
+  },
+  {
+    level: 4,
+    label: "Green",
+    desc: "Standard",
+    color: "border-green-400 bg-green-50 text-green-700",
+    active: "border-green-500 bg-green-100 ring-2 ring-green-300",
+  },
+  {
+    level: 5,
+    label: "Blue",
+    desc: "Non-urgent",
+    color: "border-blue-400 bg-blue-50 text-blue-700",
+    active: "border-blue-500 bg-blue-100 ring-2 ring-blue-300",
+  },
 ];
 
 const DANGER_SIGNS = [
@@ -32,7 +87,11 @@ const DANGER_SIGNS = [
 ];
 
 export default function TriageQueuePage() {
-  const { data, isLoading, error } = useQueueEntries({ status: "WAITING" });
+  const router = useRouter();
+  const facility = useFacilityStore((state) => state.facility);
+  const { isQueueManager } = useRoleGroup();
+  const { data, isLoading, error } = useQueueEntries({ facilityId: facility?.id, status: "WAITING" });
+  const callPatient = useCallPatient();
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
 
@@ -40,7 +99,6 @@ export default function TriageQueuePage() {
   const [acuity, setAcuity] = useState<number | null>(null);
   const [dangerSigns, setDangerSigns] = useState<Record<string, boolean>>({});
   const [notes, setNotes] = useState("");
-  // Quick triage vitals
   const [vSystolic, setVSystolic] = useState("");
   const [vDiastolic, setVDiastolic] = useState("");
   const [vHR, setVHR] = useState("");
@@ -49,33 +107,49 @@ export default function TriageQueuePage() {
   const [vRR, setVRR] = useState("");
 
   const triageMutation = useMutation({
-    mutationFn: (payload: { id: string; acuity: number; danger_signs: Array<{ name: string; present: boolean }>; vitals: Record<string, number | null> | null; notes: string | null; triaged_by: string; triaged_by_name: string }) =>
+    mutationFn: (payload: {
+      id: string;
+      acuity: number;
+      danger_signs: Array<{ name: string; present: boolean }>;
+      vitals: Record<string, number | null> | null;
+      notes: string | null;
+      triaged_by: string;
+      triaged_by_name: string;
+    }) =>
       apiClient.post<ApiResponse<unknown>>(`/internal/v1/queue/entries/${payload.id}/triage`, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["queue-entries"] });
-      setTriagingEntry(null);
-      setAcuity(null);
-      setDangerSigns({});
-      setNotes("");
-      setVSystolic(""); setVDiastolic(""); setVHR(""); setVTemp(""); setVSpO2(""); setVRR("");
+      resetComposer();
     },
   });
 
   const entries = data?.data ?? [];
+  const awaitingAssessment = useMemo(
+    () => entries.filter((entry) => !getQueueTriageCategory(entry)),
+    [entries],
+  );
+  const handoffReady = useMemo(
+    () => entries.filter((entry) => Boolean(getQueueTriageCategory(entry))),
+    [entries],
+  );
 
-  function formatWaitTime(queuedAt: string): string {
-    const diff = Date.now() - new Date(queuedAt).getTime();
-    const mins = Math.floor(diff / 60000);
-    if (mins < 60) return `${mins}m`;
-    const hrs = Math.floor(mins / 60);
-    return `${hrs}h ${mins % 60}m`;
+  function resetComposer() {
+    setTriagingEntry(null);
+    setAcuity(null);
+    setDangerSigns({});
+    setNotes("");
+    setVSystolic("");
+    setVDiastolic("");
+    setVHR("");
+    setVTemp("");
+    setVSpO2("");
+    setVRR("");
   }
 
   function handleSubmitTriage() {
     if (!triagingEntry || acuity == null) return;
-    const activeDangerSigns = Object.entries(dangerSigns)
-      .map(([name, present]) => ({ name, present }));
-    const toNum = (v: string) => (v.trim() === "" ? null : Number(v));
+    const activeDangerSigns = Object.entries(dangerSigns).map(([name, present]) => ({ name, present }));
+    const toNum = (value: string) => (value.trim() === "" ? null : Number(value));
     const vitals: Record<string, number | null> = {
       systolic: toNum(vSystolic),
       diastolic: toNum(vDiastolic),
@@ -84,44 +158,85 @@ export default function TriageQueuePage() {
       oxygen_saturation: toNum(vSpO2),
       respiratory_rate: toNum(vRR),
     };
-    const hasVitals = Object.values(vitals).some((v) => v != null);
     triageMutation.mutate({
       id: triagingEntry.id,
       acuity,
       danger_signs: activeDangerSigns,
-      vitals: hasVitals ? vitals : null,
-      notes: notes || null,
+      vitals: Object.values(vitals).some((value) => value !== null) ? vitals : null,
+      notes: notes.trim() || null,
       triaged_by: user?.id ?? "system",
       triaged_by_name: user?.displayName ?? user?.email ?? "",
     });
   }
 
+  function handleStartHandoff(entry: QueueEntryResource) {
+    const patientId = getQueuePatientId(entry);
+    if (!patientId) return;
+
+    callPatient.mutate(
+      { id: entry.id },
+      {
+        onSuccess: () => {
+          router.push(`/ehr/${patientId}?entry=queue`);
+        },
+      },
+    );
+  }
+
   return (
     <AppLayout>
-      <PageShell title="Triage Queue" subtitle="Assess and prioritize patients">
-        {isLoading ? (
+      <PageShell title="Triage Queue" subtitle={facility ? `${facility.name}` : "Assess and prioritize patients"}>
+        <div className="space-y-6">
+          <QueueWorkspaceHeader
+            badge="Queue triage"
+            badgeIcon={Stethoscope}
+            title="Assess acuity, document red flags, then hand the encounter into chart"
+            description="This workspace keeps facility context, urgency, and the next queue-to-chart action visible in one place."
+            facilityName={facility?.name}
+            actions={[
+              { href: "/queue", label: "Queue Workboard", icon: ArrowRightLeft },
+              { href: "/queue/waiting", label: "Waiting Room", icon: ClipboardCheck, tone: "secondary" },
+              ...(isQueueManager
+                ? [{ href: "/queue/walk-in", label: "Walk-in Registration", icon: UserPlus, tone: "secondary" as const }]
+                : []),
+            ]}
+            metrics={[
+              {
+                label: "Awaiting triage",
+                value: String(awaitingAssessment.length),
+                detail: "Patients who still need an acuity decision before service handoff.",
+              },
+              {
+                label: "Ready for handoff",
+                value: String(handoffReady.length),
+                detail: "Patients already triaged and ready to enter the encounter workflow.",
+              },
+            ]}
+          />
+
+          {isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+            <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
           </div>
         ) : error ? (
-          <div className="bg-red-50 rounded-lg border border-red-200 p-6 text-center">
-            <AlertTriangle className="w-8 h-8 text-red-400 mx-auto mb-2" />
-            <p className="text-red-600 text-sm">Failed to load triage queue</p>
+          <div className="rounded-3xl border border-red-200 bg-red-50 p-6 text-center">
+            <AlertTriangle className="mx-auto mb-2 h-8 w-8 text-red-400" />
+            <p className="text-sm text-red-700">Failed to load the triage queue.</p>
           </div>
         ) : (
           <div className="space-y-6">
             {/* Triage Form — when assessing a patient */}
             {triagingEntry && (
-              <div className="bg-white rounded-lg border-2 border-amber-300 p-5">
-                <div className="flex items-center justify-between mb-4">
+              <div className="rounded-3xl border-2 border-amber-300 bg-white p-5 shadow-sm">
+                <div className="mb-4 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Stethoscope className="w-5 h-5 text-amber-600" />
                     <h3 className="font-medium text-gray-900">
-                      Triage: {(triagingEntry.attributes as Record<string, unknown>).patientName as string || triagingEntry.attributes.patientId}
+                      Triage: {getQueuePatientName(triagingEntry)}
                     </h3>
                   </div>
                   <button
-                    onClick={() => { setTriagingEntry(null); setAcuity(null); setDangerSigns({}); setNotes(""); }}
+                    onClick={resetComposer}
                     className="text-xs text-gray-500 hover:text-gray-700"
                   >
                     Cancel
@@ -235,12 +350,12 @@ export default function TriageQueuePage() {
 
             {/* Queue List */}
             {entries.length === 0 ? (
-              <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-                <Stethoscope className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-400 text-sm">No patients waiting for triage</p>
+              <div className="rounded-3xl border border-slate-200 bg-white p-12 text-center shadow-sm">
+                <Stethoscope className="mx-auto mb-3 h-10 w-10 text-slate-300" />
+                <p className="text-sm text-slate-500">No patients waiting for triage at this facility.</p>
               </div>
             ) : (
-              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+              <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b bg-gray-50">
@@ -253,42 +368,63 @@ export default function TriageQueuePage() {
                   </thead>
                   <tbody>
                     {entries.map((entry) => {
-                      const triageCat = (entry.attributes as Record<string, unknown>).triage_category as string ?? (entry.attributes as Record<string, unknown>).triageCategory as string;
-                      const catColor = triageCat === "RED" ? "bg-red-100 text-red-700" :
-                        triageCat === "ORANGE" ? "bg-orange-100 text-orange-700" :
-                        triageCat === "YELLOW" ? "bg-yellow-100 text-yellow-700" :
-                        triageCat === "GREEN" ? "bg-green-100 text-green-700" :
-                        triageCat === "BLUE" ? "bg-blue-100 text-blue-700" : "";
+                      const triageCat = getQueueTriageCategory(entry);
+                      const queuedAt = getQueueQueuedAt(entry);
+                      const patientName = getQueuePatientName(entry);
+                      const catColor = triageCat
+                        ? QUEUE_TRIAGE_STYLES[triageCat] ?? "bg-slate-200 text-slate-700"
+                        : "";
 
                       return (
                         <tr key={entry.id} className="border-b last:border-b-0 hover:bg-gray-50">
                           <td className="px-4 py-3 font-medium text-gray-900">
-                            {(entry.attributes as Record<string, unknown>).patientName as string || entry.attributes.patientId}
+                            <div>
+                              <p>{patientName}</p>
+                              {getQueueReason(entry) ? (
+                                <p className="mt-1 text-xs font-normal text-slate-500">{getQueueReason(entry)}</p>
+                              ) : null}
+                            </div>
                           </td>
                           <td className="px-4 py-3 text-gray-600 text-xs">
-                            {new Date(entry.attributes.queuedAt).toLocaleTimeString()}
+                            {formatQueueDateTime(queuedAt, { hour: "2-digit", minute: "2-digit" })}
                           </td>
                           <td className="px-4 py-3 text-gray-600">
                             <span className="inline-flex items-center gap-1 text-xs">
                               <Clock className="w-3 h-3" />
-                              {formatWaitTime(entry.attributes.queuedAt)}
+                              {formatQueueWaitTime(queuedAt)}
                             </span>
                           </td>
                           <td className="px-4 py-3">
                             {triageCat ? (
-                              <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${catColor}`}>{triageCat}</span>
+                              <span className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${catColor}`}>
+                                {triageCat.charAt(0)}
+                              </span>
                             ) : (
-                              <span className="text-xs text-gray-400">Not triaged</span>
+                              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
+                                Needs triage
+                              </span>
                             )}
                           </td>
                           <td className="px-4 py-3 text-right">
-                            <button
-                              onClick={() => setTriagingEntry(entry)}
-                              disabled={triagingEntry?.id === entry.id}
-                              className="px-3 py-1.5 bg-amber-600 text-white rounded text-xs font-medium hover:bg-amber-700 disabled:opacity-50 transition-colors"
-                            >
-                              {triageCat ? "Re-triage" : "Start Triage"}
-                            </button>
+                            <div className="flex justify-end gap-2">
+                              <button
+                                onClick={() => setTriagingEntry(entry)}
+                                disabled={triagingEntry?.id === entry.id}
+                                className="rounded-xl bg-amber-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-amber-700 disabled:opacity-50"
+                              >
+                                {triageCat ? "Re-triage" : "Start Triage"}
+                              </button>
+                              {triageCat ? (
+                                <button
+                                  type="button"
+                                  onClick={() => handleStartHandoff(entry)}
+                                  disabled={callPatient.isPending}
+                                  className="rounded-xl bg-blue-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+                                >
+                                  {COORDINATION_COPY.startEncounterHandoff}
+                                </button>
+                              ) : null}
+                            </div>
                           </td>
                         </tr>
                       );
@@ -298,7 +434,8 @@ export default function TriageQueuePage() {
               </div>
             )}
           </div>
-        )}
+          )}
+        </div>
       </PageShell>
     </AppLayout>
   );

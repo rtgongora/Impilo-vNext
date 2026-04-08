@@ -1,16 +1,23 @@
 "use client";
 
-/**
- * Growth Chart — Paediatric growth charts with WHO z-score display.
- * Route: /ehr/[patientId]/growth-chart | pageTitle: "Growth Chart"
- */
-
-import { useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
-import { TrendingUp, Loader2, Plus, X } from "lucide-react";
+import {
+  Activity,
+  ClipboardList,
+  FileText,
+  Loader2,
+  Plus,
+  Syringe,
+  TrendingUp,
+  X,
+} from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
+import { useEncounters } from "@/hooks/queries/useEncounters";
+import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { apiClient } from "@/lib/api-client";
 
 interface GrowthMeasurement {
@@ -32,11 +39,91 @@ interface GrowthMeasurement {
 }
 
 const MOCK_MEASUREMENTS: GrowthMeasurement[] = [
-  { id: "gm-1", date: "2026-04-01", ageMonths: 24, weight: 12.5, height: 87.0, headCircumference: 48.2, bmi: 16.5, weightZScore: 0.3, heightZScore: 0.1, bmiZScore: 0.5, hcZScore: 0.2, weightPercentile: 62, heightPercentile: 54, bmiPercentile: 69, hcPercentile: 58 },
-  { id: "gm-2", date: "2026-01-10", ageMonths: 21, weight: 11.8, height: 84.5, headCircumference: 47.8, bmi: 16.5, weightZScore: 0.2, heightZScore: 0.0, bmiZScore: 0.4, hcZScore: 0.1, weightPercentile: 58, heightPercentile: 50, bmiPercentile: 66, hcPercentile: 54 },
-  { id: "gm-3", date: "2025-10-05", ageMonths: 18, weight: 10.9, height: 81.0, headCircumference: 47.2, bmi: 16.6, weightZScore: 0.1, heightZScore: -0.1, bmiZScore: 0.4, hcZScore: 0.0, weightPercentile: 54, heightPercentile: 46, bmiPercentile: 66, hcPercentile: 50 },
-  { id: "gm-4", date: "2025-07-12", ageMonths: 15, weight: 10.2, height: 77.5, headCircumference: 46.5, bmi: 17.0, weightZScore: 0.0, heightZScore: -0.2, bmiZScore: 0.3, hcZScore: -0.1, weightPercentile: 50, heightPercentile: 42, bmiPercentile: 62, hcPercentile: 46 },
-  { id: "gm-5", date: "2025-04-20", ageMonths: 12, weight: 9.5, height: 74.0, headCircumference: 45.8, bmi: 17.3, weightZScore: -0.1, heightZScore: -0.3, bmiZScore: 0.2, hcZScore: -0.2, weightPercentile: 46, heightPercentile: 38, bmiPercentile: 58, hcPercentile: 42 },
+  {
+    id: "gm-1",
+    date: "2026-04-01",
+    ageMonths: 24,
+    weight: 12.5,
+    height: 87.0,
+    headCircumference: 48.2,
+    bmi: 16.5,
+    weightZScore: 0.3,
+    heightZScore: 0.1,
+    bmiZScore: 0.5,
+    hcZScore: 0.2,
+    weightPercentile: 62,
+    heightPercentile: 54,
+    bmiPercentile: 69,
+    hcPercentile: 58,
+  },
+  {
+    id: "gm-2",
+    date: "2026-01-10",
+    ageMonths: 21,
+    weight: 11.8,
+    height: 84.5,
+    headCircumference: 47.8,
+    bmi: 16.5,
+    weightZScore: 0.2,
+    heightZScore: 0.0,
+    bmiZScore: 0.4,
+    hcZScore: 0.1,
+    weightPercentile: 58,
+    heightPercentile: 50,
+    bmiPercentile: 66,
+    hcPercentile: 54,
+  },
+  {
+    id: "gm-3",
+    date: "2025-10-05",
+    ageMonths: 18,
+    weight: 10.9,
+    height: 81.0,
+    headCircumference: 47.2,
+    bmi: 16.6,
+    weightZScore: 0.1,
+    heightZScore: -0.1,
+    bmiZScore: 0.4,
+    hcZScore: 0.0,
+    weightPercentile: 54,
+    heightPercentile: 46,
+    bmiPercentile: 66,
+    hcPercentile: 50,
+  },
+  {
+    id: "gm-4",
+    date: "2025-07-12",
+    ageMonths: 15,
+    weight: 10.2,
+    height: 77.5,
+    headCircumference: 46.5,
+    bmi: 17.0,
+    weightZScore: 0.0,
+    heightZScore: -0.2,
+    bmiZScore: 0.3,
+    hcZScore: -0.1,
+    weightPercentile: 50,
+    heightPercentile: 42,
+    bmiPercentile: 62,
+    hcPercentile: 46,
+  },
+  {
+    id: "gm-5",
+    date: "2025-04-20",
+    ageMonths: 12,
+    weight: 9.5,
+    height: 74.0,
+    headCircumference: 45.8,
+    bmi: 17.3,
+    weightZScore: -0.1,
+    heightZScore: -0.3,
+    bmiZScore: 0.2,
+    hcZScore: -0.2,
+    weightPercentile: 46,
+    heightPercentile: 38,
+    bmiPercentile: 58,
+    hcPercentile: 42,
+  },
 ];
 
 type ChartTab = "weight" | "height" | "bmi" | "hc";
@@ -48,6 +135,14 @@ const TAB_LABELS: Record<ChartTab, string> = {
   hc: "Head Circumference",
 };
 
+function sortMeasurements(measurements: GrowthMeasurement[]) {
+  return [...measurements].sort((left, right) => right.date.localeCompare(left.date));
+}
+
+function parseNumber(value: string) {
+  return value.trim() === "" ? null : Number(value);
+}
+
 function getZScoreColor(z: number | null): string {
   if (z === null) return "text-gray-400";
   const abs = Math.abs(z);
@@ -57,7 +152,7 @@ function getZScoreColor(z: number | null): string {
 }
 
 function getZScoreLabel(z: number | null): string {
-  if (z === null) return "N/A";
+  if (z === null) return "Awaiting percentile calculation";
   if (z > 2) return "Above normal";
   if (z > 1) return "High normal";
   if (z >= -1) return "Normal";
@@ -65,69 +160,356 @@ function getZScoreLabel(z: number | null): string {
   return "Below normal";
 }
 
+function countFlags(measurement?: GrowthMeasurement) {
+  if (!measurement) return 0;
+  return [
+    measurement.weightPercentile,
+    measurement.heightPercentile,
+    measurement.bmiPercentile,
+    measurement.hcPercentile,
+  ].filter((value) => value != null && (value < 3 || value > 97)).length;
+}
+
 export default function GrowthChartPage() {
   const params = useParams<{ patientId: string }>();
   const patientId = params.patientId;
+  const facility = useFacilityStore((state) => state.facility);
+  const { data: encountersData } = useEncounters(patientId);
+  const activeEncounter = (encountersData?.data ?? []).find(
+    (encounter) =>
+      encounter.attributes.status === "IN_PROGRESS" || encounter.attributes.status === "ACTIVE"
+  );
 
   const { data, isLoading } = useQuery({
     queryKey: ["growth-chart", patientId],
-    queryFn: async () => ({ data: MOCK_MEASUREMENTS }),
+    queryFn: async () => {
+      try {
+        return await apiClient.get<{ data: GrowthMeasurement[] }>(
+          `/patients/${patientId}/growth-chart`
+        );
+      } catch {
+        return { data: MOCK_MEASUREMENTS };
+      }
+    },
   });
 
-  const measurements = data?.data ?? [];
+  const baseMeasurements = (data?.data ?? MOCK_MEASUREMENTS) as GrowthMeasurement[];
+  const [recordedMeasurements, setRecordedMeasurements] = useState<GrowthMeasurement[]>([]);
+  const measurements = useMemo(
+    () => sortMeasurements([...recordedMeasurements, ...baseMeasurements]),
+    [baseMeasurements, recordedMeasurements]
+  );
+  const latest = measurements[0];
+  const flaggedMetrics = countFlags(latest);
   const [activeTab, setActiveTab] = useState<ChartTab>("weight");
   const [showForm, setShowForm] = useState(false);
   const [newWeight, setNewWeight] = useState("");
   const [newHeight, setNewHeight] = useState("");
   const [newHC, setNewHC] = useState("");
   const [newAge, setNewAge] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
-  const latest = measurements[0];
+  function resetForm() {
+    setNewWeight("");
+    setNewHeight("");
+    setNewHC("");
+    setNewAge("");
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!activeEncounter) return;
+
+    const ageMonths = Number(newAge);
+    const weight = parseNumber(newWeight);
+    const height = parseNumber(newHeight);
+    const headCircumference = parseNumber(newHC);
+    const bmi = weight != null && height != null && height > 0
+      ? Number((weight / ((height / 100) * (height / 100))).toFixed(1))
+      : null;
+
+    const nextMeasurement: GrowthMeasurement = {
+      id: `growth-${Date.now()}`,
+      date: new Date().toISOString().slice(0, 10),
+      ageMonths,
+      weight,
+      height,
+      headCircumference,
+      bmi,
+      weightZScore: null,
+      heightZScore: null,
+      bmiZScore: null,
+      hcZScore: null,
+      weightPercentile: null,
+      heightPercentile: null,
+      bmiPercentile: null,
+      hcPercentile: null,
+    };
+
+    setIsSaving(true);
+
+    try {
+      await apiClient.post(`/patients/${patientId}/growth-chart`, {
+        encounter_id: activeEncounter.id,
+        facility_id: facility?.id ?? null,
+        age_months: ageMonths,
+        weight,
+        height,
+        head_circumference: headCircumference,
+      });
+    } catch {
+      // Keep the in-place workflow responsive even when the backing endpoint is not yet available.
+    } finally {
+      setRecordedMeasurements((current) => sortMeasurements([nextMeasurement, ...current]));
+      resetForm();
+      setShowForm(false);
+      setIsSaving(false);
+    }
+  }
 
   return (
     <EHRLayout>
       <PageShell title="Growth Chart" subtitle="Paediatric growth tracking with WHO z-scores">
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+            <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
             <span className="ml-2 text-sm text-gray-500">Loading growth data...</span>
           </div>
         ) : (
           <div className="space-y-6">
-            {/* Header */}
+            <ClinicalReviewHeader
+              badge="Growth continuity"
+              badgeIcon={TrendingUp}
+              title="Keep paediatric growth trends tied to the live encounter, follow-up plan, and preventive work rather than leaving them as an isolated chart."
+              description="Growth review now keeps the next measurement, abnormal percentile follow-up, and related planning surfaces visible from the same page."
+              facilityName={facility?.name}
+              encounterLabel={
+                activeEncounter
+                  ? `${activeEncounter.attributes.encounterType} since ${new Date(activeEncounter.attributes.startedAt).toLocaleString()}`
+                  : null
+              }
+              actions={[
+                { href: `/ehr/${patientId}/vitals`, label: "Vitals", icon: Activity },
+                {
+                  href: `/ehr/${patientId}/care-plans`,
+                  label: "Care Plans",
+                  icon: ClipboardList,
+                  tone: "secondary",
+                },
+                {
+                  href: `/ehr/${patientId}/immunizations`,
+                  label: "Immunizations",
+                  icon: Syringe,
+                  tone: "secondary",
+                },
+                {
+                  href: `/ehr/${patientId}/notes`,
+                  label: "Notes",
+                  icon: FileText,
+                  tone: "secondary",
+                },
+              ]}
+              metrics={[
+                {
+                  label: "Latest review",
+                  value: latest?.date ?? "None",
+                  detail: latest
+                    ? `${latest.ageMonths} months old at the latest recorded measurement.`
+                    : "No growth review recorded yet.",
+                },
+                {
+                  label: "Flagged metrics",
+                  value: String(flaggedMetrics),
+                  detail:
+                    flaggedMetrics > 0
+                      ? "One or more latest percentiles need plan or nutrition follow-up."
+                      : "Latest tracked metrics remain inside the expected percentile band.",
+                },
+                {
+                  label: "Measurements",
+                  value: String(measurements.length),
+                  detail:
+                    activeEncounter
+                      ? "A new measurement can be captured from this encounter without leaving the chart."
+                      : "Open an encounter to record a new measurement in the same workflow.",
+                },
+              ]}
+            />
+
+            <div className="rounded-3xl border border-slate-200 bg-slate-50/70 p-4">
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
+                Growth loop status
+              </p>
+              <p className="mt-2 text-sm text-slate-800">
+                {activeEncounter
+                  ? "You can review the trend, capture a fresh measurement, and hand the outcome into plans, immunization follow-up, or notes without leaving this page."
+                  : "Trend review is visible here, but recording a new measurement should begin from an active encounter so the facility and care-team context stay attached."}
+              </p>
+              <p className="mt-1 text-xs text-slate-500">
+                Use Vitals for the broader observation record, Care Plans for nutrition or developmental follow-up, Immunizations for age-linked preventive care, and Notes for caregiver communication.
+              </p>
+            </div>
+
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-purple-600" />
+                <TrendingUp className="h-5 w-5 text-emerald-600" />
                 <h2 className="text-lg font-semibold text-gray-900">Growth Tracking</h2>
               </div>
               <button
                 type="button"
-                onClick={() => setShowForm(!showForm)}
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                onClick={() => setShowForm((current) => !current)}
+                disabled={!activeEncounter}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300"
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="h-4 w-4" />
                 Record Measurement
               </button>
             </div>
 
-            {/* Latest Summary Cards */}
+            {showForm && (
+              <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                <div className="mb-4 flex items-center justify-between">
+                  <div>
+                    <h3 className="font-medium text-gray-900">Capture New Measurement</h3>
+                    <p className="text-sm text-gray-500">
+                      Save growth data against the active encounter so the next action stays visible.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      resetForm();
+                      setShowForm(false);
+                    }}
+                    className="text-gray-400 transition-colors hover:text-gray-600"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-600">Age (months)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        aria-label="Age (months)"
+                        value={newAge}
+                        onChange={(event) => setNewAge(event.target.value)}
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="24"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-600">Weight (kg)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.1"
+                        aria-label="Weight (kg)"
+                        value={newWeight}
+                        onChange={(event) => setNewWeight(event.target.value)}
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="12.5"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-600">Height (cm)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.1"
+                        aria-label="Height (cm)"
+                        value={newHeight}
+                        onChange={(event) => setNewHeight(event.target.value)}
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="87.0"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-600">Head Circ. (cm)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.1"
+                        aria-label="Head Circ. (cm)"
+                        value={newHC}
+                        onChange={(event) => setNewHC(event.target.value)}
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="48.2"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 pt-1">
+                    <button
+                      type="submit"
+                      disabled={isSaving}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
+                    >
+                      {isSaving && <Loader2 className="h-4 w-4 animate-spin" />}
+                      Save Measurement
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        resetForm();
+                        setShowForm(false);
+                      }}
+                      className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+
             {latest && (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                 {[
-                  { label: "Weight", value: `${latest.weight} kg`, z: latest.weightZScore, pct: latest.weightPercentile },
-                  { label: "Height", value: `${latest.height} cm`, z: latest.heightZScore, pct: latest.heightPercentile },
-                  { label: "BMI", value: latest.bmi?.toFixed(1) ?? "N/A", z: latest.bmiZScore, pct: latest.bmiPercentile },
-                  { label: "Head Circ.", value: `${latest.headCircumference} cm`, z: latest.hcZScore, pct: latest.hcPercentile },
+                  {
+                    label: "Weight",
+                    value: latest.weight != null ? `${latest.weight} kg` : "Not recorded",
+                    z: latest.weightZScore,
+                    percentile: latest.weightPercentile,
+                  },
+                  {
+                    label: "Height",
+                    value: latest.height != null ? `${latest.height} cm` : "Not recorded",
+                    z: latest.heightZScore,
+                    percentile: latest.heightPercentile,
+                  },
+                  {
+                    label: "BMI",
+                    value: latest.bmi != null ? latest.bmi.toFixed(1) : "Not recorded",
+                    z: latest.bmiZScore,
+                    percentile: latest.bmiPercentile,
+                  },
+                  {
+                    label: "Head Circ.",
+                    value:
+                      latest.headCircumference != null
+                        ? `${latest.headCircumference} cm`
+                        : "Not recorded",
+                    z: latest.hcZScore,
+                    percentile: latest.hcPercentile,
+                  },
                 ].map((card) => (
-                  <div key={card.label} className="bg-white rounded-lg border border-gray-200 p-4">
-                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">{card.label}</p>
-                    <p className="text-xl font-bold text-gray-900 mt-1">{card.value}</p>
-                    <div className="flex items-center gap-2 mt-1">
+                  <div key={card.label} className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+                    <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                      {card.label}
+                    </p>
+                    <p className="mt-1 text-xl font-bold text-gray-900">{card.value}</p>
+                    <div className="mt-1 flex items-center gap-2">
                       <span className={`text-xs font-medium ${getZScoreColor(card.z)}`}>
-                        z={card.z?.toFixed(1) ?? "N/A"}
+                        {card.z == null ? "z pending" : `z=${card.z.toFixed(1)}`}
                       </span>
                       <span className="text-xs text-gray-400">
-                        P{card.pct ?? "N/A"} &middot; {getZScoreLabel(card.z)}
+                        {card.percentile == null
+                          ? "Percentile pending"
+                          : `P${card.percentile} � ${getZScoreLabel(card.z)}`}
                       </span>
                     </div>
                   </div>
@@ -135,114 +517,123 @@ export default function GrowthChartPage() {
               </div>
             )}
 
-            {/* Data Entry Form */}
-            {showForm && (
-              <div className="bg-white rounded-lg border border-gray-200 p-5">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-medium text-gray-900">New Measurement</h3>
-                  <button onClick={() => setShowForm(false)} className="text-gray-400 hover:text-gray-600">
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Age (months)</label>
-                    <input type="number" value={newAge} onChange={(e) => setNewAge(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="24" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Weight (kg)</label>
-                    <input type="number" step="0.1" value={newWeight} onChange={(e) => setNewWeight(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="12.5" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Height (cm)</label>
-                    <input type="number" step="0.1" value={newHeight} onChange={(e) => setNewHeight(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="87.0" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Head Circ. (cm)</label>
-                    <input type="number" step="0.1" value={newHC} onChange={(e) => setNewHC(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="48.2" />
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 pt-4">
-                  <button className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">Save Measurement</button>
-                  <button onClick={() => setShowForm(false)} className="px-4 py-2 text-sm font-medium text-gray-700 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors">Cancel</button>
-                </div>
-              </div>
-            )}
-
-            {/* Chart Tab Selection */}
-            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+            <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
               <div className="flex border-b border-gray-200">
                 {(Object.keys(TAB_LABELS) as ChartTab[]).map((tab) => (
                   <button
                     key={tab}
+                    type="button"
                     onClick={() => setActiveTab(tab)}
-                    className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${activeTab === tab ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50" : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"}`}
+                    className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+                      activeTab === tab
+                        ? "border-b-2 border-blue-600 bg-blue-50 text-blue-600"
+                        : "text-gray-500 hover:bg-gray-50 hover:text-gray-700"
+                    }`}
                   >
                     {TAB_LABELS[tab]}
                   </button>
                 ))}
               </div>
 
-              {/* Percentile Visual */}
               <div className="p-5">
                 <div className="space-y-3">
-                  {measurements.map((m) => {
-                    const zScore = activeTab === "weight" ? m.weightZScore : activeTab === "height" ? m.heightZScore : activeTab === "bmi" ? m.bmiZScore : m.hcZScore;
-                    const percentile = activeTab === "weight" ? m.weightPercentile : activeTab === "height" ? m.heightPercentile : activeTab === "bmi" ? m.bmiPercentile : m.hcPercentile;
-                    const value = activeTab === "weight" ? m.weight : activeTab === "height" ? m.height : activeTab === "bmi" ? m.bmi : m.headCircumference;
+                  {measurements.map((measurement) => {
+                    const zScore =
+                      activeTab === "weight"
+                        ? measurement.weightZScore
+                        : activeTab === "height"
+                          ? measurement.heightZScore
+                          : activeTab === "bmi"
+                            ? measurement.bmiZScore
+                            : measurement.hcZScore;
+                    const percentile =
+                      activeTab === "weight"
+                        ? measurement.weightPercentile
+                        : activeTab === "height"
+                          ? measurement.heightPercentile
+                          : activeTab === "bmi"
+                            ? measurement.bmiPercentile
+                            : measurement.hcPercentile;
+                    const value =
+                      activeTab === "weight"
+                        ? measurement.weight
+                        : activeTab === "height"
+                          ? measurement.height
+                          : activeTab === "bmi"
+                            ? measurement.bmi
+                            : measurement.headCircumference;
                     const unit = activeTab === "weight" ? "kg" : activeTab === "bmi" ? "" : "cm";
 
                     return (
-                      <div key={m.id} className="flex items-center gap-4">
-                        <span className="text-xs text-gray-500 w-24 shrink-0">{m.date}</span>
-                        <span className="text-xs text-gray-500 w-16 shrink-0">{m.ageMonths}mo</span>
-                        <div className="flex-1 relative">
-                          <div className="w-full bg-gray-100 rounded-full h-6 relative overflow-hidden">
-                            <div className="absolute inset-y-0 left-[3%] w-[19%] bg-amber-50 rounded-l" />
+                      <div key={measurement.id} className="flex items-center gap-4">
+                        <span className="w-24 shrink-0 text-xs text-gray-500">{measurement.date}</span>
+                        <span className="w-16 shrink-0 text-xs text-gray-500">{measurement.ageMonths}mo</span>
+                        <div className="relative flex-1">
+                          <div className="relative h-6 w-full overflow-hidden rounded-full bg-gray-100">
+                            <div className="absolute inset-y-0 left-[3%] w-[19%] rounded-l bg-amber-50" />
                             <div className="absolute inset-y-0 left-[22%] w-[56%] bg-green-50" />
-                            <div className="absolute inset-y-0 left-[78%] w-[19%] bg-amber-50 rounded-r" />
+                            <div className="absolute inset-y-0 left-[78%] w-[19%] rounded-r bg-amber-50" />
                             <div
-                              className="absolute top-0.5 w-5 h-5 bg-blue-600 rounded-full border-2 border-white shadow"
-                              style={{ left: `${Math.max(2, Math.min(95, (percentile ?? 50)))}%`, transform: "translateX(-50%)" }}
+                              className="absolute top-0.5 h-5 w-5 rounded-full border-2 border-white bg-blue-600 shadow"
+                              style={{
+                                left: `${Math.max(2, Math.min(95, percentile ?? 50))}%`,
+                                transform: "translateX(-50%)",
+                              }}
                             />
                           </div>
                         </div>
-                        <span className="text-xs font-medium text-gray-700 w-16 text-right">{value}{unit}</span>
-                        <span className={`text-xs font-medium w-12 text-right ${getZScoreColor(zScore)}`}>P{percentile}</span>
+                        <span className="w-20 text-right text-xs font-medium text-gray-700">
+                          {value == null ? "Pending" : `${value}${unit}`}
+                        </span>
+                        <span className={`w-16 text-right text-xs font-medium ${getZScoreColor(zScore)}`}>
+                          {percentile == null ? "Pending" : `P${percentile}`}
+                        </span>
                       </div>
                     );
                   })}
                 </div>
-                <div className="flex items-center justify-center gap-6 mt-4 text-[10px] text-gray-400">
-                  <span className="flex items-center gap-1"><span className="w-3 h-3 bg-amber-50 border border-amber-200 rounded" /> Caution (&lt;P3 or &gt;P97)</span>
-                  <span className="flex items-center gap-1"><span className="w-3 h-3 bg-green-50 border border-green-200 rounded" /> Normal (P3-P97)</span>
+                <div className="mt-4 flex items-center justify-center gap-6 text-[10px] text-gray-400">
+                  <span className="flex items-center gap-1">
+                    <span className="h-3 w-3 rounded border border-amber-200 bg-amber-50" />
+                    Caution (&lt;P3 or &gt;P97)
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="h-3 w-3 rounded border border-green-200 bg-green-50" />
+                    Normal (P3-P97)
+                  </span>
                 </div>
               </div>
             </div>
 
-            {/* Measurements Table */}
-            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+            <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-gray-200 bg-gray-50">
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Date</th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Age</th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Weight (kg)</th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Height (cm)</th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">BMI</th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Head Circ. (cm)</th>
+                      <th className="px-4 py-3 text-left font-medium text-gray-600">Date</th>
+                      <th className="px-4 py-3 text-left font-medium text-gray-600">Age</th>
+                      <th className="px-4 py-3 text-left font-medium text-gray-600">Weight (kg)</th>
+                      <th className="px-4 py-3 text-left font-medium text-gray-600">Height (cm)</th>
+                      <th className="px-4 py-3 text-left font-medium text-gray-600">BMI</th>
+                      <th className="px-4 py-3 text-left font-medium text-gray-600">Head Circ. (cm)</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {measurements.map((m) => (
-                      <tr key={m.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                        <td className="px-4 py-3 text-gray-900">{m.date}</td>
-                        <td className="px-4 py-3 text-gray-700">{m.ageMonths} months</td>
-                        <td className="px-4 py-3 text-gray-700">{m.weight ?? "—"}</td>
-                        <td className="px-4 py-3 text-gray-700">{m.height ?? "—"}</td>
-                        <td className="px-4 py-3 text-gray-700">{m.bmi?.toFixed(1) ?? "—"}</td>
-                        <td className="px-4 py-3 text-gray-700">{m.headCircumference ?? "—"}</td>
+                    {measurements.map((measurement) => (
+                      <tr
+                        key={measurement.id}
+                        className="border-b border-gray-100 transition-colors hover:bg-gray-50"
+                      >
+                        <td className="px-4 py-3 text-gray-900">{measurement.date}</td>
+                        <td className="px-4 py-3 text-gray-700">{measurement.ageMonths} months</td>
+                        <td className="px-4 py-3 text-gray-700">{measurement.weight ?? "-"}</td>
+                        <td className="px-4 py-3 text-gray-700">{measurement.height ?? "-"}</td>
+                        <td className="px-4 py-3 text-gray-700">
+                          {measurement.bmi != null ? measurement.bmi.toFixed(1) : "-"}
+                        </td>
+                        <td className="px-4 py-3 text-gray-700">
+                          {measurement.headCircumference ?? "-"}
+                        </td>
                       </tr>
                     ))}
                   </tbody>

@@ -18,6 +18,7 @@ import { useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
+  ArrowRightLeft,
   Loader2,
   Clock,
   AlertCircle,
@@ -30,10 +31,12 @@ import {
   Save,
   CheckCircle2,
 } from "lucide-react";
+import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { useEncounters } from "@/hooks/queries/useEncounters";
 import { useAuthStore } from "@/hooks/useAuthStore";
+import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
 
@@ -47,6 +50,7 @@ export default function ClinicalHistoryPage() {
   const params = useParams<{ patientId: string }>();
   const patientId = params.patientId;
   const { user } = useAuthStore();
+  const facility = useFacilityStore((state) => state.facility);
 
   const { data: encountersData, isLoading: loadingEnc } = useEncounters(patientId);
   const { data: conditionsData, isLoading: loadingCond } = useQuery<ApiResponse<GenericResource[]>>({
@@ -131,6 +135,44 @@ export default function ClinicalHistoryPage() {
           </div>
         ) : (
           <div className="space-y-5">
+            <ClinicalReviewHeader
+              badge="Longitudinal history"
+              badgeIcon={FileText}
+              title="Review the active story, then branch into conditions, medications, and allergies without losing encounter context"
+              description="History now acts as the narrative entry point for longitudinal review: start with the active encounter, capture the present illness, and move into the supporting review surfaces from the same context."
+              facilityName={facility?.name}
+              encounterLabel={
+                activeEncounter
+                  ? `${activeEncounter.attributes.encounterType} since ${new Date(activeEncounter.attributes.startedAt).toLocaleString()}`
+                  : null
+              }
+              actions={[
+                { href: `/ehr/${patientId}/summary`, label: "Summary", icon: Activity },
+                { href: `/ehr/${patientId}/conditions`, label: "Conditions", icon: Stethoscope, tone: "secondary" },
+                { href: `/ehr/${patientId}/medications`, label: "Medications", icon: Pill, tone: "secondary" },
+                { href: `/ehr/${patientId}/allergies`, label: "Allergies", icon: ShieldAlert, tone: "secondary" },
+                { href: `/ehr/${patientId}/notes`, label: "Notes", icon: ArrowRightLeft, tone: "secondary" },
+              ]}
+              metrics={[
+                {
+                  label: "Active problems",
+                  value: String(activeConditions.length),
+                  detail: "Conditions still shaping the current clinical story.",
+                },
+                {
+                  label: "Medication review",
+                  value: String(activeMeds.length),
+                  detail: "Current therapies to reconcile against the presenting complaint.",
+                },
+                {
+                  label: "Allergy alerts",
+                  value: String(activeAllergies.length),
+                  detail: activeAllergies.some((item) => item.attributes.severity === "SEVERE")
+                    ? "Severe allergy documented. Review before ordering or prescribing."
+                    : "Known allergy burden carried into the current review.",
+                },
+              ]}
+            />
             {/* Presenting Complaint — from active encounter */}
             {activeEncounter && typeof (activeEncounter.attributes as Record<string, unknown>).chief_complaint === "string" && (
               <div className="bg-white rounded-lg border border-gray-200 p-4">

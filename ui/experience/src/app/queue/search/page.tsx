@@ -7,12 +7,16 @@
 
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
-import { Search, Loader2, User, ArrowLeft } from "lucide-react";
+import { ArrowLeft, ArrowRightLeft, Loader2, Search, User, UserPlus } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
+import { QueueWorkspaceHeader } from "@/components/queue/QueueWorkspaceHeader";
 import { usePatients, type PatientResource } from "@/hooks/queries/usePatients";
+import { useFacilityStore } from "@/hooks/useFacilityStore";
+import { getPatientDisplayName, getPatientQueueSummary } from "@/lib/queue-workflows";
 
 export default function PatientSearchPage() {
+  const facility = useFacilityStore((state) => state.facility);
   const [searchTerm, setSearchTerm] = useState("");
   const [searchSubmitted, setSearchSubmitted] = useState("");
 
@@ -29,15 +33,33 @@ export default function PatientSearchPage() {
 
   return (
     <AppLayout>
-      <PageShell title="Patient Search" subtitle="Search by name, CPID, national ID, or date of birth">
-        <div className="mb-4">
+      <PageShell title="Patient Search" subtitle={facility ? `${facility.name}` : "Search by name, CPID, national ID, or date of birth"}>
+        <div className="space-y-6">
+          <QueueWorkspaceHeader
+            badge="Queue search"
+            badgeIcon={Search}
+            title="Find the right patient, then route directly into chart or registration"
+            description="Search now carries the active facility context so the queue team can decide whether to open the chart, register a walk-in, or continue searching without losing the thread."
+            facilityName={facility?.name}
+            actions={[
+              { href: "/queue", label: "Queue Workboard", icon: ArrowRightLeft },
+              { href: "/queue/walk-in", label: "Walk-in Registration", icon: UserPlus, tone: "secondary" },
+            ]}
+            metrics={[
+              {
+                label: "Results",
+                value: String(patients.length),
+                detail: searchSubmitted ? `Matches for "${searchSubmitted}" in the patient directory.` : "Search the longitudinal record before creating a new queue visit.",
+              },
+            ]}
+          />
+
           <Link href="/queue" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors">
             <ArrowLeft className="w-4 h-4" /> Back to queue
           </Link>
-        </div>
 
-        <div className="max-w-3xl space-y-6">
-          <div className="bg-white rounded-lg border border-gray-200 p-5">
+          <div className="max-w-4xl space-y-6">
+          <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
             <form onSubmit={handleSearch} className="flex gap-2">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -62,9 +84,9 @@ export default function PatientSearchPage() {
           )}
 
           {searchSubmitted && !isLoading && patients.length === 0 && (
-            <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-              <User className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-400 text-sm">No patients found for &ldquo;{searchSubmitted}&rdquo;</p>
+            <div className="rounded-3xl border border-slate-200 bg-white p-12 text-center shadow-sm">
+              <User className="mx-auto mb-3 h-10 w-10 text-slate-300" />
+              <p className="text-sm text-slate-500">No patients found for &ldquo;{searchSubmitted}&rdquo;</p>
               <Link href="/queue/walk-in" className="mt-3 inline-block text-sm text-blue-600 hover:text-blue-800">
                 Register new patient
               </Link>
@@ -72,7 +94,7 @@ export default function PatientSearchPage() {
           )}
 
           {patients.length > 0 && (
-            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+            <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b bg-gray-50">
@@ -91,17 +113,30 @@ export default function PatientSearchPage() {
                           <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
                             <User className="w-4 h-4 text-blue-600" />
                           </div>
-                          <span className="font-medium text-gray-900">{patient.attributes.displayName}</span>
+                          <div>
+                            <span className="font-medium text-gray-900">{getPatientDisplayName(patient)}</span>
+                            <p className="mt-1 text-xs text-slate-500">{getPatientQueueSummary(patient)}</p>
+                          </div>
                         </div>
                       </td>
                       <td className="px-4 py-3 text-gray-600 font-mono text-xs">{patient.attributes.cpid}</td>
                       <td className="px-4 py-3 text-gray-600">{patient.attributes.dateOfBirth}</td>
                       <td className="px-4 py-3 text-gray-600 capitalize">{patient.attributes.gender}</td>
                       <td className="px-4 py-3 text-right">
-                        <Link href={`/ehr/${patient.id}`}
-                          className="px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-md hover:bg-blue-700 transition-colors inline-block">
-                          Open Chart
-                        </Link>
+                        <div className="flex justify-end gap-2">
+                          <Link
+                            href={`/ehr/${patient.id}?entry=search`}
+                            className="inline-block rounded-xl bg-blue-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-blue-700"
+                          >
+                            Open Chart
+                          </Link>
+                          <Link
+                            href={`/queue/walk-in?patientId=${patient.id}`}
+                            className="inline-block rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-50"
+                          >
+                            Add to Queue
+                          </Link>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -109,6 +144,7 @@ export default function PatientSearchPage() {
               </table>
             </div>
           )}
+          </div>
         </div>
       </PageShell>
     </AppLayout>

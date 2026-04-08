@@ -1,17 +1,25 @@
 "use client";
 
-/**
- * Advance Directives — DNR status, living will, power of attorney, organ donation.
- * Route: /ehr/[patientId]/advance-directives | pageTitle: "Advance Directives"
- */
-
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import { FileText, Loader2, Shield, AlertTriangle, CheckCircle2, Clock, Upload, Eye } from "lucide-react";
+import {
+  Activity,
+  AlertTriangle,
+  CheckCircle2,
+  Clock,
+  Eye,
+  FileText,
+  Loader2,
+  Shield,
+  Upload,
+  Users,
+} from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
-import { apiClient } from "@/lib/api-client";
+import { useEncounters } from "@/hooks/queries/useEncounters";
+import { useFacilityStore } from "@/hooks/useFacilityStore";
 
 interface Directive {
   id: string;
@@ -55,14 +63,14 @@ const MOCK_DIRECTIVES: Directive[] = [
 ];
 
 const STATUS_STYLES: Record<string, { bg: string; icon: React.ElementType }> = {
-  "Active": { bg: "bg-green-100 text-green-700", icon: CheckCircle2 },
-  "Expired": { bg: "bg-red-100 text-red-700", icon: AlertTriangle },
-  "Revoked": { bg: "bg-gray-100 text-gray-600", icon: AlertTriangle },
+  Active: { bg: "bg-green-100 text-green-700", icon: CheckCircle2 },
+  Expired: { bg: "bg-red-100 text-red-700", icon: AlertTriangle },
+  Revoked: { bg: "bg-gray-100 text-gray-600", icon: AlertTriangle },
   "Pending Review": { bg: "bg-amber-100 text-amber-700", icon: Clock },
 };
 
 const TYPE_COLORS: Record<string, string> = {
-  "DNR": "bg-red-100 text-red-600",
+  DNR: "bg-red-100 text-red-600",
   "Living Will": "bg-purple-100 text-purple-600",
   "Power of Attorney": "bg-blue-100 text-blue-600",
   "Organ Donation": "bg-green-100 text-green-600",
@@ -72,6 +80,8 @@ const TYPE_COLORS: Record<string, string> = {
 export default function AdvanceDirectivesPage() {
   const params = useParams<{ patientId: string }>();
   const patientId = params.patientId;
+  const facility = useFacilityStore((state) => state.facility);
+  const { data: encountersData } = useEncounters(patientId);
 
   const { data, isLoading } = useQuery({
     queryKey: ["advance-directives", patientId],
@@ -79,82 +89,131 @@ export default function AdvanceDirectivesPage() {
   });
 
   const directives = data?.data ?? [];
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const activeEncounter = (encountersData?.data ?? []).find(
+    (encounter) =>
+      encounter.attributes.status === "IN_PROGRESS" || encounter.attributes.status === "ACTIVE"
+  );
+  const dnr = directives.find((directive) => directive.type === "DNR" && directive.status === "Active");
+  const needsReview = directives.filter((directive) => directive.status === "Pending Review" || directive.status === "Expired");
+  const activeDirectives = directives.filter((directive) => directive.status === "Active").length;
 
-  const dnr = directives.find((d) => d.type === "DNR" && d.status === "Active");
-  const needsReview = directives.filter((d) => d.status === "Pending Review" || d.status === "Expired");
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   return (
     <EHRLayout>
       <PageShell title="Advance Directives" subtitle="Patient advance care planning and legal directives">
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+            <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
             <span className="ml-2 text-sm text-gray-500">Loading directives...</span>
           </div>
         ) : (
           <div className="space-y-6">
-            {/* Header */}
+            <ClinicalReviewHeader
+              badge="Advance directives"
+              badgeIcon={Shield}
+              title="Keep legal preferences and emergency limits visible wherever the care plan or encounter may escalate"
+              description="Advance directives now sit in the same continuity layer as documents, care team, and notes so legal preferences stay visible when decisions become urgent."
+              facilityName={facility?.name}
+              encounterLabel={
+                activeEncounter
+                  ? `${activeEncounter.attributes.encounterType} since ${new Date(activeEncounter.attributes.startedAt).toLocaleString()}`
+                  : null
+              }
+              actions={[
+                { href: `/ehr/${patientId}/summary`, label: "Summary", icon: Activity },
+                { href: `/ehr/${patientId}/documents`, label: "Documents", icon: FileText, tone: "secondary" },
+                { href: `/ehr/${patientId}/care-team`, label: "Care Team", icon: Users, tone: "secondary" },
+                { href: `/ehr/${patientId}/notes`, label: "Notes", icon: FileText, tone: "secondary" },
+              ]}
+              metrics={[
+                {
+                  label: "Active directives",
+                  value: String(activeDirectives),
+                  detail: "Preferences currently in force for this patient.",
+                },
+                {
+                  label: "Review needed",
+                  value: String(needsReview.length),
+                  detail: "Directives that should be refreshed, verified, or re-documented.",
+                },
+                {
+                  label: "DNR status",
+                  value: dnr ? "Active" : "None",
+                  detail: dnr ? "Active resuscitation limit is on file and must stay visible." : "No active DNR order is on file.",
+                },
+              ]}
+            />
+
+            <div className="rounded-3xl border border-slate-200 bg-slate-50/70 p-4">
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">Directive continuity</p>
+              <p className="mt-2 text-sm text-slate-800">
+                {dnr
+                  ? "An active DNR is on file, so this surface needs to stay in the same workflow loop as notes, documents, and team communication whenever the encounter escalates."
+                  : "No active DNR is documented, but directive review still needs to stay connected to documents and team communication so preferences are not missed later."}
+              </p>
+              <p className="mt-1 text-xs text-slate-500">
+                Use Documents for source files, Care Team for accountable contacts, and Notes to confirm when preferences were reviewed or communicated.
+              </p>
+            </div>
+
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <FileText className="w-5 h-5 text-purple-600" />
+                <FileText className="h-5 w-5 text-purple-600" />
                 <h2 className="text-lg font-semibold text-gray-900">Advance Directives</h2>
               </div>
-              <button className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
-                <Upload className="w-4 h-4" />
+              <button className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700">
+                <Upload className="h-4 w-4" />
                 Upload Directive
               </button>
             </div>
 
-            {/* DNR Alert Banner */}
             {dnr && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
-                <Shield className="w-5 h-5 text-red-600 mt-0.5 shrink-0" />
+              <div className="flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-4">
+                <Shield className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
                 <div>
                   <h3 className="text-sm font-semibold text-red-800">Active DNR Order</h3>
-                  <p className="text-xs text-red-700 mt-1">{dnr.summary}</p>
-                  <p className="text-[10px] text-red-500 mt-1">Effective since {dnr.effectiveDate} &middot; Review by {dnr.reviewDate}</p>
+                  <p className="mt-1 text-xs text-red-700">{dnr.summary}</p>
+                  <p className="mt-1 text-[10px] text-red-500">Effective since {dnr.effectiveDate} � Review by {dnr.reviewDate}</p>
                 </div>
               </div>
             )}
 
-            {/* Review Needed */}
             {needsReview.length > 0 && (
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Clock className="w-4 h-4 text-amber-600" />
+              <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+                <div className="mb-2 flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-amber-600" />
                   <h3 className="text-sm font-medium text-amber-800">{needsReview.length} directive{needsReview.length > 1 ? "s" : ""} requiring review</h3>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {needsReview.map((d) => (
-                    <span key={d.id} className="px-2 py-1 bg-amber-100 text-amber-800 rounded text-xs">{d.type} — {d.status}</span>
+                  {needsReview.map((directive) => (
+                    <span key={directive.id} className="rounded bg-amber-100 px-2 py-1 text-xs text-amber-800">{directive.type} - {directive.status}</span>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Directive Cards */}
             {directives.length === 0 ? (
-              <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-                <FileText className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-400 text-sm">No advance directives on file</p>
+              <div className="rounded-lg border border-gray-200 bg-white p-12 text-center">
+                <FileText className="mx-auto mb-3 h-10 w-10 text-gray-300" />
+                <p className="text-sm text-gray-400">No advance directives on file</p>
               </div>
             ) : (
               <div className="space-y-3">
                 {directives.map((directive) => {
-                  const statusInfo = STATUS_STYLES[directive.status] || STATUS_STYLES["Active"];
+                  const statusInfo = STATUS_STYLES[directive.status] ?? STATUS_STYLES.Active;
                   const StatusIcon = statusInfo.icon;
                   const isExpanded = expandedId === directive.id;
 
                   return (
-                    <div key={directive.id} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                    <div key={directive.id} className="overflow-hidden rounded-lg border border-gray-200 bg-white">
                       <button
                         type="button"
                         onClick={() => setExpandedId(isExpanded ? null : directive.id)}
-                        className="w-full px-5 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors text-left"
+                        className="flex w-full items-center justify-between px-5 py-4 text-left transition-colors hover:bg-gray-50"
                       >
                         <div className="flex items-center gap-3">
-                          <div className={`px-2.5 py-1 rounded text-xs font-medium ${TYPE_COLORS[directive.type]}`}>
+                          <div className={`rounded px-2.5 py-1 text-xs font-medium ${TYPE_COLORS[directive.type]}`}>
                             {directive.type}
                           </div>
                           <div>
@@ -162,15 +221,15 @@ export default function AdvanceDirectivesPage() {
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <StatusIcon className={`w-4 h-4 ${statusInfo.bg.includes("green") ? "text-green-600" : statusInfo.bg.includes("amber") ? "text-amber-600" : "text-red-600"}`} />
-                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusInfo.bg}`}>{directive.status}</span>
+                          <StatusIcon className={`h-4 w-4 ${statusInfo.bg.includes("green") ? "text-green-600" : statusInfo.bg.includes("amber") ? "text-amber-600" : "text-red-600"}`} />
+                          <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusInfo.bg}`}>{directive.status}</span>
                         </div>
                       </button>
 
                       {isExpanded && (
-                        <div className="border-t border-gray-200 px-5 py-4 space-y-3">
+                        <div className="space-y-3 border-t border-gray-200 px-5 py-4">
                           <p className="text-sm text-gray-700">{directive.summary}</p>
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+                          <div className="grid grid-cols-2 gap-4 text-xs md:grid-cols-4">
                             <div>
                               <p className="text-gray-500">Effective Date</p>
                               <p className="font-medium text-gray-900">{directive.effectiveDate}</p>
@@ -193,11 +252,11 @@ export default function AdvanceDirectivesPage() {
                           </div>
                           <div className="flex items-center gap-2 pt-2">
                             {directive.documentRef && (
-                              <button className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors">
-                                <Eye className="w-3 h-3" /> View Document
+                              <button className="inline-flex items-center gap-1 rounded-lg border border-blue-200 px-3 py-1.5 text-xs font-medium text-blue-600 transition-colors hover:bg-blue-50">
+                                <Eye className="h-3 w-3" /> View Document
                               </button>
                             )}
-                            <button className="px-3 py-1.5 text-xs font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                            <button className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50">
                               Edit
                             </button>
                           </div>

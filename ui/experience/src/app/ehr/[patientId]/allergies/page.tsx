@@ -7,7 +7,8 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import { ShieldAlert, Plus, Loader2} from "lucide-react";
+import { ArrowRightLeft, Loader2, Pill, Plus, ShieldAlert } from "lucide-react";
+import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import {
@@ -15,6 +16,8 @@ import {
   useCreateAllergy,
   type AllergyResource } from "@/hooks/queries/useAllergies";
 import { useAuthStore } from "@/hooks/useAuthStore";
+import { useEncounters } from "@/hooks/queries/useEncounters";
+import { useFacilityStore } from "@/hooks/useFacilityStore";
 
 /* ------------------------------------------------------------------ */
 /*  Badge helpers                                                      */
@@ -51,10 +54,17 @@ export default function AllergiesPage() {
   const patientId = params.patientId;
 
   const { user } = useAuthStore();
+  const facility = useFacilityStore((state) => state.facility);
+  const { data: encountersData } = useEncounters(patientId);
   const { data: allergiesData, isLoading } = useAllergies(patientId);
   const createAllergy = useCreateAllergy();
 
   const allergies: AllergyResource[] = allergiesData?.data ?? [];
+  const activeEncounter = (encountersData?.data ?? []).find(
+    (encounter) =>
+      encounter.attributes.status === "IN_PROGRESS" || encounter.attributes.status === "ACTIVE",
+  );
+  const severeAlerts = allergies.filter((allergy) => allergy.attributes.severity === "SEVERE").length;
 
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ ...EMPTY_FORM, recorded_by: user?.displayName ?? user?.email ?? "" });
@@ -93,6 +103,44 @@ export default function AllergiesPage() {
           </div>
         ) : (
           <div className="space-y-6">
+            <ClinicalReviewHeader
+              badge="Allergy safety"
+              badgeIcon={ShieldAlert}
+              title="Surface severe reactions early and keep medication review linked to the same safety context"
+              description="Allergy review now carries encounter and facility context so clinicians can verify high-risk reactions before prescribing, ordering, or documenting the next step."
+              facilityName={facility?.name}
+              encounterLabel={
+                activeEncounter
+                  ? `${activeEncounter.attributes.encounterType} since ${new Date(activeEncounter.attributes.startedAt).toLocaleString()}`
+                  : null
+              }
+              actions={[
+                { href: `/ehr/${patientId}/history`, label: "History", icon: ArrowRightLeft },
+                { href: `/ehr/${patientId}/medications`, label: "Medications", icon: Pill, tone: "secondary" },
+              ]}
+              metrics={[
+                {
+                  label: "Recorded allergies",
+                  value: String(allergies.length),
+                  detail: "Known allergy burden visible for the active review.",
+                },
+                {
+                  label: "Severe alerts",
+                  value: String(severeAlerts),
+                  detail: severeAlerts > 0
+                    ? "Severe reactions need explicit acknowledgement before treatment changes."
+                    : "No severe reactions currently flagged.",
+                },
+                {
+                  label: "Encounter context",
+                  value: activeEncounter ? "Active" : "Review only",
+                  detail: activeEncounter
+                    ? "Use this list to clear safety risks before prescribing in the current visit."
+                    : "You can update the allergy record even without an open encounter.",
+                },
+              ]}
+            />
+
             {/* Header row with action button */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">

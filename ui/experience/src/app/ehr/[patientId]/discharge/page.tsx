@@ -12,7 +12,7 @@
  */
 
 import { useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import {
   Loader2,
   CheckCircle2,
@@ -27,14 +27,19 @@ import {
   FileSignature,
   Calendar,
   AlertTriangle,
-  Receipt } from "lucide-react";
+  Receipt,
+  Stethoscope,
+  Pill,
+} from "lucide-react";
 import Link from "next/link";
+import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { apiClient } from "@/lib/api-client";
 import { useEncounters, type EncounterResource } from "@/hooks/queries/useEncounters";
 import { usePatient } from "@/hooks/queries/usePatients";
 import { useAuthStore } from "@/hooks/useAuthStore";
+import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useRoleGroup } from "@/hooks/useRoleGroup";
 
 type DispositionType = "" | "DISCHARGE" | "ADMIT" | "TRANSFER" | "REFER" | "DEATH" | "LAMA";
@@ -60,9 +65,12 @@ const DISPOSITION_TO_DISCHARGE_TYPE: Record<string, string> = {
 export default function VisitOutcomePage() {
   const params = useParams<{ patientId: string }>();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { patientId } = params;
   const { user } = useAuthStore();
   const { isClinical } = useRoleGroup();
+  const facility = useFacilityStore((state) => state.facility);
+  const requestedEncounterId = searchParams.get("encounterId");
 
   const { data: encountersData, isLoading } = useEncounters(patientId);
   const { data: patientData } = usePatient(patientId);
@@ -71,6 +79,9 @@ export default function VisitOutcomePage() {
   const activeEncounter = encountersData?.data?.find(
     (e: EncounterResource) => e.attributes.status === "ACTIVE" || e.attributes.status === "IN_PROGRESS"
   );
+  const targetEncounter =
+    encountersData?.data?.find((encounter: EncounterResource) => encounter.id === requestedEncounterId) ??
+    activeEncounter;
 
   const [disposition, setDisposition] = useState<DispositionType>("");
   const [submitting, setSubmitting] = useState(false);
@@ -95,9 +106,11 @@ export default function VisitOutcomePage() {
   const [deathTime, setDeathTime] = useState("");
   const [deathCause, setDeathCause] = useState("");
   const [lamaCircumstances, setLamaCircumstances] = useState("");
+  const selectedDispositionLabel =
+    DISPOSITION_OPTIONS.find((option) => option.id === disposition)?.label ?? "Select outcome";
 
   async function handleComplete() {
-    if (!activeEncounter || !disposition) return;
+    if (!targetEncounter || !disposition) return;
     setSubmitting(true);
     setError(null);
 
@@ -121,7 +134,7 @@ export default function VisitOutcomePage() {
 
     try {
       const result = await apiClient.post<{ data: { attributes: { costa_bill_id?: string; [key: string]: unknown } } }>(
-        `/internal/v1/encounters/${activeEncounter.id}/discharge`,
+        `/internal/v1/encounters/${targetEncounter.id}/discharge`,
         {
           discharge_type: dischargeType,
           discharge_diagnosis: fullDiagnosis || null,
@@ -155,7 +168,7 @@ export default function VisitOutcomePage() {
           <div className="flex items-center justify-center py-16">
             <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
           </div>
-        ) : !activeEncounter ? (
+        ) : !targetEncounter ? (
           <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
             <AlertCircle className="w-10 h-10 text-gray-300 mx-auto mb-3" />
             <p className="text-gray-400 text-sm">No active encounter found</p>
@@ -175,7 +188,7 @@ export default function VisitOutcomePage() {
                   A billing draft has been created for this encounter.
                 </p>
                 <Link
-                  href={`/finance/billing/${billId}`}
+                  href={`/finance/billing/${billId}?patientId=${patientId}&encounterId=${targetEncounter.id}&source=discharge`}
                   className="inline-flex items-center gap-1 mt-2 px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-100 rounded-lg hover:bg-emerald-200 transition-colors"
                 >
                   <Receipt className="w-3 h-3" />
@@ -192,7 +205,7 @@ export default function VisitOutcomePage() {
               </button>
               {disposition === "ADMIT" && (
                 <button
-                  onClick={() => router.push("/beds")}
+                  onClick={() => router.push(`/beds?patientId=${patientId}&encounterId=${targetEncounter.id}&source=discharge&disposition=ADMIT`)}
                   className="px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 transition-colors"
                 >
                   Assign Bed
@@ -208,6 +221,60 @@ export default function VisitOutcomePage() {
           </div>
         ) : (
           <div className="space-y-6">
+            <ClinicalReviewHeader
+              badge="Outcome closure"
+              badgeIcon={CheckCircle2}
+              title="Keep encounter disposition anchored to the right encounter, the current facility, and the downstream closure steps that follow outcome selection."
+              description="Visit outcome now makes the encounter in scope, next closure move, and chart handoff explicit before you complete the disposition."
+              facilityName={facility?.name}
+              encounterLabel={`${targetEncounter.attributes.encounterType} since ${new Date(targetEncounter.attributes.startedAt).toLocaleString()}`}
+              actions={[
+                { href: `/ehr/${patientId}/encounter/${targetEncounter.id}`, label: "Encounter", icon: Stethoscope },
+                { href: `/ehr/${patientId}/notes`, label: "Notes", icon: FileSignature, tone: "secondary" },
+                { href: `/ehr/${patientId}/orders`, label: "Orders", icon: ClipboardList, tone: "secondary" },
+                { href: `/pharmacy/prescriptions?patientId=${patientId}&encounterId=${targetEncounter.id}&source=discharge`, label: "Pharmacy", icon: Pill, tone: "secondary" },
+                { href: `/ehr/${patientId}`, label: "Chart", icon: Home, tone: "secondary" },
+              ]}
+              metrics={[
+                {
+                  label: "Encounter in scope",
+                  value: targetEncounter.attributes.status,
+                  detail: requestedEncounterId
+                    ? "Outcome is anchored to the encounter passed from the detail workspace."
+                    : "Outcome is anchored to the active encounter in the chart.",
+                },
+                {
+                  label: "Selected outcome",
+                  value: selectedDispositionLabel,
+                  detail:
+                    disposition === ""
+                      ? "Choose a disposition before closing the encounter loop."
+                      : "The form below now captures the detail needed to complete this disposition in place.",
+                },
+                {
+                  label: "Closure step",
+                  value: billId ? "Billing created" : disposition === "ADMIT" ? "Bed / handoff" : "Chart handoff",
+                  detail:
+                    disposition === "ADMIT"
+                      ? "Admission requires a ward handoff and usually a bed assignment after completion."
+                      : "Use the completion state below to hand the outcome back into queue, chart, notes, or billing.",
+                },
+              ]}
+            />
+
+            <div className="rounded-3xl border border-slate-200 bg-slate-50/70 p-4">
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
+                Outcome loop status
+              </p>
+              <p className="mt-2 text-sm text-slate-800">
+                {disposition
+                  ? `${selectedDispositionLabel} is selected, so the next move is to finish the supporting details here and then complete the encounter without switching to another page.`
+                  : "The encounter is in scope, but the closure loop is still open until you choose a disposition and capture the supporting detail below."}
+              </p>
+              <p className="mt-1 text-xs text-slate-500">
+                Use Encounter for the live clinical workspace, Notes for narrative closure, Orders for unfinished downstream work, and Chart for cross-surface continuity after completion.
+              </p>
+            </div>
             {/* Disposition Selection — Lovable-aligned visual grid */}
             <div className="bg-white rounded-lg border border-gray-200 p-5">
               <div className="flex items-center gap-2 mb-4">

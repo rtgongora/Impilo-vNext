@@ -7,7 +7,8 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import { HeartPulse, Plus, Loader2, CheckCircle2 } from "lucide-react";
+import { ArrowRightLeft, CheckCircle2, HeartPulse, Loader2, Pill, Plus, ShieldAlert } from "lucide-react";
+import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import {
@@ -15,6 +16,8 @@ import {
   useCreateCondition,
   useResolveCondition,
   type ConditionResource } from "@/hooks/queries/useConditions";
+import { useEncounters } from "@/hooks/queries/useEncounters";
+import { useFacilityStore } from "@/hooks/useFacilityStore";
 
 /* ------------------------------------------------------------------ */
 /*  Badge helpers                                                      */
@@ -50,12 +53,20 @@ const EMPTY_FORM = {
 export default function ConditionsPage() {
   const params = useParams<{ patientId: string }>();
   const patientId = params.patientId;
+  const facility = useFacilityStore((state) => state.facility);
+  const { data: encountersData } = useEncounters(patientId);
 
   const { data: conditionsData, isLoading } = useConditions(patientId);
   const createCondition = useCreateCondition();
   const resolveCondition = useResolveCondition();
 
   const conditions: ConditionResource[] = conditionsData?.data ?? [];
+  const activeEncounter = (encountersData?.data ?? []).find(
+    (encounter) =>
+      encounter.attributes.status === "IN_PROGRESS" || encounter.attributes.status === "ACTIVE",
+  );
+  const activeConditions = conditions.filter((condition) => condition.attributes.clinicalStatus === "ACTIVE");
+  const resolvedConditions = conditions.filter((condition) => condition.attributes.clinicalStatus === "RESOLVED");
 
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ ...EMPTY_FORM });
@@ -98,6 +109,43 @@ export default function ConditionsPage() {
           </div>
         ) : (
           <div className="space-y-6">
+            <ClinicalReviewHeader
+              badge="Problem list"
+              badgeIcon={HeartPulse}
+              title="Keep the active problem list aligned with the encounter story and medication safety review"
+              description="Conditions now sit inside the same longitudinal review loop as history, medications, and allergies so teams can update the problem list without losing the current encounter context."
+              facilityName={facility?.name}
+              encounterLabel={
+                activeEncounter
+                  ? `${activeEncounter.attributes.encounterType} since ${new Date(activeEncounter.attributes.startedAt).toLocaleString()}`
+                  : null
+              }
+              actions={[
+                { href: `/ehr/${patientId}/history`, label: "History", icon: ArrowRightLeft },
+                { href: `/ehr/${patientId}/medications`, label: "Medications", icon: Pill, tone: "secondary" },
+                { href: `/ehr/${patientId}/allergies`, label: "Allergies", icon: ShieldAlert, tone: "secondary" },
+              ]}
+              metrics={[
+                {
+                  label: "Active",
+                  value: String(activeConditions.length),
+                  detail: "Current conditions likely to influence this encounter.",
+                },
+                {
+                  label: "Resolved",
+                  value: String(resolvedConditions.length),
+                  detail: "Historical problems kept visible for longitudinal review.",
+                },
+                {
+                  label: "Encounter context",
+                  value: activeEncounter ? "In progress" : "None",
+                  detail: activeEncounter
+                    ? "Add encounter diagnoses directly while the visit is active."
+                    : "Problem list updates will stand alone until a new encounter starts.",
+                },
+              ]}
+            />
+
             {/* Header row with action button */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">

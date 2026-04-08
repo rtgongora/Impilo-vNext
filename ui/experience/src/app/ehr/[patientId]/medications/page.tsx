@@ -8,8 +8,9 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import { Pill, Plus, Loader2, CheckCircle2, Save } from "lucide-react";
+import { ArrowRightLeft, CheckCircle2, ClipboardList, Loader2, Pill, Plus, Save, ShieldAlert, TestTube2 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
@@ -73,6 +74,11 @@ export default function MedicationsPage() {
 
   const { data: prescriptionsData, isLoading } = usePatientPrescriptions(patientId);
   const prescriptions = prescriptionsData?.data ?? [];
+  const pendingDispense = prescriptions.filter((rx) => {
+    const status = String(rx.attributes.status ?? "");
+    return status === "PENDING" || status === "ACTIVE";
+  }).length;
+  const dispensedCount = prescriptions.filter((rx) => String(rx.attributes.status ?? "") === "DISPENSED").length;
 
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({
@@ -153,6 +159,42 @@ export default function MedicationsPage() {
           </div>
         ) : (
           <div className="space-y-5">
+            <ClinicalReviewHeader
+              badge="Medication review"
+              badgeIcon={Pill}
+              title="Prescribe, dispense, and reconcile treatment while keeping the encounter and safety context visible"
+              description="Medications now sit in the same longitudinal review loop as allergies, history, orders, and results so prescribing does not drift away from the active visit."
+              facilityName={facility?.name}
+              encounterLabel={
+                activeEncounter
+                  ? `${activeEncounter.attributes.encounterType} since ${new Date(activeEncounter.attributes.startedAt).toLocaleString()}`
+                  : null
+              }
+              actions={[
+                { href: `/ehr/${patientId}/history`, label: "History", icon: ArrowRightLeft },
+                { href: `/ehr/${patientId}/allergies`, label: "Allergies", icon: ShieldAlert, tone: "secondary" },
+                { href: `/ehr/${patientId}/orders`, label: "Orders", icon: ClipboardList, tone: "secondary" },
+                { href: `/ehr/${patientId}/results`, label: "Results", icon: TestTube2, tone: "secondary" },
+              ]}
+              metrics={[
+                {
+                  label: "Active therapy",
+                  value: String(prescriptions.length),
+                  detail: "Prescription list retained for the current patient review.",
+                },
+                {
+                  label: "Pending dispense",
+                  value: String(pendingDispense),
+                  detail: "Orders still waiting on dispense or completion.",
+                },
+                {
+                  label: "Dispensed",
+                  value: String(dispensedCount),
+                  detail: "Completed medication actions kept visible for continuity.",
+                },
+              ]}
+            />
+
             {/* Header */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">

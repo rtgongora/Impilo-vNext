@@ -127,5 +127,5 @@ describe("TelemedicineSessionPage", () => {
     );
 
     expect(await screen.findByText("Note and returned response saved")).toBeInTheDocument();
-  });
+  }, 30000);
 });

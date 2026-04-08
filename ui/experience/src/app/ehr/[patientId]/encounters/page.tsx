@@ -346,10 +346,10 @@ export default function EncountersPage() {
                             </td>
                             <td className="px-4 py-3">
                               {a.costa_bill_id ? (
-                                <Link
-                                  href={`/finance/billing/${a.costa_bill_id}`}
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors"
+                                  <Link
+                                  href={`/finance/billing/${a.costa_bill_id}?patientId=${patientId}&encounterId=${encounter.id}&source=encounters`}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors"
                                 >
                                   <Receipt className="w-3 h-3" />
                                   View

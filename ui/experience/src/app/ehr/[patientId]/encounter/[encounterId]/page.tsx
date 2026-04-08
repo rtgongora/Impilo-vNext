@@ -26,6 +26,7 @@ import {
   Stethoscope,
   Receipt,
 } from "lucide-react";
+import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { ClinicalAlerts } from "@/components/ClinicalAlerts";
@@ -33,6 +34,7 @@ import { useClinicalAlerts } from "@/hooks/useClinicalAlerts";
 import { useEncounter, useCloseEncounter } from "@/hooks/queries/useEncounters";
 import { usePatient } from "@/hooks/queries/usePatients";
 import { useReferrals, type ReferralResource } from "@/hooks/queries/useReferrals";
+import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
 
@@ -42,6 +44,7 @@ export default function EncounterPage() {
   const { patientId, encounterId } = params;
   const { user } = useAuthStore();
   const { isClinical, isPrescriber } = useRoleGroup();
+  const facility = useFacilityStore((state) => state.facility);
 
   const { data: encounterData, isLoading: isLoadingEncounter } = useEncounter(encounterId);
   const { data: patientData } = usePatient(patientId);
@@ -155,6 +158,13 @@ export default function EncounterPage() {
   const isActive =
     encounter?.attributes.status === "ACTIVE" ||
     encounter?.attributes.status === "IN_PROGRESS";
+  const closureStep = !existingTriage
+    ? "Complete triage"
+    : respondedReferrals.length > 0
+      ? "Review referral responses"
+      : isActive
+        ? "Document and disposition"
+        : "Encounter closed";
 
   async function handleSaveVitals() {
     setVitalsSaving(true);
@@ -318,6 +328,64 @@ export default function EncounterPage() {
             {/* Clinical Decision Support Alerts */}
             <ClinicalAlerts alerts={clinicalAlerts} />
 
+            <ClinicalReviewHeader
+              badge="Encounter closure"
+              badgeIcon={Stethoscope}
+              title="Keep the live encounter oriented around the next clinical step, linked referral outcomes, and the eventual closure move instead of leaving those signals scattered across the workspace."
+              description="The encounter detail page now makes triage state, referral-response follow-through, and discharge readiness visible above the working forms."
+              facilityName={facility?.name}
+              encounterLabel={`${encounter.attributes.encounterType} since ${new Date(encounter.attributes.startedAt).toLocaleString()}`}
+              actions={[
+                { href: `/ehr/${patientId}/orders`, label: "Orders", icon: ClipboardList },
+                { href: `/ehr/${patientId}/notes`, label: "Notes", icon: FileText, tone: "secondary" },
+                { href: `/pharmacy/prescriptions?patientId=${patientId}&encounterId=${encounterId}&source=encounter`, label: "Pharmacy", icon: Pill, tone: "secondary" },
+                { href: `/ehr/${patientId}/consults`, label: "Consults", icon: ArrowUpRight, tone: "secondary" },
+                { href: `/ehr/${patientId}/discharge?encounterId=${encounterId}`, label: "Visit Outcome", icon: XCircle, tone: "secondary" },
+              ]}
+              metrics={[
+                {
+                  label: "Triage",
+                  value: existingTriage ? `P${String(existingTriage.attributes.acuity)}` : "Pending",
+                  detail: existingTriage
+                    ? "Encounter already has a triage record in scope."
+                    : "Complete triage first if acuity or danger signs are still missing.",
+                },
+                {
+                  label: "Referral responses",
+                  value: String(respondedReferrals.length),
+                  detail:
+                    respondedReferrals.length > 0
+                      ? "Specialist responses are back and should be reviewed before closure."
+                      : "No linked referral responses are waiting on this encounter.",
+                },
+                {
+                  label: "Closure step",
+                  value: closureStep,
+                  detail: isActive
+                    ? "Continue working in place here, then hand off to Visit Outcome when the encounter is ready to close."
+                    : "This encounter is already closed; use the chart for downstream review.",
+                },
+              ]}
+            />
+
+            <div className="rounded-3xl border border-slate-200 bg-slate-50/70 p-4">
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
+                Encounter loop status
+              </p>
+              <p className="mt-2 text-sm text-slate-800">
+                {!existingTriage
+                  ? "The encounter is open, but triage is still the first closure dependency before the rest of the clinical work can be considered complete."
+                  : respondedReferrals.length > 0
+                    ? "Referral responses are attached to this encounter, so they should be reviewed before final outcome selection."
+                    : isActive
+                      ? "This encounter is ready for ongoing documentation, orders, and a final visit outcome from the same workspace."
+                      : "The encounter is closed; this page now serves as the longitudinal record of what happened in this clinical episode."}
+              </p>
+              <p className="mt-1 text-xs text-slate-500">
+                Use Orders for outstanding investigations or prescriptions, Notes for narrative closure, Consults for referral follow-through, and Visit Outcome when the encounter is ready to close.
+              </p>
+            </div>
+
             {/* Encounter Context Bar */}
             <div className="bg-white rounded-lg border border-gray-200 p-4">
               <div className="flex items-center justify-between">
@@ -344,7 +412,7 @@ export default function EncounterPage() {
                   )}
                   {encounter.attributes.costa_bill_id && (
                     <Link
-                      href={`/finance/billing/${encounter.attributes.costa_bill_id}`}
+                      href={`/finance/billing/${encounter.attributes.costa_bill_id}?patientId=${patientId}&encounterId=${encounterId}&source=encounter`}
                       className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-medium rounded-full bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors"
                     >
                       <Receipt className="w-3 h-3" />

@@ -1,43 +1,32 @@
 "use client";
 
-/**
- * Imaging / PACS Viewer — DICOM study browser and viewer.
- * Route: /ehr/[patientId]/imaging
- *
- * Features:
- * - Study list from Orthanc PACS via BFF proxy
- * - Series browser with thumbnails
- * - Instance viewer with windowing controls
- * - DICOMweb metadata display
- * - Fullscreen mode
- */
-
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import {
+  Activity,
+  AlertCircle,
+  Calendar,
+  ClipboardList,
+  Contrast,
+  FileText,
+  Grid3X3,
   Image,
-  Monitor,
+  Loader2,
   Maximize2,
   Minimize2,
+  Monitor,
+  RotateCw,
+  Search,
   ZoomIn,
   ZoomOut,
-  RotateCw,
-  Contrast,
-  Loader2,
-  AlertCircle,
-  ChevronLeft,
-  ChevronRight,
-  Grid3X3,
-  List,
-  Calendar,
-  Activity,
 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
-import { useQuery } from "@tanstack/react-query";
+import { useEncounters } from "@/hooks/queries/useEncounters";
+import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { apiClient } from "@/lib/api-client";
-
-// ── Types ─────────────────────────────────────────────────────────
 
 interface OrthancStudy {
   ID: string;
@@ -57,25 +46,37 @@ interface OrthancStudy {
 
 interface OrthancSeries {
   ID: string;
-  MainDicomTags?: {
-    SeriesDescription?: string;
-    Modality?: string;
-    SeriesNumber?: string;
-    SeriesInstanceUID?: string;
-  };
-  Instances?: string[];
+  label: string;
+  modality: string;
+  instances: string[];
 }
 
-// ── API Hooks ─────────────────────────────────────────────────────
+function normalizePatientIdentifier(value?: string) {
+  return value?.toLowerCase().replace(/[^a-z0-9]/g, "") ?? "";
+}
+
+function matchesPatient(study: OrthancStudy, patientId: string) {
+  return (
+    normalizePatientIdentifier(study.PatientMainDicomTags?.PatientID) ===
+    normalizePatientIdentifier(patientId)
+  );
+}
+
+function formatDicomDate(date?: string): string {
+  if (!date) return "Unknown";
+  if (date.length === 8) {
+    return `${date.slice(0, 4)}-${date.slice(4, 6)}-${date.slice(6, 8)}`;
+  }
+  return date;
+}
 
 function useStudies() {
   return useQuery({
     queryKey: ["pacs", "studies"],
     queryFn: async () => {
       const studyIds = await apiClient.get<string[]>("/internal/v1/pacs/studies");
-      // Fetch details for each study (limit to 20 most recent)
       const details = await Promise.all(
-        studyIds.slice(0, 20).map(async (id: string) => {
+        studyIds.slice(0, 20).map(async (id) => {
           try {
             return await apiClient.get<OrthancStudy>(`/internal/v1/pacs/studies/${id}`);
           } catch {
@@ -89,52 +90,80 @@ function useStudies() {
   });
 }
 
-function useStudySeries(studyId: string | null) {
+function useStudySeries(studyId: string | null, seriesIds: string[]) {
   return useQuery({
-    queryKey: ["pacs", "series", studyId],
+    queryKey: ["pacs", "series", studyId, ...seriesIds],
     queryFn: async () => {
-      if (!studyId) return [];
-      const seriesIds = await apiClient.get<string[]>(
-        `/internal/v1/pacs/studies/${studyId}/series`
-      );
-      const details = await Promise.all(
-        seriesIds.map(async (id: string) => {
+      if (!studyId || seriesIds.length === 0) return [];
+
+      const series = await Promise.all(
+        seriesIds.map(async (seriesId, index) => {
           try {
-            const series = await apiClient.get<OrthancSeries>(
-              `/internal/v1/pacs/studies/${studyId}/series`
-            );
-            return { ...series, ID: id };
+            const instances = await apiClient.get<string[]>(`/internal/v1/pacs/series/${seriesId}/instances`);
+            return {
+              ID: seriesId,
+              label: `Series ${index + 1}`,
+              modality: "DICOM",
+              instances,
+            } satisfies OrthancSeries;
           } catch {
-            return { ID: id, Instances: [] };
+            return {
+              ID: seriesId,
+              label: `Series ${index + 1}`,
+              modality: "DICOM",
+              instances: [],
+            } satisfies OrthancSeries;
           }
         })
       );
-      return details as OrthancSeries[];
+
+      return series;
     },
     enabled: !!studyId,
     staleTime: 30_000,
   });
 }
 
-// ── Page Component ────────────────────────────────────────────────
-
 export default function ImagingPage() {
-  const params = useParams();
-  const patientId = params.patientId as string;
-  const { data: studies, isLoading, error } = useStudies();
+  const params = useParams<{ patientId: string }>();
+  const patientId = params.patientId;
+  const facility = useFacilityStore((state) => state.facility);
+  const { data: encountersData } = useEncounters(patientId);
+  const activeEncounter = (encountersData?.data ?? []).find(
+    (encounter) =>
+      encounter.attributes.status === "IN_PROGRESS" || encounter.attributes.status === "ACTIVE"
+  );
+  const { data: studies = [], isLoading, error } = useStudies();
 
-  const [selectedStudy, setSelectedStudy] = useState<OrthancStudy | null>(null);
+  const patientMatchedStudies = studies.filter((study) => matchesPatient(study, patientId));
+  const visibleStudies = patientMatchedStudies.length > 0 ? patientMatchedStudies : studies;
+  const selectedStudyDefault = visibleStudies[0] ?? null;
+  const [selectedStudy, setSelectedStudy] = useState<OrthancStudy | null>(selectedStudyDefault);
   const [selectedInstance, setSelectedInstance] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [isFullscreen, setIsFullscreen] = useState(false);
-
-  // Viewer controls
   const [brightness, setBrightness] = useState(100);
   const [contrast, setContrast] = useState(100);
   const [zoom, setZoom] = useState(100);
   const [rotation, setRotation] = useState(0);
-
   const viewerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!selectedStudyDefault) {
+      setSelectedStudy(null);
+      return;
+    }
+
+    setSelectedStudy((current) => {
+      if (!current) return selectedStudyDefault;
+      const stillVisible = visibleStudies.some((study) => study.ID === current.ID);
+      return stillVisible ? current : selectedStudyDefault;
+    });
+  }, [selectedStudyDefault, visibleStudies]);
+
+  const { data: series = [], isLoading: isLoadingSeries } = useStudySeries(
+    selectedStudy?.ID ?? null,
+    selectedStudy?.Series ?? []
+  );
 
   const resetViewerControls = useCallback(() => {
     setBrightness(100);
@@ -145,310 +174,388 @@ export default function ImagingPage() {
 
   const toggleFullscreen = useCallback(() => {
     if (!viewerRef.current) return;
+
     if (!isFullscreen) {
       viewerRef.current.requestFullscreen?.();
     } else {
       document.exitFullscreen?.();
     }
-    setIsFullscreen(!isFullscreen);
   }, [isFullscreen]);
 
   useEffect(() => {
-    const handler = () => setIsFullscreen(!!document.fullscreenElement);
+    const handler = () => setIsFullscreen(Boolean(document.fullscreenElement));
     document.addEventListener("fullscreenchange", handler);
     return () => document.removeEventListener("fullscreenchange", handler);
   }, []);
 
+  const contextMode = patientMatchedStudies.length > 0 ? "patient" : "workspace";
+  const selectedSeries = series.find((entry) => entry.instances.includes(selectedInstance ?? ""));
+
   return (
     <EHRLayout>
-      <PageShell title="Imaging / PACS" icon={<Image className="w-5 h-5" />}>
-        <div className="flex h-[calc(100vh-180px)] gap-4">
+      <PageShell title="Imaging / PACS" subtitle="Diagnostic imaging review and viewer continuity">
+        <div className="space-y-6">
+          <ClinicalReviewHeader
+            badge="Imaging continuity"
+            badgeIcon={Image}
+            title="Keep imaging review attached to patient context, ordering follow-up, and clinical communication rather than opening a detached PACS tool."
+            description="The viewer now makes it clear whether it found patient-matched PACS studies, what the next imaging action is, and where to continue into orders, results, documents, or notes."
+            facilityName={facility?.name}
+            encounterLabel={
+              activeEncounter
+                ? `${activeEncounter.attributes.encounterType} since ${new Date(activeEncounter.attributes.startedAt).toLocaleString()}`
+                : null
+            }
+            actions={[
+              { href: `/ehr/${patientId}/orders`, label: "Orders", icon: ClipboardList },
+              {
+                href: `/ehr/${patientId}/results`,
+                label: "Results",
+                icon: Activity,
+                tone: "secondary",
+              },
+              {
+                href: `/ehr/${patientId}/documents`,
+                label: "Documents",
+                icon: FileText,
+                tone: "secondary",
+              },
+              {
+                href: `/ehr/${patientId}/notes`,
+                label: "Notes",
+                icon: FileText,
+                tone: "secondary",
+              },
+            ]}
+            metrics={[
+              {
+                label: "Patient-matched",
+                value: String(patientMatchedStudies.length),
+                detail:
+                  patientMatchedStudies.length > 0
+                    ? "Studies tagged to this patient are available in the viewer."
+                    : "No study tags matched this chart ID, so the workspace may need order or PACS reconciliation.",
+              },
+              {
+                label: "Visible studies",
+                value: String(visibleStudies.length),
+                detail:
+                  contextMode === "patient"
+                    ? "The left rail is scoped to patient-matched studies."
+                    : "The left rail falls back to workspace-visible PACS studies while keeping the patient context visible.",
+              },
+              {
+                label: "Next action",
+                value: selectedInstance ? "Review image" : selectedStudy ? "Choose series" : "Select study",
+                detail:
+                  selectedInstance
+                    ? "Viewer controls are active for the selected instance."
+                    : selectedStudy
+                      ? "Pick a series to open the first image preview."
+                      : "Start by selecting a study from the study list.",
+              },
+            ]}
+          />
 
-          {/* ── Left Panel: Study List ───────────────────────────── */}
-          <div className="w-80 flex-shrink-0 border rounded-lg bg-white overflow-hidden flex flex-col">
-            <div className="p-3 border-b bg-gray-50 flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-gray-700">Studies</h3>
-              <div className="flex gap-1">
-                <button
-                  onClick={() => setViewMode("grid")}
-                  className={`p-1 rounded ${viewMode === "grid" ? "bg-blue-100 text-blue-600" : "text-gray-400"}`}
-                  aria-label="Grid view"
-                >
-                  <Grid3X3 className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => setViewMode("list")}
-                  className={`p-1 rounded ${viewMode === "list" ? "bg-blue-100 text-blue-600" : "text-gray-400"}`}
-                  aria-label="List view"
-                >
-                  <List className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-2">
-              {isLoading && (
-                <div className="flex items-center justify-center py-12">
-                  <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
-                  <span className="ml-2 text-sm text-gray-500">Loading studies...</span>
-                </div>
-              )}
-
-              {error && (
-                <div className="flex flex-col items-center py-8 text-center">
-                  <AlertCircle className="w-8 h-8 text-amber-500 mb-2" />
-                  <p className="text-sm text-gray-600">PACS server unavailable</p>
-                  <p className="text-xs text-gray-400 mt-1">Orthanc may not be running</p>
-                </div>
-              )}
-
-              {!isLoading && !error && studies?.length === 0 && (
-                <div className="flex flex-col items-center py-8 text-center">
-                  <Image className="w-8 h-8 text-gray-300 mb-2" />
-                  <p className="text-sm text-gray-500">No imaging studies found</p>
-                </div>
-              )}
-
-              {studies?.map((study) => (
-                <button
-                  key={study.ID}
-                  onClick={() => {
-                    setSelectedStudy(study);
-                    setSelectedInstance(null);
-                    resetViewerControls();
-                  }}
-                  className={`w-full text-left p-3 rounded-lg mb-2 border transition-colors ${
-                    selectedStudy?.ID === study.ID
-                      ? "border-blue-500 bg-blue-50"
-                      : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-                  }`}
-                >
-                  <div className="flex items-start gap-2">
-                    <Monitor className="w-4 h-4 mt-0.5 text-purple-500 flex-shrink-0" />
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-gray-800 truncate">
-                        {study.MainDicomTags?.StudyDescription || "Unnamed Study"}
-                      </p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Calendar className="w-3 h-3 text-gray-400" />
-                        <span className="text-xs text-gray-500">
-                          {formatDicomDate(study.MainDicomTags?.StudyDate)}
-                        </span>
-                      </div>
-                      {study.MainDicomTags?.AccessionNumber && (
-                        <p className="text-xs text-gray-400 mt-0.5">
-                          Accession: {study.MainDicomTags.AccessionNumber}
-                        </p>
-                      )}
-                      {study.Series && (
-                        <p className="text-xs text-gray-400 mt-0.5">
-                          {study.Series.length} series
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </button>
-              ))}
-            </div>
+          <div className="rounded-3xl border border-slate-200 bg-slate-50/70 p-4">
+            <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
+              Imaging loop status
+            </p>
+            <p className="mt-2 text-sm text-slate-800">
+              {error
+                ? "The imaging viewer could not reach PACS, so the clinical next step is to stay in orders, results, and documents while the external service is unavailable."
+                : contextMode === "patient"
+                  ? "Patient-matched imaging is available from this chart, so review can happen in place before handing findings into results, documents, or notes."
+                  : "The PACS integration is available, but study tags did not match this patient ID. The viewer keeps broader workspace studies visible while the ordering and documentation follow-up stays one click away."}
+            </p>
+            <p className="mt-1 text-xs text-slate-500">
+              Use Orders to place or reconcile imaging requests, Results for radiology outcome review, Documents for attached reports, and Notes for team communication or interpretation handoff.
+            </p>
           </div>
 
-          {/* ── Center: Viewer ───────────────────────────────────── */}
-          <div
-            ref={viewerRef}
-            className="flex-1 border rounded-lg bg-black overflow-hidden flex flex-col"
-          >
-            {/* Viewer toolbar */}
-            <div className="flex items-center justify-between px-3 py-2 bg-gray-900 border-b border-gray-700">
-              <div className="flex items-center gap-1">
-                <ToolButton
-                  icon={<ZoomIn className="w-4 h-4" />}
-                  label="Zoom In"
-                  onClick={() => setZoom((z) => Math.min(z + 25, 400))}
-                />
-                <ToolButton
-                  icon={<ZoomOut className="w-4 h-4" />}
-                  label="Zoom Out"
-                  onClick={() => setZoom((z) => Math.max(z - 25, 25))}
-                />
-                <ToolButton
-                  icon={<RotateCw className="w-4 h-4" />}
-                  label="Rotate"
-                  onClick={() => setRotation((r) => (r + 90) % 360)}
-                />
-                <ToolButton
-                  icon={<Contrast className="w-4 h-4" />}
-                  label="Reset W/L"
-                  onClick={resetViewerControls}
-                />
-                <div className="w-px h-5 bg-gray-700 mx-1" />
-                <span className="text-xs text-gray-400">{zoom}%</span>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1">
-                  <label className="text-xs text-gray-400">B:</label>
-                  <input
-                    type="range"
-                    min="0"
-                    max="200"
-                    value={brightness}
-                    onChange={(e) => setBrightness(Number(e.target.value))}
-                    className="w-16 h-1"
-                    aria-label="Brightness"
-                  />
-                </div>
-                <div className="flex items-center gap-1">
-                  <label className="text-xs text-gray-400">C:</label>
-                  <input
-                    type="range"
-                    min="0"
-                    max="200"
-                    value={contrast}
-                    onChange={(e) => setContrast(Number(e.target.value))}
-                    className="w-16 h-1"
-                    aria-label="Contrast"
-                  />
-                </div>
-                <ToolButton
-                  icon={isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-                  label={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
-                  onClick={toggleFullscreen}
-                />
-              </div>
-            </div>
-
-            {/* Viewport */}
-            <div className="flex-1 flex items-center justify-center overflow-hidden">
-              {!selectedStudy && (
-                <div className="text-center">
-                  <Monitor className="w-16 h-16 text-gray-600 mx-auto mb-3" />
-                  <p className="text-gray-400 text-sm">Select a study to view</p>
-                  <p className="text-gray-600 text-xs mt-1">
-                    Studies are loaded from Orthanc PACS
+          <div className="grid gap-4 xl:grid-cols-[320px_minmax(0,1fr)_260px]">
+            <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+              <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-4 py-3">
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-700">Studies</h3>
+                  <p className="text-xs text-gray-500">
+                    {contextMode === "patient"
+                      ? "Patient-matched imaging studies"
+                      : "Workspace-visible PACS studies"}
                   </p>
                 </div>
-              )}
+                <div className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">
+                  {visibleStudies.length}
+                </div>
+              </div>
 
-              {selectedStudy && !selectedInstance && (
-                <SeriesBrowser
-                  studyId={selectedStudy.ID}
-                  onSelectInstance={(instanceId) => setSelectedInstance(instanceId)}
-                />
-              )}
+              <div className="max-h-[calc(100vh-340px)] space-y-2 overflow-y-auto p-3">
+                {isLoading && (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
+                    <span className="ml-2 text-sm text-gray-500">Loading studies...</span>
+                  </div>
+                )}
 
-              {selectedStudy && selectedInstance && (
-                <div
-                  className="w-full h-full flex items-center justify-center"
-                  style={{
-                    filter: `brightness(${brightness}%) contrast(${contrast}%)`,
-                    transform: `scale(${zoom / 100}) rotate(${rotation}deg)`,
-                    transition: "transform 0.2s ease",
-                  }}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={`${process.env.NEXT_PUBLIC_BFF_URL || "http://localhost:8160"}/internal/v1/pacs/instances/${selectedInstance}/preview`}
-                    alt="DICOM instance"
-                    className="max-w-full max-h-full object-contain"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = "none";
-                    }}
+                {!isLoading && error && (
+                  <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-center">
+                    <AlertCircle className="mx-auto mb-2 h-8 w-8 text-amber-500" />
+                    <p className="text-sm text-gray-700">PACS server unavailable</p>
+                    <p className="mt-1 text-xs text-gray-500">Orthanc may not be running.</p>
+                  </div>
+                )}
+
+                {!isLoading && !error && visibleStudies.length === 0 && (
+                  <div className="rounded-xl border border-dashed border-gray-200 p-6 text-center">
+                    <Search className="mx-auto mb-2 h-8 w-8 text-gray-300" />
+                    <p className="text-sm text-gray-500">No imaging studies found</p>
+                    <p className="mt-1 text-xs text-gray-400">
+                      Continue from Orders or Documents until PACS metadata arrives.
+                    </p>
+                  </div>
+                )}
+
+                {!isLoading && !error && contextMode === "workspace" && visibleStudies.length > 0 && (
+                  <div className="rounded-xl border border-blue-100 bg-blue-50 px-3 py-2 text-xs text-blue-800">
+                    No PACS study tag matched patient `{patientId}`. Showing workspace-visible studies while keeping chart follow-up links nearby.
+                  </div>
+                )}
+
+                {visibleStudies.map((study) => {
+                  const isSelected = selectedStudy?.ID === study.ID;
+                  return (
+                    <button
+                      key={study.ID}
+                      type="button"
+                      onClick={() => {
+                        setSelectedStudy(study);
+                        setSelectedInstance(null);
+                        resetViewerControls();
+                      }}
+                      className={`w-full rounded-xl border p-3 text-left transition-colors ${
+                        isSelected
+                          ? "border-blue-500 bg-blue-50"
+                          : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <Monitor className="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-600" />
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium text-gray-800">
+                            {study.MainDicomTags?.StudyDescription || "Unnamed study"}
+                          </p>
+                          <div className="mt-1 flex items-center gap-2 text-xs text-gray-500">
+                            <Calendar className="h-3 w-3" />
+                            <span>{formatDicomDate(study.MainDicomTags?.StudyDate)}</span>
+                          </div>
+                          <p className="mt-1 text-xs text-gray-400">
+                            Patient tag: {study.PatientMainDicomTags?.PatientID || "Unavailable"}
+                          </p>
+                          <p className="mt-0.5 text-xs text-gray-400">
+                            {study.Series?.length ?? 0} series
+                          </p>
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div
+              ref={viewerRef}
+              className="overflow-hidden rounded-2xl border border-gray-200 bg-black shadow-sm"
+            >
+              <div className="flex items-center justify-between border-b border-gray-700 bg-gray-900 px-3 py-2">
+                <div className="flex items-center gap-1">
+                  <ToolButton
+                    icon={<ZoomIn className="h-4 w-4" />}
+                    label="Zoom in"
+                    onClick={() => setZoom((current) => Math.min(current + 25, 400))}
+                  />
+                  <ToolButton
+                    icon={<ZoomOut className="h-4 w-4" />}
+                    label="Zoom out"
+                    onClick={() => setZoom((current) => Math.max(current - 25, 25))}
+                  />
+                  <ToolButton
+                    icon={<RotateCw className="h-4 w-4" />}
+                    label="Rotate"
+                    onClick={() => setRotation((current) => (current + 90) % 360)}
+                  />
+                  <ToolButton
+                    icon={<Contrast className="h-4 w-4" />}
+                    label="Reset view"
+                    onClick={resetViewerControls}
+                  />
+                  <span className="ml-2 text-xs text-gray-400">{zoom}%</span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
+                    <label className="text-xs text-gray-400">B</label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="200"
+                      value={brightness}
+                      onChange={(event) => setBrightness(Number(event.target.value))}
+                      className="h-1 w-16"
+                      aria-label="Brightness"
+                    />
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <label className="text-xs text-gray-400">C</label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="200"
+                      value={contrast}
+                      onChange={(event) => setContrast(Number(event.target.value))}
+                      className="h-1 w-16"
+                      aria-label="Contrast"
+                    />
+                  </div>
+                  <ToolButton
+                    icon={isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+                    label={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+                    onClick={toggleFullscreen}
                   />
                 </div>
-              )}
+              </div>
+
+              <div className="flex min-h-[520px] flex-col">
+                <div className="flex-1 items-center justify-center overflow-hidden p-4">
+                  {!selectedStudy && (
+                    <div className="flex h-full flex-col items-center justify-center text-center">
+                      <Monitor className="mb-3 h-16 w-16 text-gray-600" />
+                      <p className="text-sm text-gray-400">Select a study to review imaging</p>
+                      <p className="mt-1 text-xs text-gray-600">
+                        The viewer keeps chart follow-up linked to PACS review.
+                      </p>
+                    </div>
+                  )}
+
+                  {selectedStudy && !selectedInstance && (
+                    <SeriesBrowser
+                      isLoading={isLoadingSeries}
+                      series={series}
+                      onSelectInstance={setSelectedInstance}
+                    />
+                  )}
+
+                  {selectedStudy && selectedInstance && (
+                    <div className="flex h-full items-center justify-center overflow-hidden">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={`${process.env.NEXT_PUBLIC_BFF_URL || "http://localhost:8160"}/internal/v1/pacs/instances/${selectedInstance}/preview`}
+                        alt="DICOM instance preview"
+                        className="max-h-full max-w-full object-contain"
+                        style={{
+                          filter: `brightness(${brightness}%) contrast(${contrast}%)`,
+                          transform: `scale(${zoom / 100}) rotate(${rotation}deg)`,
+                          transition: "transform 0.2s ease",
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {selectedStudy && selectedInstance && (
+                  <div className="border-t border-gray-700 bg-gray-900 px-4 py-2 text-xs text-gray-300">
+                    Reviewing {selectedSeries?.label ?? "selected series"}. Use Documents or Notes to record interpretation handoff from this image review.
+                  </div>
+                )}
+              </div>
             </div>
 
-            {/* Instance navigation */}
-            {selectedStudy && selectedInstance && (
-              <div className="flex items-center justify-center gap-2 py-2 bg-gray-900 border-t border-gray-700">
-                <button
-                  onClick={() => setSelectedInstance(null)}
-                  className="text-xs text-blue-400 hover:text-blue-300 mr-4"
-                >
-                  Back to series
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* ── Right Panel: Study Info ──────────────────────────── */}
-          {selectedStudy && (
-            <div className="w-64 flex-shrink-0 border rounded-lg bg-white overflow-y-auto">
-              <div className="p-3 border-b bg-gray-50">
+            <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+              <div className="border-b border-gray-200 bg-gray-50 px-4 py-3">
                 <h3 className="text-sm font-semibold text-gray-700">Study Details</h3>
               </div>
-              <div className="p-3 space-y-3">
-                <InfoRow label="Description" value={selectedStudy.MainDicomTags?.StudyDescription} />
-                <InfoRow label="Date" value={formatDicomDate(selectedStudy.MainDicomTags?.StudyDate)} />
-                <InfoRow label="Accession" value={selectedStudy.MainDicomTags?.AccessionNumber} />
-                <InfoRow label="Study UID" value={selectedStudy.MainDicomTags?.StudyInstanceUID} mono />
-                <InfoRow label="Referring" value={selectedStudy.MainDicomTags?.ReferringPhysicianName} />
-                <InfoRow label="Patient ID" value={selectedStudy.PatientMainDicomTags?.PatientID} />
-                <InfoRow label="Series Count" value={String(selectedStudy.Series?.length || 0)} />
-                <InfoRow label="Orthanc ID" value={selectedStudy.ID} mono />
+              <div className="space-y-3 p-4">
+                {!selectedStudy && (
+                  <div className="rounded-xl border border-dashed border-gray-200 p-4 text-sm text-gray-500">
+                    Select a study to see details, then continue into documents, results, or notes from the header actions.
+                  </div>
+                )}
+
+                {selectedStudy && (
+                  <>
+                    <InfoRow label="Description" value={selectedStudy.MainDicomTags?.StudyDescription} />
+                    <InfoRow label="Date" value={formatDicomDate(selectedStudy.MainDicomTags?.StudyDate)} />
+                    <InfoRow label="Accession" value={selectedStudy.MainDicomTags?.AccessionNumber} />
+                    <InfoRow label="Study UID" value={selectedStudy.MainDicomTags?.StudyInstanceUID} mono />
+                    <InfoRow label="Referring" value={selectedStudy.MainDicomTags?.ReferringPhysicianName} />
+                    <InfoRow label="Patient Tag" value={selectedStudy.PatientMainDicomTags?.PatientID} />
+                    <InfoRow label="Patient Name" value={selectedStudy.PatientMainDicomTags?.PatientName} />
+                    <InfoRow label="Series Count" value={String(selectedStudy.Series?.length ?? 0)} />
+                    <InfoRow label="Orthanc ID" value={selectedStudy.ID} mono />
+                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">
+                      {contextMode === "patient"
+                        ? "Patient context is aligned. Review findings here, then carry the outcome into results, documents, or notes."
+                        : "Patient context is not fully aligned in PACS metadata. Use Orders or Documents to reconcile the study against the chart while the viewer stays available."}
+                    </div>
+                  </>
+                )}
               </div>
             </div>
-          )}
+          </div>
         </div>
       </PageShell>
     </EHRLayout>
   );
 }
 
-// ── Sub-Components ──────────────────────────────────────────────────
-
 function SeriesBrowser({
-  studyId,
+  isLoading,
   onSelectInstance,
+  series,
 }: {
-  studyId: string;
+  isLoading: boolean;
   onSelectInstance: (id: string) => void;
+  series: OrthancSeries[];
 }) {
-  const { data: series, isLoading } = useStudySeries(studyId);
-
   if (isLoading) {
     return (
-      <div className="text-center">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-400 mx-auto mb-2" />
-        <p className="text-gray-400 text-sm">Loading series...</p>
+      <div className="flex h-full flex-col items-center justify-center text-center">
+        <Loader2 className="mb-2 h-8 w-8 animate-spin text-blue-400" />
+        <p className="text-sm text-gray-400">Loading series...</p>
       </div>
     );
   }
 
-  if (!series || series.length === 0) {
+  if (series.length === 0) {
     return (
-      <div className="text-center">
-        <Grid3X3 className="w-10 h-10 text-gray-600 mx-auto mb-2" />
-        <p className="text-gray-400 text-sm">No series in this study</p>
+      <div className="flex h-full flex-col items-center justify-center text-center">
+        <Grid3X3 className="mb-2 h-10 w-10 text-gray-600" />
+        <p className="text-sm text-gray-400">No series available for this study</p>
       </div>
     );
   }
 
   return (
-    <div className="p-4 w-full overflow-y-auto">
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-        {series.map((s) => (
-          <button
-            key={s.ID}
-            onClick={() => {
-              if (s.Instances && s.Instances.length > 0) {
-                onSelectInstance(s.Instances[0]);
-              }
-            }}
-            className="bg-gray-800 rounded-lg p-3 border border-gray-700 hover:border-blue-500 transition-colors text-left"
-          >
-            <div className="aspect-square bg-gray-900 rounded mb-2 flex items-center justify-center">
-              <Activity className="w-8 h-8 text-gray-600" />
-            </div>
-            <p className="text-xs text-white truncate">
-              {s.MainDicomTags?.SeriesDescription || `Series ${s.MainDicomTags?.SeriesNumber || s.ID.slice(0, 8)}`}
-            </p>
-            <p className="text-xs text-gray-400">
-              {s.MainDicomTags?.Modality || "Unknown"} · {s.Instances?.length || 0} images
-            </p>
-          </button>
-        ))}
-      </div>
+    <div className="grid gap-3 p-4 md:grid-cols-2 xl:grid-cols-3">
+      {series.map((entry) => (
+        <button
+          key={entry.ID}
+          type="button"
+          onClick={() => {
+            if (entry.instances[0]) {
+              onSelectInstance(entry.instances[0]);
+            }
+          }}
+          className="rounded-xl border border-gray-700 bg-gray-800 p-3 text-left transition-colors hover:border-blue-500"
+        >
+          <div className="mb-2 flex aspect-square items-center justify-center rounded-lg bg-gray-900">
+            <Image className="h-8 w-8 text-gray-600" />
+          </div>
+          <p className="truncate text-xs font-medium text-white">{entry.label}</p>
+          <p className="text-xs text-gray-400">
+            {entry.modality} � {entry.instances.length} images
+          </p>
+        </button>
+      ))}
     </div>
   );
 }
@@ -464,8 +571,9 @@ function ToolButton({
 }) {
   return (
     <button
+      type="button"
       onClick={onClick}
-      className="p-1.5 rounded hover:bg-gray-700 text-gray-300 hover:text-white transition-colors"
+      className="rounded p-1.5 text-gray-300 transition-colors hover:bg-gray-700 hover:text-white"
       title={label}
       aria-label={label}
     >
@@ -484,23 +592,13 @@ function InfoRow({
   mono?: boolean;
 }) {
   if (!value) return null;
+
   return (
     <div>
       <dt className="text-xs font-medium text-gray-500">{label}</dt>
-      <dd className={`text-sm text-gray-800 mt-0.5 ${mono ? "font-mono text-xs break-all" : ""}`}>
+      <dd className={`mt-0.5 text-sm text-gray-800 ${mono ? "break-all font-mono text-xs" : ""}`}>
         {value}
       </dd>
     </div>
   );
-}
-
-// ── Helpers ──────────────────────────────────────────────────────────
-
-function formatDicomDate(date?: string): string {
-  if (!date) return "Unknown";
-  // DICOM dates are YYYYMMDD
-  if (date.length === 8) {
-    return `${date.slice(0, 4)}-${date.slice(4, 6)}-${date.slice(6, 8)}`;
-  }
-  return date;
 }

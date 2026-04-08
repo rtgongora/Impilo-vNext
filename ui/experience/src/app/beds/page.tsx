@@ -10,10 +10,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Bed, Loader2, AlertCircle, CheckCircle, Clock, Wrench, Sparkles, User } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { Bed, ClipboardList, Loader2, AlertCircle, CheckCircle, Clock, Wrench, Sparkles, User } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
+import { WorkflowHeader } from "@/components/workflow/WorkflowHeader";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
 
@@ -58,8 +60,13 @@ const BED_STATUS_STYLES: Record<string, { bg: string; icon: typeof CheckCircle }
 
 export default function BedManagementPage() {
   const facility = useFacilityStore((s) => s.facility);
+  const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const [selectedWard, setSelectedWard] = useState<string | null>(null);
+  const patientId = searchParams.get("patientId");
+  const encounterId = searchParams.get("encounterId");
+  const source = searchParams.get("source");
+  const disposition = searchParams.get("disposition");
 
   const { data: wardsData, isLoading: wardsLoading } = useQuery<ApiResponse<WardResource[]>>({
     queryKey: ["wards", facility?.id],
@@ -94,6 +101,27 @@ export default function BedManagementPage() {
   const totalBeds = beds.length;
   const available = beds.filter((b) => b.attributes.status === "AVAILABLE").length;
   const occupied = beds.filter((b) => b.attributes.status === "OCCUPIED").length;
+  const reserved = beds.filter((b) => b.attributes.status === "RESERVED").length;
+  const cleaning = beds.filter((b) => b.attributes.status === "CLEANING").length;
+  const handoffContext =
+    disposition === "ADMIT"
+      ? "Admission handoff"
+      : disposition === "TRANSFER"
+        ? "Transfer handoff"
+        : source === "discharge"
+        ? "Outcome handoff"
+          : "Ward census";
+  const actions = [
+    patientId && encounterId
+      ? { href: `/ehr/${patientId}/encounter/${encounterId}`, label: "Encounter", icon: ClipboardList }
+      : null,
+    patientId
+      ? { href: `/ehr/${patientId}`, label: "Chart", icon: User, tone: "secondary" as const }
+      : null,
+    patientId && encounterId
+      ? { href: `/ehr/${patientId}/discharge?encounterId=${encounterId}`, label: "Visit Outcome", icon: Bed, tone: "secondary" as const }
+      : null,
+  ].filter((value): value is NonNullable<typeof value> => Boolean(value));
 
   return (
     <AppLayout>
@@ -113,6 +141,58 @@ export default function BedManagementPage() {
           </div>
         ) : (
           <div className="space-y-6">
+            <WorkflowHeader
+              badge="Admission continuity"
+              badgeIcon={Bed}
+              title="Keep bed assignment tied to the admitting encounter and outcome handoff instead of sending users into a disconnected ward census."
+              description="Bed management now makes the facility in scope, closure handoff source, and next bed action explicit before staff reserve or turn over beds."
+              context={[
+                { label: "Facility", value: facility.name },
+                { label: "Context", value: handoffContext },
+                selectedWard
+                  ? {
+                      label: "Ward filter",
+                      value: wards.find((ward) => ward.id === selectedWard)?.attributes.name ?? "Selected ward",
+                    }
+                  : { label: "Ward filter", value: "All wards" },
+              ]}
+              actions={actions}
+              metrics={[
+                {
+                  label: "Available",
+                  value: String(available),
+                  detail: "Beds ready for immediate reservation or assignment.",
+                },
+                {
+                  label: "Reserved / cleaning",
+                  value: `${reserved} / ${cleaning}`,
+                  detail: "Tracks beds already earmarked or turning over after discharge.",
+                },
+                {
+                  label: "Next action",
+                  value: available > 0 ? "Choose bed" : "Escalate capacity",
+                  detail:
+                    source === "discharge"
+                      ? "If this came from outcome, reserve a suitable bed here and then return to the encounter or chart."
+                      : "Use this workspace to reserve or release beds without losing facility context.",
+                },
+              ]}
+            />
+
+            <div className="rounded-3xl border border-slate-200 bg-slate-50/70 p-4">
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
+                Bed handoff status
+              </p>
+              <p className="mt-2 text-sm text-slate-800">
+                {source === "discharge"
+                  ? "This bed workspace was reached from visit outcome, so the loop here is reserving or selecting a bed without losing the encounter and chart handoff."
+                  : "This workspace supports live bed operations at the current facility, with occupancy and turnover visible from the same surface."}
+              </p>
+              <p className="mt-1 text-xs text-slate-500">
+                Use the quick actions below to reserve available beds, release discharged beds into cleaning, and move back to the encounter or chart when the handoff is complete.
+              </p>
+            </div>
+
             {/* Census Summary */}
             <div className="grid grid-cols-3 gap-4">
               <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">

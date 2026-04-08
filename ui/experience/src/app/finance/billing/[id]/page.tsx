@@ -7,16 +7,18 @@
  */
 
 import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft, Loader2, Receipt, AlertCircle, FileText,
   Send, CheckCircle, Lock, FileOutput, CreditCard, DollarSign,
-  XCircle, RefreshCw, RotateCcw,
+  XCircle, RefreshCw, RotateCcw, ClipboardList, User,
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
+import { WorkflowHeader } from "@/components/workflow/WorkflowHeader";
+import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
 
 interface BillLineItem {
@@ -153,7 +155,12 @@ function useBillAction(id: string) {
 
 export default function BillingDetailPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
+  const facility = useFacilityStore((state) => state.facility);
   const id = params.id as string;
+  const patientId = searchParams.get("patientId");
+  const encounterId = searchParams.get("encounterId");
+  const source = searchParams.get("source");
   const [approvalNote, setApprovalNote] = useState("");
   const [paymentAmount, setPaymentAmount] = useState("");
   const [paymentType, setPaymentType] = useState("FULL");
@@ -195,6 +202,28 @@ export default function BillingDetailPage() {
   const payments: PaymentResource[] = paymentsData?.data ?? [];
   const refunds: RefundResource[] = refundsData?.data ?? [];
   const hasPaidPayment = payments.some((p) => p.attributes.status === "PAID");
+  const status = bill?.attributes.status ?? "";
+  const nextAction =
+    status === "DRAFT" || status === "ACCUMULATING"
+      ? "Submit for approval"
+      : status === "APPROVAL_PENDING"
+        ? "Approve bill"
+        : status === "APPROVED"
+          ? "Finalize bill"
+          : status === "FINAL"
+            ? "Invoice or collect payment"
+            : status === "VOID"
+              ? "Closed"
+              : "Review status";
+  const actions = [
+    encounterId && patientId
+      ? { href: `/ehr/${patientId}/encounter/${encounterId}`, label: "Encounter", icon: ClipboardList }
+      : null,
+    patientId
+      ? { href: `/ehr/${patientId}`, label: "Chart", icon: User, tone: "secondary" as const }
+      : null,
+    { href: "/finance/billing", label: "Billing List", icon: Receipt, tone: "secondary" as const },
+  ].filter((value): value is NonNullable<typeof value> => Boolean(value));
 
   // Default FULL payment amount to bill's totalPayable
   useEffect(() => {
@@ -202,8 +231,6 @@ export default function BillingDetailPage() {
       setPaymentAmount(bill.attributes.amount.toFixed(2));
     }
   }, [bill, paymentType, paymentAmount]);
-
-  const status = bill?.attributes.status ?? "";
 
   return (
     <AppLayout>
@@ -238,6 +265,53 @@ export default function BillingDetailPage() {
           </div>
         ) : (
           <div className="space-y-6">
+            <WorkflowHeader
+              badge="Finance closure"
+              badgeIcon={Receipt}
+              title="Keep bill handling connected to the source encounter and patient context so finance actions do not drift away from the clinical episode that created them."
+              description="Bill detail now surfaces the facility in scope, encounter handoff, and next revenue-cycle step before users approve, finalize, invoice, or refund."
+              context={[
+                { label: "Facility", value: facility?.name ?? "No facility selected" },
+                { label: "Source", value: source === "discharge" ? "Outcome handoff" : "Finance workspace" },
+                { label: "Bill", value: bill.attributes.invoiceNumber },
+              ]}
+              actions={actions}
+              metrics={[
+                {
+                  label: "Status",
+                  value: status.replace(/_/g, " "),
+                  detail: "This bill remains in the finance workflow stage shown here.",
+                },
+                {
+                  label: "Line items",
+                  value: String(bill.attributes.lineItems?.length ?? 0),
+                  detail: "Charges posted from encounter services and downstream activity.",
+                },
+                {
+                  label: "Next action",
+                  value: nextAction,
+                  detail:
+                    encounterId && patientId
+                      ? "Resolve the finance step here, then move back to the linked encounter or chart if clarification is needed."
+                      : "Use the action panel below to move this bill to its next finance state.",
+                },
+              ]}
+            />
+
+            <div className="rounded-3xl border border-slate-200 bg-slate-50/70 p-4">
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
+                Bill loop status
+              </p>
+              <p className="mt-2 text-sm text-slate-800">
+                {source === "discharge"
+                  ? "This bill was opened from encounter outcome, so the finance loop here is completing the next billing step without losing patient or encounter continuity."
+                  : "This bill is already in the finance workflow; the key task is moving it to the next status while keeping its originating encounter easy to reach."}
+              </p>
+              <p className="mt-1 text-xs text-slate-500">
+                Use the action panel for the current finance step, or jump back to the linked encounter or chart when the bill needs clinical review, documentation, or correction.
+              </p>
+            </div>
+
             {/* Bill Summary */}
             <div className="bg-white rounded-lg border border-gray-200 p-6">
               <div className="flex items-start justify-between">

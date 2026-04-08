@@ -5,12 +5,26 @@
  * Route: /finance/claims/[id] | pageTitle: "Claim Details"
  */
 
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Loader2, FileText, AlertCircle, Clock, CheckCircle, XCircle } from "lucide-react";
+import {
+  ArrowLeft,
+  Loader2,
+  FileText,
+  AlertCircle,
+  Clock,
+  CheckCircle,
+  XCircle,
+  ClipboardList,
+  CreditCard,
+  Receipt,
+  User,
+} from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
+import { WorkflowHeader } from "@/components/workflow/WorkflowHeader";
+import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
 
 interface ClaimLineItem {
@@ -71,10 +85,47 @@ const STATUS_ICONS: Record<string, typeof CheckCircle> = {
 
 export default function ClaimDetailPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
+  const facility = useFacilityStore((state) => state.facility);
   const id = params.id as string;
+  const patientId = searchParams.get("patientId");
+  const encounterId = searchParams.get("encounterId");
+  const source = searchParams.get("source");
 
   const { data, isLoading, error } = useClaimDetail(id);
   const claim = data?.data;
+  const handoffParams = new URLSearchParams();
+
+  if (patientId) handoffParams.set("patientId", patientId);
+  if (encounterId) handoffParams.set("encounterId", encounterId);
+  if (source) handoffParams.set("source", source);
+
+  const withHandoff = (href: string) => {
+    const query = handoffParams.toString();
+    return query ? `${href}?${query}` : href;
+  };
+
+  const status = claim?.attributes.status ?? "";
+  const nextAction =
+    status === "SUBMITTED"
+      ? "Await adjudication"
+      : status === "ADJUDICATED"
+        ? "Reconcile payer response"
+        : status === "PAID"
+          ? "Confirm settlement"
+          : status === "REJECTED"
+            ? "Correct and resubmit"
+            : "Review claim";
+  const actions = [
+    encounterId && patientId
+      ? { href: `/ehr/${patientId}/encounter/${encounterId}`, label: "Encounter", icon: ClipboardList }
+      : null,
+    patientId
+      ? { href: `/ehr/${patientId}`, label: "Chart", icon: User, tone: "secondary" as const }
+      : null,
+    { href: withHandoff("/finance/billing"), label: "Billing", icon: Receipt, tone: "secondary" as const },
+    { href: withHandoff("/finance/payments"), label: "Payments", icon: CreditCard, tone: "secondary" as const },
+  ].filter((value): value is NonNullable<typeof value> => Boolean(value));
 
   return (
     <AppLayout>
@@ -84,7 +135,7 @@ export default function ClaimDetailPage() {
       >
         <div className="mb-4">
           <Link
-            href="/finance/claims"
+            href={withHandoff("/finance/claims")}
             className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -109,6 +160,53 @@ export default function ClaimDetailPage() {
           </div>
         ) : (
           <div className="space-y-6">
+            <WorkflowHeader
+              badge="Claim closure"
+              badgeIcon={FileText}
+              title="Keep claim follow-through tied to the source encounter and patient context so adjudication decisions stay connected to the originating episode of care."
+              description="Claim detail now surfaces the facility in scope, closure source, and next payer action before finance users review adjudication history."
+              context={[
+                { label: "Facility", value: facility?.name ?? "No facility selected" },
+                { label: "Source", value: source === "discharge" ? "Outcome handoff" : "Finance workspace" },
+                { label: "Claim", value: claim.attributes.claimNumber },
+              ]}
+              actions={actions}
+              metrics={[
+                {
+                  label: "Status",
+                  value: status,
+                  detail: "This claim remains at the reimbursement stage shown here.",
+                },
+                {
+                  label: "Line items",
+                  value: String(claim.attributes.lineItems?.length ?? 0),
+                  detail: "Submitted billable services attached to the current claim.",
+                },
+                {
+                  label: "Next action",
+                  value: nextAction,
+                  detail:
+                    encounterId && patientId
+                      ? "Resolve the payer step here, then move back to the linked encounter or chart when clarification is needed."
+                      : "Use this surface to review adjudication and determine the next reimbursement action.",
+                },
+              ]}
+            />
+
+            <div className="rounded-3xl border border-slate-200 bg-slate-50/70 p-4">
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
+                Claim loop status
+              </p>
+              <p className="mt-2 text-sm text-slate-800">
+                {source === "discharge"
+                  ? "This claim was opened from encounter outcome, so the loop here is resolving payer follow-through without losing the linked encounter, chart, or finance handoff."
+                  : "This claim is already in the payer workflow; the key task is reviewing adjudication while keeping the source bill and clinical episode easy to reach."}
+              </p>
+              <p className="mt-1 text-xs text-slate-500">
+                Use the quick actions above to move between billing, payments, the encounter, and the chart when adjudication needs finance or clinical clarification.
+              </p>
+            </div>
+
             {/* Claim Summary */}
             <div className="bg-white rounded-lg border border-gray-200 p-6">
               <div className="flex items-start justify-between">

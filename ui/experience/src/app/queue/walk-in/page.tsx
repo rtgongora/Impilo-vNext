@@ -5,20 +5,24 @@
  * Route: /queue/walk-in | pageTitle: "Walk-in Registration"
  */
 
-import { useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, type FormEvent } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Search, Loader2, UserPlus, User } from "lucide-react";
+import { ArrowLeft, ArrowRightLeft, ClipboardCheck, Loader2, Search, User, UserPlus } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
-import { usePatients, type PatientResource } from "@/hooks/queries/usePatients";
+import { QueueWorkspaceHeader } from "@/components/queue/QueueWorkspaceHeader";
+import { usePatient, usePatients, type PatientResource } from "@/hooks/queries/usePatients";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
 import type { QueueEntryResource } from "@/hooks/queries/useQueue";
+import { getPatientDisplayName, getPatientQueueSummary } from "@/lib/queue-workflows";
 
 export default function WalkInPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const facility = useFacilityStore((s) => s.facility);
+  const preselectedPatientId = searchParams.get("patientId");
 
   const [searchTerm, setSearchTerm] = useState("");
   const [searchSubmitted, setSearchSubmitted] = useState("");
@@ -35,8 +39,16 @@ export default function WalkInPage() {
   const { data: patientsData, isLoading: isSearching } = usePatients(
     searchSubmitted ? { search: searchSubmitted } : undefined,
   );
+  const { data: preselectedPatientData } = usePatient(preselectedPatientId ?? "");
 
   const patients = searchSubmitted ? (patientsData?.data ?? []) : [];
+
+  useEffect(() => {
+    if (preselectedPatientData?.data && !selectedPatient) {
+      setSelectedPatient(preselectedPatientData.data);
+      setShowNewPatient(false);
+    }
+  }, [preselectedPatientData?.data, selectedPatient]);
 
   function handleSearch(e: FormEvent) {
     e.preventDefault();
@@ -96,9 +108,31 @@ export default function WalkInPage() {
     <AppLayout>
       <PageShell
         title="Walk-in Registration"
-        subtitle="Search for an existing patient or register a new one"
+        subtitle={facility ? `${facility.name}` : "Search for an existing patient or register a new one"}
       >
-        <div className="mb-4">
+        <div className="space-y-6">
+          <QueueWorkspaceHeader
+            badge="Walk-in intake"
+            badgeIcon={UserPlus}
+            title="Search first, select the patient, then create the facility queue entry here"
+            description="Walk-in registration now stays tied to facility context and can receive patients directly from queue search, so staff do not have to repeat the lookup."
+            facilityName={facility?.name}
+            actions={[
+              { href: "/queue", label: "Queue Workboard", icon: ArrowRightLeft },
+              { href: "/queue/search", label: "Patient Search", icon: Search, tone: "secondary" },
+              { href: "/queue/waiting", label: "Waiting Room", icon: ClipboardCheck, tone: "secondary" },
+            ]}
+            metrics={[
+              {
+                label: "Selected patient",
+                value: selectedPatient ? "Ready" : "Pending",
+                detail: selectedPatient
+                  ? `${getPatientDisplayName(selectedPatient)} will be queued into ${facility?.name ?? "the active facility"}.`
+                  : "Search the MPI or register a new patient before creating the queue entry.",
+              },
+            ]}
+          />
+
           <Link
             href="/queue"
             className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
@@ -106,9 +140,17 @@ export default function WalkInPage() {
             <ArrowLeft className="w-4 h-4" />
             Back to queue
           </Link>
-        </div>
+        
 
         <div className="max-w-2xl space-y-6">
+          {selectedPatient ? (
+            <div className="rounded-3xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
+              <p className="font-medium">Selected patient</p>
+              <p className="mt-1">{getPatientDisplayName(selectedPatient)}</p>
+              <p className="mt-1 text-xs text-blue-800">{getPatientQueueSummary(selectedPatient)}</p>
+            </div>
+          ) : null}
+
           {/* Patient Search */}
           <div className="bg-white rounded-lg border border-gray-200 p-5">
             <h3 className="font-medium text-gray-900 mb-3">Search Existing Patient</h3>
@@ -170,11 +212,10 @@ export default function WalkInPage() {
                     </div>
                     <div>
                       <p className="text-sm font-medium text-gray-900">
-                        {patient.attributes.displayName}
+                        {getPatientDisplayName(patient)}
                       </p>
                       <p className="text-xs text-gray-500">
-                        DOB: {patient.attributes.dateOfBirth} | {patient.attributes.gender} |
-                        CPID: {patient.attributes.cpid}
+                        {getPatientQueueSummary(patient)}
                       </p>
                     </div>
                   </button>
@@ -259,6 +300,7 @@ export default function WalkInPage() {
               )}
             </button>
           )}
+        </div>
         </div>
       </PageShell>
     </AppLayout>
