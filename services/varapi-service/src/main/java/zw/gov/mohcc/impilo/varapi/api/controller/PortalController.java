@@ -65,7 +65,7 @@ public class PortalController {
         log.info("Portal: fetching own profile [actorId={}] correlationId={}",
                 ctx.actorId(), ctx.correlationId());
 
-        ProviderEntity provider = providerService.findByActorId(ctx.actorId());
+        ProviderEntity provider = providerService.getProvider(ctx.actorId()).provider();
         PortalMeResponse response = toPortalMeResponse(provider);
 
         return ResponseEntity.ok(ApiResponse.ok(response, ctx.correlationId().toString()));
@@ -78,8 +78,9 @@ public class PortalController {
         log.info("Portal: fetching CPD summary [actorId={}] correlationId={}",
                 ctx.actorId(), ctx.correlationId());
 
-        ProviderEntity provider = providerService.findByActorId(ctx.actorId());
-        CpdSummaryResponse response = cpdService.getCpdSummary(provider.getProviderPublicId());
+        ProviderEntity provider = providerService.getProvider(ctx.actorId()).provider();
+        CpdService.CpdSummary summary = cpdService.getCpdSummary(provider.getProviderPublicId());
+        CpdSummaryResponse response = toCpdSummaryResponse(summary);
 
         return ResponseEntity.ok(ApiResponse.ok(response, ctx.correlationId().toString()));
     }
@@ -92,8 +93,8 @@ public class PortalController {
         log.info("Portal: uploading CPD evidence [actorId={}, eventType={}] correlationId={}",
                 ctx.actorId(), request.eventType(), ctx.correlationId());
 
-        ProviderEntity provider = providerService.findByActorId(ctx.actorId());
-        cpdService.uploadEvidence(provider.getProviderPublicId(), request);
+        ProviderEntity provider = providerService.getProvider(ctx.actorId()).provider();
+        cpdService.uploadEvidence(request.eventId(), request.documentId(), request.evidenceType(), request.notes());
         GenericResponse response = new GenericResponse("ACCEPTED",
                 "Evidence submitted for verification");
 
@@ -107,7 +108,7 @@ public class PortalController {
         log.info("Portal: listing certificates [actorId={}] correlationId={}",
                 ctx.actorId(), ctx.correlationId());
 
-        ProviderEntity provider = providerService.findByActorId(ctx.actorId());
+        ProviderEntity provider = providerService.getProvider(ctx.actorId()).provider();
         List<LicenseEntity> licenses = licenseService.getLicenseHistory(provider.getProviderPublicId());
         List<CertificateResponse> responses = licenses.stream()
                 .map(this::toCertificateResponse)
@@ -124,7 +125,7 @@ public class PortalController {
                 ctx.actorId(), id, ctx.correlationId());
 
         // Step-up check: verify the actor has elevated authentication for document download
-        ProviderEntity provider = providerService.findByActorId(ctx.actorId());
+        ProviderEntity provider = providerService.getProvider(ctx.actorId()).provider();
         byte[] pdf = licenseService.downloadCertificate(provider.getProviderPublicId(), id);
 
         return ResponseEntity.ok()
@@ -132,6 +133,20 @@ public class PortalController {
                 .header(HttpHeaders.CONTENT_DISPOSITION,
                         "attachment; filename=\"certificate-" + id + ".pdf\"")
                 .body(pdf);
+    }
+
+    private CpdSummaryResponse toCpdSummaryResponse(CpdService.CpdSummary summary) {
+        return new CpdSummaryResponse(
+                summary.currentCycle() != null ? summary.currentCycle().getId() : null,
+                summary.currentCycle() != null ? summary.currentCycle().getProvider().getProviderPublicId() : null,
+                summary.currentCycle() != null ? summary.currentCycle().getCycleName() : null,
+                summary.currentCycle() != null ? summary.currentCycle().getStartDate() : null,
+                summary.currentCycle() != null ? summary.currentCycle().getEndDate() : null,
+                summary.requiredPoints(),
+                summary.earnedPoints(),
+                summary.currentCycle() != null ? summary.currentCycle().getStatus() : "NONE",
+                summary.requirementMet()
+        );
     }
 
     // ---- Mapper: Entity → Portal Response DTOs ----

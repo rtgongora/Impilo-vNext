@@ -158,6 +158,14 @@ export default function SchedulingPage() {
     }).catch(() => setResources([]));
   }, [facility?.id]);
 
+  const [form, setForm] = useState({
+    appointment_type: "OPD",
+    date: "",
+    time: "09:00",
+    reason: "",
+    notes: "",
+  });
+
   // Fetch availability when resource + date change
   useEffect(() => {
     if (!selectedResourceId || !form.date) {
@@ -171,14 +179,6 @@ export default function SchedulingPage() {
       setAvailabilitySlots((res.data as { slots: Array<{ time: string; available: boolean }> })?.slots ?? []);
     }).catch(() => setAvailabilitySlots([])).finally(() => setLoadingAvailability(false));
   }, [selectedResourceId, form.date]);
-
-  const [form, setForm] = useState({
-    appointment_type: "OPD",
-    date: "",
-    time: "09:00",
-    reason: "",
-    notes: "",
-  });
 
   useEffect(() => {
     fetchAppointments();

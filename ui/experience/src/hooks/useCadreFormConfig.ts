@@ -185,7 +185,8 @@ export function useCadreFormConfig(
   visitType: VisitType = "general",
   acuity: AcuityLevel = "green"
 ): CadreFormConfig {
-  const { role } = useAuthStore();
+  const { user } = useAuthStore();
+  const role = user?.roles?.[0] ?? "";
   useDevOverrideListener();
 
   const overrides = getDevOverrides();

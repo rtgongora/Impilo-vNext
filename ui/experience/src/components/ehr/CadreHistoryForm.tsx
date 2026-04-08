@@ -530,14 +530,19 @@ function DoctorHistoryForm({ config, onSave }: { config: CadreFormConfig; onSave
 
       {/* Saved Entries Summary */}
       {savedEntries.length > 0 && (
-        <div className="bg-white rounded-lg border p-4">
-          <h3 className="text-base font-semibold text-gray-900 mb-3">Documented History</h3>
-          <div className="space-y-2">{savedEntries.map((entry, i) => (
-            <div key={i} className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
-              <div className="flex items-center gap-2"><CheckCircle2 className="w-5 h-5 text-green-600" /><span className="text-sm font-medium capitalize">{entry.section.replace(/_/g, " ")}</span></div>
-              <span className="text-xs text-gray-500">{entry.time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
-            </div>
-          ))}</div>
+        <div className="space-y-4">
+          <div className="bg-white rounded-lg border p-4">
+            <h3 className="text-base font-semibold text-gray-900 mb-3">Documented History</h3>
+            <div className="space-y-2">{savedEntries.map((entry, i) => (
+              <div key={i} className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
+                <div className="flex items-center gap-2"><CheckCircle2 className="w-5 h-5 text-green-600" /><span className="text-sm font-medium capitalize">{entry.section.replace(/_/g, " ")}</span></div>
+                <span className="text-xs text-gray-500">{entry.time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+              </div>
+            ))}</div>
+          </div>
+          <button type="button" onClick={() => onSave?.({ entries: savedEntries, isComplete: true })} className="w-full h-14 bg-blue-600 text-white text-lg font-bold rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2">
+            <CheckCircle2 className="w-6 h-6" /> {config.labels.saveLabel}
+          </button>
         </div>
       )}
     </div>

@@ -12,5 +12,6 @@ public record CouncilResponse(
         String website,
         String email,
         String phone,
-        Instant createdAt
+        Instant createdAt,
+        Instant updatedAt
 ) {}

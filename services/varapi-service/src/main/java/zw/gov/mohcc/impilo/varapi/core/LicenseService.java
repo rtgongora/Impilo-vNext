@@ -171,6 +171,22 @@ public class LicenseService {
         return licenseRepository.findByProviderIdOrderByCreatedAtDesc(provider.getId());
     }
 
+    @Transactional(readOnly = true)
+    public byte[] downloadCertificate(String providerPublicId, Long licenseId) {
+        TrustContextHolder.require();
+        log.debug("Downloading certificate: providerPublicId={}, licenseId={}", providerPublicId, licenseId);
+
+        LicenseEntity license = licenseRepository.findById(licenseId)
+                .orElseThrow(() -> new IllegalArgumentException("License not found: " + licenseId));
+
+        if (!license.getProvider().getProviderPublicId().equals(providerPublicId)) {
+            throw new IllegalArgumentException("License does not belong to provider: " + providerPublicId);
+        }
+
+        // Currently this endpoint returns an empty placeholder; update with real PDF generation when available.
+        return new byte[0];
+    }
+
     private void publishEvent(String aggregateType, String aggregateId,
                                String eventType, String payload) {
         EventOutboxEntity event = new EventOutboxEntity();

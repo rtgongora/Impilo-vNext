@@ -21,6 +21,7 @@ import {
   ClipboardList,
   Pill,
   ArrowUpRight,
+  ArrowLeft,
   Save,
   Stethoscope,
   Receipt,
@@ -406,7 +407,7 @@ export default function EncounterPage() {
                           existingTriage.attributes.acuity === 4 ? "Standard" : "Non-urgent"
                         }
                       </span>
-                      {existingTriage.attributes.triaged_by_name && (
+                      {typeof existingTriage.attributes.triaged_by_name === "string" && (
                         <span className="text-xs text-gray-500 ml-2">
                           by {String(existingTriage.attributes.triaged_by_name)}
                         </span>
@@ -414,7 +415,7 @@ export default function EncounterPage() {
                     </div>
                   </div>
                   {/* Triage vitals summary if available */}
-                  {existingTriage.attributes.vitals && typeof existingTriage.attributes.vitals === "object" && (
+                  {typeof existingTriage.attributes.vitals === "object" && existingTriage.attributes.vitals !== null && (
                     <div className="flex items-center gap-3 text-xs">
                       {(existingTriage.attributes.vitals as Record<string, unknown>).systolic != null && (
                         <span>BP: {String((existingTriage.attributes.vitals as Record<string, unknown>).systolic)}/{String((existingTriage.attributes.vitals as Record<string, unknown>).diastolic ?? "")}</span>
@@ -432,7 +433,7 @@ export default function EncounterPage() {
                   )}
                 </div>
                 {/* Danger signs summary */}
-                {existingTriage.attributes.danger_signs && Array.isArray(existingTriage.attributes.danger_signs) && (
+                {Array.isArray(existingTriage.attributes.danger_signs) && (
                   (() => {
                     const present = (existingTriage.attributes.danger_signs as Array<{ name: string; present: boolean }>).filter((d) => d.present);
                     return present.length > 0 ? (

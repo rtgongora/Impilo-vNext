@@ -35,7 +35,7 @@ import {
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { useQuery } from "@tanstack/react-query";
-import { apiFetch } from "@/lib/api-client";
+import { apiClient } from "@/lib/api-client";
 
 // ── Types ─────────────────────────────────────────────────────────
 
@@ -72,12 +72,12 @@ function useStudies() {
   return useQuery({
     queryKey: ["pacs", "studies"],
     queryFn: async () => {
-      const studyIds = await apiFetch<string[]>("/internal/v1/pacs/studies");
+      const studyIds = await apiClient.get<string[]>("/internal/v1/pacs/studies");
       // Fetch details for each study (limit to 20 most recent)
       const details = await Promise.all(
         studyIds.slice(0, 20).map(async (id: string) => {
           try {
-            return await apiFetch<OrthancStudy>(`/internal/v1/pacs/studies/${id}`);
+            return await apiClient.get<OrthancStudy>(`/internal/v1/pacs/studies/${id}`);
           } catch {
             return null;
           }
@@ -94,13 +94,13 @@ function useStudySeries(studyId: string | null) {
     queryKey: ["pacs", "series", studyId],
     queryFn: async () => {
       if (!studyId) return [];
-      const seriesIds = await apiFetch<string[]>(
+      const seriesIds = await apiClient.get<string[]>(
         `/internal/v1/pacs/studies/${studyId}/series`
       );
       const details = await Promise.all(
         seriesIds.map(async (id: string) => {
           try {
-            const series = await apiFetch<OrthancSeries>(
+            const series = await apiClient.get<OrthancSeries>(
               `/internal/v1/pacs/studies/${studyId}/series`
             );
             return { ...series, ID: id };
@@ -160,7 +160,7 @@ export default function ImagingPage() {
   }, []);
 
   return (
-    <EHRLayout patientId={patientId}>
+    <EHRLayout>
       <PageShell title="Imaging / PACS" icon={<Image className="w-5 h-5" />}>
         <div className="flex h-[calc(100vh-180px)] gap-4">
 

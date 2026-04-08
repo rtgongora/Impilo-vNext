@@ -132,7 +132,7 @@ export default function ClinicalHistoryPage() {
         ) : (
           <div className="space-y-5">
             {/* Presenting Complaint — from active encounter */}
-            {activeEncounter && (activeEncounter.attributes as Record<string, unknown>).chief_complaint && (
+            {activeEncounter && typeof (activeEncounter.attributes as Record<string, unknown>).chief_complaint === "string" && (
               <div className="bg-white rounded-lg border border-gray-200 p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <FileText className="w-4 h-4 text-blue-500" />
@@ -196,7 +196,7 @@ export default function ClinicalHistoryPage() {
                           <span className="text-sm font-medium text-gray-900">
                             {String(c.attributes.condition_name ?? c.attributes.conditionName ?? "")}
                           </span>
-                          {c.attributes.icd_code && (
+                          {typeof c.attributes.icd_code === "string" && (
                             <span className="text-xs text-gray-500 ml-2">
                               ({String(c.attributes.icd_code ?? c.attributes.icdCode ?? "")})
                             </span>
@@ -261,7 +261,7 @@ export default function ClinicalHistoryPage() {
                             a.attributes.severity === "SEVERE" ? "text-red-700" : "text-gray-500"
                           }`}>{String(a.attributes.severity)}</span>
                         </div>
-                        {a.attributes.reaction && (
+                        {typeof a.attributes.reaction === "string" && (
                           <p className="text-xs text-gray-500 mt-0.5">{String(a.attributes.reaction)}</p>
                         )}
                       </div>

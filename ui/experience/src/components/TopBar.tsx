@@ -45,7 +45,7 @@ export function TopBar() {
   const patientId = params?.patientId as string | undefined;
 
   function getActionHref(action: (typeof EHR_ACTIONS)[number]): string {
-    if (action.dynamic && patientId) {
+    if ("dynamic" in action && action.dynamic && patientId) {
       if (action.label === "Orders") return `/ehr/${patientId}/orders`;
       if (action.label === "Consults") return `/ehr/${patientId}/consults`;
     }

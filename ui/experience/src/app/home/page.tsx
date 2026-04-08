@@ -299,11 +299,6 @@ export default function HomePage() {
     router.push("/workspace");
   }
 
-  // Fetch license data for clinical providers
-  const { data: licenseData } = useProviderLicenses(isClinical ? user?.id : undefined);
-  const licenses = licenseData?.data ?? [];
-  const licenseActive = licenses.length === 0 || hasActiveLicense(licenses);
-
   // Fetch recent encounters
   const { data: recentEncounters } = useQuery<{ data: Array<{ id: string; attributes: Record<string, unknown> }> }>({
     queryKey: ["home-recent-encounters"],
@@ -999,9 +994,9 @@ function FeedSection() {
                 <p className="text-xs text-gray-500 line-clamp-2">
                   {(item.attributes.body as string) ?? ""}
                 </p>
-                {item.attributes.published_at && (
+                {typeof item.attributes.published_at === "string" && (
                   <p className="text-xs text-gray-400 mt-1">
-                    {new Date(item.attributes.published_at as string).toLocaleDateString()}
+                    {new Date(item.attributes.published_at).toLocaleDateString()}
                   </p>
                 )}
               </div>

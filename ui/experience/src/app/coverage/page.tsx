@@ -320,11 +320,11 @@ function SettlementTab() {
           {remittances.map((rem, i) => (
             <div key={String(rem.id ?? i)} className="bg-white rounded-lg border border-gray-200 p-4 flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-900">Remittance {rem.reference_number ?? rem.id}</p>
+                <p className="text-sm font-medium text-gray-900">Remittance {String(rem.reference_number ?? rem.id)}</p>
                 <p className="text-xs text-gray-500">Payer: {String(rem.payer_id ?? "—")} · Provider: {String(rem.provider_ref ?? "—")}</p>
               </div>
               <div className="text-right">
-                <p className="text-sm font-mono font-bold text-gray-900">{rem.currency ?? "USD"} {Number(rem.amount ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                <p className="text-sm font-mono font-bold text-gray-900">{String(rem.currency ?? "USD")} {Number(rem.amount ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
                 <span className={`px-2 py-0.5 text-xs rounded-full ${rem.status === "PAID" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}>
                   {String(rem.status ?? "PENDING")}
                 </span>

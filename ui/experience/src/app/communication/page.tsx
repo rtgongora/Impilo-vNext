@@ -102,9 +102,9 @@ function MessagesTab() {
                 <p className="text-sm font-medium text-gray-900 truncate">{ch.name as string || "Direct Message"}</p>
                 <p className="text-xs text-gray-500">{ch.channel_type as string} channel</p>
               </div>
-              {ch.last_message_at && (
+              {typeof ch.last_message_at === "string" && (
                 <span className="text-xs text-gray-400">
-                  {new Date(ch.last_message_at as string).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  {new Date(ch.last_message_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                 </span>
               )}
             </div>

@@ -11,6 +11,7 @@
  */
 
 import { useState } from "react";
+import { useParams } from "next/navigation";
 import {
   AlertTriangle,
   Ambulance,
@@ -686,11 +687,13 @@ import { LabResultsSystem } from "@/components/lab/LabResultsSystem";
 import { PatientTimeline } from "@/components/timeline/PatientTimeline";
 import { ClerkingTemplateSelector } from "@/components/ehr/clerking/ClerkingTemplateSelector";
 import { ClerkingFormEditor } from "@/components/ehr/clerking/ClerkingFormEditor";
-import { CLERKING_TEMPLATES, type ClerkingTemplate } from "@/data/clerkingTemplates";
+import { CLERKING_TEMPLATES, type ClerkingTemplate, type CadreLevel } from "@/data/clerkingTemplates";
 
 type AssessmentTab = "triage" | "vitals" | "clerking" | "cadre-history" | "cadre-exam" | "history" | "examination" | "labs" | "timeline";
 
 export function AssessmentSection() {
+  const params = useParams<{ encounterId?: string }>();
+  const encounterId = params.encounterId;
   const cadreConfig = useCadreFormConfig();
   const isSimplified = cadreConfig.complexity === "simplified";
   const isComprehensive = cadreConfig.complexity === "comprehensive";
@@ -746,10 +749,10 @@ export function AssessmentSection() {
 
       {/* Tab content */}
       {activeTab === "triage" && <TriagePanel />}
-      {activeTab === "vitals" && <VitalsRecorder />}
+      {activeTab === "vitals" && encounterId && <VitalsRecorder encounterId={encounterId} />}
       {activeTab === "clerking" && (
         selectedTemplate
-          ? <ClerkingFormEditor template={selectedTemplate} onBack={() => setSelectedTemplate(null)} />
+          ? <ClerkingFormEditor template={selectedTemplate} cadreLevel={cadreConfig.cadre as CadreLevel} />
           : <ClerkingTemplateSelector onSelect={setSelectedTemplate} />
       )}
       {activeTab === "cadre-history" && <CadreHistoryForm config={cadreConfig} />}

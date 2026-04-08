@@ -178,7 +178,8 @@ export function useCadreFormSectionsDB(cadreCode: string | null, visitType?: Vis
  * Respects dev overrides.
  */
 export function useCadreContext(): CadreContext {
-  const { role } = useAuthStore();
+  const { user } = useAuthStore();
+  const role = user?.roles?.[0] ?? "";
   useDevOverrideListener();
   const overrides = getDevOverrides();
   const { data: definitions, isLoading } = useCadreDefinitions();

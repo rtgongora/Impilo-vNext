@@ -349,7 +349,7 @@ export function PatientBanner() {
                             {String(ca.severity ?? "")}
                           </span>
                         </div>
-                        {ca.icdCode && (
+                        {typeof ca.icdCode === "string" && (
                           <span className="text-xs text-gray-400 font-mono">
                             ICD: {String(ca.icdCode ?? ca.icd_code ?? "")}
                           </span>

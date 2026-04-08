@@ -241,8 +241,8 @@ function RulesTab() {
                   <span className={`px-2 py-0.5 text-xs rounded ${r.effect === "DENY" ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>{r.effect as string}</span>
                   <span className="px-2 py-0.5 text-xs bg-gray-100 text-gray-600 rounded">{r.action as string}</span>
                 </div>
-                {r.description && <p className="text-sm text-gray-500 mt-1">{r.description as string}</p>}
-                <p className="text-xs text-gray-400 mt-1">Pattern: {r.resourcePattern as string} · Priority: {String(r.priority)} {r.requiredPurpose ? `· Purpose: ${r.requiredPurpose}` : ""}</p>
+                {typeof r.description === "string" && <p className="text-sm text-gray-500 mt-1">{r.description}</p>}
+                <p className="text-xs text-gray-400 mt-1">Pattern: {String(r.resourcePattern)} · Priority: {String(r.priority)} {typeof r.requiredPurpose === "string" ? `· Purpose: ${r.requiredPurpose}` : ""}</p>
               </div>
               <button onClick={() => deleteMutation.mutate(r.ruleId as string)} className="p-1.5 text-gray-400 hover:text-red-500" title="Deactivate">
                 <Trash2 className="w-4 h-4" />

@@ -275,25 +275,25 @@ export default function MedicationsPage() {
                             </span>
                           </div>
                           <div className="flex items-center gap-3 text-xs text-gray-500">
-                            {a.dosage && <span>{String(a.dosage)}</span>}
-                            {(a.route ?? a.route) && <span className="capitalize">{String(a.route)}</span>}
-                            {a.frequency && <span>{String(a.frequency)}</span>}
-                            {a.duration && <span>{String(a.duration)}</span>}
+                            {typeof a.dosage === "string" && <span>{String(a.dosage)}</span>}
+                            {typeof a.route === "string" && <span className="capitalize">{String(a.route)}</span>}
+                            {typeof a.frequency === "string" && <span>{String(a.frequency)}</span>}
+                            {typeof a.duration === "string" && <span>{String(a.duration)}</span>}
                           </div>
-                          {a.instructions && (
+                          {typeof a.instructions === "string" && (
                             <p className="text-xs text-gray-500 mt-1 italic">{String(a.instructions)}</p>
                           )}
-                          {a.indication && (
+                          {typeof a.indication === "string" && (
                             <p className="text-xs text-gray-400 mt-0.5">Indication: {String(a.indication)}</p>
                           )}
                           <p className="text-xs text-gray-400 mt-1">
                             Prescribed by: {String(a.prescribed_by ?? a.prescribedBy ?? "")}
-                            {a.created_at && ` · ${new Date(String(a.created_at ?? a.createdAt)).toLocaleDateString()}`}
+                            {typeof a.created_at === "string" && ` · ${new Date(String(a.created_at ?? a.createdAt)).toLocaleDateString()}`}
                           </p>
                           {a.status === "DISPENSED" && (
                             <p className="text-xs text-purple-600 mt-0.5">
                               Dispensed by: {String(a.dispensed_by ?? a.dispensedBy ?? "")}
-                              {(a.dispensed_at ?? a.dispensedAt) && ` · ${new Date(String(a.dispensed_at ?? a.dispensedAt)).toLocaleString()}`}
+                              {typeof (a.dispensed_at ?? a.dispensedAt) === "string" && ` · ${new Date(String(a.dispensed_at ?? a.dispensedAt)).toLocaleString()}`}
                             </p>
                           )}
                         </div>

@@ -82,10 +82,10 @@ export function AIDiagnosticAssistant({ open, onClose }: AIDiagnosticAssistantPr
   const analyzePatient = async (type: string) => {
     setIsLoading(true);
     try {
-      const { data } = await apiClient.post("/api/v1/ai/diagnostic", { type, symptoms, medications, labResults });
-      if (type === "diagnostic") setDiagnosticResult(data?.result || MOCK_DIAGNOSTIC);
-      if (type === "drug-interaction") setDrugResult(data?.result || MOCK_DRUG_RESULT);
-      if (type === "lab-interpretation") setLabResult(data?.result || MOCK_LAB_RESULT);
+      const response = await apiClient.post<{ result?: DiagnosticResult | DrugInteractionResult | LabInterpretationResult }>("/api/v1/ai/diagnostic", { type, symptoms, medications, labResults });
+      if (type === "diagnostic") setDiagnosticResult((response.result as DiagnosticResult) || MOCK_DIAGNOSTIC);
+      if (type === "drug-interaction") setDrugResult((response.result as DrugInteractionResult) || MOCK_DRUG_RESULT);
+      if (type === "lab-interpretation") setLabResult((response.result as LabInterpretationResult) || MOCK_LAB_RESULT);
     } catch {
       // Fallback to mock results
       if (type === "diagnostic") setDiagnosticResult(MOCK_DIAGNOSTIC);

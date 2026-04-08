@@ -19,6 +19,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import zw.gov.mohcc.impilo.vito.core.IdentityStatus;
 import zw.gov.mohcc.impilo.vito.persistence.entity.ClientEntity;
 import zw.gov.mohcc.impilo.vito.persistence.repository.ClientRepository;
+import zw.gov.mohcc.impilo.vito.test.TestCompanionConfig;
 
 import java.util.UUID;
 
@@ -47,6 +48,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@org.springframework.context.annotation.Import(TestCompanionConfig.class)
 class V11MergeFlowIT {
 
     private static final String MERGE_URL = "/internal/v1/patients/merge";

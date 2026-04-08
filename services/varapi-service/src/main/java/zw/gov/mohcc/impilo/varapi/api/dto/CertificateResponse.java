@@ -4,8 +4,11 @@ import java.time.Instant;
 
 public record CertificateResponse(
         Long id,
-        String documentType,
-        String fileName,
+        String licenseType,
+        String licenseNumber,
         String status,
-        Instant uploadedAt
+        java.time.LocalDate validFrom,
+        java.time.LocalDate validTo,
+        String councilName,
+        Instant issuedAt
 ) {}
