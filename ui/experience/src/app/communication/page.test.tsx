@@ -60,11 +60,15 @@ describe("CommunicationPage", () => {
 
     renderPage();
 
-    expect(await screen.findByRole("link", { name: /Ward consult/i })).toHaveAttribute(
+    await waitFor(() => {
+      expect(get).toHaveBeenCalledWith("/internal/v1/communication/messages/channels");
+    }, { timeout: 10000 });
+    const threadLink = await screen.findByRole("link", { name: /Ward consult/i }, { timeout: 10000 });
+    expect(threadLink).toHaveAttribute(
       "href",
       "/communication/secure-messaging?channelId=channel-1",
     );
-  });
+  }, 10000);
 
   it("sends pages through the real communication pages endpoint", async () => {
     searchParamsValue.current = new URLSearchParams("tab=pages");

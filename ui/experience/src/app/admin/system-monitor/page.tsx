@@ -1,18 +1,22 @@
 "use client";
 
 /**
- * System Monitor — System health dashboard with service status and metrics.
+ * System Monitor — Experience BFF liveness plus admin audit tail.
  * Route: /admin/system-monitor | pageTitle: "System Monitor"
+ *
+ * Per-service mesh health and infra metrics are not aggregated here; audit entries
+ * are governance actions, not application log lines.
  */
 
-import { useState } from "react";
-import { Monitor, Loader2, RefreshCw, CheckCircle2, AlertTriangle, XCircle, Database, Cpu, HardDrive, Wifi } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { Monitor, Loader2, RefreshCw, CheckCircle2, AlertTriangle, XCircle, Cpu, Info } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
-import { apiClient } from "@/lib/api-client";
+import { useAuditLogSized } from "@/hooks/queries/useAudit";
+import { useBffHealthQuery } from "@/hooks/queries/useAdminObservability";
 
-interface ServiceStatus {
+interface ServiceCard {
   name: string;
   code: string;
   status: "healthy" | "degraded" | "down";
@@ -22,53 +26,13 @@ interface ServiceStatus {
   lastCheck: string;
 }
 
-interface SystemMetric {
-  label: string;
-  value: string;
-  max: string;
-  percentage: number;
-  status: "good" | "warning" | "critical";
-}
-
-interface ErrorEntry {
+interface AuditRow {
   id: string;
   timestamp: string;
   service: string;
-  level: "ERROR" | "WARN";
+  level: "ERROR" | "WARN" | "INFO";
   message: string;
 }
-
-const MOCK_SERVICES: ServiceStatus[] = [
-  { name: "TSHEPO (Auth)", code: "tshepo", status: "healthy", latency: 12, uptime: "99.99%", version: "1.4.2", lastCheck: "10s ago" },
-  { name: "VITO (Identity)", code: "vito", status: "healthy", latency: 18, uptime: "99.97%", version: "1.3.1", lastCheck: "10s ago" },
-  { name: "VARAPI (Registry)", code: "varapi", status: "healthy", latency: 15, uptime: "99.98%", version: "1.2.0", lastCheck: "10s ago" },
-  { name: "TUSO (Clinical)", code: "tuso", status: "healthy", latency: 22, uptime: "99.95%", version: "1.5.0", lastCheck: "10s ago" },
-  { name: "ZIBO (Finance)", code: "zibo", status: "degraded", latency: 145, uptime: "99.82%", version: "1.1.3", lastCheck: "10s ago" },
-  { name: "PCT (Claims)", code: "pct", status: "healthy", latency: 28, uptime: "99.96%", version: "1.0.4", lastCheck: "10s ago" },
-  { name: "OROS (Orders)", code: "oros", status: "healthy", latency: 20, uptime: "99.94%", version: "1.2.1", lastCheck: "10s ago" },
-  { name: "HAPI FHIR (SHR)", code: "hapi", status: "healthy", latency: 35, uptime: "99.91%", version: "7.4.0", lastCheck: "10s ago" },
-  { name: "Keycloak (IAM)", code: "keycloak", status: "healthy", latency: 25, uptime: "99.99%", version: "25.0.2", lastCheck: "10s ago" },
-  { name: "Envoy (Gateway)", code: "envoy", status: "healthy", latency: 3, uptime: "99.99%", version: "1.31.2", lastCheck: "10s ago" },
-  { name: "Kafka (Events)", code: "kafka", status: "healthy", latency: 8, uptime: "99.98%", version: "3.7.1", lastCheck: "10s ago" },
-  { name: "Redis (Cache)", code: "redis", status: "healthy", latency: 2, uptime: "99.99%", version: "7.2.4", lastCheck: "10s ago" },
-];
-
-const MOCK_METRICS: SystemMetric[] = [
-  { label: "DB Connection Pool", value: "42", max: "100", percentage: 42, status: "good" },
-  { label: "Kafka Consumer Lag", value: "124", max: "10000", percentage: 1.2, status: "good" },
-  { label: "Redis Cache Hit Rate", value: "94.2%", max: "100%", percentage: 94.2, status: "good" },
-  { label: "CPU Usage (Avg)", value: "38%", max: "100%", percentage: 38, status: "good" },
-  { label: "Memory Usage (Avg)", value: "62%", max: "100%", percentage: 62, status: "warning" },
-  { label: "Disk Usage", value: "71%", max: "100%", percentage: 71, status: "warning" },
-];
-
-const MOCK_ERRORS: ErrorEntry[] = [
-  { id: "e-1", timestamp: "2026-04-06 09:42:15", service: "ZIBO", level: "WARN", message: "Slow query detected: claims_adjudication_batch took 3.2s (threshold: 2s)" },
-  { id: "e-2", timestamp: "2026-04-06 09:38:02", service: "ZIBO", level: "ERROR", message: "Connection timeout to external payment gateway after 30s — retrying (attempt 2/3)" },
-  { id: "e-3", timestamp: "2026-04-06 09:22:45", service: "TUSO", level: "WARN", message: "FHIR bundle validation warning: 2 resources missing optional coding system" },
-  { id: "e-4", timestamp: "2026-04-06 08:55:10", service: "HAPI", level: "WARN", message: "Reindex job completed with 3 skipped resources (invalid references)" },
-  { id: "e-5", timestamp: "2026-04-06 08:12:30", service: "Kafka", level: "WARN", message: "Consumer group rebalance triggered — 2 partitions reassigned" },
-];
 
 const STATUS_ICON: Record<string, { icon: React.ElementType; color: string; bg: string }> = {
   healthy: { icon: CheckCircle2, color: "text-green-600", bg: "bg-green-100" },
@@ -76,34 +40,92 @@ const STATUS_ICON: Record<string, { icon: React.ElementType; color: string; bg: 
   down: { icon: XCircle, color: "text-red-600", bg: "bg-red-100" },
 };
 
-const METRIC_COLOR: Record<string, string> = {
-  good: "bg-green-500",
-  warning: "bg-amber-500",
-  critical: "bg-red-500",
-};
+function inferAuditLevel(action: string): "ERROR" | "WARN" | "INFO" {
+  const a = action.toUpperCase();
+  if (a.includes("FAIL") || a.includes("ERROR") || a.includes("DENIED")) return "ERROR";
+  if (a.includes("WARN") || a.includes("DELETE") || a.includes("REVOKE")) return "WARN";
+  return "INFO";
+}
+
+function formatOccurredAt(iso: string | undefined): string {
+  if (!iso) return "—";
+  try {
+    return new Date(iso).toLocaleString();
+  } catch {
+    return iso;
+  }
+}
 
 export default function SystemMonitorPage() {
-  const { data, isLoading } = useQuery({
-    queryKey: ["system-monitor"],
-    queryFn: async () => ({ services: MOCK_SERVICES, metrics: MOCK_METRICS, errors: MOCK_ERRORS }),
-    refetchInterval: 30000,
-  });
+  const queryClient = useQueryClient();
+  const healthQ = useBffHealthQuery();
+  const auditQ = useAuditLogSized(0, 40);
 
-  const services = data?.services ?? [];
-  const metrics = data?.metrics ?? [];
-  const errors = data?.errors ?? [];
+  const services: ServiceCard[] = useMemo(() => {
+    if (healthQ.isLoading) return [];
+    if (healthQ.isError || !healthQ.data) {
+      return [
+        {
+          name: "Experience BFF",
+          code: "experience-bff",
+          status: "down" as const,
+          latency: 0,
+          uptime: "—",
+          version: "—",
+          lastCheck: "—",
+        },
+      ];
+    }
+    const up = healthQ.data.status?.toUpperCase() === "UP";
+    return [
+      {
+        name: "Experience BFF",
+        code: "experience-bff",
+        status: up ? "healthy" : ("down" as const),
+        latency: healthQ.data.latencyMs,
+        uptime: "—",
+        version: "—",
+        lastCheck: formatOccurredAt(healthQ.data.checkedAt),
+      },
+    ];
+  }, [healthQ.data, healthQ.isLoading, healthQ.isError]);
+
+  const auditRows: AuditRow[] = useMemo(() => {
+    const rows = auditQ.data?.data ?? [];
+    return rows.map((entry) => {
+      const attr = entry.attributes as Record<string, unknown>;
+      const action = String(attr.action ?? "");
+      const resourceType = String(attr.resource_type ?? "—");
+      const details = attr.details != null ? String(attr.details) : "";
+      const msg = [action, resourceType, details ? details.slice(0, 200) : ""].filter(Boolean).join(" · ");
+      return {
+        id: entry.id,
+        timestamp: formatOccurredAt(String(attr.occurred_at ?? attr.timestamp ?? "")),
+        service: resourceType !== "—" ? resourceType : "Platform",
+        level: inferAuditLevel(action),
+        message: msg || action || "Audit event",
+      };
+    });
+  }, [auditQ.data]);
 
   const healthyCount = services.filter((s) => s.status === "healthy").length;
   const degradedCount = services.filter((s) => s.status === "degraded").length;
   const downCount = services.filter((s) => s.status === "down").length;
 
+  const isLoading = healthQ.isLoading || auditQ.isLoading;
+
+  const onRefresh = () => {
+    void queryClient.invalidateQueries({ queryKey: ["observability", "bff-health"] });
+    void queryClient.invalidateQueries({ queryKey: ["audit"] });
+  };
+
   return (
     <AppLayout>
-      <PageShell title="System Monitor" subtitle="Service health, metrics, and error tracking">
+      <PageShell title="System Monitor" subtitle="BFF liveness and recent admin audit activity">
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">Loading system status...</span>
+            <span className="ml-2 text-sm text-gray-500">Loading system status…</span>
           </div>
         ) : (
           <div className="space-y-6">
@@ -111,16 +133,29 @@ export default function SystemMonitorPage() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Monitor className="w-5 h-5 text-indigo-600" />
-                <h2 className="text-lg font-semibold text-gray-900">System Health</h2>
+                <h2 className="text-lg font-semibold text-gray-900">Platform signals</h2>
                 <div className="flex items-center gap-2 ml-4">
                   <span className="flex items-center gap-1 text-xs text-green-600"><CheckCircle2 className="w-3 h-3" /> {healthyCount} healthy</span>
                   {degradedCount > 0 && <span className="flex items-center gap-1 text-xs text-amber-600"><AlertTriangle className="w-3 h-3" /> {degradedCount} degraded</span>}
                   {downCount > 0 && <span className="flex items-center gap-1 text-xs text-red-600"><XCircle className="w-3 h-3" /> {downCount} down</span>}
                 </div>
               </div>
-              <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+              <button type="button" onClick={onRefresh} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                 <RefreshCw className="w-3.5 h-3.5" /> Refresh
               </button>
+            </div>
+
+            <div className="rounded-lg border border-blue-200 bg-blue-50/80 p-4 flex gap-3 text-sm text-blue-900">
+              <Info className="w-5 h-5 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium">Scope of this monitor</p>
+                <p className="mt-1 text-xs text-blue-800/90 leading-relaxed">
+                  Only the Experience BFF <code className="text-[11px]">GET /health</code> probe and the tenant audit log
+                  are wired here. Downstream service cards (identity, clinical stacks, Kafka, Redis, etc.) are{" "}
+                  <strong>not</strong> aggregated by this BFF—use your runtime platform (mesh, k8s, APM) for those signals.
+                  Audit rows are <strong>not</strong> raw application error logs.
+                </p>
+              </div>
             </div>
 
             {/* Service Status Grid */}
@@ -141,6 +176,7 @@ export default function SystemMonitorPage() {
                       <span className="text-[10px] text-gray-400">v{svc.version}</span>
                       <span className="text-[10px] text-gray-400">Up {svc.uptime}</span>
                     </div>
+                    <p className="text-[10px] text-gray-400 mt-1">Checked {svc.lastCheck}</p>
                   </div>
                 );
               })}
@@ -152,39 +188,48 @@ export default function SystemMonitorPage() {
                 <Cpu className="w-4 h-4 text-gray-500" />
                 <h3 className="font-medium text-gray-900">Infrastructure Metrics</h3>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 p-5">
-                {metrics.map((m) => (
-                  <div key={m.label}>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs text-gray-600">{m.label}</span>
-                      <span className="text-xs font-medium text-gray-900">{m.value}</span>
-                    </div>
-                    <div className="w-full bg-gray-100 rounded-full h-2.5">
-                      <div className={`h-2.5 rounded-full ${METRIC_COLOR[m.status]}`} style={{ width: `${Math.min(100, m.percentage)}%` }} />
-                    </div>
-                  </div>
-                ))}
+              <div className="p-5 text-sm text-gray-600">
+                Connection pools, Kafka lag, CPU, and disk for dependency services are{" "}
+                <strong>not published</strong> on the Experience BFF. Export them from your hosting environment or
+                observability stack.
               </div>
             </div>
 
-            {/* Recent Errors */}
+            {/* Recent Audit */}
             <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
               <div className="px-5 py-4 border-b border-gray-200 flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 text-amber-500" />
-                <h3 className="font-medium text-gray-900">Recent Errors & Warnings</h3>
+                <h3 className="font-medium text-gray-900">Recent audit activity</h3>
+                <span className="text-xs text-gray-400 ml-auto">Admin audit log (newest first)</span>
               </div>
-              <div className="divide-y divide-gray-100">
-                {errors.map((err) => (
-                  <div key={err.id} className="px-5 py-3 hover:bg-gray-50 transition-colors">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold ${err.level === "ERROR" ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"}`}>{err.level}</span>
-                      <span className="text-xs font-medium text-gray-700">{err.service}</span>
-                      <span className="text-[10px] text-gray-400">{err.timestamp}</span>
+              {auditQ.isError ? (
+                <div className="p-5 text-sm text-red-600">Could not load audit log.</div>
+              ) : auditRows.length === 0 ? (
+                <div className="p-8 text-center text-sm text-gray-500">No audit entries for this tenant.</div>
+              ) : (
+                <div className="divide-y divide-gray-100">
+                  {auditRows.map((err) => (
+                    <div key={err.id} className="px-5 py-3 hover:bg-gray-50 transition-colors">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span
+                          className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold ${
+                            err.level === "ERROR"
+                              ? "bg-red-100 text-red-700"
+                              : err.level === "WARN"
+                                ? "bg-amber-100 text-amber-700"
+                                : "bg-gray-100 text-gray-700"
+                          }`}
+                        >
+                          {err.level}
+                        </span>
+                        <span className="text-xs font-medium text-gray-700">{err.service}</span>
+                        <span className="text-[10px] text-gray-400">{err.timestamp}</span>
+                      </div>
+                      <p className="text-xs text-gray-600">{err.message}</p>
                     </div>
-                    <p className="text-xs text-gray-600">{err.message}</p>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}

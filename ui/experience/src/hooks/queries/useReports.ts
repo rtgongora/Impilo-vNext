@@ -5,9 +5,10 @@
 import { useMutation } from "@tanstack/react-query";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
 
+/** Legacy shape used by /reports/* pages */
 export interface ReportResource {
   id: string;
-  type: "report";
+  type: string;
   attributes: {
     reportType: string;
     status: string;
@@ -17,17 +18,55 @@ export interface ReportResource {
   };
 }
 
-interface GenerateReportPayload {
-  reportType: string;
-  parameters: Record<string, unknown>;
-  [key: string]: unknown;
+/** Response from POST /internal/v1/reports/generate */
+export interface ReportJobCreatedResource {
+  id: string;
+  type: string;
+  attributes: {
+    report_type: string;
+    status: string;
+    requested_by: string;
+    queued_at: string;
+    [key: string]: unknown;
+  };
 }
 
-type ReportResponse = ApiResponse<ReportResource>;
+export type ReportGenerateResponse = ApiResponse<ReportJobCreatedResource>;
+
+function readRequestedByFromSession(): string {
+  if (typeof window === "undefined") return "unknown";
+  try {
+    const raw = sessionStorage.getItem("exp:auth_user");
+    if (!raw) return "unknown";
+    const u = JSON.parse(raw) as { id?: string; email?: string; username?: string; name?: string };
+    return u.email ?? u.username ?? u.name ?? u.id ?? "unknown";
+  } catch {
+    return "unknown";
+  }
+}
+
+/** Accepts either camelCase (UI) or snake_case (BFF-aligned) keys */
+export type GenerateReportPayload = {
+  reportType?: string;
+  report_type?: string;
+  parameters?: Record<string, unknown>;
+  requestedBy?: string;
+  requested_by?: string;
+};
+
+function toGenerateBody(payload: GenerateReportPayload) {
+  const report_type = payload.report_type ?? payload.reportType;
+  if (!report_type) throw new Error("report_type is required");
+  return {
+    report_type,
+    parameters: payload.parameters ?? {},
+    requested_by: payload.requested_by ?? payload.requestedBy ?? readRequestedByFromSession(),
+  };
+}
 
 export function useGenerateReport() {
-  return useMutation<ReportResponse, unknown, GenerateReportPayload>({
-    mutationFn: (payload: GenerateReportPayload) =>
-      apiClient.post<ReportResponse>("/internal/v1/reports/generate", payload),
+  return useMutation<ReportGenerateResponse, unknown, GenerateReportPayload>({
+    mutationFn: (payload) =>
+      apiClient.post<ReportGenerateResponse>("/internal/v1/reports/generate", toGenerateBody(payload)),
   });
 }

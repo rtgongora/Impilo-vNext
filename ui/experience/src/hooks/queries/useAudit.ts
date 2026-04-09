@@ -24,17 +24,7 @@ type AuditLogResponse = ApiResponse<AuditEntryResource[]>;
 type AuditEntryResponse = ApiResponse<AuditEntryResource>;
 
 export function useAuditLog(page?: number) {
-  return useQuery<AuditLogResponse>({
-    queryKey: ["audit", { page }],
-    queryFn: () => {
-      const searchParams = new URLSearchParams();
-      if (page !== undefined) searchParams.set("page", String(page));
-
-      const qs = searchParams.toString();
-      const path = `/internal/v1/admin/audit${qs ? `?${qs}` : ""}`;
-      return apiClient.get<AuditLogResponse>(path);
-    },
-  });
+  return useAuditLogSized(page, undefined);
 }
 
 export function useAuditEntry(id: string) {
@@ -42,5 +32,19 @@ export function useAuditEntry(id: string) {
     queryKey: ["audit", id],
     queryFn: () => apiClient.get<AuditEntryResponse>(`/internal/v1/admin/audit/${id}`),
     enabled: !!id,
+  });
+}
+
+export function useAuditLogSized(page?: number, size?: number) {
+  const p = page ?? 0;
+  const s = size ?? 20;
+  return useQuery<AuditLogResponse>({
+    queryKey: ["audit", { page: p, size: s }],
+    queryFn: () => {
+      const searchParams = new URLSearchParams();
+      searchParams.set("page", String(p));
+      searchParams.set("size", String(s));
+      return apiClient.get<AuditLogResponse>(`/internal/v1/admin/audit?${searchParams.toString()}`);
+    },
   });
 }
