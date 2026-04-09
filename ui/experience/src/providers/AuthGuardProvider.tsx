@@ -14,6 +14,7 @@ import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useWorkspaceStore } from "@/hooks/useWorkspaceStore";
 import { useShiftStore } from "@/hooks/useShiftStore";
 import { matchRouteDefinition } from "@/lib/routes";
+import { isSchedulingClusterPath } from "@/lib/scheduling-paths";
 
 /**
  * Map abstract role-group names used in routes.ts to concrete Keycloak roles.
@@ -71,7 +72,15 @@ export function AuthGuardProvider({ children }: { children: ReactNode }) {
       case "workspace":
         if (!isAuthenticated) { router.replace("/auth/login"); return; }
         if (!hasFacility) { router.replace("/facility"); return; }
-        if (!hasWorkspace) { router.replace("/workspace"); return; }
+        if (!hasWorkspace) {
+          // Organization operators reach roster/on-call from /organization-admin/staffing
+          // without picking a clinical workspace; facility context is enough for staffing APIs.
+          if (isSchedulingClusterPath(pathname) && matchesRequiredRole(hasRole, "ORGANIZATION_ADMIN")) {
+            break;
+          }
+          router.replace("/workspace");
+          return;
+        }
         break;
       case "shift":
         if (!isAuthenticated) { router.replace("/auth/login"); return; }

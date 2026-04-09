@@ -109,6 +109,7 @@ function getTenantId(): string {
     const stored = sessionStorage.getItem("exp:tenant_id");
     if (stored) return stored;
   }
+  // Canonical dev default — matches V2/V21+ seeds. Golden-path integration tests use X-Tenant-ID "moh-zw".
   return "tenant-moh-zw";
 }
 

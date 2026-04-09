@@ -144,8 +144,8 @@ describe("Route Registry", () => {
     }
   });
 
-  it("scheduling roster and on-call use workspace guard (admin staffing without clinical shift)", () => {
-    for (const p of ["/scheduling/roster", "/scheduling/on-call", "/scheduling/noticeboard"]) {
+  it("scheduling hub, roster, on-call, and noticeboard use workspace guard", () => {
+    for (const p of ["/scheduling", "/scheduling/roster", "/scheduling/on-call", "/scheduling/noticeboard"]) {
       const route = ROUTES.find((r) => r.path === p);
       expect(route?.guard).toBe("workspace");
     }

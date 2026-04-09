@@ -96,7 +96,8 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/shift/active", zone: "shift", layout: "app", sidebar: "shift", guard: "shift", pageTitle: "Active Shift", navLabel: "Active Shift" },
   { path: "/shift/handover", zone: "shift", layout: "app", sidebar: "shift", guard: "shift", pageTitle: "Shift Handover", navLabel: "Handover" },
 
-  // ── Zone: Scheduling ─────────────────────────────────────────────
+  // ── Zone: Scheduling (workspace guard; ORGANIZATION_ADMIN may pass with facility only — AuthGuardProvider)
+  { path: "/scheduling", zone: "queue", layout: "app", sidebar: "queue", guard: "workspace", pageTitle: "Scheduling", navLabel: "Scheduling", navZone: "work" },
   { path: "/scheduling/roster", zone: "queue", layout: "app", sidebar: "queue", guard: "workspace", pageTitle: "Staff Roster", navLabel: "Roster", navZone: "work" },
   { path: "/scheduling/on-call", zone: "queue", layout: "app", sidebar: "queue", guard: "workspace", pageTitle: "On-Call Schedule", navLabel: "On-Call", navZone: "work" },
   { path: "/scheduling/noticeboard", zone: "queue", layout: "app", sidebar: "queue", guard: "workspace", pageTitle: "Provider Noticeboard", navLabel: "Noticeboard", navZone: "work" },
@@ -235,7 +236,7 @@ export const ROUTES: RouteDefinition[] = [
 ];
 
 // Total route count assertion
-export const EXPECTED_ROUTE_COUNT = 142;
+export const EXPECTED_ROUTE_COUNT = 143;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary
