@@ -44,7 +44,8 @@ public class MarketplaceController {
             @NotBlank String facility_id,
             @NotBlank String order_number,
             String items,
-            @NotBlank String ordered_by
+            @NotBlank String ordered_by,
+            String total_amount
     ) {}
 
     @GetMapping("/orders")
@@ -85,6 +86,101 @@ public class MarketplaceController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/catalog")
+    public ResponseEntity<Map<String, Object>> listCatalog(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String search) {
+
+        StringBuilder sql = new StringBuilder("""
+            SELECT id, name, description, category, facility_id, facility_name,
+                   price, currency, available, rating, image_url
+            FROM marketplace_services
+            WHERE tenant_id = ?
+            """);
+        List<Object> params = new ArrayList<>(List.of(tenantId));
+
+        if (category != null && !category.isBlank()) {
+            sql.append(" AND category = ?");
+            params.add(category);
+        }
+        if (search != null && !search.isBlank()) {
+            sql.append(" AND (LOWER(name) LIKE ? OR LOWER(description) LIKE ?)");
+            String like = "%" + search.toLowerCase(Locale.ROOT) + "%";
+            params.add(like);
+            params.add(like);
+        }
+
+        sql.append(" ORDER BY available DESC, name ASC");
+
+        List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql.toString(), params.toArray());
+        List<Map<String, Object>> data = rows.stream().map(this::toCatalogResource).toList();
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", data);
+        response.put("meta", Map.of(
+                "request_id", requestId,
+                "correlation_id", correlationId
+        ));
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/vendors")
+    public ResponseEntity<Map<String, Object>> listPartners(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+
+        List<Map<String, Object>> rows = jdbcTemplate.queryForList("""
+            SELECT facility_id, facility_name,
+                   count(*) AS service_count,
+                   sum(CASE WHEN available THEN 1 ELSE 0 END) AS active_listings,
+                   avg(COALESCE(rating, 0)) AS average_rating
+            FROM marketplace_services
+            WHERE tenant_id = ?
+            GROUP BY facility_id, facility_name
+            ORDER BY facility_name
+            """, tenantId);
+
+        List<Map<String, Object>> data = rows.stream().map(this::toPartnerResource).toList();
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", data);
+        response.put("meta", Map.of(
+                "request_id", requestId,
+                "correlation_id", correlationId
+        ));
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/bookings")
+    public ResponseEntity<Map<String, Object>> listBookings(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+
+        List<Map<String, Object>> rows = jdbcTemplate.queryForList("""
+            SELECT sr.id, sr.service_name, sr.facility_name, sr.status,
+                   sr.requested_at, sr.scheduled_at, sr.completed_at, sr.tracking_number
+            FROM service_requests sr
+            WHERE sr.tenant_id = ?
+            ORDER BY COALESCE(sr.scheduled_at, sr.requested_at) DESC
+            LIMIT 50
+            """, tenantId);
+
+        List<Map<String, Object>> data = rows.stream().map(this::toBookingResource).toList();
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", data);
+        response.put("meta", Map.of(
+                "request_id", requestId,
+                "correlation_id", correlationId
+        ));
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/orders/{id}")
     public ResponseEntity<Map<String, Object>> getOrder(
             @PathVariable UUID id,
@@ -121,12 +217,13 @@ public class MarketplaceController {
         jdbcTemplate.update("""
             INSERT INTO marketplace_orders
                 (id, tenant_id, facility_id, order_number, items, ordered_by, status,
-                 ordered_at, created_at, updated_at)
-            VALUES (?, ?, ?::uuid, ?, ?::jsonb, ?, 'PENDING', ?, ?, ?)
+                 total_amount, ordered_at, created_at, updated_at)
+            VALUES (?, ?, ?::uuid, ?, ?::jsonb, ?, 'PENDING', ?::numeric, ?, ?, ?)
             """,
                 orderId, tenantId, request.facility_id(),
                 request.order_number(), request.items(),
                 request.ordered_by(),
+                request.total_amount(),
                 now, now, now);
 
         outboxService.writeOutboxEvent(
@@ -153,6 +250,7 @@ public class MarketplaceController {
         attributes.put("order_number", request.order_number());
         attributes.put("items", request.items());
         attributes.put("ordered_by", request.ordered_by());
+        attributes.put("total_amount", request.total_amount());
         attributes.put("status", "PENDING");
         attributes.put("ordered_at", now);
         attributes.put("created_at", now);
@@ -169,6 +267,56 @@ public class MarketplaceController {
         ));
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    private Map<String, Object> toCatalogResource(Map<String, Object> row) {
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("name", row.get("name"));
+        attributes.put("description", row.get("description"));
+        attributes.put("category", row.get("category"));
+        attributes.put("facility_id", row.get("facility_id") != null ? row.get("facility_id").toString() : null);
+        attributes.put("facility_name", row.get("facility_name"));
+        attributes.put("price", row.get("price"));
+        attributes.put("currency", row.get("currency"));
+        attributes.put("availability", Boolean.TRUE.equals(row.get("available")) ? "AVAILABLE" : "UNAVAILABLE");
+        attributes.put("rating", row.get("rating"));
+        attributes.put("image_url", row.get("image_url"));
+        return Map.of(
+                "id", row.get("id").toString(),
+                "type", "MarketplaceCatalogItem",
+                "attributes", attributes
+        );
+    }
+
+    private Map<String, Object> toPartnerResource(Map<String, Object> row) {
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("name", row.get("facility_name"));
+        attributes.put("facility_id", row.get("facility_id") != null ? row.get("facility_id").toString() : null);
+        attributes.put("service_count", row.get("service_count"));
+        attributes.put("active_listings", row.get("active_listings"));
+        attributes.put("status", ((Number) row.get("active_listings")).intValue() > 0 ? "ACTIVE" : "INACTIVE");
+        attributes.put("rating", row.get("average_rating"));
+        return Map.of(
+                "id", row.get("facility_id") != null ? row.get("facility_id").toString() : UUID.randomUUID().toString(),
+                "type", "MarketplacePartner",
+                "attributes", attributes
+        );
+    }
+
+    private Map<String, Object> toBookingResource(Map<String, Object> row) {
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("booking_number", row.get("tracking_number"));
+        attributes.put("service_name", row.get("service_name"));
+        attributes.put("provider_name", row.get("facility_name"));
+        attributes.put("requested_at", row.get("requested_at"));
+        attributes.put("scheduled_at", row.get("scheduled_at"));
+        attributes.put("completed_at", row.get("completed_at"));
+        attributes.put("status", row.get("status"));
+        return Map.of(
+                "id", row.get("id").toString(),
+                "type", "MarketplaceBooking",
+                "attributes", attributes
+        );
     }
 
     private Map<String, Object> toResource(MarketplaceOrder o) {

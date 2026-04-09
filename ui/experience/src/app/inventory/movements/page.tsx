@@ -1,87 +1,86 @@
 "use client";
 
-/**
- * Stock Movements — Log of stock transfers between locations.
- * Route: /inventory/movements
- */
-
-import { Loader2, AlertTriangle, ArrowLeftRight } from "lucide-react";
+import Link from "next/link";
+import { ArrowLeftRight, Loader2 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
-import { useQuery } from "@tanstack/react-query";
-import { apiClient, type ApiResponse } from "@/lib/api-client";
+import { useInventoryMovements } from "@/hooks/queries/useInventory";
+import { useFacilityStore } from "@/hooks/useFacilityStore";
 
-interface StockMovement {
-  id: string;
-  type: "stock_movement";
-  attributes: {
-    date: string;
-    itemName: string;
-    fromLocation: string;
-    toLocation: string;
-    quantity: number;
-    reason: string;
-    performedBy: string;
-    [key: string]: unknown;
-  };
+function formatDate(value: string) {
+  return new Date(value).toLocaleString();
 }
 
 export default function StockMovementsPage() {
-  const { data, isLoading, error } = useQuery<ApiResponse<StockMovement[]>>({
-    queryKey: ["inventory-movements"],
-    queryFn: () => apiClient.get<ApiResponse<StockMovement[]>>("/internal/v1/inventory/movements"),
-  });
-
-  const movements = data?.data ?? [];
+  const facility = useFacilityStore((state) => state.facility);
+  const movementsQuery = useInventoryMovements(facility?.id ?? "");
+  const movements = movementsQuery.data ?? [];
 
   return (
     <AppLayout>
-      <PageShell title="Stock Movements" subtitle="Track stock transfers between locations">
-        {isLoading ? (
-          <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">Loading movements...</span>
+      <PageShell title="Stock Movements" subtitle="Track where stock moved, why it moved, and who executed the transfer for the current facility.">
+        {!facility ? (
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
+            Select a facility to review stock transfers.
+            <div className="mt-3"><Link href="/workspace" className="font-medium underline">Choose facility work</Link></div>
           </div>
-        ) : error ? (
-          <div className="bg-red-50 rounded-lg border border-red-200 p-6 text-center">
-            <AlertTriangle className="w-8 h-8 text-red-400 mx-auto mb-2" />
-            <p className="text-red-600 text-sm">Failed to load movements</p>
-          </div>
-        ) : movements.length === 0 ? (
-          <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-            <ArrowLeftRight className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-400 text-sm">No stock movements recorded</p>
+        ) : movementsQuery.isLoading ? (
+          <div className="flex items-center justify-center gap-2 py-16 text-sm text-slate-500">
+            <Loader2 className="h-5 w-5 animate-spin" /> Loading movements...
           </div>
         ) : (
-          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b bg-gray-50">
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Date</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Item</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">From</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">To</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Quantity</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Reason</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Performed By</th>
-                </tr>
-              </thead>
-              <tbody>
-                {movements.map((mov) => (
-                  <tr key={mov.id} className="border-b last:border-b-0 hover:bg-gray-50">
-                    <td className="px-4 py-3 text-gray-900">
-                      {new Date(mov.attributes.date).toLocaleDateString()}
-                    </td>
-                    <td className="px-4 py-3 font-medium text-gray-900">{mov.attributes.itemName}</td>
-                    <td className="px-4 py-3 text-gray-600">{mov.attributes.fromLocation}</td>
-                    <td className="px-4 py-3 text-gray-600">{mov.attributes.toLocation}</td>
-                    <td className="px-4 py-3 text-gray-600">{mov.attributes.quantity}</td>
-                    <td className="px-4 py-3 text-gray-600">{mov.attributes.reason}</td>
-                    <td className="px-4 py-3 text-gray-600">{mov.attributes.performedBy}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="space-y-6">
+            <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Movement trail</div>
+                  <h2 className="mt-1 text-xl font-semibold text-slate-900">{facility.name}</h2>
+                  <p className="mt-2 text-sm text-slate-600">Use movements to explain why a stock line changed before ordering more stock or reconciling a count discrepancy.</p>
+                </div>
+                <div className="flex flex-wrap gap-2 text-sm">
+                  <Link href="/inventory/counts" className="rounded-lg border border-slate-200 px-3 py-2 font-medium hover:bg-slate-50">Open counts</Link>
+                  <Link href="/inventory/requisitions" className="rounded-lg border border-slate-200 px-3 py-2 font-medium hover:bg-slate-50">Open requisitions</Link>
+                </div>
+              </div>
+            </section>
+
+            <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+              {movements.length === 0 ? (
+                <div className="p-10 text-center text-sm text-slate-500">
+                  <ArrowLeftRight className="mx-auto mb-3 h-10 w-10 text-slate-300" />
+                  No stock movements recorded for this facility yet.
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-slate-50 text-left text-slate-600">
+                      <tr>
+                        <th className="px-4 py-3 font-medium">Moved at</th>
+                        <th className="px-4 py-3 font-medium">Item</th>
+                        <th className="px-4 py-3 font-medium">From</th>
+                        <th className="px-4 py-3 font-medium">To</th>
+                        <th className="px-4 py-3 font-medium">Quantity</th>
+                        <th className="px-4 py-3 font-medium">Reason</th>
+                        <th className="px-4 py-3 font-medium">Performed by</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {movements.map((movement) => (
+                        <tr key={movement.id} className="border-t border-slate-100 align-top">
+                          <td className="px-4 py-3 text-slate-900">{formatDate(movement.movedAt)}</td>
+                          <td className="px-4 py-3 font-medium text-slate-900">{movement.itemName}</td>
+                          <td className="px-4 py-3 text-slate-600">{movement.fromLocation}</td>
+                          <td className="px-4 py-3 text-slate-600">{movement.toLocation}</td>
+                          <td className="px-4 py-3 text-slate-700">{movement.quantity}</td>
+                          <td className="px-4 py-3 text-slate-600">{movement.reason}</td>
+                          <td className="px-4 py-3 text-slate-600">{movement.performedBy}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </section>
           </div>
         )}
       </PageShell>

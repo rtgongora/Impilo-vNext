@@ -93,6 +93,14 @@ export default function BedManagementPage() {
     },
   });
 
+  const dischargeBed = useMutation({
+    mutationFn: (bedId: string) => apiClient.post(`/internal/v1/beds/${bedId}/discharge`, {}),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["beds"] });
+      queryClient.invalidateQueries({ queryKey: ["wards"] });
+    },
+  });
+
   const wards = wardsData?.data ?? [];
   const beds = bedsData?.data ?? [];
   const isLoading = wardsLoading || bedsLoading;
@@ -269,8 +277,12 @@ export default function BedManagementPage() {
                           </button>
                         )}
                         {a.status === "OCCUPIED" && (
-                          <button onClick={() => updateBedStatus.mutate({ bedId: bed.id, status: "CLEANING" })}
-                            className="text-[10px] px-1.5 py-0.5 bg-purple-600 text-white rounded hover:bg-purple-700">
+                          <button
+                            type="button"
+                            onClick={() => dischargeBed.mutate(bed.id)}
+                            disabled={dischargeBed.isPending}
+                            className="text-[10px] px-1.5 py-0.5 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:opacity-50"
+                          >
                             Discharge
                           </button>
                         )}

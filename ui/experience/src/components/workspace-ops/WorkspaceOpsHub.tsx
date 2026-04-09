@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useFacilityStore } from '@/hooks/useFacilityStore';
 import {
   BarChart3, Package, Clock, DollarSign, Settings,
   ArrowLeft, Building2, Stethoscope, Shield, Headphones,
@@ -57,6 +58,7 @@ export function WorkspaceOpsHub({
   onBack,
   visibleTabs,
 }: WorkspaceOpsHubProps) {
+  const facilityId = useFacilityStore((s) => s.facility?.id);
   const tabs = visibleTabs || WORKSPACE_TYPE_TABS[workspaceType];
   const [activeTab, setActiveTab] = useState<OpsTab>(tabs[0]);
   const meta = WORKSPACE_TYPE_META[workspaceType];
@@ -116,7 +118,7 @@ export function WorkspaceOpsHub({
 
       {/* Tab content */}
       <div className="flex-1 overflow-auto mt-3">
-        {activeTab === 'dashboard' && <WorkspaceDashboardPanel />}
+        {activeTab === 'dashboard' && <WorkspaceDashboardPanel facilityId={facilityId} />}
         {activeTab === 'stock' && <StockManagementPanel />}
         {activeTab === 'hr-shifts' && <HRShiftsPanel />}
         {activeTab === 'billing' && <BillingPanel />}

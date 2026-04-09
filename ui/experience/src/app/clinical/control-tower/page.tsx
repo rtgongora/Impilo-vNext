@@ -1,80 +1,38 @@
 "use client";
 
 /**
- * Control Tower — Real-time facility operations dashboard with stat cards and panels.
+ * Control Tower — Facility operations dashboard from live Experience BFF data.
  * Route: /clinical/control-tower | pageTitle: "Control Tower"
  */
 
-import { useState } from "react";
-import { BarChart3, Loader2, Users, Clock, BedDouble, UserCheck, AlertTriangle, RefreshCw, ArrowUp, ArrowDown } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
+import Link from "next/link";
+import {
+  BarChart3,
+  Loader2,
+  Users,
+  Clock,
+  BedDouble,
+  UserCheck,
+  AlertTriangle,
+  RefreshCw,
+} from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
-import { apiClient } from "@/lib/api-client";
-
-interface StatCard {
-  label: string;
-  value: string | number;
-  change: number;
-  changeLabel: string;
-  icon: React.ElementType;
-  color: string;
-}
-
-interface QueueItem {
-  id: string;
-  patientName: string;
-  type: string;
-  waitTime: string;
-  priority: "Urgent" | "Normal" | "Low";
-  assignedTo: string | null;
-}
-
-interface BedStatus {
-  ward: string;
-  total: number;
-  occupied: number;
-  available: number;
-  cleaning: number;
-}
-
-interface Alert {
-  id: string;
-  type: "critical" | "warning" | "info";
-  message: string;
-  time: string;
-}
-
-const MOCK_STATS: StatCard[] = [
-  { label: "Patients in Facility", value: 142, change: 8, changeLabel: "from yesterday", icon: Users, color: "bg-blue-500" },
-  { label: "Avg Wait Time", value: "23 min", change: -5, changeLabel: "from last hour", icon: Clock, color: "bg-amber-500" },
-  { label: "Bed Occupancy", value: "78%", change: 3, changeLabel: "from yesterday", icon: BedDouble, color: "bg-purple-500" },
-  { label: "Staff on Shift", value: 34, change: 0, changeLabel: "full coverage", icon: UserCheck, color: "bg-green-500" },
-];
-
-const MOCK_QUEUE: QueueItem[] = [
-  { id: "q-1", patientName: "T. Masuku", type: "Walk-in", waitTime: "45 min", priority: "Urgent", assignedTo: null },
-  { id: "q-2", patientName: "R. Dube", type: "Scheduled", waitTime: "12 min", priority: "Normal", assignedTo: "Dr. Ndlovu" },
-  { id: "q-3", patientName: "N. Chikwanha", type: "Walk-in", waitTime: "38 min", priority: "Normal", assignedTo: null },
-  { id: "q-4", patientName: "S. Mutsago", type: "Referral", waitTime: "5 min", priority: "Urgent", assignedTo: "Dr. Moyo" },
-  { id: "q-5", patientName: "P. Zimuto", type: "Follow-up", waitTime: "20 min", priority: "Low", assignedTo: "Sr. Phiri" },
-];
-
-const MOCK_BEDS: BedStatus[] = [
-  { ward: "General Medical", total: 40, occupied: 32, available: 6, cleaning: 2 },
-  { ward: "Surgical", total: 30, occupied: 25, available: 4, cleaning: 1 },
-  { ward: "Paediatric", total: 20, occupied: 14, available: 5, cleaning: 1 },
-  { ward: "Maternity", total: 25, occupied: 20, available: 3, cleaning: 2 },
-  { ward: "ICU", total: 8, occupied: 7, available: 1, cleaning: 0 },
-];
-
-const MOCK_ALERTS: Alert[] = [
-  { id: "a-1", type: "critical", message: "ICU bed capacity at 87% — only 1 bed available", time: "5 min ago" },
-  { id: "a-2", type: "warning", message: "Average wait time exceeding 30-minute threshold in OPD", time: "12 min ago" },
-  { id: "a-3", type: "warning", message: "3 patients waiting over 40 minutes without assignment", time: "18 min ago" },
-  { id: "a-4", type: "info", message: "Night shift handover completed — 34 staff checked in", time: "1 hr ago" },
-  { id: "a-5", type: "info", message: "Lab system connection restored after 5-minute outage", time: "2 hr ago" },
-];
+import { useFacilityStore } from "@/hooks/useFacilityStore";
+import {
+  buildOperationalAlerts,
+  buildQueuePerformanceByType,
+  buildQueueRows,
+  buildWardUtilization,
+  facilityOpsKeys,
+  useFacilityActiveShiftCount,
+  useFacilityBeds,
+  useFacilityQueueStats,
+  useFacilityQueueWaiting,
+  useFacilityWards,
+} from "@/hooks/queries/useFacilityOperations";
 
 const PRIORITY_STYLES: Record<string, string> = {
   Urgent: "bg-red-100 text-red-700",
@@ -89,41 +47,126 @@ const ALERT_STYLES: Record<string, string> = {
 };
 
 export default function ControlTowerPage() {
-  const { data, isLoading } = useQuery({
-    queryKey: ["control-tower"],
-    queryFn: async () => ({ stats: MOCK_STATS, queue: MOCK_QUEUE, beds: MOCK_BEDS, alerts: MOCK_ALERTS }),
-    refetchInterval: 30000,
-  });
+  const facility = useFacilityStore((s) => s.facility);
+  const fid = facility?.id;
+  const queryClient = useQueryClient();
 
-  const stats = data?.stats ?? MOCK_STATS;
-  const queue = data?.queue ?? [];
-  const beds = data?.beds ?? [];
-  const alerts = data?.alerts ?? [];
+  const wardsQ = useFacilityWards(fid);
+  const bedsQ = useFacilityBeds(fid);
+  const queueQ = useFacilityQueueWaiting(fid);
+  const statsQ = useFacilityQueueStats(fid);
+  const shiftsQ = useFacilityActiveShiftCount(fid);
+
+  const wards = wardsQ.data?.data ?? [];
+  const beds = bedsQ.data?.data ?? [];
+  const queueEntries = queueQ.data?.data ?? [];
+  const queueStats = statsQ.data?.data;
+
+  const queueRows = useMemo(() => buildQueueRows(queueEntries), [queueEntries]);
+  const bedUtil = useMemo(() => buildWardUtilization(wards, beds), [wards, beds]);
+  const queueByType = useMemo(() => buildQueuePerformanceByType(queueEntries), [queueEntries]);
+
+  const alerts = useMemo(
+    () =>
+      buildOperationalAlerts({
+        wards,
+        beds,
+        queueStats,
+        queueEntriesWaiting: queueEntries,
+      }),
+    [wards, beds, queueStats, queueEntries]
+  );
+
+  const statCards = useMemo(() => {
+    const occupied = beds.filter((b) => b.attributes.status === "OCCUPIED").length;
+    const total = beds.length;
+    const occPct = total > 0 ? Math.round((occupied / total) * 100) : 0;
+    const avgMin =
+      queueStats && queueStats.avgWaitSeconds > 0
+        ? Math.max(1, Math.round(queueStats.avgWaitSeconds / 60))
+        : 0;
+    const waitLabel = queueStats && queueStats.waiting > 0 ? `${avgMin} min` : "—";
+
+    return [
+      {
+        label: "Patients in beds",
+        value: String(occupied),
+        footnote: total > 0 ? `${occupied} occupied of ${total} configured beds` : "No bed rows for facility",
+        icon: Users,
+        color: "bg-blue-500",
+      },
+      {
+        label: "Avg wait (waiting, today)",
+        value: waitLabel,
+        footnote:
+          queueStats && queueStats.waiting > 0
+            ? `${queueStats.waiting} waiting (today's queue snapshot)`
+            : "Queue stats when patients are waiting",
+        icon: Clock,
+        color: "bg-amber-500",
+      },
+      {
+        label: "Bed occupancy",
+        value: total > 0 ? `${occPct}%` : "—",
+        footnote: total > 0 ? `${occupied} / ${total}` : "Configure wards and beds in admin",
+        icon: BedDouble,
+        color: "bg-purple-500",
+      },
+      {
+        label: "Active shifts (roster week)",
+        value: String(shiftsQ.activeShiftCount),
+        footnote: "Distinct staff with ACTIVE shift and no end time in current ISO week",
+        icon: UserCheck,
+        color: "bg-green-500",
+      },
+    ];
+  }, [beds, queueStats, shiftsQ.activeShiftCount]);
+
+  const loading =
+    !!fid &&
+    (wardsQ.isLoading || bedsQ.isLoading || queueQ.isLoading || statsQ.isLoading || shiftsQ.isLoading);
+
+  const onRefresh = () => {
+    if (!fid) return;
+    void queryClient.invalidateQueries({ queryKey: facilityOpsKeys.all(fid) });
+    void queryClient.invalidateQueries({ queryKey: ["staffing", "roster-week", fid] });
+  };
 
   return (
     <AppLayout>
-      <PageShell title="Control Tower" subtitle="Real-time facility operations dashboard">
-        {isLoading ? (
+      <PageShell title="Control Tower" subtitle="Facility operations dashboard (live BFF data)">
+        {!fid ? (
+          <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
+            <BarChart3 className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+            <p className="text-gray-600 text-sm">Select a facility to load control tower metrics.</p>
+            <Link href="/home" className="mt-2 inline-block text-sm text-blue-600 hover:text-blue-800">
+              Go to Home →
+            </Link>
+          </div>
+        ) : loading ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">Loading dashboard...</span>
+            <span className="ml-2 text-sm text-gray-500">Loading dashboard…</span>
           </div>
         ) : (
           <div className="space-y-6">
-            {/* Header */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <BarChart3 className="w-5 h-5 text-rose-600" />
-                <h2 className="text-lg font-semibold text-gray-900">Facility Overview</h2>
+                <h2 className="text-lg font-semibold text-gray-900">Facility overview</h2>
+                <span className="text-xs text-gray-500">({facility.name})</span>
               </div>
-              <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+              <button
+                type="button"
+                onClick={onRefresh}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
                 <RefreshCw className="w-3.5 h-3.5" /> Refresh
               </button>
             </div>
 
-            {/* Stat Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {stats.map((stat) => {
+              {statCards.map((stat) => {
                 const Icon = stat.icon;
                 return (
                   <div key={stat.label} className="bg-white rounded-lg border border-gray-200 p-5">
@@ -131,81 +174,134 @@ export default function ControlTowerPage() {
                       <div className={`w-10 h-10 rounded-lg ${stat.color} flex items-center justify-center`}>
                         <Icon className="w-5 h-5 text-white" />
                       </div>
-                      {stat.change !== 0 && (
-                        <span className={`flex items-center gap-0.5 text-xs font-medium ${stat.change > 0 ? "text-green-600" : "text-red-600"}`}>
-                          {stat.change > 0 ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
-                          {Math.abs(stat.change)}
-                        </span>
-                      )}
                     </div>
                     <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
                     <p className="text-xs text-gray-500 mt-1">{stat.label}</p>
+                    <p className="text-[10px] text-gray-400 mt-2 leading-snug">{stat.footnote}</p>
                   </div>
                 );
               })}
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Queue Status */}
               <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
                 <div className="px-5 py-4 border-b border-gray-200 flex items-center justify-between">
-                  <h3 className="font-medium text-gray-900">Queue Status</h3>
-                  <span className="text-xs text-gray-400">{queue.length} patients</span>
+                  <h3 className="font-medium text-gray-900">Queue — waiting</h3>
+                  <span className="text-xs text-gray-400">{queueRows.length} entries (page)</span>
                 </div>
                 <div className="divide-y divide-gray-100">
-                  {queue.map((item) => (
-                    <div key={item.id} className="px-5 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors">
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">{item.patientName}</p>
-                        <p className="text-xs text-gray-500">{item.type} &middot; Waiting {item.waitTime}</p>
+                  {queueRows.length === 0 ? (
+                    <div className="px-5 py-8 text-center text-sm text-gray-500">No WAITING queue entries.</div>
+                  ) : (
+                    queueRows.map((item) => (
+                      <div
+                        key={item.id}
+                        className="px-5 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors"
+                      >
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">{item.patientName}</p>
+                          <p className="text-xs text-gray-500">
+                            {item.type} &middot; Waiting {item.waitTime}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-xs font-medium ${PRIORITY_STYLES[item.priority]}`}
+                          >
+                            {item.priority}
+                          </span>
+                          {item.assignedTo ? (
+                            <span className="text-xs text-green-600">{item.assignedTo}</span>
+                          ) : (
+                            <span className="text-xs text-amber-600">Unassigned</span>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${PRIORITY_STYLES[item.priority]}`}>{item.priority}</span>
-                        {item.assignedTo ? (
-                          <span className="text-xs text-green-600">{item.assignedTo}</span>
-                        ) : (
-                          <span className="text-xs text-amber-600">Unassigned</span>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </div>
 
-              {/* Bed Utilization */}
               <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
                 <div className="px-5 py-4 border-b border-gray-200">
-                  <h3 className="font-medium text-gray-900">Bed Utilization</h3>
+                  <h3 className="font-medium text-gray-900">Bed utilization by ward</h3>
                 </div>
                 <div className="p-5 space-y-4">
-                  {beds.map((ward) => {
-                    const occupancyPct = Math.round((ward.occupied / ward.total) * 100);
-                    return (
-                      <div key={ward.ward}>
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-sm text-gray-700">{ward.ward}</span>
-                          <span className="text-xs text-gray-500">{ward.occupied}/{ward.total} ({occupancyPct}%)</span>
+                  {bedUtil.length === 0 ? (
+                    <p className="text-sm text-gray-500">No ward or bed data for this facility.</p>
+                  ) : (
+                    bedUtil.map((ward) => {
+                      const occupancyPct = ward.total > 0 ? Math.round((ward.occupied / ward.total) * 100) : 0;
+                      return (
+                        <div key={ward.ward}>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-sm text-gray-700">{ward.ward}</span>
+                            <span className="text-xs text-gray-500">
+                              {ward.occupied}/{ward.total} ({occupancyPct}%)
+                            </span>
+                          </div>
+                          <div className="w-full bg-gray-100 rounded-full h-3 flex overflow-hidden">
+                            <div
+                              className="bg-blue-500 h-3"
+                              style={{
+                                width: ward.total > 0 ? `${(ward.occupied / ward.total) * 100}%` : "0%",
+                              }}
+                            />
+                            <div
+                              className="bg-amber-400 h-3"
+                              style={{
+                                width: ward.total > 0 ? `${(ward.cleaning / ward.total) * 100}%` : "0%",
+                              }}
+                            />
+                          </div>
+                          <div className="flex items-center gap-3 mt-1 text-[10px] text-gray-400">
+                            <span>{ward.available} available</span>
+                            {ward.cleaning > 0 && <span>{ward.cleaning} cleaning</span>}
+                          </div>
                         </div>
-                        <div className="w-full bg-gray-100 rounded-full h-3 flex overflow-hidden">
-                          <div className="bg-blue-500 h-3" style={{ width: `${(ward.occupied / ward.total) * 100}%` }} />
-                          <div className="bg-amber-400 h-3" style={{ width: `${(ward.cleaning / ward.total) * 100}%` }} />
-                        </div>
-                        <div className="flex items-center gap-3 mt-1 text-[10px] text-gray-400">
-                          <span>{ward.available} available</span>
-                          {ward.cleaning > 0 && <span>{ward.cleaning} cleaning</span>}
-                        </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })
+                  )}
                 </div>
               </div>
             </div>
 
-            {/* Alerts & Escalations */}
+            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+              <div className="px-5 py-4 border-b border-gray-200">
+                <h3 className="font-medium text-gray-900">Waiting load by queue type</h3>
+                <p className="text-xs text-gray-500 mt-1">Derived from the same WAITING page as the queue list.</p>
+              </div>
+              <div className="p-5 space-y-3">
+                {queueByType.length === 0 ? (
+                  <p className="text-sm text-gray-500">No waiting entries to group.</p>
+                ) : (
+                  queueByType.map((q) => (
+                    <div key={q.name} className="flex items-center justify-between text-sm p-2 rounded-lg bg-gray-50">
+                      <div>
+                        <span className="font-medium">{q.name}</span>
+                        <div className="text-xs text-gray-500 mt-0.5">{q.waiting} waiting</div>
+                      </div>
+                      <span
+                        className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                          q.avgWait > 30
+                            ? "bg-red-100 text-red-700"
+                            : q.avgWait > 20
+                              ? "bg-gray-100 text-gray-600"
+                              : "bg-green-100 text-green-700"
+                        }`}
+                      >
+                        ~{q.avgWait} min avg
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
             <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
               <div className="px-5 py-4 border-b border-gray-200 flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 text-amber-500" />
-                <h3 className="font-medium text-gray-900">Alerts & Escalations</h3>
+                <h3 className="font-medium text-gray-900">Alerts &amp; thresholds</h3>
               </div>
               <div className="divide-y divide-gray-100">
                 {alerts.map((alert) => (

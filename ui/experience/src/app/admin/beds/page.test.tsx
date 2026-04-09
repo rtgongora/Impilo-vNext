@@ -36,6 +36,16 @@ vi.mock("@/hooks/useFacilityStore", () => ({
     selector({ facility: { id: "facility-1", name: "Harare Central" } }),
 }));
 
+vi.mock("@/hooks/queries/useFacilityOperations", () => ({
+  facilityOpsKeys: {
+    all: (fid: string) => ["facility-ops", fid],
+    wards: (fid: string) => ["facility-ops", fid, "wards"],
+    beds: (fid: string) => ["facility-ops", fid, "beds"],
+    queueWaiting: (fid: string) => ["facility-ops", fid, "queue", "waiting"],
+    queueStats: (fid: string) => ["facility-ops", fid, "queue", "stats"],
+  },
+}));
+
 vi.mock("@tanstack/react-query", () => ({
   useQuery: () => ({
     data: {

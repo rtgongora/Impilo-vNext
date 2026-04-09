@@ -1,31 +1,16 @@
 "use client";
 
-/**
- * Order Detail â€” View order information, items, and status timeline.
- * Route: /marketplace/orders/[id]
- */
-
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import {
-  Loader2,
-  AlertTriangle,
-  ArrowLeft,
-  Package,
-  CheckCircle2,
-  Clock,
-  Truck,
-} from "lucide-react";
+import { AlertTriangle, ArrowLeft, CheckCircle2, Clock, Loader2, Package, Truck } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useMarketplaceOrder } from "@/hooks/queries/useMarketplace";
 
-const STATUS_TIMELINE = ["PLACED", "CONFIRMED", "PROCESSING", "SHIPPED", "DELIVERED"];
-
+const STATUS_TIMELINE = ["PENDING", "APPROVED", "SHIPPED", "DELIVERED"];
 const STATUS_ICON: Record<string, typeof Clock> = {
-  PLACED: Clock,
-  CONFIRMED: CheckCircle2,
-  PROCESSING: Package,
+  PENDING: Clock,
+  APPROVED: CheckCircle2,
   SHIPPED: Truck,
   DELIVERED: CheckCircle2,
 };
@@ -33,132 +18,84 @@ const STATUS_ICON: Record<string, typeof Clock> = {
 export default function OrderDetailPage() {
   const params = useParams();
   const id = params.id as string;
+  const orderQuery = useMarketplaceOrder(id);
+  const order = orderQuery.data;
 
-  const { data, isLoading, error } = useMarketplaceOrder(id);
-  const order = data?.data;
-
-  function getTimelineIndex(status: string): number {
-    return STATUS_TIMELINE.indexOf(status);
-  }
+  const currentIndex = order ? STATUS_TIMELINE.indexOf(order.status) : -1;
 
   return (
     <AppLayout>
-      <PageShell title="Order Details" subtitle="View order information and tracking">
+      <PageShell title="Order Details" subtitle="View order information, line items, and fulfilment status.">
         <div className="mb-4">
-          <Link
-            href="/marketplace/orders"
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
-          >
-            <ArrowLeft className="w-4 h-4" /> Back to Orders
+          <Link href="/marketplace/orders" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700">
+            <ArrowLeft className="h-4 w-4" /> Back to orders
           </Link>
         </div>
 
-        {isLoading ? (
-          <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">Loading order...</span>
+        {orderQuery.isLoading ? (
+          <div className="flex items-center justify-center py-16 text-sm text-gray-500">
+            <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Loading order...
           </div>
-        ) : error || !order ? (
-          <div className="bg-red-50 rounded-lg border border-red-200 p-6 text-center">
-            <AlertTriangle className="w-8 h-8 text-red-400 mx-auto mb-2" />
-            <p className="text-red-600 text-sm">Failed to load order details</p>
+        ) : !order ? (
+          <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center">
+            <AlertTriangle className="mx-auto mb-2 h-8 w-8 text-red-400" />
+            <p className="text-sm text-red-600">Failed to load order details.</p>
           </div>
         ) : (
-          <div className="max-w-2xl space-y-6">
-            {/* Order Summary */}
-            <div className="bg-white rounded-lg border border-gray-200 p-5">
-              <div className="flex items-start justify-between mb-4">
+          <div className="max-w-3xl space-y-6">
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="flex items-start justify-between gap-4">
                 <div>
-                  <h3 className="font-medium text-gray-900">Order #{order.id.slice(0, 8).toUpperCase()}</h3>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    Placed: {new Date(order.attributes.createdAt).toLocaleString()}
-                  </p>
+                  <h3 className="text-lg font-semibold text-slate-900">{order.orderNumber}</h3>
+                  <p className="mt-1 text-sm text-slate-500">Placed {new Date(order.createdAt).toLocaleString()} • Ordered by {order.orderedBy}</p>
                 </div>
-                <span
-                  className={`inline-block px-2 py-0.5 text-xs rounded-full font-medium ${
-                    order.attributes.status === "DELIVERED"
-                      ? "bg-green-100 text-green-700"
-                      : order.attributes.status === "CANCELLED"
-                      ? "bg-red-100 text-red-700"
-                      : "bg-blue-100 text-blue-700"
-                  }`}
-                >
-                  {order.attributes.status}
+                <span className={`rounded-full px-3 py-1 text-xs font-semibold ${order.status === "DELIVERED" ? "bg-emerald-100 text-emerald-800" : order.status === "SHIPPED" ? "bg-indigo-100 text-indigo-800" : "bg-amber-100 text-amber-800"}`}>
+                  {order.status}
                 </span>
               </div>
-              <dl className="grid grid-cols-2 gap-3 text-sm">
+              <dl className="mt-4 grid gap-4 text-sm sm:grid-cols-2">
                 <div>
-                  <dt className="text-gray-500">Facility</dt>
-                  <dd className="font-medium text-gray-900">{order.attributes.facilityId}</dd>
+                  <dt className="text-slate-500">Facility</dt>
+                  <dd className="font-medium text-slate-900">{order.facilityId}</dd>
                 </div>
                 <div>
-                  <dt className="text-gray-500">Total Amount</dt>
-                  <dd className="font-medium text-gray-900">
-                    ${order.attributes.totalAmount.toFixed(2)}
-                  </dd>
+                  <dt className="text-slate-500">Total amount</dt>
+                  <dd className="font-medium text-slate-900">{order.currency} {order.totalAmount.toFixed(2)}</dd>
                 </div>
               </dl>
             </div>
 
-            {/* Items */}
-            <div className="bg-white rounded-lg border border-gray-200 p-5">
-              <h3 className="font-medium text-gray-900 mb-3">Order Items</h3>
-              <div className="space-y-3">
-                {order.attributes.items.map((item, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                  >
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <h3 className="text-lg font-semibold text-slate-900">Order items</h3>
+              <div className="mt-4 space-y-3">
+                {order.items.map((item, index) => (
+                  <div key={`${item.productId}-${index}`} className="flex items-center justify-between rounded-xl bg-slate-50 p-3">
                     <div className="flex items-center gap-3">
-                      <Package className="w-5 h-5 text-gray-400" />
+                      <Package className="h-5 w-5 text-slate-400" />
                       <div>
-                        <p className="text-sm font-medium text-gray-900">
-                          Product: {item.productId}
-                        </p>
-                        <p className="text-xs text-gray-500">Qty: {item.quantity}</p>
+                        <p className="text-sm font-medium text-slate-900">{item.description || item.productId}</p>
+                        <p className="text-xs text-slate-500">{item.productId} • Qty {item.quantity}</p>
                       </div>
                     </div>
-                    <span className="text-sm font-medium text-gray-900">
-                      ${(item.unitPrice * item.quantity).toFixed(2)}
-                    </span>
+                    <span className="text-sm font-medium text-slate-900">{order.currency} {(item.unitPrice * item.quantity).toFixed(2)}</span>
                   </div>
                 ))}
               </div>
-              <div className="mt-4 pt-3 border-t flex justify-between text-sm">
-                <span className="font-medium text-gray-700">Total</span>
-                <span className="font-bold text-gray-900">
-                  ${order.attributes.totalAmount.toFixed(2)}
-                </span>
-              </div>
             </div>
 
-            {/* Status Timeline */}
-            <div className="bg-white rounded-lg border border-gray-200 p-5">
-              <h3 className="font-medium text-gray-900 mb-4">Status Timeline</h3>
-              <div className="space-y-3">
-                {STATUS_TIMELINE.map((step, i) => {
-                  const currentIndex = getTimelineIndex(order.attributes.status);
-                  const isCompleted = i <= currentIndex;
-                  const isCurrent = i === currentIndex;
-                  const Icon = STATUS_ICON[step] || Clock;
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <h3 className="text-lg font-semibold text-slate-900">Fulfilment timeline</h3>
+              <div className="mt-4 space-y-3">
+                {STATUS_TIMELINE.map((step, index) => {
+                  const Icon = STATUS_ICON[step] ?? Clock;
+                  const completed = index <= currentIndex;
+                  const current = index === currentIndex;
                   return (
                     <div key={step} className="flex items-center gap-3">
-                      <div
-                        className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-                          isCompleted
-                            ? "bg-green-100 text-green-600"
-                            : "bg-gray-100 text-gray-400"
-                        } ${isCurrent ? "ring-2 ring-green-400" : ""}`}
-                      >
-                        <Icon className="w-4 h-4" />
+                      <div className={`flex h-8 w-8 items-center justify-center rounded-full ${completed ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-400"} ${current ? "ring-2 ring-emerald-300" : ""}`}>
+                        <Icon className="h-4 w-4" />
                       </div>
-                      <span
-                        className={`text-sm ${
-                          isCompleted ? "text-gray-900 font-medium" : "text-gray-400"
-                        }`}
-                      >
-                        {step}
-                      </span>
+                      <span className={`text-sm ${completed ? "font-medium text-slate-900" : "text-slate-400"}`}>{step}</span>
                     </div>
                   );
                 })}

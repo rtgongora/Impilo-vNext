@@ -7,6 +7,7 @@
  */
 
 import { useState, type FormEvent } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   Shield, UserCheck, FileText, DollarSign, Briefcase,
   Loader2, CheckCircle2, AlertCircle, Search, Plus, Clock,
@@ -14,10 +15,25 @@ import {
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
+import { OrganizationPlaneContextBar } from "@/components/experience/OrganizationPlaneContextBar";
 import { PageShell } from "@/components/PageShell";
+import { WorkflowHeader } from "@/components/workflow/WorkflowHeader";
+import {
+  useCheckCoverageEligibility,
+  useCoverageClaims,
+  useCoverageMembers,
+  useCoveragePlans,
+  useCoverageRemittances,
+  useCreateCoverageClaim,
+  useCreateCoveragePreauth,
+  useEnrollCoverageMember,
+  type CoveragePlan,
+} from "@/hooks/queries/useCoverage";
+import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
 
 type ActiveTab = "dashboard" | "schemes" | "membership" | "eligibility" | "contracting" | "preauth" | "claims" | "contributions" | "settlement" | "appeals" | "intelligence";
+type CoverageCoreTab = "dashboard" | "schemes" | "membership" | "eligibility" | "preauth" | "claims" | "settlement";
 
 const TABS: { key: ActiveTab; label: string; icon: typeof Shield }[] = [
   { key: "dashboard", label: "Dashboard", icon: Shield },
@@ -32,6 +48,31 @@ const TABS: { key: ActiveTab; label: string; icon: typeof Shield }[] = [
   { key: "appeals", label: "Appeals", icon: Scale },
   { key: "intelligence", label: "Intelligence", icon: Shield },
 ];
+
+const CORE_TABS: { key: CoverageCoreTab; label: string; icon: typeof Shield }[] = [
+  { key: "dashboard", label: "Dashboard", icon: Shield },
+  { key: "schemes", label: "Schemes", icon: Briefcase },
+  { key: "membership", label: "Membership", icon: Users },
+  { key: "eligibility", label: "Eligibility", icon: UserCheck },
+  { key: "preauth", label: "Pre-Auth", icon: ShieldCheck },
+  { key: "claims", label: "Claims", icon: FileText },
+  { key: "settlement", label: "Settlement", icon: DollarSign },
+];
+
+function formatCoverageDate(value?: string) {
+  if (!value) return "Pending";
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return parsed.toLocaleDateString();
+}
+
+function formatCoverageCurrency(value: number, currency = "USD") {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency,
+    maximumFractionDigits: 0,
+  }).format(value);
+}
 
 export default function CoveragePage() {
   const [activeTab, setActiveTab] = useState<ActiveTab>("dashboard");

@@ -15,6 +15,7 @@ import { PageShell } from "@/components/PageShell";
 import { WorkflowHeader } from "@/components/workflow/WorkflowHeader";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { apiClient } from "@/lib/api-client";
+import { facilityOpsKeys } from "@/hooks/queries/useFacilityOperations";
 
 export default function AdminBedsPage() {
   const facility = useFacilityStore((s) => s.facility);
@@ -39,6 +40,9 @@ export default function AdminBedsPage() {
       apiClient.post("/internal/v1/admin/wards", body),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-wards"] });
+      if (facility?.id) {
+        queryClient.invalidateQueries({ queryKey: facilityOpsKeys.all(facility.id) });
+      }
       setShowForm(false);
       setWardName("");
     },
