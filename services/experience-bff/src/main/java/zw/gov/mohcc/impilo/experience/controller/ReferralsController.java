@@ -432,9 +432,6 @@ public class ReferralsController {
                 Map.of()
         );
 
-        Referral referral = referralRepository.findByIdAndTenantId(id, tenantId)
-                .orElseThrow(() -> new ResourceNotFoundException("Referral not found: " + id));
-
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", toResource(referral));
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));

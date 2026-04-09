@@ -1,7 +1,14 @@
 # Impilo vNext — manual smoke checks for staffing APIs after compose/experience is up.
 # Prerequisites: experience-bff healthy on http://localhost:8160 (see compose/experience/docker-compose.yml)
 #
-# Usage: pwsh -File tools/experience/smoke-staffing.ps1
+# Usage: powershell -File tools/experience/smoke-staffing.ps1
+#
+# StaffingApiIntegrationTest (Maven): Docker Desktop on Windows often breaks Testcontainers' Java client (HTTP 400).
+# Point tests at the compose Postgres instead (start experience-db first — port 5433 on host):
+#   $env:EXPERIENCE_BFF_TEST_JDBC_URL = "jdbc:postgresql://localhost:5433/experience_bff"
+#   $env:EXPERIENCE_BFF_TEST_DB_USER = "impilo"
+#   $env:EXPERIENCE_BFF_TEST_DB_PASSWORD = "impilo"
+#   cd services; mvn -pl experience-bff test -Dtest=StaffingApiIntegrationTest
 
 $ErrorActionPreference = "Stop"
 $base = if ($env:BFF_URL) { $env:BFF_URL.TrimEnd('/') } else { "http://localhost:8160" }
