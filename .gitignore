@@ -53,3 +53,9 @@ vendor/m2/repository/*
 
 # ===== Local Nexus data =====
 tools/maven/nexus/data/
+
+# ===== Local Maven artifacts =====
+.m2repo/
+services/.m2/
+services/.m2repo/
+services/.mvn/
