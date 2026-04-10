@@ -7,7 +7,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Wrench, Calendar, Download } from "lucide-react";
+import { Loader2, Wrench, Calendar } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useGenerateReport } from "@/hooks/queries/useReports";

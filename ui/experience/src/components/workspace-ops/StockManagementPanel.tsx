@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import {
   Package, ShoppingCart, Truck, ClipboardCheck, AlertTriangle,
-  Plus, Search, ArrowRightLeft, Calendar, TrendingDown, CheckCircle2,
+  Plus, Search, ArrowRightLeft, Calendar, TrendingDown,
   XCircle, Clock, X,
 } from 'lucide-react';
 

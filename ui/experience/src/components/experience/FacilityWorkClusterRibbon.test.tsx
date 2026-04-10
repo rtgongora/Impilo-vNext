@@ -2,7 +2,10 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { FacilityWorkClusterRibbon } from "./FacilityWorkClusterRibbon";
 
-const mockSearch = vi.fn((_key: string): string | null => null);
+const mockSearch = vi.fn((key: string): string | null => {
+  void key;
+  return null;
+});
 
 vi.mock("next/navigation", () => ({
   useSearchParams: () => ({ get: mockSearch }),

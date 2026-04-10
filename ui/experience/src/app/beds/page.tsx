@@ -11,7 +11,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Bed, ClipboardList, Loader2, AlertCircle, CheckCircle, Clock, Wrench, Sparkles, User } from "lucide-react";
+import { Bed, ClipboardList, Loader2, CheckCircle, Clock, Wrench, Sparkles, User } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";

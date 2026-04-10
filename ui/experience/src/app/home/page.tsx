@@ -17,7 +17,7 @@ import {
   Activity, Receipt, Pill, Calendar, Shield, Stethoscope,
   ClipboardList, Package, Settings, FileText, MapPin,
   ChevronRight, Video, ShoppingCart, Database, AlertTriangle,
-  Briefcase, Heart, Globe, Siren, Award, GraduationCap, User, ShieldCheck, UserCog,
+  Briefcase, Heart, Globe, Siren, Award, User, ShieldCheck, UserCog,
   MessageSquare, Radio, TestTube2, Scan,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";

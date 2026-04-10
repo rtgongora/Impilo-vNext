@@ -36,7 +36,7 @@ const LICENSE_STATUS_STYLES: Record<string, { bg: string; text: string; icon: ty
 export default function CredentialsPage() {
   const user = useAuthStore((s) => s.user);
   const { data: licenseData, isLoading } = useProviderLicenses(user?.id);
-  const { data: affiliationData } = useCouncilAffiliations(user?.id);
+  useCouncilAffiliations(user?.id);
   const { data: cpdData } = useProviderCpd(user?.id);
   const cpd = cpdData?.data;
 

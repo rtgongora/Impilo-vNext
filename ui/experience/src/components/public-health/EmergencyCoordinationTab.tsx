@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Siren, Plus, FileText, Navigation } from "lucide-react";
+import { Siren, Plus, FileText } from "lucide-react";
 
 const EOC_STATUS = { level: "Level 2 - Enhanced Response", active: true, activatedAt: "2026-04-02 14:30", incident: "Cholera Outbreak - Harare South", commander: "Dr. M. Nyathi (Provincial PEHO)" };
 

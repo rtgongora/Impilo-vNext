@@ -5,7 +5,7 @@
  * Route: /home/notifications
  */
 
-import { Loader2, AlertTriangle, Bell, BellOff, Check, Mail, AlertCircle, Info } from "lucide-react";
+import { Loader2, AlertTriangle, BellOff, Check, Mail, AlertCircle, Info } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";

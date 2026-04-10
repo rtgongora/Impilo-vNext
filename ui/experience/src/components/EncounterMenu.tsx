@@ -131,15 +131,14 @@ export function EncounterMenu() {
   const params = useParams();
   const pathname = usePathname();
   const patientId = params?.patientId as string | undefined;
+  const patientIdOrEmpty = patientId ?? "";
 
-  if (!patientId) return null;
+  const { data: patientData } = usePatient(patientIdOrEmpty);
+  const { data: encountersData } = useEncounters(patientIdOrEmpty);
+  const { data: notesData } = useClinicalNotes(patientIdOrEmpty);
+  const { data: vitalsData } = useVitals(patientIdOrEmpty);
 
-  const activeSegment = getActiveSegment(pathname, patientId);
-  const { data: patientData } = usePatient(patientId);
-  const { data: encountersData } = useEncounters(patientId);
-  const { data: notesData } = useClinicalNotes(patientId);
-  const { data: vitalsData } = useVitals(patientId);
-
+  const activeSegment = getActiveSegment(pathname, patientIdOrEmpty);
   const patient = patientData?.data;
   const activeEncounter = (encountersData?.data ?? []).find(
     (encounter) =>
@@ -168,6 +167,8 @@ export function EncounterMenu() {
     }
     return null;
   }, [activeSegment]);
+
+  if (!patientId) return null;
 
   return (
     <aside className="w-64 bg-white border-r overflow-y-auto shrink-0">

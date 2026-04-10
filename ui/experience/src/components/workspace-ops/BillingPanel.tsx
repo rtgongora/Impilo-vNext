@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import {
-  DollarSign, FileText, CreditCard, AlertCircle, CheckCircle2,
-  Clock, TrendingUp, Receipt, Send, BarChart3, XCircle,
+  FileText, CreditCard, AlertCircle, CheckCircle2,
+  Clock, Receipt, Send, BarChart3,
 } from 'lucide-react';
 
 // ─── Types ───

@@ -32,7 +32,6 @@ import { PageShell } from "@/components/PageShell";
 import { ClinicalAlerts } from "@/components/ClinicalAlerts";
 import { useClinicalAlerts } from "@/hooks/useClinicalAlerts";
 import { useEncounter, useCloseEncounter } from "@/hooks/queries/useEncounters";
-import { usePatient } from "@/hooks/queries/usePatients";
 import { useReferrals, type ReferralResource } from "@/hooks/queries/useReferrals";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useQuery } from "@tanstack/react-query";
@@ -47,7 +46,6 @@ export default function EncounterPage() {
   const facility = useFacilityStore((state) => state.facility);
 
   const { data: encounterData, isLoading: isLoadingEncounter } = useEncounter(encounterId);
-  const { data: patientData } = usePatient(patientId);
   const { data: referralsData } = useReferrals(patientId);
   const closeEncounter = useCloseEncounter();
 
@@ -98,7 +96,6 @@ export default function EncounterPage() {
   const currentUserName = user?.displayName ?? user?.email ?? "Provider";
 
   const encounter = encounterData?.data;
-  const patient = patientData?.data;
 
   // Vitals form state
   const [systolic, setSystolic] = useState("");

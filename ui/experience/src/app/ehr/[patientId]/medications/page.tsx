@@ -66,7 +66,7 @@ export default function MedicationsPage() {
   const { user } = useAuthStore();
   const facility = useFacilityStore((s) => s.facility);
   const queryClient = useQueryClient();
-  const { isPrescriber, isDispenser } = useRoleGroup();
+  const { isPrescriber } = useRoleGroup();
   const { data: encountersData } = useEncounters(patientId);
   const activeEncounter = (encountersData?.data ?? []).find(
     (e) => e.attributes.status === "IN_PROGRESS" || e.attributes.status === "ACTIVE"

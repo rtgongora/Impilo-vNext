@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import {
-  Users, Clock, Calendar, UserCheck, UserX, Coffee,
+  Users, Clock, Calendar, UserCheck, Coffee,
   AlertTriangle, ArrowRightLeft, FileText, Shield, Sun, Moon,
 } from 'lucide-react';
 

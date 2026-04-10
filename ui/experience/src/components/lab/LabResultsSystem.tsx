@@ -385,11 +385,7 @@ const orderStatusConfig: Record<
 };
 
 /* ---------- component ---------- */
-interface LabResultsSystemProps {
-  encounterId?: string;
-}
-
-export function LabResultsSystem({ encounterId }: LabResultsSystemProps) {
+export function LabResultsSystem() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<"all" | "pending" | "abnormal">("all");
 

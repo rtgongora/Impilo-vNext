@@ -6,7 +6,7 @@
  * Backed by VITO + TSHEPO-IDENTITY + VARAPI.
  */
 
-import { useState, type FormEvent } from "react";
+import { useState } from "react";
 import { RegistryPlaneContextBar } from "@/components/experience/RegistryPlaneContextBar";
 import {
   Shield, UserPlus, Search, RefreshCw, Layers, BookOpen,

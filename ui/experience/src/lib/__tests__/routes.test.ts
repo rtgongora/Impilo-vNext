@@ -5,7 +5,6 @@ import {
   ROUTE_COUNT,
   ZONES,
   ZONE_COUNT,
-  type RouteDefinition,
   type LayoutVariant,
   type SidebarContext,
   type GuardType,

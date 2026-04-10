@@ -181,7 +181,6 @@ export function buildAvailableOperationalModes(user: OperationalAuthPrincipal | 
   if (!user) return [];
 
   const roles = user.roles ?? [];
-  const has = (r: string) => roles.includes(r);
   const allowed = new Set<OperationalMode>();
 
   allowed.add("my_life");

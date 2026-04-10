@@ -24,8 +24,6 @@ import {
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
-import { useRoleGroup } from "@/hooks/useRoleGroup";
-
 const CLINICAL_MODULES = [
   { label: "My Dashboard", description: "Your worklist, tasks, and alerts", href: "/queue", icon: ClipboardList, color: "bg-blue-100 text-blue-600" },
   { label: "Communication", description: "Messages, pages & calls", href: "/home/notifications", icon: MessageSquare, color: "bg-blue-100 text-blue-600" },
@@ -48,8 +46,6 @@ const CLINICAL_MODULES = [
 ];
 
 export default function ClinicalHubPage() {
-  const { isClinical } = useRoleGroup();
-
   return (
     <AppLayout>
       <PageShell title="Clinical Care" subtitle="Patient encounters, assessments, and care delivery">

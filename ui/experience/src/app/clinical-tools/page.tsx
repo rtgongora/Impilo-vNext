@@ -10,7 +10,7 @@
 
 import { useState, useRef, useCallback } from "react";
 import {
-  Mic, MicOff, Wifi, WifiOff, FileText, Activity,
+  Mic, MicOff, Wifi, FileText, Activity,
   Shield, RefreshCw, CheckCircle2, AlertTriangle, Download,
   Loader2, Settings, Heart, ClipboardList,
 } from "lucide-react";

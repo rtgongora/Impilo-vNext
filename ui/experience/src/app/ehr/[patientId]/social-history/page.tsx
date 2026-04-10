@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import { ClipboardList, Edit3, Home, Loader2, Save, Target, Users, X } from "lucide-react";
+import { ClipboardList, Edit3, Home, Loader2, Save, Target, Users } from "lucide-react";
 import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";

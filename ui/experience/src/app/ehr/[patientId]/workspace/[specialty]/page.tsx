@@ -22,7 +22,6 @@ import {
   FileText, ClipboardList, AlertTriangle,
 } from "lucide-react";
 import { EHRLayout } from "@/components/EHRLayout";
-import { PageShell } from "@/components/PageShell";
 
 interface SpecialtyConfig {
   label: string;

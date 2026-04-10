@@ -163,7 +163,7 @@ const CADRE_MAP: Record<string, ClinicalCadre> = {
   patient: "chw", radiologist: "radiographer",
 };
 
-function getCadreComplexity(cadre: ClinicalCadre, _acuity: AcuityLevel): FormComplexity {
+function getCadreComplexity(cadre: ClinicalCadre): FormComplexity {
   const comprehensive: ClinicalCadre[] = [
     "doctor", "specialist", "consultant", "registrar", "intern_doctor",
     "dentist", "nurse_practitioner",
@@ -195,7 +195,7 @@ export function useCadreFormConfig(
 
   const profileRole = (role as string) || "doctor";
   const cadre: ClinicalCadre = overrides.cadre || CADRE_MAP[profileRole] || "doctor";
-  const complexity = getCadreComplexity(cadre, effectiveAcuity);
+  const complexity = getCadreComplexity(cadre);
 
   const isComprehensive = complexity === "comprehensive";
   const isFocused = complexity === "focused";

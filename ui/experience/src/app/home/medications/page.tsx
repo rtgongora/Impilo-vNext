@@ -13,7 +13,6 @@ import { ArrowLeft, Pill, Loader2, RefreshCw, CheckCircle2, AlertCircle } from "
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
-import { useAuthStore } from "@/hooks/useAuthStore";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
 
 interface PrescriptionResource {
@@ -47,7 +46,6 @@ function useMyPrescriptions() {
 }
 
 export default function MyMedicationsPage() {
-  const user = useAuthStore((s) => s.user);
   const queryClient = useQueryClient();
   const { data, isLoading, error } = useMyPrescriptions();
   const prescriptions = data?.data ?? [];

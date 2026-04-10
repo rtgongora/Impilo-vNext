@@ -4,7 +4,7 @@ import { useState } from 'react';
 import {
   Bell, BellOff, MessageSquare, ClipboardList, Megaphone,
   AlertTriangle, CheckCircle, Clock, ArrowRight, Send, X,
-  Volume2, VolumeX, Shield, ArrowRightLeft, Info, Phone,
+  Volume2, VolumeX, Shield, ArrowRightLeft, Phone,
 } from 'lucide-react';
 
 // ─── Types ───
@@ -104,7 +104,6 @@ export function NotificationsCommsHub() {
   const unreadCount = notifications.filter(n => !n.read).length;
   const hasCritical = notifications.some(n => !n.read && (n.priority === 'critical' || n.priority === 'high'));
   const filtered = filter === 'all' ? notifications : notifications.filter(n => n.category === filter);
-  const unreadMessages = notifications.filter(n => n.category === 'message' && !n.read).length;
 
   // Per-category unread counts
   const categoryUnread: Record<string, number> = {

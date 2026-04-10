@@ -3,7 +3,6 @@
  * Uses Web Speech API (browser-native) with ElevenLabs Scribe fallback.
  */
 import { useState, useRef, useCallback, useEffect } from "react";
-import { apiClient } from "@/lib/api-client";
 
 export type SpeechEngine = "browser" | "elevenlabs" | "auto";
 
@@ -28,8 +27,10 @@ interface UseSpeechToTextReturn {
   activeEngine: "browser" | "elevenlabs" | "none";
 }
 
-const getSpeechRecognitionClass = (): any =>
-  (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition || null;
+function getSpeechRecognitionClass(): SpeechRecognitionConstructor | null {
+  if (typeof window === "undefined") return null;
+  return window.SpeechRecognition ?? window.webkitSpeechRecognition ?? null;
+}
 
 const isBrowserSpeechSupported = () => !!getSpeechRecognitionClass();
 
@@ -52,7 +53,7 @@ export function useSpeechToText({
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [interimTranscript, setInterimTranscript] = useState("");
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const recordingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -101,10 +102,14 @@ export function useSpeechToText({
         return;
       }
 
-      const data = await resp.json();
-      if (data.text && data.text.trim()) {
+      const data: unknown = await resp.json();
+      const text =
+        data && typeof data === "object" && "text" in data && typeof (data as { text: unknown }).text === "string"
+          ? (data as { text: string }).text.trim()
+          : "";
+      if (text) {
         setTranscript((prev) => {
-          const newText = prev ? prev + " " + data.text.trim() : data.text.trim();
+          const newText = prev ? `${prev} ${text}` : text;
           onTranscript?.(newText, true);
           return newText;
         });
@@ -148,8 +153,9 @@ export function useSpeechToText({
           mediaRecorderRef.current = newRecorder;
         }
       }, 5000);
-    } catch (e: any) {
-      onError?.(e.message || "Failed to start ElevenLabs recording");
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Failed to start ElevenLabs recording";
+      onError?.(msg);
     }
   }, [sendChunkToScribe, onError]);
 
@@ -167,15 +173,15 @@ export function useSpeechToText({
     recognition.interimResults = interimResults;
     recognition.maxAlternatives = 1;
 
-    recognition.onresult = (event: any) => {
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
       let interim = "";
       let final = "";
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const result = event.results[i];
         if (result.isFinal) {
-          final += result[0].transcript;
+          final += result[0]?.transcript ?? "";
         } else {
-          interim += result[0].transcript;
+          interim += result[0]?.transcript ?? "";
         }
       }
       if (final) {
@@ -192,7 +198,7 @@ export function useSpeechToText({
       }
     };
 
-    recognition.onerror = (event: any) => {
+    recognition.onerror = (event: Event & { error?: string }) => {
       if (event.error === "aborted" || event.error === "no-speech") return;
       onError?.(event.error || "Speech recognition error");
       setIsListening(false);
@@ -211,8 +217,9 @@ export function useSpeechToText({
       recognitionRef.current = recognition;
       activeEngineRef.current = "browser";
       setIsListening(true);
-    } catch (e: any) {
-      onError?.(e.message || "Failed to start speech recognition");
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Failed to start speech recognition";
+      onError?.(msg);
     }
   }, [language, continuous, interimResults, onTranscript, onError, isListening]);
 

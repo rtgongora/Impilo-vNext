@@ -25,7 +25,6 @@ import {
   UserX,
   ClipboardList,
   FileSignature,
-  Calendar,
   AlertTriangle,
   Receipt,
   Stethoscope,
@@ -37,7 +36,6 @@ import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { apiClient } from "@/lib/api-client";
 import { useEncounters, type EncounterResource } from "@/hooks/queries/useEncounters";
-import { usePatient } from "@/hooks/queries/usePatients";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useRoleGroup } from "@/hooks/useRoleGroup";
@@ -73,8 +71,6 @@ export default function VisitOutcomePage() {
   const requestedEncounterId = searchParams.get("encounterId");
 
   const { data: encountersData, isLoading } = useEncounters(patientId);
-  const { data: patientData } = usePatient(patientId);
-  const patient = patientData?.data;
 
   const activeEncounter = encountersData?.data?.find(
     (e: EncounterResource) => e.attributes.status === "ACTIVE" || e.attributes.status === "IN_PROGRESS"

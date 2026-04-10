@@ -10,7 +10,7 @@
 import { ReactNode, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import {
-  Shield, Database, Scale, BookOpen, ClipboardList, Plus, Loader2, X, Trash2, CheckCircle, XCircle, Bot,
+  Shield, Database, Scale, BookOpen, ClipboardList, Plus, Loader2, Trash2, CheckCircle, XCircle, Bot,
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";

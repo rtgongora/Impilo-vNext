@@ -2,6 +2,7 @@
 interface SpeechRecognition extends EventTarget {
   continuous: boolean;
   interimResults: boolean;
+  maxAlternatives: number;
   lang: string;
   start(): void;
   stop(): void;
@@ -34,12 +35,12 @@ interface SpeechRecognitionAlternative {
   confidence: number;
 }
 
-declare var SpeechRecognition: {
+interface SpeechRecognitionConstructor {
   new (): SpeechRecognition;
   prototype: SpeechRecognition;
-};
+}
 
 interface Window {
-  SpeechRecognition: typeof SpeechRecognition;
-  webkitSpeechRecognition: typeof SpeechRecognition;
+  SpeechRecognition: SpeechRecognitionConstructor;
+  webkitSpeechRecognition: SpeechRecognitionConstructor;
 }

@@ -3,10 +3,8 @@
 import { useState } from 'react';
 import {
   Bed, Users, Activity, AlertTriangle, Building2, ArrowRightLeft,
-  User, Clock, RefreshCw, ChevronRight, Stethoscope, LogOut,
-  Heart, Eye, UserPlus, ClipboardList, Pill, Thermometer,
-  CheckCircle2, Circle, Timer, LogIn, ShieldCheck, CalendarCheck,
-  Clipboard, Syringe, ArrowLeft, X,
+  User, Clock, RefreshCw, ChevronRight, LogOut,
+  Heart, Eye, ArrowLeft, X,
 } from 'lucide-react';
 
 // ─── Types ───

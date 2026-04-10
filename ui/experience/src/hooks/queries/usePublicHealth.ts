@@ -7,10 +7,6 @@ function asRecord(value: unknown): UnknownRecord {
   return value && typeof value === "object" ? (value as UnknownRecord) : {};
 }
 
-function asArray<T>(value: unknown): T[] {
-  return Array.isArray(value) ? (value as T[]) : [];
-}
-
 /**
  * Unwraps BFF `data` payloads that mirror upstream services:
  * surveillance uses `items`, counters use `counters`, alerts use `alerts`,
