@@ -1,0 +1,885 @@
+{
+  "id": "impilo",
+  "realm": "impilo",
+  "enabled": true,
+  "displayName": "Impilo National Health Platform",
+  "displayNameHtml": "<strong>Impilo National Health Platform</strong>",
+  "loginWithEmailAllowed": true,
+  "registrationAllowed": false,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": false,
+  "sslRequired": "external",
+  "accessTokenLifespan": 300,
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 36000,
+  "accessCodeLifespan": 60,
+  "accessCodeLifespanUserAction": 300,
+  "defaultSignatureAlgorithm": "RS256",
+  "bruteForceProtected": true,
+  "duplicateEmailsAllowed": false,
+  "verifyEmail": false,
+  "internationalizationEnabled": false,
+  "defaultLocale": "en",
+  "roles": {
+    "realm": [
+      {
+        "name": "ADMIN",
+        "description": "National or programme administrator",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "CLINICAL",
+        "description": "Generic clinical privilege bucket",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "FINANCE",
+        "description": "Finance and revenue cycle",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "PRESCRIBER",
+        "description": "Medication prescribing authority",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "DISPENSER",
+        "description": "Pharmacy dispensing authority",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "QUEUE_MANAGER",
+        "description": "Queue and patient flow operations",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "BED_MANAGER",
+        "description": "Bed and ward capacity management",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "NURSE",
+        "description": "Registered nurse",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "DOCTOR",
+        "description": "Medical officer / general practitioner",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "SPECIALIST",
+        "description": "Specialist clinician",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "CONSULTANT",
+        "description": "Consultant-grade clinician",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "REGISTRAR",
+        "description": "Registrar / trainee doctor",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "INTERN_DOCTOR",
+        "description": "Intern or junior doctor",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "MIDWIFE",
+        "description": "Midwife",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "NURSE_PRACTITIONER",
+        "description": "Nurse practitioner",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "ENROLLED_NURSE",
+        "description": "Enrolled nurse",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "PHARMACIST",
+        "description": "Pharmacist",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "PHARMACY_TECH",
+        "description": "Pharmacy technician",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "LAB_TECH",
+        "description": "Laboratory technologist",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "PHYSIOTHERAPIST",
+        "description": "Physiotherapist",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "OCCUPATIONAL_THERAPIST",
+        "description": "Occupational therapist",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "SOCIAL_WORKER",
+        "description": "Medical social worker",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "PSYCHOLOGIST",
+        "description": "Psychologist",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "DIETITIAN",
+        "description": "Clinical dietitian",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "RADIOGRAPHER",
+        "description": "Diagnostic radiographer",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "SONOGRAPHER",
+        "description": "Sonographer",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "PARAMEDIC",
+        "description": "Paramedic",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "EMT",
+        "description": "Emergency medical technician",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "CHW",
+        "description": "Community health worker",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "ENV_HEALTH",
+        "description": "Environmental health practitioner",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "HEALTH_PROMOTER",
+        "description": "Health promotion officer",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "HEALTH_INFO_OFFICER",
+        "description": "Health information management",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "RECEPTIONIST",
+        "description": "Front-desk reception",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "SYSTEM_ADMIN",
+        "description": "Platform system administrator",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "SUPER_ADMIN",
+        "description": "Break-glass super administrator",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "CLINICAL_STAFF",
+        "description": "Composite clinical frontline",
+        "composite": true,
+        "clientRole": false,
+        "composites": {
+          "realm": [
+            "DOCTOR",
+            "NURSE",
+            "SPECIALIST",
+            "CONSULTANT",
+            "REGISTRAR",
+            "INTERN_DOCTOR",
+            "MIDWIFE",
+            "NURSE_PRACTITIONER",
+            "ENROLLED_NURSE"
+          ]
+        }
+      },
+      {
+        "name": "ALLIED_HEALTH",
+        "description": "Composite allied health",
+        "composite": true,
+        "clientRole": false,
+        "composites": {
+          "realm": [
+            "PHYSIOTHERAPIST",
+            "OCCUPATIONAL_THERAPIST",
+            "SOCIAL_WORKER",
+            "PSYCHOLOGIST",
+            "DIETITIAN",
+            "RADIOGRAPHER",
+            "SONOGRAPHER",
+            "LAB_TECH",
+            "PHARMACIST",
+            "PHARMACY_TECH",
+            "PARAMEDIC",
+            "EMT"
+          ]
+        }
+      },
+      {
+        "name": "ADMIN_STAFF",
+        "description": "Composite admin",
+        "composite": true,
+        "clientRole": false,
+        "composites": {
+          "realm": [
+            "ADMIN",
+            "SYSTEM_ADMIN",
+            "HEALTH_INFO_OFFICER",
+            "RECEPTIONIST"
+          ]
+        }
+      },
+      {
+        "name": "COMMUNITY_HEALTH",
+        "description": "Composite community team",
+        "composite": true,
+        "clientRole": false,
+        "composites": {
+          "realm": [
+            "CHW",
+            "ENV_HEALTH",
+            "HEALTH_PROMOTER"
+          ]
+        }
+      }
+    ]
+  },
+  "clientScopes": [
+    {
+      "name": "openid",
+      "description": "OpenID Connect scope",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "false"
+      }
+    },
+    {
+      "name": "profile",
+      "description": "OpenID Connect built-in scope: profile",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true",
+        "consent.screen.text": "${profileScopeConsentText}"
+      },
+      "protocolMappers": [
+        {
+          "name": "username",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "username",
+            "claim.name": "preferred_username",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        },
+        {
+          "name": "full name",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-full-name-mapper",
+          "consentRequired": false,
+          "config": {
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        },
+        {
+          "name": "given name",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "firstName",
+            "claim.name": "given_name",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        },
+        {
+          "name": "family name",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "lastName",
+            "claim.name": "family_name",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "name": "email",
+      "description": "OpenID Connect built-in scope: email",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true",
+        "consent.screen.text": "${emailScopeConsentText}"
+      },
+      "protocolMappers": [
+        {
+          "name": "email",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "email",
+            "claim.name": "email",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        },
+        {
+          "name": "email verified",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "emailVerified",
+            "claim.name": "email_verified",
+            "jsonType.label": "boolean",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "name": "impilo-tenant",
+      "description": "Adds tenant_id claim to access tokens",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "false"
+      },
+      "protocolMappers": [
+        {
+          "name": "tenant_id",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-hardcoded-claim-mapper",
+          "consentRequired": false,
+          "config": {
+            "claim.name": "tenant_id",
+            "claim.value": "moh-zw",
+            "jsonType.label": "String",
+            "id.token.claim": "false",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "false"
+          }
+        }
+      ]
+    },
+    {
+      "name": "impilo-trust-headers",
+      "description": "Trust plane headers as OIDC claims",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "false"
+      },
+      "protocolMappers": [
+        {
+          "name": "x_actor_id",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "actor_id",
+            "claim.name": "x_actor_id",
+            "jsonType.label": "String",
+            "id.token.claim": "false",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "false"
+          }
+        },
+        {
+          "name": "x_tenant_id",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "tenant_id",
+            "claim.name": "x_tenant_id",
+            "jsonType.label": "String",
+            "id.token.claim": "false",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "false"
+          }
+        },
+        {
+          "name": "x_pod_id",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "pod_id",
+            "claim.name": "x_pod_id",
+            "jsonType.label": "String",
+            "id.token.claim": "false",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "false"
+          }
+        }
+      ]
+    },
+    {
+      "name": "impilo-clinical",
+      "description": "Clinical data access scope",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      },
+      "protocolMappers": [
+        {
+          "name": "clinical_scope",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-hardcoded-claim-mapper",
+          "consentRequired": false,
+          "config": {
+            "claim.name": "clinical_access",
+            "claim.value": "true",
+            "jsonType.label": "boolean",
+            "id.token.claim": "false",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "false"
+          }
+        }
+      ]
+    },
+    {
+      "name": "impilo-admin",
+      "description": "Administrative access scope",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      },
+      "protocolMappers": [
+        {
+          "name": "admin_scope",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-hardcoded-claim-mapper",
+          "consentRequired": false,
+          "config": {
+            "claim.name": "admin_access",
+            "claim.value": "true",
+            "jsonType.label": "boolean",
+            "id.token.claim": "false",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "false"
+          }
+        }
+      ]
+    }
+  ],
+  "defaultDefaultClientScopes": [
+    "openid",
+    "profile",
+    "email",
+    "impilo-tenant"
+  ],
+  "clients": [
+    {
+      "clientId": "impilo-ui",
+      "name": "Impilo Experience UI",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "https://impilo.gov.zw/*",
+        "https://www.impilo.gov.zw/*"
+      ],
+      "webOrigins": [
+        "https://impilo.gov.zw",
+        "https://www.impilo.gov.zw"
+      ],
+      "protocol": "openid-connect",
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "fullScopeAllowed": true,
+      "defaultClientScopes": [
+        "openid",
+        "profile",
+        "email",
+        "impilo-tenant"
+      ],
+      "optionalClientScopes": [
+        "address",
+        "phone",
+        "offline_access",
+        "microprofile-jwt",
+        "impilo-trust-headers",
+        "impilo-clinical",
+        "impilo-admin"
+      ]
+    },
+    {
+      "clientId": "impilo-ops-console",
+      "name": "Impilo Ops Console",
+      "enabled": true,
+      "publicClient": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "secret": "CHANGE_ME_OPS_CONSOLE",
+      "redirectUris": [
+        "https://ops.impilo.gov.zw/*"
+      ],
+      "webOrigins": [
+        "https://ops.impilo.gov.zw"
+      ],
+      "protocol": "openid-connect",
+      "fullScopeAllowed": true,
+      "defaultClientScopes": [
+        "openid",
+        "profile",
+        "email",
+        "impilo-tenant"
+      ],
+      "optionalClientScopes": [
+        "address",
+        "phone",
+        "offline_access",
+        "microprofile-jwt",
+        "impilo-trust-headers",
+        "impilo-clinical",
+        "impilo-admin"
+      ]
+    },
+    {
+      "clientId": "impilo-ehr",
+      "name": "Impilo EHR",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "https://ehr.impilo.gov.zw/*"
+      ],
+      "webOrigins": [
+        "https://ehr.impilo.gov.zw"
+      ],
+      "protocol": "openid-connect",
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "fullScopeAllowed": true,
+      "defaultClientScopes": [
+        "openid",
+        "profile",
+        "email",
+        "impilo-tenant"
+      ],
+      "optionalClientScopes": [
+        "address",
+        "phone",
+        "offline_access",
+        "microprofile-jwt",
+        "impilo-trust-headers",
+        "impilo-clinical",
+        "impilo-admin"
+      ]
+    },
+    {
+      "clientId": "impilo-portal",
+      "name": "Impilo Citizen Portal",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "https://portal.impilo.gov.zw/*"
+      ],
+      "webOrigins": [
+        "https://portal.impilo.gov.zw"
+      ],
+      "protocol": "openid-connect",
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "fullScopeAllowed": true,
+      "defaultClientScopes": [
+        "openid",
+        "profile",
+        "email",
+        "impilo-tenant"
+      ],
+      "optionalClientScopes": [
+        "address",
+        "phone",
+        "offline_access",
+        "microprofile-jwt",
+        "impilo-trust-headers",
+        "impilo-clinical",
+        "impilo-admin"
+      ]
+    },
+    {
+      "clientId": "impilo-mobile-citizen",
+      "name": "Impilo Citizen Mobile",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "impilo-citizen://auth/*",
+        "com.impilo.citizen://auth/*"
+      ],
+      "webOrigins": [
+        "+"
+      ],
+      "protocol": "openid-connect",
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "fullScopeAllowed": true,
+      "defaultClientScopes": [
+        "openid",
+        "profile",
+        "email",
+        "impilo-tenant"
+      ],
+      "optionalClientScopes": [
+        "address",
+        "phone",
+        "offline_access",
+        "microprofile-jwt",
+        "impilo-trust-headers",
+        "impilo-clinical",
+        "impilo-admin"
+      ]
+    },
+    {
+      "clientId": "impilo-mobile-provider",
+      "name": "Impilo Provider Mobile",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "impilo-provider://auth/*",
+        "com.impilo.provider://auth/*"
+      ],
+      "webOrigins": [
+        "+"
+      ],
+      "protocol": "openid-connect",
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "fullScopeAllowed": true,
+      "defaultClientScopes": [
+        "openid",
+        "profile",
+        "email",
+        "impilo-tenant"
+      ],
+      "optionalClientScopes": [
+        "address",
+        "phone",
+        "offline_access",
+        "microprofile-jwt",
+        "impilo-trust-headers",
+        "impilo-clinical",
+        "impilo-admin"
+      ]
+    },
+    {
+      "clientId": "impilo-bff",
+      "name": "Impilo Experience BFF",
+      "enabled": true,
+      "publicClient": false,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "secret": "CHANGE_ME_BFF",
+      "redirectUris": [],
+      "webOrigins": [],
+      "protocol": "openid-connect",
+      "fullScopeAllowed": true,
+      "defaultClientScopes": [
+        "openid",
+        "profile",
+        "email",
+        "impilo-tenant"
+      ],
+      "optionalClientScopes": [
+        "address",
+        "phone",
+        "offline_access",
+        "microprofile-jwt",
+        "impilo-trust-headers",
+        "impilo-clinical",
+        "impilo-admin"
+      ]
+    },
+    {
+      "clientId": "impilo-admin-cli",
+      "name": "Impilo Admin CLI",
+      "enabled": true,
+      "publicClient": false,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "secret": "CHANGE_ME_ADMIN_CLI",
+      "redirectUris": [],
+      "webOrigins": [],
+      "protocol": "openid-connect",
+      "fullScopeAllowed": true,
+      "defaultClientScopes": [
+        "openid",
+        "profile",
+        "email",
+        "impilo-tenant"
+      ],
+      "optionalClientScopes": [
+        "address",
+        "phone",
+        "offline_access",
+        "microprofile-jwt",
+        "impilo-trust-headers",
+        "impilo-clinical",
+        "impilo-admin"
+      ]
+    }
+  ],
+  "users": [],
+  "accessTokenLifespanForImplicitFlow": 900,
+  "offlineSessionIdleTimeout": 2592000,
+  "permanentLockout": false,
+  "maxFailureWaitSeconds": 900,
+  "minimumQuickLoginWaitSeconds": 60,
+  "waitIncrementSeconds": 60,
+  "quickLoginCheckMilliSeconds": 1000,
+  "maxDeltaTimeSeconds": 43200,
+  "failureFactor": 5,
+  "passwordPolicy": "length(12) and upperCase(1) and lowerCase(1) and digits(1) and specialChars(1) and notUsername and passwordHistory(5)",
+  "defaultOptionalClientScopes": [
+    "address",
+    "phone",
+    "offline_access",
+    "microprofile-jwt",
+    "impilo-trust-headers",
+    "impilo-clinical",
+    "impilo-admin"
+  ],
+  "identityProviders": [
+    {
+      "alias": "mosip",
+      "providerId": "oidc",
+      "enabled": false,
+      "displayName": "MOSIP (national ID) — configure",
+      "trustEmail": false,
+      "storeToken": false,
+      "addReadTokenRoleOnCreate": false,
+      "firstBrokerLoginFlowAlias": "first broker login",
+      "config": {
+        "hideOnLoginPage": "true"
+      }
+    },
+    {
+      "alias": "facility-ldap",
+      "providerId": "ldap",
+      "enabled": false,
+      "displayName": "Facility directory LDAP — configure",
+      "config": {
+        "vendor": "other"
+      }
+    }
+  ],
+  "browserFlow": "browser",
+  "registrationFlow": "registration",
+  "directGrantFlow": "direct grant",
+  "resetCredentialsFlow": "reset credentials",
+  "clientAuthenticationFlow": "clients",
+  "dockerAuthenticationFlow": "docker auth"
+}
