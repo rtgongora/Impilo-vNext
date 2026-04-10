@@ -32,7 +32,7 @@ public class CareEmergencyInpatientController {
     @GetMapping("/care-plans")
     public ResponseEntity<Map<String, Object>> listCarePlans(@RequestHeader("X-Tenant-ID") String tenantId, @RequestParam String patientId) {
         List<Map<String, Object>> plans = jdbc.queryForList(
-                "SELECT * FROM care_plans WHERE tenant_id = ? AND patient_id = ?::uuid AND status = 'ACTIVE' ORDER BY created_at DESC", tenantId, patientId);
+                "SELECT * FROM care_plans WHERE tenant_id = ? AND patient_id = ?::uuid ORDER BY created_at DESC", tenantId, patientId);
         for (Map<String, Object> plan : plans) {
             UUID planId = (UUID) plan.get("id");
             plan.put("goals", jdbc.queryForList("SELECT * FROM care_plan_goals WHERE care_plan_id = ? ORDER BY priority", planId));

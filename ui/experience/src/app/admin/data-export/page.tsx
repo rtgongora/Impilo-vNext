@@ -1,22 +1,39 @@
 "use client";
 
 /**
- * Data Export — Export job management with format selection and scheduling.
+ * Data Export — Report jobs from Experience BFF (`report_jobs` + outbox).
  * Route: /admin/data-export | pageTitle: "Data Export"
  */
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Download, Loader2, Plus, X, Clock, CheckCircle2, AlertCircle, FileText, Calendar, RefreshCw } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
-import { apiClient } from "@/lib/api-client";
+import { useAdminReportJobs, type ReportJobResource } from "@/hooks/queries/useAdminReportJobs";
+import { useGenerateReport } from "@/hooks/queries/useReports";
 
-interface ExportJob {
+const ADMIN_EXPORT_REPORT_TYPE = "ADMIN_DATA_EXPORT";
+
+const DATA_TYPE_OPTIONS = [
+  "Demographics",
+  "Encounters",
+  "Diagnoses",
+  "Lab Results",
+  "Medications",
+  "Vitals",
+  "Procedures",
+  "Immunizations",
+  "Inventory",
+] as const;
+
+type UiStatus = "Completed" | "Running" | "Failed" | "Scheduled" | "Queued";
+
+interface ExportJobRow {
   id: string;
   name: string;
-  status: "Completed" | "Running" | "Failed" | "Scheduled" | "Queued";
-  format: "CSV" | "JSON" | "FHIR Bundle" | "HL7";
+  status: UiStatus;
+  format: string;
   dataTypes: string[];
   dateRange: string;
   createdAt: string;
@@ -26,15 +43,11 @@ interface ExportJob {
   progress: number;
   recurring: boolean;
   schedule: string | null;
+  resultUrl: string | null;
+  errorMessage: string | null;
+  rawParameters: Record<string, unknown>;
+  reportType: string;
 }
-
-const MOCK_JOBS: ExportJob[] = [
-  { id: "ex-1", name: "Monthly Patient Summary", status: "Completed", format: "CSV", dataTypes: ["Demographics", "Encounters", "Diagnoses"], dateRange: "2026-03-01 to 2026-03-31", createdAt: "2026-04-01 06:00", completedAt: "2026-04-01 06:12", fileSize: "24.5 MB", records: 15420, progress: 100, recurring: true, schedule: "1st of each month at 06:00" },
-  { id: "ex-2", name: "Lab Results Export", status: "Running", format: "FHIR Bundle", dataTypes: ["Lab Results", "Orders"], dateRange: "2026-01-01 to 2026-03-31", createdAt: "2026-04-06 08:30", completedAt: null, fileSize: null, records: null, progress: 62, recurring: false, schedule: null },
-  { id: "ex-3", name: "DHIS2 Aggregate Report", status: "Completed", format: "JSON", dataTypes: ["Encounters", "Diagnoses", "Procedures", "Vitals"], dateRange: "2026-03-01 to 2026-03-31", createdAt: "2026-04-02 00:00", completedAt: "2026-04-02 00:35", fileSize: "8.2 MB", records: 5230, progress: 100, recurring: true, schedule: "2nd of each month at 00:00" },
-  { id: "ex-4", name: "Pharmacy Stock Audit", status: "Failed", format: "CSV", dataTypes: ["Inventory", "Dispensing"], dateRange: "2026-03-15 to 2026-04-05", createdAt: "2026-04-05 14:00", completedAt: null, fileSize: null, records: null, progress: 45, recurring: false, schedule: null },
-  { id: "ex-5", name: "Weekly Immunization Report", status: "Scheduled", format: "CSV", dataTypes: ["Immunizations"], dateRange: "2026-03-30 to 2026-04-06", createdAt: "2026-04-06 00:00", completedAt: null, fileSize: null, records: null, progress: 0, recurring: true, schedule: "Every Monday at 00:00" },
-];
 
 const STATUS_STYLES: Record<string, { bg: string; icon: React.ElementType }> = {
   Completed: { bg: "bg-green-100 text-green-700", icon: CheckCircle2 },
@@ -44,30 +57,181 @@ const STATUS_STYLES: Record<string, { bg: string; icon: React.ElementType }> = {
   Queued: { bg: "bg-gray-100 text-gray-600", icon: Clock },
 };
 
-export default function DataExportPage() {
-  const { data, isLoading } = useQuery({
-    queryKey: ["data-exports"],
-    queryFn: async () => ({ data: MOCK_JOBS }),
-  });
+function parseParams(json: string | null): Record<string, unknown> {
+  if (!json) return {};
+  try {
+    return JSON.parse(json) as Record<string, unknown>;
+  } catch {
+    return {};
+  }
+}
 
-  const jobs = data?.data ?? [];
+function paramString(p: Record<string, unknown>, key: string): string | undefined {
+  const v = p[key];
+  return typeof v === "string" ? v : undefined;
+}
+
+function paramStringArray(p: Record<string, unknown>, key: string): string[] {
+  const v = p[key];
+  if (!Array.isArray(v)) return [];
+  return v.filter((x): x is string => typeof x === "string");
+}
+
+function mapBackendStatus(status: string): UiStatus {
+  const s = status.toUpperCase();
+  if (s === "COMPLETED") return "Completed";
+  if (s === "FAILED") return "Failed";
+  if (s === "RUNNING" || s === "PROCESSING") return "Running";
+  if (s === "SCHEDULED") return "Scheduled";
+  return "Queued";
+}
+
+function mapJobToRow(job: ReportJobResource): ExportJobRow {
+  const a = job.attributes;
+  const p = parseParams(a.parameters);
+  const name = paramString(p, "export_name") ?? paramString(p, "name") ?? a.report_type;
+  const format = paramString(p, "format") ?? "—";
+  const dateFrom = paramString(p, "date_from") ?? "";
+  const dateTo = paramString(p, "date_to") ?? "";
+  const dateRange = dateFrom && dateTo ? `${dateFrom} → ${dateTo}` : dateFrom || dateTo || "—";
+  const dataTypes = paramStringArray(p, "data_types");
+  const recurring = p.recurring === true;
+  const schedule = paramString(p, "schedule") ?? null;
+  const uiStatus = mapBackendStatus(a.status);
+  let progress = 0;
+  if (uiStatus === "Completed") progress = 100;
+  else if (uiStatus === "Running") progress = 50;
+
+  return {
+    id: job.id,
+    name,
+    status: uiStatus,
+    format,
+    dataTypes,
+    dateRange,
+    createdAt: a.queued_at ? new Date(a.queued_at).toLocaleString() : "—",
+    completedAt: a.completed_at ? new Date(a.completed_at).toLocaleString() : null,
+    fileSize: null,
+    records: null,
+    progress,
+    recurring,
+    schedule,
+    resultUrl: a.result_url,
+    errorMessage: a.error_message,
+    rawParameters: p,
+    reportType: a.report_type,
+  };
+}
+
+export default function DataExportPage() {
+  const queryClient = useQueryClient();
+  const jobsQ = useAdminReportJobs({ page: 0, size: 50 });
+  const generateReport = useGenerateReport();
+
+  const jobs: ExportJobRow[] = useMemo(() => (jobsQ.data?.data ?? []).map(mapJobToRow), [jobsQ.data]);
   const [showForm, setShowForm] = useState(false);
   const [newName, setNewName] = useState("");
   const [newFormat, setNewFormat] = useState("CSV");
   const [newDateFrom, setNewDateFrom] = useState("");
   const [newDateTo, setNewDateTo] = useState("");
   const [newRecurring, setNewRecurring] = useState(false);
+  const [types, setTypes] = useState<Record<string, boolean>>({});
+  const [formError, setFormError] = useState<string | null>(null);
+
+  const toggleType = (t: string) => {
+    setTypes((prev) => ({ ...prev, [t]: !prev[t] }));
+  };
+
+  const selectedTypes = Object.entries(types).filter(([, v]) => v).map(([k]) => k);
+
+  function invalidateJobs() {
+    void queryClient.invalidateQueries({ queryKey: ["admin", "reports", "jobs"] });
+  }
+
+  function startExport() {
+    setFormError(null);
+    if (!newName.trim()) {
+      setFormError("Export name is required.");
+      return;
+    }
+    if (!newDateFrom || !newDateTo) {
+      setFormError("Date from and date to are required.");
+      return;
+    }
+    generateReport.mutate(
+      {
+        report_type: ADMIN_EXPORT_REPORT_TYPE,
+        parameters: {
+          export_name: newName.trim(),
+          format: newFormat,
+          date_from: newDateFrom,
+          date_to: newDateTo,
+          data_types: selectedTypes.length > 0 ? selectedTypes : [],
+          recurring: newRecurring,
+        },
+      },
+      {
+        onSuccess: () => {
+          invalidateJobs();
+          setShowForm(false);
+          setNewName("");
+          setNewDateFrom("");
+          setNewDateTo("");
+          setNewRecurring(false);
+          setTypes({});
+        },
+        onError: (e: unknown) => {
+          const msg =
+            e && typeof e === "object" && "error" in e
+              ? String((e as { error?: { message?: string } }).error?.message ?? "Request failed")
+              : "Could not queue export.";
+          setFormError(msg);
+        },
+      }
+    );
+  }
+
+  function retryJob(row: ExportJobRow) {
+    generateReport.mutate(
+      {
+        report_type: row.reportType,
+        parameters: {
+          ...row.rawParameters,
+          retried_from_job_id: row.id,
+        },
+      },
+      {
+        onSuccess: () => invalidateJobs(),
+      }
+    );
+  }
+
+  const isLoading = jobsQ.isLoading;
 
   return (
     <AppLayout>
-      <PageShell title="Data Export" subtitle="Export and schedule data extractions">
+      <PageShell title="Data Export" subtitle="Queued report jobs (Experience BFF)">
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">Loading exports...</span>
+            <span className="ml-2 text-sm text-gray-500">Loading export jobs...</span>
           </div>
         ) : (
           <div className="space-y-6">
+            <div className="rounded-lg border border-slate-200 bg-slate-50/90 p-4 text-sm text-slate-800 flex gap-3">
+              <FileText className="w-5 h-5 text-slate-500 shrink-0" />
+              <div>
+                <p className="font-medium text-slate-900">How exports work here</p>
+                <p className="mt-1 text-xs text-slate-600 leading-relaxed">
+                  Jobs are rows in <code className="text-[11px]">report_jobs</code> created via{" "}
+                  <code className="text-[11px]">POST /internal/v1/reports/generate</code> and listed via{" "}
+                  <code className="text-[11px]">GET /internal/v1/admin/reports/jobs</code>. Processing, file artifacts, and{" "}
+                  <code className="text-[11px]">result_url</code> are populated by downstream workers when implemented—not
+                  simulated in the UI.
+                </p>
+              </div>
+            </div>
+
             {/* Header */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -80,6 +244,13 @@ export default function DataExportPage() {
               </button>
             </div>
 
+            {jobsQ.isError && (
+              <div className="text-sm text-red-600 border border-red-200 rounded-lg p-3">
+                Could not load report jobs. You need admin role access to{" "}
+                <code className="text-xs">/internal/v1/admin/reports/jobs</code>.
+              </div>
+            )}
+
             {/* New Export Form */}
             {showForm && (
               <div className="bg-white rounded-lg border border-gray-200 p-5">
@@ -87,6 +258,7 @@ export default function DataExportPage() {
                   <h3 className="font-medium text-gray-900">Create New Export</h3>
                   <button onClick={() => setShowForm(false)} className="text-gray-400 hover:text-gray-600"><X className="w-4 h-4" /></button>
                 </div>
+                {formError && <p className="text-sm text-red-600 mb-3">{formError}</p>}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">Export Name</label>
@@ -102,20 +274,20 @@ export default function DataExportPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Date From</label>
-                    <input type="date" value={newDateFrom} onChange={(e) => setNewDateFrom(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    <label htmlFor="admin-export-date-from" className="block text-xs font-medium text-gray-600 mb-1">Date From</label>
+                    <input id="admin-export-date-from" type="date" value={newDateFrom} onChange={(e) => setNewDateFrom(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Date To</label>
-                    <input type="date" value={newDateTo} onChange={(e) => setNewDateTo(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    <label htmlFor="admin-export-date-to" className="block text-xs font-medium text-gray-600 mb-1">Date To</label>
+                    <input id="admin-export-date-to" type="date" value={newDateTo} onChange={(e) => setNewDateTo(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
                   </div>
                 </div>
                 <div className="mt-4">
                   <label className="block text-xs font-medium text-gray-600 mb-2">Data Types</label>
                   <div className="flex flex-wrap gap-2">
-                    {["Demographics", "Encounters", "Diagnoses", "Lab Results", "Medications", "Vitals", "Procedures", "Immunizations", "Inventory"].map((dt) => (
+                    {DATA_TYPE_OPTIONS.map((dt) => (
                       <label key={dt} className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 rounded-lg border border-gray-200 text-xs text-gray-700 cursor-pointer hover:bg-gray-100">
-                        <input type="checkbox" className="rounded" />
+                        <input type="checkbox" className="rounded" checked={!!types[dt]} onChange={() => toggleType(dt)} />
                         {dt}
                       </label>
                     ))}
@@ -126,7 +298,7 @@ export default function DataExportPage() {
                   <label htmlFor="recurring" className="text-xs text-gray-600">Schedule as recurring export</label>
                 </div>
                 <div className="flex items-center gap-3 pt-4">
-                  <button className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">Start Export</button>
+                  <button type="button" onClick={startExport} disabled={generateReport.isPending} className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50">Queue Export</button>
                   <button onClick={() => setShowForm(false)} className="px-4 py-2 text-sm font-medium text-gray-700 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors">Cancel</button>
                 </div>
               </div>
@@ -174,13 +346,15 @@ export default function DataExportPage() {
                             {job.fileSize ? `${job.fileSize} / ${job.records?.toLocaleString()} records` : "—"}
                           </td>
                           <td className="px-4 py-3">
-                            {job.status === "Completed" && (
-                              <button className="inline-flex items-center gap-1 px-2.5 py-1 text-xs text-blue-600 border border-blue-200 rounded hover:bg-blue-50 transition-colors">
+                            {job.resultUrl ? (
+                              <a href={job.resultUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 px-2.5 py-1 text-xs text-blue-600 border border-blue-200 rounded hover:bg-blue-50 transition-colors">
                                 <Download className="w-3 h-3" /> Download
-                              </button>
-                            )}
+                              </a>
+                            ) : job.status === "Completed" ? (
+                              <span className="text-xs text-gray-400" title="Worker did not set result_url">No URL</span>
+                            ) : null}
                             {job.status === "Failed" && (
-                              <button className="inline-flex items-center gap-1 px-2.5 py-1 text-xs text-amber-600 border border-amber-200 rounded hover:bg-amber-50 transition-colors">
+                              <button type="button" onClick={() => retryJob(job)} disabled={generateReport.isPending} className="ml-2 inline-flex items-center gap-1 px-2.5 py-1 text-xs text-amber-600 border border-amber-200 rounded hover:bg-amber-50 transition-colors disabled:opacity-50">
                                 <RefreshCw className="w-3 h-3" /> Retry
                               </button>
                             )}

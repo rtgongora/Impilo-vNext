@@ -42,46 +42,11 @@ vi.mock("@/hooks/queries/useEncounters", () => ({
   }),
 }));
 
-vi.mock("@tanstack/react-query", () => ({
-  useQuery: () => ({
-    data: {
-      data: [
-        {
-          id: "ct-1",
-          name: "Dr. M. Ndlovu",
-          role: "Primary Physician",
-          specialty: "Internal Medicine",
-          isPrimary: true,
-          phone: "+263 77 123 4567",
-          email: "m.ndlovu@impilo.zw",
-          facility: "Harare Central Hospital",
-          assignedDate: "2025-01-15",
-          status: "Active",
-          avatar: "MN",
-        },
-        {
-          id: "ct-2",
-          name: "Dr. T. Moyo",
-          role: "Specialist",
-          specialty: "Cardiology",
-          isPrimary: false,
-          phone: "+263 77 345 6789",
-          email: "t.moyo@impilo.zw",
-          facility: "Parirenyatwa Hospital",
-          assignedDate: "2025-06-20",
-          status: "Active",
-          avatar: "TM",
-        },
-      ],
-    },
-    isLoading: false,
-  }),
-}));
-
 describe("CareTeamPage", () => {
   it("surfaces team ownership continuity across care planning surfaces", () => {
     render(<CareTeamPage />);
 
+    expect(screen.getByText("Care team roster not connected")).toBeInTheDocument();
     expect(screen.getByText("Keep the accountable team visible so plans, consults, and next actions still have an owner")).toBeInTheDocument();
     expect(screen.getByText("Team continuity")).toBeInTheDocument();
     expect(screen.getByText("Cross-facility")).toBeInTheDocument();

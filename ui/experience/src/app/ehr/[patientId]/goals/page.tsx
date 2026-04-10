@@ -3,35 +3,15 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import { ClipboardList, Calendar, Edit3, FileText, Link2, Loader2, Plus, Target, Users, X } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
 import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { useEncounters } from "@/hooks/queries/useEncounters";
+import type { PatientGoalUi } from "@/hooks/queries/useCareContinuity";
+import { usePatientGoalsFromCarePlans } from "@/hooks/queries/useCareContinuity";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 
-interface PatientGoal {
-  id: string;
-  title: string;
-  description: string;
-  status: "On Track" | "At Risk" | "Behind" | "Achieved" | "Cancelled";
-  priority: "High" | "Medium" | "Low";
-  progress: number;
-  targetDate: string;
-  createdDate: string;
-  linkedCarePlan: string | null;
-  category: string;
-  notes: string;
-}
-
-const MOCK_GOALS: PatientGoal[] = [
-  { id: "goal-1", title: "Reduce HbA1c to below 7%", description: "Through medication adherence, dietary changes, and regular exercise, aim to reduce HbA1c from current 8.2% to below 7%.", status: "On Track", priority: "High", progress: 65, targetDate: "2026-06-30", createdDate: "2026-01-15", linkedCarePlan: "Diabetes Management Plan", category: "Clinical", notes: "Last HbA1c: 7.4% (improving)" },
-  { id: "goal-2", title: "Walk 30 minutes daily", description: "Establish a daily walking routine of at least 30 minutes to improve cardiovascular fitness and support weight management.", status: "At Risk", priority: "Medium", progress: 40, targetDate: "2026-04-30", createdDate: "2026-01-15", linkedCarePlan: "Diabetes Management Plan", category: "Lifestyle", notes: "Patient reports 3-4 days/week adherence" },
-  { id: "goal-3", title: "Lose 5 kg body weight", description: "Reduce body weight from 85 kg to 80 kg through diet and exercise modifications.", status: "Behind", priority: "Medium", progress: 20, targetDate: "2026-09-30", createdDate: "2026-01-15", linkedCarePlan: "Diabetes Management Plan", category: "Clinical", notes: "Current weight: 84 kg (1 kg lost)" },
-  { id: "goal-4", title: "Complete smoking cessation programme", description: "Maintain tobacco-free status and complete the 6-month cessation programme.", status: "Achieved", priority: "High", progress: 100, targetDate: "2025-12-31", createdDate: "2025-06-15", linkedCarePlan: null, category: "Lifestyle", notes: "Successfully completed. Smoke-free for 9 months." },
-  { id: "goal-5", title: "PHQ-9 score below 5", description: "Reduce depression screening score through therapy and medication management.", status: "On Track", priority: "High", progress: 55, targetDate: "2026-07-31", createdDate: "2026-02-01", linkedCarePlan: "Mental Health Support Plan", category: "Mental Health", notes: "Last PHQ-9: 8 (down from 14)" },
-  { id: "goal-6", title: "Blood pressure consistently below 130/80", description: "Achieve sustained blood pressure control through medication and lifestyle modifications.", status: "On Track", priority: "High", progress: 75, targetDate: "2026-05-31", createdDate: "2025-11-01", linkedCarePlan: null, category: "Clinical", notes: "Recent readings: 128/78, 132/82, 126/76" },
-];
+type PatientGoal = PatientGoalUi;
 
 const STATUS_STYLES: Record<string, string> = {
   "On Track": "bg-green-100 text-green-700",
@@ -60,12 +40,8 @@ export default function GoalsPage() {
   const facility = useFacilityStore((state) => state.facility);
   const { data: encountersData } = useEncounters(patientId);
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["goals", patientId],
-    queryFn: async () => ({ data: MOCK_GOALS }),
-  });
-
-  const goals = data?.data ?? [];
+  const { data, isLoading, isError, refetch } = usePatientGoalsFromCarePlans(patientId);
+  const goals: PatientGoal[] = data?.data ?? [];
   const activeEncounter = (encountersData?.data ?? []).find(
     (encounter) =>
       encounter.attributes.status === "IN_PROGRESS" || encounter.attributes.status === "ACTIVE"
@@ -95,6 +71,17 @@ export default function GoalsPage() {
           <div className="flex items-center justify-center py-16">
             <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
             <span className="ml-2 text-sm text-gray-500">Loading goals...</span>
+          </div>
+        ) : isError ? (
+          <div className="flex flex-col items-center justify-center gap-3 py-16">
+            <p className="text-sm text-gray-600">Unable to load goals (care-plan source failed).</p>
+            <button
+              type="button"
+              onClick={() => void refetch()}
+              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            >
+              Retry
+            </button>
           </div>
         ) : (
           <div className="space-y-6">

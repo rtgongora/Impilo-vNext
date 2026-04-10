@@ -1,6 +1,11 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { useAuthStore, type AuthUser } from "../useAuthStore";
+import { useFacilityStore } from "../useFacilityStore";
 import { useOperationalContextStore } from "../useOperationalContextStore";
+import { useShiftStore } from "../useShiftStore";
+import { useWorkModeStore } from "../useWorkModeStore";
+import { useWorkspaceStore } from "../useWorkspaceStore";
+import { EXPERIENCE_CONTINUITY_SESSION_KEYS } from "@/lib/session-continuity";
 
 // Mock sessionStorage
 const sessionStorageMock = (() => {
@@ -35,7 +40,11 @@ describe("useAuthStore", () => {
       expiresAt: null,
       isAuthenticated: false,
     });
+    useFacilityStore.getState().clearFacility();
+    useWorkspaceStore.getState().clearWorkspace();
+    useShiftStore.getState().endShift();
     useOperationalContextStore.getState().reset();
+    useWorkModeStore.getState().reset();
     sessionStorageMock.clear();
     vi.clearAllMocks();
   });
@@ -96,6 +105,12 @@ describe("useAuthStore", () => {
 
   it("clearAuth removes items from sessionStorage", () => {
     useAuthStore.getState().setAuth(testUser, "tok-123", "ref-456", "2026-12-31T00:00:00Z");
+    sessionStorageMock.setItem("exp:facility", JSON.stringify({ id: "facility-1" }));
+    sessionStorageMock.setItem("exp:workspace", JSON.stringify({ id: "workspace-1" }));
+    sessionStorageMock.setItem("exp:shift", JSON.stringify({ id: "shift-1" }));
+    sessionStorageMock.setItem("exp:work_mode", "clinical");
+    sessionStorageMock.setItem("exp:work_mode_context", JSON.stringify({ licenseNumber: "L-1" }));
+    sessionStorageMock.setItem("exp:purpose_of_use", "TREATMENT");
     vi.clearAllMocks();
 
     useAuthStore.getState().clearAuth();
@@ -104,9 +119,79 @@ describe("useAuthStore", () => {
     expect(sessionStorageMock.removeItem).toHaveBeenCalledWith("exp:auth_user");
     expect(sessionStorageMock.removeItem).toHaveBeenCalledWith("exp:refresh_token");
     expect(sessionStorageMock.removeItem).toHaveBeenCalledWith("exp:expires_at");
-    expect(sessionStorageMock.removeItem).toHaveBeenCalledWith("exp:operational_mode");
-    expect(sessionStorageMock.removeItem).toHaveBeenCalledWith("exp:facility_work_subcontext");
-    expect(sessionStorageMock.removeItem).toHaveBeenCalledWith("exp:registry_admin_subtype");
+    for (const key of EXPERIENCE_CONTINUITY_SESSION_KEYS) {
+      expect(sessionStorageMock.removeItem).toHaveBeenCalledWith(key);
+    }
+  });
+
+  it("clearAuth resets facility, workspace, shift, work mode, and operational context stores", () => {
+    useFacilityStore.getState().setFacility({
+      id: "facility-1",
+      name: "Central Hospital",
+      code: "CH",
+      facilityType: "Hospital",
+      capabilities: ["queue"],
+    });
+    useWorkspaceStore.getState().setWorkspace({
+      id: "workspace-1",
+      name: "OPD",
+      workspaceType: "CONSULT",
+      facilityId: "facility-1",
+    });
+    useShiftStore.getState().startShift({
+      id: "shift-1",
+      startedAt: "2026-04-09T08:00:00Z",
+      workspaceId: "workspace-1",
+      facilityId: "facility-1",
+    });
+    useOperationalContextStore.getState().setOperationalMode("facility_work");
+    useOperationalContextStore.getState().setFacilityWorkSubcontext("triage");
+    useWorkModeStore.getState().setMode("clinical", { licenseNumber: "LIC-123" });
+
+    useAuthStore.getState().setAuth(testUser, "tok-123");
+    useAuthStore.getState().clearAuth();
+
+    expect(useFacilityStore.getState().facility).toBeNull();
+    expect(useWorkspaceStore.getState().workspace).toBeNull();
+    expect(useShiftStore.getState().shift).toBeNull();
+    expect(useOperationalContextStore.getState().operationalMode).toBe("my_life");
+    expect(useOperationalContextStore.getState().facilityWorkSubcontext).toBeNull();
+    expect(useWorkModeStore.getState().mode).toBe("general");
+    expect(useWorkModeStore.getState().context).toEqual({});
+  });
+
+  it("setAuth clears inherited continuity when replacing the signed-in user", () => {
+    useFacilityStore.getState().setFacility({
+      id: "facility-1",
+      name: "Central Hospital",
+      code: "CH",
+      facilityType: "Hospital",
+      capabilities: ["queue"],
+    });
+    useWorkspaceStore.getState().setWorkspace({
+      id: "workspace-1",
+      name: "OPD",
+      workspaceType: "CONSULT",
+      facilityId: "facility-1",
+    });
+    useShiftStore.getState().startShift({
+      id: "shift-1",
+      startedAt: "2026-04-09T08:00:00Z",
+      workspaceId: "workspace-1",
+      facilityId: "facility-1",
+    });
+    useWorkModeStore.getState().setMode("clinical");
+    useAuthStore.getState().setAuth(testUser, "tok-123");
+
+    useAuthStore.getState().setAuth(
+      { ...testUser, id: "U-002", email: "dr.moyo@impilo.health" },
+      "tok-456",
+    );
+
+    expect(useFacilityStore.getState().facility).toBeNull();
+    expect(useWorkspaceStore.getState().workspace).toBeNull();
+    expect(useShiftStore.getState().shift).toBeNull();
+    expect(useWorkModeStore.getState().mode).toBe("general");
   });
 
   it("hasRole returns true for assigned roles", () => {

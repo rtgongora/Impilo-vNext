@@ -12,13 +12,11 @@ import {
   TrendingUp,
   X,
 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
 import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { useEncounters } from "@/hooks/queries/useEncounters";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
-import { apiClient } from "@/lib/api-client";
 
 interface GrowthMeasurement {
   id: string;
@@ -37,94 +35,6 @@ interface GrowthMeasurement {
   bmiPercentile: number | null;
   hcPercentile: number | null;
 }
-
-const MOCK_MEASUREMENTS: GrowthMeasurement[] = [
-  {
-    id: "gm-1",
-    date: "2026-04-01",
-    ageMonths: 24,
-    weight: 12.5,
-    height: 87.0,
-    headCircumference: 48.2,
-    bmi: 16.5,
-    weightZScore: 0.3,
-    heightZScore: 0.1,
-    bmiZScore: 0.5,
-    hcZScore: 0.2,
-    weightPercentile: 62,
-    heightPercentile: 54,
-    bmiPercentile: 69,
-    hcPercentile: 58,
-  },
-  {
-    id: "gm-2",
-    date: "2026-01-10",
-    ageMonths: 21,
-    weight: 11.8,
-    height: 84.5,
-    headCircumference: 47.8,
-    bmi: 16.5,
-    weightZScore: 0.2,
-    heightZScore: 0.0,
-    bmiZScore: 0.4,
-    hcZScore: 0.1,
-    weightPercentile: 58,
-    heightPercentile: 50,
-    bmiPercentile: 66,
-    hcPercentile: 54,
-  },
-  {
-    id: "gm-3",
-    date: "2025-10-05",
-    ageMonths: 18,
-    weight: 10.9,
-    height: 81.0,
-    headCircumference: 47.2,
-    bmi: 16.6,
-    weightZScore: 0.1,
-    heightZScore: -0.1,
-    bmiZScore: 0.4,
-    hcZScore: 0.0,
-    weightPercentile: 54,
-    heightPercentile: 46,
-    bmiPercentile: 66,
-    hcPercentile: 50,
-  },
-  {
-    id: "gm-4",
-    date: "2025-07-12",
-    ageMonths: 15,
-    weight: 10.2,
-    height: 77.5,
-    headCircumference: 46.5,
-    bmi: 17.0,
-    weightZScore: 0.0,
-    heightZScore: -0.2,
-    bmiZScore: 0.3,
-    hcZScore: -0.1,
-    weightPercentile: 50,
-    heightPercentile: 42,
-    bmiPercentile: 62,
-    hcPercentile: 46,
-  },
-  {
-    id: "gm-5",
-    date: "2025-04-20",
-    ageMonths: 12,
-    weight: 9.5,
-    height: 74.0,
-    headCircumference: 45.8,
-    bmi: 17.3,
-    weightZScore: -0.1,
-    heightZScore: -0.3,
-    bmiZScore: 0.2,
-    hcZScore: -0.2,
-    weightPercentile: 46,
-    heightPercentile: 38,
-    bmiPercentile: 58,
-    hcPercentile: 42,
-  },
-];
 
 type ChartTab = "weight" | "height" | "bmi" | "hc";
 
@@ -180,25 +90,10 @@ export default function GrowthChartPage() {
       encounter.attributes.status === "IN_PROGRESS" || encounter.attributes.status === "ACTIVE"
   );
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["growth-chart", patientId],
-    queryFn: async () => {
-      try {
-        return await apiClient.get<{ data: GrowthMeasurement[] }>(
-          `/patients/${patientId}/growth-chart`
-        );
-      } catch {
-        return { data: MOCK_MEASUREMENTS };
-      }
-    },
-  });
-
-  const baseMeasurements = (data?.data ?? MOCK_MEASUREMENTS) as GrowthMeasurement[];
+  /** No BFF growth/WHO module; entries below are browser-session only unless Agent 0 adds a persisted API. */
   const [recordedMeasurements, setRecordedMeasurements] = useState<GrowthMeasurement[]>([]);
-  const measurements = useMemo(
-    () => sortMeasurements([...recordedMeasurements, ...baseMeasurements]),
-    [baseMeasurements, recordedMeasurements]
-  );
+  const measurements = useMemo(() => sortMeasurements([...recordedMeasurements]), [recordedMeasurements]);
+  const isLoading = false;
   const latest = measurements[0];
   const flaggedMetrics = countFlags(latest);
   const [activeTab, setActiveTab] = useState<ChartTab>("weight");
@@ -248,22 +143,11 @@ export default function GrowthChartPage() {
     };
 
     setIsSaving(true);
-
     try {
-      await apiClient.post(`/patients/${patientId}/growth-chart`, {
-        encounter_id: activeEncounter.id,
-        facility_id: facility?.id ?? null,
-        age_months: ageMonths,
-        weight,
-        height,
-        head_circumference: headCircumference,
-      });
-    } catch {
-      // Keep the in-place workflow responsive even when the backing endpoint is not yet available.
-    } finally {
       setRecordedMeasurements((current) => sortMeasurements([nextMeasurement, ...current]));
       resetForm();
       setShowForm(false);
+    } finally {
       setIsSaving(false);
     }
   }
@@ -278,6 +162,14 @@ export default function GrowthChartPage() {
           </div>
         ) : (
           <div className="space-y-6">
+            <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-800">
+              <p className="font-medium text-slate-900">Growth data not persisted</p>
+              <p className="mt-1 text-slate-600">
+                There is no supported experience-BFF growth-chart API or WHO z-score pipeline wired here. Measurements you add
+                stay in this browser session only. Agent 0: paediatric growth observations store + read path (or integration
+                to an authoritative service).
+              </p>
+            </div>
             <ClinicalReviewHeader
               badge="Growth continuity"
               badgeIcon={TrendingUp}

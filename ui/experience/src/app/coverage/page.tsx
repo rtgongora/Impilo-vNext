@@ -7,33 +7,25 @@
  */
 
 import { useState, type FormEvent } from "react";
-import { useSearchParams } from "next/navigation";
 import {
   Shield, UserCheck, FileText, DollarSign, Briefcase,
-  Loader2, CheckCircle2, AlertCircle, Search, Plus, Clock,
+  Loader2, CheckCircle2, AlertCircle, Plus,
   Users, CreditCard, Scale, ShieldCheck,
 } from "lucide-react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
-import { OrganizationPlaneContextBar } from "@/components/experience/OrganizationPlaneContextBar";
 import { PageShell } from "@/components/PageShell";
-import { WorkflowHeader } from "@/components/workflow/WorkflowHeader";
 import {
-  useCheckCoverageEligibility,
   useCoverageClaims,
-  useCoverageMembers,
   useCoveragePlans,
   useCoverageRemittances,
   useCreateCoverageClaim,
-  useCreateCoveragePreauth,
   useEnrollCoverageMember,
-  type CoveragePlan,
+  type CoverageClaim,
 } from "@/hooks/queries/useCoverage";
-import { useFacilityStore } from "@/hooks/useFacilityStore";
-import { apiClient, type ApiResponse } from "@/lib/api-client";
+import { apiClient } from "@/lib/api-client";
 
 type ActiveTab = "dashboard" | "schemes" | "membership" | "eligibility" | "contracting" | "preauth" | "claims" | "contributions" | "settlement" | "appeals" | "intelligence";
-type CoverageCoreTab = "dashboard" | "schemes" | "membership" | "eligibility" | "preauth" | "claims" | "settlement";
 
 const TABS: { key: ActiveTab; label: string; icon: typeof Shield }[] = [
   { key: "dashboard", label: "Dashboard", icon: Shield },
@@ -49,16 +41,6 @@ const TABS: { key: ActiveTab; label: string; icon: typeof Shield }[] = [
   { key: "intelligence", label: "Intelligence", icon: Shield },
 ];
 
-const CORE_TABS: { key: CoverageCoreTab; label: string; icon: typeof Shield }[] = [
-  { key: "dashboard", label: "Dashboard", icon: Shield },
-  { key: "schemes", label: "Schemes", icon: Briefcase },
-  { key: "membership", label: "Membership", icon: Users },
-  { key: "eligibility", label: "Eligibility", icon: UserCheck },
-  { key: "preauth", label: "Pre-Auth", icon: ShieldCheck },
-  { key: "claims", label: "Claims", icon: FileText },
-  { key: "settlement", label: "Settlement", icon: DollarSign },
-];
-
 function formatCoverageDate(value?: string) {
   if (!value) return "Pending";
   const parsed = new Date(value);
@@ -72,6 +54,32 @@ function formatCoverageCurrency(value: number, currency = "USD") {
     currency,
     maximumFractionDigits: 0,
   }).format(value);
+}
+
+const ELIGIBILITY_SUMMARY_KEYS = new Set(["result_code", "result_message"]);
+
+function EligibilityExtraFields({ payload }: { payload: Record<string, unknown> | undefined }) {
+  if (!payload) return null;
+  const entries = Object.entries(payload).filter(([k]: [string, unknown]) => !ELIGIBILITY_SUMMARY_KEYS.has(k));
+  if (entries.length === 0) {
+    return (
+      <p className="mt-3 text-xs text-gray-500">
+        No additional fields in this response. GOP and packaged benefit lines are not simulated in the UI.
+      </p>
+    );
+  }
+  return (
+    <dl className="mt-3 grid grid-cols-1 gap-2 rounded-lg border border-white/60 bg-white/50 p-3 text-xs">
+      {entries.slice(0, 16).map(([k, v]: [string, unknown]) => (
+        <div key={k} className="flex flex-col gap-0.5 sm:flex-row sm:gap-2">
+          <dt className="shrink-0 font-medium text-gray-600">{k}</dt>
+          <dd className="font-mono text-gray-800 break-all">
+            {v !== null && typeof v === "object" ? JSON.stringify(v) : String(v)}
+          </dd>
+        </div>
+      ))}
+    </dl>
+  );
 }
 
 export default function CoveragePage() {
@@ -112,50 +120,47 @@ export default function CoveragePage() {
 
 // ── DASHBOARD TAB ────────────────────────────────────────────────
 function DashboardTab() {
-  const { data: plansData } = useQuery<{ data: unknown[] }>({
-    queryKey: ["coverage-plans"], queryFn: () => apiClient.get("/internal/v1/coverage/plans"),
-  });
-  const { data: remittancesData } = useQuery<{ data: unknown[] }>({
-    queryKey: ["coverage-remittances"], queryFn: () => apiClient.get("/internal/v1/coverage/remittances"),
-  });
-
-  const plans = (plansData?.data ?? []) as Array<Record<string, unknown>>;
-  const remittances = (remittancesData?.data ?? []) as Array<Record<string, unknown>>;
+  const plansQ = useCoveragePlans();
+  const remQ = useCoverageRemittances();
+  const plans = plansQ.data ?? [];
+  const remittances = remQ.data ?? [];
+  const remittanceTotal = remittances.reduce((sum, r) => sum + r.amount, 0);
+  const primaryCurrency = remittances[0]?.currency ?? "USD";
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-violet-50 rounded-lg border border-violet-200 p-4 text-center">
-          <p className="text-2xl font-bold text-violet-700">{plans.length || "4.7M"}</p>
-          <p className="text-xs text-violet-600">Active Members</p>
+          <p className="text-2xl font-bold text-violet-700">{plansQ.isLoading ? "…" : plans.length}</p>
+          <p className="text-xs text-violet-600">Configured plans</p>
+          <p className="text-[10px] text-violet-500/90 mt-1">GET /internal/v1/coverage/plans</p>
         </div>
         <div className="bg-green-50 rounded-lg border border-green-200 p-4 text-center">
-          <p className="text-2xl font-bold text-green-700">{plans.length || "12,456"}</p>
-          <p className="text-xs text-green-600">Claims This Month</p>
+          <p className="text-2xl font-bold text-green-700">{remQ.isLoading ? "…" : remittances.length}</p>
+          <p className="text-xs text-green-600">Remittance rows</p>
+          <p className="text-[10px] text-green-600/90 mt-1">Not a claims ledger total</p>
         </div>
         <div className="bg-blue-50 rounded-lg border border-blue-200 p-4 text-center">
-          <p className="text-2xl font-bold text-blue-700">${remittances.length ? (remittances.length * 225).toLocaleString() : "2.8M"}</p>
-          <p className="text-xs text-blue-600">Settled This Month</p>
+          <p className="text-2xl font-bold text-blue-700">
+            {remQ.isLoading ? "…" : formatCoverageCurrency(remittanceTotal, primaryCurrency)}
+          </p>
+          <p className="text-xs text-blue-600">Sum of remittance amounts</p>
         </div>
         <div className="bg-amber-50 rounded-lg border border-amber-200 p-4 text-center">
-          <p className="text-2xl font-bold text-amber-700">94.2%</p>
-          <p className="text-xs text-amber-600">Claim Approval Rate</p>
+          <p className="text-2xl font-bold text-amber-700">—</p>
+          <p className="text-xs text-amber-600">Claim mix / approval rate</p>
+          <p className="text-[10px] text-amber-600/90 mt-1">Needs aggregated reporting API</p>
         </div>
       </div>
 
       <div className="bg-white rounded-lg border border-gray-200 p-5">
-        <h3 className="text-sm font-semibold text-gray-900 mb-3">Settlement Pipeline — 13-State Distribution</h3>
-        <div className="flex items-center gap-1 text-[10px] overflow-x-auto pb-2">
-          {([["INITIATED",45],["VERIFIED",38],["PREAUTH",12],["SUBMITTED",156],["ADJUDICATED",89],["APPROVED",67],["REMITTED",234],["PAID",189],["SETTLED",412],["RECONCILED",1023],["DISPUTED",3],["RECOVERED",1],["WRITTEN_OFF",0]] as const).map(([stage, count], i) => (
-            <div key={stage} className="flex items-center gap-1">
-              <div className="px-2 py-1 bg-violet-100 text-violet-700 rounded whitespace-nowrap flex flex-col items-center">
-                <span className="font-bold">{count}</span>
-                <span>{stage}</span>
-              </div>
-              {i < 12 && <span className="text-gray-300">→</span>}
-            </div>
-          ))}
-        </div>
+        <h3 className="text-sm font-semibold text-gray-900 mb-2">Settlement lifecycle</h3>
+        <p className="text-xs text-gray-600 leading-relaxed">
+          Stage-level volumes are not aggregated in this UI. Use the{" "}
+          <span className="font-medium text-gray-800">Settlement</span> tab for remittance rows from{" "}
+          <code className="text-[10px]">GET /internal/v1/coverage/remittances</code>, and the{" "}
+          <span className="font-medium text-gray-800">Claims</span> tab with a coverage id to load claims.
+        </p>
       </div>
     </div>
   );
@@ -163,10 +168,7 @@ function DashboardTab() {
 
 // ── SCHEMES TAB ──────────────────────────────────────────────────
 function SchemesTab() {
-  const { data, isLoading } = useQuery<{ data: Array<{ id?: string; plan_code?: string; plan_name?: string; payer_id?: string; plan_type?: string; status?: string; [k: string]: unknown }> }>({
-    queryKey: ["coverage-plans"], queryFn: () => apiClient.get("/internal/v1/coverage/plans"),
-  });
-  const plans = data?.data ?? [];
+  const { data: plans = [], isLoading } = useCoveragePlans();
 
   return (
     <div className="space-y-4">
@@ -180,14 +182,14 @@ function SchemesTab() {
         </div>
       ) : (
         <div className="space-y-3">
-          {plans.map((plan, i) => (
-            <div key={plan.id ?? i} className="bg-white rounded-lg border border-gray-200 p-5 flex items-center justify-between">
+          {plans.map((plan) => (
+            <div key={plan.id} className="bg-white rounded-lg border border-gray-200 p-5 flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-900">{plan.plan_name ?? "Unnamed Plan"}</p>
-                <p className="text-xs text-gray-500">{plan.plan_code ?? "—"} · {plan.plan_type ?? "STANDARD"} · Payer: {plan.payer_id ?? "—"}</p>
+                <p className="text-sm font-medium text-gray-900">{plan.planName}</p>
+                <p className="text-xs text-gray-500">{plan.planCode || "—"} · {plan.planType} · Payer: {plan.payerId || "—"}</p>
               </div>
               <span className={`px-2 py-0.5 text-xs rounded-full font-medium ${plan.status === "ACTIVE" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"}`}>
-                {plan.status ?? "—"}
+                {plan.status}
               </span>
             </div>
           ))}
@@ -255,21 +257,7 @@ function EligibilityTab() {
               <h4 className="text-base font-semibold">{String((check.data?.data as Record<string, unknown>)?.result_code ?? "UNKNOWN")}</h4>
             </div>
             <p className="text-sm text-gray-700">{String((check.data?.data as Record<string, unknown>)?.result_message ?? "")}</p>
-            <div className="grid grid-cols-3 gap-3 mt-3">
-              <div className="bg-white/60 rounded p-2"><p className="text-[10px] text-gray-500">Benefit Package</p><p className="text-xs font-medium">Standard OPD</p></div>
-              <div className="bg-white/60 rounded p-2"><p className="text-[10px] text-gray-500">Member Liability</p><p className="text-xs font-medium">10% co-pay</p></div>
-              <div className="bg-white/60 rounded p-2"><p className="text-[10px] text-gray-500">Pre-Auth Required</p><p className="text-xs font-medium">No</p></div>
-            </div>
-          </div>
-          {/* Guarantee of Payment Card */}
-          <div className="bg-blue-50 rounded-lg border border-blue-200 p-5">
-            <h4 className="text-sm font-semibold text-blue-900 mb-2">Guarantee of Payment (GOP)</h4>
-            <div className="grid grid-cols-4 gap-3 text-xs">
-              <div><p className="text-gray-500">GOP Reference</p><p className="font-mono font-medium">GOP-2024-0847</p></div>
-              <div><p className="text-gray-500">Status</p><p className="font-medium text-green-700">APPROVED</p></div>
-              <div><p className="text-gray-500">Amount Reserved</p><p className="font-mono font-medium">$500.00</p></div>
-              <div><p className="text-gray-500">Expires</p><p className="font-medium">2024-12-31</p></div>
-            </div>
+            <EligibilityExtraFields payload={check.data?.data as Record<string, unknown> | undefined} />
           </div>
         </div>
       )}
@@ -285,23 +273,51 @@ function EligibilityTab() {
 // ── CLAIMS TAB ───────────────────────────────────────────────────
 function ClaimsTab() {
   const [showForm, setShowForm] = useState(false);
-  const queryClient = useQueryClient();
+  const [listCoverageId, setListCoverageId] = useState("");
+  const [appliedCoverageId, setAppliedCoverageId] = useState<string | null>(null);
+  const submit = useCreateCoverageClaim();
+  const claimsQ = useCoverageClaims(appliedCoverageId);
 
-  const submit = useMutation({
-    mutationFn: (body: Record<string, string>) =>
-      apiClient.post("/internal/v1/coverage/claims", body),
-    onSuccess: () => { setShowForm(false); queryClient.invalidateQueries({ queryKey: ["coverage-claims"] }); },
-  });
+  function applyListFilter() {
+    const id = listCoverageId.trim();
+    setAppliedCoverageId(id.length > 0 ? id : null);
+  }
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-base font-semibold text-gray-900">Claims & Adjudication</h3>
-        <button onClick={() => setShowForm(!showForm)}
+        <button type="button" onClick={() => setShowForm(!showForm)}
           className="inline-flex items-center gap-1.5 px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">
           <Plus className="w-4 h-4" /> Submit Claim
         </button>
       </div>
+
+      <div className="bg-slate-50 rounded-lg border border-slate-200 p-4 flex flex-col gap-2 sm:flex-row sm:items-end">
+        <div className="flex-1">
+          <label htmlFor="claims-list-coverage" className="block text-xs font-medium text-gray-600 mb-1">
+            Coverage ID (list claims)
+          </label>
+          <input
+            id="claims-list-coverage"
+            type="text"
+            value={listCoverageId}
+            onChange={(e) => setListCoverageId(e.target.value)}
+            placeholder="Same id used when submitting claims"
+            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg"
+          />
+        </div>
+        <button
+          type="button"
+          onClick={applyListFilter}
+          className="px-4 py-2 bg-slate-800 text-white text-sm font-medium rounded-lg hover:bg-slate-900"
+        >
+          Load claims
+        </button>
+      </div>
+      <p className="text-xs text-gray-500">
+        Uses <code className="text-[10px]">GET /internal/v1/coverage/claims?coverageId=…</code> via Experience BFF.
+      </p>
 
       {showForm && (
         <div className="bg-white rounded-lg border border-blue-200 p-5 space-y-3">
@@ -313,13 +329,22 @@ function ClaimsTab() {
             <input type="number" placeholder="Total Amount" step="0.01" className="px-3 py-2 text-sm border border-gray-300 rounded-lg" id="claim-amount" />
           </div>
           <div className="flex gap-2">
-            <button onClick={() => setShowForm(false)} className="flex-1 py-2 bg-gray-100 text-gray-700 text-sm rounded-lg">Cancel</button>
-            <button onClick={() => {
+            <button type="button" onClick={() => setShowForm(false)} className="flex-1 py-2 bg-gray-100 text-gray-700 text-sm rounded-lg">Cancel</button>
+            <button type="button" onClick={() => {
               const coverageId = (document.getElementById("claim-coverage") as HTMLInputElement)?.value;
               const claimType = (document.getElementById("claim-type") as HTMLInputElement)?.value;
               const facilityId = (document.getElementById("claim-facility") as HTMLInputElement)?.value;
               const totalAmount = (document.getElementById("claim-amount") as HTMLInputElement)?.value;
-              submit.mutate({ coverageId, claimType, facilityId, totalAmount });
+              submit.mutate(
+                { coverageId, claimType, facilityId, totalAmount },
+                {
+                  onSuccess: () => {
+                    setShowForm(false);
+                    setListCoverageId(coverageId);
+                    setAppliedCoverageId(coverageId.trim() || null);
+                  },
+                }
+              );
             }} disabled={submit.isPending}
               className="flex-1 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50">
               {submit.isPending ? "Submitting..." : "Submit Claim"}
@@ -328,26 +353,66 @@ function ClaimsTab() {
         </div>
       )}
 
-      <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-        <FileText className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-        <p className="text-gray-400 text-sm">Claims will appear here after submission</p>
-        <p className="text-gray-400 text-xs mt-1">Lifecycle: SUBMITTED → ADJUDICATED → APPROVED → REMITTED</p>
-      </div>
+      {appliedCoverageId && claimsQ.isLoading && (
+        <div className="flex items-center justify-center py-12 gap-2 text-gray-500 text-sm">
+          <Loader2 className="w-5 h-5 animate-spin" /> Loading claims…
+        </div>
+      )}
+      {appliedCoverageId && claimsQ.isError && (
+        <div className="text-sm text-red-600 border border-red-200 rounded-lg p-3">Could not load claims for this coverage id.</div>
+      )}
+      {appliedCoverageId && !claimsQ.isLoading && !claimsQ.isError && (claimsQ.data?.length ?? 0) === 0 && (
+        <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
+          <FileText className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+          <p className="text-gray-400 text-sm">No claims returned for this coverage id</p>
+          <p className="text-gray-400 text-xs mt-1">Lifecycle: SUBMITTED → ADJUDICATED → APPROVED → REMITTED</p>
+        </div>
+      )}
+      {appliedCoverageId && !claimsQ.isLoading && (claimsQ.data?.length ?? 0) > 0 && claimsQ.data && (
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-gray-50 text-left">
+                <th className="px-4 py-2 font-medium text-gray-600">Claim #</th>
+                <th className="px-4 py-2 font-medium text-gray-600">Type</th>
+                <th className="px-4 py-2 font-medium text-gray-600">Amount</th>
+                <th className="px-4 py-2 font-medium text-gray-600">Status</th>
+                <th className="px-4 py-2 font-medium text-gray-600">Created</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {claimsQ.data.map((c: CoverageClaim) => (
+                <tr key={c.id} className="hover:bg-gray-50">
+                  <td className="px-4 py-2 font-mono text-xs">{c.claimNumber}</td>
+                  <td className="px-4 py-2">{c.claimType}</td>
+                  <td className="px-4 py-2">{formatCoverageCurrency(c.totalAmount, "USD")}</td>
+                  <td className="px-4 py-2"><span className="text-xs rounded-full bg-gray-100 px-2 py-0.5">{c.status}</span></td>
+                  <td className="px-4 py-2 text-xs text-gray-500">{formatCoverageDate(c.createdAt)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      {!appliedCoverageId && (
+        <div className="bg-white rounded-lg border border-gray-200 p-8 text-center text-sm text-gray-500">
+          Enter a coverage id and choose <span className="font-medium text-gray-700">Load claims</span> to list rows from the coverage service.
+        </div>
+      )}
     </div>
   );
 }
 
 // ── SETTLEMENT TAB ───────────────────────────────────────────────
 function SettlementTab() {
-  const { data, isLoading } = useQuery<{ data: Array<Record<string, unknown>> }>({
-    queryKey: ["coverage-remittances"], queryFn: () => apiClient.get("/internal/v1/coverage/remittances"),
-  });
-  const remittances = data?.data ?? [];
+  const { data: remittances = [], isLoading } = useCoverageRemittances();
 
   return (
     <div className="space-y-4">
       <h3 className="text-base font-semibold text-gray-900">Settlement & Remittance</h3>
-      <p className="text-sm text-gray-500">13-state settlement lifecycle: INITIATED → VERIFIED → PREAUTHORIZED → SUBMITTED → ADJUDICATED → APPROVED → REMITTED → PAID → SETTLED → RECONCILED</p>
+      <p className="text-sm text-gray-500">
+        Rows from <code className="text-xs">GET /internal/v1/coverage/remittances</code>. Downstream payers may use longer state machines than the fields returned here.
+      </p>
 
       {isLoading ? (
         <div className="flex items-center justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-gray-400" /></div>
@@ -358,16 +423,19 @@ function SettlementTab() {
         </div>
       ) : (
         <div className="space-y-3">
-          {remittances.map((rem, i) => (
-            <div key={String(rem.id ?? i)} className="bg-white rounded-lg border border-gray-200 p-4 flex items-center justify-between">
+          {remittances.map((rem) => (
+            <div key={rem.id} className="bg-white rounded-lg border border-gray-200 p-4 flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-900">Remittance {String(rem.reference_number ?? rem.id)}</p>
-                <p className="text-xs text-gray-500">Payer: {String(rem.payer_id ?? "—")} · Provider: {String(rem.provider_ref ?? "—")}</p>
+                <p className="text-sm font-medium text-gray-900">Remittance {rem.remittanceNumber}</p>
+                <p className="text-xs text-gray-500">Coverage: {rem.coverageId || "—"} · Remitted: {formatCoverageDate(rem.remittedAt)}</p>
               </div>
               <div className="text-right">
-                <p className="text-sm font-mono font-bold text-gray-900">{String(rem.currency ?? "USD")} {Number(rem.amount ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                <p className="text-sm font-mono font-bold text-gray-900">
+                  {rem.currency}{" "}
+                  {rem.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </p>
                 <span className={`px-2 py-0.5 text-xs rounded-full ${rem.status === "PAID" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}>
-                  {String(rem.status ?? "PENDING")}
+                  {rem.status}
                 </span>
               </div>
             </div>
@@ -381,11 +449,7 @@ function SettlementTab() {
 // ── MEMBERSHIP TAB ───────────────────────────────────────────────
 function MembershipTab() {
   const [showForm, setShowForm] = useState(false);
-  const queryClient = useQueryClient();
-  const enroll = useMutation({
-    mutationFn: (body: Record<string, string>) => apiClient.post("/internal/v1/coverage/members", body),
-    onSuccess: () => { setShowForm(false); queryClient.invalidateQueries({ queryKey: ["coverage-members"] }); },
-  });
+  const enroll = useEnrollCoverageMember();
 
   return (
     <div className="space-y-4">
@@ -410,12 +474,15 @@ function MembershipTab() {
           </div>
           <div className="flex gap-2">
             <button onClick={() => setShowForm(false)} className="flex-1 py-2 bg-gray-100 text-gray-700 text-sm rounded-lg">Cancel</button>
-            <button onClick={() => {
+            <button type="button" onClick={() => {
               const clientId = (document.getElementById("mem-client") as HTMLInputElement)?.value;
               const planId = (document.getElementById("mem-plan") as HTMLInputElement)?.value;
               const memberNumber = (document.getElementById("mem-number") as HTMLInputElement)?.value;
               const relationship = (document.getElementById("mem-rel") as HTMLSelectElement)?.value;
-              enroll.mutate({ clientId, planId, memberNumber, relationship });
+              enroll.mutate(
+                { clientId, planId, memberNumber, relationship },
+                { onSuccess: () => setShowForm(false) }
+              );
             }} disabled={enroll.isPending}
               className="flex-1 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50">
               {enroll.isPending ? "Enrolling..." : "Enroll"}
@@ -558,26 +625,12 @@ function ContractingTab() {
   return (
     <div className="space-y-4">
       <h3 className="text-base font-semibold text-gray-900">Provider Contracting & Network Management</h3>
-      <p className="text-sm text-gray-500">Manage provider contracts, rate schedules, network tiers, and sanctions.</p>
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-        <table className="w-full text-sm">
-          <thead><tr className="border-b bg-gray-50">
-            <th className="text-left px-4 py-3 font-medium text-gray-600">Provider</th>
-            <th className="text-left px-4 py-3 font-medium text-gray-600">Contract Type</th>
-            <th className="text-left px-4 py-3 font-medium text-gray-600">Network Tier</th>
-            <th className="text-left px-4 py-3 font-medium text-gray-600">Rate Schedule</th>
-            <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
-          </tr></thead>
-          <tbody className="divide-y">
-            {([["Harare Central Hospital","FFS","Tier 1","NHIS-2024","Active"],["Parirenyatwa Group","Capitation","Tier 1","CIMAS-2024","Active"],["Chitungwiza Central","FFS","Tier 2","PSMAS-2024","Active"],["Avenues Clinic","Capitation","Tier 3","PRIVATE-2024","Under Review"]] as const).map(([name,type,tier,schedule,status]) => (
-              <tr key={name} className="hover:bg-gray-50"><td className="px-4 py-3 font-medium text-gray-900">{name}</td><td className="px-4 py-3 text-gray-600">{type}</td>
-                <td className="px-4 py-3"><span className="px-2 py-0.5 text-xs rounded bg-blue-100 text-blue-700">{tier}</span></td>
-                <td className="px-4 py-3 text-gray-600 font-mono text-xs">{schedule}</td>
-                <td className="px-4 py-3"><span className={`px-2 py-0.5 text-xs rounded-full ${status === "Active" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}>{status}</span></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <p className="text-sm text-gray-500">
+        No contracting or network API is exposed on the Experience BFF yet. This tab is intentionally empty instead of showing demo providers.
+      </p>
+      <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
+        <Briefcase className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+        <p className="text-gray-400 text-sm">Contract directory not wired</p>
       </div>
     </div>
   );
@@ -585,37 +638,42 @@ function ContractingTab() {
 
 // ── PAYER INTELLIGENCE TAB ───────────────────────────────────────
 function IntelligenceTab() {
+  const { data: remittances = [], isLoading } = useCoverageRemittances();
+  const n = remittances.length;
+  const total = remittances.reduce((s, r) => s + r.amount, 0);
+  const avg = n > 0 ? total / n : 0;
+  const cur = remittances[0]?.currency ?? "USD";
+
   return (
     <div className="space-y-6">
       <h3 className="text-base font-semibold text-gray-900">Payer Intelligence & Analytics</h3>
-      <div className="grid grid-cols-4 gap-4">
+      <p className="text-sm text-gray-500">
+        Fraud, loss ratio, and timing KPIs need a reporting service. Below is a simple slice derived only from remittance rows already loaded for coverage operations.
+      </p>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
-          <p className="text-2xl font-bold text-gray-900">$127</p>
-          <p className="text-xs text-gray-500">Avg Claim Value</p>
+          <p className="text-2xl font-bold text-gray-900">{isLoading ? "…" : n}</p>
+          <p className="text-xs text-gray-500">Remittance rows</p>
         </div>
         <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
-          <p className="text-2xl font-bold text-green-700">2.3d</p>
-          <p className="text-xs text-gray-500">Avg Settlement Time</p>
+          <p className="text-2xl font-bold text-gray-900">{isLoading ? "…" : formatCoverageCurrency(total, cur)}</p>
+          <p className="text-xs text-gray-500">Total remitted (sum)</p>
         </div>
         <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
-          <p className="text-2xl font-bold text-red-600">0.8%</p>
-          <p className="text-xs text-gray-500">Fraud Flag Rate</p>
+          <p className="text-2xl font-bold text-green-700">{isLoading || n === 0 ? "—" : formatCoverageCurrency(avg, cur)}</p>
+          <p className="text-xs text-gray-500">Avg remittance</p>
         </div>
         <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
-          <p className="text-2xl font-bold text-blue-700">78%</p>
-          <p className="text-xs text-gray-500">Medical Loss Ratio</p>
+          <p className="text-2xl font-bold text-amber-700">—</p>
+          <p className="text-xs text-gray-500">Fraud / MLR / timing</p>
+          <p className="text-[10px] text-gray-400 mt-1">Not in BFF</p>
         </div>
       </div>
       <div className="bg-white rounded-lg border border-gray-200 p-5">
-        <h4 className="text-sm font-semibold text-gray-900 mb-3">Analytics Domains</h4>
-        <div className="grid grid-cols-2 gap-3">
-          {(["Fraud Detection & Pattern Analysis", "Utilization Patterns & Outliers", "Cost Optimization & Benchmarking", "Provider Performance Scoring", "Member Risk Stratification", "Claims Forecasting"] as const).map((domain) => (
-            <div key={domain} className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
-              <Shield className="w-4 h-4 text-violet-500" />
-              <span className="text-sm text-gray-700">{domain}</span>
-            </div>
-          ))}
-        </div>
+        <h4 className="text-sm font-semibold text-gray-900 mb-2">Future analytics domains</h4>
+        <p className="text-xs text-gray-600">
+          When reporting APIs exist, this area can host fraud, utilization, benchmarking, and forecasting without placeholder numbers.
+        </p>
       </div>
     </div>
   );

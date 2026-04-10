@@ -6,8 +6,7 @@
  */
 
 import { create } from "zustand";
-import { OPERATIONAL_CONTEXT_SESSION_KEYS } from "@/lib/operational-context";
-import { useOperationalContextStore } from "@/hooks/useOperationalContextStore";
+import { hasPersistedExperienceContinuity, resetExperienceContinuity } from "@/lib/session-continuity";
 
 export interface AuthUser {
   id: string;
@@ -39,6 +38,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isAuthenticated: false,
 
   setAuth: (user, token, refreshToken, expiresAt) => {
+    const currentUser = get().user;
+    const shouldResetContinuity = currentUser
+      ? currentUser.id !== user.id
+      : typeof window !== "undefined" &&
+        !sessionStorage.getItem("exp:auth_user") &&
+        hasPersistedExperienceContinuity();
+
+    if (shouldResetContinuity) {
+      resetExperienceContinuity();
+    }
+
     if (typeof window !== "undefined") {
       sessionStorage.setItem("exp:auth_token", token);
       sessionStorage.setItem("exp:auth_user", JSON.stringify(user));
@@ -63,11 +73,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       sessionStorage.removeItem("exp:auth_user");
       sessionStorage.removeItem("exp:refresh_token");
       sessionStorage.removeItem("exp:expires_at");
-      for (const key of OPERATIONAL_CONTEXT_SESSION_KEYS) {
-        sessionStorage.removeItem(key);
-      }
     }
-    useOperationalContextStore.getState().reset();
+    resetExperienceContinuity();
     set({ user: null, token: null, refreshToken: null, expiresAt: null, isAuthenticated: false });
   },
 

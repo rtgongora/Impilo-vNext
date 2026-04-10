@@ -42,8 +42,9 @@ vi.mock("@/hooks/queries/useEncounters", () => ({
   }),
 }));
 
-vi.mock("@tanstack/react-query", () => ({
-  useQuery: () => ({
+vi.mock("@/hooks/queries/useStructuredHistory", () => ({
+  __esModule: true,
+  useAdvanceDirectives: () => ({
     data: {
       data: [
         {
@@ -73,6 +74,8 @@ vi.mock("@tanstack/react-query", () => ({
       ],
     },
     isLoading: false,
+    isError: false,
+    refetch: vi.fn(),
   }),
 }));
 

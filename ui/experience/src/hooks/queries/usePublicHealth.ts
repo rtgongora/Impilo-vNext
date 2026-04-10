@@ -11,6 +11,24 @@ function asArray<T>(value: unknown): T[] {
   return Array.isArray(value) ? (value as T[]) : [];
 }
 
+/**
+ * Unwraps BFF `data` payloads that mirror upstream services:
+ * surveillance uses `items`, counters use `counters`, alerts use `alerts`,
+ * indawo list uses `items`, some services wrap rows in `data`.
+ */
+export function extractPublicHealthList(payload: unknown, listKeys: readonly string[]): unknown[] {
+  if (payload == null) return [];
+  if (Array.isArray(payload)) return payload;
+  const o = payload as Record<string, unknown>;
+  for (const key of listKeys) {
+    const v = o[key];
+    if (Array.isArray(v)) return v;
+  }
+  if (Array.isArray(o.items)) return o.items as unknown[];
+  if (Array.isArray(o.data)) return o.data as unknown[];
+  return [];
+}
+
 function getAttributes(value: unknown): UnknownRecord {
   const record = asRecord(value);
   const attributes = record.attributes;
@@ -104,44 +122,60 @@ export interface PublicHealthSite {
 function normalizeSignal(resource: unknown): PublicHealthSignal {
   const record = getAttributes(resource);
   const outer = asRecord(resource);
+  const idVal = outer.id ?? record.id;
+  const id = idVal != null ? String(idVal) : "";
+  const name = readString(record, "name", "disease", "condition");
+  const eventType = readString(record, "eventType", "event_type");
   return {
-    id: readString(outer, "id") || readString(record, "id"),
-    disease: readString(record, "disease", "condition", "name") || "Unspecified signal",
-    facility: readString(record, "facility_name", "facility", "source_facility") || "Unknown facility",
+    id,
+    disease: name || eventType || "Signal definition",
+    facility:
+      readString(record, "facility_name", "facility", "source_facility", "conditionField", "condition_field") ||
+      "—",
     cases: readNumber(record, "case_count", "cases", "count"),
     threshold: readNumber(record, "threshold", "threshold_value"),
-    status: readString(record, "status") || "monitoring",
-    detectedAt: readString(record, "detected_at", "reported_at", "created_at"),
+    status: readString(record, "status") || "ACTIVE",
+    detectedAt: readString(record, "detected_at", "reported_at", "createdAt", "created_at"),
   };
 }
 
 function normalizeCase(resource: unknown): PublicHealthCase {
   const record = getAttributes(resource);
   const outer = asRecord(resource);
+  const idVal = outer.id ?? record.id;
+  const id = idVal != null ? String(idVal) : "";
+  const facilityId = record.facilityId ?? record.facility_id;
   return {
-    id: readString(outer, "id") || readString(record, "id"),
-    disease: readString(record, "disease", "condition") || "Unspecified case",
-    patientRef: readString(record, "patient_ref", "cpid", "client_id") || "Unknown patient",
-    facility: readString(record, "facility_name", "facility") || "Unknown facility",
-    status: readString(record, "status") || "under_review",
-    outcome: readString(record, "outcome") || "Pending",
-    reportedAt: readString(record, "reported_at", "created_at", "detected_at"),
+    id,
+    disease:
+      readString(record, "title", "disease", "condition", "caseType", "case_type") || "Surveillance case",
+    patientRef:
+      readString(record, "patient_ref", "cpid", "client_id") ||
+      (record.signalHitId != null || record.signal_hit_id != null
+        ? `Hit ${record.signalHitId ?? record.signal_hit_id}`
+        : "—"),
+    facility: readString(record, "facility_name", "facility") || (facilityId != null ? String(facilityId) : "—"),
+    status: readString(record, "status") || "OPEN",
+    outcome: readString(record, "outcome", "description") || readString(record, "severity") || "—",
+    reportedAt: readString(record, "reported_at", "createdAt", "created_at", "detected_at"),
   };
 }
 
 function normalizeAlert(resource: unknown): PublicHealthAlert {
   const record = getAttributes(resource);
   const outer = asRecord(resource);
+  const idVal = outer.id ?? record.id;
+  const syndrome = readString(record, "syndrome_code", "syndromeCode");
+  const facility = record.facility_id ?? record.facilityId;
   return {
-    id: readString(outer, "id") || readString(record, "id"),
+    id: idVal != null ? String(idVal) : "",
     title:
       readString(record, "title", "name", "alert_name") ||
-      readString(record, "disease", "condition") ||
-      "Public health alert",
+      (syndrome ? `Syndrome ${syndrome}` : "Surveillance alert"),
     severity: readString(record, "severity", "priority") || "medium",
-    location: readString(record, "location", "area", "jurisdiction") || "Unknown location",
-    status: readString(record, "status") || "active",
-    detectedAt: readString(record, "detected_at", "created_at", "reported_at"),
+    location: readString(record, "location", "area", "jurisdiction") || (facility != null ? String(facility) : "—"),
+    status: readBoolean(record, "acknowledged") ? "acknowledged" : "active",
+    detectedAt: readString(record, "detected_at", "triggered_at", "created_at", "reported_at"),
   };
 }
 
@@ -165,11 +199,12 @@ function normalizeCounter(resource: unknown): PublicHealthCounter {
 function normalizeCampaign(resource: unknown): PublicHealthCampaign {
   const record = getAttributes(resource);
   const outer = asRecord(resource);
+  const idVal = outer.id ?? record.id;
   return {
-    id: readString(outer, "id") || readString(record, "id"),
+    id: idVal != null ? String(idVal) : "",
     name: readString(record, "name", "campaign_name") || "Unnamed campaign",
     status: readString(record, "status") || "planning",
-    campaignType: readString(record, "campaign_type", "type") || "General",
+    campaignType: readString(record, "campaignType", "campaign_type", "type") || "General",
     jurisdiction: readString(record, "jurisdiction", "location") || "National",
     targetPopulation: readNumber(record, "target_population", "target", "target_count"),
     reachedPopulation: readNumber(record, "reached_population", "reached", "completed_count"),
@@ -181,8 +216,9 @@ function normalizeCampaign(resource: unknown): PublicHealthCampaign {
 function normalizeSite(resource: unknown): PublicHealthSite {
   const record = getAttributes(resource);
   const outer = asRecord(resource);
+  const siteId = outer.siteId ?? outer.id ?? record.siteId ?? record.site_id ?? record.id;
   return {
-    id: readString(outer, "id") || readString(record, "id"),
+    id: siteId != null ? String(siteId) : "",
     name: readString(record, "name", "site_name") || "Unknown site",
     siteType: readString(record, "site_type", "type", "category") || "General",
     jurisdiction: readString(record, "jurisdiction", "district", "province") || "Unknown jurisdiction",
@@ -196,8 +232,8 @@ export function usePublicHealthSignals() {
   return useQuery({
     queryKey: ["public-health-signals"],
     queryFn: async () => {
-      const response = await apiClient.get<{ data: unknown[] }>("/internal/v1/public-health/signals");
-      return asArray(response.data).map(normalizeSignal);
+      const response = await apiClient.get<{ data: unknown }>("/internal/v1/public-health/signals");
+      return extractPublicHealthList(response.data, ["items"]).map(normalizeSignal);
     },
   });
 }
@@ -206,8 +242,8 @@ export function usePublicHealthCases() {
   return useQuery({
     queryKey: ["public-health-cases"],
     queryFn: async () => {
-      const response = await apiClient.get<{ data: unknown[] }>("/internal/v1/public-health/cases");
-      return asArray(response.data).map(normalizeCase);
+      const response = await apiClient.get<{ data: unknown }>("/internal/v1/public-health/cases");
+      return extractPublicHealthList(response.data, ["items"]).map(normalizeCase);
     },
   });
 }
@@ -216,8 +252,8 @@ export function usePublicHealthAlerts() {
   return useQuery({
     queryKey: ["public-health-alerts"],
     queryFn: async () => {
-      const response = await apiClient.get<{ data: unknown[] }>("/internal/v1/public-health/alerts");
-      return asArray(response.data).map(normalizeAlert);
+      const response = await apiClient.get<{ data: unknown }>("/internal/v1/public-health/alerts");
+      return extractPublicHealthList(response.data, ["alerts"]).map(normalizeAlert);
     },
   });
 }
@@ -226,8 +262,22 @@ export function usePublicHealthCounters() {
   return useQuery({
     queryKey: ["public-health-counters"],
     queryFn: async () => {
-      const response = await apiClient.get<{ data: unknown[] | UnknownRecord }>("/internal/v1/public-health/counters");
+      const response = await apiClient.get<{ data: unknown }>("/internal/v1/public-health/counters");
       const raw = response.data;
+      const rows = extractPublicHealthList(raw, ["counters"]);
+      if (rows.length > 0) {
+        return rows.map((row) => {
+          const r = asRecord(row);
+          const label = readString(r, "syndrome_code", "label") || "Counter";
+          const val = readNumber(r, "event_count", "count", "value");
+          return normalizeCounter({
+            id: readString(r, "facility_id", "id") + label + readString(r, "count_date"),
+            label,
+            value: String(val),
+            detail: `${readString(r, "facility_id", "facility")} · ${readString(r, "count_date")}`,
+          });
+        });
+      }
       if (Array.isArray(raw)) return raw.map(normalizeCounter);
       const record = asRecord(raw);
       return Object.entries(record).map(([key, value]) =>
@@ -245,8 +295,12 @@ export function usePublicHealthCampaigns() {
   return useQuery({
     queryKey: ["public-health-campaigns"],
     queryFn: async () => {
-      const response = await apiClient.get<{ data: unknown[] }>("/internal/v1/public-health/campaigns");
-      return asArray(response.data).map(normalizeCampaign);
+      const response = await apiClient.get<{ data: unknown }>("/internal/v1/public-health/campaigns");
+      const d = asRecord(response.data);
+      const rows = Array.isArray(d.content)
+        ? (d.content as unknown[])
+        : extractPublicHealthList(response.data, ["items"]);
+      return rows.map(normalizeCampaign);
     },
   });
 }
@@ -255,8 +309,8 @@ export function usePublicHealthSites() {
   return useQuery({
     queryKey: ["public-health-sites"],
     queryFn: async () => {
-      const response = await apiClient.get<{ data: unknown[] }>("/internal/v1/public-health/sites");
-      return asArray(response.data).map(normalizeSite);
+      const response = await apiClient.get<{ data: unknown }>("/internal/v1/public-health/sites");
+      return extractPublicHealthList(response.data, ["items"]).map(normalizeSite);
     },
   });
 }

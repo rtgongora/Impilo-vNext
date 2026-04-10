@@ -70,9 +70,9 @@ function formatDicomDate(date?: string): string {
   return date;
 }
 
-function useStudies() {
+function useStudies(chartPatientId: string | undefined) {
   return useQuery({
-    queryKey: ["pacs", "studies"],
+    queryKey: ["pacs", "studies", chartPatientId ?? "unknown"],
     queryFn: async () => {
       const studyIds = await apiClient.get<string[]>("/internal/v1/pacs/studies");
       const details = await Promise.all(
@@ -87,6 +87,7 @@ function useStudies() {
       return details.filter(Boolean) as OrthancStudy[];
     },
     staleTime: 30_000,
+    enabled: Boolean(chartPatientId),
   });
 }
 
@@ -133,11 +134,15 @@ export default function ImagingPage() {
     (encounter) =>
       encounter.attributes.status === "IN_PROGRESS" || encounter.attributes.status === "ACTIVE"
   );
-  const { data: studies = [], isLoading, error } = useStudies();
+  const { data: studies = [], isLoading, error } = useStudies(patientId);
 
   const patientMatchedStudies = studies.filter((study) => matchesPatient(study, patientId));
-  const visibleStudies = patientMatchedStudies.length > 0 ? patientMatchedStudies : studies;
+  /** Never list unrelated DICOM patients in this chart's rail — avoids wrong-patient review. */
+  const visibleStudies = patientMatchedStudies;
   const selectedStudyDefault = visibleStudies[0] ?? null;
+  const hasPacsStudies = studies.length > 0;
+  const hasPatientMatch = patientMatchedStudies.length > 0;
+  const pacsHasUnmatchedStudies = !isLoading && !error && hasPacsStudies && !hasPatientMatch;
   const [selectedStudy, setSelectedStudy] = useState<OrthancStudy | null>(selectedStudyDefault);
   const [selectedInstance, setSelectedInstance] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -188,7 +193,7 @@ export default function ImagingPage() {
     return () => document.removeEventListener("fullscreenchange", handler);
   }, []);
 
-  const contextMode = patientMatchedStudies.length > 0 ? "patient" : "workspace";
+  const contextMode = hasPatientMatch ? "patient" : pacsHasUnmatchedStudies ? "reconcile" : "empty";
   const selectedSeries = series.find((entry) => entry.instances.includes(selectedInstance ?? ""));
 
   return (
@@ -237,12 +242,12 @@ export default function ImagingPage() {
                     : "No study tags matched this chart ID, so the workspace may need order or PACS reconciliation.",
               },
               {
-                label: "Visible studies",
-                value: String(visibleStudies.length),
+                label: "PACS (workspace)",
+                value: String(studies.length),
                 detail:
-                  contextMode === "patient"
-                    ? "The left rail is scoped to patient-matched studies."
-                    : "The left rail falls back to workspace-visible PACS studies while keeping the patient context visible.",
+                  hasPatientMatch
+                    ? "Orthanc returned this many studies for the workspace query; only patient-matched rows appear in the rail."
+                    : "Studies exist in PACS but none matched this chart ID — reconcile DICOM PatientID with the chart before expecting a list here.",
               },
               {
                 label: "Next action",
@@ -266,7 +271,9 @@ export default function ImagingPage() {
                 ? "The imaging viewer could not reach PACS, so the clinical next step is to stay in orders, results, and documents while the external service is unavailable."
                 : contextMode === "patient"
                   ? "Patient-matched imaging is available from this chart, so review can happen in place before handing findings into results, documents, or notes."
-                  : "The PACS integration is available, but study tags did not match this patient ID. The viewer keeps broader workspace studies visible while the ordering and documentation follow-up stays one click away."}
+                  : contextMode === "reconcile"
+                    ? "PACS returned studies for the workspace, but none matched this chart's patient identifier. The study rail stays empty here so another patient's images are not shown in this chart; reconcile PatientID (or use Orders/Documents) before review."
+                    : "No patient-matched studies are available yet. Continue from Orders or Documents until PACS metadata aligns with this chart."}
             </p>
             <p className="mt-1 text-xs text-slate-500">
               Use Orders to place or reconcile imaging requests, Results for radiology outcome review, Documents for attached reports, and Notes for team communication or interpretation handoff.
@@ -281,7 +288,7 @@ export default function ImagingPage() {
                   <p className="text-xs text-gray-500">
                     {contextMode === "patient"
                       ? "Patient-matched imaging studies"
-                      : "Workspace-visible PACS studies"}
+                      : "Patient-matched studies only (no cross-patient fallback)"}
                   </p>
                 </div>
                 <div className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">
@@ -308,16 +315,22 @@ export default function ImagingPage() {
                 {!isLoading && !error && visibleStudies.length === 0 && (
                   <div className="rounded-xl border border-dashed border-gray-200 p-6 text-center">
                     <Search className="mx-auto mb-2 h-8 w-8 text-gray-300" />
-                    <p className="text-sm text-gray-500">No imaging studies found</p>
+                    <p className="text-sm text-gray-500">
+                      {contextMode === "reconcile"
+                        ? "No studies matched this patient in PACS"
+                        : "No imaging studies found"}
+                    </p>
                     <p className="mt-1 text-xs text-gray-400">
-                      Continue from Orders or Documents until PACS metadata arrives.
+                      {contextMode === "reconcile"
+                        ? `Orthanc has ${studies.length} workspace study/studies, but DICOM PatientID did not match this chart. Reconcile identifiers or open imaging from Orders.`
+                        : "Continue from Orders or Documents until PACS metadata arrives."}
                     </p>
                   </div>
                 )}
 
-                {!isLoading && !error && contextMode === "workspace" && visibleStudies.length > 0 && (
-                  <div className="rounded-xl border border-blue-100 bg-blue-50 px-3 py-2 text-xs text-blue-800">
-                    No PACS study tag matched patient `{patientId}`. Showing workspace-visible studies while keeping chart follow-up links nearby.
+                {!isLoading && !error && contextMode === "reconcile" && (
+                  <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-950">
+                    Safety: unrelated patients&apos; studies are not listed in this chart. Align DICOM PatientID with `{patientId}` (or route via Orders) to populate the rail.
                   </div>
                 )}
 
@@ -492,9 +505,7 @@ export default function ImagingPage() {
                     <InfoRow label="Series Count" value={String(selectedStudy.Series?.length ?? 0)} />
                     <InfoRow label="Orthanc ID" value={selectedStudy.ID} mono />
                     <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">
-                      {contextMode === "patient"
-                        ? "Patient context is aligned. Review findings here, then carry the outcome into results, documents, or notes."
-                        : "Patient context is not fully aligned in PACS metadata. Use Orders or Documents to reconcile the study against the chart while the viewer stays available."}
+                      Patient context is aligned in PACS metadata for this study. Review findings here, then carry the outcome into results, documents, or notes.
                     </div>
                   </>
                 )}

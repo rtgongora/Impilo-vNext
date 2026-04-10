@@ -8,8 +8,20 @@ vi.mock("@/components/EHRLayout", () => ({ EHRLayout: ({ children }: { children:
 vi.mock("@/components/PageShell", () => ({ PageShell: ({ children, title }: { children: ReactNode; title: string }) => <div><h1>{title}</h1>{children}</div> }));
 vi.mock("@/hooks/useFacilityStore", () => ({ useFacilityStore: (selector: (state: { facility: { id: string; name: string } }) => unknown) => selector({ facility: { id: "facility-1", name: "Harare Central Hospital" } }) }));
 vi.mock("@/hooks/queries/useEncounters", () => ({ useEncounters: () => ({ data: { data: [{ id: "enc-1", attributes: { status: "IN_PROGRESS", encounterType: "OUTPATIENT", startedAt: "2026-04-08T09:00:00.000Z" } }] } }) }));
-vi.mock("@tanstack/react-query", () => ({ useQuery: () => ({ data: { data: [{ id: "pr-1", name: "Colonoscopy", type: "Endoscopy", date: "2026-04-15", surgeon: "Dr. Chikwava", facility: "Harare Central Hospital", status: "Scheduled", notes: "Prep instructions given" }, { id: "pr-2", name: "Appendectomy", type: "General Surgery", date: "2026-03-10", surgeon: "Dr. Mutasa", facility: "Parirenyatwa Hospital", status: "Completed", notes: "No complications" }] }, isLoading: false }) }));
-vi.mock("@/lib/api-client", () => ({ apiClient: { get: vi.fn() } }));
+vi.mock("@/hooks/queries/useStructuredHistory", () => ({
+  __esModule: true,
+  usePatientProcedures: () => ({
+    data: {
+      data: [
+        { id: "pr-1", name: "Colonoscopy", type: "Endoscopy", date: "2026-04-15", surgeon: "Dr. Chikwava", facility: "Harare Central Hospital", status: "Scheduled", notes: "Prep instructions given" },
+        { id: "pr-2", name: "Appendectomy", type: "General Surgery", date: "2026-03-10", surgeon: "Dr. Mutasa", facility: "Parirenyatwa Hospital", status: "Completed", notes: "No complications" },
+      ],
+    },
+    isLoading: false,
+    isError: false,
+    refetch: vi.fn(),
+  }),
+}));
 
 describe("ProceduresPage", () => {
   it("surfaces procedure continuity with documents and care planning", () => {

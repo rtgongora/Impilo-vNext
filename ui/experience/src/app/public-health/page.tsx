@@ -10,8 +10,8 @@
 import { useState } from "react";
 import {
   Activity, AlertTriangle, Bug, ClipboardCheck, Megaphone,
-  MapPin, Shield, Siren, Users, Settings, Building, TreePine,
-  Ship, School, Globe, Radio, Target,
+  MapPin, Shield, Siren, Settings, Building, TreePine,
+  Ship, School, Globe, Radio, Target, Users,
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
@@ -102,10 +102,8 @@ export default function PublicHealthPage() {
           ))}
         </div>
 
-        {/* Dashboard Tab */}
         {activeTab === "dashboard" && (
           <div className="space-y-4">
-            {/* KPI Cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
               {[
                 { Icon: Bug, value: "3", label: "Active Outbreaks", color: "text-red-700", bg: "bg-red-50", border: "border-red-200" },
@@ -123,7 +121,6 @@ export default function PublicHealthPage() {
               ))}
             </div>
 
-            {/* Outbreak + Complaints Summary */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="bg-white rounded-lg border border-gray-200 p-5">
                 <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2 mb-3">
@@ -171,7 +168,6 @@ export default function PublicHealthPage() {
               </div>
             </div>
 
-            {/* Campaigns Progress + Reporting */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="bg-white rounded-lg border border-gray-200 p-5">
                 <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2 mb-3">

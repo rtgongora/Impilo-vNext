@@ -3,68 +3,13 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import { AlertTriangle, ClipboardList, FileText, Heart, Loader2, Plus, Users, X } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
 import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { useEncounters } from "@/hooks/queries/useEncounters";
+import type { FamilyMember } from "@/hooks/queries/useStructuredHistory";
+import { useFamilyHistory } from "@/hooks/queries/useStructuredHistory";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
-
-interface FamilyCondition {
-  id: string;
-  condition: string;
-  onsetAge: number | null;
-  status: "Active" | "Resolved" | "Deceased";
-  notes: string;
-}
-
-interface FamilyMember {
-  id: string;
-  name: string;
-  relationship: string;
-  age: number | null;
-  deceased: boolean;
-  deceasedAge: number | null;
-  causeOfDeath: string | null;
-  conditions: FamilyCondition[];
-}
-
-const MOCK_FAMILY: FamilyMember[] = [
-  {
-    id: "fm-1", name: "John M.", relationship: "Father", age: 68, deceased: false, deceasedAge: null, causeOfDeath: null,
-    conditions: [
-      { id: "fc-1", condition: "Type 2 Diabetes Mellitus", onsetAge: 52, status: "Active", notes: "On insulin since 2018" },
-      { id: "fc-2", condition: "Hypertension", onsetAge: 45, status: "Active", notes: "Controlled with medication" },
-    ],
-  },
-  {
-    id: "fm-2", name: "Mary M.", relationship: "Mother", age: 65, deceased: false, deceasedAge: null, causeOfDeath: null,
-    conditions: [
-      { id: "fc-3", condition: "Breast Cancer", onsetAge: 58, status: "Resolved", notes: "Stage I, mastectomy 2019, in remission" },
-      { id: "fc-4", condition: "Osteoporosis", onsetAge: 60, status: "Active", notes: "On bisphosphonates" },
-    ],
-  },
-  {
-    id: "fm-3", name: "Robert M.", relationship: "Paternal Grandfather", age: null, deceased: true, deceasedAge: 72, causeOfDeath: "Myocardial Infarction",
-    conditions: [
-      { id: "fc-5", condition: "Coronary Artery Disease", onsetAge: 55, status: "Deceased", notes: "Multiple MIs" },
-      { id: "fc-6", condition: "Type 2 Diabetes Mellitus", onsetAge: 48, status: "Deceased", notes: "" },
-    ],
-  },
-  {
-    id: "fm-4", name: "Sarah M.", relationship: "Sister", age: 35, deceased: false, deceasedAge: null, causeOfDeath: null,
-    conditions: [
-      { id: "fc-7", condition: "Asthma", onsetAge: 12, status: "Active", notes: "Mild intermittent" },
-    ],
-  },
-  {
-    id: "fm-5", name: "Grace M.", relationship: "Maternal Grandmother", age: null, deceased: true, deceasedAge: 81, causeOfDeath: "Stroke",
-    conditions: [
-      { id: "fc-8", condition: "Cerebrovascular Disease", onsetAge: 75, status: "Deceased", notes: "" },
-      { id: "fc-9", condition: "Atrial Fibrillation", onsetAge: 70, status: "Deceased", notes: "" },
-    ],
-  },
-];
 
 const RELATIONSHIPS = ["Father", "Mother", "Brother", "Sister", "Son", "Daughter", "Paternal Grandfather", "Paternal Grandmother", "Maternal Grandfather", "Maternal Grandmother", "Uncle", "Aunt", "Cousin"];
 
@@ -80,12 +25,8 @@ export default function FamilyHistoryPage() {
   const facility = useFacilityStore((state) => state.facility);
   const { data: encountersData } = useEncounters(patientId);
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["family-history", patientId],
-    queryFn: async () => ({ data: MOCK_FAMILY }),
-  });
-
-  const members = data?.data ?? [];
+  const { data, isLoading, isError, refetch } = useFamilyHistory(patientId);
+  const members: FamilyMember[] = data?.data ?? [];
   const activeEncounter = (encountersData?.data ?? []).find(
     (encounter) =>
       encounter.attributes.status === "IN_PROGRESS" || encounter.attributes.status === "ACTIVE"
@@ -110,6 +51,17 @@ export default function FamilyHistoryPage() {
           <div className="flex items-center justify-center py-16">
             <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
             <span className="ml-2 text-sm text-gray-500">Loading family history...</span>
+          </div>
+        ) : isError ? (
+          <div className="flex flex-col items-center justify-center gap-3 py-16">
+            <p className="text-sm text-gray-600">Unable to load family history for this patient.</p>
+            <button
+              type="button"
+              onClick={() => void refetch()}
+              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            >
+              Retry
+            </button>
           </div>
         ) : (
           <div className="space-y-6">

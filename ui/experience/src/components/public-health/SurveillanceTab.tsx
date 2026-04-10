@@ -2,16 +2,9 @@
 
 import { useState } from "react";
 import {
-  AlertTriangle, Plus, Eye, Clock, CheckCircle, Send,
+  AlertTriangle, Plus, Eye, Clock, CheckCircle, Send, Loader2,
 } from "lucide-react";
-
-const SURVEILLANCE_SIGNALS = [
-  { id: "SIG-001", disease: "Acute Watery Diarrhoea", facility: "Parirenyatwa Hospital", cases: 5, threshold: 3, date: "2026-04-05", status: "breached", action: "investigate" },
-  { id: "SIG-002", disease: "Measles (suspected)", facility: "Harare Central Hospital", cases: 2, threshold: 5, date: "2026-04-05", status: "monitoring", action: "watch" },
-  { id: "SIG-003", disease: "Malaria", facility: "Chipinge District Hospital", cases: 34, threshold: 20, date: "2026-04-04", status: "breached", action: "respond" },
-  { id: "SIG-004", disease: "Typhoid", facility: "Chitungwiza Central Hospital", cases: 8, threshold: 5, date: "2026-04-04", status: "breached", action: "investigate" },
-  { id: "SIG-005", disease: "AFP (Acute Flaccid Paralysis)", facility: "United Bulawayo Hospitals", cases: 1, threshold: 1, date: "2026-04-03", status: "breached", action: "investigate" },
-];
+import { usePublicHealthCases, usePublicHealthSignals } from "@/hooks/queries/usePublicHealth";
 
 const WEEKLY_REPORTS = [
   { facility: "Parirenyatwa Hospital", week: "W14-2026", submitted: true, onTime: true, diseases: 12, zero: 8, positive: 4 },
@@ -21,15 +14,10 @@ const WEEKLY_REPORTS = [
   { facility: "Sally Mugabe Hospital", week: "W14-2026", submitted: true, onTime: true, diseases: 12, zero: 9, positive: 3 },
 ];
 
-const CASE_REPORTS = [
-  { id: "CBR-2026-0142", disease: "Cholera", patient: "CPID-***421", age: 34, sex: "F", facility: "Budiriro Clinic", date: "2026-04-05", status: "confirmed", outcome: "recovering" },
-  { id: "CBR-2026-0143", disease: "Cholera", patient: "CPID-***422", age: 7, sex: "M", facility: "Budiriro Clinic", date: "2026-04-05", status: "suspected", outcome: "admitted" },
-  { id: "CBR-2026-0144", disease: "Typhoid", patient: "CPID-***423", age: 22, sex: "F", facility: "Chitungwiza Central", date: "2026-04-04", status: "confirmed", outcome: "recovering" },
-  { id: "CBR-2026-0145", disease: "Measles", patient: "CPID-***424", age: 3, sex: "M", facility: "Masvingo Provincial", date: "2026-04-04", status: "suspected", outcome: "admitted" },
-  { id: "CBR-2026-0146", disease: "AFP", patient: "CPID-***425", age: 2, sex: "F", facility: "UBH", date: "2026-04-03", status: "under_investigation", outcome: "stable" },
-];
-
 export function SurveillanceTab() {
+  const { data: apiSignals = [], isLoading: sigLoading, isError: sigError } = usePublicHealthSignals();
+  const { data: apiCases = [], isLoading: caseLoading, isError: caseError } = usePublicHealthCases();
+
   const [filter, setFilter] = useState("all");
   const [showNewEvent, setShowNewEvent] = useState(false);
   const [showNewCase, setShowNewCase] = useState(false);
@@ -37,16 +25,37 @@ export function SurveillanceTab() {
   const [selectedCase, setSelectedCase] = useState<string | null>(null);
   const [activeSubTab, setActiveSubTab] = useState<"signals" | "cases" | "weekly">("signals");
 
+  const filteredSignals = apiSignals.filter((s) => {
+    if (filter === "all") return true;
+    return s.status.toUpperCase() === filter.toUpperCase();
+  });
+
   return (
     <div className="space-y-4">
+      <div className="rounded-lg border border-blue-200 bg-blue-50/80 p-3 text-xs text-blue-900">
+        <strong>Live data:</strong> Threshold signal definitions and surveillance cases are loaded from Experience BFF →
+        surveillance-service (empty if the service is down or unseeded). Weekly IDSR aggregates below are not backed by a
+        repository endpoint yet.
+      </div>
+
       {/* KPI Strip */}
       <div className="grid grid-cols-5 gap-3">
         {[
-          { label: "Signals This Week", value: "12", color: "text-red-700", sub: "5 breached" },
-          { label: "Under Investigation", value: "7", color: "text-amber-700", sub: "3 field teams deployed" },
-          { label: "Reporting Completeness", value: "89%", color: "text-blue-700", sub: "W14 - 134/150 facilities" },
-          { label: "Timeliness", value: "76%", color: "text-amber-700", sub: "Target: 80%" },
-          { label: "Active Case Reports", value: "46", color: "text-sky-700", sub: "12 confirmed this week" },
+          {
+            label: "Signal definitions (tenant)",
+            value: sigLoading ? "…" : String(apiSignals.length),
+            color: "text-red-700",
+            sub: sigError ? "Could not reach surveillance" : "From /public-health/signals",
+          },
+          {
+            label: "Surveillance cases (page)",
+            value: caseLoading ? "…" : String(apiCases.length),
+            color: "text-sky-700",
+            sub: caseError ? "Could not reach surveillance" : "From /public-health/cases",
+          },
+          { label: "Reporting Completeness", value: "—", color: "text-blue-700", sub: "Not wired to backend" },
+          { label: "Timeliness", value: "—", color: "text-amber-700", sub: "Not wired to backend" },
+          { label: "Legacy demo KPIs", value: "—", color: "text-gray-500", sub: "Removed in Wave 1" },
         ].map((kpi, i) => (
           <div key={i} className="bg-white rounded-lg border border-gray-200 p-3 text-center">
             <p className={`text-2xl font-bold ${kpi.color}`}>{kpi.value}</p>
@@ -85,9 +94,9 @@ export function SurveillanceTab() {
             <div className="flex gap-2">
               <select value={filter} onChange={(e) => setFilter(e.target.value)}
                 className="h-8 px-2 text-xs border border-gray-300 rounded-lg">
-                <option value="all">All Signals</option>
-                <option value="breached">Breached Only</option>
-                <option value="monitoring">Monitoring</option>
+                <option value="all">All</option>
+                <option value="ACTIVE">Active</option>
+                <option value="INACTIVE">Inactive</option>
               </select>
               <button onClick={() => setShowNewEvent(!showNewEvent)}
                 className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700">
@@ -158,6 +167,18 @@ export function SurveillanceTab() {
 
             {/* Signals Table */}
             <div className="overflow-x-auto">
+              {sigLoading && (
+                <div className="flex items-center justify-center gap-2 py-8 text-sm text-gray-500">
+                  <Loader2 className="h-4 w-4 animate-spin" /> Loading signals…
+                </div>
+              )}
+              {sigError && (
+                <p className="px-3 py-4 text-sm text-red-700">Unable to load signals from surveillance-service via BFF.</p>
+              )}
+              {!sigLoading && !sigError && filteredSignals.length === 0 && (
+                <p className="px-3 py-4 text-sm text-gray-600">No signal definitions returned for this tenant.</p>
+              )}
+              {!sigLoading && !sigError && filteredSignals.length > 0 && (
               <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b bg-gray-50">
@@ -172,27 +193,25 @@ export function SurveillanceTab() {
                   </tr>
                 </thead>
                 <tbody>
-                  {SURVEILLANCE_SIGNALS.filter(s => filter === "all" || s.status === filter).map(sig => (
+                  {filteredSignals.map((sig) => (
                     <tr key={sig.id}>
                       <td className={`px-3 py-2 font-mono ${selectedSignal === sig.id ? "bg-blue-50" : ""}`}>{sig.id}</td>
                       <td className="px-3 py-2 font-medium text-gray-900">{sig.disease}</td>
                       <td className="px-3 py-2 text-gray-600">{sig.facility}</td>
-                      <td className="px-3 py-2 font-bold">{sig.cases}</td>
+                      <td className="px-3 py-2 font-bold">{sig.cases || "—"}</td>
                       <td className="px-3 py-2 text-gray-500">{sig.threshold}</td>
                       <td className="px-3 py-2">
                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
-                          sig.status === "breached" ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"
+                          sig.status.toUpperCase() === "ACTIVE" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-700"
                         }`}>{sig.status}</span>
                       </td>
-                      <td className="px-3 py-2 text-gray-500">{sig.date}</td>
+                      <td className="px-3 py-2 text-gray-500">{sig.detectedAt || "—"}</td>
                       <td className="px-3 py-2">
-                        <button onClick={() => setSelectedSignal(selectedSignal === sig.id ? null : sig.id)}
+                        <button type="button" onClick={() => setSelectedSignal(selectedSignal === sig.id ? null : sig.id)}
                           className="inline-flex items-center gap-1 px-2 py-1 border border-gray-300 rounded text-[10px] font-medium hover:bg-gray-50">
                           {selectedSignal === sig.id ? "Close" : (
                             <>
-                              {sig.action === "investigate" && <><Eye className="h-3 w-3" /> Investigate</>}
-                              {sig.action === "respond" && <><AlertTriangle className="h-3 w-3" /> Respond</>}
-                              {sig.action === "watch" && <><Clock className="h-3 w-3" /> Monitor</>}
+                              <Eye className="h-3 w-3" /> Review
                             </>
                           )}
                         </button>
@@ -201,15 +220,16 @@ export function SurveillanceTab() {
                   ))}
                 </tbody>
               </table>
+              )}
             </div>
 
             {/* Expanded Signal Response Workflow */}
             {selectedSignal && (() => {
-              const sig = SURVEILLANCE_SIGNALS.find(s => s.id === selectedSignal);
+              const sig = apiSignals.find((s) => s.id === selectedSignal);
               if (!sig) return null;
               return (
                 <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 space-y-4">
-                  <h4 className="text-sm font-semibold">Signal Response Workflow - {sig.disease} at {sig.facility}</h4>
+                  <h4 className="text-sm font-semibold">Signal Response Workflow — {sig.disease} ({sig.facility})</h4>
 
                   {/* Step 1: Verification */}
                   <div className="p-3 border border-gray-200 rounded-lg bg-white space-y-2">
@@ -424,6 +444,18 @@ export function SurveillanceTab() {
             )}
 
             <div className="overflow-x-auto">
+              {caseLoading && (
+                <div className="flex items-center justify-center gap-2 py-8 text-sm text-gray-500">
+                  <Loader2 className="h-4 w-4 animate-spin" /> Loading cases…
+                </div>
+              )}
+              {caseError && (
+                <p className="px-3 py-4 text-sm text-red-700">Unable to load cases from surveillance-service via BFF.</p>
+              )}
+              {!caseLoading && !caseError && apiCases.length === 0 && (
+                <p className="px-3 py-4 text-sm text-gray-600">No surveillance cases returned for this tenant.</p>
+              )}
+              {!caseLoading && !caseError && apiCases.length > 0 && (
               <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b bg-gray-50">
@@ -439,20 +471,20 @@ export function SurveillanceTab() {
                   </tr>
                 </thead>
                 <tbody>
-                  {CASE_REPORTS.map(c => (
+                  {apiCases.map((c) => (
                     <tr key={c.id} className={`border-b hover:bg-gray-50 ${selectedCase === c.id ? "bg-blue-50" : ""}`}>
                       <td className="px-3 py-2 font-mono">{c.id}</td>
                       <td className="px-3 py-2 font-medium text-gray-900">{c.disease}</td>
-                      <td className="px-3 py-2 font-mono">{c.patient}</td>
-                      <td className="px-3 py-2">{c.age}{c.sex}</td>
+                      <td className="px-3 py-2 font-mono">{c.patientRef}</td>
+                      <td className="px-3 py-2 text-gray-400">—</td>
                       <td className="px-3 py-2 text-gray-600">{c.facility}</td>
-                      <td className="px-3 py-2 text-gray-500">{c.date}</td>
+                      <td className="px-3 py-2 text-gray-500">{c.reportedAt || "—"}</td>
                       <td className="px-3 py-2">
                         <span className="px-2 py-0.5 border border-gray-300 rounded text-[10px] capitalize">{c.status.replace(/_/g, " ")}</span>
                       </td>
                       <td className="px-3 py-2 capitalize">{c.outcome}</td>
                       <td className="px-3 py-2">
-                        <button onClick={() => setSelectedCase(selectedCase === c.id ? null : c.id)}
+                        <button type="button" onClick={() => setSelectedCase(selectedCase === c.id ? null : c.id)}
                           className="px-2 py-1 border border-gray-300 rounded text-[10px] font-medium hover:bg-gray-50">
                           {selectedCase === c.id ? "Close" : "Update"}
                         </button>
@@ -461,11 +493,12 @@ export function SurveillanceTab() {
                   ))}
                 </tbody>
               </table>
+              )}
             </div>
 
             {/* Expanded Case Update */}
             {selectedCase && (() => {
-              const c = CASE_REPORTS.find(r => r.id === selectedCase);
+              const c = apiCases.find((r) => r.id === selectedCase);
               if (!c) return null;
               return (
                 <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 space-y-3">
@@ -519,6 +552,10 @@ export function SurveillanceTab() {
       {/* Weekly IDSR Tab */}
       {activeSubTab === "weekly" && (
         <div className="bg-white rounded-lg border border-gray-200">
+          <div className="border-b border-amber-200 bg-amber-50 px-4 py-2 text-xs text-amber-900">
+            <strong>Not connected:</strong> Weekly IDSR facility completeness is still illustrative. There is no matching
+            Experience BFF or surveillance-service list endpoint wired for this grid in Wave 1.
+          </div>
           <div className="px-4 py-3 border-b flex items-center justify-between">
             <div>
               <h4 className="text-sm font-semibold text-gray-900">Weekly IDSR Aggregate Reporting</h4>

@@ -42,16 +42,17 @@ vi.mock("@/hooks/queries/useEncounters", () => ({
   }),
 }));
 
-vi.mock("@tanstack/react-query", () => ({
-  useQuery: () => ({
+vi.mock("@/hooks/queries/useCareContinuity", () => ({
+  __esModule: true,
+  usePatientGoalsFromCarePlans: () => ({
     data: {
       data: [
         {
           id: "goal-1",
           title: "Reduce HbA1c to below 7%",
           description: "Clinical goal",
-          status: "At Risk",
-          priority: "High",
+          status: "At Risk" as const,
+          priority: "High" as const,
           progress: 40,
           targetDate: "2026-06-30",
           createdDate: "2026-01-15",
@@ -62,6 +63,8 @@ vi.mock("@tanstack/react-query", () => ({
       ],
     },
     isLoading: false,
+    isError: false,
+    refetch: vi.fn(),
   }),
 }));
 

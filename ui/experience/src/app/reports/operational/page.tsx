@@ -43,6 +43,10 @@ export default function OperationalReportsPage() {
     <AppLayout>
       <PageShell title="Operational Reports" subtitle="Analyze operational performance metrics">
         <div className="max-w-2xl space-y-6">
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
+            Uses <code className="text-[10px]">POST /internal/v1/reports/generate</code> for operational analytics report
+            types; processing is asynchronous — the UI navigates to the job detail after queueing.
+          </div>
           <div className="bg-white rounded-lg border border-gray-200 p-5">
             <h3 className="font-medium text-gray-900 mb-3">Report Type</h3>
             <div className="space-y-2">
@@ -100,6 +104,7 @@ export default function OperationalReportsPage() {
 
           <div className="flex justify-end">
             <button
+              type="button"
               onClick={handleGenerate}
               disabled={!dateFrom || !dateTo || generateReport.isPending}
               className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"

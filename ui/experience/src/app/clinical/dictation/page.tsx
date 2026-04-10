@@ -6,11 +6,9 @@
  */
 
 import { useState, useRef } from "react";
-import { Mic, MicOff, Pause, Play, Square, Save, Loader2, FileText, Trash2, Clock } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { Mic, Pause, Play, Square, Save, Loader2, FileText, Trash2, Clock, AlertCircle } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
-import { apiClient } from "@/lib/api-client";
 
 type RecordingState = "idle" | "recording" | "paused" | "processing";
 type NoteType = "SOAP" | "Progress" | "Procedure" | "Consultation" | "Discharge";
@@ -25,12 +23,6 @@ interface RecentDictation {
   preview: string;
 }
 
-const MOCK_RECENT: RecentDictation[] = [
-  { id: "d-1", date: "2026-04-06 09:15", noteType: "SOAP", duration: "3:42", wordCount: 245, status: "Saved", preview: "Patient presents with persistent lower back pain..." },
-  { id: "d-2", date: "2026-04-06 08:30", noteType: "Progress", duration: "2:18", wordCount: 156, status: "Saved", preview: "Day 3 post-operative. Wound healing well..." },
-  { id: "d-3", date: "2026-04-05 16:45", noteType: "Consultation", duration: "5:12", wordCount: 380, status: "Draft", preview: "Referred by Dr. Ndlovu for cardiology opinion..." },
-];
-
 const WAVEFORM_BARS = 40;
 
 export default function DictationPage() {
@@ -40,12 +32,8 @@ export default function DictationPage() {
   const [elapsed, setElapsed] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const { data } = useQuery({
-    queryKey: ["recent-dictations"],
-    queryFn: async () => ({ data: MOCK_RECENT }),
-  });
-
-  const recentDictations = data?.data ?? [];
+  /** No dictation history API in Wave 1 — avoid fabricated rows. */
+  const recentDictations: RecentDictation[] = [];
 
   function startRecording() {
     setRecordingState("recording");
@@ -70,11 +58,9 @@ export default function DictationPage() {
   function stopRecording() {
     if (timerRef.current) clearInterval(timerRef.current);
     setRecordingState("processing");
-    // Simulate processing
     setTimeout(() => {
-      setTranscript("Patient presents with a two-week history of persistent cough, productive of yellowish sputum. No haemoptysis. Associated with low-grade fever and night sweats. No significant weight loss noted. Past medical history includes well-controlled hypertension on amlodipine 5mg daily. No known allergies. On examination, patient is afebrile, respiratory rate 18, SpO2 97% on room air. Chest examination reveals bilateral basal crepitations. Assessment: Community-acquired pneumonia. Plan: Chest X-ray, sputum culture, start amoxicillin 500mg TDS for 7 days. Follow up in 5 days.");
       setRecordingState("idle");
-    }, 2000);
+    }, 400);
   }
 
   function formatTime(s: number): string {
@@ -100,8 +86,23 @@ export default function DictationPage() {
 
   return (
     <AppLayout>
-      <PageShell title="Voice Dictation" subtitle="Speech-to-text for clinical notes">
+      <PageShell
+        title="Voice Dictation"
+        subtitle="Local recording controls only — no connected speech-to-text or dictation store yet"
+      >
         <div className="space-y-6">
+          <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+            <div className="flex gap-2">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" aria-hidden />
+              <div>
+                <p className="font-medium">Not a clinical transcript pipeline</p>
+                <p className="mt-1 text-xs text-amber-900/90">
+                  Stopping a recording does not generate text. Recent dictations are empty until a dictation or ASR API is available (tracked for Agent 0). Type or paste into the transcript area, or use Notes from the chart.
+                </p>
+              </div>
+            </div>
+          </div>
+
           {/* Header */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -152,7 +153,7 @@ export default function DictationPage() {
               )}
               {recordingState === "processing" && (
                 <p className="text-xs text-blue-500 mt-1 flex items-center justify-center gap-1">
-                  <Loader2 className="w-3 h-3 animate-spin" /> Processing transcript...
+                  <Loader2 className="w-3 h-3 animate-spin" /> Finishing recording…
                 </p>
               )}
             </div>
@@ -208,7 +209,7 @@ export default function DictationPage() {
               onChange={(e) => setTranscript(e.target.value)}
               rows={8}
               className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 leading-relaxed"
-              placeholder="Transcript will appear here after recording..."
+              placeholder="No speech-to-text is connected — type or paste the note here after recording."
             />
             <div className="flex items-center gap-3 mt-3">
               <button
@@ -234,25 +235,31 @@ export default function DictationPage() {
               <h3 className="font-medium text-gray-900">Recent Dictations</h3>
             </div>
             <div className="divide-y divide-gray-100">
-              {recentDictations.map((d) => (
-                <div key={d.id} className="px-5 py-3 hover:bg-gray-50 transition-colors">
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center gap-2">
-                      <FileText className="w-4 h-4 text-gray-400" />
-                      <span className="text-sm font-medium text-gray-900">{d.noteType} Note</span>
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${d.status === "Saved" ? "bg-green-100 text-green-700" : d.status === "Draft" ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"}`}>
-                        {d.status}
-                      </span>
-                    </div>
-                    <span className="text-xs text-gray-400">{d.date}</span>
-                  </div>
-                  <p className="text-xs text-gray-500 truncate">{d.preview}</p>
-                  <div className="flex items-center gap-3 mt-1 text-[10px] text-gray-400">
-                    <span>Duration: {d.duration}</span>
-                    <span>{d.wordCount} words</span>
-                  </div>
+              {recentDictations.length === 0 ? (
+                <div className="px-5 py-8 text-center text-sm text-gray-500">
+                  No saved dictation history yet. This list needs a backend dictation or notes integration.
                 </div>
-              ))}
+              ) : (
+                recentDictations.map((d) => (
+                  <div key={d.id} className="px-5 py-3 hover:bg-gray-50 transition-colors">
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-2">
+                        <FileText className="w-4 h-4 text-gray-400" />
+                        <span className="text-sm font-medium text-gray-900">{d.noteType} Note</span>
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${d.status === "Saved" ? "bg-green-100 text-green-700" : d.status === "Draft" ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"}`}>
+                          {d.status}
+                        </span>
+                      </div>
+                      <span className="text-xs text-gray-400">{d.date}</span>
+                    </div>
+                    <p className="text-xs text-gray-500 truncate">{d.preview}</p>
+                    <div className="flex items-center gap-3 mt-1 text-[10px] text-gray-400">
+                      <span>Duration: {d.duration}</span>
+                      <span>{d.wordCount} words</span>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>

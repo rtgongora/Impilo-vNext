@@ -8,7 +8,27 @@ vi.mock("@/components/EHRLayout", () => ({ EHRLayout: ({ children }: { children:
 vi.mock("@/components/PageShell", () => ({ PageShell: ({ children, title }: { children: ReactNode; title: string }) => <div><h1>{title}</h1>{children}</div> }));
 vi.mock("@/hooks/useFacilityStore", () => ({ useFacilityStore: (selector: (state: { facility: { id: string; name: string } }) => unknown) => selector({ facility: { id: "facility-1", name: "Harare Central" } }) }));
 vi.mock("@/hooks/queries/useEncounters", () => ({ useEncounters: () => ({ data: { data: [{ id: "enc-1", attributes: { status: "IN_PROGRESS", encounterType: "OUTPATIENT", startedAt: "2026-04-08T09:00:00.000Z" } }] } }) }));
-vi.mock("@tanstack/react-query", () => ({ useQuery: () => ({ data: { data: [{ id: "s-1", category: "Smoking", icon: "home", status: "Former Smoker", detail: "Quit 3 years ago", lastUpdated: "2026-03-15", riskLevel: "Moderate" }] }, isLoading: false }) }));
+vi.mock("@/hooks/queries/useStructuredHistory", () => ({
+  __esModule: true,
+  useSocialHistory: () => ({
+    data: {
+      data: [
+        {
+          id: "s-1",
+          category: "Smoking",
+          icon: "home",
+          status: "Former Smoker",
+          detail: "Quit 3 years ago",
+          riskLevel: "Moderate",
+          lastUpdated: "2026-03-15",
+        },
+      ],
+    },
+    isLoading: false,
+    isError: false,
+    refetch: vi.fn(),
+  }),
+}));
 
 describe("SocialHistoryPage", () => {
   it("surfaces social continuity into goals and care plans", () => {

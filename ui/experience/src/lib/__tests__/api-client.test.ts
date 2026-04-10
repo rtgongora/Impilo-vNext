@@ -1,4 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { useFacilityStore } from "@/hooks/useFacilityStore";
+import { useShiftStore } from "@/hooks/useShiftStore";
+import { useWorkModeStore } from "@/hooks/useWorkModeStore";
+import { useWorkspaceStore } from "@/hooks/useWorkspaceStore";
 import { apiClient } from "../api-client";
 
 // Mock sessionStorage
@@ -30,6 +34,11 @@ describe("apiClient", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     sessionStorageMock.clear();
+    useFacilityStore.getState().clearFacility();
+    useWorkspaceStore.getState().clearWorkspace();
+    useShiftStore.getState().endShift();
+    useWorkModeStore.getState().reset();
+    window.history.pushState({}, "", "/");
   });
 
   afterEach(() => {
@@ -316,5 +325,66 @@ describe("apiClient", () => {
     const [url, options] = mockFetch.mock.calls[0];
     expect(url).toBe("http://localhost:8160/internal/v1/test/123");
     expect(options.method).toBe("DELETE");
+  });
+
+  it("clears persisted experience continuity on auth failure after refresh fails", async () => {
+    sessionStorageMock.setItem("exp:auth_token", "expired-token");
+    sessionStorageMock.setItem("exp:refresh_token", "refresh-token");
+    sessionStorageMock.setItem("exp:facility", JSON.stringify({ id: "facility-1" }));
+    sessionStorageMock.setItem("exp:workspace", JSON.stringify({ id: "workspace-1" }));
+    sessionStorageMock.setItem("exp:shift", JSON.stringify({ id: "shift-1" }));
+    sessionStorageMock.setItem("exp:work_mode", "clinical");
+    sessionStorageMock.setItem("exp:work_mode_context", JSON.stringify({ licenseNumber: "LIC-123" }));
+    sessionStorageMock.setItem("exp:purpose_of_use", "TREATMENT");
+    window.history.pushState({}, "", "/auth/login");
+
+    useFacilityStore.getState().setFacility({
+      id: "facility-1",
+      name: "Central Hospital",
+      code: "CH",
+      facilityType: "Hospital",
+      capabilities: ["queue"],
+    });
+    useWorkspaceStore.getState().setWorkspace({
+      id: "workspace-1",
+      name: "OPD",
+      workspaceType: "CONSULT",
+      facilityId: "facility-1",
+    });
+    useShiftStore.getState().startShift({
+      id: "shift-1",
+      startedAt: "2026-04-09T08:00:00Z",
+      workspaceId: "workspace-1",
+      facilityId: "facility-1",
+    });
+    useWorkModeStore.getState().setMode("clinical", { licenseNumber: "LIC-123" });
+
+    mockFetch
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+        json: () => Promise.resolve({ error: { code: "UNAUTHORIZED", message: "Expired" } }),
+      })
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+        json: () => Promise.resolve({ error: { code: "REFRESH_FAILED", message: "Expired" } }),
+      });
+
+    await expect(apiClient.get("/internal/v1/test")).rejects.toMatchObject({
+      status: 401,
+      error: { code: "SESSION_EXPIRED", message: "Session expired" },
+    });
+
+    expect(sessionStorageMock.getItem("exp:auth_token")).toBeNull();
+    expect(sessionStorageMock.getItem("exp:facility")).toBeNull();
+    expect(sessionStorageMock.getItem("exp:workspace")).toBeNull();
+    expect(sessionStorageMock.getItem("exp:shift")).toBeNull();
+    expect(sessionStorageMock.getItem("exp:work_mode")).toBeNull();
+    expect(sessionStorageMock.getItem("exp:purpose_of_use")).toBeNull();
+    expect(useFacilityStore.getState().facility).toBeNull();
+    expect(useWorkspaceStore.getState().workspace).toBeNull();
+    expect(useShiftStore.getState().shift).toBeNull();
+    expect(useWorkModeStore.getState().mode).toBe("general");
   });
 });

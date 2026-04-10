@@ -11,6 +11,8 @@
  * with the new token. If refresh fails, clears auth and redirects to login.
  */
 
+import { useAuthStore } from "@/hooks/useAuthStore";
+
 const BFF_BASE_URL = process.env.NEXT_PUBLIC_BFF_URL || "http://localhost:8160";
 
 export interface ApiResponse<T> {
@@ -198,11 +200,13 @@ async function attemptRefresh(): Promise<boolean> {
       const attrs = data?.data?.attributes;
       if (!attrs?.token) return false;
 
-      // Update session storage with new tokens
-      sessionStorage.setItem("exp:auth_token", attrs.token);
-      if (attrs.refreshToken) sessionStorage.setItem("exp:refresh_token", attrs.refreshToken);
-      if (attrs.expiresAt) sessionStorage.setItem("exp:expires_at", attrs.expiresAt);
-      if (attrs.user) sessionStorage.setItem("exp:auth_user", JSON.stringify(attrs.user));
+      if (attrs.user) {
+        useAuthStore
+          .getState()
+          .setAuth(attrs.user, attrs.token, attrs.refreshToken ?? refreshToken, attrs.expiresAt ?? null);
+      } else {
+        useAuthStore.getState().setTokens(attrs.token, attrs.refreshToken ?? refreshToken, attrs.expiresAt ?? null);
+      }
 
       return true;
     } catch {
@@ -220,10 +224,7 @@ async function attemptRefresh(): Promise<boolean> {
  */
 function handleAuthFailure(): void {
   if (typeof window !== "undefined") {
-    sessionStorage.removeItem("exp:auth_token");
-    sessionStorage.removeItem("exp:auth_user");
-    sessionStorage.removeItem("exp:refresh_token");
-    sessionStorage.removeItem("exp:expires_at");
+    useAuthStore.getState().clearAuth();
 
     // Only redirect if not already on auth page
     if (!window.location.pathname.startsWith("/auth")) {

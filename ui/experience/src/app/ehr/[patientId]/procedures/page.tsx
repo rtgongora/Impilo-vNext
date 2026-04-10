@@ -3,33 +3,13 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import { Calendar, ClipboardList, FileText, Filter, Loader2, Scissors } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
 import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { useEncounters } from "@/hooks/queries/useEncounters";
+import type { PatientProcedure } from "@/hooks/queries/useStructuredHistory";
+import { usePatientProcedures } from "@/hooks/queries/useStructuredHistory";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
-import { apiClient } from "@/lib/api-client";
-
-interface Procedure {
-  id: string;
-  name: string;
-  type: string;
-  date: string;
-  surgeon: string;
-  facility: string;
-  status: "Completed" | "Scheduled" | "Cancelled" | "In Progress";
-  notes: string;
-}
-
-const MOCK_PROCEDURES: Procedure[] = [
-  { id: "pr-1", name: "Appendectomy", type: "General Surgery", date: "2026-03-10", surgeon: "Dr. Mutasa", facility: "Parirenyatwa Hospital", status: "Completed", notes: "Laparoscopic approach, no complications" },
-  { id: "pr-2", name: "Colonoscopy", type: "Endoscopy", date: "2026-04-15", surgeon: "Dr. Chikwava", facility: "Harare Central Hospital", status: "Scheduled", notes: "Screening colonoscopy, bowel prep instructions given" },
-  { id: "pr-3", name: "Knee Arthroscopy", type: "Orthopaedic", date: "2025-11-20", surgeon: "Dr. Ndlovu", facility: "Avenues Clinic", status: "Completed", notes: "Meniscal repair, weight-bearing as tolerated" },
-  { id: "pr-4", name: "Cataract Extraction", type: "Ophthalmology", date: "2025-08-05", surgeon: "Dr. Sibanda", facility: "Parirenyatwa Hospital", status: "Completed", notes: "Phacoemulsification with IOL implant, left eye" },
-  { id: "pr-5", name: "CT Abdomen Guided Biopsy", type: "Radiology", date: "2026-05-01", surgeon: "Dr. Moyo", facility: "Harare Central Hospital", status: "Scheduled", notes: "Liver lesion biopsy, NPO from midnight" },
-  { id: "pr-6", name: "Tonsillectomy", type: "ENT", date: "2026-02-14", surgeon: "Dr. Mutasa", facility: "Avenues Clinic", status: "Cancelled", notes: "Patient declined procedure" },
-];
 
 const STATUS_STYLES: Record<string, string> = {
   Completed: "bg-green-100 text-green-700",
@@ -46,18 +26,8 @@ export default function ProceduresPage() {
   const facility = useFacilityStore((state) => state.facility);
   const { data: encountersData } = useEncounters(patientId);
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["procedures", patientId],
-    queryFn: async () => {
-      try {
-        return await apiClient.get(`/patients/${patientId}/procedures`);
-      } catch {
-        return { data: MOCK_PROCEDURES };
-      }
-    },
-  });
-
-  const procedures: Procedure[] = (data as { data: Procedure[] })?.data ?? MOCK_PROCEDURES;
+  const { data, isLoading, isError, refetch } = usePatientProcedures(patientId);
+  const procedures: PatientProcedure[] = data?.data ?? [];
   const activeEncounter = (encountersData?.data ?? []).find(
     (encounter) =>
       encounter.attributes.status === "IN_PROGRESS" || encounter.attributes.status === "ACTIVE"
@@ -85,6 +55,17 @@ export default function ProceduresPage() {
           <div className="flex items-center justify-center py-16">
             <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
             <span className="ml-2 text-sm text-gray-500">Loading procedures...</span>
+          </div>
+        ) : isError ? (
+          <div className="flex flex-col items-center justify-center gap-3 py-16">
+            <p className="text-sm text-gray-600">Unable to load procedures for this patient.</p>
+            <button
+              type="button"
+              onClick={() => void refetch()}
+              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            >
+              Retry
+            </button>
           </div>
         ) : (
           <div className="space-y-6">
@@ -207,7 +188,7 @@ export default function ProceduresPage() {
                           <td className="px-4 py-3 text-gray-700">{procedure.surgeon}</td>
                           <td className="px-4 py-3 text-gray-700">{procedure.facility}</td>
                           <td className="px-4 py-3">
-                            <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_STYLES[procedure.status]}`}>{procedure.status}</span>
+                            <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_STYLES[procedure.status] ?? "bg-gray-100 text-gray-600"}`}>{procedure.status}</span>
                           </td>
                         </tr>
                       ))}

@@ -15,98 +15,13 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
 import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { useEncounters } from "@/hooks/queries/useEncounters";
+import type { CarePlanUi } from "@/hooks/queries/useCareContinuity";
+import { useCarePlans } from "@/hooks/queries/useCareContinuity";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
-import { apiClient } from "@/lib/api-client";
-
-interface CarePlan {
-  id: string;
-  title: string;
-  status: "Active" | "Completed" | "Draft";
-  category: string;
-  startDate: string;
-  targetDate: string;
-  author: string;
-  goals: { label: string; progress: number }[];
-  interventions: { label: string; completed: boolean }[];
-}
-
-const MOCK_CARE_PLANS: CarePlan[] = [
-  {
-    id: "cp-1",
-    title: "Diabetes Management Plan",
-    status: "Active",
-    category: "Chronic Disease",
-    startDate: "2026-01-15",
-    targetDate: "2026-07-15",
-    author: "Dr. Moyo",
-    goals: [
-      { label: "HbA1c below 7%", progress: 65 },
-      { label: "Daily glucose monitoring", progress: 80 },
-      { label: "Weight reduction 5kg", progress: 40 },
-    ],
-    interventions: [
-      { label: "Metformin 500mg BD", completed: true },
-      { label: "Dietitian referral", completed: true },
-      { label: "Exercise programme enrollment", completed: false },
-      { label: "Monthly HbA1c check", completed: false },
-    ],
-  },
-  {
-    id: "cp-2",
-    title: "Hypertension Control",
-    status: "Active",
-    category: "Cardiovascular",
-    startDate: "2026-02-01",
-    targetDate: "2026-08-01",
-    author: "Dr. Ndlovu",
-    goals: [
-      { label: "BP below 140/90", progress: 70 },
-      { label: "Sodium intake < 2g/day", progress: 50 },
-    ],
-    interventions: [
-      { label: "Amlodipine 5mg daily", completed: true },
-      { label: "Home BP monitoring kit", completed: true },
-      { label: "Low-sodium diet education", completed: false },
-    ],
-  },
-  {
-    id: "cp-3",
-    title: "Post-Surgical Rehabilitation",
-    status: "Completed",
-    category: "Rehabilitation",
-    startDate: "2025-09-01",
-    targetDate: "2025-12-01",
-    author: "Dr. Chikwava",
-    goals: [
-      { label: "Full range of motion", progress: 100 },
-      { label: "Pain-free mobility", progress: 100 },
-    ],
-    interventions: [
-      { label: "Physiotherapy 3x/week", completed: true },
-      { label: "Analgesic taper", completed: true },
-      { label: "Follow-up imaging", completed: true },
-    ],
-  },
-  {
-    id: "cp-4",
-    title: "Mental Health Support",
-    status: "Draft",
-    category: "Behavioural Health",
-    startDate: "",
-    targetDate: "",
-    author: "Dr. Moyo",
-    goals: [{ label: "PHQ-9 score < 5", progress: 0 }],
-    interventions: [
-      { label: "CBT sessions weekly", completed: false },
-      { label: "SSRI initiation review", completed: false },
-    ],
-  },
-];
 
 const STATUS_STYLES: Record<string, string> = {
   Active: "bg-green-100 text-green-700",
@@ -120,18 +35,8 @@ export default function CarePlansPage() {
   const facility = useFacilityStore((state) => state.facility);
   const { data: encountersData } = useEncounters(patientId);
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["care-plans", patientId],
-    queryFn: async () => {
-      try {
-        return await apiClient.get(`/patients/${patientId}/care-plans`);
-      } catch {
-        return { data: MOCK_CARE_PLANS };
-      }
-    },
-  });
-
-  const carePlans: CarePlan[] = (data as { data: CarePlan[] })?.data ?? MOCK_CARE_PLANS;
+  const { data, isLoading, isError, refetch } = useCarePlans(patientId);
+  const carePlans: CarePlanUi[] = data?.data ?? [];
   const activeEncounter = (encountersData?.data ?? []).find(
     (encounter) =>
       encounter.attributes.status === "IN_PROGRESS" || encounter.attributes.status === "ACTIVE"
@@ -147,7 +52,7 @@ export default function CarePlansPage() {
   const [formTitle, setFormTitle] = useState("");
   const [formCategory, setFormCategory] = useState("");
   const [formTargetDate, setFormTargetDate] = useState("");
-  const [expandedPlan, setExpandedPlan] = useState<string | null>(carePlans[0]?.id ?? null);
+  const [expandedPlan, setExpandedPlan] = useState<string | null>(null);
 
   return (
     <EHRLayout>
@@ -156,6 +61,17 @@ export default function CarePlansPage() {
           <div className="flex items-center justify-center py-16">
             <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
             <span className="ml-2 text-sm text-gray-500">Loading care plans...</span>
+          </div>
+        ) : isError ? (
+          <div className="flex flex-col items-center justify-center gap-3 py-16">
+            <p className="text-sm text-gray-600">Unable to load care plans from the server.</p>
+            <button
+              type="button"
+              onClick={() => void refetch()}
+              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            >
+              Retry
+            </button>
           </div>
         ) : (
           <div className="space-y-6">
@@ -285,12 +201,25 @@ export default function CarePlansPage() {
                           <ClipboardList className="h-5 w-5 text-blue-600" />
                           <div>
                             <div className="font-medium text-gray-900">{plan.title}</div>
-                            <div className="text-xs text-gray-500">{plan.category} � {plan.author}</div>
+                            <div className="text-xs text-gray-500">
+                              {plan.category} · {plan.author}
+                            </div>
                           </div>
                         </div>
                         <div className="flex items-center gap-3">
-                          <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_STYLES[plan.status]}`}>{plan.status}</span>
-                          {plan.startDate && <span className="text-xs text-gray-400">{plan.startDate} ? {plan.targetDate}</span>}
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                              STATUS_STYLES[plan.status] ?? "bg-gray-100 text-gray-600"
+                            }`}
+                          >
+                            {plan.status}
+                          </span>
+                          {plan.startDate && (
+                            <span className="text-xs text-gray-400">
+                              {plan.startDate}
+                              {plan.targetDate ? ` → ${plan.targetDate}` : ""}
+                            </span>
+                          )}
                         </div>
                       </button>
 
@@ -301,9 +230,9 @@ export default function CarePlansPage() {
                               <Target className="h-4 w-4 text-amber-600" /> Goals
                             </h4>
                             <div className="space-y-2">
-                              {plan.goals.map((goal, index) => (
-                                <div key={index} className="flex items-center gap-3">
-                                  <span className="w-48 truncate text-sm text-gray-700">{goal.label}</span>
+                              {plan.goals.map((goal) => (
+                                <div key={goal.id} className="flex items-center gap-3">
+                                  <span className="w-48 truncate text-sm text-gray-700">{goal.description}</span>
                                   <div className="h-2 flex-1 rounded-full bg-gray-100">
                                     <div className="h-2 rounded-full bg-blue-500 transition-all" style={{ width: `${goal.progress}%` }} />
                                   </div>
@@ -318,8 +247,8 @@ export default function CarePlansPage() {
                               <CheckCircle2 className="h-4 w-4 text-green-600" /> Interventions
                             </h4>
                             <div className="space-y-1.5">
-                              {plan.interventions.map((item, index) => (
-                                <div key={index} className="flex items-center gap-2 text-sm">
+                              {plan.interventions.map((item) => (
+                                <div key={item.id || item.label} className="flex items-center gap-2 text-sm">
                                   {item.completed ? (
                                     <CheckCircle2 className="h-4 w-4 text-green-500" />
                                   ) : (

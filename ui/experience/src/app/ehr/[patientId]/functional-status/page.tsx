@@ -3,84 +3,33 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import { Activity, Calendar, ClipboardList, FileText, Loader2, TrendingUp } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
 import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { useEncounters } from "@/hooks/queries/useEncounters";
+import type { AssessmentType, FunctionalAssessment } from "@/hooks/queries/useStructuredHistory";
+import { useFunctionalAssessments } from "@/hooks/queries/useStructuredHistory";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 
-type AssessmentType = "barthel" | "katz" | "lawton";
-
-interface ActivityScore {
-  activity: string;
-  score: number;
-  maxScore: number;
-  level: string;
+function buildTrendHistory(assessments: FunctionalAssessment[]): { date: string; barthel: number; katz: number; lawton: number }[] {
+  const byDate = new Map<string, { date: string; barthel?: number; katz?: number; lawton?: number }>();
+  for (const a of assessments) {
+    const row = byDate.get(a.date) ?? { date: a.date };
+    if (a.type === "barthel") row.barthel = a.totalScore;
+    if (a.type === "katz") row.katz = a.totalScore;
+    if (a.type === "lawton") row.lawton = a.totalScore;
+    byDate.set(a.date, row);
+  }
+  return Array.from(byDate.values())
+    .filter((r) => r.barthel != null || r.katz != null || r.lawton != null)
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .map((r) => ({
+      date: r.date,
+      barthel: r.barthel ?? 0,
+      katz: r.katz ?? 0,
+      lawton: r.lawton ?? 0,
+    }));
 }
-
-interface FunctionalAssessment {
-  id: string;
-  type: AssessmentType;
-  date: string;
-  assessor: string;
-  totalScore: number;
-  maxScore: number;
-  interpretation: string;
-  activities: ActivityScore[];
-}
-
-const MOCK_ASSESSMENTS: FunctionalAssessment[] = [
-  {
-    id: "fa-1", type: "barthel", date: "2026-04-01", assessor: "Sr. N. Phiri", totalScore: 85, maxScore: 100,
-    interpretation: "Moderate dependence - needs some assistance with daily activities",
-    activities: [
-      { activity: "Feeding", score: 10, maxScore: 10, level: "Independent" },
-      { activity: "Bathing", score: 5, maxScore: 5, level: "Independent" },
-      { activity: "Grooming", score: 5, maxScore: 5, level: "Independent" },
-      { activity: "Dressing", score: 10, maxScore: 10, level: "Independent" },
-      { activity: "Bowels", score: 10, maxScore: 10, level: "Continent" },
-      { activity: "Bladder", score: 10, maxScore: 10, level: "Continent" },
-      { activity: "Toilet use", score: 10, maxScore: 10, level: "Independent" },
-      { activity: "Transfers", score: 10, maxScore: 15, level: "Minor help" },
-      { activity: "Mobility", score: 10, maxScore: 15, level: "Walks with help" },
-      { activity: "Stairs", score: 5, maxScore: 10, level: "Needs help" },
-    ],
-  },
-  {
-    id: "fa-2", type: "katz", date: "2026-04-01", assessor: "Sr. N. Phiri", totalScore: 5, maxScore: 6,
-    interpretation: "Moderately independent - needs assistance with one ADL",
-    activities: [
-      { activity: "Bathing", score: 1, maxScore: 1, level: "Independent" },
-      { activity: "Dressing", score: 1, maxScore: 1, level: "Independent" },
-      { activity: "Toileting", score: 1, maxScore: 1, level: "Independent" },
-      { activity: "Transferring", score: 1, maxScore: 1, level: "Independent" },
-      { activity: "Continence", score: 1, maxScore: 1, level: "Continent" },
-      { activity: "Feeding", score: 0, maxScore: 1, level: "Needs assistance" },
-    ],
-  },
-  {
-    id: "fa-3", type: "lawton", date: "2026-04-01", assessor: "Sr. N. Phiri", totalScore: 6, maxScore: 8,
-    interpretation: "Some dependence in instrumental activities",
-    activities: [
-      { activity: "Telephone use", score: 1, maxScore: 1, level: "Independent" },
-      { activity: "Shopping", score: 0, maxScore: 1, level: "Needs assistance" },
-      { activity: "Food preparation", score: 1, maxScore: 1, level: "Independent" },
-      { activity: "Housekeeping", score: 1, maxScore: 1, level: "Independent" },
-      { activity: "Laundry", score: 1, maxScore: 1, level: "Independent" },
-      { activity: "Transportation", score: 0, maxScore: 1, level: "Needs assistance" },
-      { activity: "Medication management", score: 1, maxScore: 1, level: "Independent" },
-      { activity: "Finances", score: 1, maxScore: 1, level: "Independent" },
-    ],
-  },
-];
-
-const HISTORY: { date: string; barthel: number; katz: number; lawton: number }[] = [
-  { date: "2026-04-01", barthel: 85, katz: 5, lawton: 6 },
-  { date: "2026-01-10", barthel: 80, katz: 4, lawton: 5 },
-  { date: "2025-10-05", barthel: 75, katz: 4, lawton: 5 },
-  { date: "2025-07-15", barthel: 70, katz: 3, lawton: 4 },
-];
 
 const TAB_LABELS: Record<AssessmentType, string> = {
   barthel: "Barthel Index (ADL)",
@@ -108,12 +57,9 @@ export default function FunctionalStatusPage() {
   const facility = useFacilityStore((state) => state.facility);
   const { data: encountersData } = useEncounters(patientId);
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["functional-status", patientId],
-    queryFn: async () => ({ data: MOCK_ASSESSMENTS }),
-  });
-
-  const assessments = data?.data ?? [];
+  const { data, isLoading, isError, refetch } = useFunctionalAssessments(patientId);
+  const assessments: FunctionalAssessment[] = data?.data ?? [];
+  const trendHistory = buildTrendHistory(assessments);
   const activeEncounter = (encountersData?.data ?? []).find(
     (encounter) =>
       encounter.attributes.status === "IN_PROGRESS" || encounter.attributes.status === "ACTIVE"
@@ -129,6 +75,17 @@ export default function FunctionalStatusPage() {
           <div className="flex items-center justify-center py-16">
             <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
             <span className="ml-2 text-sm text-gray-500">Loading assessments...</span>
+          </div>
+        ) : isError ? (
+          <div className="flex flex-col items-center justify-center gap-3 py-16">
+            <p className="text-sm text-gray-600">Unable to load functional assessments for this patient.</p>
+            <button
+              type="button"
+              onClick={() => void refetch()}
+              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            >
+              Retry
+            </button>
           </div>
         ) : (
           <div className="space-y-6">
@@ -205,7 +162,9 @@ export default function FunctionalStatusPage() {
                   <div className="mt-2 h-2 w-full rounded-full bg-gray-200">
                     <div className={`h-2 rounded-full ${barColor(assessment.totalScore, assessment.maxScore)}`} style={{ width: `${(assessment.totalScore / assessment.maxScore) * 100}%` }} />
                   </div>
-                  <p className="mt-1 text-[10px] text-gray-400">{assessment.date} · {assessment.assessor}</p>
+                                    <p className="mt-1 text-[10px] text-gray-400">
+                    {assessment.date} Â· {assessment.assessor}
+                  </p>
                 </button>
               ))}
             </div>
@@ -251,7 +210,7 @@ export default function FunctionalStatusPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {HISTORY.map((history, index) => (
+                    {trendHistory.map((history, index) => (
                       <tr key={history.date} className="border-b border-gray-100 transition-colors hover:bg-gray-50">
                         <td className="flex items-center gap-1.5 px-4 py-3 text-gray-900">
                           <Calendar className="h-3.5 w-3.5 text-gray-400" />
@@ -259,15 +218,15 @@ export default function FunctionalStatusPage() {
                         </td>
                         <td className={`px-4 py-3 font-medium ${scoreColor(history.barthel, 100)}`}>
                           {history.barthel}
-                          {index < HISTORY.length - 1 && history.barthel > HISTORY[index + 1].barthel && <span className="ml-1 text-xs text-green-500">+{history.barthel - HISTORY[index + 1].barthel}</span>}
+                          {index < trendHistory.length - 1 && history.barthel > trendHistory[index + 1].barthel && <span className="ml-1 text-xs text-green-500">+{history.barthel - trendHistory[index + 1].barthel}</span>}
                         </td>
                         <td className={`px-4 py-3 font-medium ${scoreColor(history.katz, 6)}`}>
                           {history.katz}
-                          {index < HISTORY.length - 1 && history.katz > HISTORY[index + 1].katz && <span className="ml-1 text-xs text-green-500">+{history.katz - HISTORY[index + 1].katz}</span>}
+                          {index < trendHistory.length - 1 && history.katz > trendHistory[index + 1].katz && <span className="ml-1 text-xs text-green-500">+{history.katz - trendHistory[index + 1].katz}</span>}
                         </td>
                         <td className={`px-4 py-3 font-medium ${scoreColor(history.lawton, 8)}`}>
                           {history.lawton}
-                          {index < HISTORY.length - 1 && history.lawton > HISTORY[index + 1].lawton && <span className="ml-1 text-xs text-green-500">+{history.lawton - HISTORY[index + 1].lawton}</span>}
+                          {index < trendHistory.length - 1 && history.lawton > trendHistory[index + 1].lawton && <span className="ml-1 text-xs text-green-500">+{history.lawton - trendHistory[index + 1].lawton}</span>}
                         </td>
                       </tr>
                     ))}

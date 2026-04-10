@@ -16,6 +16,7 @@ import { ExperienceEntryProvider } from "./ExperienceEntryProvider";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useOperationalContextStore } from "@/hooks/useOperationalContextStore";
+import { loadHydratedExperienceContinuity, resetExperienceContinuity } from "@/lib/session-continuity";
 import { useWorkspaceStore } from "@/hooks/useWorkspaceStore";
 import { useShiftStore } from "@/hooks/useShiftStore";
 
@@ -32,25 +33,30 @@ function StoreHydrator({ children }: { children: ReactNode }) {
     try {
       const token = sessionStorage.getItem("exp:auth_token");
       const userStr = sessionStorage.getItem("exp:auth_user");
+      const refreshToken = sessionStorage.getItem("exp:refresh_token");
+      const expiresAt = sessionStorage.getItem("exp:expires_at");
+      let hasAuthenticatedSession = false;
+
       if (token && userStr) {
         const user = JSON.parse(userStr);
-        setAuth(user, token);
+        setAuth(user, token, refreshToken, expiresAt);
         useOperationalContextStore.getState().ensureDefaultFromUser(user);
+        hasAuthenticatedSession = true;
+      } else {
+        resetExperienceContinuity();
       }
 
-      const facilityStr = sessionStorage.getItem("exp:facility");
-      if (facilityStr) {
-        setFacility(JSON.parse(facilityStr));
-      }
-
-      const workspaceStr = sessionStorage.getItem("exp:workspace");
-      if (workspaceStr) {
-        setWorkspace(JSON.parse(workspaceStr));
-      }
-
-      const shiftStr = sessionStorage.getItem("exp:shift");
-      if (shiftStr) {
-        startShift(JSON.parse(shiftStr));
+      if (hasAuthenticatedSession) {
+        const { facility, workspace, shift } = loadHydratedExperienceContinuity();
+        if (facility) {
+          setFacility(facility);
+        }
+        if (workspace) {
+          setWorkspace(workspace);
+        }
+        if (shift) {
+          startShift(shift);
+        }
       }
     } catch {
       // Silently ignore parse errors in stored state

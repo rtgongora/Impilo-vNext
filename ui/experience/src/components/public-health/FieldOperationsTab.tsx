@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Users, ClipboardList, Target, Navigation, Radio, MapPin, Plus } from "lucide-react";
+import { Users, ClipboardList, Target, Navigation, Radio, MapPin, Plus, Loader2 } from "lucide-react";
+import { usePublicHealthSites } from "@/hooks/queries/usePublicHealth";
 
 const FIELD_TEAMS = [
   { id: "FT-01", name: "Harare South Response Team", lead: "J. Moyo", members: 6, status: "deployed", location: "Budiriro", activeSince: "2026-04-02", tasksComplete: 12, tasksPending: 4 },
@@ -31,9 +32,55 @@ const GPS_CHECKINS = [
 
 export function FieldOperationsTab() {
   const [activeSubTab, setActiveSubTab] = useState<"teams" | "tasks" | "tracking">("teams");
+  const { data: indawoSites = [], isLoading: sitesLoading, isError: sitesError } = usePublicHealthSites();
 
   return (
     <div className="space-y-4">
+      <div className="rounded-lg border border-emerald-200 bg-emerald-50/80 p-4">
+        <h4 className="text-sm font-semibold text-emerald-900 flex items-center gap-2">
+          <MapPin className="h-4 w-4" /> Registered sites (Indawo, via BFF)
+        </h4>
+        <p className="mt-1 text-xs text-emerald-800">
+          Live list from <code className="rounded bg-white/70 px-1">GET /internal/v1/public-health/sites</code> → indawo-service.
+          Field rosters and GPS check-ins below remain illustrative until a workforce/ops API exists.
+        </p>
+        {sitesLoading && (
+          <div className="mt-3 flex items-center gap-2 text-sm text-gray-600">
+            <Loader2 className="h-4 w-4 animate-spin" /> Loading sites…
+          </div>
+        )}
+        {sitesError && (
+          <p className="mt-3 text-sm text-red-700">Could not load Indawo sites (service unreachable or empty).</p>
+        )}
+        {!sitesLoading && !sitesError && indawoSites.length === 0 && (
+          <p className="mt-3 text-sm text-gray-600">No sites returned for this tenant.</p>
+        )}
+        {!sitesLoading && !sitesError && indawoSites.length > 0 && (
+          <div className="mt-3 overflow-x-auto rounded-md border border-emerald-100 bg-white">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b bg-gray-50 text-left">
+                  <th className="px-3 py-2 font-medium text-gray-600">Site ID</th>
+                  <th className="px-3 py-2 font-medium text-gray-600">Name</th>
+                  <th className="px-3 py-2 font-medium text-gray-600">Type</th>
+                  <th className="px-3 py-2 font-medium text-gray-600">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {indawoSites.slice(0, 25).map((s) => (
+                  <tr key={s.id} className="border-b border-gray-100">
+                    <td className="px-3 py-2 font-mono text-gray-700">{s.id}</td>
+                    <td className="px-3 py-2 font-medium text-gray-900">{s.name}</td>
+                    <td className="px-3 py-2 text-gray-600">{s.siteType}</td>
+                    <td className="px-3 py-2 text-gray-600">{s.operationalStatus}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
       {/* KPIs */}
       <div className="grid grid-cols-5 gap-3">
         {[

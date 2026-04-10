@@ -42,31 +42,40 @@ vi.mock("@/hooks/queries/useEncounters", () => ({
   }),
 }));
 
-vi.mock("@tanstack/react-query", () => ({
-  useQuery: () => ({
+vi.mock("@/hooks/queries/useCareContinuity", () => ({
+  __esModule: true,
+  useCarePlans: () => ({
     data: {
       data: [
         {
           id: "cp-1",
           title: "Diabetes Management Plan",
-          status: "Active",
+          status: "Active" as const,
           category: "Chronic Disease",
           startDate: "2026-01-15",
           targetDate: "2026-07-15",
           author: "Dr. Moyo",
-          goals: [{ label: "HbA1c below 7%", progress: 65 }],
-          interventions: [{ label: "Dietitian referral", completed: false }],
+          goals: [
+            {
+              id: "g1",
+              description: "HbA1c below 7%",
+              progress: 65,
+              category: "CLINICAL",
+              targetDate: "2026-07-15",
+              createdDate: "2026-01-15",
+              statusKey: "IN_PROGRESS",
+              priorityKey: "HIGH",
+              notes: "",
+            },
+          ],
+          interventions: [{ id: "i1", label: "Dietitian referral", completed: false }],
         },
       ],
     },
     isLoading: false,
+    isError: false,
+    refetch: vi.fn(),
   }),
-}));
-
-vi.mock("@/lib/api-client", () => ({
-  apiClient: {
-    get: vi.fn(),
-  },
 }));
 
 describe("CarePlansPage", () => {

@@ -50,6 +50,7 @@ interface WorkModeState {
   context: WorkModeContext;
   setMode: (mode: WorkMode, context?: WorkModeContext) => void;
   deriveFromRoles: (roles: string[]) => void;
+  reset: () => void;
 }
 
 function loadMode(): WorkMode {
@@ -88,6 +89,12 @@ export const useWorkModeStore = create<WorkModeState>((set) => ({
     sessionStorage.setItem("exp:work_mode", derived);
     sessionStorage.setItem("exp:work_mode_context", "{}");
     set({ mode: derived, context: {} });
+  },
+
+  reset: () => {
+    sessionStorage.removeItem("exp:work_mode");
+    sessionStorage.removeItem("exp:work_mode_context");
+    set({ mode: "general", context: {} });
   },
 }));
 

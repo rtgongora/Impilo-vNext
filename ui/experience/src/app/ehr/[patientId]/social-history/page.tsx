@@ -3,34 +3,13 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import { ClipboardList, Edit3, Home, Loader2, Save, Target, Users, X } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
 import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { useEncounters } from "@/hooks/queries/useEncounters";
+import type { SocialHistoryEntry } from "@/hooks/queries/useStructuredHistory";
+import { useSocialHistory } from "@/hooks/queries/useStructuredHistory";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
-
-interface SocialSection {
-  id: string;
-  category: string;
-  icon: string;
-  status: string;
-  detail: string;
-  lastUpdated: string;
-  riskLevel: "Low" | "Moderate" | "High" | "Unknown";
-}
-
-const MOCK_SOCIAL: SocialSection[] = [
-  { id: "s-1", category: "Smoking", icon: "home", status: "Former Smoker", detail: "Quit 3 years ago. 10 pack-year history. Used nicotine patches to quit.", lastUpdated: "2026-03-15", riskLevel: "Moderate" },
-  { id: "s-2", category: "Alcohol Use", icon: "home", status: "Social Drinker", detail: "1-2 drinks per week, typically wine with meals. No binge drinking. AUDIT-C score: 2.", lastUpdated: "2026-03-15", riskLevel: "Low" },
-  { id: "s-3", category: "Substance Use", icon: "home", status: "No current use", detail: "No history of recreational drug use. No IV drug use.", lastUpdated: "2026-03-15", riskLevel: "Low" },
-  { id: "s-4", category: "Occupation", icon: "home", status: "Office Worker", detail: "Accountant at a mid-size firm. Sedentary work 8hrs/day. No occupational hazards identified. Employed full-time.", lastUpdated: "2026-02-10", riskLevel: "Low" },
-  { id: "s-5", category: "Education", icon: "home", status: "University Graduate", detail: "Bachelor of Commerce degree. Health literate - can read and understand medical information.", lastUpdated: "2025-11-20", riskLevel: "Low" },
-  { id: "s-6", category: "Housing", icon: "home", status: "Stable Housing", detail: "Owns a 3-bedroom house in suburban area. Running water and electricity. No lead or mold concerns.", lastUpdated: "2025-11-20", riskLevel: "Low" },
-  { id: "s-7", category: "Food Security", icon: "home", status: "Food Secure", detail: "No difficulty accessing nutritious food. Regular meals 3x daily. Follows a balanced diet.", lastUpdated: "2026-01-05", riskLevel: "Low" },
-  { id: "s-8", category: "Transportation", icon: "home", status: "Has Own Vehicle", detail: "Personal vehicle available. Can reach healthcare facilities within 20 minutes. Valid driver licence.", lastUpdated: "2025-11-20", riskLevel: "Low" },
-  { id: "s-9", category: "Social Support", icon: "home", status: "Strong Support Network", detail: "Married, 2 children. Active church community. Regular contact with extended family. No isolation concerns.", lastUpdated: "2026-01-05", riskLevel: "Low" },
-];
 
 const RISK_STYLES: Record<string, string> = {
   Low: "bg-green-100 text-green-700",
@@ -45,12 +24,8 @@ export default function SocialHistoryPage() {
   const facility = useFacilityStore((state) => state.facility);
   const { data: encountersData } = useEncounters(patientId);
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["social-history", patientId],
-    queryFn: async () => ({ data: MOCK_SOCIAL }),
-  });
-
-  const sections = data?.data ?? [];
+  const { data, isLoading, isError, refetch } = useSocialHistory(patientId);
+  const sections: SocialHistoryEntry[] = data?.data ?? [];
   const activeEncounter = (encountersData?.data ?? []).find(
     (encounter) =>
       encounter.attributes.status === "IN_PROGRESS" || encounter.attributes.status === "ACTIVE"
@@ -59,7 +34,7 @@ export default function SocialHistoryPage() {
   const [editStatus, setEditStatus] = useState("");
   const [editDetail, setEditDetail] = useState("");
 
-  function startEdit(section: SocialSection) {
+  function startEdit(section: SocialHistoryEntry) {
     setEditingId(section.id);
     setEditStatus(section.status);
     setEditDetail(section.detail);
@@ -71,8 +46,11 @@ export default function SocialHistoryPage() {
     setEditDetail("");
   }
 
-  const highRiskCount = sections.filter((section) => section.riskLevel === "High").length;
-  const moderateRiskCount = sections.filter((section) => section.riskLevel === "Moderate").length;
+  const highRiskCount = sections.filter((section) => section.riskLevel?.toLowerCase() === "high").length;
+  const moderateRiskCount = sections.filter((section) => {
+    const r = section.riskLevel?.toLowerCase();
+    return r === "moderate" || r === "medium";
+  }).length;
 
   return (
     <EHRLayout>
@@ -81,6 +59,17 @@ export default function SocialHistoryPage() {
           <div className="flex items-center justify-center py-16">
             <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
             <span className="ml-2 text-sm text-gray-500">Loading social history...</span>
+          </div>
+        ) : isError ? (
+          <div className="flex flex-col items-center justify-center gap-3 py-16">
+            <p className="text-sm text-gray-600">Unable to load social history for this patient.</p>
+            <button
+              type="button"
+              onClick={() => void refetch()}
+              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            >
+              Retry
+            </button>
           </div>
         ) : (
           <div className="space-y-6">
@@ -164,7 +153,13 @@ export default function SocialHistoryPage() {
                           <div className="mb-1 flex items-center justify-between">
                             <h3 className="text-sm font-medium text-gray-900">{section.category}</h3>
                             <div className="flex items-center gap-2">
-                              <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${RISK_STYLES[section.riskLevel]}`}>{section.riskLevel} Risk</span>
+                              <span
+                                className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                                  RISK_STYLES[section.riskLevel] ?? RISK_STYLES.Unknown
+                                }`}
+                              >
+                                {section.riskLevel} Risk
+                              </span>
                               {!isEditing && (
                                 <button onClick={() => startEdit(section)} className="p-1 text-gray-400 transition-colors hover:text-blue-600">
                                   <Edit3 className="h-3.5 w-3.5" />

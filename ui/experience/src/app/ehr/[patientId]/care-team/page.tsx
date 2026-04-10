@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import { Activity, Mail, Loader2, Phone, Plus, Star, Trash2, Users, X, FileText, ClipboardList } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
 import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
@@ -24,27 +23,15 @@ interface CareTeamMember {
   avatar: string;
 }
 
-const MOCK_TEAM: CareTeamMember[] = [
-  { id: "ct-1", name: "Dr. M. Ndlovu", role: "Primary Physician", specialty: "Internal Medicine", isPrimary: true, phone: "+263 77 123 4567", email: "m.ndlovu@impilo.zw", facility: "Harare Central Hospital", assignedDate: "2025-01-15", status: "Active", avatar: "MN" },
-  { id: "ct-2", name: "Sr. N. Phiri", role: "Primary Nurse", specialty: "General Nursing", isPrimary: true, phone: "+263 77 234 5678", email: "n.phiri@impilo.zw", facility: "Harare Central Hospital", assignedDate: "2025-01-15", status: "Active", avatar: "NP" },
-  { id: "ct-3", name: "Dr. T. Moyo", role: "Specialist", specialty: "Cardiology", isPrimary: false, phone: "+263 77 345 6789", email: "t.moyo@impilo.zw", facility: "Parirenyatwa Hospital", assignedDate: "2025-06-20", status: "Active", avatar: "TM" },
-  { id: "ct-4", name: "Dr. S. Chirwa", role: "Consultant", specialty: "Psychiatry", isPrimary: false, phone: "+263 77 456 7890", email: "s.chirwa@impilo.zw", facility: "Harare Central Hospital", assignedDate: "2025-11-10", status: "Active", avatar: "SC" },
-  { id: "ct-5", name: "Ms. L. Banda", role: "Dietitian", specialty: "Clinical Nutrition", isPrimary: false, phone: "+263 77 567 8901", email: "l.banda@impilo.zw", facility: "Harare Central Hospital", assignedDate: "2026-01-05", status: "Active", avatar: "LB" },
-  { id: "ct-6", name: "Mr. K. Sibanda", role: "Physiotherapist", specialty: "Orthopaedic Physiotherapy", isPrimary: false, phone: "+263 77 678 9012", email: "k.sibanda@impilo.zw", facility: "Parirenyatwa Hospital", assignedDate: "2025-08-12", status: "Inactive", avatar: "KS" },
-];
-
 export default function CareTeamPage() {
   const params = useParams<{ patientId: string }>();
   const patientId = params.patientId;
   const facility = useFacilityStore((state) => state.facility);
   const { data: encountersData } = useEncounters(patientId);
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["care-team", patientId],
-    queryFn: async () => ({ data: MOCK_TEAM }),
-  });
-
-  const members = data?.data ?? [];
+  /** No BFF care-team roster yet (Agent 0: patient-scoped care team assignments API + persistence). */
+  const members: CareTeamMember[] = [];
+  const isLoading = false;
   const activeEncounter = (encountersData?.data ?? []).find(
     (encounter) =>
       encounter.attributes.status === "IN_PROGRESS" || encounter.attributes.status === "ACTIVE"
@@ -70,6 +57,13 @@ export default function CareTeamPage() {
           </div>
         ) : (
           <div className="space-y-6">
+            <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
+              <p className="font-medium">Care team roster not connected</p>
+              <p className="mt-1 text-amber-900/90">
+                The experience BFF does not expose a patient care-team assignment store yet. Use Care Plans and Notes for
+                ownership until Agent 0 adds a supported API and data contract.
+              </p>
+            </div>
             <ClinicalReviewHeader
               badge="Care team"
               badgeIcon={Users}
@@ -222,7 +216,7 @@ export default function CareTeamPage() {
                             <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gray-100 text-sm font-semibold text-gray-500">{member.avatar}</div>
                             <div>
                               <h3 className="text-sm font-medium text-gray-700">{member.name}</h3>
-                              <p className="text-xs text-gray-500">{member.role} · {member.specialty}</p>
+                              <p className="text-xs text-gray-500">{member.role} ï¿½ {member.specialty}</p>
                             </div>
                           </div>
                         </div>

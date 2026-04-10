@@ -44,6 +44,11 @@ export default function ClinicalReportsPage() {
     <AppLayout>
       <PageShell title="Clinical Reports" subtitle="Generate clinical reports for your facility">
         <div className="max-w-2xl space-y-6">
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
+            Queues a <code className="text-[10px]">report_jobs</code> row via{" "}
+            <code className="text-[10px]">POST /internal/v1/reports/generate</code>. Open the report detail route for status
+            and <code className="text-[10px]">result_url</code> when workers populate it.
+          </div>
           {/* Report Type Selection */}
           <div className="bg-white rounded-lg border border-gray-200 p-5">
             <h3 className="font-medium text-gray-900 mb-3">Report Type</h3>
@@ -104,6 +109,7 @@ export default function ClinicalReportsPage() {
           {/* Generate */}
           <div className="flex justify-end">
             <button
+              type="button"
               onClick={handleGenerate}
               disabled={!dateFrom || !dateTo || generateReport.isPending}
               className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
