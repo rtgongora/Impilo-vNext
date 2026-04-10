@@ -3,17 +3,19 @@
  * MAR, CDS, paging, barcode scanning, and specialty workspaces in one hub.
  */
 import React, { useState } from "react";
-import { View, Text, TextInput, ScrollView, TouchableOpacity, FlatList, StyleSheet, Alert } from "react-native";
+import { View, Text, TextInput, ScrollView, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import { Screen, Header, Button, Badge, LoadingSpinner } from "@impilo/mobile-design-system";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   checkDrugInteractions, fetchOrderSets, fetchCarePlans, createCarePlan,
-  fetchMAR, administerMedication, evaluateCDS, fetchSpecialtyWorkspaces,
+  fetchMAR, administerMedication, evaluateCDS,
   fetchPages, sendPage,
 } from "../../services/queueService";
 import { useEncounterStore } from "../../stores/encounterStore";
+import { SPECIALTY_WORKSPACES, getSpecialtyById } from "../../data/specialtyWorkspaces";
 
 import { InpatientScreen } from "./InpatientScreen";
+import { SpecialtyWorkspacePanel } from "./SpecialtyWorkspacePanel";
 
 type ToolTab = "soap" | "drugs" | "orders" | "care" | "mar" | "cds" | "paging" | "barcode" | "workspaces" | "inpatient";
 
@@ -189,17 +191,22 @@ function BarcodePanel() {
 }
 
 function SpecialtyPanel() {
-  const { data: workspaces = [], isLoading } = useQuery({ queryKey: ["specialty-workspaces"], queryFn: fetchSpecialtyWorkspaces });
-  if (isLoading) return <LoadingSpinner />;
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const active = activeId ? getSpecialtyById(activeId) : undefined;
+
+  if (active) {
+    return <SpecialtyWorkspacePanel workspace={active} onBack={() => setActiveId(null)} />;
+  }
+
   return (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>Specialty Workspaces</Text>
-      <Text style={styles.hint}>Specialty-specific clinical tools and protocols</Text>
-      {(workspaces as Array<Record<string, unknown>>).map((w) => (
-        <View key={String(w.id)} style={styles.card}>
-          <Text style={styles.cardTitle}>{String(w.name)}</Text>
-          <Text style={styles.cardMeta}>Tools: {((w.tools as string[]) ?? []).join(", ")}</Text>
-          <Button label="Open Workspace" size="small" onPress={() => Alert.alert(String(w.name), `Opening ${w.name} workspace with ${((w.tools as string[]) ?? []).length} tools`)} />
+      <Text style={styles.hint}>18 specialty hubs with tools and quick actions</Text>
+      {SPECIALTY_WORKSPACES.map((w) => (
+        <View key={w.id} style={styles.card}>
+          <Text style={styles.cardTitle}>{w.name}</Text>
+          <Text style={styles.cardMeta}>{w.tools.length} tools · {w.icon}</Text>
+          <Button label="Open workspace" size="small" onPress={() => setActiveId(w.id)} />
         </View>
       ))}
     </View>
