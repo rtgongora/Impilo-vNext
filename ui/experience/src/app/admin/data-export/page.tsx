@@ -39,9 +39,6 @@ interface ExportJobRow {
   dateRange: string;
   createdAt: string;
   completedAt: string | null;
-  fileSize: string | null;
-  records: number | null;
-  progress: number;
   recurring: boolean;
   schedule: string | null;
   resultUrl: string | null;
@@ -82,7 +79,7 @@ function mapBackendStatus(status: string): UiStatus {
   const s = status.toUpperCase();
   if (s === "COMPLETED") return "Completed";
   if (s === "FAILED") return "Failed";
-  if (s === "RUNNING" || s === "PROCESSING") return "Running";
+  if (s === "RUNNING" || s === "PROCESSING" || s === "GENERATING") return "Running";
   if (s === "SCHEDULED") return "Scheduled";
   return "Queued";
 }
@@ -99,9 +96,6 @@ function mapJobToRow(job: ReportJobResource): ExportJobRow {
   const recurring = p.recurring === true;
   const schedule = paramString(p, "schedule") ?? null;
   const uiStatus = mapBackendStatus(a.status);
-  let progress = 0;
-  if (uiStatus === "Completed") progress = 100;
-  else if (uiStatus === "Running") progress = 50;
 
   return {
     id: job.id,
@@ -112,9 +106,6 @@ function mapJobToRow(job: ReportJobResource): ExportJobRow {
     dateRange,
     createdAt: a.queued_at ? new Date(a.queued_at).toLocaleString() : "—",
     completedAt: a.completed_at ? new Date(a.completed_at).toLocaleString() : null,
-    fileSize: null,
-    records: null,
-    progress,
     recurring,
     schedule,
     resultUrl: a.result_url,
@@ -211,6 +202,7 @@ export default function DataExportPage() {
       },
       {
         onSuccess: (res) => {
+          setLastQueuedJobId(res.data.id);
           invalidateJobDetail(res.data.id);
           invalidateJobs();
         },
@@ -240,7 +232,8 @@ export default function DataExportPage() {
                   <code className="text-[11px]">GET /internal/v1/admin/reports/jobs</code>, and inspected per job via{" "}
                   <code className="text-[11px]">GET /internal/v1/reports/{"{id}"}</code> (tenant-scoped). Processing, file
                   artifacts, and <code className="text-[11px]">result_url</code> are populated by downstream workers when
-                  implemented—not simulated in the UI.
+                  implemented—not simulated in the UI. The job list does not include byte size, row counts, or percent
+                  progress; those are not fields on <code className="text-[11px]">ReportJob</code> today.
                 </p>
               </div>
             </div>
@@ -346,11 +339,28 @@ export default function DataExportPage() {
                       <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
                       <th className="text-left px-4 py-3 font-medium text-gray-600">Format</th>
                       <th className="text-left px-4 py-3 font-medium text-gray-600">Date Range</th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Size / Records</th>
+                      <th
+                        className="text-left px-4 py-3 font-medium text-gray-600 max-w-[10rem]"
+                        title="ReportJob has no file size or row-count fields in the BFF contract."
+                      >
+                        File metrics
+                      </th>
                       <th className="text-left px-4 py-3 font-medium text-gray-600">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
+                    {!jobsQ.isError && jobs.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="px-4 py-10 text-center text-sm text-gray-500">
+                          <p className="font-medium text-gray-700">No export jobs yet</p>
+                          <p className="mt-1 text-xs text-gray-500 max-w-md mx-auto">
+                            Queue an export above. Jobs appear here from{" "}
+                            <code className="text-[11px]">GET /internal/v1/admin/reports/jobs</code>—nothing is simulated in
+                            the table.
+                          </p>
+                        </td>
+                      </tr>
+                    ) : null}
                     {jobs.map((job) => {
                       const style = STATUS_STYLES[job.status];
                       const StatusIcon = style.icon;
@@ -371,16 +381,11 @@ export default function DataExportPage() {
                               <StatusIcon className="w-3.5 h-3.5" />
                               <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${style.bg}`}>{job.status}</span>
                             </div>
-                            {job.status === "Running" && (
-                              <div className="w-20 bg-gray-200 rounded-full h-1.5 mt-1.5">
-                                <div className="bg-blue-500 h-1.5 rounded-full" style={{ width: `${job.progress}%` }} />
-                              </div>
-                            )}
                           </td>
                           <td className="px-4 py-3 text-gray-700">{job.format}</td>
                           <td className="px-4 py-3 text-gray-500 text-xs">{job.dateRange}</td>
-                          <td className="px-4 py-3 text-gray-700">
-                            {job.fileSize ? `${job.fileSize} / ${job.records?.toLocaleString()} records` : "—"}
+                          <td className="px-4 py-3 text-xs text-gray-400 leading-snug">
+                            Not in BFF contract (no size / row count on ReportJob).
                           </td>
                           <td className="px-4 py-3">
                             {job.resultUrl ? (

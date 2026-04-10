@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.experience;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -12,7 +13,6 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.testcontainers.containers.PostgreSQLContainer;
 
 import java.util.Map;
 import java.util.UUID;
@@ -35,50 +35,21 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@ExtendWith(DockerOrExternalPostgresCondition.class)
 class StaffingApiIntegrationTest {
 
-    private static final String EXTERNAL_JDBC = System.getenv("EXPERIENCE_BFF_TEST_JDBC_URL");
-    private static final PostgreSQLContainer<?> POSTGRES;
-    private static final boolean USE_TESTCONTAINERS;
-
-    static {
-        boolean useTc = EXTERNAL_JDBC == null || EXTERNAL_JDBC.isBlank();
-        USE_TESTCONTAINERS = useTc;
-        if (useTc) {
-            PostgreSQLContainer<?> c = new PostgreSQLContainer<>("postgres:16-alpine")
-                    .withDatabaseName("experience_bff_staffing")
-                    .withUsername("test")
-                    .withPassword("test");
-            c.start();
-            POSTGRES = c;
-        } else {
-            POSTGRES = null;
-        }
-    }
+    private static final ExperienceBffTestDatabaseSupport DATABASE =
+            ExperienceBffTestDatabaseSupport.fromEnvironment("experience_bff_staffing");
 
     @AfterAll
     static void stopContainer() {
-        if (POSTGRES != null) {
-            POSTGRES.stop();
-        }
+        DATABASE.stop();
     }
 
     @DynamicPropertySource
     static void configure(DynamicPropertyRegistry registry) {
-        if (USE_TESTCONTAINERS) {
-            registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
-            registry.add("spring.datasource.username", POSTGRES::getUsername);
-            registry.add("spring.datasource.password", POSTGRES::getPassword);
-            registry.add("spring.datasource.driver-class-name", () -> "org.postgresql.Driver");
-        } else {
-            registry.add("spring.datasource.url", () -> EXTERNAL_JDBC);
-            registry.add("spring.datasource.username",
-                    () -> System.getenv().getOrDefault("EXPERIENCE_BFF_TEST_DB_USER", "impilo"));
-            registry.add("spring.datasource.password",
-                    () -> System.getenv().getOrDefault("EXPERIENCE_BFF_TEST_DB_PASSWORD", "impilo"));
+        DATABASE.configure(registry);
             // application-test.yml defaults to ContainerDatabaseDriver — not valid for a plain Postgres URL.
-            registry.add("spring.datasource.driver-class-name", () -> "org.postgresql.Driver");
-        }
     }
 
     @Autowired

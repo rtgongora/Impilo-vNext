@@ -1,7 +1,9 @@
 package zw.gov.mohcc.impilo.experience;
 
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -9,9 +11,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.UUID;
 
@@ -22,24 +21,23 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * Flyway V32 structured history endpoints for EHR continuity (seeded patient from V4).
+ *
+ * <p>Uses the shared experience-bff database preflight: Testcontainers when Docker is
+ * available, or an externally supplied Postgres via EXPERIENCE_BFF_TEST_JDBC_URL and
+ * optional EXPERIENCE_BFF_TEST_DB_USER / EXPERIENCE_BFF_TEST_DB_PASSWORD.</p>
  */
 @SpringBootTest
 @AutoConfigureMockMvc
-@Testcontainers
 @ActiveProfiles("test")
+@ExtendWith(DockerOrExternalPostgresCondition.class)
 class StructuredHistoryApiIntegrationTest {
 
-    @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine")
-            .withDatabaseName("experience_bff_structured_history")
-            .withUsername("test")
-            .withPassword("test");
+    static final ExperienceBffTestDatabaseSupport DATABASE =
+            ExperienceBffTestDatabaseSupport.fromEnvironment("experience_bff_structured_history");
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
+        DATABASE.configure(registry);
     }
 
     @Autowired
@@ -49,6 +47,11 @@ class StructuredHistoryApiIntegrationTest {
     private static final String POD = "national";
     /** Tatenda Moyo — V4 golden path */
     private static final String PATIENT_ID = "a1000000-0000-0000-0000-000000000001";
+
+    @AfterAll
+    static void stopDatabase() {
+        DATABASE.stop();
+    }
 
     @Test
     @DisplayName("GET structured history endpoints return seeded data for golden-path patient")

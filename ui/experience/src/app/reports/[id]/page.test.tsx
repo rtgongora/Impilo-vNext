@@ -54,7 +54,7 @@ describe("ReportDetailPage", () => {
           report_type: "ADMIN_DATA_EXPORT",
           status: "COMPLETED",
           requested_by: "user@example.com",
-          parameters: "{}",
+          parameters: JSON.stringify({ export_name: "Q1", format: "CSV" }),
           result_url: "https://example.com/export.csv",
           error_message: null,
           queued_at: "2026-04-09T10:00:00.000Z",
@@ -74,6 +74,11 @@ describe("ReportDetailPage", () => {
       "https://example.com/export.csv",
     );
     expect(screen.getByText(/ADMIN DATA EXPORT/i)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /all data export jobs/i })).toHaveAttribute("href", "/admin/data-export");
+    expect(screen.getByText(/^Queued parameters$/)).toBeInTheDocument();
+    expect(screen.getByText(/"export_name"/)).toBeInTheDocument();
+    expect(screen.getByText(/"Q1"/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /copy report job id/i })).toBeInTheDocument();
   });
 
   it("shows 404 messaging when the job is not found", async () => {
@@ -112,7 +117,32 @@ describe("ReportDetailPage", () => {
     renderPage();
 
     expect(await screen.findByText("worker timeout")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /all data export jobs/i })).not.toBeInTheDocument();
     const retry = screen.getByRole("button", { name: /queue again/i });
     expect(retry).toBeInTheDocument();
+  });
+
+  it("renders invalid parameters string when JSON parse fails", async () => {
+    get.mockResolvedValue({
+      data: {
+        id: JOB_ID,
+        type: "ReportJob",
+        attributes: {
+          report_type: "ADMIN_DATA_EXPORT",
+          status: "COMPLETED",
+          requested_by: "u",
+          parameters: "not-json{",
+          result_url: "https://example.com/x",
+          error_message: null,
+          queued_at: "2026-04-09T10:00:00.000Z",
+          started_at: null,
+          completed_at: "2026-04-09T10:00:05.000Z",
+        },
+      },
+      meta: {},
+    });
+
+    renderPage();
+    expect(await screen.findByText("not-json{")).toBeInTheDocument();
   });
 });

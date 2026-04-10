@@ -5,6 +5,7 @@
  * Route: /reports/[id]
  */
 
+import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useQueryClient } from "@tanstack/react-query";
@@ -17,6 +18,7 @@ import {
   Clock,
   CheckCircle2,
   RefreshCw,
+  Copy,
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
@@ -29,6 +31,26 @@ function parseJobParameters(raw: string | null): Record<string, unknown> {
     return JSON.parse(raw) as Record<string, unknown>;
   } catch {
     return {};
+  }
+}
+
+type ParametersView =
+  | { kind: "empty" }
+  | { kind: "object"; value: Record<string, unknown> }
+  | { kind: "jsonNonObject"; text: string }
+  | { kind: "invalid"; text: string };
+
+function classifyParameters(raw: string | null): ParametersView {
+  const t = raw?.trim() ?? "";
+  if (!t) return { kind: "empty" };
+  try {
+    const v = JSON.parse(t) as unknown;
+    if (v !== null && typeof v === "object" && !Array.isArray(v)) {
+      return { kind: "object", value: v as Record<string, unknown> };
+    }
+    return { kind: "jsonNonObject", text: JSON.stringify(v, null, 2) };
+  } catch {
+    return { kind: "invalid", text: t };
   }
 }
 
@@ -58,6 +80,7 @@ export default function ReportDetailPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const id = params.id as string;
+  const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">("idle");
   const { data, isLoading, error, isError } = useReportJob(id);
   const generateReport = useGenerateReport();
 
@@ -73,6 +96,18 @@ export default function ReportDetailPage() {
     typeof error === "object" &&
     "status" in error &&
     (error as { status?: number }).status === 404;
+
+  async function copyJobId(jobId: string) {
+    setCopyState("idle");
+    try {
+      await navigator.clipboard.writeText(jobId);
+      setCopyState("copied");
+      window.setTimeout(() => setCopyState("idle"), 2000);
+    } catch {
+      setCopyState("failed");
+      window.setTimeout(() => setCopyState("idle"), 2000);
+    }
+  }
 
   function retry() {
     if (!attrs || !id) return;
@@ -125,6 +160,17 @@ export default function ReportDetailPage() {
           </div>
         ) : (
           <div className="max-w-2xl space-y-6">
+            {attrs.report_type === "ADMIN_DATA_EXPORT" && (
+              <p className="text-xs text-gray-600">
+                <Link href="/admin/data-export" className="font-medium text-blue-700 hover:underline">
+                  All data export jobs
+                </Link>
+                <span className="text-gray-500">
+                  {" "}
+                  — full list uses <code className="text-[11px]">GET /internal/v1/admin/reports/jobs</code> (admin access).
+                </span>
+              </p>
+            )}
             <div className="bg-white rounded-lg border border-gray-200 p-5">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-start gap-3 min-w-0">
@@ -136,6 +182,15 @@ export default function ReportDetailPage() {
                       {attrs.report_type.replace(/_/g, " ")}
                     </h3>
                     <p className="text-xs text-gray-500 mt-0.5 break-all">Job ID: {job.id}</p>
+                    <button
+                      type="button"
+                      aria-label="Copy report job id"
+                      onClick={() => void copyJobId(job.id)}
+                      className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-blue-700 hover:text-blue-900"
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                      {copyState === "copied" ? "Copied" : copyState === "failed" ? "Copy unavailable" : "Copy job ID"}
+                    </button>
                   </div>
                 </div>
                 <span
@@ -145,6 +200,38 @@ export default function ReportDetailPage() {
                   {statusLabel(status)}
                 </span>
               </div>
+            </div>
+
+            <div className="bg-white rounded-lg border border-gray-200 p-5">
+              <h3 className="font-medium text-gray-900 mb-2">Queued parameters</h3>
+              <p className="text-xs text-gray-500 mb-3">
+                Stored on the job as JSON (<code className="text-[11px]">attributes.parameters</code> from the BFF).
+              </p>
+              {(() => {
+                const pv = classifyParameters(attrs.parameters);
+                if (pv.kind === "empty") {
+                  return <p className="text-sm text-gray-500">No parameters were stored for this job.</p>;
+                }
+                if (pv.kind === "object") {
+                  return (
+                    <pre className="text-xs bg-slate-50 border border-slate-200 rounded-lg p-3 overflow-x-auto text-slate-800 font-mono">
+                      {JSON.stringify(pv.value, null, 2)}
+                    </pre>
+                  );
+                }
+                if (pv.kind === "jsonNonObject") {
+                  return (
+                    <pre className="text-xs bg-slate-50 border border-slate-200 rounded-lg p-3 overflow-x-auto text-slate-800 font-mono">
+                      {pv.text}
+                    </pre>
+                  );
+                }
+                return (
+                  <pre className="text-xs bg-amber-50 border border-amber-200 rounded-lg p-3 overflow-x-auto text-amber-950 font-mono whitespace-pre-wrap">
+                    {pv.text}
+                  </pre>
+                );
+              })()}
             </div>
 
             <div className="bg-white rounded-lg border border-gray-200 p-5">
