@@ -10,8 +10,17 @@
 
 import Link from "next/link";
 import {
-  ClipboardList, Users, Stethoscope, Bed, Calendar,
-  ArrowRightLeft, Clock, Gauge, DoorOpen, MessageSquare,
+  Ambulance,
+  ClipboardList,
+  Users,
+  Stethoscope,
+  Bed,
+  Calendar,
+  ArrowRightLeft,
+  Clock,
+  Gauge,
+  DoorOpen,
+  MessageSquare,
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
@@ -21,6 +30,14 @@ const CLINICAL_MODULES = [
   { label: "My Dashboard", description: "Your worklist, tasks, and alerts", href: "/queue", icon: ClipboardList, color: "bg-blue-100 text-blue-600" },
   { label: "Communication", description: "Messages, pages & calls", href: "/home/notifications", icon: MessageSquare, color: "bg-blue-100 text-blue-600" },
   { label: "Patient Queue", description: "Waiting patients & triage", href: "/queue", icon: Users, color: "bg-orange-100 text-orange-600" },
+  {
+    label: "ED / Casualty",
+    description: "Emergency activations on live BFF",
+    href: "/clinical/emergency",
+    icon: Ambulance,
+    color: "bg-red-100 text-red-700",
+    clinical: true,
+  },
   { label: "Patient Encounters", description: "Clinical documentation & care", href: "/queue/search", icon: Stethoscope, color: "bg-blue-100 text-blue-600", clinical: true },
   { label: "Bed Management", description: "Ward status & admissions", href: "/beds", icon: Bed, color: "bg-purple-100 text-purple-600", clinical: true },
   { label: "Appointments", description: "Scheduling & booking", href: "/scheduling", icon: Calendar, color: "bg-cyan-100 text-cyan-600" },

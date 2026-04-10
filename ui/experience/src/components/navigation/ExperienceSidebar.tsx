@@ -7,6 +7,7 @@ import type { LucideIcon } from "lucide-react";
 import {
   Activity,
   ArrowUpRight,
+  Ambulance,
   Bell,
   BriefcaseBusiness,
   Building2,
@@ -67,6 +68,7 @@ const ZONES: SidebarZone[] = [
     label: "Work",
     items: [
       { href: "/clinical", label: "Clinical Hub", icon: Stethoscope, requiredRoles: CLINICAL_ROLES },
+      { href: "/clinical/emergency", label: "ED / Casualty", icon: Ambulance, requiredRoles: QUEUE_ROLES },
       { href: "/queue", label: "Queue", icon: Users, requiredRoles: QUEUE_ROLES },
       { href: "/scheduling", label: "Scheduling", icon: Calendar, requiredRoles: CLINICAL_ROLES },
       { href: "/pharmacy", label: "Pharmacy", icon: Pill, requiredRoles: DISPENSER_ROLES },
@@ -141,12 +143,18 @@ function getSidebarSpotlight(pathname: string): SidebarSpotlight {
     };
   }
 
-  if (pathname.startsWith("/ehr") || pathname.startsWith("/queue") || pathname.startsWith("/telemedicine")) {
+  if (
+    pathname.startsWith("/ehr") ||
+    pathname.startsWith("/queue") ||
+    pathname.startsWith("/telemedicine") ||
+    pathname.startsWith("/clinical")
+  ) {
     return {
       title: "Clinical coordination",
-      description: "Stay in the patient workflow with quick access to queue, consults, and telemedicine.",
+      description: "Stay in the patient workflow with quick access to queue, ED activations, consults, and telemedicine.",
       tone: "border-emerald-400/20 bg-emerald-400/10 text-emerald-100",
       actions: [
+        { href: "/clinical/emergency", label: "ED / Casualty", icon: Ambulance },
         { href: "/queue", label: "Queue", icon: Users },
         { href: "/telemedicine", label: "Telemedicine", icon: Stethoscope },
       ],

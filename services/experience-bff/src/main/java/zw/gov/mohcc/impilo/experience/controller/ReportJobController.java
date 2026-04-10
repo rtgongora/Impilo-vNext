@@ -13,6 +13,7 @@ import zw.gov.mohcc.impilo.experience.service.OutboxService;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Endpoint 3: Edge-function-like job trigger — POST /internal/v1/reports/generate
@@ -35,6 +36,56 @@ public class ReportJobController {
             Map<String, Object> parameters,
             @NotBlank String requested_by
     ) {}
+
+    /**
+     * Tenant-scoped job detail — same resource shape as admin list rows.
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<Map<String, Object>> getJob(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+
+        final UUID jobId;
+        try {
+            jobId = UUID.fromString(id);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        return reportJobRepository.findById(jobId)
+                .filter(job -> tenantId.equals(job.getTenantId()))
+                .map(job -> {
+                    Map<String, Object> response = new LinkedHashMap<>();
+                    response.put("data", toJobResource(job));
+                    response.put("meta", Map.of(
+                            "request_id", requestId,
+                            "correlation_id", correlationId
+                    ));
+                    return ResponseEntity.ok(response);
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    private Map<String, Object> toJobResource(ReportJob job) {
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("report_type", job.getReportType());
+        attributes.put("status", job.getStatus());
+        attributes.put("requested_by", job.getRequestedBy());
+        attributes.put("parameters", job.getParameters());
+        attributes.put("result_url", job.getResultUrl());
+        attributes.put("error_message", job.getErrorMessage());
+        attributes.put("queued_at", job.getQueuedAt());
+        attributes.put("started_at", job.getStartedAt());
+        attributes.put("completed_at", job.getCompletedAt());
+
+        Map<String, Object> resource = new LinkedHashMap<>();
+        resource.put("id", job.getId().toString());
+        resource.put("type", "ReportJob");
+        resource.put("attributes", attributes);
+        return resource;
+    }
 
     @PostMapping("/generate")
     @Transactional
@@ -76,18 +127,8 @@ public class ReportJobController {
                 Map.of()
         );
 
-        Map<String, Object> attributes = new LinkedHashMap<>();
-        attributes.put("report_type", job.getReportType());
-        attributes.put("status", job.getStatus());
-        attributes.put("requested_by", job.getRequestedBy());
-        attributes.put("queued_at", job.getQueuedAt());
-
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", Map.of(
-                "id", job.getId().toString(),
-                "type", "ReportJob",
-                "attributes", attributes
-        ));
+        response.put("data", toJobResource(job));
         response.put("meta", Map.of(
                 "request_id", requestId,
                 "correlation_id", correlationId

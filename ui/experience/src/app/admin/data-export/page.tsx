@@ -6,6 +6,7 @@
  */
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { Download, Loader2, Plus, X, Clock, CheckCircle2, AlertCircle, FileText, Calendar, RefreshCw } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
@@ -137,6 +138,7 @@ export default function DataExportPage() {
   const [newRecurring, setNewRecurring] = useState(false);
   const [types, setTypes] = useState<Record<string, boolean>>({});
   const [formError, setFormError] = useState<string | null>(null);
+  const [lastQueuedJobId, setLastQueuedJobId] = useState<string | null>(null);
 
   const toggleType = (t: string) => {
     setTypes((prev) => ({ ...prev, [t]: !prev[t] }));
@@ -146,6 +148,10 @@ export default function DataExportPage() {
 
   function invalidateJobs() {
     void queryClient.invalidateQueries({ queryKey: ["admin", "reports", "jobs"] });
+  }
+
+  function invalidateJobDetail(jobId: string) {
+    void queryClient.invalidateQueries({ queryKey: ["reports", jobId] });
   }
 
   function startExport() {
@@ -171,7 +177,10 @@ export default function DataExportPage() {
         },
       },
       {
-        onSuccess: () => {
+        onSuccess: (res) => {
+          const newId = res.data.id;
+          setLastQueuedJobId(newId);
+          invalidateJobDetail(newId);
           invalidateJobs();
           setShowForm(false);
           setNewName("");
@@ -201,7 +210,10 @@ export default function DataExportPage() {
         },
       },
       {
-        onSuccess: () => invalidateJobs(),
+        onSuccess: (res) => {
+          invalidateJobDetail(res.data.id);
+          invalidateJobs();
+        },
       }
     );
   }
@@ -224,10 +236,11 @@ export default function DataExportPage() {
                 <p className="font-medium text-slate-900">How exports work here</p>
                 <p className="mt-1 text-xs text-slate-600 leading-relaxed">
                   Jobs are rows in <code className="text-[11px]">report_jobs</code> created via{" "}
-                  <code className="text-[11px]">POST /internal/v1/reports/generate</code> and listed via{" "}
-                  <code className="text-[11px]">GET /internal/v1/admin/reports/jobs</code>. Processing, file artifacts, and{" "}
-                  <code className="text-[11px]">result_url</code> are populated by downstream workers when implemented—not
-                  simulated in the UI.
+                  <code className="text-[11px]">POST /internal/v1/reports/generate</code>, listed via{" "}
+                  <code className="text-[11px]">GET /internal/v1/admin/reports/jobs</code>, and inspected per job via{" "}
+                  <code className="text-[11px]">GET /internal/v1/reports/{"{id}"}</code> (tenant-scoped). Processing, file
+                  artifacts, and <code className="text-[11px]">result_url</code> are populated by downstream workers when
+                  implemented—not simulated in the UI.
                 </p>
               </div>
             </div>
@@ -243,6 +256,25 @@ export default function DataExportPage() {
                 <Plus className="w-4 h-4" /> New Export
               </button>
             </div>
+
+            {lastQueuedJobId && (
+              <div className="rounded-lg border border-blue-200 bg-blue-50/90 px-4 py-3 text-sm text-blue-900 flex flex-wrap items-center justify-between gap-2">
+                <span>Export queued.</span>
+                <Link
+                  href={`/reports/${lastQueuedJobId}`}
+                  className="font-medium text-blue-700 hover:underline"
+                >
+                  Open job status →
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => setLastQueuedJobId(null)}
+                  className="text-xs text-blue-600 hover:text-blue-800 ml-auto"
+                >
+                  Dismiss
+                </button>
+              </div>
+            )}
 
             {jobsQ.isError && (
               <div className="text-sm text-red-600 border border-red-200 rounded-lg p-3">
@@ -325,7 +357,12 @@ export default function DataExportPage() {
                       return (
                         <tr key={job.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                           <td className="px-4 py-3">
-                            <p className="text-gray-900 font-medium">{job.name}</p>
+                            <Link
+                              href={`/reports/${job.id}`}
+                              className="text-gray-900 font-medium hover:text-blue-600 hover:underline"
+                            >
+                              {job.name}
+                            </Link>
                             <p className="text-[10px] text-gray-400">{job.dataTypes.join(", ")}</p>
                             {job.recurring && <span className="text-[10px] text-purple-500 flex items-center gap-0.5 mt-0.5"><Calendar className="w-2.5 h-2.5" /> {job.schedule}</span>}
                           </td>

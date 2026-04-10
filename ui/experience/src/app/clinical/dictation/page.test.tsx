@@ -75,3 +75,26 @@ describe("DictationPage", () => {
     expect(screen.queryByText(/Patient presents with a two-week history/)).not.toBeInTheDocument();
   });
 });
+
+describe("DictationPage productivity", () => {
+  it("copies typed transcript via clipboard API (no fabricated content)", async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal("navigator", { ...navigator, clipboard: { writeText } });
+
+    render(<DictationPage />);
+
+    const textarea = screen.getByRole("textbox");
+    fireEvent.change(textarea, { target: { value: "Follow-up in one week." } });
+
+    fireEvent.click(screen.getByRole("button", { name: /Copy transcript/i }));
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(writeText).toHaveBeenCalledWith("Follow-up in one week.");
+    expect(await screen.findByText(/Copied to clipboard/)).toBeInTheDocument();
+
+    vi.unstubAllGlobals();
+  });
+});

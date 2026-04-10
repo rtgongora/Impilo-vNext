@@ -6,6 +6,7 @@
  */
 
 import { useState } from "react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { MessageSquare, FileText, Monitor, Loader2, Search, Send } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
@@ -129,9 +130,9 @@ function KioskTab() {
         <Monitor className="w-12 h-12 text-gray-300 mx-auto mb-3" />
         <p className="text-sm text-gray-600">Kiosk check-in is available at <strong>/kiosk</strong></p>
         <p className="text-xs text-gray-400 mt-1">Patients can self-check-in, verify identity, and join queues</p>
-        <a href="/kiosk" className="mt-4 inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+        <Link href="/kiosk" className="mt-4 inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700">
           Open Kiosk Mode
-        </a>
+        </Link>
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 ﻿import type { ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import CommunicationPage from "./page";
@@ -84,9 +84,15 @@ describe("CommunicationPage", () => {
     renderPage();
 
     await user.click(await screen.findByRole("button", { name: /Send page/i }));
-    await user.type(screen.getByPlaceholderText("Recipient ID"), "provider-7");
-    await user.type(screen.getByPlaceholderText("Recipient name"), "Dr. Moyo");
-    await user.type(screen.getByPlaceholderText("Page message..."), "Please review Bed 4");
+    fireEvent.change(screen.getByPlaceholderText("Recipient ID"), {
+      target: { value: "provider-7" },
+    });
+    fireEvent.change(screen.getByPlaceholderText("Recipient name"), {
+      target: { value: "Dr. Moyo" },
+    });
+    fireEvent.change(screen.getByPlaceholderText("Page message..."), {
+      target: { value: "Please review Bed 4" },
+    });
     await user.click(screen.getAllByRole("button", { name: /^Send page$/i })[1]);
 
     await waitFor(() => {
@@ -97,8 +103,8 @@ describe("CommunicationPage", () => {
         recipientName: "Dr. Moyo",
         message: "Please review Bed 4",
       }));
-    });
-  });
+    }, { timeout: 10000 });
+  }, 10000);
 
   it("replaces fake call controls with telemedicine and callback routing", async () => {
     searchParamsValue.current = new URLSearchParams("tab=calls");

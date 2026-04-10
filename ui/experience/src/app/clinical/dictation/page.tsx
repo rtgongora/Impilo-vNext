@@ -6,7 +6,19 @@
  */
 
 import { useState, useRef } from "react";
-import { Mic, Pause, Play, Square, Save, Loader2, FileText, Trash2, Clock, AlertCircle } from "lucide-react";
+import {
+  Mic,
+  Pause,
+  Play,
+  Square,
+  Save,
+  Loader2,
+  FileText,
+  Trash2,
+  Clock,
+  AlertCircle,
+  ClipboardCopy,
+} from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 
@@ -30,7 +42,19 @@ export default function DictationPage() {
   const [noteType, setNoteType] = useState<NoteType>("SOAP");
   const [transcript, setTranscript] = useState("");
   const [elapsed, setElapsed] = useState(0);
+  const [copyHint, setCopyHint] = useState<string | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  async function copyTranscript() {
+    if (!transcript) return;
+    try {
+      await navigator.clipboard.writeText(transcript);
+      setCopyHint("Copied to clipboard");
+    } catch {
+      setCopyHint("Clipboard unavailable");
+    }
+    window.setTimeout(() => setCopyHint(null), 2500);
+  }
 
   /** No dictation history API in Wave 1 — avoid fabricated rows. */
   const recentDictations: RecentDictation[] = [];
@@ -211,12 +235,21 @@ export default function DictationPage() {
               className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 leading-relaxed"
               placeholder="No speech-to-text is connected — type or paste the note here after recording."
             />
-            <div className="flex items-center gap-3 mt-3">
+            <div className="mt-3 flex flex-wrap items-center gap-3">
               <button
                 disabled={!transcript}
                 className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <Save className="w-4 h-4" /> Save to Notes
+              </button>
+              <button
+                type="button"
+                disabled={!transcript}
+                onClick={() => void copyTranscript()}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <ClipboardCopy className="h-4 w-4" aria-hidden />
+                Copy transcript
               </button>
               <button
                 disabled={!transcript}
@@ -225,6 +258,7 @@ export default function DictationPage() {
               >
                 <Trash2 className="w-4 h-4" /> Clear
               </button>
+              {copyHint && <span className="text-xs text-gray-500">{copyHint}</span>}
             </div>
           </div>
 
