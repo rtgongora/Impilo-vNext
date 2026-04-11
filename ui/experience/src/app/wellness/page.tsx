@@ -17,6 +17,8 @@ import {
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
+import { useAuthStore } from "@/hooks/useAuthStore";
+import { useWellnessActivities } from "@/hooks/queries/useCitizenWellness";
 
 const SECTIONS = [
   { href: "/wellness/goals", label: "Health Goals", description: "Set and track personal health targets", Icon: Target, color: "bg-green-50 text-green-600" },
@@ -31,10 +33,49 @@ const SECTIONS = [
   { href: "/wellness/screenings", label: "Screening Schedule", description: "View due and upcoming health screenings", Icon: CalendarCheck, color: "bg-cyan-50 text-cyan-600" },
 ];
 
+function TodaySnapshot() {
+  const patientId = useAuthStore((s) => s.user?.id);
+  const today = new Date().toISOString().slice(0, 10);
+  const { data: activities = [], isLoading } = useWellnessActivities(patientId, 7);
+  const todayRow = activities.find((a) => (a.activityDate || "").slice(0, 10) === today);
+
+  if (!patientId) return null;
+  if (isLoading) {
+    return (
+      <div className="mb-6 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-500">Loading today&apos;s snapshot…</div>
+    );
+  }
+  if (!todayRow && activities.length === 0) return null;
+
+  return (
+    <div className="mb-6 rounded-xl border border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50 px-4 py-4 flex flex-wrap items-center gap-6 text-sm">
+      <span className="font-semibold text-gray-800">Today</span>
+      <span className="text-gray-700">
+        <strong className="text-blue-700">{todayRow?.steps ?? 0}</strong> steps
+      </span>
+      <span className="text-gray-700">
+        <strong className="text-cyan-700">{todayRow?.waterMl ?? 0}</strong> ml water
+      </span>
+      <span className="text-gray-700">
+        <strong className="text-violet-700">{todayRow?.activeMinutes ?? 0}</strong> active min
+      </span>
+      {todayRow?.sleepHours != null && (
+        <span className="text-gray-700">
+          <strong className="text-indigo-700">{todayRow.sleepHours}</strong>h sleep
+        </span>
+      )}
+      <Link href="/wellness/activity" className="ml-auto text-blue-600 font-medium hover:underline">
+        Log activity
+      </Link>
+    </div>
+  );
+}
+
 export default function WellnessPage() {
   return (
     <AppLayout>
       <PageShell title="Wellness Hub" subtitle="Move. Eat. Sleep. Rest. Recover. Live." icon={<Sparkles className="h-6 w-6" />}>
+        <TodaySnapshot />
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {SECTIONS.map(({ href, label, description, Icon, color }) => (
             <Link key={href} href={href} className="rounded-xl border border-gray-200 bg-white p-5 hover:border-blue-400 hover:shadow-md transition-all group">
