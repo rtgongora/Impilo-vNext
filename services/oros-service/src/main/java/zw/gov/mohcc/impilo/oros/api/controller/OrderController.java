@@ -71,8 +71,9 @@ public class OrderController {
         if (request.items() != null) {
             items = request.items().stream()
                     .map(dto -> new OrderStateMachine.OrderItemData(
-                            dto.code(), dto.displayName(), dto.quantity(),
-                            dto.instructions(), dto.specimenType(), dto.bodySite()))
+                            dto.codingSystem(), dto.code(), dto.displayName(),
+                            dto.quantity(), dto.instructions(),
+                            dto.specimenType(), dto.bodySite()))
                     .collect(Collectors.toList());
         }
 

@@ -16,6 +16,9 @@ import zw.gov.mohcc.impilo.oros.persistence.repository.OrderItemRepository;
 import zw.gov.mohcc.impilo.oros.persistence.repository.OrderRepository;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
+import zw.gov.mohcc.impilo.sharedkernel.terminology.Coding;
+import zw.gov.mohcc.impilo.sharedkernel.terminology.CodingSystem;
+import zw.gov.mohcc.impilo.sharedkernel.terminology.CodingValidator;
 
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -67,6 +70,7 @@ public class OrderStateMachine {
      * Inner class for order item data transfer during order placement.
      */
     public record OrderItemData(
+            String codingSystem,
             String code,
             String displayName,
             int quantity,
@@ -107,8 +111,19 @@ public class OrderStateMachine {
 
         if (items != null) {
             for (OrderItemData itemData : items) {
+                // Validate coding system if provided
+                String systemUri = itemData.codingSystem() != null
+                        ? itemData.codingSystem() : CodingSystem.IMPILO_LOCAL.getUri();
+                Coding coding = Coding.of(systemUri, itemData.code(), itemData.displayName());
+                List<String> codingIssues = CodingValidator.validate(coding);
+                if (!codingIssues.isEmpty()) {
+                    log.warn("Order item coding validation warnings for code '{}': {}",
+                            itemData.code(), String.join("; ", codingIssues));
+                }
+
                 OrderItemEntity item = new OrderItemEntity();
                 item.setOrderId(orderId);
+                item.setCodingSystem(systemUri);
                 item.setCode(itemData.code());
                 item.setDisplayName(itemData.displayName());
                 item.setQuantity(itemData.quantity());

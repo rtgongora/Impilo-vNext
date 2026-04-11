@@ -11,6 +11,9 @@ import zw.gov.mohcc.impilo.oros.persistence.entity.CatalogItemEntity;
 import zw.gov.mohcc.impilo.oros.persistence.repository.CatalogItemRepository;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
+import zw.gov.mohcc.impilo.sharedkernel.terminology.Coding;
+import zw.gov.mohcc.impilo.sharedkernel.terminology.CodingSystem;
+import zw.gov.mohcc.impilo.sharedkernel.terminology.CodingValidator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,6 +46,7 @@ public class CatalogService {
 
     /**
      * Import a batch of catalog items for the current tenant.
+     * Validates coding system URIs against the adopted international standards.
      */
     @Transactional
     public List<CatalogItemEntity> importCatalog(List<CatalogItemImport> items) {
@@ -50,6 +54,16 @@ public class CatalogService {
         List<CatalogItemEntity> imported = new ArrayList<>();
 
         for (CatalogItemImport item : items) {
+            // Validate the coding if a system is provided
+            if (item.codingSystem() != null && !item.codingSystem().isBlank()) {
+                Coding coding = Coding.of(item.codingSystem(), item.code(), item.displayName());
+                List<String> issues = CodingValidator.validate(coding);
+                if (!issues.isEmpty()) {
+                    log.warn("Catalog item coding validation warnings for code '{}': {}",
+                            item.code(), String.join("; ", issues));
+                }
+            }
+
             // Upsert: check if code already exists for this tenant
             CatalogItemEntity entity = catalogRepository
                     .findByTenantIdAndCode(ctx.tenantId(), item.code())
@@ -64,6 +78,8 @@ public class CatalogService {
             entity.setDisplayName(item.displayName());
             entity.setCategory(item.category());
             entity.setZiboCanonical(item.ziboCanonical());
+            entity.setCodingSystem(item.codingSystem() != null ? item.codingSystem()
+                    : CodingSystem.IMPILO_LOCAL.getUri());
             entity.setActive(true);
             imported.add(catalogRepository.save(entity));
         }
@@ -86,6 +102,7 @@ public class CatalogService {
      */
     public record CatalogItemImport(
             OrderType orderType,
+            String codingSystem,
             String code,
             String displayName,
             String category,
