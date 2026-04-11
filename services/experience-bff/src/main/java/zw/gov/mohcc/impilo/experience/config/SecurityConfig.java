@@ -27,8 +27,8 @@ import java.util.Map;
  *
  * <p>When a JwtDecoder bean is available (production/integration): enforces
  * RS256 signature verification, expiration checking, and path-based RBAC.
- * When no JwtDecoder bean exists (dev with OAuth2 auto-config excluded):
- * falls back to permitAll() with a prominent warning log.</p>
+ * When no JwtDecoder bean exists (OAuth2 auto-config excluded or Keycloak
+ * unreachable): fails closed by denying all requests (denyAll).</p>
  *
  * <h3>Role Groups (aligned with frontend AuthGuardProvider ROLE_GROUPS)</h3>
  * <ul>
@@ -199,10 +199,10 @@ public class SecurityConfig {
                     .jwt(jwt -> jwt.jwtAuthenticationConverter(keycloakJwtConverter()))
                 );
         } else {
-            log.warn("SECURITY: JWT validation DISABLED — no JwtDecoder bean found. "
-                    + "All endpoints are open. This is acceptable only in development. "
+            log.error("SECURITY FAIL-CLOSED: No JwtDecoder bean found — all endpoints DENIED. "
+                    + "Configure a valid OAuth2 Resource Server (Keycloak) to enable access. "
                     + "Ensure OAuth2ResourceServerAutoConfiguration is NOT excluded in production.");
-            http.authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
+            http.authorizeHttpRequests(auth -> auth.anyRequest().denyAll());
         }
 
         return http.build();
