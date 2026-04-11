@@ -56,7 +56,9 @@ public class ServiceClientConfig {
             String formsBaseUrl,
             String rulesBaseUrl,
             // Health OS §5: Workflow
-            String workflowBaseUrl
+            String workflowBaseUrl,
+            // Health OS §13: Conversational & Guidance
+            String guidanceBaseUrl
     ) {
         public ServiceEndpoints {
             if (pctBaseUrl == null) pctBaseUrl = "http://localhost:8088";
@@ -84,6 +86,7 @@ public class ServiceClientConfig {
             if (formsBaseUrl == null) formsBaseUrl = "http://localhost:8240";
             if (rulesBaseUrl == null) rulesBaseUrl = "http://localhost:8241";
             if (workflowBaseUrl == null) workflowBaseUrl = "http://localhost:8250";
+            if (guidanceBaseUrl == null) guidanceBaseUrl = "http://localhost:8260";
         }
     }
 

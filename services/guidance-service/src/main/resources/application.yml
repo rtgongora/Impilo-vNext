@@ -1,0 +1,43 @@
+server:
+  port: 8260
+
+spring:
+  application:
+    name: guidance-service
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:guidance}
+    username: ${DB_USER:impilo}
+    password: ${DB_PASSWORD:impilo}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: guidance-service
+      auto-offset-reset: earliest
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+impilo:
+  guidance:
+    # Knowledge source configuration
+    search-service-url: ${SEARCH_SERVICE_URL:http://localhost:8230}
+    # LLM/AI configuration (placeholder for future integration)
+    ai-provider: ${AI_PROVIDER:local}
+    ai-model: ${AI_MODEL:none}
+    # Consent enforcement
+    require-consent-for-personalization: true
+
+logging:
+  level:
+    zw.gov.mohcc.impilo: INFO

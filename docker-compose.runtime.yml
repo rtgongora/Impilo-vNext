@@ -404,6 +404,31 @@ services:
       retries: 15
       start_period: 45s
 
+  # ── Guidance Service — Conversational & Knowledge (port 8260) ────────
+  guidance:
+    build:
+      context: ./services/guidance-service
+      dockerfile: Dockerfile
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: guidance
+      DB_USER: ${POSTGRES_USER:-impilo}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SEARCH_SERVICE_URL: http://search:8230
+    ports:
+      - "8260:8260"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8260/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+
   # ===========================================================================
   # EXPERIENCE LAYER
   # ===========================================================================
@@ -448,6 +473,7 @@ services:
       LANDELA_BASE_URL: http://landela:8092
       ORTHANC_BASE_URL: http://orthanc:8042
       ORTHANC_DICOMWEB_URL: http://orthanc:8042/dicom-web
+      GUIDANCE_BASE_URL: http://guidance:8260
     ports:
       - "8160:8160"
     depends_on:
