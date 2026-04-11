@@ -105,39 +105,12 @@ butano:
     validation-enabled: ${ZIBO_VALIDATION_ENABLED:false}
     zibo-base-url: ${ZIBO_BASE_URL:http://localhost:8085}
     mode: ${ZIBO_MODE:LENIENT}
-    # Adopted international coding systems (Healthcare Coding Standards doctrine)
-    # These are the system URIs validated by the TerminologyValidationInterceptor
-    supported-systems:
-      - uri: "http://id.who.int/icd/release/11"
-        name: "ICD-11"
-        resource-types: [Condition, Encounter]
-      - uri: "http://hl7.org/fhir/sid/icd-10"
-        name: "ICD-10"
-        resource-types: [Condition]
-      - uri: "http://snomed.info/sct"
-        name: "SNOMED CT"
-        resource-types: [Condition, Procedure, Observation, AllergyIntolerance, ServiceRequest]
-      - uri: "http://loinc.org"
-        name: "LOINC"
-        resource-types: [Observation, DiagnosticReport, ServiceRequest]
-      - uri: "http://www.whocc.no/atc"
-        name: "ATC"
-        resource-types: [MedicationRequest]
-      - uri: "http://hl7.org/fhir/sid/cvx"
-        name: "CVX"
-        resource-types: [Immunization]
-      - uri: "http://www.ama-assn.org/go/cpt"
-        name: "CPT"
-        resource-types: [Procedure]
-      - uri: "http://unitsofmeasure.org"
-        name: "UCUM"
-        resource-types: [Observation]
-      - uri: "http://dicom.nema.org/resources/ontology/DCM"
-        name: "DICOM"
-        resource-types: [ImagingStudy]
-      - uri: "http://terminology.hl7.org/CodeSystem/v3-ActCode"
-        name: "HL7 ActCode"
-        resource-types: [Encounter]
+    # Adopted international coding systems — see docs/doctrine/healthcare-coding-standards.md
+    # Validation is driven by ZIBO CodeSystem artifacts, not static config.
+    # The CodingSystem enum in shared-kernel-java is the canonical URI registry.
+    # Validated resource types: Condition (ICD-11/SNOMED), Observation (LOINC),
+    #   MedicationRequest (ATC), Procedure (SNOMED/CPT), Immunization (CVX),
+    #   DiagnosticReport (LOINC), ServiceRequest (LOINC/SNOMED), Encounter (HL7 ActCode)
   reconciliation:
     batch-size: 100
     provisional-tag-system: "https://impilo.gov.zw/provisional"
