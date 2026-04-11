@@ -33,6 +33,14 @@ export interface AuthState {
   setShift: (shiftId: string) => void;
   setPurposeOfUse: (purpose: PurposeOfUse) => void;
   setDeviceFingerprint: (fp: string) => void;
+
+  // Health OS §6: Provider ID activation
+  /** Activate a Provider ID for regulated professional work. */
+  activateProvider: (providerId: string, displayName: string) => void;
+  /** Deactivate Provider ID (return to person-only context). */
+  deactivateProvider: () => void;
+  /** True when Provider ID is activated for this session. */
+  hasActiveProvider: () => boolean;
 }
 
 let keycloakClient: KeycloakClient | null = null;
@@ -263,6 +271,30 @@ export const authStore = createStore<AuthState>((set, get) => ({
       set({ session: updated });
       persistSessionData(updated);
     }
+  },
+
+  // Health OS §6: "Sign in as a person; practice as a provider only under activated Provider ID."
+  activateProvider: (providerId: string, _displayName: string) => {
+    const current = get().session;
+    if (current) {
+      const updated = { ...current, providerId };
+      set({ session: updated });
+      persistSessionData(updated);
+    }
+  },
+
+  deactivateProvider: () => {
+    const current = get().session;
+    if (current) {
+      const { providerId: _, ...rest } = current as SessionContext & { providerId?: string };
+      set({ session: rest as SessionContext });
+      persistSessionData(rest as SessionContext);
+    }
+  },
+
+  hasActiveProvider: () => {
+    const session = get().session;
+    return !!(session as SessionContext & { providerId?: string })?.providerId;
   },
 }));
 

@@ -107,9 +107,10 @@
 7. ~~useAuthStore: activateProvider/deactivateProvider/hasActiveProvider~~ DONE
 8. Accelerate sidecar app retirement — IN PROGRESS (tracked in sidecar-retirement-ledger.ts)
 
-### Phase 3: Full Doctrine Completion (Mid-term)
-9. Separate Equipment from Assets
-10. Merge mobile apps into single role-adaptive codebase
-11. Implement caregiver linkage model
-12. Add workflow state to access control evaluation
-13. In-session role context switching (role selector in sidebar)
+### Phase 3: Full Doctrine Completion (Mid-term) — DONE
+9. ~~Separate Equipment from Assets~~ DONE (EquipmentEntity, V004 migration, repository)
+10. ~~Implement caregiver linkage model~~ DONE (VITO V020 migration, useCaregiverLinkage hook, TS contract)
+11. ~~Add workflow state to access control~~ DONE (x-workflow-state header end-to-end: CompanionHeaders, TrustHeaders, AuthorizationRequest, Envoy, TS contract)
+12. ~~Mobile auth Provider ID support~~ DONE (activateProvider/deactivateProvider/hasActiveProvider)
+13. Merge mobile apps into single role-adaptive codebase — DEFERRED (requires React Navigation restructure)
+14. In-session role context switching (role selector in sidebar) — DEFERRED (Phase 4)

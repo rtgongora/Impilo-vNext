@@ -34,6 +34,7 @@ public final class TrustHeaders {
     public static final String ASSURANCE_LEVEL = "x-assurance-level";
     public static final String SUBJECT_ID      = "x-subject-id";
     public static final String ACCESS_MODE     = "x-access-mode";
+    public static final String WORKFLOW_STATE  = "x-workflow-state";
 
     // ── Response / obligation headers ────────────────────────────────
     public static final String DECISION      = "x-decision";

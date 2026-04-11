@@ -126,8 +126,22 @@ export interface GovernedActionContext {
   consentRef?: string;
   // 9. Assurance level
   assuranceLevel?: AssuranceLevel;
-  // 10. Workflow state
+  // 10. Workflow state (e.g. DRAFT, ACTIVE, DISCHARGED, SIGNED_OFF)
   workflowState?: string;
+}
+
+// ── Caregiver Linkage (Health OS §4, §5) ────────────────────────────
+
+export type CaregiverLinkageType = "FAMILY" | "PROFESSIONAL" | "LEGAL" | "COMMUNITY";
+
+export interface CaregiverLinkage {
+  id: string;
+  caregiverHealthId: HealthId;
+  subjectHealthId: HealthId;
+  relationship: string;
+  linkageType: CaregiverLinkageType;
+  grantedScopes: string[];
+  consentRef?: string;
 }
 
 // ── Header name constants (must match CompanionHeaders.java) ────────
@@ -154,6 +168,8 @@ export const HEALTH_OS_HEADERS = {
   ASSURANCE_LEVEL: "X-Assurance-Level",
   SUBJECT_ID: "X-Subject-ID",
   ACCESS_MODE: "X-Access-Mode",
+  // Workflow
+  WORKFLOW_STATE: "X-Workflow-State",
   // Idempotency
   IDEMPOTENCY_KEY: "Idempotency-Key",
 } as const;

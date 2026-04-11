@@ -57,6 +57,7 @@ public final class CompanionHeaders {
     public static final String ASSURANCE_LEVEL  = "X-Assurance-Level";  // LOA1–LOA4
     public static final String SUBJECT_ID       = "X-Subject-ID";       // Patient/subject of action
     public static final String ACCESS_MODE      = "X-Access-Mode";      // INTERNAL, EXTERNAL
+    public static final String WORKFLOW_STATE   = "X-Workflow-State";   // e.g. DRAFT, ACTIVE, DISCHARGED
 
     // ── Timeout & Idempotency ───────────────────────────────────
     public static final String CLIENT_TIMEOUT_MS = "X-Client-Timeout-MS";

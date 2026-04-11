@@ -31,6 +31,7 @@ public record AuthorizationRequest(
     // ── Governance (Health OS §11) ──
     String assuranceLevel,      // LOA1–LOA4
     String subjectId,           // Patient/subject of action
+    String workflowState,       // Health OS §11 dim 10: workflow state (e.g. DRAFT, ACTIVE, DISCHARGED)
     // ── Derived from request ──
     String action,
     String resourceType,
@@ -75,6 +76,7 @@ public record AuthorizationRequest(
             // Governance (Health OS §11)
             headerGetter.apply(TrustHeaders.ASSURANCE_LEVEL),
             headerGetter.apply(TrustHeaders.SUBJECT_ID),
+            headerGetter.apply(TrustHeaders.WORKFLOW_STATE),
             // Derived from request
             deriveAction(method, path),
             deriveResourceType(path),

@@ -179,6 +179,7 @@ static_resources:
                               - exact: "x-assurance-level"
                               - exact: "x-subject-id"
                               - exact: "x-access-mode"
+                              - exact: "x-workflow-state"
                               - exact: "x-device-fingerprint"
                               - exact: "x-client-timeout-ms"
                         authorization_response:
