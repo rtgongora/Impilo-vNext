@@ -69,6 +69,6 @@ msika-flow:
     platform-fee-cap: "50.00"
   integration:
     msika-core-url: ${MSIKA_CORE_URL:http://localhost:8086}
-    mushex-url: ${MUSHEX_URL:http://localhost:8087}
+    mushex-url: ${MUSHEX_URL:http://localhost:8102}
     tuso-url: ${TUSO_URL:http://localhost:8084}
     varapi-url: ${VARAPI_URL:http://localhost:8083}

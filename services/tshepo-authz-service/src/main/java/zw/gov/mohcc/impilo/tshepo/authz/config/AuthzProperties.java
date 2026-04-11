@@ -17,12 +17,12 @@ public class AuthzProperties {
     private int breakGlassTtlMinutes = 60;
     private int breakGlassReviewSlaHours = 24;
     private RiskThresholds riskThresholds = new RiskThresholds();
-    private String consentServiceUrl = "http://localhost:8081";
+    private String consentServiceUrl = "http://localhost:8182";
     private String consentEvaluatePath = "/v1/consent/evaluate";
-    private String identityServiceUrl = "http://localhost:8082";
-    private String auditServiceUrl = "http://localhost:8086";
+    private String identityServiceUrl = "http://localhost:8181";
+    private String auditServiceUrl = "http://localhost:8183";
     private String auditKafkaTopic = "tshepo.audit.events";
-    private String keysServiceUrl = "http://localhost:8087";
+    private String keysServiceUrl = "http://localhost:8184";
     private ESignet esignet = new ESignet();
     private Cache cache = new Cache();
 

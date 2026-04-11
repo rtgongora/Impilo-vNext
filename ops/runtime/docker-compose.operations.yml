@@ -102,12 +102,12 @@ services:
     environment:
       <<: *java-env
     ports:
-      - "8097:8097"
+      - "8096:8096"
     depends_on:
       <<: *java-depends
     healthcheck:
       <<: *java-healthcheck
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8097/actuator/health || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8096/actuator/health || exit 1"]
 
   inventory:
     <<: *service-defaults
@@ -249,13 +249,14 @@ services:
     container_name: impilo-share-slip
     environment:
       <<: *java-env
+      SERVER_PORT: 8104
     ports:
-      - "8095:8095"
+      - "8104:8104"
     depends_on:
       <<: *java-depends
     healthcheck:
       <<: *java-healthcheck
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8095/actuator/health || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8104/actuator/health || exit 1"]
 
   reporting:
     <<: *service-defaults
@@ -265,14 +266,14 @@ services:
     container_name: impilo-reporting
     environment:
       <<: *java-env
-      SERVER_PORT: 8200
+      SERVER_PORT: 8176
     ports:
-      - "8200:8200"
+      - "8176:8176"
     depends_on:
       <<: *java-depends
     healthcheck:
       <<: *java-healthcheck
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8200/actuator/health || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8176/actuator/health || exit 1"]
 
   # ===========================================================================
   # Operations Layer
@@ -298,7 +299,7 @@ services:
       # Sovereign service URLs (compose networking)
       PCT_BASE_URL: http://pct:8088
       OROS_BASE_URL: http://oros:8089
-      PHARMACY_BASE_URL: http://pharmacy:8097
+      PHARMACY_BASE_URL: http://pharmacy:8096
       VITO_BASE_URL: http://vito:8082
       TUSO_BASE_URL: http://tuso:8084
       VARAPI_BASE_URL: http://varapi:8083

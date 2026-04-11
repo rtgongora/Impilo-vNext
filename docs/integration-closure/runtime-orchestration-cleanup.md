@@ -52,27 +52,11 @@ This document records all runtime orchestration issues identified and resolved d
 
 ## Service Port Conflicts — DOCUMENTED
 
-Not all services run simultaneously. The docker-compose.runtime.yml includes only the integration-critical subset. However, these service port conflicts exist in application.yml defaults:
+Not all services run simultaneously. The docker-compose.runtime.yml includes only the integration-critical subset.
 
-| Port | Service A | Service B | Impact |
-|------|-----------|-----------|--------|
-| 8081 | tshepo-service | tshepo-authz-service | Cannot run both locally without SERVER_PORT override |
-| 8087 | mushex-service | ubomi-service | Cannot run both locally without override |
-| 8091 | butano-fhir | card-print-agent | Cannot run both locally without override |
-| 8092 | fhir-gateway-service | landela-adapter-service | Cannot run both locally without override |
-| 8093 | document-service | inpatient-service | Cannot run both locally without override |
-| 8094 | jobs-service | credential-verification-service | Cannot run both locally without override |
-| 8095 | share-slip-service | offline-sync-service | Cannot run both locally without override |
-| 8096 | pharmacy-service | pacs-adapter-service | Cannot run both locally without override |
-| 8098 | inventory-service | inventory-elmis-adapter | Cannot run both locally without override |
-| 8140 | workflow-service | data-pipeline-service, coverage-service | Triple conflict |
-| 8150 | connector-fhir-adapter | indawo-service, national-data-repository-service | Triple conflict |
-| 8160 | reporting-service | experience-bff | Cannot run both without override |
-| 8210 | observability-service | data-ingestion-service | Cannot run both without override |
-| 8220 | data-governance-service | security-hardening-service | Cannot run both without override |
-| 8230 | data-warehouse-service | ndr-service | Cannot run both without override |
+**Port conflicts (resolved):** Phase A0 assigned unique `localhost` defaults per service and aligned the Experience BFF. See **[`docs/runbooks/port-allocation.md`](../runbooks/port-allocation.md)**.
 
-**Mitigation**: All services use `${SERVER_PORT:default}` pattern, so override via environment variable is straightforward. For integration testing, the docker-compose.runtime.yml assigns unique ports. Services NOT in the runtime compose file only conflict when run ad-hoc locally.
+**Mitigation:** Continue to use `${SERVER_PORT:…}` overrides for any host-specific deployment; compose can map non-default host ports when needed.
 
 ## Canonical Runtime Path
 

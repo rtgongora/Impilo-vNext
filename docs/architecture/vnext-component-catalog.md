@@ -53,7 +53,7 @@ Impilo vNext comprises **68 backend services**, **24 UI applications**, and **12
 | 13 | **butano-service** | — | `butano` | BUTANO orchestration layer — SHR write coordination, CPID-only (no PII) | Java 21, Spring Boot 3.3, PostgreSQL, Kafka | Implemented |
 | 14 | **butano-fhir** | 8090 | `butano_fhir` | HAPI FHIR R4 server — longitudinal health record, IPS, visit timeline | HAPI FHIR 7.4, PostgreSQL | Implemented |
 | 15 | **ubomi-service** | — | `—` | CRVS Interface — births/deaths linkage to national registries | Java 21, Spring Boot 3.3 | Implemented |
-| 16 | **mushex-service** | 8087 | `mushex_db` | Finance Engine — payments, claims adjudication, settlement, fraud detection, ledger | Java 21, Spring Boot 3.3, PostgreSQL, Redis, Kafka | Implemented |
+| 16 | **mushex-service** | 8102 | `mushex_db` | Finance Engine — payments, claims adjudication, settlement, fraud detection, ledger | Java 21, Spring Boot 3.3, PostgreSQL, Redis, Kafka | Implemented |
 
 #### Ring 0 Platform Primitives
 
@@ -61,7 +61,7 @@ Impilo vNext comprises **68 backend services**, **24 UI applications**, and **12
 |---|---------|------|----------|---------|------------|--------|
 | 17 | **schema-registry-service** | 8371 | `impilo_schema_registry` | Event schema governance, compatibility gates, CI validation | Java 21, Spring Boot 3.3, PostgreSQL | Skeleton |
 | 18 | **developer-portal-service** | 8370 | `impilo_dev_portal` | Client registration, API key issuance, sandbox, deprecation tracking | Java 21, Spring Boot 3.3, PostgreSQL | Skeleton |
-| 19 | **observability-service** | 8210 | `observability` | Dashboard & alert registry, CRUD, outbox event publishing | Java 21, Spring Boot 3.3, PostgreSQL | Skeleton |
+| 19 | **observability-service** | 8211 | `observability` | Dashboard & alert registry, CRUD, outbox event publishing | Java 21, Spring Boot 3.3, PostgreSQL | Skeleton |
 
 ---
 
@@ -74,7 +74,7 @@ Impilo vNext comprises **68 backend services**, **24 UI applications**, and **12
 | 22 | **costing-engine-service** | 8101 | `costing` / `costa_db` | COSTA — billing, tariffs, exemptions, claims packing | TSHEPO, MSIKA, MUSHEX | Implemented |
 | 23 | **pharmacy-service** | 8096 | `pharmacy` | Dispense workflow — stock, FEFO, barcode, pickup proof | TSHEPO, OROS, MUSHEX, MSIKA | Implemented |
 | 24 | **msika-flow-service** | 8100 | `msika_flow` | Health Marketplace — orders, fulfillment, vendor management, booking | TSHEPO, MSIKA, MUSHEX, VARAPI | Implemented |
-| 25 | **inpatient-service** | 8093 | `inpatient` | Admissions, ward transfers, bed assignments, discharges | TSHEPO, TUSO, PCT | Skeleton |
+| 25 | **inpatient-service** | 8121 | `inpatient` | Admissions, ward transfers, bed assignments, discharges | TSHEPO, TUSO, PCT | Skeleton |
 | 26 | **coverage-service** | 8140 | `impilo_coverage` | Coverage & eligibility engine, pre-authorization, claims lifecycle | TSHEPO, MUSHEX | Implemented |
 | 27 | **indawo-service** | 8150 | `impilo_indawo` | Location & address registry, geocoding, catchment areas | TSHEPO, TUSO | Implemented |
 
@@ -87,7 +87,7 @@ Impilo vNext comprises **68 backend services**, **24 UI applications**, and **12
 | # | Service | Port | Database | Purpose | Status |
 |---|---------|------|----------|---------|--------|
 | 28 | **inventory-service** | 8098 | `inventory` | Supply chain, stock visibility, requisitions, handovers | Implemented |
-| 29 | **inventory-elmis-adapter** | 8098 | `inventory_elmis` | External eLMIS stock sync, receipt forwarding, reconciliation | Implemented |
+| 29 | **inventory-elmis-adapter** | 8108 | `inventory_elmis` | External eLMIS stock sync, receipt forwarding, reconciliation | Implemented |
 | 30 | **pharmacy-elmis-adapter** | 8099 | `pharmacy_elmis` | External pharmacy eLMIS stock sync, order forwarding | Implemented |
 | 31 | **product-registry-service** | 8097 | `product_registry` | Product master data (planned merge into MSIKA) | Implemented |
 
@@ -98,41 +98,41 @@ Impilo vNext comprises **68 backend services**, **24 UI applications**, and **12
 | 32 | **document-service** | 8093 | `document_service` | MinIO/S3 document storage, pre-signed URLs, AV scanning | Implemented |
 | 33 | **landela-adapter-service** | 8092 | `landela_adapter` | Document gateway (Landela/MinIO integration) | Implemented |
 | 34 | **credential-verification-service** | 8094 | `credential_verification` | Ed25519 signed PDFs + QR verification | Implemented |
-| 35 | **card-print-agent** | 8091 | `card_print` | Smart card printing agent | Implemented |
-| 36 | **share-slip-service** | 8095 | `share_slip` | OTP-based delegated pickup slips | Implemented |
+| 35 | **card-print-agent** | 8291 | `card_print` | Smart card printing agent | Implemented |
+| 36 | **share-slip-service** | 8104 | `share_slip` | OTP-based delegated pickup slips | Implemented |
 
 #### Integration & Interoperability
 
 | # | Service | Port | Database | Purpose | Status |
 |---|---------|------|----------|---------|--------|
 | 37 | **integration-hub** | 8110 | `integration_hub` | DHIS2, eLMIS, LIMS, iHRIS adapters — event routing & dispatch | Skeleton |
-| 38 | **fhir-gateway-service** | 8092 | `fhir_gateway` | FHIR boundary routing & audit gateway | Skeleton |
-| 39 | **connector-fhir-adapter** | 8150 | `impilo_connector_fhir` | FHIR bundle validation, header audit, relay routing | Skeleton |
-| 40 | **pacs-adapter-service** | 8096 | `pacs` | DICOM/Orthanc PACS integration — imaging metadata gateway | Skeleton |
+| 38 | **fhir-gateway-service** | 8091 | `fhir_gateway` | FHIR boundary routing & audit gateway | Skeleton |
+| 39 | **connector-fhir-adapter** | 8151 | `impilo_connector_fhir` | FHIR bundle validation, header audit, relay routing | Skeleton |
+| 40 | **pacs-adapter-service** | 8113 | `pacs` | DICOM/Orthanc PACS integration — imaging metadata gateway | Skeleton |
 | 41 | **channels-service** | 8130 | `impilo_channels` | Omnichannel access (USSD, WhatsApp, SMS, IVR), session mgmt | Skeleton |
 
 #### Notifications & Workflow
 
 | # | Service | Port | Database | Purpose | Status |
 |---|---------|------|----------|---------|--------|
-| 42 | **notification-service** | 8111 | `notification` | Multi-channel notification engine (SMS/email/push), template management | Skeleton |
-| 43 | **workflow-service** | 8140 | `impilo_workflow` | Versioned workflow definitions, instance lifecycle, DMN-ish decision surface | Skeleton |
-| 44 | **jobs-service** | 8094 | `jobs` | Job definitions, triggers, execution records, scheduling | Skeleton |
+| 42 | **notification-service** | 8200 | `notification` | Multi-channel notification engine (SMS/email/push), template management | Skeleton |
+| 43 | **workflow-service** | 8250 | `impilo_workflow` | Versioned workflow definitions, instance lifecycle, DMN-ish decision surface | Skeleton |
+| 44 | **jobs-service** | 8109 | `jobs` | Job definitions, triggers, execution records, scheduling | Skeleton |
 | 45 | **dispatch-service** | 8320 | `impilo_dispatch` | Supply chain dispatch, delivery tracking, cold-chain compliance | Skeleton |
-| 46 | **rules-service** | 8112 | `impilo_rules` | Lightweight rule evaluation, recursive descent parser, decision logging | Skeleton |
-| 47 | **forms-service** | 8131 | `impilo_forms` | JSON Schema-based form definitions, versioning, payload validation | Skeleton |
+| 46 | **rules-service** | 8241 | `impilo_rules` | Lightweight rule evaluation, recursive descent parser, decision logging | Skeleton |
+| 47 | **forms-service** | 8240 | `impilo_forms` | JSON Schema-based form definitions, versioning, payload validation | Skeleton |
 
 #### Data, Analytics & Reporting
 
 | # | Service | Port | Database | Purpose | Status |
 |---|---------|------|----------|---------|--------|
-| 48 | **reporting-service** | — | `reporting` | BI reports, operational dashboards | Skeleton |
-| 49 | **ndr-service** | 8230 | `ndr` | National Data Repository — aggregated de-identified analytics | Skeleton |
-| 50 | **national-data-repository-service** | 8150 | `impilo_ndr` | NDR analytics-ready store — versioned tables, materialized views | Skeleton |
-| 51 | **data-warehouse-service** | 8230 | `impilo_data_warehouse` | Gold dataset materializer — bronze events to analytical datasets | Skeleton |
-| 52 | **data-pipeline-service** | 8140 | `pipeline` | EventEnvelope ingestion, curated pipeline records, watermarks | Skeleton |
+| 48 | **reporting-service** | 8176 | `reporting` | BI reports, operational dashboards | Skeleton |
+| 49 | **ndr-service** | 8232 | `ndr` | National Data Repository — aggregated de-identified analytics | Skeleton |
+| 50 | **national-data-repository-service** | 8152 | `impilo_ndr` | NDR analytics-ready store — versioned tables, materialized views | Skeleton |
+| 51 | **data-warehouse-service** | 8233 | `impilo_data_warehouse` | Gold dataset materializer — bronze events to analytical datasets | Skeleton |
+| 52 | **data-pipeline-service** | 8215 | `pipeline` | EventEnvelope ingestion, curated pipeline records, watermarks | Skeleton |
 | 53 | **data-ingestion-service** | 8210 | `impilo_data_ingestion` | Facility/external data submission ingestion & routing | Skeleton |
-| 54 | **search-service** | 8132 | `impilo_search` | SQL ILIKE-based entity search & indexing with pagination | Skeleton |
+| 54 | **search-service** | 8230 | `impilo_search` | SQL ILIKE-based entity search & indexing with pagination | Skeleton |
 | 55 | **surveillance-service** | 8180 | `surv` | Disease surveillance (eIDSR) — signal detection, case registry | Skeleton |
 | 56 | **campaigns-service** | 8190 | `camp` | Public health campaign management & outreach | Skeleton |
 
@@ -142,9 +142,9 @@ Impilo vNext comprises **68 backend services**, **24 UI applications**, and **12
 |---|---------|------|----------|---------|--------|
 | 57 | **data-governance-service** | 8220 | `impilo_data_governance` | Data quality rules, lineage tracking, metadata cataloging | Skeleton |
 | 58 | **data-access-governance-service** | 8170 | `dags` | Policy registry, access-request workflow, permit-token issuance | Skeleton |
-| 59 | **security-hardening-service** | 8220 | `secharden` | Policy pack registry, compliance scan results | Skeleton |
+| 59 | **security-hardening-service** | 8221 | `secharden` | Policy pack registry, compliance scan results | Skeleton |
 | 60 | **audit-ledger-service** | 8350 | `impilo_audit_ledger` | Append-only SHA-256 hash-chained audit ledger (no UPDATE/DELETE) | Skeleton |
-| 61 | **identity-assurance-service** | 8200 | `impilo_identity_assurance` | Step-up checks, device attestation, risk scoring | Skeleton |
+| 61 | **identity-assurance-service** | 8201 | `impilo_identity_assurance` | Step-up checks, device attestation, risk scoring | Skeleton |
 
 #### Offline & Edge
 
@@ -329,48 +329,67 @@ All UIs use **Next.js 14.2.x**, **TypeScript 5.5**, **TailwindCSS 3.4**, **Radix
 | 6379 | Redis | Infra |
 | 8042 | Orthanc Web | Infra |
 | 8080 | Keycloak | Infra |
-| 8081 | TSHEPO (authz) | Ring 0 |
+| 8079 | TSHEPO legacy monolith (`tshepo-service`) | Ring 0 |
+| 8081 | TSHEPO Authz (HTTP) | Ring 0 |
 | 8082 | VITO | Ring 0 |
 | 8083 | VARAPI | Ring 0 |
 | 8084 | TUSO | Ring 0 |
 | 8085 | ZIBO | Ring 0 |
 | 8086 | MSIKA | Ring 0 |
-| 8087 | MUSHEX | Ring 0 |
+| 8087 | UBOMI | Ring 1 |
 | 8088 | PCT | Ring 1 |
 | 8089 | OROS | Ring 1 |
 | 8090 | HAPI FHIR (BUTANO) | Ring 0 / Infra |
-| 8091 | Card Print Agent / BUTANO FHIR | Ring 2 / Ring 0 |
-| 8092 | Landela Adapter / FHIR Gateway | Ring 2 |
-| 8093 | Inpatient / Document Service | Ring 1 / Ring 2 |
-| 8094 | Credential Verification / Jobs Service | Ring 2 |
-| 8095 | Share Slip / Offline Sync | Ring 2 |
-| 8096 | Pharmacy / PACS Adapter | Ring 1 / Ring 2 |
+| 8091 | FHIR Gateway | Ring 2 |
+| 8092 | Landela Adapter | Ring 2 |
+| 8093 | Document Service | Ring 2 |
+| 8094 | Credential Verification | Ring 2 |
+| 8095 | Offline Sync | Ring 2 |
+| 8096 | Pharmacy | Ring 1 |
 | 8097 | Product Registry | Ring 2 |
-| 8098 | Inventory / Inventory eLMIS Adapter | Ring 2 |
+| 8098 | Inventory | Ring 2 |
 | 8099 | Pharmacy eLMIS Adapter | Ring 2 |
 | 8100 | MSIKA Flow | Ring 1 |
 | 8101 | COSTA (Costing Engine) | Ring 1 |
+| 8102 | MUSheX | Ring 1 |
+| 8104 | Share Slip | Ring 2 |
+| 8108 | Inventory eLMIS Adapter | Ring 2 |
+| 8109 | Jobs Service | Ring 2 |
 | 8110 | Integration Hub | Ring 2 |
-| 8111 | Notification Service | Ring 2 |
-| 8112 | Rules Service | Ring 2 |
+| 8113 | PACS Adapter | Ring 2 |
+| 8121 | Inpatient | Ring 1 |
 | 8130 | Channels | Ring 2 |
-| 8131 | Forms Service | Ring 2 |
-| 8132 | Search Service | Ring 2 |
-| 8140 | Data Pipeline / Workflow / Coverage | Ring 2 / Ring 1 |
-| 8150 | Connector FHIR Adapter / NDR / INDAWO | Ring 2 / Ring 1 |
-| 8160 | Experience BFF / Reporting | Experience / Ring 2 |
+| 8140 | Coverage | Ring 1 |
+| 8150 | INDAWO | Ring 1 |
+| 8151 | Connector FHIR Adapter | Ring 2 |
+| 8152 | National Data Repository | Ring 2 |
+| 8160 | Experience BFF | Experience |
+| 8176 | Reporting | Ring 2 |
 | 8170 | Data Access Governance (DAGS) | Ring 2 |
 | 8180 | Surveillance | Ring 2 |
-| 8181 | TSHEPO Identity / OPA | Ring 0 / Infra |
+| 8181 | TSHEPO Identity | Ring 0 |
 | 8182 | TSHEPO Consent | Ring 0 |
 | 8183 | TSHEPO Audit | Ring 0 |
 | 8184 | TSHEPO Keys | Ring 0 |
 | 8185 | TSHEPO Offline | Ring 0 |
 | 8190 | Campaigns | Ring 2 |
-| 8200 | Identity Assurance | Ring 2 |
-| 8210 | Data Ingestion / Observability | Ring 2 |
-| 8220 | Data Governance / Security Hardening | Ring 2 |
-| 8230 | NDR / Data Warehouse | Ring 2 |
+| 8200 | Notification | Ring 2 |
+| 8201 | Identity Assurance | Ring 2 |
+| 8210 | Data Ingestion | Ring 2 |
+| 8211 | Observability | Ring 2 |
+| 8215 | Data Pipeline | Ring 2 |
+| 8220 | Data Governance | Ring 2 |
+| 8221 | Security Hardening | Ring 2 |
+| 8230 | Search | Ring 2 |
+| 8232 | NDR | Ring 2 |
+| 8233 | Data Warehouse | Ring 2 |
+| 8240 | Forms | Ring 2 |
+| 8241 | Rules | Ring 2 |
+| 8250 | Workflow | Ring 2 |
+| 8260 | Guidance | Ring 2 |
+| 8270 | Clinical Knowledge Platform | Ring 2 |
+| 8289 | BUTANO FHIR layer | Ring 2 |
+| 8291 | Card Print Agent | Ring 2 |
 | 8310 | Asset Registry | Ring 2 |
 | 8320 | Dispatch Service | Ring 2 |
 | 8330 | IoT Ingestion | Ring 2 |
@@ -386,4 +405,4 @@ All UIs use **Next.js 14.2.x**, **TypeScript 5.5**, **TailwindCSS 3.4**, **Radix
 | 9901 | Envoy Admin | Infra |
 | 10000 | Envoy Gateway | Infra |
 
-> **Note**: Some port numbers are shared between services that would not run simultaneously in local dev, or represent port conflicts to be resolved in deployment configuration.
+> **Note:** Unique defaults are defined in [`docs/runbooks/port-allocation.md`](../../runbooks/port-allocation.md) (Phase A0). Override with `SERVER_PORT` when needed.

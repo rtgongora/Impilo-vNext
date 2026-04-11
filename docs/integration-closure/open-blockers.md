@@ -27,22 +27,17 @@ This document lists all remaining blockers and gaps that could not be fully reso
 
 ## Blocker 3: Service Port Conflicts (15+ pairs)
 
-**Status**: DOCUMENTED — NOT BLOCKING
-**Impact**: Low — only matters when running conflicting services simultaneously outside docker-compose
-**Details**:
-All affected services use `${SERVER_PORT:default}` pattern. Docker-compose assigns unique ports. Conflicts exist only in application.yml defaults.
-**Key conflicts**:
-- tshepo-service (8081) vs tshepo-authz-service (8081)
-- reporting-service (8160) vs experience-bff (8160)
-- See full list in `docs/integration-closure/runtime-orchestration-cleanup.md`
-**Next Action**: For any future full-stack compose file that includes all services, assign unique host ports. No code change needed — env variable overrides are sufficient.
+**Status**: RESOLVED (Phase A0, 2026-04-11)
+**Impact**: Was low for bare-metal multi-service dev; defaults are now unique per `docs/runbooks/port-allocation.md`.
+**Details**: Legacy `application.yml` collisions (e.g. tshepo monolith vs authz, reporting vs BFF, mushex vs ubomi) were split onto distinct ports; BFF defaults align where applicable.
+**Next Action**: Keep the runbook updated when adding services; optional CI check for duplicate defaults.
 
 ## Blocker 4: Support and Notification Services Not in Runtime Compose
 
 **Status**: DOCUMENTED
 **Impact**: Medium — Steel threads C (Support) and D (Messaging) cannot execute against the canonical runtime without adding these services
 **Details**:
-- `docker-compose.runtime.yml` includes 8 backend services but not support-service (8340) or notification-service (8111)
+- `docker-compose.runtime.yml` includes 8 backend services but not support-service (8340) or notification-service (8200)
 - The steel thread tests for these threads assume the services are running at their default ports
 **Next Action**: Add support-service and notification-service to docker-compose.runtime.yml or create a separate docker-compose.integration.yml that extends it.
 

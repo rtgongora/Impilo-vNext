@@ -283,7 +283,7 @@ components:
     module_path: services/tshepo-service
     image: null
     build_target: "services/tshepo-service (Maven + Dockerfile)"
-    port: 8081
+    port: 8079
     dependencies: [postgres, redis, kafka, keycloak]
     env_files: [".env"]
     env_vars:
@@ -296,7 +296,7 @@ components:
       - KEYCLOAK_REALM
     healthcheck:
       type: http
-      endpoint: "http://localhost:8081/actuator/health"
+      endpoint: "http://localhost:8079/actuator/health"
       interval: 10s
       timeout: 5s
       retries: 15
@@ -305,7 +305,7 @@ components:
     bootstrap_steps: []
     shutdown_priority: 10
     profiles: [dev-lite, dev-full, integration, pilot]
-    notes: "Monolith TSHEPO — handles authorize endpoint. TSHEPO decomposition services below are for future."
+    notes: "Legacy tshepo-service on 8079 (do not run with authz on same 8081). Decomposed PDP: tshepo-authz-service on 8081 (HTTP) + 9090 (gRPC)."
     database: tshepo
     kafka_topics: [platform.audit.events]
 
@@ -555,11 +555,11 @@ components:
     description: "Pharmacy service — dispensing, stock"
     module_path: services/pharmacy-service
     build_target: "services/pharmacy-service (Maven + Dockerfile)"
-    port: 8097
+    port: 8096
     dependencies: [postgres, redis, kafka, keycloak]
     healthcheck:
       type: http
-      endpoint: "http://localhost:8097/actuator/health"
+      endpoint: "http://localhost:8096/actuator/health"
     readiness_timeout: 90s
     shutdown_priority: 30
     profiles: [dev-full, integration, pilot]
@@ -619,16 +619,15 @@ components:
     description: "MUSHEX — financial/reimbursement engine"
     module_path: services/mushex-service
     build_target: "services/mushex-service (Maven + Dockerfile)"
-    port: 8087
+    port: 8102
     dependencies: [postgres, redis, kafka, keycloak]
     healthcheck:
       type: http
-      endpoint: "http://localhost:8087/actuator/health"
+      endpoint: "http://localhost:8102/actuator/health"
     readiness_timeout: 90s
     shutdown_priority: 30
     profiles: [dev-full, integration, pilot]
     database: mushex
-    notes: "Port 8087 shared with ubomi — use SERVER_PORT override for one."
 
   - name: costing-engine
     type: ring2
@@ -668,11 +667,11 @@ components:
     description: "Inpatient service — ward management, admissions"
     module_path: services/inpatient-service
     build_target: "services/inpatient-service (Maven + Dockerfile)"
-    port: 8093
+    port: 8121
     dependencies: [postgres, redis, kafka, keycloak, vito, tuso]
     healthcheck:
       type: http
-      endpoint: "http://localhost:8093/actuator/health"
+      endpoint: "http://localhost:8121/actuator/health"
     readiness_timeout: 90s
     shutdown_priority: 30
     profiles: [dev-full, integration, pilot]
@@ -749,11 +748,11 @@ components:
     description: "Share slip service — patient data sharing"
     module_path: services/share-slip-service
     build_target: "services/share-slip-service (Maven + Dockerfile)"
-    port: 8095
+    port: 8104
     dependencies: [postgres, redis, kafka]
     healthcheck:
       type: http
-      endpoint: "http://localhost:8095/actuator/health"
+      endpoint: "http://localhost:8104/actuator/health"
     readiness_timeout: 90s
     shutdown_priority: 30
     profiles: [dev-full, integration, pilot]
@@ -785,11 +784,11 @@ components:
     description: "Notification service — SMS, email, push"
     module_path: services/notification-service
     build_target: "services/notification-service (Maven)"
-    port: 8111
+    port: 8200
     dependencies: [postgres, kafka]
     healthcheck:
       type: http
-      endpoint: "http://localhost:8111/actuator/health"
+      endpoint: "http://localhost:8200/actuator/health"
     readiness_timeout: 90s
     shutdown_priority: 40
     profiles: [dev-full, integration, pilot]
@@ -801,16 +800,15 @@ components:
     description: "Jobs service — background task scheduling"
     module_path: services/jobs-service
     build_target: "services/jobs-service (Maven + Dockerfile)"
-    port: 8094
+    port: 8109
     dependencies: [postgres, kafka]
     healthcheck:
       type: http
-      endpoint: "http://localhost:8094/actuator/health"
+      endpoint: "http://localhost:8109/actuator/health"
     readiness_timeout: 90s
     shutdown_priority: 40
     profiles: [dev-full, integration, pilot]
     database: jobs
-    notes: "Port 8094 shared with credential-verification — use SERVER_PORT override for one."
 
   - name: workflow-service
     type: operations
@@ -818,11 +816,11 @@ components:
     description: "Workflow service — process orchestration"
     module_path: services/workflow-service
     build_target: "services/workflow-service (Maven)"
-    port: 8140
+    port: 8250
     dependencies: [postgres, kafka]
     healthcheck:
       type: http
-      endpoint: "http://localhost:8140/actuator/health"
+      endpoint: "http://localhost:8250/actuator/health"
     readiness_timeout: 90s
     shutdown_priority: 40
     profiles: [dev-full, integration, pilot]
@@ -850,11 +848,11 @@ components:
     description: "Forms service — dynamic form definitions"
     module_path: services/forms-service
     build_target: "services/forms-service (Maven)"
-    port: 8131
+    port: 8240
     dependencies: [postgres, kafka]
     healthcheck:
       type: http
-      endpoint: "http://localhost:8131/actuator/health"
+      endpoint: "http://localhost:8240/actuator/health"
     readiness_timeout: 90s
     shutdown_priority: 40
     profiles: [dev-full, integration, pilot]
@@ -866,11 +864,11 @@ components:
     description: "Search service — unified search"
     module_path: services/search-service
     build_target: "services/search-service (Maven)"
-    port: 8120
+    port: 8230
     dependencies: [postgres, kafka]
     healthcheck:
       type: http
-      endpoint: "http://localhost:8120/actuator/health"
+      endpoint: "http://localhost:8230/actuator/health"
     readiness_timeout: 90s
     shutdown_priority: 40
     profiles: [dev-full, integration, pilot]
@@ -898,11 +896,11 @@ components:
     description: "Rules service — business rules engine"
     module_path: services/rules-service
     build_target: "services/rules-service (Maven)"
-    port: 8135
+    port: 8241
     dependencies: [postgres, kafka]
     healthcheck:
       type: http
-      endpoint: "http://localhost:8135/actuator/health"
+      endpoint: "http://localhost:8241/actuator/health"
     readiness_timeout: 90s
     shutdown_priority: 40
     profiles: [dev-full, integration, pilot]
@@ -946,11 +944,11 @@ components:
     description: "Reporting service — report generation"
     module_path: services/reporting-service
     build_target: "services/reporting-service (Maven + Dockerfile)"
-    port: 8200
+    port: 8176
     dependencies: [postgres, kafka]
     healthcheck:
       type: http
-      endpoint: "http://localhost:8200/actuator/health"
+      endpoint: "http://localhost:8176/actuator/health"
     readiness_timeout: 90s
     shutdown_priority: 40
     profiles: [dev-full, integration, pilot]
@@ -962,11 +960,11 @@ components:
     description: "Data warehouse service — analytics"
     module_path: services/data-warehouse-service
     build_target: "services/data-warehouse-service (Maven)"
-    port: 8230
+    port: 8233
     dependencies: [postgres, kafka]
     healthcheck:
       type: http
-      endpoint: "http://localhost:8230/actuator/health"
+      endpoint: "http://localhost:8233/actuator/health"
     readiness_timeout: 90s
     shutdown_priority: 40
     profiles: [integration, pilot]
@@ -1201,18 +1199,8 @@ components:
     profiles: [integration, pilot]
 
 # =============================================================================
-# SPEC CONFLICT NOTES (port overlaps)
+# Port allocation (Phase A0)
 # =============================================================================
-# The following port conflicts exist in application.yml defaults:
-#   - tshepo-service (8081) vs tshepo-authz-service (8081): Use monolith OR decomposed, not both
-#   - tshepo-identity (8181) vs OPA (8181): Override SERVER_PORT when running both
-#   - ubomi (8087) vs mushex (8087): Override SERVER_PORT for one
-#   - jobs (8094) vs credential-verification (8094): Override SERVER_PORT for one
-#   - document-service (8093) vs inpatient (8093): Override SERVER_PORT for one
-#   - inventory (8098) vs inventory-elmis-adapter (8098): Override SERVER_PORT for one
-#   - coverage (8140) vs data-pipeline (8140) vs workflow (8140): Override SERVER_PORT
-#   - butano-service (8090) vs hapi-fhir host mapping (8090): Container networking resolves this
-#
-# In Docker Compose, these conflicts are resolved via container networking
-# (each service gets its own network namespace). For bare-metal dev, use SERVER_PORT overrides.
+# Unique localhost defaults and BFF alignment are documented in:
+#   docs/runbooks/port-allocation.md
 # =============================================================================

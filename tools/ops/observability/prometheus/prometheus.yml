@@ -131,7 +131,7 @@ scrape_configs:
   - job_name: pharmacy
     metrics_path: /actuator/prometheus
     static_configs:
-      - targets: ['pharmacy:8097']
+      - targets: ['pharmacy:8096']
         labels:
           plane: clinical
           service: pharmacy

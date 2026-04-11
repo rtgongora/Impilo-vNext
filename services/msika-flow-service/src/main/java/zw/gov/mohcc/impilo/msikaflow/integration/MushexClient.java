@@ -17,7 +17,7 @@ public class MushexClient {
     private final RestTemplate restTemplate;
     private final String mushexBaseUrl;
 
-    public MushexClient(@Value("${msika-flow.integration.mushex-url:http://localhost:8087}") String mushexBaseUrl) {
+    public MushexClient(@Value("${msika-flow.integration.mushex-url:http://localhost:8102}") String mushexBaseUrl) {
         this.restTemplate = new RestTemplate();
         this.mushexBaseUrl = mushexBaseUrl;
     }

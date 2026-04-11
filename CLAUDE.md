@@ -115,13 +115,22 @@ Trust headers defined in `CompanionHeaders.java` ↔ `api-client.ts` ↔ `envoy.
 - Docker/K8s, Helm, GitHub Actions
 
 ## Service Port Map (local dev)
-- TSHEPO: 8081, VITO: 8082, VARAPI: 8083, TUSO: 8084, ZIBO: 8085
-- Msika: 8086, PCT: 8088, OROS: 8089, HAPI FHIR: 8090
-- Landela: 8092, Document Store: 8093, Pharmacy: 8096
-- Msika Flow: 8100, Costa: 8101, Mushex: 8102
-- Coverage: 8140, Indawo: 8150, Experience BFF: 8160, Clinical Knowledge Platform: 8270
-- Surveillance: 8180, Campaigns: 8190, Notification: 8200
-- Data Governance: 8220
+
+Authoritative table (defaults, no collisions): [`docs/runbooks/port-allocation.md`](docs/runbooks/port-allocation.md).
+
+Summary:
+
+- TSHEPO Authz: **8081** (gRPC **9090**), TSHEPO legacy monolith: **8079**, VITO: **8082**, VARAPI: **8083**, TUSO: **8084**, ZIBO: **8085**
+- MSIKA: **8086**, UBOMI: **8087**, PCT: **8088**, OROS: **8089**, BUTANO (HAPI): **8090**, FHIR Gateway: **8091**, BUTANO FHIR layer: **8289**
+- Landela: **8092**, Document Store: **8093**, Inpatient: **8121**, Pharmacy: **8096**, PACS adapter: **8113**
+- Msika Flow: **8100**, Costa: **8101**, MUSheX: **8102**
+- Share slip: **8104**, Offline sync: **8095**, Jobs: **8109**, Credential verification: **8094**
+- Connector FHIR adapter: **8151**, Indawo: **8150**, National data repository: **8152**
+- Coverage: **8140**, Data pipeline: **8215**, Workflow: **8250**
+- Experience BFF: **8160**, Reporting: **8176**, Search: **8230**, Forms: **8240**, Rules: **8241**, Guidance: **8260**, Clinical Knowledge Platform: **8270**
+- NDR: **8232**, Data warehouse: **8233**, Data governance: **8220**, Security hardening: **8221**, Observability: **8211**, Data ingestion: **8210**
+- Surveillance: **8180**, Campaigns: **8190**, Notification: **8200**, Identity assurance: **8201**
+- Card print agent: **8291**, Product registry: **8097**, Inventory eLMIS adapter: **8108**
 - Envoy: 10000 (public), 9901 (admin)
 - Keycloak: 8080, MinIO: 9000/9001, Kafka: 9092
 - Experience UI: 3020, UI Shell: 3000, Ops Console: 3001, EHR: 3002, Portal: 3003

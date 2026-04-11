@@ -12,7 +12,7 @@ info:
 servers:
   - url: http://localhost:10000
     description: Local Envoy gateway
-  - url: http://localhost:8087
+  - url: http://localhost:8102
     description: Direct service access
 
 paths:
