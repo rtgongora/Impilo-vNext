@@ -208,6 +208,18 @@ export default function LoginPage() {
           </Link>
         </p>
       </div>
+
+      <p className="mt-4 text-center text-xs text-gray-400">
+        By signing in, you agree to the{" "}
+        <Link href="/terms" className="text-blue-500 hover:text-blue-700 underline">
+          Terms of Use
+        </Link>{" "}
+        and{" "}
+        <Link href="/privacy" className="text-blue-500 hover:text-blue-700 underline">
+          Privacy Policy
+        </Link>
+        .
+      </p>
     </AuthLayout>
   );
 }

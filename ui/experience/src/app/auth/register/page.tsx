@@ -239,6 +239,18 @@ export default function RegisterPage() {
               </div>
             </div>
 
+            <p className="text-xs text-gray-400 text-center">
+              By creating an account, you agree to the{" "}
+              <Link href="/terms" className="text-blue-500 hover:text-blue-700 underline">
+                Terms of Use
+              </Link>{" "}
+              and{" "}
+              <Link href="/privacy" className="text-blue-500 hover:text-blue-700 underline">
+                Privacy Policy
+              </Link>
+              .
+            </p>
+
             <button type="submit" disabled={submitting}
               className="w-full py-3 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors">
               {submitting ? <><Loader2 className="w-4 h-4 animate-spin" /> Creating account...</> : <><UserPlus className="w-4 h-4" /> Create Account</>}
