@@ -49,6 +49,8 @@ management:
       show-details: when-authorized
 
 impilo:
+  security:
+    allow-anonymous: false
   auth:
     fallback-enabled: ${AUTH_FALLBACK_ENABLED:false}
   services:

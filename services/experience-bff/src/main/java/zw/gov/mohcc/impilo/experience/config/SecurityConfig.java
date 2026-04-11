@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.experience.config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
@@ -27,8 +28,9 @@ import java.util.Map;
  *
  * <p>When a JwtDecoder bean is available (production/integration): enforces
  * RS256 signature verification, expiration checking, and path-based RBAC.
- * When no JwtDecoder bean exists (OAuth2 auto-config excluded or Keycloak
- * unreachable): fails closed by denying all requests (denyAll).</p>
+ * When no JwtDecoder bean exists and {@code impilo.security.allow-anonymous=true}:
+ * permits all requests (dev only). When no JwtDecoder and allow-anonymous is false
+ * (default): throws {@link IllegalStateException} to prevent startup with no auth.</p>
  *
  * <h3>Role Groups (aligned with frontend AuthGuardProvider ROLE_GROUPS)</h3>
  * <ul>
@@ -84,6 +86,9 @@ public class SecurityConfig {
 
     @Autowired(required = false)
     private JwtDecoder jwtDecoder;
+
+    @Value("${impilo.security.allow-anonymous:false}")
+    private boolean allowAnonymous;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -198,11 +203,14 @@ public class SecurityConfig {
                 .oauth2ResourceServer(oauth2 -> oauth2
                     .jwt(jwt -> jwt.jwtAuthenticationConverter(keycloakJwtConverter()))
                 );
+        } else if (allowAnonymous) {
+            log.warn("SECURITY: JWT validation DISABLED — impilo.security.allow-anonymous=true. "
+                    + "All endpoints are open. This MUST NOT be used in production.");
+            http.authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
         } else {
-            log.error("SECURITY FAIL-CLOSED: No JwtDecoder bean found — all endpoints DENIED. "
-                    + "Configure a valid OAuth2 Resource Server (Keycloak) to enable access. "
-                    + "Ensure OAuth2ResourceServerAutoConfiguration is NOT excluded in production.");
-            http.authorizeHttpRequests(auth -> auth.anyRequest().denyAll());
+            throw new IllegalStateException(
+                    "No JwtDecoder bean found and impilo.security.allow-anonymous is false. "
+                    + "Configure OAuth2 resource server or set impilo.security.allow-anonymous=true for dev.");
         }
 
         return http.build();
