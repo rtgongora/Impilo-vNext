@@ -50,12 +50,13 @@ public class AccountDeletionController {
     @Transactional
     public ResponseEntity<Map<String, Object>> requestDeletion(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(value = CompanionHeaders.POD_ID, required = false, defaultValue = "default") String podId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
             @RequestBody Map<String, Object> body) {
 
-        String userId = actorId != null ? actorId : body.getOrDefault("userId", "").toString();
+        String userId = actorId != null && !actorId.isBlank() ? actorId : body.getOrDefault("userId", "").toString();
         String reason = body.getOrDefault("reason", "").toString();
 
         if (userId.isBlank()) {
@@ -90,16 +91,23 @@ public class AccountDeletionController {
                 now, tenantId, userId);
 
         // Publish deletion request event for async processing
-        outboxService.publish(
+        outboxService.writeOutboxEvent(
                 "impilo.experience.account.deletion-requested.v1",
+                correlationId,
+                requestId,
                 requestUuid.toString(),
+                tenantId,
+                podId,
+                "AccountDeletion",
+                userId,
                 Map.of(
                         "requestId", requestUuid.toString(),
                         "userId", userId,
                         "tenantId", tenantId,
                         "reason", reason,
                         "requestedAt", now.toString()
-                ));
+                ),
+                Map.of());
 
         log.info("Account deletion requested: user={}, requestId={}", userId, requestUuid);
 
