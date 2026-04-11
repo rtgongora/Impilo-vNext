@@ -9,10 +9,23 @@
   "ignorePatterns": [
     "node_modules",
     ".next",
-    "out",
-    "src/components/ehr/**",
-    "src/components/clinical/**",
-    "src/engines/**",
-    "src/data/clerkingTemplates.ts"
+    "out"
+  ],
+  "overrides": [
+    {
+      "files": [
+        "src/components/ehr/**",
+        "src/components/clinical/**",
+        "src/engines/**",
+        "src/data/clerkingTemplates.ts"
+      ],
+      "rules": {
+        "@typescript-eslint/no-unused-vars": "off",
+        "no-unused-vars": "off",
+        "@typescript-eslint/no-explicit-any": "off",
+        "react-hooks/rules-of-hooks": "warn",
+        "react-hooks/exhaustive-deps": "off"
+      }
+    }
   ]
 }
