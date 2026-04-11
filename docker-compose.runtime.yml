@@ -422,10 +422,38 @@ services:
       DB_USER: ${POSTGRES_USER:-impilo}
       DB_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
       SPRING_PROFILES_ACTIVE: default
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_REALM: ${KEYCLOAK_REALM:-impilo}
+      # ── Backend service URLs ──────────────────────────────────────
+      PCT_BASE_URL: http://pct:8088
+      OROS_BASE_URL: http://oros:8089
+      VITO_BASE_URL: http://vito:8082
+      TUSO_BASE_URL: http://tuso:8084
+      VARAPI_BASE_URL: http://varapi:8083
+      BUTANO_BASE_URL: http://hapi-fhir:8090
+      FHIR_BASE_URL: http://hapi-fhir:8090/fhir
+      PHARMACY_BASE_URL: http://pharmacy:8096
+      MSIKA_BASE_URL: http://msika:8086
+      MSIKA_FLOW_BASE_URL: http://msika-flow:8100
+      MUSHEX_BASE_URL: http://mushex:8102
+      COSTA_BASE_URL: http://costa:8101
+      COVERAGE_BASE_URL: http://coverage:8140
+      INDAWO_BASE_URL: http://indawo:8150
+      SURVEILLANCE_BASE_URL: http://surveillance:8180
+      CAMPAIGNS_BASE_URL: http://campaigns:8190
+      NOTIFICATION_BASE_URL: http://notification:8200
+      DATA_GOVERNANCE_BASE_URL: http://data-governance:8220
+      DOCUMENT_STORE_BASE_URL: http://document-store:8093
+      LANDELA_BASE_URL: http://landela:8092
+      ORTHANC_BASE_URL: http://orthanc:8042
+      ORTHANC_DICOMWEB_URL: http://orthanc:8042/dicom-web
     ports:
       - "8160:8160"
     depends_on:
       postgres:
+        condition: service_healthy
+      kafka:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8160/actuator/health || exit 1"]
