@@ -271,6 +271,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/wellness/programs", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Prevention Programs", navLabel: "Programs", navZone: "life" },
   { path: "/wellness/screenings", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Screening Schedule", navLabel: "Screenings", navZone: "life" },
   { path: "/wellness/activity", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Activity & Fitness", navLabel: "Activity", navZone: "life" },
+  { path: "/wellness/connect", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Health Connect ingest", navLabel: "HC ingest", navZone: "life" },
   { path: "/wellness/diet", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Diet & Nutrition", navLabel: "Diet", navZone: "life" },
   { path: "/wellness/sleep", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Sleep & Recovery", navLabel: "Sleep", navZone: "life" },
   { path: "/wellness/clubs", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Clubs & Communities", navLabel: "Clubs", navZone: "life" },

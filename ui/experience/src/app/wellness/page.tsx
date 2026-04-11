@@ -64,9 +64,14 @@ function TodaySnapshot() {
           <strong className="text-indigo-700">{todayRow.sleepHours}</strong>h sleep
         </span>
       )}
-      <Link href="/wellness/activity" className="ml-auto text-blue-600 font-medium hover:underline">
-        Log activity
-      </Link>
+      <div className="ml-auto flex flex-wrap gap-4 text-sm">
+        <Link href="/wellness/activity" className="text-blue-600 font-medium hover:underline">
+          Log activity
+        </Link>
+        <Link href="/wellness/connect" className="text-indigo-600 font-medium hover:underline">
+          Health Connect ingest
+        </Link>
+      </div>
     </div>
   );
 }
