@@ -74,3 +74,24 @@ export function useCommerceOrderAction() {
   });
 }
 
+// ── Cart operations (absorbs msika-flow-portal:/cart) ────────────────
+
+export function useCommerceCart() {
+  return useQuery({
+    queryKey: ["commerce-cart"],
+    queryFn: () => apiClient.get<{ data: Array<{ id: string; name: string; quantity: number; unitPrice: number }> }>("/internal/v1/commerce/cart"),
+  });
+}
+
+export function useValidateCart() {
+  return useMutation({
+    mutationFn: () => apiClient.post<CommerceJson>("/internal/v1/commerce/cart/validate"),
+  });
+}
+
+export function useCheckoutCart() {
+  return useMutation({
+    mutationFn: () => apiClient.post<CommerceJson>("/internal/v1/commerce/orders"),
+  });
+}
+

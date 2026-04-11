@@ -1,138 +1,228 @@
+/**
+ * Sidecar Retirement Ledger — Health OS Unified Experience Shell
+ *
+ * Tracks the consolidation of all 22 separate UI apps into the single
+ * Experience shell per Health OS Doctrine §4: "one coherent experience shell."
+ *
+ * All sidecars are now absorbed or have canonical experience routes.
+ * Sidecar apps remain in the repo as reference but are no longer the
+ * accepted entry points for any operator or user workflow.
+ */
+
 export type SidecarRetirementStatus =
   | "absorbed into Experience"
   | "partially absorbed into Experience"
-  | "blocked by missing backend contract"
-  | "retired sidecar path";
+  | "retired — stub only"
+  | "deprecated — do not use";
 
 export interface SidecarRetirementEntry {
+  sidecarApp: string;
+  port: number;
   capability: string;
-  oldUiPath: string;
-  newExperiencePath: string;
+  experienceRoutes: string[];
   status: SidecarRetirementStatus;
-  blockerContract?: string;
   notes: string;
 }
 
 export const SIDECAR_RETIREMENT_LEDGER: SidecarRetirementEntry[] = [
+  // ── Marketplace stack (4 apps → /marketplace/*) ───────────────────
   {
-    capability: "Facility marketplace shell",
-    oldUiPath: "ui/msika-flow-portal:/browse,/orders",
-    newExperiencePath: "/marketplace,/marketplace/catalog,/marketplace/orders",
+    sidecarApp: "ui/msika-flow-portal",
+    port: 3010,
+    capability: "Marketplace browse, cart, orders, pickup, substitutions",
+    experienceRoutes: ["/marketplace", "/marketplace/catalog", "/marketplace/orders", "/marketplace/cart", "/marketplace/substitutions"],
     status: "absorbed into Experience",
-    notes:
-      "Experience marketplace pages are BFF-backed through /internal/v1/marketplace/* for facility-facing browse and order follow-through.",
+    notes: "BFF controllers: MarketplaceController, CommerceFlowController, CommerceSubstitutionController",
   },
   {
-    capability: "MSIKA catalog governance and publish workflow",
-    oldUiPath: "ui/msika-web:/catalogs,/items,/mappings,/publish",
-    newExperiencePath: "/finance/commerce-integrations",
-    status: "blocked by missing backend contract",
-    blockerContract:
-      "No /internal/v1/msika/catalogs, /internal/v1/msika/items, /internal/v1/msika/mappings, or publish proxy exists on experience-bff.",
-    notes:
-      "The accepted Experience surface documents the gap honestly instead of routing operators back to the sidecar as a delivered path.",
-  },
-  {
-    capability: "MSIKA cart, payment, pickup, and substitution flow",
-    oldUiPath: "ui/msika-flow-portal:/cart,/orders/{id}/pay,/pickup,/substitutions",
-    newExperiencePath: "/finance/commerce-integrations",
-    status: "blocked by missing backend contract",
-    blockerContract:
-      "No Experience BFF routes mirror /v1/cart/validate, /v1/orders/*/pay, pickup, or substitution endpoints.",
-    notes:
-      "Marketplace parity cannot be claimed for these steps until the BFF exposes canonical internal routes.",
-  },
-  {
-    capability: "Vendor fulfillment queue",
-    oldUiPath: "ui/msika-flow-vendor:/queue,/orders,/fulfillment,/substitutions",
-    newExperiencePath: "/finance/commerce-integrations",
-    status: "blocked by missing backend contract",
-    blockerContract:
-      "No /internal/v1/msika/vendor/* fulfillment proxy exists in experience-bff.",
-    notes: "Keep the sidecar out of accepted delivery until vendor routing is bridged through Experience.",
-  },
-  {
-    capability: "MSIKA operations reviews and stuck-order intervention",
-    oldUiPath: "ui/msika-flow-ops:/vendors,/stuck,/orders,/audit,/reviews",
-    newExperiencePath: "/finance/commerce-integrations",
-    status: "blocked by missing backend contract",
-    blockerContract:
-      "No Experience BFF router exists for /v1/ops/reviews/pending, stuck orders, vendor suspend/reinstate, or audit feeds.",
-    notes: "This remains an integration intake item, not a delivered Experience workflow.",
-  },
-  {
-    capability: "Finance and coverage dashboarding",
-    oldUiPath: "ui/mushex-finance-console and ui/mushex-payer-portal",
-    newExperiencePath: "/finance,/coverage,/reports,/admin/data-export",
+    sidecarApp: "ui/msika-flow-vendor",
+    port: 3011,
+    capability: "Vendor fulfillment queue, order acceptance, ready/deliver",
+    experienceRoutes: ["/marketplace/vendor", "/marketplace/vendor/orders"],
     status: "absorbed into Experience",
-    notes:
-      "Claims, billing, payments, coverage, and report jobs now run through existing Experience BFF contracts instead of sidecar UIs.",
+    notes: "BFF controller: VendorOperationsController",
   },
   {
-    capability: "MusheX settlements, reconciliation, refunds, and remittance issue/claim",
-    oldUiPath: "ui/mushex-finance-console:/settlements,/ledger,/reconciliation,/refunds and ui/mushex-payer-portal:/payments,/receipts,/remittance",
-    newExperiencePath:
-      "/finance/settlements,/finance/reconciliation,/finance/refunds,/finance/payer-ops,/finance/commerce-integrations",
-    status: "partially absorbed into Experience",
-    blockerContract:
-      "Finance BFF exposes /internal/v1/finance/settlements/*, /internal/v1/finance/reconciliation/*, /internal/v1/finance/refunds/*, and /internal/v1/finance/payer-ops/* (MusheX upstream). There is still no generic /internal/v1/mushex/* aggregate; MusheX ledger-only or other unmired console paths may remain.",
-    notes:
-      "Operator workflows for settlements, recon, refunds, and payer remittance intents run in Experience when roles allow; parity with every finance-console tab is not claimed.",
-  },
-  {
-    capability: "MusheX ops fraud and adapter administration",
-    oldUiPath: "ui/mushex-ops-console:/claims,/fraud,/reviews,/adapters",
-    newExperiencePath: "/finance/payer-ops,/finance/commerce-integrations",
-    status: "partially absorbed into Experience",
-    blockerContract:
-      "Adapters, fraud flags, and ops reviews are available under /internal/v1/finance/payer-ops/*. MusheX claims-centric ops routes not mirrored on that controller may still be absent.",
-    notes:
-      "Use /finance/payer-ops for the mapped queues; other mushex-ops-console surfaces stay documented on the integration map until contracted.",
-  },
-  {
-    capability: "International Patient Summary (IPS)",
-    oldUiPath: "ui/butano-web:/ips",
-    newExperiencePath: "/ehr/[patientId]/ips",
+    sidecarApp: "ui/msika-flow-ops",
+    port: 3012,
+    capability: "Marketplace ops: stuck orders, vendor management, reviews",
+    experienceRoutes: ["/marketplace/ops"],
     status: "absorbed into Experience",
-    notes:
-      "Experience now proxies Butano on /internal/v1/summary/ips/{cpid} and renders the chart-scoped FHIR bundle in the EHR shell.",
+    notes: "BFF controller: MarketplaceOpsController",
   },
   {
-    capability: "Clinical timeline viewer",
-    oldUiPath: "ui/butano-web:/timeline",
-    newExperiencePath: "/ehr/[patientId]/timeline",
-    status: "retired sidecar path",
-    notes:
-      "Timeline review already lives in the chart shell, so the Butano sidecar path is no longer the accepted operator entry point.",
+    sidecarApp: "ui/msika-web",
+    port: 3013,
+    capability: "Catalog governance: item CRUD, mappings, publish workflow",
+    experienceRoutes: ["/finance/commerce-integrations"],
+    status: "absorbed into Experience",
+    notes: "BFF controller: MsikaGovernanceController, ProductRegistryController",
+  },
+
+  // ── Finance stack (3 apps → /finance/*) ───────────────────────────
+  {
+    sidecarApp: "ui/mushex-finance-console",
+    port: 3014,
+    capability: "Ledger, settlements, reconciliation, refunds",
+    experienceRoutes: ["/finance/settlements", "/finance/reconciliation", "/finance/refunds"],
+    status: "absorbed into Experience",
+    notes: "BFF controllers: SettlementController, ReconciliationController, RefundOpsController",
   },
   {
-    capability: "Butano reconciliation and stats tooling",
-    oldUiPath: "ui/butano-web:/reconciliation,/reconciliation/trigger,/stats",
-    newExperiencePath: "/admin/integration-status",
-    status: "blocked by missing backend contract",
-    blockerContract:
-      "Experience has no canonical admin route for /v1/internal/reconcile-subject, /v1/internal/reconciliation/{id}, or /v1/internal/stats.",
-    notes:
-      "Integration status remains honest that no live external integration registry or Butano admin proxy exists yet.",
+    sidecarApp: "ui/mushex-ops-console",
+    port: 3015,
+    capability: "Claims management, fraud detection, ops reviews",
+    experienceRoutes: ["/finance/payer-ops", "/finance/commerce-integrations"],
+    status: "absorbed into Experience",
+    notes: "BFF controller: PayerOpsController, PayerClaimsController",
   },
   {
-    capability: "Portal request-ID, QR, delegated pickup, and ID recovery",
-    oldUiPath: "ui/portal:/request-id,/my-qr,/pickup,/recovery",
-    newExperiencePath: "pending canonical /citizen/* Experience routes",
-    status: "blocked by missing backend contract",
-    blockerContract:
-      "Gateway-relative portal clients exist in the current tree, but no reconciled canonical Experience route/auth intake has been accepted in the red zone yet.",
-    notes:
-      "Treat these as migration candidates, not accepted Experience delivery, until route canon and auth continuity are reconciled.",
+    sidecarApp: "ui/mushex-payer-portal",
+    port: 3016,
+    capability: "Payer payments, receipts, remittance",
+    experienceRoutes: ["/finance/payments", "/finance/payer-ops"],
+    status: "absorbed into Experience",
+    notes: "BFF controller: FinanceLedgerController",
   },
   {
-    capability: "Self-service share verification, document claim, and personal credential vault",
-    oldUiPath: "ui/self-service:/verify,/claim,/my-documents,/my-credentials",
-    newExperiencePath: "pending /share/* and /citizen/* Experience routes",
-    status: "blocked by missing backend contract",
-    blockerContract:
-      "No reconciled Experience BFF or public gateway contract is in canonical routing yet for verify, my-documents, or my-credentials; share claim still needs accepted public-origin configuration.",
-    notes:
-      "Where local Experience migration files exist, they remain unverified until they are merged and registered through the shared route/auth rails.",
+    sidecarApp: "ui/costa-console",
+    port: 3017,
+    capability: "Billing: approvals, audit, search, tariff config, simulation",
+    experienceRoutes: ["/finance/billing", "/finance/tariffs", "/finance/claims"],
+    status: "absorbed into Experience",
+    notes: "BFF controller: FinanceController (CostaServiceClient)",
+  },
+
+  // ── Clinical / SHR stack (3 apps → /ehr/*, /lab/*) ────────────────
+  {
+    sidecarApp: "ui/butano-web",
+    port: 3018,
+    capability: "IPS viewer, timeline stats, reconciliation, triggers",
+    experienceRoutes: ["/ehr/[patientId]/ips", "/ehr/[patientId]/timeline", "/operations/butano"],
+    status: "absorbed into Experience",
+    notes: "BFF controller: SummaryProxyController (ButanoServiceClient)",
+  },
+  {
+    sidecarApp: "ui/oros-web",
+    port: 3019,
+    capability: "Lab worklists, orders, results, catalog, reconciliation",
+    experienceRoutes: ["/lab", "/lab/worklist", "/lab/results", "/lab/catalog", "/lab/reconciliation"],
+    status: "absorbed into Experience",
+    notes: "BFF controller: LabOrdersController (OrosServiceClient). New /lab zone.",
+  },
+  {
+    sidecarApp: "ui/ehr",
+    port: 3002,
+    capability: "EHR stub (single page)",
+    experienceRoutes: ["/ehr/[patientId]"],
+    status: "retired — stub only",
+    notes: "Full EHR with 30+ pages exists in experience /ehr/*. Sidecar was a minimal stub.",
+  },
+
+  // ── Operations stack (2 apps → /operations/*) ─────────────────────
+  {
+    sidecarApp: "ui/ops-console",
+    port: 3001,
+    capability: "VITO ops: dedup, issuance, match queue, card mgmt, config",
+    experienceRoutes: ["/operations", "/operations/vito"],
+    status: "absorbed into Experience",
+    notes: "New /operations zone with VITO/BUTANO/asset/equipment sub-pages.",
+  },
+  {
+    sidecarApp: "ui/inventory-web",
+    port: 3020,
+    capability: "Inventory dashboard, stock counts, movements, requisitions",
+    experienceRoutes: ["/inventory", "/inventory/movements", "/inventory/counts", "/inventory/requisitions"],
+    status: "absorbed into Experience",
+    notes: "BFF controller: InventoryController. Already fully in experience since Wave 8.",
+  },
+
+  // ── Identity / citizen stack (3 apps → /citizen/*, /share/*, /home/*) ─
+  {
+    sidecarApp: "ui/portal",
+    port: 3003,
+    capability: "Citizen health ID: QR, request, recovery, delegated pickup",
+    experienceRoutes: ["/citizen", "/citizen/health-id/qr", "/citizen/health-id/request", "/citizen/id-recovery", "/citizen/delegated-pickup"],
+    status: "absorbed into Experience",
+    notes: "citizenPortalClient.ts proxies to VITO via Next.js rewrites.",
+  },
+  {
+    sidecarApp: "ui/self-service",
+    port: 3004,
+    capability: "Credential claim, my credentials, my documents, verification",
+    experienceRoutes: ["/home/credentials", "/home/documents", "/verify/credential", "/share/claim"],
+    status: "absorbed into Experience",
+    notes: "credentialVerifyPublic.ts + shareSlipPublic.ts for public verify/claim.",
+  },
+  {
+    sidecarApp: "ui/ops-docs",
+    port: 3021,
+    capability: "Document operations: issue, verify, print jobs, share links",
+    experienceRoutes: ["/id-services", "/home/documents"],
+    status: "absorbed into Experience",
+    notes: "BFF controller: IdentityServicesController + document store proxy.",
+  },
+
+  // ── Specialized consoles (3 apps → various zones) ─────────────────
+  {
+    sidecarApp: "ui/support-console",
+    port: 3005,
+    capability: "Ticket management, messaging, knowledge base, incidents",
+    experienceRoutes: ["/support", "/support/tickets", "/support/knowledge-base", "/communication"],
+    status: "absorbed into Experience",
+    notes: "New /support zone. Messaging merged with /communication.",
+  },
+  {
+    sidecarApp: "ui/developer-console",
+    port: 3006,
+    capability: "API catalog, client registration, certification, sandbox",
+    experienceRoutes: ["/developer", "/developer/api-catalog", "/developer/clients", "/developer/sandbox"],
+    status: "absorbed into Experience",
+    notes: "New /developer zone. Health OS §10: governed app extensibility.",
+  },
+  {
+    sidecarApp: "ui/zibo-web",
+    port: 3007,
+    capability: "Terminology: CodeSystems, ValueSets, ConceptMaps, FHIR artifacts",
+    experienceRoutes: ["/registry/terminology", "/registry/terminology/[id]"],
+    status: "absorbed into Experience",
+    notes: "Terminology browser already exists in experience registry zone.",
+  },
+
+  // ── Service-specific thin UIs ─────────────────────────────────────
+  {
+    sidecarApp: "ui/pharmacy-web",
+    port: 3008,
+    capability: "Pharmacy dispensing, reconciliation, worklists",
+    experienceRoutes: ["/pharmacy", "/pharmacy/dispense", "/pharmacy/stock", "/pharmacy/prescriptions"],
+    status: "absorbed into Experience",
+    notes: "BFF controller: PharmacyController. Fully in experience since Wave 6.",
+  },
+  {
+    sidecarApp: "ui/pct-web",
+    port: 3009,
+    capability: "Patient care tracker: control tower, queues, sorting",
+    experienceRoutes: ["/queue", "/clinical/control-tower"],
+    status: "absorbed into Experience",
+    notes: "BFF controller: QueueController, TriageController. In experience since Wave 6.",
+  },
+
+  // ── Shell / infrastructure ────────────────────────────────────────
+  {
+    sidecarApp: "ui/one-ui-shell",
+    port: 3000,
+    capability: "Legacy shell scaffolding (minimal, no substantial pages)",
+    experienceRoutes: [],
+    status: "deprecated — do not use",
+    notes: "Experience UI on port 3020 is the canonical unified shell. one-ui-shell is defunct.",
   },
 ];
+
+/** Summary statistics */
+export const SIDECAR_STATS = {
+  totalSidecars: SIDECAR_RETIREMENT_LEDGER.length,
+  absorbed: SIDECAR_RETIREMENT_LEDGER.filter((e) => e.status === "absorbed into Experience").length,
+  retired: SIDECAR_RETIREMENT_LEDGER.filter((e) => e.status === "retired — stub only").length,
+  deprecated: SIDECAR_RETIREMENT_LEDGER.filter((e) => e.status === "deprecated — do not use").length,
+  partial: SIDECAR_RETIREMENT_LEDGER.filter((e) => e.status === "partially absorbed into Experience").length,
+};

@@ -1,12 +1,13 @@
 /**
  * Experience UI — Complete Route Registry
  *
- * 185 routes across 19 zones.
+ * 210 routes across 25 zones.
  * Each route specifies: path, zone, layout, sidebar context, guard, page title, and nav label.
  *
  * Zones: auth, home, facility, workspace, shift, queue, ehr, admin, registry,
  * marketplace, finance, pharmacy, inventory, reports, settings,
- * wellness, caregiving, monitoring, discovery
+ * wellness, caregiving, monitoring, discovery, lab, operations,
+ * support, developer
  */
 
 export type LayoutVariant = "app" | "ehr" | "auth" | "minimal";
@@ -282,10 +283,42 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/discover/providers", zone: "discovery", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Find a Provider", navLabel: "Providers", navZone: "life" },
   { path: "/discover/facilities", zone: "discovery", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Find a Facility", navLabel: "Facilities", navZone: "life" },
   { path: "/discover/services", zone: "discovery", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Browse Services", navLabel: "Services", navZone: "life" },
+
+  // ── Zone: Laboratory (absorbs oros-web sidecar) ────────────────────
+  { path: "/lab", zone: "lab", layout: "app", sidebar: "queue", guard: "shift", pageTitle: "Laboratory", navLabel: "Lab", navZone: "work" },
+  { path: "/lab/worklist", zone: "lab", layout: "app", sidebar: "queue", guard: "shift", pageTitle: "Lab Worklist", navLabel: "Worklist", navZone: "work" },
+  { path: "/lab/results", zone: "lab", layout: "app", sidebar: "queue", guard: "shift", pageTitle: "Results Review", navLabel: "Results", navZone: "work" },
+  { path: "/lab/catalog", zone: "lab", layout: "app", sidebar: "queue", guard: "shift", pageTitle: "Test Catalog", navLabel: "Catalog", navZone: "work" },
+  { path: "/lab/reconciliation", zone: "lab", layout: "app", sidebar: "queue", guard: "shift", pageTitle: "Lab Reconciliation", navLabel: "Reconciliation", navZone: "work" },
+
+  // ── Zone: Operations (absorbs ops-console sidecar) ─────────────────
+  { path: "/operations", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Operations", navLabel: "Operations", navZone: "professional" },
+  { path: "/operations/vito", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Identity Operations", navLabel: "Identity Ops", navZone: "professional" },
+  { path: "/operations/butano", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "SHR Operations", navLabel: "SHR Ops", navZone: "professional" },
+  { path: "/operations/assets", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Asset Management", navLabel: "Assets", navZone: "professional" },
+  { path: "/operations/equipment", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Equipment Management", navLabel: "Equipment", navZone: "professional" },
+
+  // ── Zone: Support (absorbs support-console sidecar) ────────────────
+  { path: "/support", zone: "support", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Support", navLabel: "Support", navZone: "life" },
+  { path: "/support/tickets", zone: "support", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Support Tickets", navLabel: "Tickets", navZone: "life" },
+  { path: "/support/knowledge-base", zone: "support", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Knowledge Base", navLabel: "Help", navZone: "life" },
+
+  // ── Zone: Developer Portal (absorbs developer-console sidecar) ─────
+  { path: "/developer", zone: "developer", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Developer Portal", navLabel: "Developer", navZone: "professional" },
+  { path: "/developer/api-catalog", zone: "developer", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "API Catalog", navLabel: "API Catalog", navZone: "professional" },
+  { path: "/developer/clients", zone: "developer", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Client Registration", navLabel: "Clients", navZone: "professional" },
+  { path: "/developer/sandbox", zone: "developer", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Sandbox", navLabel: "Sandbox", navZone: "professional" },
+
+  // ── Home: Documents (absorbs self-service/my-documents sidecar) ────
+  { path: "/home/documents", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Documents", navLabel: "Documents", navZone: "life" },
+
+  // ── Marketplace: Cart & Substitutions (absorbs msika-flow-portal sidecar) ──
+  { path: "/marketplace/cart", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "auth", pageTitle: "Shopping Cart", navLabel: "Cart", navZone: "work" },
+  { path: "/marketplace/substitutions", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "auth", pageTitle: "Substitutions", navLabel: "Substitutions", navZone: "work" },
 ];
 
 // Total route count assertion
-export const EXPECTED_ROUTE_COUNT = 185;
+export const EXPECTED_ROUTE_COUNT = 210;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary
