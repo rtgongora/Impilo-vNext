@@ -188,6 +188,20 @@ public class RemittanceService {
         return token;
     }
 
+    public RemittanceTokenEntity issueRemittanceSlip(String intentId) {
+        Map<String, String> slip = issueSlip(intentId);
+        String tokenId = slip.get("tokenId");
+        if (tokenId == null) {
+            throw new IllegalStateException("Remittance slip issuance did not return a token id");
+        }
+        return tokenRepository.findById(tokenId)
+                .orElseThrow(() -> new IllegalStateException("Issued remittance token not found: " + tokenId));
+    }
+
+    public RemittanceTokenEntity claimRemittance(String tokenPlaintext, String otpPlaintext) {
+        return claimSlip(tokenPlaintext, otpPlaintext, null);
+    }
+
     /**
      * Revoke a remittance slip, preventing it from being claimed.
      *

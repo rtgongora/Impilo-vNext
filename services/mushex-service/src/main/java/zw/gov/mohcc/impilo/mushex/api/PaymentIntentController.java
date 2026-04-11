@@ -57,12 +57,11 @@ public class PaymentIntentController {
                 : ctx.facilityId();
 
         PaymentIntentEntity intent = paymentIntentService.createIntent(
-                ctx.tenantId(),
-                facilityId,
                 sourceType,
                 request.sourceId(),
                 request.amount(),
                 request.currency(),
+                facilityId,
                 request.idempotencyKey(),
                 request.metadata()
         );

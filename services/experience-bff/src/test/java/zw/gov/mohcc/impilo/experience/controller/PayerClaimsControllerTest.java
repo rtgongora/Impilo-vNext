@@ -4,6 +4,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.MushexServiceClient;
 import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
@@ -11,6 +13,19 @@ import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class PayerClaimsControllerTest {
+
+    @Test
+    void listClaimsForwardsPagedPayload() {
+        PayerClaimsController controller = new PayerClaimsController(new StubMushexClient());
+
+        MultiValueMap<String, String> query = new LinkedMultiValueMap<>();
+        query.add("status", "SUBMITTED");
+
+        ResponseEntity<String> response = controller.listClaims(query, "req-0", "corr-0");
+
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals("{\"items\":[{\"claimId\":\"CLAIM-1\"}],\"page\":0}", response.getBody());
+    }
 
     @Test
     void getClaimForwardsClaimPayload() {
@@ -61,6 +76,13 @@ class PayerClaimsControllerTest {
     private static final class StubMushexClient extends MushexServiceClient {
         private StubMushexClient() {
             super(new RestTemplate(), endpoints());
+        }
+
+        @Override
+        public ResponseEntity<String> listClaims(MultiValueMap<String, String> queryParams) {
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body("{\"items\":[{\"claimId\":\"CLAIM-1\"}],\"page\":0}");
         }
 
         @Override

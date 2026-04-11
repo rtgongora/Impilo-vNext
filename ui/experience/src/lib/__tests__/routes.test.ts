@@ -193,11 +193,13 @@ describe("Route Registry", () => {
 
   it("registers absorbed marketplace and finance operations routes in canonical shared routing", () => {
     const financePaths: Array<[string, string]> = [
+      ["/finance/msika-governance", "MSIKA_GOVERNANCE"],
       ["/finance/settlements", "FINANCE"],
       ["/finance/reconciliation", "PAYER_OPS"],
       ["/finance/refunds", "FINANCE"],
       ["/finance/payer-ops", "PAYER_OPS"],
       ["/finance/ledger", "FINANCE"],
+      ["/finance/payer-claims", "PAYER_OPS"],
       ["/finance/payer-claims/[claimId]", "PAYER_OPS"],
     ];
 

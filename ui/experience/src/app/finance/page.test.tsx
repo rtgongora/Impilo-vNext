@@ -52,5 +52,9 @@ describe("FinancePage", () => {
       "href",
       "/finance/commerce-integrations",
     );
+    expect(screen.getByRole("link", { name: /MSIKA Governance/i })).toHaveAttribute(
+      "href",
+      "/finance/msika-governance?patientId=patient-1&encounterId=enc-1&source=discharge",
+    );
   });
 });

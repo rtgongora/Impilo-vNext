@@ -20,6 +20,13 @@ public interface PaymentIntentRepository extends JpaRepository<PaymentIntentEnti
 
     Page<PaymentIntentEntity> findByTenantIdAndStatus(UUID tenantId, IntentStatus status, Pageable pageable);
 
+    List<PaymentIntentEntity> findByTenantIdAndStatusAndCreatedAtBetween(
+            UUID tenantId,
+            IntentStatus status,
+            OffsetDateTime start,
+            OffsetDateTime end
+    );
+
     List<PaymentIntentEntity> findBySourceTypeAndSourceId(SourceType sourceType, String sourceId);
 
     long countBySourceTypeAndSourceIdAndStatus(SourceType sourceType, String sourceId, IntentStatus status);

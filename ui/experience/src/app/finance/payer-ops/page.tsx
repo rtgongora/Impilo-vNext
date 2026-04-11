@@ -76,6 +76,17 @@ export default function FinancePayerOpsPage() {
           </Link>
         </div>
 
+        <div className="mb-4 rounded-xl border border-indigo-200 bg-indigo-50/60 p-4 text-sm text-slate-700">
+          <p className="font-medium text-slate-900">Payer claims queue</p>
+          <p className="mt-1">
+            Search and hand off into MusheX payer-claim detail from{" "}
+            <Link href="/finance/payer-claims" className="text-blue-700 hover:underline">
+              /finance/payer-claims
+            </Link>
+            .
+          </p>
+        </div>
+
         <div className="max-w-4xl space-y-8">
           <FinancePayerOpsReconciliationNotice />
 

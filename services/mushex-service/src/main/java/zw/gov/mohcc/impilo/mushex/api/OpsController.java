@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import zw.gov.mohcc.impilo.mushex.domain.entity.OpsReviewEntity;
 import zw.gov.mohcc.impilo.mushex.service.OpsService;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import zw.gov.mohcc.impilo.shared.response.ApiResponse;
@@ -27,16 +28,16 @@ public class OpsController {
     }
 
     @GetMapping("/reviews/pending")
-    public ResponseEntity<ApiResponse<PagedResponse<Object>>> getPendingReviews(
+    public ResponseEntity<ApiResponse<PagedResponse<OpsReviewEntity>>> getPendingReviews(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         var ctx = TrustContextHolder.require();
         String correlationId = ctx.correlationId().toString();
 
         Pageable pageable = PageRequest.of(page, size);
-        Page<Object> result = opsService.getPendingReviews(ctx.tenantId(), pageable);
+        Page<OpsReviewEntity> result = opsService.getPendingReviews(ctx.tenantId(), pageable);
 
-        PagedResponse<Object> paged = PagedResponse.of(
+        PagedResponse<OpsReviewEntity> paged = PagedResponse.of(
                 result.getContent(), page, size, result.getTotalElements());
 
         return ResponseEntity.ok(ApiResponse.ok(paged, correlationId));
@@ -49,7 +50,7 @@ public class OpsController {
         var ctx = TrustContextHolder.require();
         String correlationId = ctx.correlationId().toString();
 
-        Object result = opsService.approveReview(id, ctx.actorId(), notes);
+        Object result = opsService.approveReview(id, notes);
 
         return ResponseEntity.ok(ApiResponse.ok(result, correlationId));
     }

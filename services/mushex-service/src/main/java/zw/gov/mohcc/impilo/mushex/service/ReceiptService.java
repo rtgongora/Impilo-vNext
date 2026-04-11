@@ -11,6 +11,7 @@ import zw.gov.mohcc.impilo.mushex.domain.repository.PaymentIntentRepository;
 import zw.gov.mohcc.impilo.mushex.domain.repository.ReceiptRepository;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -104,5 +105,11 @@ public class ReceiptService {
      */
     public Optional<ReceiptEntity> getReceipt(String intentId) {
         return receiptRepository.findByIntentId(intentId);
+    }
+
+    public List<ReceiptEntity> getReceiptsByIntentId(String intentId) {
+        return receiptRepository.findByIntentId(intentId)
+                .map(List::of)
+                .orElseGet(List::of);
     }
 }

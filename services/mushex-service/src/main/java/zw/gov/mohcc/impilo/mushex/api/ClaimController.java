@@ -1,6 +1,9 @@
 package zw.gov.mohcc.impilo.mushex.api;
 
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -9,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestParam;
 import zw.gov.mohcc.impilo.mushex.api.dto.ClaimAdjudicationRequest;
 import zw.gov.mohcc.impilo.mushex.api.dto.ClaimAttachmentRequest;
 import zw.gov.mohcc.impilo.mushex.api.dto.ClaimCreateRequest;
@@ -16,9 +20,11 @@ import zw.gov.mohcc.impilo.mushex.api.dto.ClaimDisputeRequest;
 import zw.gov.mohcc.impilo.mushex.domain.entity.ClaimAttachmentEntity;
 import zw.gov.mohcc.impilo.mushex.domain.entity.ClaimEntity;
 import zw.gov.mohcc.impilo.mushex.domain.entity.ClaimEventEntity;
+import zw.gov.mohcc.impilo.mushex.domain.enums.ClaimStatus;
 import zw.gov.mohcc.impilo.mushex.service.ClaimService;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import zw.gov.mohcc.impilo.shared.response.ApiResponse;
+import zw.gov.mohcc.impilo.shared.response.PagedResponse;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -35,6 +41,24 @@ public class ClaimController {
         this.claimService = claimService;
     }
 
+    @GetMapping
+    public ResponseEntity<ApiResponse<PagedResponse<ClaimEntity>>> listClaims(
+            @RequestParam(required = false) ClaimStatus status,
+            @RequestParam(required = false) String insurerId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        var ctx = TrustContextHolder.require();
+        String correlationId = ctx.correlationId().toString();
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<ClaimEntity> result = claimService.listClaims(ctx.tenantId(), status, insurerId, pageable);
+
+        PagedResponse<ClaimEntity> paged = PagedResponse.of(
+                result.getContent(), page, size, result.getTotalElements());
+
+        return ResponseEntity.ok(ApiResponse.ok(paged, correlationId));
+    }
+
     @PostMapping
     public ResponseEntity<ApiResponse<ClaimEntity>> createClaim(
             @Valid @RequestBody ClaimCreateRequest request) {
@@ -46,10 +70,9 @@ public class ClaimController {
                 : ctx.facilityId();
 
         ClaimEntity claim = claimService.createClaim(
-                ctx.tenantId(),
-                facilityId,
                 request.billId(),
                 request.insurerId(),
+                facilityId,
                 request.totals()
         );
 
@@ -108,7 +131,7 @@ public class ClaimController {
         var ctx = TrustContextHolder.require();
         String correlationId = ctx.correlationId().toString();
 
-        ClaimEntity claim = claimService.disputeClaim(id, request.reason());
+        ClaimEntity claim = claimService.disputeClaim(id, request.reason(), ctx.actorId());
 
         return ResponseEntity.ok(ApiResponse.ok(claim, correlationId));
     }

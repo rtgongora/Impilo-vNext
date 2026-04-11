@@ -14,12 +14,15 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import zw.gov.mohcc.impilo.mushex.api.dto.ReconImportLine;
 import zw.gov.mohcc.impilo.mushex.api.dto.ReconMatchRequest;
+import zw.gov.mohcc.impilo.mushex.domain.entity.ReconQueueEntity;
 import zw.gov.mohcc.impilo.mushex.service.ReconciliationService;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import zw.gov.mohcc.impilo.shared.response.ApiResponse;
 import zw.gov.mohcc.impilo.shared.response.PagedResponse;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/mushex/v1/recon")
@@ -37,23 +40,35 @@ public class ReconciliationController {
         var ctx = TrustContextHolder.require();
         String correlationId = ctx.correlationId().toString();
 
-        Object result = reconciliationService.importStatement(ctx.tenantId(), lines);
+        List<Map<String, String>> statementLines = lines.stream()
+                .map(line -> {
+                    Map<String, String> mapped = new LinkedHashMap<>();
+                    mapped.put("ref", line.ref());
+                    mapped.put("date", line.date());
+                    mapped.put("amount", line.amount());
+                    mapped.put("currency", line.currency());
+                    mapped.put("counterparty", line.counterparty());
+                    return mapped;
+                })
+                .toList();
+
+        Object result = reconciliationService.importStatement(ctx.tenantId(), statementLines);
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok(result, correlationId));
     }
 
     @GetMapping("/unmatched")
-    public ResponseEntity<ApiResponse<PagedResponse<Object>>> getUnmatched(
+    public ResponseEntity<ApiResponse<PagedResponse<ReconQueueEntity>>> getUnmatched(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         var ctx = TrustContextHolder.require();
         String correlationId = ctx.correlationId().toString();
 
         Pageable pageable = PageRequest.of(page, size);
-        Page<Object> result = reconciliationService.getUnmatched(ctx.tenantId(), pageable);
+        Page<ReconQueueEntity> result = reconciliationService.getUnmatched(ctx.tenantId(), pageable);
 
-        PagedResponse<Object> paged = PagedResponse.of(
+        PagedResponse<ReconQueueEntity> paged = PagedResponse.of(
                 result.getContent(), page, size, result.getTotalElements());
 
         return ResponseEntity.ok(ApiResponse.ok(paged, correlationId));

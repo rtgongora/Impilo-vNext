@@ -13,9 +13,13 @@ import java.util.UUID;
 @Repository
 public interface ClaimRepository extends JpaRepository<ClaimEntity, String> {
 
+    Page<ClaimEntity> findByTenantId(UUID tenantId, Pageable pageable);
+
     Page<ClaimEntity> findByTenantIdAndStatus(UUID tenantId, ClaimStatus status, Pageable pageable);
 
     Optional<ClaimEntity> findByBillId(String billId);
 
     Page<ClaimEntity> findByTenantIdAndInsurerId(UUID tenantId, String insurerId, Pageable pageable);
+
+    Page<ClaimEntity> findByTenantIdAndInsurerIdAndStatus(UUID tenantId, String insurerId, ClaimStatus status, Pageable pageable);
 }

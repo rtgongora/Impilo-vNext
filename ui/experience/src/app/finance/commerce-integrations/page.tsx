@@ -156,6 +156,19 @@ export default function CommerceIntegrationsPage() {
                   </tr>
                   <tr>
                     <td className="px-3 py-2">
+                      <Link href="/finance/msika-governance" className="text-blue-700 hover:underline">
+                        /finance/msika-governance
+                      </Link>
+                    </td>
+                    <td className="px-3 py-2 font-mono text-xs">
+                      GET/POST /internal/v1/msika/catalogs, GET/POST /internal/v1/msika/mappings/pending, POST /internal/v1/msika/import
+                    </td>
+                    <td className="px-3 py-2 text-slate-600">
+                      Catalog governance, mapping review, publishing, and CSV import now run in Experience instead of the MSIKA governance sidecar.
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="px-3 py-2">
                       <Link href="/finance/settlements" className="text-blue-700 hover:underline">
                         /finance/settlements
                       </Link>
@@ -208,6 +221,10 @@ export default function CommerceIntegrationsPage() {
                   </tr>
                   <tr>
                     <td className="px-3 py-2">
+                      <Link href="/finance/payer-claims" className="text-blue-700 hover:underline">
+                        /finance/payer-claims
+                      </Link>
+                      ,{" "}
                       <Link href="/finance/payer-ops" className="text-blue-700 hover:underline">
                         /finance/payer-ops
                       </Link>
@@ -220,7 +237,7 @@ export default function CommerceIntegrationsPage() {
                       GET/POST /internal/v1/finance/payer-ops/*, GET/POST /internal/v1/finance/payer-claims/*
                     </td>
                     <td className="px-3 py-2 text-slate-600">
-                      Intents, remittance, adapters, fraud flags, ops reviews, and payer-claim detail actions (MusheX).
+                      Intents, remittance, adapters, fraud flags, ops reviews, payer-claim queue, and payer-claim detail actions (MusheX).
                       Tighter finance/admin roles apply on the BFF.
                     </td>
                   </tr>
@@ -290,6 +307,16 @@ export default function CommerceIntegrationsPage() {
               <code className="text-xs">/internal/v1/product-registry/*</code> and <code className="text-xs">/internal/v1/commerce/*</code>.
               The remaining MSIKA gap is governance parity, not day-to-day operator rails.
             </p>
+            <div className="mb-3 rounded-lg border border-emerald-200 bg-emerald-50/50 p-4 text-sm text-emerald-950">
+              <p className="font-medium">Governance is now live in Experience</p>
+              <p className="mt-1">
+                The canonical governance workspace is{" "}
+                <Link href="/finance/msika-governance" className="underline underline-offset-2">
+                  /finance/msika-governance
+                </Link>
+                , backed by <code className="text-[11px]">/internal/v1/msika/*</code>.
+              </p>
+            </div>
             <div className="overflow-x-auto rounded-lg border border-amber-200 bg-amber-50/40">
               <table className="w-full text-sm">
                 <thead className="bg-amber-100/60 text-left">
@@ -380,11 +407,15 @@ export default function CommerceIntegrationsPage() {
               <Link href="/finance/payer-ops" className="text-blue-700 hover:underline">
                 /finance/payer-ops
               </Link>
-              ), payer claims (
+              ), payer claims queue (
+              <Link href="/finance/payer-claims" className="text-blue-700 hover:underline">
+                /finance/payer-claims
+              </Link>
+              ), payer claim detail (
               <Link href="/finance/payer-claims/[claimId]" className="text-blue-700 hover:underline">
                 /finance/payer-claims/[claimId]
               </Link>
-              ). Other MusheX paths, such as a claims queue or list route, may still be absent.
+              ). Other MusheX paths outside these typed finance routes may still be absent.
             </p>
             <div className="overflow-x-auto rounded-lg border border-amber-200 bg-amber-50/40">
               <table className="w-full text-sm">
@@ -427,8 +458,8 @@ export default function CommerceIntegrationsPage() {
                     <td className="px-3 py-2">
                       Adapters, fraud flags, and ops reviews are proxied under{" "}
                       <code className="text-xs">/internal/v1/finance/payer-ops/*</code>. MusheX claim detail actions are
-                      partially represented by <code className="text-xs">/internal/v1/finance/payer-claims/*</code>, but a
-                      claims queue or list surface is still missing.
+                      now paired with a real claims queue and detail surface under{" "}
+                      <code className="text-xs">/internal/v1/finance/payer-claims*</code>.
                     </td>
                   </tr>
                 </tbody>

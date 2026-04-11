@@ -55,12 +55,10 @@ export const SIDECAR_RETIREMENT_LEDGER: SidecarRetirementEntry[] = [
     sidecarApp: "ui/msika-web",
     capability: "Catalog governance, mappings, publish, and import",
     oldUiPath: "ui/msika-web:/catalogs,/mappings,/publish,/import",
-    newExperiencePath: "/finance/commerce-integrations",
-    status: "partially absorbed into Experience",
+    newExperiencePath: "/finance/msika-governance",
+    status: "absorbed into Experience",
     notes:
-      "Backend governance rails exist, but Experience still needs a first-class governance workspace instead of only the integration map.",
-    blockerContract:
-      "Canonical Experience governance routes and UI consumption for /internal/v1/msika/* are still pending.",
+      "Catalog governance, mapping review, publishing, and CSV import now run in Experience through the canonical MSIKA governance workspace.",
   },
   {
     sidecarApp: "ui/mushex-finance-console",
@@ -75,11 +73,10 @@ export const SIDECAR_RETIREMENT_LEDGER: SidecarRetirementEntry[] = [
     sidecarApp: "ui/mushex-ops-console",
     capability: "Fraud, adapters, ops reviews, and claims operations",
     oldUiPath: "ui/mushex-ops-console:/adapters,/fraud,/reviews,/claims",
-    newExperiencePath: "/finance/payer-ops, /finance/payer-claims/[claimId]",
-    status: "partially absorbed into Experience",
-    notes: "Adapters, fraud, ops reviews, and claim detail actions are real in Experience.",
-    blockerContract:
-      "A canonical Experience claim-list or queue route is still missing even though payer claim detail endpoints now exist.",
+    newExperiencePath: "/finance/payer-ops, /finance/payer-claims, /finance/payer-claims/[claimId]",
+    status: "absorbed into Experience",
+    notes:
+      "Adapters, fraud, ops reviews, payer-claim queue, and payer-claim detail actions now run in Experience through typed finance routes.",
   },
   {
     sidecarApp: "ui/mushex-payer-portal",
@@ -128,11 +125,9 @@ export const SIDECAR_RETIREMENT_LEDGER: SidecarRetirementEntry[] = [
     capability: "Credential verification, shared-document claim, personal documents, and personal credentials",
     oldUiPath: "ui/self-service:/verify,/claim,/my-documents,/my-credentials",
     newExperiencePath: "/verify/credential, /share/claim, /home/documents, /home/credentials",
-    status: "partially absorbed into Experience",
+    status: "absorbed into Experience",
     notes:
-      "Verify and share-claim now run in Experience. The home documents and credentials pages do not yet replace citizen self-service parity.",
-    blockerContract:
-      "My-documents and my-credentials still need real Experience contracts and runtime semantics before the sidecar is fully retired.",
+      "Verify, share-claim, personal documents, and the personal credential vault now run in Experience through the public verifier, share-slip, clinical-tools, and credential-vault bridges.",
   },
   {
     sidecarApp: "ui/ops-docs",

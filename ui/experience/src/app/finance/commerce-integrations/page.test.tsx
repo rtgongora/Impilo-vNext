@@ -43,6 +43,13 @@ describe("CommerceIntegrationsPage", () => {
       "href",
       "/finance/payer-ops",
     );
+    expect(screen.getAllByRole("link", { name: /^\/finance\/payer-claims$/i })[0]).toHaveAttribute(
+      "href",
+      "/finance/payer-claims",
+    );
+    const governanceLinks = screen.getAllByRole("link", { name: /^\/finance\/msika-governance$/i });
+    expect(governanceLinks.length).toBeGreaterThanOrEqual(1);
+    expect(governanceLinks[0]).toHaveAttribute("href", "/finance/msika-governance");
     expect(screen.getByRole("link", { name: /^\/marketplace\/vendor$/i })).toHaveAttribute("href", "/marketplace/vendor");
     expect(screen.getByText(/ui\/msika-web/i)).toBeInTheDocument();
     expect(screen.getByText(/ui\/mushex-finance-console/i)).toBeInTheDocument();

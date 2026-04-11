@@ -18,14 +18,20 @@ import zw.gov.mohcc.impilo.mushex.domain.repository.ClaimAttachmentRepository;
 import zw.gov.mohcc.impilo.mushex.domain.repository.ClaimEventRepository;
 import zw.gov.mohcc.impilo.mushex.domain.repository.ClaimRepository;
 import zw.gov.mohcc.impilo.mushex.domain.repository.EventOutboxRepository;
+import zw.gov.mohcc.impilo.mushex.domain.repository.PaymentIntentRepository;
+import zw.gov.mohcc.impilo.mushex.domain.repository.ReceiptRepository;
 import zw.gov.mohcc.impilo.mushex.service.ClaimService;
 import zw.gov.mohcc.impilo.mushex.service.PaymentIntentService;
+import zw.gov.mohcc.impilo.mushex.service.ReceiptService;
 import zw.gov.mohcc.impilo.shared.auth.AccessMode;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
 import java.math.BigDecimal;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import java.util.Optional;
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -47,17 +53,21 @@ class ClaimServiceTest {
     @Mock private ClaimEventRepository claimEventRepository;
     @Mock private ClaimAttachmentRepository attachmentRepository;
     @Mock private AdjudicationRepository adjudicationRepository;
-    @Mock private PaymentIntentService intentService;
     @Mock private EventOutboxRepository outboxRepository;
-    @Mock private ObjectMapper objectMapper;
+    @Mock private PaymentIntentRepository paymentIntentRepository;
+    @Mock private ReceiptRepository receiptRepository;
 
     private ClaimService service;
+    private RecordingPaymentIntentService intentService;
+    private ObjectMapper objectMapper;
 
     private final UUID tenantId = UUID.randomUUID();
     private final UUID facilityId = UUID.randomUUID();
 
     @BeforeEach
     void setUp() {
+        objectMapper = new ObjectMapper();
+        intentService = new RecordingPaymentIntentService(paymentIntentRepository, outboxRepository, receiptRepository, objectMapper);
         service = new ClaimService(
             claimRepository, claimEventRepository, attachmentRepository,
             adjudicationRepository, intentService, outboxRepository, objectMapper
@@ -118,7 +128,6 @@ class ClaimServiceTest {
         when(claimRepository.findById("CLM-100")).thenReturn(Optional.of(claim));
         when(claimRepository.save(any(ClaimEntity.class))).thenAnswer(inv -> inv.getArgument(0));
         when(claimEventRepository.save(any(ClaimEventEntity.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(objectMapper.writeValueAsString(any())).thenReturn("{}");
 
         ClaimEntity result = service.submitClaim("CLM-100");
 
@@ -134,7 +143,6 @@ class ClaimServiceTest {
         when(claimRepository.findById("CLM-101")).thenReturn(Optional.of(claim));
         when(claimRepository.save(any(ClaimEntity.class))).thenAnswer(inv -> inv.getArgument(0));
         when(claimEventRepository.save(any(ClaimEventEntity.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(objectMapper.writeValueAsString(any())).thenReturn("{}");
 
         service.submitClaim("CLM-101");
 
@@ -161,7 +169,6 @@ class ClaimServiceTest {
         when(claimRepository.findById("CLM-103")).thenReturn(Optional.of(claim));
         when(claimRepository.save(any(ClaimEntity.class))).thenAnswer(inv -> inv.getArgument(0));
         when(claimEventRepository.save(any(ClaimEventEntity.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(objectMapper.writeValueAsString(any())).thenReturn("{}");
 
         ClaimEntity result = service.submitClaim("CLM-103");
 
@@ -174,7 +181,6 @@ class ClaimServiceTest {
         when(claimRepository.findById("CLM-104")).thenReturn(Optional.of(claim));
         when(claimRepository.save(any(ClaimEntity.class))).thenAnswer(inv -> inv.getArgument(0));
         when(claimEventRepository.save(any(ClaimEventEntity.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(objectMapper.writeValueAsString(any())).thenReturn("{}");
 
         service.submitClaim("CLM-104");
 
@@ -195,7 +201,6 @@ class ClaimServiceTest {
         when(claimRepository.save(any(ClaimEntity.class))).thenAnswer(inv -> inv.getArgument(0));
         when(adjudicationRepository.save(any(AdjudicationEntity.class))).thenAnswer(inv -> inv.getArgument(0));
         when(claimEventRepository.save(any(ClaimEventEntity.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(objectMapper.writeValueAsString(any())).thenReturn("{}");
 
         service.recordAdjudication("CLM-200", "{\"approved\":true}",
             new BigDecimal("50.00"), new BigDecimal("450.00"));
@@ -216,7 +221,6 @@ class ClaimServiceTest {
         when(claimRepository.save(any(ClaimEntity.class))).thenAnswer(inv -> inv.getArgument(0));
         when(adjudicationRepository.save(any(AdjudicationEntity.class))).thenAnswer(inv -> inv.getArgument(0));
         when(claimEventRepository.save(any(ClaimEventEntity.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(objectMapper.writeValueAsString(any())).thenReturn("{}");
 
         ClaimEntity result = service.recordAdjudication("CLM-201", null,
             new BigDecimal("100.00"), new BigDecimal("400.00"));
@@ -232,14 +236,17 @@ class ClaimServiceTest {
         when(claimRepository.save(any(ClaimEntity.class))).thenAnswer(inv -> inv.getArgument(0));
         when(adjudicationRepository.save(any(AdjudicationEntity.class))).thenAnswer(inv -> inv.getArgument(0));
         when(claimEventRepository.save(any(ClaimEventEntity.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(objectMapper.writeValueAsString(any())).thenReturn("{}");
 
         service.recordAdjudication("CLM-202", null,
             new BigDecimal("150.00"), new BigDecimal("350.00"));
 
         // Patient residual > 0 should trigger intent creation
-        verify(intentService).createIntent(any(), eq("BILL-CLM-202"), eq(new BigDecimal("150.00")),
-            eq("USD"), eq(facilityId), eq("CLAIM_RESIDUAL_CLM-202"), any());
+        assertEquals(1, intentService.createIntentCalls);
+        assertEquals("BILL-CLM-202", intentService.lastSourceId);
+        assertEquals(new BigDecimal("150.00"), intentService.lastAmount);
+        assertEquals("USD", intentService.lastCurrency);
+        assertEquals(facilityId, intentService.lastFacilityId);
+        assertEquals("CLAIM_RESIDUAL_CLM-202", intentService.lastIdempotencyKey);
     }
 
     @Test
@@ -249,12 +256,11 @@ class ClaimServiceTest {
         when(claimRepository.save(any(ClaimEntity.class))).thenAnswer(inv -> inv.getArgument(0));
         when(adjudicationRepository.save(any(AdjudicationEntity.class))).thenAnswer(inv -> inv.getArgument(0));
         when(claimEventRepository.save(any(ClaimEventEntity.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(objectMapper.writeValueAsString(any())).thenReturn("{}");
 
         service.recordAdjudication("CLM-203", null,
             BigDecimal.ZERO, new BigDecimal("500.00"));
 
-        verify(intentService, never()).createIntent(any(), any(), any(), any(), any(), any(), any());
+        assertEquals(0, intentService.createIntentCalls);
     }
 
     @Test
@@ -287,7 +293,6 @@ class ClaimServiceTest {
         when(claimRepository.findById("CLM-300")).thenReturn(Optional.of(claim));
         when(claimRepository.save(any(ClaimEntity.class))).thenAnswer(inv -> inv.getArgument(0));
         when(claimEventRepository.save(any(ClaimEventEntity.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(objectMapper.writeValueAsString(any())).thenReturn("{}");
 
         ClaimEntity result = service.disputeClaim("CLM-300", "Incorrect adjudication amount", "actor-2");
 
@@ -300,7 +305,6 @@ class ClaimServiceTest {
         when(claimRepository.findById("CLM-301")).thenReturn(Optional.of(claim));
         when(claimRepository.save(any(ClaimEntity.class))).thenAnswer(inv -> inv.getArgument(0));
         when(claimEventRepository.save(any(ClaimEventEntity.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(objectMapper.writeValueAsString(any())).thenReturn("{}");
 
         service.disputeClaim("CLM-301", "Missing line items", "actor-2");
 
@@ -319,7 +323,6 @@ class ClaimServiceTest {
         when(claimRepository.findById("CLM-302")).thenReturn(Optional.of(claim));
         when(claimRepository.save(any(ClaimEntity.class))).thenAnswer(inv -> inv.getArgument(0));
         when(claimEventRepository.save(any(ClaimEventEntity.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(objectMapper.writeValueAsString(any())).thenReturn("{}");
 
         ClaimEntity result = service.disputeClaim("CLM-302", "Rejection was in error", null);
 
@@ -372,6 +375,20 @@ class ClaimServiceTest {
         assertThrows(IllegalArgumentException.class, () -> service.submitClaim("CLM-MISSING"));
     }
 
+    @Test
+    void listClaims_withStatusAndInsurer_usesCombinedRepositoryFilter() {
+        var pageable = PageRequest.of(0, 20);
+        ClaimEntity claim = buildClaim("CLM-500", ClaimStatus.SUBMITTED);
+        when(claimRepository.findByTenantIdAndInsurerIdAndStatus(tenantId, "INS-001", ClaimStatus.SUBMITTED, pageable))
+                .thenReturn(new PageImpl<>(List.of(claim), pageable, 1));
+
+        var result = service.listClaims(tenantId, ClaimStatus.SUBMITTED, "INS-001", pageable);
+
+        assertEquals(1, result.getTotalElements());
+        assertEquals("CLM-500", result.getContent().get(0).getClaimId());
+        verify(claimRepository).findByTenantIdAndInsurerIdAndStatus(tenantId, "INS-001", ClaimStatus.SUBMITTED, pageable);
+    }
+
     // ---------------------------------------------------------------
     // Helpers
     // ---------------------------------------------------------------
@@ -386,5 +403,42 @@ class ClaimServiceTest {
         claim.setStatus(status);
         claim.setTotals("{\"total\":\"500.00\"}");
         return claim;
+    }
+
+    private static final class RecordingPaymentIntentService extends PaymentIntentService {
+        private int createIntentCalls;
+        private String lastSourceId;
+        private BigDecimal lastAmount;
+        private String lastCurrency;
+        private UUID lastFacilityId;
+        private String lastIdempotencyKey;
+
+        private RecordingPaymentIntentService(
+                PaymentIntentRepository paymentIntentRepository,
+                EventOutboxRepository outboxRepository,
+                ReceiptRepository receiptRepository,
+                ObjectMapper objectMapper
+        ) {
+            super(paymentIntentRepository, outboxRepository, new ReceiptService(receiptRepository, paymentIntentRepository, objectMapper), objectMapper);
+        }
+
+        @Override
+        public zw.gov.mohcc.impilo.mushex.domain.entity.PaymentIntentEntity createIntent(
+                zw.gov.mohcc.impilo.mushex.domain.enums.SourceType sourceType,
+                String sourceId,
+                BigDecimal amount,
+                String currency,
+                UUID facilityId,
+                String idempotencyKey,
+                String metadata
+        ) {
+            createIntentCalls++;
+            lastSourceId = sourceId;
+            lastAmount = amount;
+            lastCurrency = currency;
+            lastFacilityId = facilityId;
+            lastIdempotencyKey = idempotencyKey;
+            return new zw.gov.mohcc.impilo.mushex.domain.entity.PaymentIntentEntity();
+        }
     }
 }

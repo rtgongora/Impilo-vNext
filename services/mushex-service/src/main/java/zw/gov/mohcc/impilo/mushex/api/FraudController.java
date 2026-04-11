@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import zw.gov.mohcc.impilo.mushex.domain.entity.FraudFlagEntity;
 import zw.gov.mohcc.impilo.mushex.service.FraudDetectionService;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import zw.gov.mohcc.impilo.shared.response.ApiResponse;
@@ -24,16 +25,16 @@ public class FraudController {
     }
 
     @GetMapping("/flags")
-    public ResponseEntity<ApiResponse<PagedResponse<Object>>> getFlags(
+    public ResponseEntity<ApiResponse<PagedResponse<FraudFlagEntity>>> getFlags(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         var ctx = TrustContextHolder.require();
         String correlationId = ctx.correlationId().toString();
 
         Pageable pageable = PageRequest.of(page, size);
-        Page<Object> result = fraudDetectionService.getFlags(ctx.tenantId(), pageable);
+        Page<FraudFlagEntity> result = fraudDetectionService.getFlags(ctx.tenantId(), pageable);
 
-        PagedResponse<Object> paged = PagedResponse.of(
+        PagedResponse<FraudFlagEntity> paged = PagedResponse.of(
                 result.getContent(), page, size, result.getTotalElements());
 
         return ResponseEntity.ok(ApiResponse.ok(paged, correlationId));

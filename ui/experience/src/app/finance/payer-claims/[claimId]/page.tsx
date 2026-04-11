@@ -28,8 +28,8 @@ export default function FinancePayerClaimDetailPage() {
         icon={<FileText className="h-6 w-6" />}
       >
         <div className="mb-4">
-          <Link href="/finance/payer-ops" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700">
-            <ArrowLeft className="h-4 w-4" /> Back to payer ops
+          <Link href="/finance/payer-claims" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700">
+            <ArrowLeft className="h-4 w-4" /> Back to payer claims
           </Link>
         </div>
 

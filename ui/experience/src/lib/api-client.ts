@@ -360,6 +360,67 @@ async function request<T>(
   return response.json();
 }
 
+async function requestForm<T>(
+  method: string,
+  path: string,
+  body: FormData,
+  opts?: ApiRequestOptions,
+): Promise<T> {
+  const headers = { ...getV11Headers(), ...opts?.extraHeaders };
+  delete headers["Content-Type"];
+
+  if (["POST", "PUT", "PATCH"].includes(method)) {
+    headers["Idempotency-Key"] = crypto.randomUUID();
+  }
+
+  const response = await fetch(`${BFF_BASE_URL}${path}`, {
+    method,
+    headers,
+    body,
+  });
+
+  if (response.status === 401 && !path.includes("/auth/")) {
+    const refreshed = await attemptRefresh();
+    if (refreshed) {
+      const retryHeaders = { ...getV11Headers(), ...opts?.extraHeaders };
+      delete retryHeaders["Content-Type"];
+      if (["POST", "PUT", "PATCH"].includes(method)) {
+        retryHeaders["Idempotency-Key"] = crypto.randomUUID();
+      }
+
+      const retryResponse = await fetch(`${BFF_BASE_URL}${path}`, {
+        method,
+        headers: retryHeaders,
+        body,
+      });
+
+      if (retryResponse.ok) {
+        return retryResponse.json();
+      }
+
+      if (retryResponse.status === 401) {
+        handleAuthFailure();
+      }
+
+      const errorBody = await retryResponse.json().catch(() => null);
+      throw { status: retryResponse.status, ...(errorBody || {}) };
+    }
+
+    handleAuthFailure();
+    throw { status: 401, error: { code: "SESSION_EXPIRED", message: "Session expired" } };
+  }
+
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => null);
+    throw {
+      status: response.status,
+      ...(errorBody || {}),
+    };
+  }
+
+  return response.json();
+}
+
 export const apiClient = {
   get: <T>(path: string) => request<T>("GET", path),
   getText: (path: string) => request<string>("GET", path, undefined, "text"),
@@ -367,4 +428,5 @@ export const apiClient = {
   put: <T>(path: string, body?: unknown) => request<T>("PUT", path, body),
   patch: <T>(path: string, body?: unknown) => request<T>("PATCH", path, body),
   delete: <T>(path: string) => request<T>("DELETE", path),
+  postForm: <T>(path: string, body: FormData, opts?: ApiRequestOptions) => requestForm<T>("POST", path, body, opts),
 };

@@ -61,6 +61,11 @@ describe("FinancePayerClaimDetailPage", () => {
     const user = userEvent.setup();
     renderPage();
 
+    expect(screen.getByRole("link", { name: /Back to payer claims/i })).toHaveAttribute(
+      "href",
+      "/finance/payer-claims",
+    );
+
     await waitFor(() => {
       expect(get).toHaveBeenCalledWith("/internal/v1/finance/payer-claims/CLM-1");
     });

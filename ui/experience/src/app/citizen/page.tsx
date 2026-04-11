@@ -41,13 +41,14 @@ export default function CitizenHubPage() {
       </ul>
 
       <div className="rounded-lg border border-dashed border-gray-300 p-4 text-xs text-gray-600">
-        <p className="font-medium text-gray-800 mb-1">Still sidecar-only (backlog)</p>
-        <ul className="list-disc pl-4 space-y-1">
-          <li>
-            <code className="text-[10px]">ui/self-service</code> my-documents / my-credentials — still blocked (no Experience
-            contract in this lane).
-          </li>
-        </ul>
+        <p className="font-medium text-gray-800 mb-1">Experience self-service parity</p>
+        <p>
+          The former self-service flows now live in the Experience shell: verification at{" "}
+          <code className="text-[10px]">/verify/credential</code>, claim at{" "}
+          <code className="text-[10px]">/share/claim</code>, documents at{" "}
+          <code className="text-[10px]">/home/documents</code>, and credentials at{" "}
+          <code className="text-[10px]">/home/credentials</code>.
+        </p>
       </div>
     </div>
   );

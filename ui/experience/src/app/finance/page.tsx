@@ -7,7 +7,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Receipt, FileText, CreditCard, BookOpen, ClipboardList, User, Layers } from "lucide-react";
+import { Receipt, FileText, CreditCard, BookOpen, ClipboardList, User, Layers, DatabaseZap } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { OrganizationPlaneContextBar } from "@/components/experience/OrganizationPlaneContextBar";
 import { PageShell } from "@/components/PageShell";
@@ -42,6 +42,13 @@ const FINANCE_SECTIONS = [
     href: "/finance/tariffs",
     icon: BookOpen,
     color: "bg-amber-100 text-amber-600",
+  },
+  {
+    title: "MSIKA Governance",
+    description: "Govern catalogs, imports, mappings, and publication from Experience",
+    href: "/finance/msika-governance",
+    icon: DatabaseZap,
+    color: "bg-indigo-100 text-indigo-700",
   },
 ] as const;
 

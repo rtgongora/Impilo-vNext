@@ -153,6 +153,14 @@ public class MushexServiceClient {
         return restTemplate.getForEntity(baseUrl + "/mushex/v1/claims/" + claimId, String.class);
     }
 
+    public ResponseEntity<String> listClaims(MultiValueMap<String, String> queryParams) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/mushex/v1/claims")
+                .queryParams(copy(queryParams))
+                .toUriString();
+        log.info("MusheX: Listing claims");
+        return restTemplate.getForEntity(url, String.class);
+    }
+
     public ResponseEntity<String> submitClaim(String claimId) {
         log.info("MusheX: Submitting claim={}", claimId);
         return restTemplate.exchange(

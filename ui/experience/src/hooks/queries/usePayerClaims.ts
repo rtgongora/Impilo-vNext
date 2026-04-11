@@ -11,6 +11,24 @@ import { apiClient } from "@/lib/api-client";
 
 export type PayerClaimJson = unknown;
 
+function buildQuery(params: Record<string, string | number | undefined>) {
+  const query = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value != null && value !== "") query.set(key, String(value));
+  }
+  const suffix = query.toString();
+  return suffix ? `?${suffix}` : "";
+}
+
+export function usePayerClaims(params: { status?: string; insurerId?: string; page?: number; size?: number }, enabled = true) {
+  return useQuery<PayerClaimJson>({
+    queryKey: ["finance", "payer-claims", "list", params.status ?? "", params.insurerId ?? "", params.page ?? "", params.size ?? ""],
+    queryFn: () =>
+      apiClient.get<PayerClaimJson>(`/internal/v1/finance/payer-claims${buildQuery(params)}`),
+    enabled,
+  });
+}
+
 export function usePayerClaim(claimId: string | undefined) {
   return useQuery<PayerClaimJson>({
     queryKey: ["finance", "payer-claims", claimId],
@@ -24,6 +42,7 @@ export function usePayerClaim(claimId: string | undefined) {
 
 function invalidateClaim(qc: ReturnType<typeof useQueryClient>, claimId: string) {
   void qc.invalidateQueries({ queryKey: ["finance", "payer-claims", claimId] });
+  void qc.invalidateQueries({ queryKey: ["finance", "payer-claims", "list"] });
 }
 
 export function useSubmitPayerClaim() {

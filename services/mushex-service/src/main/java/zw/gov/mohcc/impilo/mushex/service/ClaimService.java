@@ -23,9 +23,12 @@ import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 /**
  * Claims switching state machine.
@@ -308,6 +311,33 @@ public class ClaimService {
                 ctx.tenantId());
 
         return claim;
+    }
+
+    public Page<ClaimEntity> listClaims(UUID tenantId, ClaimStatus status, String insurerId, Pageable pageable) {
+        if (tenantId == null) {
+            throw new IllegalArgumentException("tenantId is required");
+        }
+
+        if (insurerId != null && !insurerId.isBlank() && status != null) {
+            return claimRepository.findByTenantIdAndInsurerIdAndStatus(tenantId, insurerId, status, pageable);
+        }
+        if (insurerId != null && !insurerId.isBlank()) {
+            return claimRepository.findByTenantIdAndInsurerId(tenantId, insurerId, pageable);
+        }
+        if (status != null) {
+            return claimRepository.findByTenantIdAndStatus(tenantId, status, pageable);
+        }
+        return claimRepository.findByTenantId(tenantId, pageable);
+    }
+
+    public List<ClaimEventEntity> getClaimEvents(String claimId) {
+        getClaim(claimId);
+        return claimEventRepository.findByClaimIdOrderByCreatedAtAsc(claimId);
+    }
+
+    public List<ClaimAttachmentEntity> getClaimAttachments(String claimId) {
+        getClaim(claimId);
+        return attachmentRepository.findByClaimId(claimId);
     }
 
     /**
