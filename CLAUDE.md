@@ -42,7 +42,13 @@
 
 ## Service Port Map (local dev)
 - TSHEPO: 8081, VITO: 8082, VARAPI: 8083, TUSO: 8084, ZIBO: 8085
-- PCT: 8088, OROS: 8089, HAPI FHIR: 8090
+- Msika: 8086, PCT: 8088, OROS: 8089, HAPI FHIR: 8090
+- Landela: 8092, Document Store: 8093, Pharmacy: 8096
+- Msika Flow: 8100, Costa: 8101, Mushex: 8102
+- Coverage: 8140, Indawo: 8150, Experience BFF: 8160
+- Surveillance: 8180, Campaigns: 8190, Notification: 8200
+- Data Governance: 8220
 - Envoy: 10000 (public), 9901 (admin)
 - Keycloak: 8080, MinIO: 9000/9001, Kafka: 9092
+- Orthanc PACS: 8042, Orthanc DICOM-Web: 8042/dicom-web
 - UI Shell: 3000, Ops Console: 3001, EHR: 3002, Portal: 3003
