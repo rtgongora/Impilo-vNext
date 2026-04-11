@@ -1,0 +1,12 @@
+{
+  "name": "@impilo/completeness",
+  "private": true,
+  "description": "Seven-dimension service completeness report (Phase A2)",
+  "type": "module",
+  "scripts": {
+    "report": "node generate-completeness-report.mjs"
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.0"
+  }
+}

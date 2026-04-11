@@ -71,6 +71,31 @@ jobs:
         working-directory: ui/experience
         run: npx tsc --noEmit --skipLibCheck 2>/dev/null || echo "Type check completed with warnings"
 
+  completeness-report:
+    name: Completeness report (informational)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Generate Phase A2 report
+        working-directory: scripts/completeness
+        run: |
+          npm ci
+          npm run report
+
+      - name: Upload report artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: completeness-report
+          path: |
+            docs/reports/completeness-report.json
+            docs/reports/completeness-report.md
+          retention-days: 14
+
   frontend-test:
     name: Frontend Unit Tests
     runs-on: ubuntu-latest

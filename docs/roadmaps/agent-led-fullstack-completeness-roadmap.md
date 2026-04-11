@@ -32,7 +32,7 @@ Phases are ordered by **dependency**. **Agent cycles** = bounded agent run + hum
 |-------|--------|------------|-------------------------------------|
 | **A0** | Port matrix doc + align defaults (or env-only ports) + fix worst collisions | **Serial first** (one authoritative file set), then parallel per-service YAML if split by service | **1–2** cycles if only top collisions; **2–4** if normalizing most services |
 | **A1** | Service registry (YAML) + small generator script for completeness report | After A0 schema frozen | **1** cycle |
-| **A2** | Completeness script (seven dimensions) + CI optional job | With A1 once paths known | **1–2** cycles |
+| **A2** | Completeness script (seven dimensions) + CI optional job | With A1 once paths known | **1** (completed 2026-04-11) |
 | **B** | Contracts: policy + backfill **per domain** (TSHEPO, registry, clinical, finance, data, knowledge) | **Yes — one agent per domain** once naming convention locked | **~1 cycle per domain** for first pass; **+1** per domain if Spectral + sample contract tests added |
 | **C** | BFF: route map doc + client normalization **per domain** | Parallel **per domain** after B contracts for that domain exist | **~1–2 cycles per domain** |
 | **D** | Experience: remove placeholders, wire search, public-health hardening | Parallel **per feature** (search vs public-health vs friction) | **1 cycle** per major feature slice |
@@ -142,7 +142,9 @@ flowchart LR
 
 **A1 (done):** service registry — [`docs/registry/services-registry.yaml`](../registry/services-registry.yaml); regenerate tables with `cd scripts/registry && npm install && npm run generate` (see [`docs/registry/README.md`](../registry/README.md)).
 
-**Next:** **A2** completeness script (seven dimensions) + optional CI job — parallelizable once registry paths are stable.
+**A2 (done):** seven-dimension completeness report — `scripts/completeness` (`npm run report`) → `docs/reports/completeness-report.{json,md}`; CI job **Completeness report (informational)** uploads artifacts (see `.github/workflows/ci.yml`).
+
+**Next:** **Phase B** — contracts backfill per domain (policy + OpenAPI / AsyncAPI / FHIR-only docs).
 
 ---
 
@@ -154,3 +156,4 @@ flowchart LR
 | 2026-04-11 | Phase A0 completed: linked `docs/runbooks/port-allocation.md`. |
 | 2026-04-11 | Operating rule 5: wave end = commit → pull --rebase → push (`CLAUDE.md`). |
 | 2026-04-11 | Phase A1: `docs/registry/services-registry.yaml` + Node generator (`scripts/registry`). |
+| 2026-04-11 | Phase A2: `scripts/completeness` + `docs/reports/` + informational CI artifact job. |
