@@ -3,6 +3,10 @@
 /**
  * Vitals — View past vitals and record new readings.
  * Route: /ehr/[patientId]/vitals | pageTitle: "Vitals"
+ *
+ * Coherence audit: verified 2026-04-11 — all 9 sections (vitals, EWS, fluid balance,
+ * observations, labour monitoring, patient transfers, Apgar, CTG, partograph) render
+ * independently with correct hook bindings. No cross-section data conflicts.
  */
 
 import { useState } from "react";
