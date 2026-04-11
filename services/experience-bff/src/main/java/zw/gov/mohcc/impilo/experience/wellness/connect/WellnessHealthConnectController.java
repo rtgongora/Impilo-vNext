@@ -42,10 +42,10 @@ public class WellnessHealthConnectController {
                 "read.heart_rate", "write.heart_rate"));
         body.put("dedupeKey", "records[].id scoped per patientId + tenant");
         body.put("aggregationModel", Map.of(
-                "steps", "sum per local calendar day (UTC boundary)",
-                "hydration", "sum ml per startTime local day",
-                "sleep", "last session wins per wake-day (endTime or startTime)",
-                "heartRate", "append samples to wellness_vitals_log"));
+                "steps", "sum per local calendar day (UTC boundary); JSON field count",
+                "hydration", "sum ml per startTime local day; JSON field volumeLiters (liters)",
+                "sleep", "last session wins per wake-day (endTime or startTime); hoursSlept optional if endTime set",
+                "heartRate", "append samples to wellness_vitals_log; beatsPerMinute or samples[{time,beatsPerMinute}]"));
         return ResponseEntity.ok(Map.of("data", body));
     }
 
