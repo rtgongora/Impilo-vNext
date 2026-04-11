@@ -18,6 +18,8 @@ import java.util.UUID;
 /**
  * Endpoint 3: Edge-function-like job trigger — POST /internal/v1/reports/generate
  * Enqueues a report generation job in DB and writes an outbox event.
+ *
+ * @see AdminReportJobController for paginated admin job listing (GET /admin/reports/jobs)
  */
 @RestController
 @RequestMapping("/internal/v1/reports")
