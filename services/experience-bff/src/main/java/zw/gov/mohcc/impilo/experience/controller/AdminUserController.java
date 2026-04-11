@@ -47,14 +47,16 @@ public class AdminUserController {
     private final AdminUserRepository adminUserRepository;
     private final JdbcTemplate jdbcTemplate;
     private final OutboxService outboxService;
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate;
 
     public AdminUserController(AdminUserRepository adminUserRepository,
                                JdbcTemplate jdbcTemplate,
-                               OutboxService outboxService) {
+                               OutboxService outboxService,
+                               RestTemplate serviceRestTemplate) {
         this.adminUserRepository = adminUserRepository;
         this.jdbcTemplate = jdbcTemplate;
         this.outboxService = outboxService;
+        this.restTemplate = serviceRestTemplate;
     }
 
     public record CreateUserRequest(

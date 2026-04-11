@@ -50,7 +50,11 @@ public class AuthSessionController {
     @Value("${impilo.auth.fallback-enabled:false}")
     private boolean fallbackEnabled;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate;
+
+    public AuthSessionController(RestTemplate serviceRestTemplate) {
+        this.restTemplate = serviceRestTemplate;
+    }
 
     /**
      * Login via email/password → Keycloak ROPC grant.

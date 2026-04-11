@@ -72,11 +72,9 @@ Some controllers use **BFF PostgreSQL** (`JdbcTemplate`, JPA repositories) only 
 
 ---
 
-## 4. Phase C gaps (track in follow-up PRs)
+## 4. Phase C follow-ups
 
-| Gap | Action |
-|-----|--------|
-| `new RestTemplate()` in `AuthSessionController`, `AdminUserController`, `PacsController` | **No trust-header forwarding** — prefer `serviceRestTemplate` or shared factory. |
+No open items from the original Phase C gap list; track new drift in PRs as needed.
 
 ---
 

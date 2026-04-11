@@ -35,9 +35,10 @@ public class FhirPublisher {
     private final String fhirBaseUrl;
 
     public FhirPublisher(
+            RestTemplate serviceRestTemplate,
             ObjectMapper objectMapper,
             @Value("${impilo.services.fhir-base-url:http://localhost:8090/fhir}") String fhirBaseUrl) {
-        this.restTemplate = new RestTemplate();
+        this.restTemplate = serviceRestTemplate;
         this.objectMapper = objectMapper;
         this.fhirBaseUrl = fhirBaseUrl;
     }

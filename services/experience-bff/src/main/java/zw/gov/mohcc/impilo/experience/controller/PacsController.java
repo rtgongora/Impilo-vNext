@@ -35,9 +35,10 @@ public class PacsController {
     private final String dicomWebUrl;
 
     public PacsController(
+            RestTemplate serviceRestTemplate,
             @Value("${impilo.services.orthanc-base-url:http://localhost:8042}") String orthancBaseUrl,
             @Value("${impilo.services.orthanc-dicomweb-url:http://localhost:8042/dicom-web}") String dicomWebUrl) {
-        this.restTemplate = new RestTemplate();
+        this.restTemplate = serviceRestTemplate;
         this.orthancBaseUrl = orthancBaseUrl;
         this.dicomWebUrl = dicomWebUrl;
     }
