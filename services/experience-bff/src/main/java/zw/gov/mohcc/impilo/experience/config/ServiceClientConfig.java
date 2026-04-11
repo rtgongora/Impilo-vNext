@@ -59,7 +59,9 @@ public class ServiceClientConfig {
             // Health OS §5: Workflow
             String workflowBaseUrl,
             // Health OS §13: Conversational & Guidance
-            String guidanceBaseUrl
+            String guidanceBaseUrl,
+            // Integration / cross-tenant routing (integration-hub-service)
+            String integrationHubBaseUrl
     ) {
         public ServiceEndpoints(
                 String pctBaseUrl,
@@ -109,6 +111,7 @@ public class ServiceClientConfig {
                     null,
                     null,
                     null,
+                    null,
                     null
             );
         }
@@ -141,6 +144,7 @@ public class ServiceClientConfig {
             if (rulesBaseUrl == null) rulesBaseUrl = "http://localhost:8241";
             if (workflowBaseUrl == null) workflowBaseUrl = "http://localhost:8250";
             if (guidanceBaseUrl == null) guidanceBaseUrl = "http://localhost:8260";
+            if (integrationHubBaseUrl == null) integrationHubBaseUrl = "http://localhost:8110";
         }
     }
 

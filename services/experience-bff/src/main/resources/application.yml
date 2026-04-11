@@ -70,7 +70,6 @@ impilo:
     surveillance-base-url: ${SURVEILLANCE_BASE_URL:http://localhost:8180}
     campaigns-base-url: ${CAMPAIGNS_BASE_URL:http://localhost:8190}
     indawo-base-url: ${INDAWO_BASE_URL:http://localhost:8150}
-    fhir-base-url: ${FHIR_BASE_URL:http://localhost:8090/fhir}
     orthanc-base-url: ${ORTHANC_BASE_URL:http://localhost:8042}
     orthanc-dicomweb-url: ${ORTHANC_DICOMWEB_URL:http://localhost:8042/dicom-web}
     data-governance-base-url: ${DATA_GOVERNANCE_BASE_URL:http://localhost:8220}
@@ -85,6 +84,7 @@ impilo:
     workflow-base-url: ${WORKFLOW_BASE_URL:http://localhost:8250}
     # Health OS §13: Conversational & Guidance
     guidance-base-url: ${GUIDANCE_BASE_URL:http://localhost:8260}
+    integration-hub-base-url: ${INTEGRATION_HUB_BASE_URL:http://localhost:8110}
 
   clinical-platform:
     base-url: ${CLINICAL_KNOWLEDGE_PLATFORM_BASE_URL:http://localhost:8270}

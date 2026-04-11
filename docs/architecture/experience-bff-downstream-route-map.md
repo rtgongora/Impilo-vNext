@@ -39,6 +39,7 @@ Trust headers from inbound requests are copied onto outbound `RestTemplate` call
 | `rules-base-url` | `http://localhost:8241` | Rules |
 | `workflow-base-url` | `http://localhost:8250` | Workflow |
 | `guidance-base-url` | `http://localhost:8260` | Guidance |
+| `integration-hub-base-url` | `http://localhost:8110` | Integration Hub |
 
 Ports should match [`docs/runbooks/port-allocation.md`](../runbooks/port-allocation.md) and [`docs/registry/services-registry.yaml`](../registry/services-registry.yaml); if YAML and BFF defaults diverge, treat the port runbook + registry as the reconciliation target.
 
@@ -66,14 +67,11 @@ Ports should match [`docs/runbooks/port-allocation.md`](../runbooks/port-allocat
 | `VarapiServiceClient` | VARAPI |
 | `VitoServiceClient` | VITO |
 | `CredentialServiceClient` | Credential verification |
+| `IntegrationHubServiceClient` | Integration Hub (routes, dispatch, dead letters, mapping templates) |
 
 ## Deliberate proxies (no dedicated `*Client` bean)
 
 - **Public health:** `PublicHealthController` uses `RestTemplate` against `surveillance-base-url`, `campaigns-base-url`, and `indawo-base-url` (see controller and `application.yml`).
-
-## Not wired in BFF `application.yml` today
-
-- **Integration Hub** (`integration-hub`, default port **8110**) — no `*-base-url` under `impilo.services` yet; OpenAPI lives at [`integration-hub.openapi.yaml`](../../contracts/openapi/integration-hub.openapi.yaml) for platform consumers.
 
 ## Related
 

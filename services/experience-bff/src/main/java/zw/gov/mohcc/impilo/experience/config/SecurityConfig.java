@@ -136,6 +136,13 @@ public class SecurityConfig {
                     // ── Pharmacy: dispense requires dispenser role ────────
                     .requestMatchers(HttpMethod.POST, "/internal/v1/pharmacy/dispense")
                             .hasAnyRole(DISPENSER_ROLES)
+                    // ── Pharmacy: sovereign pharmacy-service proxies ───────
+                    .requestMatchers(HttpMethod.GET, "/internal/v1/pharmacy/upstream/dispense-orders/patient/**")
+                            .hasAnyRole(CLINICAL_ROLES)
+                    .requestMatchers(HttpMethod.GET, "/internal/v1/pharmacy/upstream/worklists")
+                            .hasAnyRole(DISPENSER_ROLES)
+                    .requestMatchers(HttpMethod.POST, "/internal/v1/pharmacy/upstream/dispense-orders/*/complete")
+                            .hasAnyRole(DISPENSER_ROLES)
 
                     // ── Mobile provider: prescriptions → prescriber ───────
                     .requestMatchers(HttpMethod.POST, "/internal/v1/mobile/provider/prescriptions")
@@ -201,6 +208,10 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.POST, "/internal/v1/mobile/provider/discharge")
                             .hasAnyRole(CLINICAL_ROLES)
 
+                    // ── Health Connect–style wellness ingest (typed changesets, deduped)
+                    .requestMatchers("/internal/v1/wellness/connect/**")
+                            .authenticated()
+
                     // ── Citizen wellness (web + mobile): any authenticated user may manage own rows;
                     //     patientId must match actor in a future ABAC pass. Placed before stricter citizen/**.
                     .requestMatchers("/internal/v1/mobile/citizen/wellness/**")
@@ -224,6 +235,9 @@ public class SecurityConfig {
 
                     // ── Guidance/knowledge endpoints (Health OS §2a) ──────
                     .requestMatchers("/internal/v1/guidance/**")
+                            .authenticated()
+                    // ── Integration hub (national routing / dispatch) ───────
+                    .requestMatchers("/internal/v1/integration-hub/**")
                             .authenticated()
                     // ── Clinical knowledge curation (admin-equivalent) ─────────
                     .requestMatchers("/internal/v1/clinical/curation/**")

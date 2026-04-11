@@ -29,6 +29,7 @@ Links **typed HTTP clients**, **`impilo.services` / other config**, **downstream
 | `FhirGatewayServiceClient` | `fhir-gateway-base-url` | 8091 | `fhir-gateway-service` | `fhir-gateway.openapi.yaml` |
 | `FhirPublisher` | `impilo.services.fhir-base-url` | 8090/fhir | BUTANO FHIR surface | `butano.custom.openapi.yaml` |
 | `SearchServiceClient` | `search-base-url` | 8230 | `search-service` | `search.openapi.yaml` |
+| `IntegrationHubServiceClient` | `integration-hub-base-url` | 8110 | `integration-hub` | `integration-hub.openapi.yaml` |
 | `GuidanceServiceClient` | `guidance-base-url` | 8260 | `guidance-service` | `guidance.openapi.yaml` |
 | `ClinicalKnowledgePlatformClient` | `impilo.clinical-platform.base-url` | 8270 | `clinical-knowledge-platform-service` | `clinical-knowledge-platform.openapi.yaml` |
 
@@ -59,12 +60,15 @@ These are **aggregates** (one prefix may fan out to several downstream calls). F
 | `/internal/v1/commerce/*`, marketplace | `MsikaFlowServiceClient` | Marketplace flow |
 | `/internal/v1/msika`, `/product-registry` | `MsikaServiceClient` | Product / catalogue |
 | `/internal/v1/credentials` | `CredentialServiceClient` | Credential verification |
+| `/internal/v1/search` | `SearchServiceClient` | Federated search-service proxy |
+| `/internal/v1/pharmacy/upstream/**` | `PharmacyServiceClient` | Sovereign dispense orders / worklists |
+| `/internal/v1/integration-hub/**` | `IntegrationHubServiceClient` | Routes, dispatch, dead letters, mapping templates |
 
 ---
 
 ## 3. BFF-local surfaces (no downstream typed client)
 
-Some controllers use **BFF PostgreSQL** (`JdbcTemplate`, JPA repositories) only — e.g. **`PatientController`**, **`PharmacyController`**, **`InventoryController`** under `/internal/v1/patients`, `/pharmacy`, `/inventory`. They do not map to a row in §1; document any cross-service calls inside the controller if added later.
+Some controllers use **BFF PostgreSQL** (`JdbcTemplate`, JPA repositories) only — e.g. **`PatientController`**, **`InventoryController`** under `/internal/v1/patients`, `/inventory`. **`PharmacyController`** is hybrid: prescriptions and local dispense stay on the BFF DB; **`/internal/v1/pharmacy/upstream/**`** delegates to `PharmacyServiceClient`.
 
 ---
 
@@ -72,9 +76,7 @@ Some controllers use **BFF PostgreSQL** (`JdbcTemplate`, JPA repositories) only 
 
 | Gap | Action |
 |-----|--------|
-| `SearchServiceClient`, `PharmacyServiceClient` | Beans exist; **no controller** injects them yet — wire search UI / pharmacy BFF routes or drop unused beans. |
 | `new RestTemplate()` in `AuthSessionController`, `AdminUserController`, `PacsController` | **No trust-header forwarding** — prefer `serviceRestTemplate` or shared factory. |
-| Integration Hub | Contract in repo; **no** `impilo.services` key yet — add when BFF calls hub. |
 
 ---
 

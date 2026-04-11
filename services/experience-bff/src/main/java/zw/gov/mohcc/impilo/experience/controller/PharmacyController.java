@@ -1,5 +1,6 @@
 package zw.gov.mohcc.impilo.experience.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.data.domain.Page;
@@ -9,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.PharmacyServiceClient;
 import zw.gov.mohcc.impilo.experience.domain.Prescription;
 import zw.gov.mohcc.impilo.experience.repository.PrescriptionRepository;
 import zw.gov.mohcc.impilo.experience.service.OutboxService;
@@ -29,13 +31,16 @@ public class PharmacyController {
     private final PrescriptionRepository prescriptionRepository;
     private final OutboxService outboxService;
     private final org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
+    private final PharmacyServiceClient pharmacyClient;
 
     public PharmacyController(PrescriptionRepository prescriptionRepository,
                               OutboxService outboxService,
-                              org.springframework.jdbc.core.JdbcTemplate jdbcTemplate) {
+                              org.springframework.jdbc.core.JdbcTemplate jdbcTemplate,
+                              PharmacyServiceClient pharmacyClient) {
         this.prescriptionRepository = prescriptionRepository;
         this.outboxService = outboxService;
         this.jdbcTemplate = jdbcTemplate;
+        this.pharmacyClient = pharmacyClient;
     }
 
     public record CreatePrescriptionRequest(
@@ -283,6 +288,63 @@ public class PharmacyController {
         response.put("data", toResource(prescription));
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return ResponseEntity.ok(response);
+    }
+
+    // ── Sovereign pharmacy-service (dispense orders / worklists) ─────────────
+
+    @GetMapping("/upstream/dispense-orders/patient/{cpid}")
+    public ResponseEntity<Map<String, Object>> listUpstreamDispenseOrdersForPatient(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @PathVariable String cpid) {
+        try {
+            JsonNode data = pharmacyClient.getPatientDispenseOrders(cpid);
+            return ResponseEntity.ok(Map.of(
+                    "data", data != null ? data : Map.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            return ResponseEntity.ok(Map.of(
+                    "data", Map.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
+    }
+
+    @GetMapping("/upstream/worklists")
+    public ResponseEntity<Map<String, Object>> listUpstreamWorklist(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestParam String facilityId,
+            @RequestParam(required = false) String status) {
+        try {
+            JsonNode data = pharmacyClient.getWorklist(facilityId, status);
+            return ResponseEntity.ok(Map.of(
+                    "data", data != null ? data : Map.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            return ResponseEntity.ok(Map.of(
+                    "data", Map.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
+    }
+
+    @PostMapping("/upstream/dispense-orders/{dispenseOrderId}/complete")
+    public ResponseEntity<Map<String, Object>> completeUpstreamDispense(
+            @PathVariable UUID dispenseOrderId,
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode data = pharmacyClient.completeDispense(dispenseOrderId);
+            return ResponseEntity.ok(Map.of(
+                    "data", data != null ? data : Map.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            return ResponseEntity.ok(Map.of(
+                    "data", Map.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
     }
 
     private Map<String, Object> toResource(Prescription p) {
