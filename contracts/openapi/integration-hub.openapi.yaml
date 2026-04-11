@@ -1,0 +1,98 @@
+# =============================================================================
+# Integration Hub — routes, dispatch, dead letters (OpenAPI 3.0)
+# Phase B baseline: national routing and message dispatch (`RouteController`, etc.).
+# =============================================================================
+openapi: "3.0.3"
+
+info:
+  title: Integration Hub API
+  version: "1.0.0"
+  description: |
+    Cross-tenant integration routing, dispatch, dead-letter replay, and mapping
+    templates. Route mutations require national federation authority where enforced.
+  contact:
+    name: Impilo Platform Team
+  license:
+    name: Proprietary
+
+servers:
+  - url: http://localhost:8110
+    description: Local development
+  - url: https://{tenant}.impilo.health/api
+    description: Production (per-tenant)
+    variables:
+      tenant:
+        default: demo
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Internal-Routes
+    description: Integration route registry
+  - name: Internal-Dispatch
+    description: Outbound dispatch
+
+paths:
+  /internal/v1/routes:
+    get:
+      operationId: integrationHubListRoutes
+      tags: [Internal-Routes]
+      summary: List routes for tenant
+      responses:
+        "200":
+          description: Route list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+    post:
+      operationId: integrationHubUpsertRoute
+      tags: [Internal-Routes]
+      summary: Create or update route (national)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "201":
+          description: Route saved
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/dispatch:
+    post:
+      operationId: integrationHubDispatch
+      tags: [Internal-Dispatch]
+      summary: Dispatch message to configured route
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "202":
+          description: Accepted for delivery
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

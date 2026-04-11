@@ -69,6 +69,10 @@ Ports should match [`docs/runbooks/port-allocation.md`](../runbooks/port-allocat
 
 - **Public health:** `PublicHealthController` uses `RestTemplate` against `surveillance-base-url`, `campaigns-base-url`, and `indawo-base-url` (see controller and `application.yml`).
 
+## Not wired in BFF `application.yml` today
+
+- **Integration Hub** (`integration-hub`, default port **8110**) — no `*-base-url` under `impilo.services` yet; OpenAPI lives at [`integration-hub.openapi.yaml`](../../contracts/openapi/integration-hub.openapi.yaml) for platform consumers.
+
 ## Related
 
 - OpenAPI inventory: [`contracts/openapi/`](../../contracts/openapi/)

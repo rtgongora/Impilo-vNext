@@ -144,7 +144,7 @@ flowchart LR
 
 **A2 (done):** seven-dimension completeness report — `scripts/completeness` (`npm run report`) → `docs/reports/completeness-report.{json,md}`; CI job **Completeness report (informational)** uploads artifacts (see `.github/workflows/ci.yml`).
 
-**Phase B (in progress):** OpenAPI baselines under [`contracts/openapi/`](../../contracts/openapi/) — registry slice (VARAPI, TUSO, UBOMI) landed; **+** INDAWO, Product Registry, Coverage, Guidance, Clinical Knowledge Platform; **+** Search, Forms, Notification, Rules; **+** registry mapping fixes (`costing-engine-service` → COSTA contract, `butano-fhir` module key). Remaining: trust/TSHEPO decomposition, more integration adapters, FHIR-only narrative for BUTANO stack.
+**Phase B (in progress):** OpenAPI baselines under [`contracts/openapi/`](../../contracts/openapi/) — registry slice (VARAPI, TUSO, UBOMI) landed; **+** INDAWO, Product Registry, Coverage, Guidance, Clinical Knowledge Platform; **+** Search, Forms, Notification, Rules; **+** registry mapping fixes (`costing-engine-service` → COSTA contract, `butano-fhir` module key); **+** workflow, integration-hub, FHIR gateway control plane, data governance, surveillance, campaigns. Remaining: trust/TSHEPO decomposition, more integration adapters, FHIR-only narrative for BUTANO stack.
 
 **Phase C (started):** downstream index — [`docs/architecture/experience-bff-downstream-route-map.md`](../architecture/experience-bff-downstream-route-map.md) (expand per-controller paths next).
 
@@ -165,3 +165,4 @@ flowchart LR
 | 2026-04-11 | Phase B (slice): INDAWO, Product Registry, Coverage, Guidance, Clinical Knowledge Platform OpenAPI baselines. |
 | 2026-04-11 | Phase B: Search, Forms, Notification, Rules OpenAPI; completeness mapper fixes (BUTANO/COSTA module keys, Extension client for forms/rules). |
 | 2026-04-11 | Phase C seed: `docs/architecture/experience-bff-downstream-route-map.md`. |
+| 2026-04-11 | Phase B: workflow, integration-hub, FHIR gateway, data governance, surveillance, campaigns OpenAPI baselines. |
