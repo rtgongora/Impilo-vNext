@@ -27,6 +27,15 @@ Full doctrine: [`docs/doctrine/health-os-doctrine.md`](docs/doctrine/health-os-d
   - `test:` adding or fixing tests
 - **Auto-Push**: Push every commit to remote immediately after creation.
 
+### Wave completion (roadmap / vertical slices)
+After completing **each wave** (e.g. Phase A0, A1, a B-domain contract pass, a D feature slice, or any bounded “done” milestone in [`docs/roadmaps/agent-led-fullstack-completeness-roadmap.md`](docs/roadmaps/agent-led-fullstack-completeness-roadmap.md)):
+
+1. **Commit** — Stage only that wave’s changes; use **Conventional Commits**; keep commits atomic (one logical change per commit when possible).
+2. **Pull** — `git pull --rebase` (or `git pull` if the branch policy forbids rebase) so local `HEAD` includes the latest remote work **before** push.
+3. **Push** — `git push` so the wave is on the remote. If the pull surfaced conflicts, resolve them, re-run tests if needed, then push.
+
+If there is **nothing to commit**, still run **pull** so the working copy matches remote before starting the next wave. Do not leave a finished wave uncommitted or unpushed unless the user explicitly asked to hold commits.
+
 ### Adaptive Thinking
 - Operate at **Effort: Max**.
 - Run a **Blocker Check** before writing code for complex tasks:

@@ -87,6 +87,7 @@ Cycle 5+ (parallel):  F: pick N services from report; N agents; strict file owne
 2. **Contract naming convention** locked in one short contributor note or registry README (one small PR).
 3. **Per-agent file ownership** in the task prompt (e.g. only `services/coverage-service/**` and `contracts/openapi/coverage.openapi.yaml`).
 4. **CI:** completeness job **informational** until baseline, then flip **required** service-by-service.
+5. **End of every wave:** **commit** (conventional, scoped) → **`git pull --rebase`** (or project-standard pull) → **`git push`**. Documented in [`CLAUDE.md`](../../CLAUDE.md) under **Wave completion**.
 
 ---
 
@@ -149,3 +150,4 @@ flowchart LR
 |------|--------|
 | 2026-04-11 | Initial agent-led roadmap (retimed phases, parallelization, operating rules). |
 | 2026-04-11 | Phase A0 completed: linked `docs/runbooks/port-allocation.md`. |
+| 2026-04-11 | Operating rule 5: wave end = commit → pull --rebase → push (`CLAUDE.md`). |
