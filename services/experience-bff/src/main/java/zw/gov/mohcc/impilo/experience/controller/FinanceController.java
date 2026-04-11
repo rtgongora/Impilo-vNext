@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.CostaServiceClient;
 
 import java.util.Map;
@@ -52,6 +53,9 @@ public class FinanceController {
      */
     @GetMapping("/billing")
     public ResponseEntity<Map<String, Object>> listBilling(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size,
             @RequestParam(required = false) String status) {
@@ -79,7 +83,11 @@ public class FinanceController {
      * Fetches a single bill with its lines and parties from COSTA.
      */
     @GetMapping("/billing/{id}")
-    public ResponseEntity<Map<String, Object>> getBillingDetail(@PathVariable String id) {
+    public ResponseEntity<Map<String, Object>> getBillingDetail(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @PathVariable String id) {
         try {
             JsonNode costaData = costaClient.getBill(id);
             JsonNode bill = costaData != null && costaData.has("bill") ? costaData.get("bill") : costaData;
@@ -109,7 +117,11 @@ public class FinanceController {
      * Submit a bill for approval (DRAFT/ACCUMULATING → APPROVAL_PENDING).
      */
     @PostMapping("/billing/{id}/submit")
-    public ResponseEntity<Map<String, Object>> submitBillForApproval(@PathVariable String id) {
+    public ResponseEntity<Map<String, Object>> submitBillForApproval(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @PathVariable String id) {
         try {
             JsonNode result = costaClient.submitForApproval(id);
             return ResponseEntity.ok(Map.of("data", toBillingResource(result)));
@@ -127,6 +139,9 @@ public class FinanceController {
      */
     @PostMapping("/billing/{id}/approve")
     public ResponseEntity<Map<String, Object>> approveBill(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @PathVariable String id,
             @RequestBody(required = false) Map<String, String> body) {
         try {
@@ -146,7 +161,11 @@ public class FinanceController {
      * Finalize an approved bill (APPROVED → FINAL).
      */
     @PostMapping("/billing/{id}/finalize")
-    public ResponseEntity<Map<String, Object>> finalizeBill(@PathVariable String id) {
+    public ResponseEntity<Map<String, Object>> finalizeBill(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @PathVariable String id) {
         try {
             JsonNode result = costaClient.finalizeBill(id);
             return ResponseEntity.ok(Map.of("data", toBillingResource(result)));
@@ -163,7 +182,11 @@ public class FinanceController {
      * Issue an invoice for a finalized bill.
      */
     @PostMapping("/billing/{id}/invoice")
-    public ResponseEntity<Map<String, Object>> issueInvoice(@PathVariable String id) {
+    public ResponseEntity<Map<String, Object>> issueInvoice(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @PathVariable String id) {
         try {
             JsonNode result = costaClient.issueInvoice(id);
             ObjectNode resource = objectMapper.createObjectNode();
@@ -190,6 +213,9 @@ public class FinanceController {
      */
     @PostMapping("/billing/{id}/payment")
     public ResponseEntity<Map<String, Object>> createPaymentIntent(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @PathVariable String id,
             @RequestBody Map<String, String> body) {
         try {
@@ -215,7 +241,11 @@ public class FinanceController {
      * List payments for a specific bill from COSTA.
      */
     @GetMapping("/billing/{id}/payments")
-    public ResponseEntity<Map<String, Object>> getBillPayments(@PathVariable String id) {
+    public ResponseEntity<Map<String, Object>> getBillPayments(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @PathVariable String id) {
         try {
             JsonNode costaData = costaClient.getBillPayments(id);
             ArrayNode resources = objectMapper.createArrayNode();
@@ -238,6 +268,9 @@ public class FinanceController {
      */
     @PostMapping("/billing/{id}/payments/{paymentId}/cancel")
     public ResponseEntity<Map<String, Object>> cancelPayment(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @PathVariable String id, @PathVariable String paymentId) {
         try {
             JsonNode result = costaClient.cancelPayment(id, paymentId);
@@ -256,6 +289,9 @@ public class FinanceController {
      */
     @PostMapping("/billing/{id}/refund")
     public ResponseEntity<Map<String, Object>> createRefund(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @PathVariable String id,
             @RequestBody Map<String, String> body) {
         try {
@@ -286,7 +322,11 @@ public class FinanceController {
      * List refunds for a specific bill.
      */
     @GetMapping("/billing/{id}/refunds")
-    public ResponseEntity<Map<String, Object>> getBillRefunds(@PathVariable String id) {
+    public ResponseEntity<Map<String, Object>> getBillRefunds(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @PathVariable String id) {
         try {
             JsonNode costaData = costaClient.getBillRefunds(id);
             ArrayNode resources = objectMapper.createArrayNode();
@@ -311,6 +351,9 @@ public class FinanceController {
      */
     @GetMapping("/tariffs")
     public ResponseEntity<Map<String, Object>> listTariffs(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
         try {
@@ -338,6 +381,9 @@ public class FinanceController {
      */
     @GetMapping("/payments")
     public ResponseEntity<Map<String, Object>> listPayments(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
         try {
@@ -365,6 +411,9 @@ public class FinanceController {
      */
     @GetMapping("/claims")
     public ResponseEntity<Map<String, Object>> listClaims(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
         try {
@@ -391,7 +440,11 @@ public class FinanceController {
      * Fetches a single claim pack from COSTA with bill context.
      */
     @GetMapping("/claims/{id}")
-    public ResponseEntity<Map<String, Object>> getClaimDetail(@PathVariable String id) {
+    public ResponseEntity<Map<String, Object>> getClaimDetail(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @PathVariable String id) {
         try {
             JsonNode costaData = costaClient.getClaim(id);
             ObjectNode resource = toClaimResource(costaData);
