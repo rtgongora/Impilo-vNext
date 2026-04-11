@@ -1,0 +1,173 @@
+# =============================================================================
+# INDAWO — Site & Address Registry API (OpenAPI 3.0)
+# Phase B baseline: internal addresses and site snapshots.
+# =============================================================================
+openapi: "3.0.3"
+
+info:
+  title: INDAWO — Site & Address Registry API
+  version: "1.0.0"
+  description: |
+    INDAWO holds canonical addresses and site snapshot feeds for facility context
+    and public-health surfaces. Internal routes are consumed via BFF or batch jobs.
+  contact:
+    name: Impilo Platform Team
+  license:
+    name: Proprietary
+
+servers:
+  - url: http://localhost:8150
+    description: Local development
+  - url: https://{tenant}.impilo.health/api
+    description: Production (per-tenant)
+    variables:
+      tenant:
+        default: demo
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Internal-Address
+    description: Tenant-scoped address register
+  - name: Internal-Snapshot
+    description: Site snapshot pagination for sync
+
+paths:
+  /internal/v1/addresses:
+    get:
+      operationId: indawoListAddresses
+      tags: [Internal-Address]
+      summary: List addresses for tenant
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: Address list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+    post:
+      operationId: indawoCreateAddress
+      tags: [Internal-Address]
+      summary: Create address
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/addresses/{id}:
+    get:
+      operationId: indawoGetAddress
+      tags: [Internal-Address]
+      summary: Get address by id
+      parameters:
+        - $ref: "#/components/parameters/AddressId"
+      responses:
+        "200":
+          description: Address
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        "404":
+          description: Not found
+
+  /internal/v1/snapshots/sites:
+    get:
+      operationId: indawoSnapshotSites
+      tags: [Internal-Snapshot]
+      summary: Paginated site snapshot
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: cursor
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 500
+            default: 100
+        - name: as_of
+          in: query
+          schema:
+            type: string
+            format: date-time
+      responses:
+        "200":
+          description: Site snapshot page
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    TenantId:
+      name: X-Tenant-ID
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+    PodId:
+      name: X-Pod-ID
+      in: header
+      required: true
+      schema:
+        type: string
+    RequestId:
+      name: X-Request-ID
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+    CorrelationId:
+      name: X-Correlation-ID
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+    AddressId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid

@@ -1,6 +1,6 @@
 # Service completeness report (Phase A2)
 
-Generated: 2026-04-11T20:01:25.853Z
+Generated: 2026-04-11T20:15:12.874Z
 
 | Module | Composite | backend | bff | contract | api_docs | kafka | ui_hooks | ui_pages |
 |--------|-----------|---------|-----|----------|----------|-------|----------|----------|
@@ -14,7 +14,6 @@ Generated: 2026-04-11T20:01:25.853Z
 | observability-service | 0.429 | substantial | none | none | partial | none | partial | partial |
 | tshepo-authz-service | 0.476 | substantial | none | none | partial | none | partial | substantial |
 | tshepo-offline-service | 0.476 | substantial | none | none | partial | none | partial | substantial |
-| indawo-service | 0.476 | substantial | stub | none | stub | none | partial | substantial |
 | butano-service | 0.476 | substantial | none | none | partial | none | partial | substantial |
 | inventory-elmis-adapter | 0.476 | substantial | none | none | partial | none | partial | substantial |
 | pacs-adapter-service | 0.476 | substantial | none | none | partial | none | partial | substantial |
@@ -36,7 +35,6 @@ Generated: 2026-04-11T20:01:25.853Z
 | tshepo-identity-service | 0.524 | substantial | none | none | partial | none | substantial | substantial |
 | tshepo-consent-service | 0.524 | substantial | none | none | partial | none | substantial | substantial |
 | tshepo-keys-service | 0.524 | substantial | none | none | partial | none | substantial | substantial |
-| product-registry-service | 0.524 | substantial | none | none | partial | none | substantial | substantial |
 | butano-fhir | 0.524 | substantial | none | none | partial | none | substantial | substantial |
 | pharmacy-elmis-adapter | 0.524 | substantial | none | none | partial | none | substantial | substantial |
 | inpatient-service | 0.524 | substantial | none | none | partial | none | substantial | substantial |
@@ -46,7 +44,6 @@ Generated: 2026-04-11T20:01:25.853Z
 | campaigns-service | 0.524 | substantial | stub | none | partial | none | partial | substantial |
 | identity-assurance-service | 0.524 | substantial | none | none | partial | none | substantial | substantial |
 | zibo-service | 0.571 | substantial | none | substantial | substantial | substantial | none | none |
-| coverage-service | 0.571 | substantial | substantial | none | stub | none | partial | substantial |
 | landela-adapter-service | 0.571 | substantial | none | substantial | substantial | none | none | substantial |
 | search-service | 0.571 | substantial | partial | none | stub | none | substantial | substantial |
 | data-ingestion-service | 0.571 | substantial | none | none | stub | partial | substantial | substantial |
@@ -55,12 +52,13 @@ Generated: 2026-04-11T20:01:25.853Z
 | tshepo-audit-service | 0.619 | substantial | none | none | partial | partial | substantial | substantial |
 | costing-engine-service | 0.619 | substantial | none | none | partial | substantial | partial | substantial |
 | tshepo-service | 0.667 | substantial | none | none | partial | substantial | substantial | substantial |
+| indawo-service | 0.667 | substantial | stub | substantial | partial | none | partial | substantial |
 | fhir-gateway-service | 0.667 | substantial | substantial | none | partial | none | substantial | substantial |
-| clinical-knowledge-platform-service | 0.667 | substantial | substantial | none | partial | none | substantial | substantial |
-| guidance-service | 0.667 | substantial | substantial | none | partial | none | substantial | substantial |
 | tuso-service | 0.714 | substantial | substantial | substantial | substantial | none | none | substantial |
+| product-registry-service | 0.714 | substantial | none | substantial | substantial | none | substantial | substantial |
 | credential-verification-service | 0.714 | substantial | none | substantial | substantial | none | substantial | substantial |
 | share-slip-service | 0.714 | substantial | none | substantial | substantial | none | substantial | substantial |
+| coverage-service | 0.762 | substantial | substantial | substantial | partial | none | partial | substantial |
 | card-print-agent | 0.762 | substantial | none | substantial | substantial | partial | partial | substantial |
 | experience-bff | 0.762 | substantial | substantial | none | stub | substantial | substantial | substantial |
 | inventory-service | 0.81 | substantial | none | substantial | substantial | substantial | partial | substantial |
@@ -68,6 +66,8 @@ Generated: 2026-04-11T20:01:25.853Z
 | msika-service | 0.857 | substantial | substantial | substantial | substantial | none | substantial | substantial |
 | oros-service | 0.857 | substantial | substantial | substantial | substantial | substantial | none | substantial |
 | document-service | 0.857 | substantial | substantial | substantial | substantial | none | substantial | substantial |
+| clinical-knowledge-platform-service | 0.857 | substantial | substantial | substantial | substantial | none | substantial | substantial |
+| guidance-service | 0.857 | substantial | substantial | substantial | substantial | none | substantial | substantial |
 | pct-service | 0.952 | substantial | substantial | substantial | substantial | substantial | partial | substantial |
 | pharmacy-service | 0.952 | substantial | partial | substantial | substantial | substantial | substantial | substantial |
 | vito-service | 1 | substantial | substantial | substantial | substantial | substantial | substantial | substantial |
@@ -78,8 +78,8 @@ Generated: 2026-04-11T20:01:25.853Z
 
 - backend: 3
 - bff: 0.71
-- contract: 0.74
-- api_docs: 1.91
+- contract: 0.96
+- api_docs: 1.99
 - kafka: 0.59
 - experience_hooks: 2.39
 - experience_pages: 2.84

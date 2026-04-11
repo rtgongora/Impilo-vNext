@@ -1,0 +1,89 @@
+# =============================================================================
+# Coverage — Payer eligibility, claims, preauth (OpenAPI 3.0)
+# Phase B baseline: internal eligibility check (expand to claims/preauth/remit).
+# =============================================================================
+openapi: "3.0.3"
+
+info:
+  title: Coverage Service API
+  version: "1.0.0"
+  description: |
+    Internal coverage and payer rails (eligibility, pre-authorisation, claims,
+    remittances). Trust headers align with `CompanionHeaders`.
+  contact:
+    name: Impilo Platform Team
+  license:
+    name: Proprietary
+
+servers:
+  - url: http://localhost:8140
+    description: Local development
+  - url: https://{tenant}.impilo.health/api
+    description: Production (per-tenant)
+    variables:
+      tenant:
+        default: demo
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Internal-Eligibility
+    description: Member eligibility checks
+
+paths:
+  /internal/v1/coverage/eligibility:
+    post:
+      operationId: coverageCheckEligibility
+      tags: [Internal-Eligibility]
+      summary: Check coverage eligibility for a service date
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/CorrelationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: CheckEligibilityRequest — align fields with service DTO in a later revision
+              additionalProperties: true
+      responses:
+        "200":
+          description: Eligibility decision
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        "400":
+          description: Invalid request
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    TenantId:
+      name: X-Tenant-ID
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+    PodId:
+      name: X-Pod-ID
+      in: header
+      required: true
+      schema:
+        type: string
+    CorrelationId:
+      name: X-Correlation-ID
+      in: header
+      required: true
+      schema:
+        type: string

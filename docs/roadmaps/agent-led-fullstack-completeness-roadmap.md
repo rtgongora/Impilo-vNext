@@ -144,7 +144,9 @@ flowchart LR
 
 **A2 (done):** seven-dimension completeness report — `scripts/completeness` (`npm run report`) → `docs/reports/completeness-report.{json,md}`; CI job **Completeness report (informational)** uploads artifacts (see `.github/workflows/ci.yml`).
 
-**Next:** **Phase B** — contracts backfill per domain (policy + OpenAPI / AsyncAPI / FHIR-only docs).
+**Phase B (in progress):** OpenAPI baselines under [`contracts/openapi/`](../../contracts/openapi/) — registry slice (VARAPI, TUSO, UBOMI) landed; **+** INDAWO, Product Registry, Coverage, Guidance, Clinical Knowledge Platform. Remaining domains: trust/TSHEPO decomposition, finance remainder, integration adapters, FHIR-only BUTANO narrative.
+
+**Next:** extend Phase B (remaining REST services + Spectral/policy when ready), then **Phase C** BFF route map / client alignment per domain.
 
 ---
 
@@ -158,3 +160,4 @@ flowchart LR
 | 2026-04-11 | Phase A1: `docs/registry/services-registry.yaml` + Node generator (`scripts/registry`). |
 | 2026-04-11 | Phase A2: `scripts/completeness` + `docs/reports/` + informational CI artifact job. |
 | 2026-04-11 | Phase B (slice): OpenAPI baselines for registry plane VARAPI, TUSO, UBOMI (`contracts/openapi/`). |
+| 2026-04-11 | Phase B (slice): INDAWO, Product Registry, Coverage, Guidance, Clinical Knowledge Platform OpenAPI baselines. |
