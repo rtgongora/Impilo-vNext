@@ -117,7 +117,9 @@ Content-Type: application/json
 
 **Outbox:** `clinical.event_outbox` receives rows for recommendation traces, prescribing traces (when `record_trace: true`), overrides, pathway completion, and approved knowledge items. Set `CLINICAL_KAFKA_RELAY_ENABLED=true` and `KAFKA_BOOTSTRAP_SERVERS` to publish to topics in `docs/contracts/kafka-clinical-guidance-events.md`.
 
-**Knowledge admin UI:** `ui/knowledge-admin` (port **3021**) — BFF-proxied curation console for operators.
+**Canonical curation UI:** Experience admin route `/admin/clinical-curation` — BFF-proxied curation console for operators inside the unified shell.
+
+**Legacy reference UI:** `ui/knowledge-admin` (port **3021**) remains in-repo only as a migration reference and should not be treated as the accepted operator entry point.
 
 ## Docker
 

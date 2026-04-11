@@ -158,6 +158,10 @@ describe("Route Registry", () => {
     const ledgerRoute = ROUTES.find((r) => r.path === "/admin/sidecar-retirement");
     expect(ledgerRoute?.guard).toBe("role");
     expect(ledgerRoute?.requiredRole).toBe("ADMIN");
+
+    const curationRoute = ROUTES.find((r) => r.path === "/admin/clinical-curation");
+    expect(curationRoute?.guard).toBe("role");
+    expect(curationRoute?.requiredRole).toBe("ADMIN");
   });
 
   it("registers citizen self-service and public share claim routes in canonical shared routing", () => {

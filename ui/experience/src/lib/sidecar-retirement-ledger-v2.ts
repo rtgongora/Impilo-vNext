@@ -16,6 +16,15 @@ export interface SidecarRetirementEntry {
 
 export const SIDECAR_RETIREMENT_LEDGER: SidecarRetirementEntry[] = [
   {
+    sidecarApp: "ui/knowledge-admin",
+    capability: "National clinical knowledge curation queue",
+    oldUiPath: "ui/knowledge-admin:/",
+    newExperiencePath: "/admin/clinical-curation",
+    status: "absorbed into Experience",
+    notes:
+      "ClinicalCurationController-backed review and decision workflows now run inside the Experience admin plane with the same BFF contract.",
+  },
+  {
     sidecarApp: "ui/msika-flow-portal",
     capability: "Facility marketplace shell",
     oldUiPath: "ui/msika-flow-portal:/browse,/cart,/orders,/pickup,/substitutions",

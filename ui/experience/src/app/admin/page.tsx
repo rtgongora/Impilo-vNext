@@ -17,6 +17,7 @@ import {
   Globe,
   Building,
   AlertTriangle,
+  BookHeart,
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
@@ -91,6 +92,13 @@ const ADMIN_SECTIONS = [
     href: "/admin/break-glass",
     icon: AlertTriangle,
     color: "bg-red-100 text-red-600",
+  },
+  {
+    title: "Clinical Curation",
+    description: "Review and approve national clinical knowledge proposals",
+    href: "/admin/clinical-curation",
+    icon: BookHeart,
+    color: "bg-rose-100 text-rose-600",
   },
 ] as const;
 

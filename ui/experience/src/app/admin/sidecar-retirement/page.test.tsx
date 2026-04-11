@@ -39,6 +39,8 @@ describe("SidecarRetirementPage", () => {
 
     expect(screen.getByRole("heading", { level: 1, name: /Sidecar Retirement Ledger/i })).toBeInTheDocument();
     expect(screen.getByText(/Facility marketplace shell/i)).toBeInTheDocument();
+    expect(screen.getByText(/National clinical knowledge curation queue/i)).toBeInTheDocument();
+    expect(screen.getByText(/ui\/knowledge-admin:\//i)).toBeInTheDocument();
     expect(screen.getByText(/ui\/msika-web:\/catalogs/i)).toBeInTheDocument();
     expect(screen.getByText(/ui\/butano-web:\/ips,\/timeline,\/triggers/i)).toBeInTheDocument();
     expect(screen.getByText(/partially absorbed into Experience/i)).toBeInTheDocument();

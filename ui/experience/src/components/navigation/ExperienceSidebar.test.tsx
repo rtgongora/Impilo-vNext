@@ -22,7 +22,13 @@ describe("ExperienceSidebar", () => {
   beforeEach(() => {
     mockUsePathname.mockReturnValue("/clinical");
     mockUseAuthStore.mockReturnValue({
-      user: { displayName: "Dr. Moyo", email: "dr.moyo@example.com" },
+      user: {
+        id: "provider-1",
+        displayName: "Dr. Moyo",
+        email: "dr.moyo@example.com",
+        roles: ["CLINICIAN", "SYSTEM_ADMIN"],
+        actorType: "PROVIDER",
+      },
       hasRole: (role: string) => ["CLINICIAN", "SYSTEM_ADMIN"].includes(role),
     });
     mockUseExperienceEntry.mockReturnValue({
@@ -55,6 +61,10 @@ describe("ExperienceSidebar", () => {
   it("exposes the sidecar retirement ledger in professional navigation for admin-capable users", () => {
     render(<ExperienceSidebar />);
 
+    expect(screen.getByRole("link", { name: "Knowledge curation" })).toHaveAttribute(
+      "href",
+      "/admin/clinical-curation",
+    );
     expect(screen.getByRole("link", { name: "Sidecar ledger" })).toHaveAttribute(
       "href",
       "/admin/sidecar-retirement",
@@ -108,5 +118,14 @@ describe("ExperienceSidebar", () => {
       "href",
       "/share/claim",
     );
+  });
+
+  it("shows knowledge curation in the professional oversight spotlight on admin routes", () => {
+    mockUsePathname.mockReturnValue("/admin/clinical-curation");
+
+    render(<ExperienceSidebar />);
+
+    expect(screen.getByText("Professional oversight")).toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: "Knowledge curation" }).some((link) => link.getAttribute("href") === "/admin/clinical-curation")).toBe(true);
   });
 });

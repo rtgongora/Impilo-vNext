@@ -105,6 +105,7 @@ const ZONES: SidebarZone[] = [
       // Absorbed sidecars: ops-console → /operations, developer-console → /developer
       { href: "/operations", label: "Operations", icon: Settings2, requiredRoles: ADMIN_ROLES },
       { href: "/developer", label: "Developer Portal", icon: Code2, requiredRoles: ADMIN_ROLES },
+      { href: "/admin/clinical-curation", label: "Knowledge curation", icon: Lightbulb, requiredRoles: ADMIN_ROLES },
       { href: "/admin/sidecar-retirement", label: "Sidecar ledger", icon: ArrowUpRight, requiredRoles: ADMIN_ROLES },
       { href: "/settings", label: "Settings", icon: CreditCard },
     ],
@@ -237,6 +238,7 @@ function getSidebarSpotlight(pathname: string): SidebarSpotlight {
       description: "Reference, governance, and reporting — use Registry plane or Org administration for explicit operational context.",
       tone: "border-violet-400/20 bg-violet-400/10 text-violet-100",
       actions: [
+        { href: "/admin/clinical-curation", label: "Knowledge curation", icon: Lightbulb },
         { href: "/registry-admin", label: "Registry plane", icon: ShieldCheck },
         { href: "/organization-admin", label: "Org admin", icon: BriefcaseBusiness },
       ],

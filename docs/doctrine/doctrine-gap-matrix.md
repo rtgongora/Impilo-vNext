@@ -51,7 +51,7 @@
 
 | Requirement | Status | Current State | Gap |
 |---|---|---|---|
-| One coherent experience shell | PARTIAL | `ui/experience/` is primary (161 routes, 15 zones); 22+ sidecar apps exist | Sidecar retirement in progress |
+| One coherent experience shell | PARTIAL | `ui/experience/` is primary (219 routes, 26 zones); canonical replacements are tracked in `sidecar-retirement-ledger-v2.ts` and surfaced at `/admin/sidecar-retirement` | Remaining partials are governance, citizen self-service parity, and blocked backend contracts |
 | Role-based adaptation | DONE | AuthGuardProvider with 13 role groups | — |
 | Citizen experience | PARTIAL | Citizen pages in experience + separate portal app | Consolidate portal into experience |
 | Provider experience | PARTIAL | Clinical/EHR zones in experience + separate EHR app | Consolidate EHR into experience |
@@ -107,7 +107,7 @@
 5. ~~Implement Provider ID activation flow (post-login step)~~ DONE (/provider/activate page)
 6. ~~Add `provider` guard to AuthGuardProvider~~ DONE
 7. ~~useAuthStore: activateProvider/deactivateProvider/hasActiveProvider~~ DONE
-8. Accelerate sidecar app retirement — IN PROGRESS (tracked in sidecar-retirement-ledger.ts)
+8. Accelerate sidecar app retirement — IN PROGRESS (tracked in `ui/experience/src/lib/sidecar-retirement-ledger-v2.ts`)
 
 ### Phase 3: Full Doctrine Completion (Mid-term) — DONE
 9. ~~Separate Equipment from Assets~~ DONE (EquipmentEntity, V004 migration, repository)

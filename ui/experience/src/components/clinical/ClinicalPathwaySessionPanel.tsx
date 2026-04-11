@@ -20,16 +20,15 @@ function parseSchema(raw: unknown): SchemaField[] {
   const fields = (raw as { fields?: unknown }).fields;
   if (!Array.isArray(fields)) return [];
   return fields
-    .map((f) => {
-      if (!f || typeof f !== "object") return null;
+    .flatMap((f): SchemaField[] => {
+      if (!f || typeof f !== "object") return [];
       const o = f as Record<string, unknown>;
       const name = typeof o.name === "string" ? o.name : "";
       const type = typeof o.type === "string" ? o.type : "text";
       const values = Array.isArray(o.values) ? o.values.filter((v): v is string => typeof v === "string") : undefined;
-      if (!name) return null;
-      return { name, type, values } satisfies SchemaField;
-    })
-    .filter((x): x is SchemaField => x != null);
+      if (!name) return [];
+      return [{ name, type, values }];
+    });
 }
 
 function applyStepPayload(
@@ -88,7 +87,7 @@ export function ClinicalPathwaySessionPanel({ patientId, encounterId, compact }:
     applyStepPayload(data, {
       setPrompt,
       setStepType,
-      setSchema,
+      setSchema: setSchemaRaw,
       setStatus,
       setSummary,
     });
@@ -133,7 +132,7 @@ export function ClinicalPathwaySessionPanel({ patientId, encounterId, compact }:
           applyStepPayload(data, {
             setPrompt,
             setStepType,
-            setSchema,
+            setSchema: setSchemaRaw,
             setStatus,
             setSummary,
           });

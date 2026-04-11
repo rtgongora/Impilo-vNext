@@ -51,6 +51,6 @@ Responses expose `support_mode`: `SOURCE_GROUNDED`, `RULE_EVALUATED`, `MIXED_RUL
 ## Future extension (target state)
 
 - Split `ClinicalRulesEngine` into dedicated `clinical-rules-engine-service` with Drools or DMN for curator-edited tables.
-- Wire `extraction_jobs` + `knowledge_review_items` to a document OCR/PDF pipeline and curator UI (`ui/knowledge-admin`).
+- Keep `extraction_jobs` + `knowledge_review_items` aligned with the document OCR/PDF pipeline and the canonical Experience curator workflow (`/admin/clinical-curation`); legacy `ui/knowledge-admin` remains reference-only.
 - Attach vector retrieval (`chunk_embedding_ref`) behind a feature flag; keep lexical search as default for auditability.
 - Citizen channel: hard policy pack so `citizen_mode` never receives prescriber-only payloads.
