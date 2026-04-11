@@ -31,6 +31,10 @@ public class ServiceClientConfig {
             String pctBaseUrl,
             String orosBaseUrl,
             String pharmacyBaseUrl,
+            String butanoBaseUrl,
+            String msikaBaseUrl,
+            String msikaFlowBaseUrl,
+            String mushexBaseUrl,
             String vitoBaseUrl,
             String tusoBaseUrl,
             String varapiBaseUrl,
@@ -48,6 +52,10 @@ public class ServiceClientConfig {
             if (pctBaseUrl == null) pctBaseUrl = "http://localhost:8088";
             if (orosBaseUrl == null) orosBaseUrl = "http://localhost:8089";
             if (pharmacyBaseUrl == null) pharmacyBaseUrl = "http://localhost:8096";
+            if (butanoBaseUrl == null) butanoBaseUrl = "http://localhost:8090";
+            if (msikaBaseUrl == null) msikaBaseUrl = "http://localhost:8086";
+            if (msikaFlowBaseUrl == null) msikaFlowBaseUrl = "http://localhost:8100";
+            if (mushexBaseUrl == null) mushexBaseUrl = "http://localhost:8102";
             if (vitoBaseUrl == null) vitoBaseUrl = "http://localhost:8082";
             if (tusoBaseUrl == null) tusoBaseUrl = "http://localhost:8084";
             if (varapiBaseUrl == null) varapiBaseUrl = "http://localhost:8083";
@@ -79,6 +87,12 @@ public class ServiceClientConfig {
                 forwardHeader(inbound, request, CompanionHeaders.REQUEST_ID);
                 forwardHeader(inbound, request, CompanionHeaders.CORRELATION_ID);
                 forwardHeader(inbound, request, CompanionHeaders.AUTHORIZATION);
+                forwardHeader(inbound, request, CompanionHeaders.ACTOR_ID);
+                forwardHeader(inbound, request, CompanionHeaders.ACTOR_TYPE);
+                forwardHeader(inbound, request, CompanionHeaders.PURPOSE_OF_USE);
+                forwardHeader(inbound, request, CompanionHeaders.FACILITY_ID);
+                forwardHeader(inbound, request, CompanionHeaders.WORKSPACE_ID);
+                forwardHeader(inbound, request, CompanionHeaders.SHIFT_ID);
                 forwardHeader(inbound, request, CompanionHeaders.IDEMPOTENCY_KEY);
                 forwardHeader(inbound, request, CompanionHeaders.CLIENT_TIMEOUT_MS);
             }

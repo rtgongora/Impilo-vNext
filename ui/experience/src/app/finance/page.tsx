@@ -7,7 +7,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Receipt, FileText, CreditCard, BookOpen, ClipboardList, User } from "lucide-react";
+import { Receipt, FileText, CreditCard, BookOpen, ClipboardList, User, Layers } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { OrganizationPlaneContextBar } from "@/components/experience/OrganizationPlaneContextBar";
 import { PageShell } from "@/components/PageShell";
@@ -125,6 +125,29 @@ export default function FinancePage() {
             <p className="mt-1 text-xs text-slate-500">
               Open the next finance surface below, or move back to the encounter or chart when the revenue step needs clinical clarification.
             </p>
+          </div>
+
+          <div className="rounded-xl border border-indigo-200 bg-indigo-50/60 p-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700">
+                  <Layers className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-900">Commerce & payer stack</h3>
+                  <p className="mt-1 text-xs text-slate-600 max-w-xl">
+                    MSIKA, MusheX, and facility marketplace: canonical Experience routes, what legacy sidecars superseded,
+                    and exact BFF gaps — no separate UI required for acceptance.
+                  </p>
+                </div>
+              </div>
+              <Link
+                href="/finance/commerce-integrations"
+                className="inline-flex shrink-0 items-center justify-center rounded-lg border border-indigo-300 bg-white px-4 py-2 text-sm font-medium text-indigo-800 hover:bg-indigo-50"
+              >
+                Open integration map
+              </Link>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">

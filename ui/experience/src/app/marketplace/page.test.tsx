@@ -59,6 +59,10 @@ describe("MarketplacePage", () => {
     renderPage();
 
     expect(await screen.findByText(/Harare Central Hospital marketplace workflow/i)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Commerce & payer integration map/i })).toHaveAttribute(
+      "href",
+      "/finance/commerce-integrations",
+    );
     expect(screen.getByRole("link", { name: /Return to inventory/i })).toHaveAttribute("href", "/inventory?source=marketplace");
     await waitFor(() => {
       expect(get).toHaveBeenCalledWith("/internal/v1/marketplace/orders?facility_id=facility-1");
@@ -66,5 +70,27 @@ describe("MarketplacePage", () => {
       expect(get).toHaveBeenCalledWith("/internal/v1/marketplace/vendors");
       expect(get).toHaveBeenCalledWith("/internal/v1/marketplace/bookings");
     });
+  });
+
+  it("does not show zero open orders when the orders request fails", async () => {
+    get.mockImplementation((url: string) => {
+      if (url === "/internal/v1/marketplace/orders?facility_id=facility-1") {
+        return Promise.reject({ status: 500 });
+      }
+      if (url === "/internal/v1/marketplace/catalog") {
+        return Promise.resolve({ data: [] });
+      }
+      if (url === "/internal/v1/marketplace/vendors") {
+        return Promise.resolve({ data: [] });
+      }
+      if (url === "/internal/v1/marketplace/bookings") {
+        return Promise.resolve({ data: [] });
+      }
+      return Promise.resolve({ data: [] });
+    });
+
+    renderPage();
+    expect(await screen.findByText(/Could not load orders from Experience BFF/i)).toBeInTheDocument();
+    expect(screen.getByText(/Orders request failed/i)).toBeInTheDocument();
   });
 });

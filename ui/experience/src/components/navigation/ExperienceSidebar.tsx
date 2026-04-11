@@ -16,6 +16,7 @@ import {
   CreditCard,
   FileBarChart2,
   Heart,
+  IdCard,
   LayoutDashboard,
   Menu,
   Package,
@@ -87,19 +88,22 @@ const ZONES: SidebarZone[] = [
       { href: "/organization-admin", label: "Org administration", icon: BriefcaseBusiness, requiredRoles: ["SYSTEM_ADMIN", "FACILITY_ADMIN", "DEVELOPER", "FINANCE"] },
       { href: "/reports", label: "Reports", icon: FileBarChart2 },
       { href: "/admin", label: "Administration", icon: Shield, requiredRoles: ADMIN_ROLES },
+      { href: "/admin/sidecar-retirement", label: "Sidecar ledger", icon: ArrowUpRight, requiredRoles: ADMIN_ROLES },
       { href: "/settings", label: "Settings", icon: CreditCard },
     ],
   },
   {
     id: "life",
     label: "My Life",
-    items: [
-      { href: "/home", label: "Home", icon: LayoutDashboard },
-      { href: "/home/notifications", label: "Notifications", icon: Bell },
-      { href: "/home/profile", label: "Profile", icon: User },
-      { href: "/home/preferences", label: "Preferences", icon: Heart },
-      { href: "/home/medications", label: "Medications", icon: Pill },
-    ],
+      items: [
+        { href: "/home", label: "Home", icon: LayoutDashboard },
+        { href: "/citizen", label: "Citizen services", icon: IdCard },
+        { href: "/share/claim", label: "Claim shared docs", icon: ClipboardList },
+        { href: "/home/notifications", label: "Notifications", icon: Bell },
+        { href: "/home/profile", label: "Profile", icon: User },
+        { href: "/home/preferences", label: "Preferences", icon: Heart },
+        { href: "/home/medications", label: "Medications", icon: Pill },
+      ],
   },
 ];
 
@@ -169,6 +173,24 @@ function getSidebarSpotlight(pathname: string): SidebarSpotlight {
       actions: [
         { href: "/finance/billing", label: "Billing", icon: CreditCard },
         { href: "/finance/payments", label: "Payments", icon: Wallet },
+      ],
+    };
+  }
+
+  if (
+    pathname.startsWith("/citizen") ||
+    pathname.startsWith("/share/claim") ||
+    pathname.startsWith("/verify/credential")
+  ) {
+    return {
+      title: "Citizen self-service",
+      description: "Health ID, recovery, public credential verification, and shared-document claim stay inside the same Experience shell.",
+      tone: "border-cyan-400/20 bg-cyan-400/10 text-cyan-100",
+      actions: [
+        { href: "/verify/credential", label: "Verify credential", icon: ShieldCheck },
+        { href: "/citizen/health-id/qr", label: "Health ID QR", icon: IdCard },
+        { href: "/citizen/id-recovery", label: "ID recovery", icon: IdCard },
+        { href: "/share/claim", label: "Claim docs", icon: ClipboardList },
       ],
     };
   }

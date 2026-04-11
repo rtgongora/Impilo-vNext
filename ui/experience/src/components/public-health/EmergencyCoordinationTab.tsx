@@ -1,263 +1,220 @@
 "use client";
 
-import { useState } from "react";
-import { Siren, Plus, FileText } from "lucide-react";
+import Link from "next/link";
+import { useMemo, useState } from "react";
+import { Loader2, Siren } from "lucide-react";
+import {
+  useActivateEmergency,
+  useEmergencyActivations,
+  useEndEmergency,
+  useLogEmergencyAction,
+  type EmergencyActivationRow,
+} from "@/hooks/queries/useEmergency";
+import { useAuthStore } from "@/hooks/useAuthStore";
 
-const EOC_STATUS = { level: "Level 2 - Enhanced Response", active: true, activatedAt: "2026-04-02 14:30", incident: "Cholera Outbreak - Harare South", commander: "Dr. M. Nyathi (Provincial PEHO)" };
+const PROTOCOL_OPTIONS = ["CODE_BLUE", "TRAUMA", "RSI", "MATERNITY", "TOXICOLOGY", "OTHER"] as const;
 
-const SITUATION_REPORTS = [
-  { id: "SITREP-014", date: "2026-04-06 06:00", author: "Dr. M. Nyathi", period: "24hr", newCases: 8, totalCases: 47, deaths: 0, status: "published" },
-  { id: "SITREP-013", date: "2026-04-05 06:00", author: "Dr. M. Nyathi", period: "24hr", newCases: 12, totalCases: 39, deaths: 1, status: "published" },
-  { id: "SITREP-012", date: "2026-04-04 06:00", author: "Sr. T. Moyo", period: "24hr", newCases: 6, totalCases: 27, deaths: 0, status: "published" },
-  { id: "SITREP-011", date: "2026-04-03 06:00", author: "Dr. M. Nyathi", period: "24hr", newCases: 9, totalCases: 21, deaths: 1, status: "published" },
-];
+function asString(v: unknown): string {
+  return v == null ? "" : String(v);
+}
 
-const RESOURCES = [
-  { type: "ORS Sachets", requested: 5000, mobilized: 3200, deployed: 2800, source: "WHO / UNICEF" },
-  { type: "Cholera Kits", requested: 200, mobilized: 200, deployed: 150, source: "Central Medical Stores" },
-  { type: "Water Purification Tablets", requested: 10000, mobilized: 8000, deployed: 6500, source: "ZINWA" },
-  { type: "Body Bags", requested: 50, mobilized: 50, deployed: 10, source: "Red Cross" },
-  { type: "PPE Sets", requested: 300, mobilized: 300, deployed: 250, source: "MOHCC" },
-  { type: "IV Fluids (Ringer's Lactate)", requested: 1000, mobilized: 600, deployed: 400, source: "NatPharm" },
-];
+function formatWhen(iso: unknown): string {
+  const s = asString(iso);
+  if (!s) return "—";
+  const d = new Date(s);
+  return Number.isNaN(d.getTime()) ? s : d.toLocaleString();
+}
 
-const CONTACTS = [
-  { name: "Dr. M. Nyathi", role: "Incident Commander / PEHO", org: "MoHCC", phone: "+263-77-XXX-1234", available: true },
-  { name: "Mr. J. Chigumba", role: "Logistics Lead", org: "City of Harare", phone: "+263-77-XXX-2345", available: true },
-  { name: "Sr. R. Maposa", role: "Epidemiologist", org: "WHO Zimbabwe", phone: "+263-77-XXX-3456", available: true },
-  { name: "Mr. T. Matamba", role: "WASH Coordinator", org: "UNICEF", phone: "+263-77-XXX-4567", available: false },
-  { name: "Dr. S. Hwende", role: "Clinical Lead - CTC", org: "Parirenyatwa Hospital", phone: "+263-77-XXX-5678", available: true },
-];
-
+/**
+ * Live **emergency activations** from Experience BFF (`/internal/v1/emergency/*`).
+ * EOC level, sitreps, resource tracker, agency directory, IAP — **unsupported** (removed demo tables).
+ */
 export function EmergencyCoordinationTab() {
-  const [activeSubTab, setActiveSubTab] = useState<"sitreps" | "resources" | "contacts" | "iap">("sitreps");
+  const { user } = useAuthStore();
+  const performedBy = user?.id ?? "";
+  const performedByName = user?.displayName ?? performedBy;
+
+  const { data, isLoading, isError, refetch } = useEmergencyActivations();
+  const activate = useActivateEmergency();
+  const logAction = useLogEmergencyAction();
+  const endEmergency = useEndEmergency();
+
+  const rows = (data?.data ?? []) as EmergencyActivationRow[];
+  const activeRows = useMemo(
+    () => rows.filter((r) => asString(r.status).toUpperCase() === "ACTIVE"),
+    [rows],
+  );
+
+  const [protocolType, setProtocolType] = useState<string>(PROTOCOL_OPTIONS[0]);
+  const [patientId, setPatientId] = useState("");
+  const [encounterId, setEncounterId] = useState("");
+  const [teamLeader, setTeamLeader] = useState("");
+  const [location, setLocation] = useState("");
+
+  const [actionFor, setActionFor] = useState<EmergencyActivationRow | null>(null);
+  const [actionType, setActionType] = useState("NOTE");
+  const [actionDescription, setActionDescription] = useState("");
+
+  const [endFor, setEndFor] = useState<EmergencyActivationRow | null>(null);
+  const [endOutcome, setEndOutcome] = useState("STABILISED");
+  const [endNotes, setEndNotes] = useState("");
+
+  const [activeSubTab, setActiveSubTab] = useState<"activations" | "unsupported">("activations");
 
   return (
     <div className="space-y-4">
-      {/* EOC Status Banner */}
-      <div className={`rounded-lg border p-4 ${EOC_STATUS.active ? "border-red-200 bg-red-50" : "border-gray-200 bg-gray-50"}`}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-red-100">
-              <Siren className="h-5 w-5 text-red-600" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="font-bold text-gray-900">{EOC_STATUS.level}</h3>
-                <span className="px-2 py-0.5 bg-red-600 text-white rounded-full text-[10px] font-medium">ACTIVE</span>
-              </div>
-              <p className="text-sm text-gray-600">{EOC_STATUS.incident}</p>
-              <p className="text-xs text-gray-500">Commander: {EOC_STATUS.commander} -- Activated: {EOC_STATUS.activatedAt}</p>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <button className="px-3 py-1.5 border border-gray-300 rounded-lg text-xs font-medium hover:bg-gray-50">Escalate to Level 3</button>
-            <button className="px-3 py-1.5 bg-red-600 text-white text-xs font-medium rounded-lg hover:bg-red-700">Deactivate EOC</button>
-          </div>
+      <div className="rounded-lg border border-red-200 bg-red-50/90 p-3 text-xs text-red-950">
+        <strong>Live:</strong> protocol activations below use the same BFF as{" "}
+        <Link href="/clinical/emergency" className="underline font-medium">
+          ED / Casualty
+        </Link>
+        . <strong>EOC dashboards, sitreps, logistics tables, and agency directories</strong> are not on{" "}
+        <code className="text-[10px]">/internal/v1/emergency/*</code> — prior demo content was removed.
+      </div>
+
+      <div className={`rounded-lg border p-3 ${activeRows.length > 0 ? "border-amber-200 bg-amber-50" : "border-gray-200 bg-gray-50"}`}>
+        <div className="flex items-center gap-2">
+          <Siren className="h-5 w-5 text-amber-700" />
+          <p className="text-sm font-medium text-gray-900">
+            Active protocol activations: {activeRows.length}
+            {rows.length > 0 && <span className="text-gray-500 font-normal"> ({rows.length} recent total)</span>}
+          </p>
         </div>
       </div>
 
-      {/* Sub-tabs */}
       <div className="flex gap-1 border-b border-gray-200">
-        {[
-          { key: "sitreps" as const, label: "Situation Reports" },
-          { key: "resources" as const, label: "Resource Mobilization" },
-          { key: "contacts" as const, label: "Agency Directory" },
-          { key: "iap" as const, label: "Incident Action Plan" },
-        ].map((tab) => (
-          <button key={tab.key} onClick={() => setActiveSubTab(tab.key)}
-            className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
-              activeSubTab === tab.key ? "border-amber-600 text-amber-600" : "border-transparent text-gray-500 hover:text-gray-700"
-            }`}>
-            {tab.label}
-          </button>
-        ))}
+        <button
+          type="button"
+          onClick={() => setActiveSubTab("activations")}
+          className={`px-3 py-2 text-sm font-medium border-b-2 ${
+            activeSubTab === "activations" ? "border-amber-600 text-amber-600" : "border-transparent text-gray-500"
+          }`}
+        >
+          Activations
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveSubTab("unsupported")}
+          className={`px-3 py-2 text-sm font-medium border-b-2 ${
+            activeSubTab === "unsupported" ? "border-amber-600 text-amber-600" : "border-transparent text-gray-500"
+          }`}
+        >
+          EOC / SitRep / logistics (unsupported)
+        </button>
       </div>
 
-      {/* Situation Reports */}
-      {activeSubTab === "sitreps" && (
-        <div className="bg-white rounded-lg border border-gray-200">
-          <div className="px-4 py-3 border-b flex items-center justify-between">
-            <h4 className="text-sm font-semibold text-gray-900">Situation Reports (SitRep)</h4>
-            <button className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700">
-              <Plus className="h-3.5 w-3.5" /> New SitRep
-            </button>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="border-b bg-gray-50">
-                  <th className="text-left px-3 py-2 font-medium text-gray-600">SitRep ID</th>
-                  <th className="text-left px-3 py-2 font-medium text-gray-600">Date/Time</th>
-                  <th className="text-left px-3 py-2 font-medium text-gray-600">Author</th>
-                  <th className="text-left px-3 py-2 font-medium text-gray-600">Period</th>
-                  <th className="text-left px-3 py-2 font-medium text-gray-600">New Cases</th>
-                  <th className="text-left px-3 py-2 font-medium text-gray-600">Cumulative</th>
-                  <th className="text-left px-3 py-2 font-medium text-gray-600">Deaths</th>
-                  <th className="text-left px-3 py-2 font-medium text-gray-600">Status</th>
-                  <th className="text-left px-3 py-2 font-medium text-gray-600"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {SITUATION_REPORTS.map(s => (
-                  <tr key={s.id} className="border-b hover:bg-gray-50">
-                    <td className="px-3 py-2 font-mono">{s.id}</td>
-                    <td className="px-3 py-2 text-gray-500">{s.date}</td>
-                    <td className="px-3 py-2">{s.author}</td>
-                    <td className="px-3 py-2">{s.period}</td>
-                    <td className="px-3 py-2 font-bold">{s.newCases}</td>
-                    <td className="px-3 py-2">{s.totalCases}</td>
-                    <td className="px-3 py-2">{s.deaths}</td>
-                    <td className="px-3 py-2">
-                      <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-[10px] font-medium">{s.status}</span>
-                    </td>
-                    <td className="px-3 py-2">
-                      <button className="p-1 text-gray-400 hover:text-gray-600">
-                        <FileText className="h-3.5 w-3.5" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+      {activeSubTab === "unsupported" && (
+        <div className="bg-white rounded-lg border border-gray-200 p-6 text-sm text-gray-600 space-y-2">
+          <p>
+            <strong>Gap:</strong> situation reports, resource mobilization grids, inter-agency contact lists, and IAP widgets
+            need dedicated persistence and BFF routes. None are exposed on the current Experience emergency contract.
+          </p>
+          <p className="text-xs text-gray-500">
+            Blocker examples (for backlog): <code className="text-[10px]">GET /internal/v1/eoc/status</code>,{" "}
+            <code className="text-[10px]">GET /internal/v1/sitreps</code>, or domain-specific service proxies.
+          </p>
         </div>
       )}
 
-      {/* Resource Mobilization */}
-      {activeSubTab === "resources" && (
-        <div className="bg-white rounded-lg border border-gray-200">
-          <div className="px-4 py-3 border-b flex items-center justify-between">
-            <h4 className="text-sm font-semibold text-gray-900">Resource Mobilization Tracker</h4>
-            <button className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700">
-              <Plus className="h-3.5 w-3.5" /> Request Resource
-            </button>
+      {activeSubTab === "activations" && (
+        <>
+          <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-3">
+            <h4 className="text-sm font-semibold text-gray-900">Start activation</h4>
+            <form onSubmit={(e) => { e.preventDefault(); activate.mutate({ protocolType, patientId: patientId.trim() || null, encounterId: encounterId.trim() || null, teamLeader: teamLeader.trim(), location: location.trim() }); }} className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+              <label className="block">
+                Protocol
+                <select value={protocolType} onChange={(e) => setProtocolType(e.target.value)} className="mt-1 w-full border rounded px-2 py-1.5">
+                  {PROTOCOL_OPTIONS.map((p) => (
+                    <option key={p} value={p}>{p}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="block">
+                Location
+                <input value={location} onChange={(e) => setLocation(e.target.value)} className="mt-1 w-full border rounded px-2 py-1.5" placeholder="Ward / bay" />
+              </label>
+              <label className="block">
+                Patient UUID (optional)
+                <input value={patientId} onChange={(e) => setPatientId(e.target.value)} className="mt-1 w-full border rounded px-2 py-1.5 font-mono text-[10px]" />
+              </label>
+              <label className="block">
+                Encounter UUID (optional)
+                <input value={encounterId} onChange={(e) => setEncounterId(e.target.value)} className="mt-1 w-full border rounded px-2 py-1.5 font-mono text-[10px]" />
+              </label>
+              <label className="block md:col-span-2">
+                Team leader
+                <input value={teamLeader} onChange={(e) => setTeamLeader(e.target.value)} className="mt-1 w-full border rounded px-2 py-1.5" />
+              </label>
+              <button type="submit" disabled={activate.isPending} className="md:col-span-2 py-2 bg-red-600 text-white rounded text-xs font-medium disabled:opacity-50">
+                {activate.isPending ? "Submitting…" : "Activate protocol"}
+              </button>
+            </form>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="border-b bg-gray-50">
-                  <th className="text-left px-3 py-2 font-medium text-gray-600">Resource</th>
-                  <th className="text-left px-3 py-2 font-medium text-gray-600">Source</th>
-                  <th className="text-left px-3 py-2 font-medium text-gray-600">Requested</th>
-                  <th className="text-left px-3 py-2 font-medium text-gray-600">Mobilized</th>
-                  <th className="text-left px-3 py-2 font-medium text-gray-600">Deployed</th>
-                  <th className="text-left px-3 py-2 font-medium text-gray-600">Pipeline</th>
-                </tr>
-              </thead>
-              <tbody>
-                {RESOURCES.map((r, i) => {
-                  const pct = Math.round((r.deployed / r.requested) * 100);
-                  return (
-                    <tr key={i} className="border-b hover:bg-gray-50">
-                      <td className="px-3 py-2 font-medium text-gray-900">{r.type}</td>
-                      <td className="px-3 py-2 text-gray-500">{r.source}</td>
-                      <td className="px-3 py-2">{r.requested.toLocaleString()}</td>
-                      <td className="px-3 py-2">{r.mobilized.toLocaleString()}</td>
-                      <td className="px-3 py-2">{r.deployed.toLocaleString()}</td>
-                      <td className="px-3 py-2">
-                        <div className="flex items-center gap-2">
-                          <div className="w-20 bg-gray-200 rounded-full h-2">
-                            <div className="h-2 rounded-full bg-blue-500" style={{ width: `${pct}%` }} />
-                          </div>
-                          <span className="text-xs text-gray-500">{pct}%</span>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
 
-      {/* Agency Directory */}
-      {activeSubTab === "contacts" && (
-        <div className="bg-white rounded-lg border border-gray-200">
-          <div className="px-4 py-3 border-b">
-            <h4 className="text-sm font-semibold text-gray-900">Inter-Agency Contact Directory</h4>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="border-b bg-gray-50">
-                  <th className="text-left px-3 py-2 font-medium text-gray-600">Name</th>
-                  <th className="text-left px-3 py-2 font-medium text-gray-600">Role</th>
-                  <th className="text-left px-3 py-2 font-medium text-gray-600">Organization</th>
-                  <th className="text-left px-3 py-2 font-medium text-gray-600">Phone</th>
-                  <th className="text-left px-3 py-2 font-medium text-gray-600">Availability</th>
-                </tr>
-              </thead>
-              <tbody>
-                {CONTACTS.map((c, i) => (
-                  <tr key={i} className="border-b hover:bg-gray-50">
-                    <td className="px-3 py-2 font-medium text-gray-900">{c.name}</td>
-                    <td className="px-3 py-2">{c.role}</td>
-                    <td className="px-3 py-2">{c.org}</td>
-                    <td className="px-3 py-2 font-mono">{c.phone}</td>
-                    <td className="px-3 py-2">
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
-                        c.available ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"
-                      }`}>{c.available ? "Available" : "Unavailable"}</span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* Incident Action Plan */}
-      {activeSubTab === "iap" && (
-        <div className="bg-white rounded-lg border border-gray-200 p-5">
-          <h4 className="text-sm font-semibold text-gray-900">Incident Action Plan (IAP)</h4>
-          <p className="text-xs text-gray-500 mb-4">Operational objectives and response strategy for current activation</p>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-3">
-              <h4 className="text-sm font-semibold text-gray-900">Response Objectives</h4>
-              {[
-                { obj: "Reduce case fatality rate below 1%", status: "on_track", progress: 75 },
-                { obj: "Achieve 100% contact tracing within 48hrs", status: "at_risk", progress: 60 },
-                { obj: "Ensure safe water access in affected wards", status: "on_track", progress: 85 },
-                { obj: "Establish cholera treatment centres x3", status: "completed", progress: 100 },
-                { obj: "Community health education - 50,000 households", status: "in_progress", progress: 45 },
-              ].map((o, i) => (
-                <div key={i} className="p-3 border border-gray-200 rounded-lg">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm font-medium text-gray-900">{o.obj}</span>
-                    <span className="px-2 py-0.5 border border-gray-300 rounded text-[10px] capitalize">{o.status.replace(/_/g, " ")}</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className={`h-2 rounded-full ${o.progress >= 80 ? "bg-green-500" : o.progress >= 50 ? "bg-amber-500" : "bg-red-500"}`} style={{ width: `${o.progress}%` }} />
-                  </div>
+          <div className="bg-white rounded-lg border border-gray-200">
+            <div className="px-4 py-3 border-b flex justify-between items-center">
+              <h4 className="text-sm font-semibold">Recent activations</h4>
+              <button type="button" onClick={() => refetch()} className="text-xs text-blue-600 hover:underline">Refresh</button>
+            </div>
+            <div className="p-4">
+              {isLoading && (
+                <div className="flex items-center gap-2 text-sm text-gray-500 py-6 justify-center">
+                  <Loader2 className="h-5 w-5 animate-spin" /> Loading…
                 </div>
-              ))}
-            </div>
-            <div className="space-y-3">
-              <h4 className="text-sm font-semibold text-gray-900">Command Notes</h4>
-              <textarea placeholder="Enter incident commander notes..." className="w-full border border-gray-300 rounded-lg p-3 min-h-[200px] text-sm" />
-              <button className="px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700">Save Notes</button>
-              <h4 className="text-sm font-semibold text-gray-900 mt-4">Response Timeline</h4>
-              <div className="space-y-2 text-sm">
-                {[
-                  { time: "Apr 2, 14:30", event: "EOC activated - Level 2" },
-                  { time: "Apr 2, 16:00", event: "First response teams deployed to Budiriro" },
-                  { time: "Apr 3, 08:00", event: "CTC established at Budiriro Clinic" },
-                  { time: "Apr 4, 10:00", event: "Water sampling initiated - 12 sites" },
-                  { time: "Apr 5, 06:00", event: "WHO technical support team arrives" },
-                ].map((e, i) => (
-                  <div key={i} className="flex gap-3 items-start">
-                    <span className="text-xs text-gray-500 w-28 shrink-0">{e.time}</span>
-                    <span className="text-gray-900">{e.event}</span>
-                  </div>
-                ))}
-              </div>
+              )}
+              {isError && <p className="text-sm text-red-600 text-center py-4">Failed to load activations.</p>}
+              {!isLoading && !isError && rows.length === 0 && (
+                <p className="text-sm text-gray-500 text-center py-6">No activations returned.</p>
+              )}
+              {!isLoading && !isError && rows.length > 0 && (
+                <ul className="divide-y divide-gray-100 max-h-[360px] overflow-y-auto">
+                  {rows.map((r) => (
+                    <li key={asString(r.id)} className="py-3 flex flex-wrap gap-2 justify-between items-start">
+                      <div>
+                        <p className="font-medium text-sm">{asString(r.protocol_type)}</p>
+                        <p className="text-xs text-gray-500">
+                          {formatWhen(r.activation_time)} · {asString(r.location) || "—"} · {asString(r.status)}
+                        </p>
+                      </div>
+                      <div className="flex gap-1">
+                        <button type="button" className="text-[10px] px-2 py-1 border rounded" onClick={() => setActionFor(r)}>Log action</button>
+                        <button type="button" className="text-[10px] px-2 py-1 border rounded" onClick={() => setEndFor(r)}>End</button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </div>
-        </div>
+
+          {actionFor && (
+            <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-2">
+              <h4 className="text-sm font-semibold">Log action — {asString(actionFor.protocol_type)}</h4>
+              <form onSubmit={(e) => { e.preventDefault(); if (!actionFor.id) return; logAction.mutate({ id: actionFor.id, actionType, description: actionDescription.trim(), performedBy: performedByName || performedBy }, { onSuccess: () => { setActionFor(null); setActionDescription(""); } }); }} className="space-y-2 text-xs">
+                <input value={actionType} onChange={(e) => setActionType(e.target.value)} className="w-full border rounded px-2 py-1.5" placeholder="Action type" />
+                <textarea value={actionDescription} onChange={(e) => setActionDescription(e.target.value)} className="w-full border rounded px-2 py-1.5 min-h-[60px]" placeholder="Description" />
+                <div className="flex gap-2">
+                  <button type="submit" disabled={logAction.isPending} className="px-3 py-1.5 bg-blue-600 text-white rounded">Save</button>
+                  <button type="button" onClick={() => setActionFor(null)} className="px-3 py-1.5 border rounded">Cancel</button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {endFor && (
+            <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-2">
+              <h4 className="text-sm font-semibold">End activation</h4>
+              <form onSubmit={(e) => { e.preventDefault(); if (!endFor.id) return; endEmergency.mutate({ id: endFor.id, outcome: endOutcome, notes: endNotes.trim() }, { onSuccess: () => { setEndFor(null); setEndNotes(""); } }); }} className="space-y-2 text-xs">
+                <input value={endOutcome} onChange={(e) => setEndOutcome(e.target.value)} className="w-full border rounded px-2 py-1.5" />
+                <textarea value={endNotes} onChange={(e) => setEndNotes(e.target.value)} className="w-full border rounded px-2 py-1.5 min-h-[50px]" placeholder="Notes" />
+                <div className="flex gap-2">
+                  <button type="submit" disabled={endEmergency.isPending} className="px-3 py-1.5 bg-red-700 text-white rounded">End</button>
+                  <button type="button" onClick={() => setEndFor(null)} className="px-3 py-1.5 border rounded">Cancel</button>
+                </div>
+              </form>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

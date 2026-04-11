@@ -3,10 +3,13 @@ package zw.gov.mohcc.impilo.experience.client;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
+
+import java.util.Map;
 
 /**
  * HTTP client for the VARAPI (Provider Registry) sovereign service.
@@ -46,6 +49,18 @@ public class VarapiServiceClient {
         String url = baseUrl + "/v1/internal/providers/" + providerId;
         log.info("VARAPI: Getting provider={}", providerId);
         ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Create a provider profile in the canonical registry.
+     */
+    public JsonNode createProvider(Map<String, Object> request) {
+        String url = baseUrl + "/v1/internal/providers";
+        log.info("VARAPI: Creating provider [givenName={}, familyName={}, profession={}]",
+                request.get("givenName"), request.get("familyName"), request.get("profession"));
+        ResponseEntity<JsonNode> response =
+                restTemplate.postForEntity(url, new HttpEntity<>(request), JsonNode.class);
         return extractData(response);
     }
 

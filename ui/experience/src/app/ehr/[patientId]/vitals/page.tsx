@@ -7,17 +7,22 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import { Activity, AlertTriangle, ClipboardList, Droplets, Loader2, Plus, Truck } from "lucide-react";
+import { Activity, AlertTriangle, Baby, ClipboardList, Droplets, HeartPulse, Loader2, Plus, Truck } from "lucide-react";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { useEarlyWarningScores, useRecordEWS } from "@/hooks/queries/useEWS";
 import { useFluidBalance, useRecordFluid } from "@/hooks/queries/useFluidBalance";
+import {
+  useLabourMonitoring,
+  useRecordLabourMonitoring,
+} from "@/hooks/queries/useLabourMonitoring";
 import { useObservations, useRecordObservation } from "@/hooks/queries/useObservations";
 import {
   useAcceptPatientTransfer,
   usePatientTransfers,
   useRequestPatientTransfer,
 } from "@/hooks/queries/usePatientTransfers";
+import { useApgarScores, useRecordApgar } from "@/hooks/queries/useApgar";
 import {
   useVitals,
   useRecordVitals,
@@ -27,6 +32,8 @@ import { useAuthStore } from "@/hooks/useAuthStore";
 import { useRoleGroup } from "@/hooks/useRoleGroup";
 import { useEncounters } from "@/hooks/queries/useEncounters";
 import { VitalsTrendPanel } from "@/components/VitalsTrendChart";
+import { VitalsCtgSection } from "@/features/maternity/ctg/VitalsCtgSection";
+import { VitalsPartographSection } from "@/features/maternity/partograph/VitalsPartographSection";
 
 function localCalendarDateISO() {
   const t = new Date();
@@ -78,6 +85,19 @@ export default function VitalsPage() {
   const recordObs = useRecordObservation();
   const obsRows = obsData?.data ?? [];
 
+  const [labourShowAllPatientHistory, setLabourShowAllPatientHistory] = useState(false);
+  const labourListEncounterId =
+    activeEncounter && encounterId && !labourShowAllPatientHistory ? encounterId : null;
+  const {
+    data: labourData,
+    isLoading: labourLoading,
+    isError: labourError,
+    refetch: refetchLabour,
+  } = useLabourMonitoring(patientId, labourListEncounterId);
+  const recordLabour = useRecordLabourMonitoring();
+  const labourRows = labourData?.data ?? [];
+  const latestLabour = labourRows[0];
+
   const {
     data: xferData,
     isLoading: xferLoading,
@@ -87,6 +107,15 @@ export default function VitalsPage() {
   const requestXfer = useRequestPatientTransfer();
   const acceptXfer = useAcceptPatientTransfer();
   const xferRows = xferData?.data ?? [];
+
+  const {
+    data: apgarData,
+    isLoading: apgarLoading,
+    isError: apgarError,
+    refetch: refetchApgar,
+  } = useApgarScores(patientId);
+  const recordApgar = useRecordApgar();
+  const apgarRows = apgarData?.data ?? [];
 
   const vitals: VitalsResource[] = vitalsData?.data ?? [];
 
@@ -114,6 +143,28 @@ export default function VitalsPage() {
   const [showXferForm, setShowXferForm] = useState(false);
   const [xferReason, setXferReason] = useState("CLINICAL");
   const [xferNotes, setXferNotes] = useState("");
+  const [showApgarForm, setShowApgarForm] = useState(false);
+  const [apgarMinute, setApgarMinute] = useState("1");
+  const [apgarAppearance, setApgarAppearance] = useState("");
+  const [apgarPulse, setApgarPulse] = useState("");
+  const [apgarGrimace, setApgarGrimace] = useState("");
+  const [apgarActivity, setApgarActivity] = useState("");
+  const [apgarRespiration, setApgarRespiration] = useState("");
+  const [showLabourForm, setShowLabourForm] = useState(false);
+  const [labourPhase, setLabourPhase] = useState("ACTIVE_LABOUR");
+  const [labourFetalHeart, setLabourFetalHeart] = useState("");
+  const [labourContractions, setLabourContractions] = useState("");
+  const [labourDuration, setLabourDuration] = useState("");
+  const [labourCervix, setLabourCervix] = useState("");
+  const [labourDescent, setLabourDescent] = useState("");
+  const [labourPulse, setLabourPulse] = useState("");
+  const [labourSystolic, setLabourSystolic] = useState("");
+  const [labourDiastolic, setLabourDiastolic] = useState("");
+  const [labourTemperature, setLabourTemperature] = useState("");
+  const [labourLiquor, setLabourLiquor] = useState("CLEAR");
+  const [labourMoulding, setLabourMoulding] = useState("NONE");
+  const [labourCaput, setLabourCaput] = useState("NONE");
+  const [labourNotes, setLabourNotes] = useState("");
 
   function formatParamsCell(p: unknown): string {
     if (p == null) return "—";
@@ -198,6 +249,92 @@ export default function VitalsPage() {
     );
   }
 
+  function handleApgarSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const minute = Number(apgarMinute);
+    const appearance = Number(apgarAppearance);
+    const pulse = Number(apgarPulse);
+    const grimace = Number(apgarGrimace);
+    const activity = Number(apgarActivity);
+    const respiration = Number(apgarRespiration);
+    const fields = [appearance, pulse, grimace, activity, respiration];
+    if (!Number.isFinite(minute) || fields.some((n) => !Number.isFinite(n))) return;
+    if (fields.some((n) => n < 0 || n > 2)) return;
+    recordApgar.mutate(
+      {
+        patientId,
+        encounterId: encounterId || null,
+        minute: Math.round(minute),
+        appearance: Math.round(appearance),
+        pulse: Math.round(pulse),
+        grimace: Math.round(grimace),
+        activity: Math.round(activity),
+        respiration: Math.round(respiration),
+      },
+      {
+        onSuccess: () => {
+          setApgarAppearance("");
+          setApgarPulse("");
+          setApgarGrimace("");
+          setApgarActivity("");
+          setApgarRespiration("");
+          setShowApgarForm(false);
+        },
+      },
+    );
+  }
+
+  function parseOptionalNumber(value: string) {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    const number = Number(trimmed);
+    return Number.isFinite(number) ? number : null;
+  }
+
+  function handleLabourSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    recordLabour.mutate(
+      {
+        patientId,
+        encounterId: encounterId || null,
+        phase: labourPhase,
+        recordedBy: user?.id ?? user?.displayName ?? "unknown",
+        fetalHeartRateBpm: parseOptionalNumber(labourFetalHeart),
+        contractionFrequency10Min: parseOptionalNumber(labourContractions),
+        contractionDurationSec: parseOptionalNumber(labourDuration),
+        cervicalDilationCm: parseOptionalNumber(labourCervix),
+        fetalDescentFifths: parseOptionalNumber(labourDescent),
+        maternalPulseBpm: parseOptionalNumber(labourPulse),
+        systolicBp: parseOptionalNumber(labourSystolic),
+        diastolicBp: parseOptionalNumber(labourDiastolic),
+        temperatureC: parseOptionalNumber(labourTemperature),
+        liquor: labourLiquor,
+        moulding: labourMoulding,
+        caput: labourCaput,
+        notes: labourNotes.trim() || null,
+      },
+      {
+        onSuccess: () => {
+          setLabourPhase("ACTIVE_LABOUR");
+          setLabourFetalHeart("");
+          setLabourContractions("");
+          setLabourDuration("");
+          setLabourCervix("");
+          setLabourDescent("");
+          setLabourPulse("");
+          setLabourSystolic("");
+          setLabourDiastolic("");
+          setLabourTemperature("");
+          setLabourLiquor("CLEAR");
+          setLabourMoulding("NONE");
+          setLabourCaput("NONE");
+          setLabourNotes("");
+          setShowLabourForm(false);
+        },
+      },
+    );
+  }
+
   function handleFluidSubmit(e: React.FormEvent) {
     e.preventDefault();
     const vol = Number(fluidVolume);
@@ -266,7 +403,7 @@ export default function VitalsPage() {
     <EHRLayout>
       <PageShell
         title="Vitals"
-        subtitle="Vitals, EWS, fluid I/O, observation entries, and transfer requests — live BFF data for this patient"
+        subtitle="Vitals, maternity partograph & CTG, labour compatibility rows, EWS, neonatal APGAR, fluid I/O, observation entries, and transfer requests — live BFF data for this patient"
       >
 
         {isLoading ? (
@@ -295,6 +432,302 @@ export default function VitalsPage() {
               </button>
               )}
             </div>
+
+            {/* Maternity: partograph + CTG (same feature family) + legacy labour rows */}
+            <section
+              className="rounded-lg border border-pink-200/90 bg-white p-5"
+              aria-labelledby="labour-monitoring-heading"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <HeartPulse className="h-5 w-5 text-pink-600" aria-hidden />
+                  <h2 id="labour-monitoring-heading" className="text-lg font-semibold text-gray-900">
+                    Maternity: partograph, CTG & labour
+                  </h2>
+                </div>
+              </div>
+              <p className="mt-1 text-xs text-gray-500">
+                Partograph: <code className="rounded bg-gray-100 px-1">/internal/v1/maternity/partograph/sessions</code> (cervical
+                progress plot). CTG: <code className="rounded bg-gray-100 px-1">/internal/v1/maternity/ctg/sessions</code> with
+                polled trace chunks — <span className="font-medium text-gray-800">not a websocket stream</span>. Legacy flat rows
+                remain under the fold for <code className="rounded bg-gray-100 px-1">labour_monitoring_entries</code> only.
+              </p>
+
+              <VitalsPartographSection
+                patientId={patientId}
+                encounterId={encounterId}
+                hasActiveEncounter={Boolean(activeEncounter && encounterId)}
+                isClinical={isClinical}
+                recordedBy={user?.id ?? user?.displayName ?? "unknown"}
+              />
+
+              <VitalsCtgSection
+                patientId={patientId}
+                encounterId={encounterId}
+                hasActiveEncounter={Boolean(activeEncounter && encounterId)}
+                isClinical={isClinical}
+                recordedBy={user?.id ?? user?.displayName ?? "unknown"}
+              />
+
+              <details className="mt-5 rounded-lg border border-dashed border-pink-200/80 bg-pink-50/30 p-3">
+                <summary className="cursor-pointer text-sm font-medium text-pink-950">
+                  Legacy labour rows (<code className="text-xs">labour_monitoring_entries</code>) — compatibility only
+                </summary>
+                <p className="mt-2 text-xs text-gray-600">
+                  Flat table via <code className="rounded bg-gray-100 px-1">GET/POST /internal/v1/labour-monitoring</code>. Not
+                  the canonical plotted record; prefer partograph sessions above.
+                </p>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  {activeEncounter && (
+                    <button
+                      type="button"
+                      onClick={() => setLabourShowAllPatientHistory((p) => !p)}
+                      className="rounded-lg border border-pink-200 bg-white px-3 py-1.5 text-xs font-medium text-pink-900 hover:bg-pink-50"
+                    >
+                      {labourShowAllPatientHistory
+                        ? "Show this encounter only"
+                        : "Show full patient labour history"}
+                    </button>
+                  )}
+                  {isClinical && (
+                    <button
+                      type="button"
+                      onClick={() => setShowLabourForm((p) => !p)}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-pink-200 bg-pink-50 px-3 py-1.5 text-sm font-medium text-pink-950 hover:bg-pink-100"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Record legacy labour row
+                    </button>
+                  )}
+                </div>
+                <p className="mt-2 text-xs text-gray-600">
+                  {activeEncounter ? (
+                    labourShowAllPatientHistory ? (
+                      <>
+                        Showing <span className="font-medium">all legacy rows</span> for this patient (GET without{" "}
+                        <code className="rounded bg-gray-100 px-1">encounterId</code>).
+                      </>
+                    ) : (
+                      <>
+                        Filtered to <span className="font-medium">active encounter</span>{" "}
+                        <code className="rounded bg-gray-100 px-1">{encounterId}</code>.
+                      </>
+                    )
+                  ) : (
+                    <>
+                      No active encounter; legacy list shows <span className="font-medium">all rows</span> for this patient.
+                    </>
+                  )}
+                </p>
+
+              {labourError && (
+                <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950">
+                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                  <div>
+                    <p className="font-medium">Could not load labour monitoring</p>
+                    <button type="button" className="mt-1 text-xs underline" onClick={() => void refetchLabour()}>
+                      Retry
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {showLabourForm && isClinical && (
+                <form onSubmit={handleLabourSubmit} className="mt-4 space-y-3 rounded-lg border border-gray-100 bg-gray-50/80 p-4">
+                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                    <label className="text-xs font-medium text-gray-600">
+                      Phase
+                      <select
+                        value={labourPhase}
+                        onChange={(e) => setLabourPhase(e.target.value)}
+                        className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                      >
+                        <option value="LATENT_LABOUR">Latent labour</option>
+                        <option value="ACTIVE_LABOUR">Active labour</option>
+                        <option value="SECOND_STAGE">Second stage</option>
+                        <option value="POSTPARTUM">Postpartum monitoring</option>
+                      </select>
+                    </label>
+                    <label className="text-xs font-medium text-gray-600">
+                      Fetal heart bpm
+                      <input value={labourFetalHeart} onChange={(e) => setLabourFetalHeart(e.target.value)} className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                    </label>
+                    <label className="text-xs font-medium text-gray-600">
+                      Contractions / 10 min
+                      <input value={labourContractions} onChange={(e) => setLabourContractions(e.target.value)} className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                    </label>
+                    <label className="text-xs font-medium text-gray-600">
+                      Duration sec
+                      <input value={labourDuration} onChange={(e) => setLabourDuration(e.target.value)} className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                    </label>
+                    <label className="text-xs font-medium text-gray-600">
+                      Cervical dilation cm
+                      <input value={labourCervix} onChange={(e) => setLabourCervix(e.target.value)} className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                    </label>
+                    <label className="text-xs font-medium text-gray-600">
+                      Descent fifths
+                      <input value={labourDescent} onChange={(e) => setLabourDescent(e.target.value)} className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                    </label>
+                    <label className="text-xs font-medium text-gray-600">
+                      Maternal pulse
+                      <input value={labourPulse} onChange={(e) => setLabourPulse(e.target.value)} className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                    </label>
+                    <label className="text-xs font-medium text-gray-600">
+                      Temperature C
+                      <input value={labourTemperature} onChange={(e) => setLabourTemperature(e.target.value)} className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                    </label>
+                    <label className="text-xs font-medium text-gray-600">
+                      Systolic BP
+                      <input value={labourSystolic} onChange={(e) => setLabourSystolic(e.target.value)} className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                    </label>
+                    <label className="text-xs font-medium text-gray-600">
+                      Diastolic BP
+                      <input value={labourDiastolic} onChange={(e) => setLabourDiastolic(e.target.value)} className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                    </label>
+                    <label className="text-xs font-medium text-gray-600">
+                      Liquor
+                      <select value={labourLiquor} onChange={(e) => setLabourLiquor(e.target.value)} className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                        <option value="CLEAR">Clear</option>
+                        <option value="MECONIUM">Meconium</option>
+                        <option value="BLOOD_STAINED">Blood-stained</option>
+                        <option value="ABSENT">Absent / drained</option>
+                      </select>
+                    </label>
+                    <label className="text-xs font-medium text-gray-600">
+                      Moulding
+                      <select value={labourMoulding} onChange={(e) => setLabourMoulding(e.target.value)} className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                        <option value="NONE">None</option>
+                        <option value="+">+</option>
+                        <option value="++">++</option>
+                        <option value="+++">+++</option>
+                      </select>
+                    </label>
+                    <label className="text-xs font-medium text-gray-600">
+                      Caput
+                      <select value={labourCaput} onChange={(e) => setLabourCaput(e.target.value)} className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                        <option value="NONE">None</option>
+                        <option value="+">+</option>
+                        <option value="++">++</option>
+                        <option value="+++">+++</option>
+                      </select>
+                    </label>
+                  </div>
+                  <label className="block text-xs font-medium text-gray-600">
+                    Notes
+                    <textarea value={labourNotes} onChange={(e) => setLabourNotes(e.target.value)} rows={2} className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="Maternal condition, escalation, membrane status, augmentation notes..." />
+                  </label>
+                  <button
+                    type="submit"
+                    disabled={recordLabour.isPending}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-pink-600 px-4 py-2 text-sm font-medium text-white hover:bg-pink-700 disabled:opacity-50"
+                  >
+                    {recordLabour.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                    Save legacy labour row
+                  </button>
+                  {recordLabour.isError && (
+                    <p className="text-xs text-red-600">Failed to save legacy labour row. Check BFF and try again.</p>
+                  )}
+                </form>
+              )}
+
+              {labourLoading ? (
+                <div className="mt-4 flex items-center gap-2 text-sm text-gray-500">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Loading legacy labour rows…
+                </div>
+              ) : labourRows.length === 0 ? (
+                <p className="mt-4 text-sm text-gray-500">No labour monitoring rows recorded for this patient yet.</p>
+              ) : (
+                <>
+                  {latestLabour && (
+                    <div className="mt-4 rounded-xl border border-pink-100 bg-gradient-to-r from-pink-50/90 to-white px-4 py-3">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-pink-900">Latest reading</p>
+                      <p className="mt-1 text-xs text-gray-600">
+                        {latestLabour.recorded_at
+                          ? new Date(String(latestLabour.recorded_at)).toLocaleString()
+                          : "—"}
+                        {latestLabour.phase ? ` · ${latestLabour.phase}` : ""}
+                        {latestLabour.derived_stage ? ` · derived ${latestLabour.derived_stage}` : ""}
+                      </p>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-gray-800 ring-1 ring-pink-100">
+                          FHR {latestLabour.fetal_heart_rate_bpm ?? "—"} bpm
+                        </span>
+                        <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-gray-800 ring-1 ring-pink-100">
+                          Cx {latestLabour.cervical_dilation_cm ?? "—"} cm
+                        </span>
+                        <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-gray-800 ring-1 ring-pink-100">
+                          Ctx {latestLabour.contraction_frequency_10min ?? "—"}/10 min
+                        </span>
+                        <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-gray-800 ring-1 ring-pink-100">
+                          BP{" "}
+                          {latestLabour.systolic_bp != null || latestLabour.diastolic_bp != null
+                            ? `${latestLabour.systolic_bp ?? "—"}/${latestLabour.diastolic_bp ?? "—"}`
+                            : "—"}
+                        </span>
+                        <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-gray-800 ring-1 ring-pink-100">
+                          Temp {latestLabour.temperature_c ?? "—"} °C
+                        </span>
+                      </div>
+                      {Array.isArray(latestLabour.alert_flags) && latestLabour.alert_flags.length > 0 ? (
+                        <div className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-900">
+                          Alerts: {latestLabour.alert_flags.join(", ")}
+                        </div>
+                      ) : null}
+                    </div>
+                  )}
+                  <div className="mt-4 overflow-x-auto rounded-lg border border-gray-100">
+                    <table className="w-full min-w-[980px] text-sm">
+                      <thead>
+                        <tr className="border-b border-gray-200 bg-gray-50 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                          <th className="px-3 py-2">Recorded</th>
+                          <th className="px-3 py-2">Phase</th>
+                          <th className="px-3 py-2">Derived stage</th>
+                          <th className="px-3 py-2">FHR</th>
+                          <th className="px-3 py-2">Ctx/10</th>
+                          <th className="px-3 py-2">Duration</th>
+                          <th className="px-3 py-2">Cx cm</th>
+                          <th className="px-3 py-2">BP</th>
+                          <th className="px-3 py-2">Temp</th>
+                          <th className="px-3 py-2">Liquor</th>
+                          <th className="px-3 py-2">Alerts</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {labourRows.map((row, i) => {
+                          const id = String(row.id ?? `labour-${i}`);
+                          const rec = row.recorded_at != null ? String(row.recorded_at) : "";
+                          const when = rec ? new Date(rec).toLocaleString() : "—";
+                          const alerts = Array.isArray(row.alert_flags) ? row.alert_flags : [];
+                          return (
+                            <tr key={id} className="hover:bg-gray-50/80">
+                              <td className="px-3 py-2 text-gray-800">{when}</td>
+                              <td className="px-3 py-2 text-gray-700">{row.phase ?? "—"}</td>
+                              <td className="px-3 py-2 text-gray-700">{row.derived_stage ?? "—"}</td>
+                              <td className="px-3 py-2 text-gray-700">{row.fetal_heart_rate_bpm ?? "—"}</td>
+                              <td className="px-3 py-2 text-gray-700">{row.contraction_frequency_10min ?? "—"}</td>
+                              <td className="px-3 py-2 text-gray-700">{row.contraction_duration_sec ?? "—"}</td>
+                              <td className="px-3 py-2 text-gray-700">{row.cervical_dilation_cm ?? "—"}</td>
+                              <td className="px-3 py-2 text-gray-700">
+                                {row.systolic_bp != null || row.diastolic_bp != null
+                                  ? `${row.systolic_bp ?? "—"}/${row.diastolic_bp ?? "—"}`
+                                  : "—"}
+                              </td>
+                              <td className="px-3 py-2 text-gray-700">{row.temperature_c ?? "—"}</td>
+                              <td className="px-3 py-2 text-gray-700">{row.liquor ?? "—"}</td>
+                              <td className="px-3 py-2 text-gray-700">
+                                {alerts.length === 0 ? "None" : alerts.join(", ")}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              )}
+              </details>
+            </section>
 
             {/* Early warning scores — existing /internal/v1/ews */}
             <div className="rounded-lg border border-gray-200 bg-white p-5">
@@ -396,6 +829,187 @@ export default function VitalsPage() {
                               <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${riskBadgeClass(risk)}`}>{risk}</span>
                             </td>
                             <td className="px-3 py-2 text-gray-700">{esc ? "Yes" : "No"}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            {/* Neonatal APGAR — GET/POST /internal/v1/apgar (apgar_scores) */}
+            <div className="rounded-lg border border-rose-200/90 bg-white p-5">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <Baby className="h-5 w-5 text-rose-600" aria-hidden />
+                  <h2 className="text-lg font-semibold text-gray-900">Neonatal APGAR</h2>
+                </div>
+                {isClinical && (
+                  <button
+                    type="button"
+                    onClick={() => setShowApgarForm((p) => !p)}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-sm font-medium text-rose-950 hover:bg-rose-100"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Record APGAR
+                  </button>
+                )}
+              </div>
+              <p className="mt-1 text-xs text-gray-500">
+                Maternity monitoring slice supported here: scores persist in{" "}
+                <code className="rounded bg-gray-100 px-1">apgar_scores</code> via{" "}
+                <code className="rounded bg-gray-100 px-1">/internal/v1/apgar</code>. Labour monitoring rows now persist separately;
+                CTG traces are still not in the experience BFF.
+              </p>
+
+              {apgarError && (
+                <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950">
+                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                  <div>
+                    <p className="font-medium">Could not load APGAR history</p>
+                    <button type="button" className="mt-1 text-xs underline" onClick={() => void refetchApgar()}>
+                      Retry
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {showApgarForm && isClinical && (
+                <form onSubmit={handleApgarSubmit} className="mt-4 space-y-3 rounded-lg border border-gray-100 bg-gray-50/80 p-4">
+                  <div className="flex flex-wrap items-end gap-3">
+                    <label className="text-xs font-medium text-gray-600">
+                      Minute
+                      <input
+                        type="number"
+                        min={1}
+                        max={10}
+                        required
+                        value={apgarMinute}
+                        onChange={(e) => setApgarMinute(e.target.value)}
+                        className="mt-1 block w-24 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                      />
+                    </label>
+                    <label className="text-xs font-medium text-gray-600">
+                      Appearance (0–2)
+                      <input
+                        type="number"
+                        min={0}
+                        max={2}
+                        required
+                        value={apgarAppearance}
+                        onChange={(e) => setApgarAppearance(e.target.value)}
+                        className="mt-1 block w-20 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                      />
+                    </label>
+                    <label className="text-xs font-medium text-gray-600">
+                      Pulse (0–2)
+                      <input
+                        type="number"
+                        min={0}
+                        max={2}
+                        required
+                        value={apgarPulse}
+                        onChange={(e) => setApgarPulse(e.target.value)}
+                        className="mt-1 block w-20 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                      />
+                    </label>
+                    <label className="text-xs font-medium text-gray-600">
+                      Grimace (0–2)
+                      <input
+                        type="number"
+                        min={0}
+                        max={2}
+                        required
+                        value={apgarGrimace}
+                        onChange={(e) => setApgarGrimace(e.target.value)}
+                        className="mt-1 block w-20 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                      />
+                    </label>
+                    <label className="text-xs font-medium text-gray-600">
+                      Activity (0–2)
+                      <input
+                        type="number"
+                        min={0}
+                        max={2}
+                        required
+                        value={apgarActivity}
+                        onChange={(e) => setApgarActivity(e.target.value)}
+                        className="mt-1 block w-20 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                      />
+                    </label>
+                    <label className="text-xs font-medium text-gray-600">
+                      Respiration (0–2)
+                      <input
+                        type="number"
+                        min={0}
+                        max={2}
+                        required
+                        value={apgarRespiration}
+                        onChange={(e) => setApgarRespiration(e.target.value)}
+                        className="mt-1 block w-20 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                      />
+                    </label>
+                    <button
+                      type="submit"
+                      disabled={recordApgar.isPending}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-rose-600 px-4 py-2 text-sm font-medium text-white hover:bg-rose-700 disabled:opacity-50"
+                    >
+                      {recordApgar.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                      Save APGAR
+                    </button>
+                  </div>
+                  {recordApgar.isError && (
+                    <p className="text-xs text-red-600">Failed to save APGAR. Check BFF and try again.</p>
+                  )}
+                </form>
+              )}
+
+              {apgarLoading ? (
+                <div className="mt-4 flex items-center gap-2 text-sm text-gray-500">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Loading APGAR…
+                </div>
+              ) : apgarRows.length === 0 ? (
+                <p className="mt-4 text-sm text-gray-500">No APGAR scores recorded for this patient yet.</p>
+              ) : (
+                <div className="mt-4 overflow-x-auto rounded-lg border border-gray-100">
+                  <table className="w-full min-w-[640px] text-sm">
+                    <thead>
+                      <tr className="border-b border-gray-200 bg-gray-50 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                        <th className="px-3 py-2">Recorded</th>
+                        <th className="px-3 py-2">Min</th>
+                        <th className="px-3 py-2">Ap</th>
+                        <th className="px-3 py-2">P</th>
+                        <th className="px-3 py-2">G</th>
+                        <th className="px-3 py-2">Ac</th>
+                        <th className="px-3 py-2">R</th>
+                        <th className="px-3 py-2">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {apgarRows.map((row, i) => {
+                        const id = String(row.id ?? `apgar-${i}`);
+                        const rec = row.recorded_at != null ? String(row.recorded_at) : "";
+                        const when = rec ? new Date(rec).toLocaleString() : "—";
+                        const total =
+                          row.total != null
+                            ? Number(row.total)
+                            : Number(row.appearance) +
+                              Number(row.pulse) +
+                              Number(row.grimace) +
+                              Number(row.activity) +
+                              Number(row.respiration);
+                        return (
+                          <tr key={id} className="hover:bg-gray-50/80">
+                            <td className="px-3 py-2 text-gray-800">{when}</td>
+                            <td className="px-3 py-2 text-gray-700">{row.minute}</td>
+                            <td className="px-3 py-2 text-gray-700">{row.appearance}</td>
+                            <td className="px-3 py-2 text-gray-700">{row.pulse}</td>
+                            <td className="px-3 py-2 text-gray-700">{row.grimace}</td>
+                            <td className="px-3 py-2 text-gray-700">{row.activity}</td>
+                            <td className="px-3 py-2 text-gray-700">{row.respiration}</td>
+                            <td className="px-3 py-2 font-medium text-gray-900">{Number.isFinite(total) ? total : "—"}</td>
                           </tr>
                         );
                       })}

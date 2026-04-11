@@ -2,10 +2,12 @@
 
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { AlertTriangle, ArrowLeft, CheckCircle2, Clock, Loader2, Package, Truck } from "lucide-react";
+import { useMemo, useState } from "react";
+import { AlertTriangle, ArrowLeft, CheckCircle2, Clock, Loader2, Package, Truck, RefreshCw } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useMarketplaceOrder } from "@/hooks/queries/useMarketplace";
+import { useCommerceOrder, useCommerceOrderAction, useCommerceOrderTracking } from "@/hooks/queries/useCommerceFlow";
 
 const STATUS_TIMELINE = ["PENDING", "APPROVED", "SHIPPED", "DELIVERED"];
 const STATUS_ICON: Record<string, typeof Clock> = {
@@ -18,10 +20,19 @@ const STATUS_ICON: Record<string, typeof Clock> = {
 export default function OrderDetailPage() {
   const params = useParams();
   const id = params.id as string;
-  const orderQuery = useMarketplaceOrder(id);
-  const order = orderQuery.data;
+  const commerceQ = useCommerceOrder(id);
+  const trackingQ = useCommerceOrderTracking(id);
+  const commerceAction = useCommerceOrderAction();
+  const [lastActionResponse, setLastActionResponse] = useState<unknown>(null);
 
-  const currentIndex = order ? STATUS_TIMELINE.indexOf(order.status) : -1;
+  const marketplaceQ = useMarketplaceOrder(id);
+  const marketplaceOrder = marketplaceQ.data;
+
+  const commerceOrder = useMemo(() => (commerceQ.data && typeof commerceQ.data === "object" ? commerceQ.data as Record<string, unknown> : null), [commerceQ.data]);
+
+  const shouldShowMarketplace = commerceQ.isError;
+
+  const currentIndex = marketplaceOrder ? STATUS_TIMELINE.indexOf(marketplaceOrder.status) : -1;
 
   return (
     <AppLayout>
@@ -32,35 +43,108 @@ export default function OrderDetailPage() {
           </Link>
         </div>
 
-        {orderQuery.isLoading ? (
+        {commerceQ.isLoading ? (
           <div className="flex items-center justify-center py-16 text-sm text-gray-500">
             <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Loading order...
           </div>
-        ) : !order ? (
+        ) : commerceOrder ? (
+          <div className="max-w-3xl space-y-6">
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-900">Commerce order</h3>
+                  <p className="mt-1 text-sm text-slate-600">
+                    Backed by <code className="text-xs">GET /internal/v1/commerce/orders/{`{orderId}`}</code>.
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500 break-all">Order ID: {id}</p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  {(["validate", "price", "pay", "cancel"] as const).map((action) => (
+                    <button
+                      key={action}
+                      type="button"
+                      disabled={commerceAction.isPending}
+                      onClick={() => {
+                        setLastActionResponse(null);
+                        commerceAction.mutate(
+                          { orderId: id, action },
+                          { onSuccess: (res) => setLastActionResponse(res) }
+                        );
+                      }}
+                      className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-800 hover:bg-slate-50 disabled:opacity-50"
+                    >
+                      {action.toUpperCase()}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => void trackingQ.refetch()}
+                    className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-800 hover:bg-slate-50"
+                  >
+                    <RefreshCw className="h-3.5 w-3.5" /> Refresh tracking
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {trackingQ.data ? (
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <h3 className="text-lg font-semibold text-slate-900">Tracking</h3>
+                <pre className="mt-3 max-h-72 overflow-auto rounded-lg border border-slate-200 bg-slate-50 p-3 text-[11px] text-slate-800">
+                  {JSON.stringify(trackingQ.data, null, 2)}
+                </pre>
+              </div>
+            ) : trackingQ.isError ? (
+              <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+                Tracking is not available for this order (or the upstream rejected the request).
+              </div>
+            ) : null}
+
+            {lastActionResponse ? (
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <h3 className="text-lg font-semibold text-slate-900">Last action response</h3>
+                <pre className="mt-3 max-h-72 overflow-auto rounded-lg border border-slate-200 bg-slate-50 p-3 text-[11px] text-slate-800">
+                  {JSON.stringify(lastActionResponse, null, 2)}
+                </pre>
+              </div>
+            ) : null}
+
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <h3 className="text-lg font-semibold text-slate-900">Raw order payload</h3>
+              <pre className="mt-3 max-h-[32rem] overflow-auto rounded-lg border border-slate-200 bg-slate-50 p-3 text-[11px] text-slate-800">
+                {JSON.stringify(commerceOrder, null, 2)}
+              </pre>
+            </div>
+          </div>
+        ) : shouldShowMarketplace && marketplaceQ.isLoading ? (
+          <div className="flex items-center justify-center py-16 text-sm text-gray-500">
+            <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Loading order...
+          </div>
+        ) : shouldShowMarketplace && !marketplaceOrder ? (
           <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center">
             <AlertTriangle className="mx-auto mb-2 h-8 w-8 text-red-400" />
             <p className="text-sm text-red-600">Failed to load order details.</p>
           </div>
-        ) : (
+        ) : shouldShowMarketplace && marketplaceOrder ? (
           <div className="max-w-3xl space-y-6">
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <h3 className="text-lg font-semibold text-slate-900">{order.orderNumber}</h3>
-                  <p className="mt-1 text-sm text-slate-500">Placed {new Date(order.createdAt).toLocaleString()} • Ordered by {order.orderedBy}</p>
+                  <h3 className="text-lg font-semibold text-slate-900">{marketplaceOrder.orderNumber}</h3>
+                  <p className="mt-1 text-sm text-slate-500">Placed {new Date(marketplaceOrder.createdAt).toLocaleString()} - Ordered by {marketplaceOrder.orderedBy}</p>
                 </div>
-                <span className={`rounded-full px-3 py-1 text-xs font-semibold ${order.status === "DELIVERED" ? "bg-emerald-100 text-emerald-800" : order.status === "SHIPPED" ? "bg-indigo-100 text-indigo-800" : "bg-amber-100 text-amber-800"}`}>
-                  {order.status}
+                <span className={`rounded-full px-3 py-1 text-xs font-semibold ${marketplaceOrder.status === "DELIVERED" ? "bg-emerald-100 text-emerald-800" : marketplaceOrder.status === "SHIPPED" ? "bg-indigo-100 text-indigo-800" : "bg-amber-100 text-amber-800"}`}>
+                  {marketplaceOrder.status}
                 </span>
               </div>
               <dl className="mt-4 grid gap-4 text-sm sm:grid-cols-2">
                 <div>
                   <dt className="text-slate-500">Facility</dt>
-                  <dd className="font-medium text-slate-900">{order.facilityId}</dd>
+                  <dd className="font-medium text-slate-900">{marketplaceOrder.facilityId}</dd>
                 </div>
                 <div>
                   <dt className="text-slate-500">Total amount</dt>
-                  <dd className="font-medium text-slate-900">{order.currency} {order.totalAmount.toFixed(2)}</dd>
+                  <dd className="font-medium text-slate-900">{marketplaceOrder.currency} {marketplaceOrder.totalAmount.toFixed(2)}</dd>
                 </div>
               </dl>
             </div>
@@ -68,16 +152,16 @@ export default function OrderDetailPage() {
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
               <h3 className="text-lg font-semibold text-slate-900">Order items</h3>
               <div className="mt-4 space-y-3">
-                {order.items.map((item, index) => (
+                {marketplaceOrder.items.map((item, index) => (
                   <div key={`${item.productId}-${index}`} className="flex items-center justify-between rounded-xl bg-slate-50 p-3">
                     <div className="flex items-center gap-3">
                       <Package className="h-5 w-5 text-slate-400" />
                       <div>
                         <p className="text-sm font-medium text-slate-900">{item.description || item.productId}</p>
-                        <p className="text-xs text-slate-500">{item.productId} • Qty {item.quantity}</p>
+                        <p className="text-xs text-slate-500">{item.productId} ï¿½ Qty {item.quantity}</p>
                       </div>
                     </div>
-                    <span className="text-sm font-medium text-slate-900">{order.currency} {(item.unitPrice * item.quantity).toFixed(2)}</span>
+                    <span className="text-sm font-medium text-slate-900">{marketplaceOrder.currency} {(item.unitPrice * item.quantity).toFixed(2)}</span>
                   </div>
                 ))}
               </div>
@@ -101,6 +185,10 @@ export default function OrderDetailPage() {
                 })}
               </div>
             </div>
+          </div>
+        ) : (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 p-6 text-sm text-amber-900">
+            This order id did not resolve via commerce or marketplace endpoints.
           </div>
         )}
       </PageShell>

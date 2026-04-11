@@ -48,5 +48,9 @@ describe("FinancePage", () => {
       "href",
       "/finance/billing?patientId=patient-1&encounterId=enc-1&source=discharge",
     );
+    expect(screen.getByRole("link", { name: /Open integration map/i })).toHaveAttribute(
+      "href",
+      "/finance/commerce-integrations",
+    );
   });
 });

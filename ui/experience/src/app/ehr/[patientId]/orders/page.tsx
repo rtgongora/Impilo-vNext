@@ -29,6 +29,7 @@ import { useEncounters } from "@/hooks/queries/useEncounters";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useRoleGroup } from "@/hooks/useRoleGroup";
+import { useProductRegistrySearch } from "@/hooks/queries/useProductRegistry";
 import { apiClient } from "@/lib/api-client";
 
 const STATUS_BADGE: Record<string, string> = {
@@ -55,6 +56,33 @@ const EMPTY_FORM = {
   ordered_by_name: "",
   facility_id: "",
 };
+
+type ProductRegistryCandidate = {
+  id: string;
+  name: string;
+  code: string;
+  kind?: string;
+};
+
+function extractProductCandidates(payload: unknown): ProductRegistryCandidate[] {
+  const root = payload as any;
+  const list =
+    (Array.isArray(root) && root) ||
+    (Array.isArray(root?.items) && root.items) ||
+    (Array.isArray(root?.data) && root.data) ||
+    (Array.isArray(root?.results) && root.results) ||
+    [];
+
+  return list
+    .map((raw: any, i: number) => {
+      const id = String(raw?.id ?? raw?.itemId ?? raw?.sku ?? raw?.code ?? `item-${i}`);
+      const name = String(raw?.name ?? raw?.label ?? raw?.title ?? raw?.displayName ?? raw?.description ?? "");
+      const code = String(raw?.code ?? raw?.productCode ?? raw?.sku ?? raw?.itemCode ?? "");
+      const kind = raw?.kind != null ? String(raw.kind) : undefined;
+      return { id, name, code, kind } satisfies ProductRegistryCandidate;
+    })
+    .filter((c: ProductRegistryCandidate) => c.name.trim() !== "" || c.code.trim() !== "");
+}
 
 export default function OrdersPage() {
   const params = useParams<{ patientId: string }>();
@@ -96,6 +124,15 @@ export default function OrdersPage() {
 
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(buildFormState);
+  const [catalogQuery, setCatalogQuery] = useState("");
+
+  const productSearch = useProductRegistrySearch({
+    q: catalogQuery.trim() || undefined,
+    size: 8,
+    page: 0,
+    kind: form.category === "LABORATORY" ? "service" : undefined,
+  });
+  const productCandidates = extractProductCandidates(productSearch.data);
 
   function updateField(field: string, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -230,6 +267,72 @@ export default function OrdersPage() {
                 <div className="mb-4 flex items-center gap-2">
                   <TestTube2 className="h-5 w-5 text-indigo-500" />
                   <h3 className="font-medium text-gray-900">New Lab Order</h3>
+                </div>
+                <div className="mb-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800">
+                  <p className="font-medium text-slate-900">Product / service lookup (shared rail)</p>
+                  <p className="mt-1 text-xs text-slate-600">
+                    Optional assistance: search{" "}
+                    <code className="rounded bg-white px-1">GET /internal/v1/product-registry/search</code> to fill Test Name and
+                    Test Code. If nothing matches, you can still enter a free-text order (no fake catalog is shown).
+                  </p>
+                  <div className="mt-3 flex flex-wrap items-end gap-3">
+                    <label className="text-xs font-medium text-slate-700">
+                      Search term
+                      <input
+                        type="text"
+                        value={catalogQuery}
+                        onChange={(e) => setCatalogQuery(e.target.value)}
+                        placeholder="e.g. CBC, Malaria smear, CXR"
+                        className="mt-1 block w-80 max-w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                      />
+                    </label>
+                    <div className="text-xs text-slate-600">
+                      {catalogQuery.trim().length < 2
+                        ? "Type at least 2 characters to search."
+                        : productSearch.isLoading
+                          ? "Searching registry…"
+                          : productSearch.isError
+                            ? "Registry search failed."
+                            : productCandidates.length === 0
+                              ? "No matches."
+                              : `${productCandidates.length} match${productCandidates.length === 1 ? "" : "es"} shown.`}
+                    </div>
+                  </div>
+                  {catalogQuery.trim().length >= 2 && productCandidates.length > 0 && (
+                    <div className="mt-3 overflow-x-auto rounded-lg border border-slate-200 bg-white">
+                      <table className="w-full min-w-[520px] text-sm">
+                        <thead className="bg-slate-50 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
+                          <tr>
+                            <th className="px-3 py-2">Name</th>
+                            <th className="px-3 py-2">Code</th>
+                            <th className="px-3 py-2">Kind</th>
+                            <th className="px-3 py-2">Action</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {productCandidates.map((c) => (
+                            <tr key={c.id} className="hover:bg-slate-50/70">
+                              <td className="px-3 py-2 text-slate-900">{c.name || "—"}</td>
+                              <td className="px-3 py-2 font-mono text-xs text-slate-700">{c.code || "—"}</td>
+                              <td className="px-3 py-2 text-slate-700">{c.kind ?? "—"}</td>
+                              <td className="px-3 py-2">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (c.name) updateField("test_name", c.name);
+                                    if (c.code) updateField("test_code", c.code);
+                                  }}
+                                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-800 hover:bg-slate-50"
+                                >
+                                  Use
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </div>
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="grid grid-cols-1 gap-3 md:grid-cols-2">

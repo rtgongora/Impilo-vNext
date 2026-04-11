@@ -38,6 +38,7 @@ import java.util.Map;
  *   <li>PRESCRIBER: CLINICIAN, FACILITY_ADMIN, SYSTEM_ADMIN, DEVELOPER</li>
  *   <li>DISPENSER: PHARMACIST, FACILITY_ADMIN, SYSTEM_ADMIN, DEVELOPER</li>
  *   <li>QUEUE: CLINICIAN, NURSE, SUPPORT_AGENT, FACILITY_ADMIN, SYSTEM_ADMIN, DEVELOPER</li>
+ *   <li>COMMERCE: FINANCE, CLINICIAN, NURSE, PHARMACIST, SUPPORT_AGENT, FACILITY_ADMIN, SYSTEM_ADMIN, DEVELOPER</li>
  *   <li>CITIZEN: CITIZEN, SYSTEM_ADMIN, DEVELOPER</li>
  * </ul>
  */
@@ -57,6 +58,12 @@ public class SecurityConfig {
     private static final String[] FINANCE_ROLES = {
             "SYSTEM_ADMIN", "FACILITY_ADMIN", "FINANCE"};
 
+    private static final String[] PAYER_OPS_ROLES = {
+            "SYSTEM_ADMIN", "FINANCE", "DEVELOPER"};
+
+    private static final String[] MSIKA_GOVERNANCE_ROLES = {
+            "SYSTEM_ADMIN", "FACILITY_ADMIN", "FINANCE", "DEVELOPER"};
+
     private static final String[] CLINICAL_ROLES = {
             "CLINICIAN", "NURSE", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"};
 
@@ -68,6 +75,9 @@ public class SecurityConfig {
 
     private static final String[] QUEUE_ROLES = {
             "CLINICIAN", "NURSE", "SUPPORT_AGENT", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"};
+
+    private static final String[] COMMERCE_ROLES = {
+            "FINANCE", "CLINICIAN", "NURSE", "PHARMACIST", "SUPPORT_AGENT", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"};
 
     private static final String[] CITIZEN_ROLES = {
             "CITIZEN", "SYSTEM_ADMIN", "DEVELOPER"};
@@ -93,7 +103,13 @@ public class SecurityConfig {
                     .requestMatchers("/internal/v1/admin/**").hasAnyRole(ADMIN_ROLES)
 
                     // ── Finance zone ──────────────────────────────────────
+                    .requestMatchers("/internal/v1/finance/payer-claims/**").hasAnyRole(PAYER_OPS_ROLES)
+                    .requestMatchers("/internal/v1/finance/payer-ops/**").hasAnyRole(PAYER_OPS_ROLES)
+                    .requestMatchers("/internal/v1/finance/reconciliation/**").hasAnyRole(PAYER_OPS_ROLES)
+                    .requestMatchers("/internal/v1/msika/**").hasAnyRole(MSIKA_GOVERNANCE_ROLES)
                     .requestMatchers("/internal/v1/finance/**").hasAnyRole(FINANCE_ROLES)
+                    .requestMatchers("/internal/v1/product-registry/**").hasAnyRole(COMMERCE_ROLES)
+                    .requestMatchers("/internal/v1/commerce/**").hasAnyRole(COMMERCE_ROLES)
 
                     // ── Queue management ──────────────────────────────────
                     .requestMatchers(HttpMethod.POST, "/internal/v1/queue/**")
@@ -126,6 +142,16 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.POST, "/internal/v1/triage/**")
                             .hasAnyRole(CLINICAL_ROLES)
                     .requestMatchers(HttpMethod.POST, "/internal/v1/vitals/**")
+                            .hasAnyRole(CLINICAL_ROLES)
+                    .requestMatchers(HttpMethod.POST, "/internal/v1/growth/**")
+                            .hasAnyRole(CLINICAL_ROLES)
+                    .requestMatchers(HttpMethod.GET, "/internal/v1/maternity/**")
+                            .hasAnyRole(CLINICAL_ROLES)
+                    .requestMatchers(HttpMethod.POST, "/internal/v1/maternity/**")
+                            .hasAnyRole(CLINICAL_ROLES)
+                    .requestMatchers(HttpMethod.PATCH, "/internal/v1/maternity/**")
+                            .hasAnyRole(CLINICAL_ROLES)
+                    .requestMatchers(HttpMethod.POST, "/internal/v1/labour-monitoring/**")
                             .hasAnyRole(CLINICAL_ROLES)
                     .requestMatchers(HttpMethod.POST, "/internal/v1/clinical-notes/**")
                             .hasAnyRole(CLINICAL_ROLES)

@@ -236,7 +236,8 @@ function handleAuthFailure(): void {
 async function request<T>(
   method: string,
   path: string,
-  body?: unknown
+  body?: unknown,
+  responseType: "json" | "text" = "json",
 ): Promise<T> {
   const headers = getV11Headers();
 
@@ -266,6 +267,9 @@ async function request<T>(
       });
 
       if (retryResponse.ok) {
+        if (responseType === "text") {
+          return retryResponse.text() as Promise<T>;
+        }
         return retryResponse.json();
       }
 
@@ -290,11 +294,16 @@ async function request<T>(
     };
   }
 
+  if (responseType === "text") {
+    return response.text() as Promise<T>;
+  }
+
   return response.json();
 }
 
 export const apiClient = {
   get: <T>(path: string) => request<T>("GET", path),
+  getText: (path: string) => request<string>("GET", path, undefined, "text"),
   post: <T>(path: string, body?: unknown) => request<T>("POST", path, body),
   put: <T>(path: string, body?: unknown) => request<T>("PUT", path, body),
   patch: <T>(path: string, body?: unknown) => request<T>("PATCH", path, body),

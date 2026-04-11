@@ -48,6 +48,7 @@ describe("apiClient", () => {
   it("exports apiClient with get, post, put, patch, delete methods", () => {
     expect(apiClient).toBeDefined();
     expect(typeof apiClient.get).toBe("function");
+    expect(typeof apiClient.getText).toBe("function");
     expect(typeof apiClient.post).toBe("function");
     expect(typeof apiClient.put).toBe("function");
     expect(typeof apiClient.patch).toBe("function");
@@ -325,6 +326,18 @@ describe("apiClient", () => {
     const [url, options] = mockFetch.mock.calls[0];
     expect(url).toBe("http://localhost:8160/internal/v1/test/123");
     expect(options.method).toBe("DELETE");
+  });
+
+  it("returns plain text bodies when getText is used", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      text: () => Promise.resolve("{\"resourceType\":\"Bundle\"}"),
+    });
+
+    await expect(apiClient.getText("/internal/v1/summary/ips/CPID-123")).resolves.toBe(
+      "{\"resourceType\":\"Bundle\"}",
+    );
   });
 
   it("clears persisted experience continuity on auth failure after refresh fails", async () => {

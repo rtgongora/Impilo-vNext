@@ -1,7 +1,11 @@
 import type { ReactNode } from "react";
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import PatientSummaryPage from "./page";
+
+const { mockUsePatient } = vi.hoisted(() => ({
+  mockUsePatient: vi.fn(),
+}));
 
 vi.mock("next/navigation", () => ({
   useParams: () => ({ patientId: "patient-1" }),
@@ -26,17 +30,7 @@ vi.mock("@/hooks/useFacilityStore", () => ({
 }));
 
 vi.mock("@/hooks/queries/usePatients", () => ({
-  usePatient: () => ({
-    data: {
-      data: {
-        id: "patient-1",
-        attributes: {
-          displayName: "Tariro Moyo",
-        },
-      },
-    },
-    isLoading: false,
-  }),
+  usePatient: () => mockUsePatient(),
 }));
 
 vi.mock("@/hooks/queries/useEncounters", () => ({
@@ -134,6 +128,21 @@ vi.mock("@tanstack/react-query", () => ({
 }));
 
 describe("PatientSummaryPage", () => {
+  beforeEach(() => {
+    mockUsePatient.mockReturnValue({
+      data: {
+        data: {
+          id: "patient-1",
+          attributes: {
+            displayName: "Tariro Moyo",
+            cpid: "ZW-CPID-TEST-001",
+          },
+        },
+      },
+      isLoading: false,
+    });
+  });
+
   it("surfaces coordination signals and referral movement in summary", () => {
     render(<PatientSummaryPage />);
 
@@ -143,5 +152,28 @@ describe("PatientSummaryPage", () => {
     expect(screen.getByText("Returned guidance")).toBeInTheDocument();
     expect(screen.getByText("Review persistent chest pain")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Open Consults" })).toBeInTheDocument();
+    expect(screen.getByText("International Patient Summary (IPS)")).toBeInTheDocument();
+    expect(screen.getByText(/Experience now proxies the Butano IPS bundle/)).toBeInTheDocument();
+    expect(screen.getByText(/ZW-CPID-TEST-001/)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Open IPS/i })).toHaveAttribute("href", "/ehr/patient-1/ips");
+  });
+
+  it("does not offer Open IPS when the patient has no CPID", () => {
+    mockUsePatient.mockReturnValue({
+      data: {
+        data: {
+          id: "patient-1",
+          attributes: {
+            displayName: "No Cpid Patient",
+          },
+        },
+      },
+      isLoading: false,
+    });
+
+    render(<PatientSummaryPage />);
+
+    expect(screen.queryByRole("link", { name: /Open IPS/i })).not.toBeInTheDocument();
+    expect(screen.getByText(/IPS stays unavailable until the patient chart exposes a CPID/i)).toBeInTheDocument();
   });
 });

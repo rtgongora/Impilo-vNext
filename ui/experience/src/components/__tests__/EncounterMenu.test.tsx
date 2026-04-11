@@ -172,7 +172,7 @@ describe("EncounterMenu", () => {
     render(<EncounterMenu />);
 
     const expectedItems = [
-      "Summary", "Timeline",
+      "Summary", "Timeline", "IPS",
       "Vitals", "Conditions", "History",
       "Allergies", "Immunizations",
       "Medications", "Orders", "Results", "Imaging", "Care Plans", "Care Team", "Goals",
@@ -220,6 +220,9 @@ describe("EncounterMenu", () => {
 
     const medicationsLink = getLinkByHref("/ehr/P-042/medications");
     expect(medicationsLink).toHaveAttribute("href", "/ehr/P-042/medications");
+
+    const ipsLink = getLinkByHref("/ehr/P-042/ips");
+    expect(ipsLink).toHaveAttribute("href", "/ehr/P-042/ips");
   });
 
   it("renders the live workspace and save-state indicator", () => {

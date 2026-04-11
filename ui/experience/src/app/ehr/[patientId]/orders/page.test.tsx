@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import OrdersPage from "./page";
 
@@ -111,8 +111,17 @@ vi.mock("@/hooks/queries/useLabOrders", () => ({
   useCancelLabOrder: () => ({ mutate: vi.fn(), isPending: false }),
 }));
 
+const { mockUseProductRegistrySearch } = vi.hoisted(() => ({
+  mockUseProductRegistrySearch: vi.fn(),
+}));
+
+vi.mock("@/hooks/queries/useProductRegistry", () => ({
+  useProductRegistrySearch: (params: unknown) => mockUseProductRegistrySearch(params),
+}));
+
 describe("OrdersPage", () => {
   it("surfaces diagnostic ordering orchestration with in-place workflow actions", () => {
+    mockUseProductRegistrySearch.mockReturnValue({ data: { items: [] }, isLoading: false, isError: false });
     render(<OrdersPage />);
 
     expect(screen.getByText("Order, collect, result, and review diagnostics from the same encounter-aware workspace")).toBeInTheDocument();
@@ -122,5 +131,33 @@ describe("OrdersPage", () => {
     expect(screen.getByRole("button", { name: "Collect" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Enter Result" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Results" })).toHaveAttribute("href", "/ehr/patient-1/results");
+  });
+
+  it("allows product-registry search to fill test name/code (no fake catalog)", () => {
+    mockUseProductRegistrySearch.mockImplementation((params: any) => {
+      if (params?.q === "cbc") {
+        return {
+          data: { items: [{ id: "svc-1", name: "Complete Blood Count", code: "CBC", kind: "service" }] },
+          isLoading: false,
+          isError: false,
+        };
+      }
+      return { data: { items: [] }, isLoading: false, isError: false };
+    });
+
+    render(<OrdersPage />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Add Order" }));
+    fireEvent.change(screen.getByLabelText("Search term"), { target: { value: "cbc" } });
+
+    expect(screen.getByText(/1 match/)).toBeInTheDocument();
+    const lookupCard = screen.getByText("Product / service lookup (shared rail)").closest("div");
+    expect(lookupCard).toBeTruthy();
+    const table = within(lookupCard as HTMLElement).getByRole("table");
+    expect(within(table).getByText("Complete Blood Count")).toBeInTheDocument();
+    fireEvent.click(within(table).getByRole("button", { name: "Use" }));
+
+    expect(screen.getByDisplayValue("Complete Blood Count")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("CBC")).toBeInTheDocument();
   });
 });

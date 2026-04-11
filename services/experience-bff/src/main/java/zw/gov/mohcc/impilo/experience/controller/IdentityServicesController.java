@@ -13,18 +13,18 @@ import zw.gov.mohcc.impilo.experience.client.VarapiServiceClient;
 import java.util.Map;
 
 /**
- * Identity Services BFF Controller — bridges Lovable ID Services Hub
+ * Identity Services BFF Controller â€” bridges Lovable ID Services Hub
  * to VITO (patient identity), VARAPI (provider identity), and
  * TSHEPO-IDENTITY (CPID generation).
  *
  * Endpoints:
- * - POST /internal/v1/identity/patient/register — register patient PHID
- * - POST /internal/v1/identity/patient/resolve — resolve health ID → CPID
- * - POST /internal/v1/identity/patient/recovery/start — start ID recovery
- * - POST /internal/v1/identity/patient/recovery/verify — verify recovery
- * - POST /internal/v1/identity/provider/create — create provider ID
- * - GET  /internal/v1/identity/provider/{id} — get provider identity
- * - GET  /internal/v1/identity/search — search identities
+ * - POST /internal/v1/identity/patient/register â€” register patient PHID
+ * - POST /internal/v1/identity/patient/resolve â€” resolve health ID â†’ CPID
+ * - POST /internal/v1/identity/patient/recovery/start â€” start ID recovery
+ * - POST /internal/v1/identity/patient/recovery/verify â€” verify recovery
+ * - POST /internal/v1/identity/provider/create â€” create provider ID
+ * - GET  /internal/v1/identity/provider/{id} â€” get provider identity
+ * - GET  /internal/v1/identity/search â€” search identities
  */
 @RestController
 @RequestMapping("/internal/v1/identity")
@@ -40,7 +40,7 @@ public class IdentityServicesController {
         this.varapiClient = varapiClient;
     }
 
-    // ── Patient Identity (VITO) ──────────────────────────────────
+    // â”€â”€ Patient Identity (VITO) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     @PostMapping("/patient/register")
     public ResponseEntity<Map<String, Object>> registerPatientIdentity(
@@ -111,7 +111,7 @@ public class IdentityServicesController {
         }
     }
 
-    // ── Provider Identity (VARAPI) ───────────────────────────────
+    // â”€â”€ Provider Identity (VARAPI) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     @PostMapping("/provider/create")
     public ResponseEntity<Map<String, Object>> createProviderIdentity(
@@ -119,8 +119,8 @@ public class IdentityServicesController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestBody Map<String, Object> body) {
         try {
-            // VARAPI provider creation — delegates to POST /v1/internal/providers
-            JsonNode result = varapiClient.getProvider("create"); // placeholder — would need a createProvider method
+            // VARAPI provider creation â€” delegates to POST /v1/internal/providers
+            JsonNode result = varapiClient.createProvider(body);
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
                     "data", result != null ? result : Map.of(),
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
@@ -147,7 +147,7 @@ public class IdentityServicesController {
         }
     }
 
-    // ── Search ───────────────────────────────────────────────────
+    // â”€â”€ Search â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     @GetMapping("/search")
     public ResponseEntity<Map<String, Object>> searchIdentities(
@@ -166,3 +166,4 @@ public class IdentityServicesController {
         }
     }
 }
+

@@ -41,6 +41,7 @@ import {
   Shield,
   Brain,
   ChevronRight,
+  Globe2,
 } from "lucide-react";
 import { useClinicalNotes } from "@/hooks/queries/useClinicalNotes";
 import { useEncounters } from "@/hooks/queries/useEncounters";
@@ -65,6 +66,7 @@ const MENU_SECTIONS: MenuSection[] = [
     items: [
       { label: "Summary", description: "Patient summary and status", segment: "summary", icon: LayoutDashboard },
       { label: "Timeline", description: "Clinical event timeline", segment: "timeline", icon: Clock },
+      { label: "IPS", description: "International patient summary bundle", segment: "ips", icon: Globe2 },
     ],
   },
   {

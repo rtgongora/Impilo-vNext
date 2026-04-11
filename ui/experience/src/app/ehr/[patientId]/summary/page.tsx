@@ -25,6 +25,7 @@ import {
   ArrowRightLeft,
   Video,
   ClipboardCheck,
+  Globe2,
 } from "lucide-react";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
@@ -177,6 +178,41 @@ export default function PatientSummaryPage() {
                 </div>
               </div>
             )}
+
+            <div className="rounded-lg border border-indigo-200 bg-indigo-50/90 p-4 text-sm text-indigo-950">
+              <div className="flex items-start gap-2">
+                <Globe2 className="mt-0.5 h-5 w-5 shrink-0 text-indigo-700" aria-hidden />
+                <div>
+                  <p className="font-semibold text-indigo-950">International Patient Summary (IPS)</p>
+                  <p className="mt-1 text-indigo-900/90">
+                    Experience now proxies the Butano IPS bundle through{" "}
+                    <code className="rounded bg-white/80 px-1">/internal/v1/summary/ips/{"{cpid}"}</code>, so the summary can
+                    link to a real chart-scoped document instead of carrying a placeholder contract note.
+                  </p>
+                  <p className="mt-2 text-xs text-indigo-800/90">
+                    Use the IPS workspace to review the returned FHIR document bundle, resource counts, and raw payload.
+                  </p>
+                  {patient.attributes.cpid ? (
+                    <div className="mt-3 flex flex-wrap items-center gap-3">
+                      <p className="text-xs text-indigo-800">
+                        Patient CPID: <span className="font-mono">{String(patient.attributes.cpid)}</span>
+                      </p>
+                      <Link
+                        href={`/ehr/${patientId}/ips`}
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-700 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-indigo-800"
+                      >
+                        <Globe2 className="h-3.5 w-3.5" />
+                        Open IPS
+                      </Link>
+                    </div>
+                  ) : (
+                    <p className="mt-2 text-xs text-amber-800">
+                      IPS stays unavailable until the patient chart exposes a CPID for Butano summary generation.
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
 
             <div className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
               <div className="rounded-3xl border border-slate-200 bg-[linear-gradient(135deg,#f8fbff_0%,#eef6ff_45%,#fffaf5_100%)] p-5 shadow-sm">

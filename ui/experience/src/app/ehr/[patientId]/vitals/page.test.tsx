@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import VitalsPage from "./page";
 
@@ -40,16 +41,26 @@ vi.mock("@/components/VitalsTrendChart", () => ({
   VitalsTrendPanel: () => null,
 }));
 
+vi.mock("@/features/maternity/partograph/VitalsPartographSection", () => ({
+  VitalsPartographSection: () => <div data-testid="vitals-partograph-stub">Partograph session UI</div>,
+}));
+
+vi.mock("@/features/maternity/ctg/VitalsCtgSection", () => ({
+  VitalsCtgSection: () => <div data-testid="vitals-ctg-stub">CTG session UI</div>,
+}));
+
 vi.mock("@/hooks/queries/useVitals", () => ({
   useVitals: () => ({ data: { data: [] }, isLoading: false }),
   useRecordVitals: () => ({ mutate: vi.fn(), isPending: false, isError: false }),
 }));
 
-const { mockUseEws, mockUseFluid, mockUseObs, mockUseXfer } = vi.hoisted(() => ({
+const { mockUseEws, mockUseFluid, mockUseObs, mockUseXfer, mockUseApgar, mockUseLabour } = vi.hoisted(() => ({
   mockUseEws: vi.fn(),
   mockUseFluid: vi.fn(),
   mockUseObs: vi.fn(),
   mockUseXfer: vi.fn(),
+  mockUseApgar: vi.fn(),
+  mockUseLabour: vi.fn(),
 }));
 
 vi.mock("@/hooks/queries/useEWS", () => ({
@@ -73,6 +84,16 @@ vi.mock("@/hooks/queries/usePatientTransfers", () => ({
   useAcceptPatientTransfer: () => ({ mutate: vi.fn(), isPending: false, isError: false }),
 }));
 
+vi.mock("@/hooks/queries/useApgar", () => ({
+  useApgarScores: () => mockUseApgar(),
+  useRecordApgar: () => ({ mutate: vi.fn(), isPending: false, isError: false }),
+}));
+
+vi.mock("@/hooks/queries/useLabourMonitoring", () => ({
+  useLabourMonitoring: () => mockUseLabour(),
+  useRecordLabourMonitoring: () => ({ mutate: vi.fn(), isPending: false, isError: false }),
+}));
+
 function stubEmpty() {
   return { data: { data: [] }, isLoading: false, isError: false, refetch: vi.fn() };
 }
@@ -87,6 +108,8 @@ function defaultMocks() {
   });
   mockUseObs.mockReturnValue(stubEmpty());
   mockUseXfer.mockReturnValue(stubEmpty());
+  mockUseApgar.mockReturnValue(stubEmpty());
+  mockUseLabour.mockReturnValue(stubEmpty());
 }
 
 describe("VitalsPage EWS integration", () => {
@@ -233,5 +256,108 @@ describe("VitalsPage patient transfers integration", () => {
     expect(screen.getByText("INTERNAL")).toBeInTheDocument();
     expect(screen.getByText("Needs ICU bed")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Accept" })).toBeInTheDocument();
+  });
+});
+
+describe("VitalsPage neonatal APGAR integration", () => {
+  beforeEach(defaultMocks);
+
+  it("surfaces empty APGAR section", () => {
+    render(<VitalsPage />);
+    expect(screen.getByRole("heading", { name: "Neonatal APGAR" })).toBeInTheDocument();
+    expect(screen.getByText(/No APGAR scores recorded for this patient yet/)).toBeInTheDocument();
+  });
+
+  it("renders APGAR rows from BFF-shaped data", () => {
+    mockUseApgar.mockReturnValue({
+      data: {
+        data: [
+          {
+            id: "apgar-1",
+            minute: 1,
+            appearance: 2,
+            pulse: 2,
+            grimace: 1,
+            activity: 2,
+            respiration: 2,
+            total: 9,
+            recorded_at: "2026-04-10T16:00:00.000Z",
+          },
+        ],
+      },
+      isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
+    });
+
+    render(<VitalsPage />);
+    const apgarTable = screen.getByText("Ap").closest("table");
+    expect(apgarTable).toBeTruthy();
+    if (apgarTable) {
+      expect(within(apgarTable as HTMLElement).getByText("9")).toBeInTheDocument();
+      expect(within(apgarTable as HTMLElement).getAllByText("2").length).toBeGreaterThanOrEqual(1);
+    }
+  });
+});
+
+describe("VitalsPage labour monitoring integration", () => {
+  beforeEach(defaultMocks);
+
+  it("surfaces maternity section with partograph stub and legacy labour inside details", async () => {
+    const user = userEvent.setup();
+    render(<VitalsPage />);
+    expect(screen.getByRole("heading", { name: "Maternity: partograph, CTG & labour" })).toBeInTheDocument();
+    expect(screen.getByTestId("vitals-partograph-stub")).toBeInTheDocument();
+    expect(screen.getByTestId("vitals-ctg-stub")).toBeInTheDocument();
+    await user.click(screen.getByText(/Legacy labour rows/i));
+    expect(screen.getByText(/No labour monitoring rows recorded for this patient yet/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Show full patient labour history" })).toBeInTheDocument();
+    const labourRegion = screen.getByRole("region", { name: /Maternity: partograph/ });
+    expect(labourRegion).toHaveTextContent(/Filtered to/);
+    expect(labourRegion).toHaveTextContent(/active encounter/);
+    expect(labourRegion).toHaveTextContent(/enc-1/);
+    expect(labourRegion).toHaveTextContent(/not a websocket stream/i);
+  });
+
+  it("renders labour monitoring rows from BFF-shaped data", async () => {
+    mockUseLabour.mockReturnValue({
+      data: {
+        data: [
+          {
+            id: "labour-1",
+            phase: "ACTIVE_LABOUR",
+            derived_stage: "ACTIVE_LABOUR",
+            fetal_heart_rate_bpm: 168,
+            contraction_frequency_10min: 4,
+            contraction_duration_sec: 55,
+            cervical_dilation_cm: 6,
+            systolic_bp: 150,
+            diastolic_bp: 92,
+            temperature_c: 38.2,
+            liquor: "CLEAR",
+            alert_flags: ["FETAL_HEART_ABNORMAL", "BLOOD_PRESSURE_ELEVATED"],
+            recorded_at: "2026-04-11T09:00:00.000Z",
+          },
+        ],
+      },
+      isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
+    });
+
+    const user = userEvent.setup();
+    render(<VitalsPage />);
+    await user.click(screen.getByText(/Legacy labour rows/i));
+
+    expect(screen.getByText("Latest reading")).toBeInTheDocument();
+    expect(screen.getByText(/FHR 168 bpm/)).toBeInTheDocument();
+    expect(screen.getAllByText("ACTIVE_LABOUR").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("168")).toBeInTheDocument();
+    expect(screen.getByText("4")).toBeInTheDocument();
+    expect(screen.getByText("6")).toBeInTheDocument();
+    expect(screen.getByText("150/92")).toBeInTheDocument();
+    expect(
+      screen.getAllByText(/FETAL_HEART_ABNORMAL, BLOOD_PRESSURE_ELEVATED/).length,
+    ).toBeGreaterThanOrEqual(2);
   });
 });

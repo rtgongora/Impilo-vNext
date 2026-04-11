@@ -9,6 +9,10 @@ package zw.gov.mohcc.impilo.companion.context;
  * Optional v1.1 headers:
  *   X-Client-Timeout-MS, Idempotency-Key
  *
+ * Operational context headers used by Experience and workflow services:
+ *   X-Actor-ID, X-Actor-Type, X-Purpose-Of-Use,
+ *   X-Facility-ID, X-Workspace-ID, X-Shift-ID
+ *
  * Policy response headers (injected by gateway after OPA/TSHEPO allow):
  *   X-Policy-Decision, X-Policy-Version, X-Decision-Reason
  */
@@ -29,6 +33,12 @@ public final class CompanionHeaders {
 
     // ── Timeout Propagation ─────────────────────────────────────
     public static final String CLIENT_TIMEOUT_MS = "X-Client-Timeout-MS";
+    public static final String ACTOR_ID          = "X-Actor-ID";
+    public static final String ACTOR_TYPE        = "X-Actor-Type";
+    public static final String PURPOSE_OF_USE    = "X-Purpose-Of-Use";
+    public static final String FACILITY_ID       = "X-Facility-ID";
+    public static final String WORKSPACE_ID      = "X-Workspace-ID";
+    public static final String SHIFT_ID          = "X-Shift-ID";
 
     // ── Idempotency ─────────────────────────────────────────────
     public static final String IDEMPOTENCY_KEY = "Idempotency-Key";

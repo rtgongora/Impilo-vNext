@@ -6,7 +6,8 @@
  * Backed by VITO + TSHEPO-IDENTITY + VARAPI.
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { RegistryPlaneContextBar } from "@/components/experience/RegistryPlaneContextBar";
 import {
   Shield, UserPlus, Search, RefreshCw, Layers, BookOpen,
@@ -16,7 +17,7 @@ import {
 import { useMutation } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
-import { apiClient } from "@/lib/api-client";
+import { apiClient, type ApiResponse } from "@/lib/api-client";
 
 type ActiveTab = "generate" | "validate" | "recovery" | "batch" | "architecture";
 
@@ -40,11 +41,22 @@ function copyToClipboard(text: string) {
 }
 
 export default function IdServicesPage() {
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<ActiveTab>("generate");
+
+  useEffect(() => {
+    const requestedTab = searchParams.get("tab");
+    if (requestedTab && TABS.some((tab) => tab.key === requestedTab)) {
+      setActiveTab(requestedTab as ActiveTab);
+    }
+  }, [searchParams]);
 
   return (
     <AppLayout>
-      <PageShell title="Identity Services" subtitle="Generate, validate, and recover health IDs">
+      <PageShell
+        title="Identity Services"
+        subtitle="Use the real identity contracts that exist today. Unsupported provider recovery, facility identity, and batch issuance remain visible but are not simulated."
+      >
         <RegistryPlaneContextBar />
         <div className="flex gap-1 mb-6 border-b border-gray-200">
           {TABS.map((tab) => {
@@ -93,8 +105,23 @@ function IdGenerationCard({ type, label, format, icon: Icon, color }: {
   const [generatedIds, setGeneratedIds] = useState<Record<string, string> | null>(null);
 
   const register = useMutation({
-    mutationFn: (body: Record<string, unknown>) =>
-      apiClient.post<{ data: Record<string, unknown> }>("/internal/v1/identity/patient/register", body),
+    mutationFn: (body: Record<string, unknown>) => {
+      if (type === "patient") {
+        return apiClient.post<ApiResponse<Record<string, unknown>>>(
+          "/internal/v1/identity/patient/register",
+          body,
+        );
+      }
+
+      if (type === "provider") {
+        return apiClient.post<ApiResponse<Record<string, unknown>>>(
+          "/internal/v1/identity/provider/create",
+          body,
+        );
+      }
+
+      throw new Error("Facility identity creation is not supported on the Experience BFF.");
+    },
     onSuccess: (res) => {
       const data = res?.data ?? {};
       const ids: Record<string, string> = {};
@@ -105,9 +132,31 @@ function IdGenerationCard({ type, label, format, icon: Icon, color }: {
       setGeneratedIds(ids);
     },
   });
+  const unsupportedFacilityCreation = type === "facility";
+  const canGenerate = !unsupportedFacilityCreation && Boolean(name);
+  const payload =
+    type === "provider"
+      ? {
+          title: "Dr",
+          givenName: name,
+          familyName,
+          dateOfBirth: dob || undefined,
+          email: email || undefined,
+          profession: "GENERAL_PRACTITIONER",
+          cadre: "CLINICIAN",
+          nationality: "ZW",
+          gender: "UNKNOWN",
+        }
+      : {
+          givenName: name,
+          familyName,
+          dateOfBirth: dob,
+          province,
+          idType: type,
+        };
 
   return (
-    <div className={`bg-white rounded-lg border-2 border-${color}-200 p-5 space-y-3`}>
+    <div data-testid={`generate-card-${type}`} className={`bg-white rounded-lg border-2 border-${color}-200 p-5 space-y-3`}>
       <div className="flex items-center gap-2 mb-1">
         <div className={`w-8 h-8 rounded-lg bg-${color}-100 flex items-center justify-center`}>
           <Icon className={`w-4 h-4 text-${color}-600`} />
@@ -138,12 +187,19 @@ function IdGenerationCard({ type, label, format, icon: Icon, color }: {
         )}
       </div>
 
-      <button onClick={() => { setGeneratedIds(null); register.mutate({ givenName: name, familyName, dateOfBirth: dob, province, idType: type }); }}
-        disabled={register.isPending || !name}
+      <button onClick={() => { setGeneratedIds(null); if (!unsupportedFacilityCreation) register.mutate(payload); }}
+        disabled={register.isPending || !canGenerate}
         className={`w-full py-2 bg-${color}-600 text-white text-xs font-medium rounded-lg hover:bg-${color}-700 disabled:opacity-50 flex items-center justify-center gap-1`}>
         {register.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <UserPlus className="w-3 h-3" />}
-        Generate
+        {unsupportedFacilityCreation ? "Unsupported" : "Generate"}
       </button>
+
+      {unsupportedFacilityCreation && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-[11px] text-amber-900">
+          Facility identity creation is not proxied through the Experience BFF yet. Keep this flow unsupported
+          until a real facility-registry create contract exists.
+        </div>
+      )}
 
       {generatedIds && (
         <div className="bg-green-50 border border-green-200 rounded-lg p-3 space-y-1.5">
@@ -161,7 +217,6 @@ function IdGenerationCard({ type, label, format, icon: Icon, color }: {
         </div>
       )}
 
-      {/* Email delivery */}
       {generatedIds && (
         <div className="flex gap-1">
           <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
@@ -184,8 +239,22 @@ function ValidateTab() {
   const [healthId, setHealthId] = useState("");
 
   const resolve = useMutation({
-    mutationFn: (id: string) =>
-      apiClient.post<{ data: Record<string, unknown> }>("/internal/v1/identity/patient/resolve", { healthId: id, idType }),
+    mutationFn: async (id: string) => {
+      if (idType === "patient") {
+        return apiClient.post<ApiResponse<Record<string, unknown>>>(
+          "/internal/v1/identity/patient/resolve",
+          { healthId: id, idType },
+        );
+      }
+
+      if (idType === "provider") {
+        return apiClient.get<ApiResponse<Record<string, unknown>>>(
+          `/internal/v1/identity/provider/${encodeURIComponent(id)}`,
+        );
+      }
+
+      throw new Error("Facility identity validation is not supported on the Experience BFF.");
+    },
   });
 
   return (
@@ -204,11 +273,16 @@ function ValidateTab() {
           <input type="text" value={healthId} onChange={(e) => setHealthId(e.target.value)}
             placeholder={`Enter ${idType === "patient" ? "PHID or CPID" : idType === "provider" ? "Provider ID" : "Facility ID"}`}
             className="flex-1 px-4 py-3 text-sm border border-gray-300 rounded-lg font-mono" />
-          <button onClick={() => resolve.mutate(healthId)} disabled={resolve.isPending || !healthId}
+          <button onClick={() => resolve.mutate(healthId)} disabled={resolve.isPending || !healthId || idType === "facility"}
             className="px-6 py-3 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2">
             {resolve.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />} Validate
           </button>
         </div>
+        {idType === "facility" && (
+          <p className="mt-3 text-xs text-amber-700">
+            Facility validation stays unsupported until the facility registry exposes a canonical Experience BFF read contract.
+          </p>
+        )}
       </div>
       {resolve.isSuccess && (
         <div className="bg-green-50 border border-green-200 rounded-lg p-5">
@@ -223,7 +297,14 @@ function ValidateTab() {
           </div>
         </div>
       )}
-      {resolve.isError && <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-2"><AlertCircle className="w-5 h-5 text-red-500" /><p className="text-sm text-red-700">Identity not found or invalid.</p></div>}
+      {resolve.isError && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-2">
+          <AlertCircle className="w-5 h-5 text-red-500" />
+          <p className="text-sm text-red-700">
+            {(resolve.error as Error | null)?.message ?? "Identity not found or invalid."}
+          </p>
+        </div>
+      )}
     </div>
   );
 }
@@ -270,6 +351,31 @@ function RecoveryTab() {
 
   const methods = recoveryType === "patient" ? PATIENT_METHODS : PROVIDER_METHODS;
 
+  if (recoveryType === "provider") {
+    return (
+      <div className="space-y-6">
+        <div className="flex gap-2 mb-2">
+          <button onClick={() => { setRecoveryType("patient"); setMethod("phone_otp"); setStep("form"); }}
+            className="px-4 py-2 text-sm font-medium rounded-lg bg-gray-100 text-gray-600">
+            Patient PHID Recovery
+          </button>
+          <button onClick={() => { setRecoveryType("provider"); setMethod("phone_otp"); setStep("form"); }}
+            className="px-4 py-2 text-sm font-medium rounded-lg bg-teal-600 text-white">
+            Provider ID Recovery
+          </button>
+        </div>
+
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-5 text-sm text-amber-950">
+          <p className="font-semibold">Provider recovery is not delivered in Experience yet</p>
+          <p className="mt-2">
+            The current Experience BFF only proxies patient recovery endpoints. Do not simulate provider recovery
+            until a canonical VARAPI or trust-layer recovery contract exists.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex gap-2 mb-2">
@@ -278,7 +384,7 @@ function RecoveryTab() {
           Patient PHID Recovery
         </button>
         <button onClick={() => { setRecoveryType("provider"); setMethod("phone_otp"); setStep("form"); }}
-          className={`px-4 py-2 text-sm font-medium rounded-lg ${recoveryType === "provider" ? "bg-teal-600 text-white" : "bg-gray-100 text-gray-600"}`}>
+          className="px-4 py-2 text-sm font-medium rounded-lg bg-gray-100 text-gray-600">
           Provider ID Recovery
         </button>
       </div>
@@ -421,6 +527,28 @@ function BatchTab() {
   const [count, setCount] = useState(10);
   const [facility, setFacility] = useState("Harare Central Hospital");
   const [generated, setGenerated] = useState<string[]>([]);
+  const batchIssuanceSupported = false;
+
+  if (!batchIssuanceSupported) {
+    return (
+      <div className="rounded-lg border border-amber-200 bg-amber-50 p-6 text-sm text-amber-950">
+        <div className="flex items-start gap-3">
+          <Layers className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" />
+          <div>
+            <h3 className="text-base font-semibold">Batch identity issuance is intentionally unsupported</h3>
+            <p className="mt-2">
+              Experience will not deliver browser-generated PHIDs or CSV exports. The accepted surface now blocks this
+              until a real backend contract exists for reserve, issue, and audited download.
+            </p>
+            <p className="mt-3 text-xs text-amber-900/80">
+              Required contract: a canonical Experience BFF route for batch issuance with facility scope, audit
+              metadata, and server-generated identifiers.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const FACILITIES = ["Harare Central Hospital", "Parirenyatwa Group", "Chitungwiza Central", "Mpilo Central", "United Bulawayo"];
 

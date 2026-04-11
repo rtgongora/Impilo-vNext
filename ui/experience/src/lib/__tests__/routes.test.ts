@@ -143,6 +143,78 @@ describe("Route Registry", () => {
     }
   });
 
+  it("registers the IPS chart route with ehr layout and shift guard", () => {
+    const route = ROUTES.find((r) => r.path === "/ehr/[patientId]/ips");
+    expect(route?.layout).toBe("ehr");
+    expect(route?.guard).toBe("shift");
+  });
+
+  it("registers commerce integrations and sidecar retirement in canonical shared routing", () => {
+    const financeRoute = ROUTES.find((r) => r.path === "/finance/commerce-integrations");
+    expect(financeRoute?.guard).toBe("role");
+    expect(financeRoute?.requiredRole).toBe("FINANCE");
+
+    const ledgerRoute = ROUTES.find((r) => r.path === "/admin/sidecar-retirement");
+    expect(ledgerRoute?.guard).toBe("role");
+    expect(ledgerRoute?.requiredRole).toBe("ADMIN");
+  });
+
+  it("registers citizen self-service and public share claim routes in canonical shared routing", () => {
+    const citizenPaths = [
+      "/citizen",
+      "/citizen/health-id/qr",
+      "/citizen/health-id/request",
+      "/citizen/id-recovery",
+      "/citizen/delegated-pickup",
+    ];
+
+    for (const p of citizenPaths) {
+      const route = ROUTES.find((r) => r.path === p);
+      expect(route?.layout).toBe("app");
+      expect(route?.guard).toBe("auth");
+      expect(route?.navZone).toBe("life");
+    }
+
+    const shareClaimRoute = ROUTES.find((r) => r.path === "/share/claim");
+    expect(shareClaimRoute?.layout).toBe("app");
+    expect(shareClaimRoute?.guard).toBe("none");
+    expect(shareClaimRoute?.navZone).toBe("life");
+
+    const verifyCredentialRoute = ROUTES.find((r) => r.path === "/verify/credential");
+    expect(verifyCredentialRoute?.layout).toBe("app");
+    expect(verifyCredentialRoute?.guard).toBe("none");
+    expect(verifyCredentialRoute?.navZone).toBe("life");
+  });
+
+  it("registers absorbed marketplace and finance operations routes in canonical shared routing", () => {
+    const financePaths = [
+      "/finance/settlements",
+      "/finance/reconciliation",
+      "/finance/refunds",
+      "/finance/payer-ops",
+    ];
+
+    for (const p of financePaths) {
+      const route = ROUTES.find((r) => r.path === p);
+      expect(route?.guard).toBe("role");
+      expect(route?.requiredRole).toBe("FINANCE");
+      expect(route?.navZone).toBe("work");
+    }
+
+    const marketplacePaths = [
+      "/marketplace/ops",
+      "/marketplace/vendor",
+      "/marketplace/vendor/orders",
+    ];
+
+    for (const p of marketplacePaths) {
+      const route = ROUTES.find((r) => r.path === p);
+      expect(route?.guard).toBe("role");
+      expect(route?.requiredRole).toBe("FINANCE");
+      expect(route?.navZone).toBe("work");
+    }
+  });
+
   it("scheduling hub, roster, on-call, and noticeboard use workspace guard", () => {
     for (const p of ["/scheduling", "/scheduling/roster", "/scheduling/on-call", "/scheduling/noticeboard"]) {
       const route = ROUTES.find((r) => r.path === p);

@@ -83,6 +83,13 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/home/preferences", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Preferences", navLabel: "Preferences", navZone: "life" },
   { path: "/home/credentials", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Credentials & CPD", navLabel: "Credentials", navZone: "professional" },
   { path: "/home/medications", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Medications", navLabel: "Medications", navZone: "life" },
+  { path: "/citizen", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Citizen Services", navLabel: "Citizen Services", navZone: "life" },
+  { path: "/citizen/health-id/qr", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Health ID QR", navLabel: "Health ID QR", navZone: "life" },
+  { path: "/citizen/health-id/request", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Request Health ID", navLabel: "Request Health ID", navZone: "life" },
+  { path: "/citizen/id-recovery", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "ID Recovery", navLabel: "ID Recovery", navZone: "life" },
+  { path: "/citizen/delegated-pickup", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Delegated Pickup", navLabel: "Delegated Pickup", navZone: "life" },
+  { path: "/verify/credential", zone: "home", layout: "app", sidebar: "main", guard: "none", pageTitle: "Verify Credential", navLabel: "Verify Credential", navZone: "life" },
+  { path: "/share/claim", zone: "home", layout: "app", sidebar: "main", guard: "none", pageTitle: "Claim Shared Documents", navLabel: "Claim Shared Documents", navZone: "life" },
 
   // ── Zone: Facility Selection ────────────────────────────────────
   { path: "/facility", zone: "facility", layout: "app", sidebar: "facility", guard: "auth", pageTitle: "Select Facility", navLabel: "Facilities" },
@@ -118,6 +125,7 @@ export const ROUTES: RouteDefinition[] = [
   // ── Zone: EHR (Clinical) ────────────────────────────────────────
   { path: "/ehr/[patientId]", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Patient Chart", navLabel: "Chart", navZone: "work" },
   { path: "/ehr/[patientId]/summary", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Patient Summary", navLabel: "Summary", navZone: "work" },
+  { path: "/ehr/[patientId]/ips", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "International Patient Summary", navLabel: "IPS", navZone: "work" },
   { path: "/ehr/[patientId]/vitals", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Vitals", navLabel: "Vitals", navZone: "work" },
   { path: "/ehr/[patientId]/history", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Medical History", navLabel: "History", navZone: "work" },
   { path: "/ehr/[patientId]/conditions", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Conditions", navLabel: "Conditions", navZone: "work" },
@@ -165,6 +173,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/admin/data-export", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Data Export", navLabel: "Data Export", navZone: "professional" },
   { path: "/admin/system-monitor", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "System Monitor", navLabel: "System Monitor", navZone: "professional" },
   { path: "/admin/integration-status", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Integration Status", navLabel: "Integrations", navZone: "professional" },
+  { path: "/admin/sidecar-retirement", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Sidecar Retirement", navLabel: "Sidecar Retirement", navZone: "professional" },
 
   // ── Administrative plane landings (operational context: registry_admin / organization_admin) ──
   { path: "/registry-admin", zone: "admin", layout: "app", sidebar: "registry", guard: "role", requiredRole: "REGISTRY_ADMIN", pageTitle: "Registry Administration", navLabel: "Registry Admin", navZone: "professional" },
@@ -190,6 +199,9 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/marketplace/catalog", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "auth", pageTitle: "Service Catalog", navLabel: "Catalog", navZone: "work" },
   { path: "/marketplace/orders", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "auth", pageTitle: "My Orders", navLabel: "Orders", navZone: "work" },
   { path: "/marketplace/orders/[id]", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "auth", pageTitle: "Order Details", navLabel: "Order", navZone: "work" },
+  { path: "/marketplace/ops", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "role", requiredRole: "FINANCE", pageTitle: "Marketplace Operations", navLabel: "Marketplace Ops", navZone: "work" },
+  { path: "/marketplace/vendor", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "role", requiredRole: "FINANCE", pageTitle: "Vendor Fulfilment", navLabel: "Vendor Fulfilment", navZone: "work" },
+  { path: "/marketplace/vendor/orders", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "role", requiredRole: "FINANCE", pageTitle: "Vendor Orders", navLabel: "Vendor Orders", navZone: "work" },
   { path: "/marketplace/vendors", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "auth", pageTitle: "Vendors", navLabel: "Vendors", navZone: "work" },
   { path: "/marketplace/bookings", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "auth", pageTitle: "Bookings", navLabel: "Bookings", navZone: "work" },
 
@@ -200,7 +212,12 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/finance/billing", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Billing", navLabel: "Billing", navZone: "work" },
   { path: "/finance/billing/[id]", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Bill Details", navLabel: "Bill", navZone: "work" },
   { path: "/finance/payments", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Payments", navLabel: "Payments", navZone: "work" },
+  { path: "/finance/settlements", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Settlements", navLabel: "Settlements", navZone: "work" },
+  { path: "/finance/reconciliation", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Reconciliation", navLabel: "Reconciliation", navZone: "work" },
+  { path: "/finance/refunds", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Refunds", navLabel: "Refunds", navZone: "work" },
+  { path: "/finance/payer-ops", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Payer Operations", navLabel: "Payer Ops", navZone: "work" },
   { path: "/finance/tariffs", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Tariff Management", navLabel: "Tariffs", navZone: "work" },
+  { path: "/finance/commerce-integrations", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Commerce & Payer Stack", navLabel: "Commerce Integrations", navZone: "work" },
 
   // ── Zone: Beds & Wards ──────────────────────────────────────────
   { path: "/beds", zone: "queue", layout: "app", sidebar: "queue", guard: "shift", pageTitle: "Bed Management", navLabel: "Beds", navZone: "work" },
@@ -237,7 +254,7 @@ export const ROUTES: RouteDefinition[] = [
 ];
 
 // Total route count assertion
-export const EXPECTED_ROUTE_COUNT = 144;
+export const EXPECTED_ROUTE_COUNT = 161;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

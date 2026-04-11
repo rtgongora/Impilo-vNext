@@ -51,4 +51,62 @@ describe("ExperienceSidebar", () => {
     expect(screen.getByText("Clinical coordination")).toBeInTheDocument();
     expect(screen.getAllByRole("link", { name: "ED / Casualty" })).toHaveLength(2);
   });
+
+  it("exposes the sidecar retirement ledger in professional navigation for admin-capable users", () => {
+    render(<ExperienceSidebar />);
+
+    expect(screen.getByRole("link", { name: "Sidecar ledger" })).toHaveAttribute(
+      "href",
+      "/admin/sidecar-retirement",
+    );
+  });
+
+  it("keeps citizen services in life navigation", () => {
+    render(<ExperienceSidebar />);
+
+    expect(screen.getByRole("link", { name: "Citizen services" })).toHaveAttribute(
+      "href",
+      "/citizen",
+    );
+    expect(screen.getByRole("link", { name: "Claim shared docs" })).toHaveAttribute(
+      "href",
+      "/share/claim",
+    );
+  });
+
+  it("shows citizen self-service spotlight actions on citizen routes", () => {
+    mockUsePathname.mockReturnValue("/citizen");
+
+    render(<ExperienceSidebar />);
+
+    expect(screen.getByText("Citizen self-service")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Health ID QR" })).toHaveAttribute(
+      "href",
+      "/citizen/health-id/qr",
+    );
+    expect(screen.getByRole("link", { name: "ID recovery" })).toHaveAttribute(
+      "href",
+      "/citizen/id-recovery",
+    );
+    expect(screen.getByRole("link", { name: "Claim docs" })).toHaveAttribute(
+      "href",
+      "/share/claim",
+    );
+  });
+
+  it("shows credential verification in the citizen self-service spotlight on public verify routes", () => {
+    mockUsePathname.mockReturnValue("/verify/credential");
+
+    render(<ExperienceSidebar />);
+
+    expect(screen.getByText("Citizen self-service")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Verify credential" })).toHaveAttribute(
+      "href",
+      "/verify/credential",
+    );
+    expect(screen.getByRole("link", { name: "Claim docs" })).toHaveAttribute(
+      "href",
+      "/share/claim",
+    );
+  });
 });
