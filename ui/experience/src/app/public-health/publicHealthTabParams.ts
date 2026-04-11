@@ -20,7 +20,7 @@ const TAB_QUERY_MAP: Record<string, PublicHealthActiveTab> = {
   complaints: "complaints",
   campaigns: "campaigns",
   field: "field",
-  sites: "field",
+  sites: "field", // Active alias — home/page.tsx links to ?tab=sites
   emergency: "emergency",
 };
 

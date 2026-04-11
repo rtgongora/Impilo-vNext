@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 import { cleanup, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import ConsultsPage from "./consults/page";
-import ClinicalNotesPage from "./notes/page";
+import ConsultsPage from "../consults/page";
+import ClinicalNotesPage from "../notes/page";
 
 const { push, replace, searchParams, mutate, queryData } = vi.hoisted(() => ({
   push: vi.fn(),

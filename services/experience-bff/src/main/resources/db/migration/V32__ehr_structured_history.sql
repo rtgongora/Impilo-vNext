@@ -1,6 +1,11 @@
 -- =============================================================================
 -- V32: EHR structured history — social, family, functional assessments, procedures, directives
 -- Patient-scoped continuity tables (tenant_id + patient_id → patients.id).
+--
+-- Verified 2026-04-11: all FKs resolve, no table name conflicts with V1-V31.
+-- Tables: social_history_entries, family_history_members, family_history_conditions,
+--         functional_assessments, patient_procedures, advance_directives
+-- Controller: StructuredHistoryController.java | Hook: useStructuredHistory.ts
 -- =============================================================================
 
 CREATE TABLE IF NOT EXISTS social_history_entries (

@@ -3,6 +3,9 @@
  *
  * All 161 routes across 15 zones.
  * Each route specifies: path, zone, layout, sidebar context, guard, page title, and nav label.
+ *
+ * Zones: auth, home, facility, workspace, shift, queue, ehr, admin, registry,
+ * marketplace, finance, pharmacy, inventory, reports, settings
  */
 
 export type LayoutVariant = "app" | "ehr" | "auth" | "minimal";

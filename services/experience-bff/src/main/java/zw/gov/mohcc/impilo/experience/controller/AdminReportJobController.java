@@ -21,6 +21,8 @@ import java.util.Map;
  * Admin report job listing for observability and export surfaces.
  *
  * <p>GET /internal/v1/admin/reports/jobs — paginated jobs for the tenant, newest first.</p>
+ *
+ * @see ReportJobController for job trigger (POST /generate) and single-job detail (GET /{id})
  */
 @RestController
 @RequestMapping("/internal/v1/admin/reports/jobs")
