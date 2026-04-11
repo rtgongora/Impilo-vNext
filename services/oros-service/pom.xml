@@ -80,6 +80,13 @@
             <version>${project.version}</version>
         </dependency>
 
+        <!-- Shared Kernel (terminology: CodingSystem, CodeableConcept, CodingValidator) -->
+        <dependency>
+            <groupId>zw.gov.mohcc.impilo</groupId>
+            <artifactId>shared-kernel-java</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- Observability -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

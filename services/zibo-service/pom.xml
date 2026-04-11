@@ -80,6 +80,13 @@
             <version>${project.version}</version>
         </dependency>
 
+        <!-- Shared Kernel (terminology: CodingSystem, CodeableConcept, CodingValidator) -->
+        <dependency>
+            <groupId>zw.gov.mohcc.impilo</groupId>
+            <artifactId>shared-kernel-java</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- HAPI FHIR (R4 structures + validation) -->
         <dependency>
             <groupId>ca.uhn.hapi.fhir</groupId>
