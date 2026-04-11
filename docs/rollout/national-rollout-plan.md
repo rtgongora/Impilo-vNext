@@ -51,7 +51,7 @@
 | zibo-service | 8085 | Second | Terminology; must be loaded before clinical services |
 | msika-service | 8086 | Second | Product/formulary catalog |
 | butano-service | 8090 | Third | SHR; CPID-only, requires VITO operational |
-| mushex-service | 8087 | Third | Finance engine; can follow registries |
+| mushex-service | 8102 | Third | Finance engine; can follow registries |
 
 **Ring 0 deployment window**: Per-site, completed before any Ring 1 service is enabled.
 
@@ -75,10 +75,10 @@
 | integration-hub | 8110 | Deploy with Ring 0; routes activated per ring |
 | notification-service | 8111 | Deploy with Ring 0; templates loaded per phase |
 | search-service | 8120 | Deploy after Ring 1; indexes built post-data-load |
-| reporting-service | 8160 | Deploy in Phase 2+; dashboards per site tier |
+| reporting-service | 8176 | Deploy in Phase 2+; dashboards per site tier |
 | surveillance-service | 8118 | Deploy in Phase 2+; eIDSR config per province |
 | data-pipeline-service | 8140 | Deploy in Phase 2+; NDR feeds activated per province |
-| fhir-gateway-service | 8113 | Deploy when external HIE integration required |
+| fhir-gateway-service | 8091 | Deploy when external HIE integration required |
 | offline-sync-service | 8115 | Deploy for Tier 3/4 sites; CRDT reconciliation |
 
 ### 2.4 Outer Ring — Experience Layer

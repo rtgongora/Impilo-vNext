@@ -64,7 +64,7 @@ Impilo Fundo ("Fundo" = "to learn/teach" in isiZulu) is the training program for
 | Facility configuration: departments, services, operating hours | 1 hour | tuso-service (8084) | ops-console (3001) |
 | Provider management: credentialing, privileging | 1 hour | varapi-service (8083) | ops-console (3001) |
 | Terminology and formulary management | 1 hour | zibo-service (8085), msika-service (8086) | zibo-web (3008), msika-web (3019) |
-| Report generation and dashboards | 1 hour | reporting-service (8160) | ops-console (3001) |
+| Report generation and dashboards | 1 hour | reporting-service (8176) | ops-console (3001) |
 | Consent policy management | 0.5 hour | tshepo-consent-service (8182) | ops-console (3001) |
 | Billing and tariff configuration | 1 hour | costing-engine-service (8101), mushex-service (8087) | costa-console (3015) |
 | Practical assessment: 5 admin tasks | 1 hour | All above | All above |
