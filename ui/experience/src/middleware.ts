@@ -16,6 +16,7 @@ const PUBLIC_PREFIXES = [
   "/share",
   "/privacy",
   "/terms",
+  "/consent",
   "/_next",
   "/api",
 ];
