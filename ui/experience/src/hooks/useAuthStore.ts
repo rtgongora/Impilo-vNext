@@ -55,6 +55,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (refreshToken) sessionStorage.setItem("exp:refresh_token", refreshToken);
       if (expiresAt) sessionStorage.setItem("exp:expires_at", expiresAt);
     }
+    if (typeof document !== "undefined") {
+      document.cookie = "exp:has_session=1;path=/;SameSite=Lax";
+    }
     set({ user, token, refreshToken: refreshToken ?? null, expiresAt: expiresAt ?? null, isAuthenticated: true });
   },
 
@@ -73,6 +76,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       sessionStorage.removeItem("exp:auth_user");
       sessionStorage.removeItem("exp:refresh_token");
       sessionStorage.removeItem("exp:expires_at");
+    }
+    if (typeof document !== "undefined") {
+      document.cookie = "exp:has_session=;path=/;expires=Thu, 01 Jan 1970 00:00:00 GMT";
     }
     resetExperienceContinuity();
     set({ user: null, token: null, refreshToken: null, expiresAt: null, isAuthenticated: false });
