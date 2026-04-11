@@ -28,6 +28,8 @@ import zw.gov.mohcc.impilo.zibo.persistence.repository.EventOutboxRepository;
 import zw.gov.mohcc.impilo.zibo.persistence.repository.ValidationJobRepository;
 import zw.gov.mohcc.impilo.zibo.persistence.repository.ValidationLogRepository;
 
+import zw.gov.mohcc.impilo.sharedkernel.terminology.CodingSystem;
+
 import java.time.OffsetDateTime;
 import java.util.*;
 
@@ -96,6 +98,12 @@ public class ValidationEngine {
         UUID tenantId = ctx.tenantId();
 
         PolicyMode effectiveMode = resolveEffectiveMode(tenantId, facilityId, modeOverride);
+
+        // Quick structural check: warn if system URI is not a recognized international standard
+        if (!CodingSystem.isKnown(system)) {
+            log.debug("Coding system URI '{}' is not in the CodingSystem registry — " +
+                    "proceeding with database lookup", system);
+        }
 
         // Look up the CodeSystem artifact by canonical URL
         List<ArtifactEntity> artifacts = artifactRepository.findByTenantIdAndCanonicalUrl(tenantId, system);
