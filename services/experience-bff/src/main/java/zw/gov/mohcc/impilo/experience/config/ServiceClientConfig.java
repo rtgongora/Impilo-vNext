@@ -46,7 +46,17 @@ public class ServiceClientConfig {
             String indawoBaseUrl,
             String dataGovernanceBaseUrl,
             String landelaBaseUrl,
-            String notificationBaseUrl
+            String notificationBaseUrl,
+            // Health OS §10: Interoperability
+            String fhirBaseUrl,
+            String fhirGatewayBaseUrl,
+            // Health OS §12: Governed Knowledge
+            String searchBaseUrl,
+            // Health OS §11: Extension Points
+            String formsBaseUrl,
+            String rulesBaseUrl,
+            // Health OS §5: Workflow
+            String workflowBaseUrl
     ) {
         public ServiceEndpoints {
             if (pctBaseUrl == null) pctBaseUrl = "http://localhost:8088";
@@ -68,6 +78,12 @@ public class ServiceClientConfig {
             if (dataGovernanceBaseUrl == null) dataGovernanceBaseUrl = "http://localhost:8220";
             if (landelaBaseUrl == null) landelaBaseUrl = "http://localhost:8092";
             if (notificationBaseUrl == null) notificationBaseUrl = "http://localhost:8200";
+            if (fhirBaseUrl == null) fhirBaseUrl = "http://localhost:8090/fhir";
+            if (fhirGatewayBaseUrl == null) fhirGatewayBaseUrl = "http://localhost:8091";
+            if (searchBaseUrl == null) searchBaseUrl = "http://localhost:8230";
+            if (formsBaseUrl == null) formsBaseUrl = "http://localhost:8240";
+            if (rulesBaseUrl == null) rulesBaseUrl = "http://localhost:8241";
+            if (workflowBaseUrl == null) workflowBaseUrl = "http://localhost:8250";
         }
     }
 

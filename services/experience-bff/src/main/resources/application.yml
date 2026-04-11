@@ -76,6 +76,12 @@ impilo:
     data-governance-base-url: ${DATA_GOVERNANCE_BASE_URL:http://localhost:8220}
     landela-base-url: ${LANDELA_BASE_URL:http://localhost:8092}
     notification-base-url: ${NOTIFICATION_BASE_URL:http://localhost:8200}
+    fhir-base-url: ${FHIR_BASE_URL:http://localhost:8090/fhir}
+    fhir-gateway-base-url: ${FHIR_GATEWAY_BASE_URL:http://localhost:8091}
+    search-base-url: ${SEARCH_BASE_URL:http://localhost:8230}
+    forms-base-url: ${FORMS_BASE_URL:http://localhost:8240}
+    rules-base-url: ${RULES_BASE_URL:http://localhost:8241}
+    workflow-base-url: ${WORKFLOW_BASE_URL:http://localhost:8250}
 
 logging:
   level:
