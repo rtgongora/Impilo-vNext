@@ -28,5 +28,5 @@ npm run generate
 - Ports: [`docs/runbooks/port-allocation.md`](../runbooks/port-allocation.md)
 - Roadmap: [`docs/roadmaps/agent-led-fullstack-completeness-roadmap.md`](../roadmaps/agent-led-fullstack-completeness-roadmap.md)
 - Completeness (Phase A2): `cd scripts/completeness && npm install && npm run report` → [`docs/reports/`](../reports/) (`completeness-report.json` / `.md`)
-- Experience BFF (Phase C): downstream [`experience-bff-downstream-route-map.md`](../architecture/experience-bff-downstream-route-map.md); `/internal/v1` index [`experience-bff-internal-routes.md`](../architecture/experience-bff-internal-routes.md) (`cd scripts/bff-routes && node list-bff-internal-routes.mjs`)
+- Experience BFF (Phase C): downstream [`experience-bff-downstream-route-map.md`](../architecture/experience-bff-downstream-route-map.md); domain mapping [`experience-bff-phase-c-domain-mapping.md`](../architecture/experience-bff-phase-c-domain-mapping.md); `/internal/v1` index [`experience-bff-internal-routes.md`](../architecture/experience-bff-internal-routes.md) (`cd scripts/bff-routes && node list-bff-internal-routes.mjs`)
 - Maven modules: `services/pom.xml` `<modules>` — registry should stay aligned (Phase A2 may add drift checks).

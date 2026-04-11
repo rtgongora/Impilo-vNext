@@ -31,6 +31,7 @@ Trust headers from inbound requests are copied onto outbound `RestTemplate` call
 | `data-governance-base-url` | `http://localhost:8220` | Data governance |
 | `landela-base-url` | `http://localhost:8092` | Landela adapter |
 | `notification-base-url` | `http://localhost:8200` | Notification |
+| `credential-base-url` | `http://localhost:8094` | Credential verification (Landela suite) |
 | `fhir-base-url` | `http://localhost:8090/fhir` | FHIR root on BUTANO host |
 | `fhir-gateway-base-url` | `http://localhost:8091` | FHIR Gateway |
 | `search-base-url` | `http://localhost:8230` | Search |
@@ -64,6 +65,7 @@ Ports should match [`docs/runbooks/port-allocation.md`](../runbooks/port-allocat
 | `TusoServiceClient` | TUSO |
 | `VarapiServiceClient` | VARAPI |
 | `VitoServiceClient` | VITO |
+| `CredentialServiceClient` | Credential verification |
 
 ## Deliberate proxies (no dedicated `*Client` bean)
 
