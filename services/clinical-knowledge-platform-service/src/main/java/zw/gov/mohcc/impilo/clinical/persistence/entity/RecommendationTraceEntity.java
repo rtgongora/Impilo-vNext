@@ -63,6 +63,10 @@ public class RecommendationTraceEntity {
         return id;
     }
 
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
     public String getSupportMode() {
         return supportMode;
     }
@@ -133,5 +137,17 @@ public class RecommendationTraceEntity {
 
     public JsonNode getRecommendationsJson() {
         return recommendationsJson;
+    }
+
+    public JsonNode getRulesTriggeredJson() {
+        return rulesTriggeredJson;
+    }
+
+    public String getKnowledgeVersion() {
+        return knowledgeVersion;
+    }
+
+    public String getSourceVersion() {
+        return sourceVersion;
     }
 }

@@ -67,6 +67,14 @@ public class PathwaySessionEntity {
         return status;
     }
 
+    public String getTenantId() {
+        return tenantId;
+    }
+
+    public String getActorId() {
+        return actorId;
+    }
+
     public void setPathwayId(UUID pathwayId) {
         this.pathwayId = pathwayId;
     }

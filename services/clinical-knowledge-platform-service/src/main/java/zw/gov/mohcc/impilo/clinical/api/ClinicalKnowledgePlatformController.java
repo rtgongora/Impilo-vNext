@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.clinical.audit.TraceService;
 import zw.gov.mohcc.impilo.clinical.assistant.ClinicalAssistantService;
+import zw.gov.mohcc.impilo.clinical.events.ClinicalOutboxWriter;
 import zw.gov.mohcc.impilo.clinical.nudge.NudgeEvaluationService;
 import zw.gov.mohcc.impilo.clinical.pathway.PathwaySessionService;
 import zw.gov.mohcc.impilo.clinical.persistence.entity.OverrideRecordEntity;
@@ -33,6 +34,7 @@ public class ClinicalKnowledgePlatformController {
     private final TraceService traceService;
     private final OverrideRecordRepository overrideRecordRepository;
     private final ClinicalRulesEngine clinicalRulesEngine;
+    private final ClinicalOutboxWriter clinicalOutboxWriter;
 
     public ClinicalKnowledgePlatformController(
             ClinicalAssistantService assistantService,
@@ -41,7 +43,8 @@ public class ClinicalKnowledgePlatformController {
             NudgeEvaluationService nudgeEvaluationService,
             TraceService traceService,
             OverrideRecordRepository overrideRecordRepository,
-            ClinicalRulesEngine clinicalRulesEngine) {
+            ClinicalRulesEngine clinicalRulesEngine,
+            ClinicalOutboxWriter clinicalOutboxWriter) {
         this.assistantService = assistantService;
         this.prescribingEvaluationService = prescribingEvaluationService;
         this.pathwaySessionService = pathwaySessionService;
@@ -49,6 +52,7 @@ public class ClinicalKnowledgePlatformController {
         this.traceService = traceService;
         this.overrideRecordRepository = overrideRecordRepository;
         this.clinicalRulesEngine = clinicalRulesEngine;
+        this.clinicalOutboxWriter = clinicalOutboxWriter;
     }
 
     @PostMapping("/assistant/ask")
@@ -144,7 +148,16 @@ public class ClinicalKnowledgePlatformController {
         o.setRecommendationTraceId(traceId);
         o.setOverrideReason(reason);
         o.setOverriddenBy(actorId);
-        overrideRecordRepository.save(o);
-        return ResponseEntity.ok(Map.of("data", Map.of("status", "recorded")));
+        OverrideRecordEntity saved = overrideRecordRepository.save(o);
+        clinicalOutboxWriter.enqueue(
+                "GUIDANCE_OVERRIDE_RECORDED",
+                "default",
+                "OverrideRecord",
+                saved.getId().toString(),
+                Map.of(
+                        "override_id", saved.getId().toString(),
+                        "recommendation_trace_id", traceId.toString(),
+                        "overridden_by", actorId));
+        return ResponseEntity.ok(Map.of("data", Map.of("status", "recorded", "override_id", saved.getId().toString())));
     }
 }

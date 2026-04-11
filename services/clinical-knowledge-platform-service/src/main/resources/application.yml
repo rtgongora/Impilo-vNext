@@ -4,6 +4,12 @@ server:
 spring:
   application:
     name: clinical-knowledge-platform-service
+  autoconfigure:
+    exclude:
+      # Manual Kafka producer when impilo.clinical.kafka.relay-enabled=true (see ClinicalKafkaConfig).
+      - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:127.0.0.1:9092}
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:clinical_knowledge}
     username: ${DB_USER:impilo}
@@ -37,6 +43,10 @@ management:
 
 impilo:
   clinical:
+    kafka:
+      # Set true in environments with Kafka; outbox rows still accumulate when false.
+      relay-enabled: ${CLINICAL_KAFKA_RELAY_ENABLED:false}
+      relay-poll-ms: ${CLINICAL_KAFKA_RELAY_POLL_MS:2000}
     steward:
       broad-spectrum-days-threshold: ${STEWARDSHIP_BROAD_SPECTRUM_DAYS:3}
     edliz:

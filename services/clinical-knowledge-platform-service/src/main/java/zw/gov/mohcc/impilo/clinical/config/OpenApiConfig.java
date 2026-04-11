@@ -27,6 +27,9 @@ public class OpenApiConfig {
                                 .description("Conversational EDLIZ-aligned answers with citations and traces."),
                         new Tag()
                                 .name("Prescribing & pathways")
-                                .description("Structured evaluation and care pathway metadata.")));
+                                .description("Structured evaluation and care pathway metadata."),
+                        new Tag()
+                                .name("Knowledge curation")
+                                .description("Human-in-the-loop review of proposed extracts; approve into clinical_knowledge_items.")));
     }
 }

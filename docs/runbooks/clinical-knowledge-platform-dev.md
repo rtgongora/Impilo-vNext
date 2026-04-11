@@ -103,6 +103,22 @@ GET http://localhost:8160/internal/v1/clinical/source/documents/a0000001-0001-40
 
 Experience UI hooks: `useClinicalSourceIngestionSummary`, `useClinicalDefaultEdlizDocumentId`, `useIngestClinicalPdf` in `ui/experience/src/hooks/queries/useGuidance.ts`.
 
+### Curation queue & Kafka outbox
+
+After PDF ingest, up to **25** `knowledge_review_items` rows are created (`SOURCE_EXCERPT` payloads). Curators approve/reject via:
+
+```http
+GET http://localhost:8270/internal/v1/clinical/curation/review-items?status=PROPOSED
+POST http://localhost:8270/internal/v1/clinical/curation/review-items/{id}/decision
+Content-Type: application/json
+
+{ "decision": "APPROVED", "reviewer": "curator-id", "notes": "" }
+```
+
+**Outbox:** `clinical.event_outbox` receives rows for recommendation traces, prescribing traces (when `record_trace: true`), overrides, pathway completion, and approved knowledge items. Set `CLINICAL_KAFKA_RELAY_ENABLED=true` and `KAFKA_BOOTSTRAP_SERVERS` to publish to topics in `docs/contracts/kafka-clinical-guidance-events.md`.
+
+**Knowledge admin UI:** `ui/knowledge-admin` (port **3021**) — BFF-proxied curation console for operators.
+
 ## Docker
 
 From repository root (after databases exist):

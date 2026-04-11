@@ -10,6 +10,7 @@ import zw.gov.mohcc.impilo.experience.client.ClinicalKnowledgePlatformClient;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * BFF for national clinical knowledge (EDLIZ-aligned). Proxies to clinical-knowledge-platform-service.
@@ -79,6 +80,35 @@ public class ClinicalKnowledgeController {
         } catch (Exception e) {
             log.error("Clinical pathways list failed: {}", e.getMessage());
             return ResponseEntity.ok(Map.of("data", java.util.List.of()));
+        }
+    }
+
+    @PostMapping("/pathways/sessions")
+    public ResponseEntity<Map<String, Object>> startPathwaySession(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody Map<String, Object> body) {
+        try {
+            JsonNode data = clinicalClient.startPathwaySession(body);
+            return ResponseEntity.ok(Map.of("data", data != null ? data : Map.of()));
+        } catch (Exception e) {
+            log.error("Clinical pathway session start failed: {}", e.getMessage());
+            return ResponseEntity.ok(Map.of("data", Map.of("error", "unavailable")));
+        }
+    }
+
+    @PostMapping("/pathways/sessions/{sessionId}/advance")
+    public ResponseEntity<Map<String, Object>> advancePathwaySession(
+            @PathVariable UUID sessionId,
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestBody Map<String, Object> body) {
+        try {
+            JsonNode data = clinicalClient.advancePathwaySession(sessionId, body);
+            return ResponseEntity.ok(Map.of("data", data != null ? data : Map.of()));
+        } catch (Exception e) {
+            log.error("Clinical pathway advance failed: {}", e.getMessage());
+            return ResponseEntity.ok(Map.of("data", Map.of("error", "unavailable")));
         }
     }
 

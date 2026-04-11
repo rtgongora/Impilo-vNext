@@ -9,9 +9,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import zw.gov.mohcc.impilo.clinical.persistence.entity.ExtractionJobEntity;
+import zw.gov.mohcc.impilo.clinical.persistence.entity.KnowledgeReviewItemEntity;
 import zw.gov.mohcc.impilo.clinical.persistence.entity.SourceDocumentEntity;
 import zw.gov.mohcc.impilo.clinical.persistence.entity.SourceSectionEntity;
 import zw.gov.mohcc.impilo.clinical.persistence.repository.ExtractionJobRepository;
+import zw.gov.mohcc.impilo.clinical.persistence.repository.KnowledgeReviewItemRepository;
 import zw.gov.mohcc.impilo.clinical.persistence.repository.SourceDocumentRepository;
 import zw.gov.mohcc.impilo.clinical.persistence.repository.SourceSectionRepository;
 
@@ -43,6 +45,7 @@ public class EdlizPdfIngestionService {
     private final SourceSectionRepository sectionRepository;
     private final SourceDocumentRepository documentRepository;
     private final ExtractionJobRepository extractionJobRepository;
+    private final KnowledgeReviewItemRepository knowledgeReviewItemRepository;
     private final ObjectMapper objectMapper;
 
     private final String defaultReferencePdfPath;
@@ -56,6 +59,7 @@ public class EdlizPdfIngestionService {
             SourceSectionRepository sectionRepository,
             SourceDocumentRepository documentRepository,
             ExtractionJobRepository extractionJobRepository,
+            KnowledgeReviewItemRepository knowledgeReviewItemRepository,
             ObjectMapper objectMapper,
             @Value("${impilo.clinical.edliz.reference-pdf-path}") String defaultReferencePdfPath,
             @Value("${impilo.clinical.edliz.reference-sha256}") String expectedSha256,
@@ -66,6 +70,7 @@ public class EdlizPdfIngestionService {
         this.sectionRepository = sectionRepository;
         this.documentRepository = documentRepository;
         this.extractionJobRepository = extractionJobRepository;
+        this.knowledgeReviewItemRepository = knowledgeReviewItemRepository;
         this.objectMapper = objectMapper;
         this.defaultReferencePdfPath = defaultReferencePdfPath;
         this.expectedSha256 = expectedSha256 == null ? "" : expectedSha256.trim();
@@ -153,6 +158,22 @@ public class EdlizPdfIngestionService {
             job.setCompletedAt(Instant.now());
             extractionJobRepository.save(job);
 
+            int reviewCap = Math.min(toSave.size(), 25);
+            for (int i = 0; i < reviewCap; i++) {
+                SourceSectionEntity row = toSave.get(i);
+                KnowledgeReviewItemEntity kr = new KnowledgeReviewItemEntity();
+                kr.setExtractionJobId(job.getId());
+                String text = row.getRawText();
+                String excerpt = text.length() > 2000 ? text.substring(0, 2000) : text;
+                kr.setProposedPayload(objectMapper.valueToTree(Map.of(
+                        "type", "SOURCE_EXCERPT",
+                        "document_id", documentId.toString(),
+                        "section_path", row.getSectionPath(),
+                        "title", row.getSectionTitle(),
+                        "excerpt", excerpt)));
+                knowledgeReviewItemRepository.save(kr);
+            }
+
             Map<String, Object> data = new LinkedHashMap<>();
             data.put("document_id", documentId.toString());
             data.put("extraction_job_id", job.getId().toString());
@@ -160,6 +181,7 @@ public class EdlizPdfIngestionService {
             data.put("pages_total", pages.size());
             data.put("sections_inserted", toSave.size());
             data.put("ingestion_status", document.getIngestionStatus());
+            data.put("knowledge_review_items_queued", reviewCap);
             return data;
         } catch (ResponseStatusException e) {
             throw e;

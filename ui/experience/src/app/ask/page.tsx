@@ -16,7 +16,7 @@ import { MessageSquare, Send, Loader2, Sparkles, ShieldCheck, BookMarked } from 
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { apiClient } from "@/lib/api-client";
-import { useAskEdlizClinical } from "@/hooks/queries/useGuidance";
+import { useAskEdlizClinical, useClinicalPathways, useStartClinicalPathwaySession } from "@/hooks/queries/useGuidance";
 
 interface Message {
   id: string;
@@ -41,7 +41,17 @@ export default function AskPage() {
   const [consentGranted, setConsentGranted] = useState(false);
   const [mode, setMode] = useState<"general" | "edliz">("general");
   const askEdliz = useAskEdlizClinical();
+  const { data: pathwaysRes } = useClinicalPathways();
+  const startPathway = useStartClinicalPathwaySession();
+  const [pathwaySessionId, setPathwaySessionId] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
+
+  const pathways = (pathwaysRes?.data ?? []) as Array<{
+    id?: string;
+    pathway_name?: string;
+    condition_code?: string;
+    step_count?: number;
+  }>;
 
   // Health OS §16a: consent-aware — check if user has opted into personalized guidance
   useEffect(() => {
@@ -173,6 +183,44 @@ export default function AskPage() {
                 <strong>Non-personalized mode.</strong> Responses are general and not tailored to your health profile.
                 To receive personalized guidance, enable guidance consent in your <a href="/settings/notifications" className="underline">preferences</a>.
               </div>
+            </div>
+          )}
+          {mode === "edliz" && pathways.length > 0 && (
+            <div className="mb-3 rounded-lg border border-emerald-100 bg-white p-3 text-xs text-gray-700">
+              <p className="font-medium text-emerald-900 mb-2">Guided pathways (national demo)</p>
+              <div className="flex flex-wrap gap-2">
+                {pathways
+                  .filter((p) => (p.step_count ?? 0) > 0)
+                  .map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      disabled={startPathway.isPending}
+                      onClick={() => {
+                        if (!p.id) return;
+                        startPathway.mutate(
+                          { pathway_id: p.id },
+                          {
+                            onSuccess: (res) => {
+                              const inner = res?.data as { session_id?: string } | undefined;
+                              const sid = inner?.session_id;
+                              if (sid) setPathwaySessionId(sid);
+                            },
+                          }
+                        );
+                      }}
+                      className="rounded-full border border-emerald-200 px-2 py-1 hover:bg-emerald-50 disabled:opacity-50"
+                    >
+                      {p.pathway_name ?? p.condition_code}
+                    </button>
+                  ))}
+              </div>
+              {pathwaySessionId && (
+                <p className="mt-2 text-[10px] text-gray-500">
+                  Session started: <span className="font-mono">{pathwaySessionId}</span> — advance via{" "}
+                  <code className="bg-gray-100 px-1 rounded">POST /clinical/pathways/sessions/…/advance</code>
+                </p>
+              )}
             </div>
           )}
           {/* Messages */}

@@ -30,6 +30,7 @@ import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { ClinicalAlerts } from "@/components/ClinicalAlerts";
+import { EdlizPrescribingPanel } from "@/components/clinical/EdlizPrescribingPanel";
 import { useClinicalAlerts } from "@/hooks/useClinicalAlerts";
 import { useEncounter, useCloseEncounter } from "@/hooks/queries/useEncounters";
 import { useReferrals, type ReferralResource } from "@/hooks/queries/useReferrals";
@@ -324,6 +325,27 @@ export default function EncounterPage() {
           <div className="space-y-6">
             {/* Clinical Decision Support Alerts */}
             <ClinicalAlerts alerts={clinicalAlerts} />
+
+            {isPrescriber && (
+              <EdlizPrescribingPanel
+                patientId={patientId}
+                encounterId={encounterId}
+                actorId={currentUserId}
+                diagnoses={(conditionsData?.data ?? [])
+                  .map((c) => {
+                    const a = c.attributes as { condition_name?: string; icd_code?: string };
+                    return (a.condition_name || a.icd_code || "").trim();
+                  })
+                  .filter(Boolean)}
+                activeMedicationGenerics={(medsData?.data ?? [])
+                  .map((m) => {
+                    const a = m.attributes as { generic_name?: string; medication_name?: string };
+                    const g = (a.generic_name || a.medication_name || "").toLowerCase().trim();
+                    return g.split(/\s+/)[0] ?? "";
+                  })
+                  .filter(Boolean)}
+              />
+            )}
 
             <ClinicalReviewHeader
               badge="Encounter closure"

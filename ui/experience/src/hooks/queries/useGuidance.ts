@@ -91,6 +91,39 @@ export function useIngestClinicalPdf() {
   });
 }
 
+/** Prescribing decision support (optional `record_trace` for audit). */
+export function useClinicalPrescribingEvaluate() {
+  return useMutation({
+    mutationFn: (body: Record<string, unknown>) =>
+      apiClient.post<ApiResponse<Record<string, unknown>>>("/internal/v1/clinical/prescribing/evaluate", body),
+  });
+}
+
+export function useClinicalPathways() {
+  return useQuery({
+    queryKey: ["clinical", "pathways"],
+    queryFn: () =>
+      apiClient.get<ApiResponse<Array<Record<string, unknown>>>>("/internal/v1/clinical/pathways"),
+  });
+}
+
+export function useStartClinicalPathwaySession() {
+  return useMutation({
+    mutationFn: (body: { pathway_id: string; patient_id?: string; encounter_id?: string }) =>
+      apiClient.post<ApiResponse<Record<string, unknown>>>("/internal/v1/clinical/pathways/sessions", body),
+  });
+}
+
+export function useAdvanceClinicalPathwaySession() {
+  return useMutation({
+    mutationFn: (args: { sessionId: string; answers: Record<string, unknown> }) =>
+      apiClient.post<ApiResponse<Record<string, unknown>>>(
+        `/internal/v1/clinical/pathways/sessions/${args.sessionId}/advance`,
+        { answers: args.answers }
+      ),
+  });
+}
+
 // ── Reminders & Prompts ─────────────────────────────────────────────
 
 export interface Reminder {

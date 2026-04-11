@@ -1,8 +1,12 @@
 package zw.gov.mohcc.impilo.clinical.prescribing;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import zw.gov.mohcc.impilo.clinical.audit.TraceService;
 import zw.gov.mohcc.impilo.clinical.persistence.entity.MedicineGuidanceEntity;
+import zw.gov.mohcc.impilo.clinical.persistence.entity.SourceDocumentEntity;
 import zw.gov.mohcc.impilo.clinical.persistence.repository.MedicineGuidanceRepository;
+import zw.gov.mohcc.impilo.clinical.persistence.repository.SourceDocumentRepository;
 import zw.gov.mohcc.impilo.clinical.rules.ClinicalRulesEngine;
 import zw.gov.mohcc.impilo.clinical.rules.model.ClinicalEvaluationContext;
 import zw.gov.mohcc.impilo.clinical.rules.model.RuleAlert;
@@ -14,14 +18,21 @@ public class PrescribingEvaluationService {
 
     private final ClinicalRulesEngine rulesEngine;
     private final MedicineGuidanceRepository medicineGuidanceRepository;
+    private final TraceService traceService;
+    private final SourceDocumentRepository sourceDocumentRepository;
 
     public PrescribingEvaluationService(
             ClinicalRulesEngine rulesEngine,
-            MedicineGuidanceRepository medicineGuidanceRepository) {
+            MedicineGuidanceRepository medicineGuidanceRepository,
+            TraceService traceService,
+            SourceDocumentRepository sourceDocumentRepository) {
         this.rulesEngine = rulesEngine;
         this.medicineGuidanceRepository = medicineGuidanceRepository;
+        this.traceService = traceService;
+        this.sourceDocumentRepository = sourceDocumentRepository;
     }
 
+    @Transactional
     public Map<String, Object> evaluate(Map<String, Object> body) {
         ClinicalEvaluationContext ctx = ClinicalEvaluationContext.fromMap(mergeProposedIntoContext(body == null ? Map.of() : body));
         List<RuleAlert> alerts = rulesEngine.evaluate(ctx);
@@ -55,7 +66,44 @@ public class PrescribingEvaluationService {
         out.put("alerts", alerts.stream().map(RuleAlert::toMap).toList());
         out.put("therapy_evaluation", therapyRows);
         out.put("neonatal_gentamicin_hint", neonatalHint(ctx));
+
+        if (body != null && Boolean.TRUE.equals(body.get("record_trace"))) {
+            String actorId = Objects.toString(body.get("actor_id"), "anonymous");
+            String role = Objects.toString(body.get("role"), "PRESCRIBER");
+            String patientId = body.get("patient_id") != null ? body.get("patient_id").toString() : null;
+            String encounterId = body.get("encounter_id") != null ? body.get("encounter_id").toString() : null;
+            String tenantId = Objects.toString(body.get("tenant_id"), "default");
+            String sourceVersion = sourceDocumentRepository.findFirstByStatusOrderByEffectiveDateDesc("ACTIVE")
+                    .map(SourceDocumentEntity::getVersionLabel)
+                    .orElse("unknown");
+            String supportMode = alerts.isEmpty() ? "SOURCE_GROUNDED" : "RULE_EVALUATED";
+            traceService.record(
+                    actorId,
+                    role,
+                    patientId,
+                    encounterId,
+                    "PRESCRIBING_EVALUATE",
+                    auditInputContext(body, tenantId),
+                    out,
+                    List.of(),
+                    alerts.stream().map(RuleAlert::toMap).toList(),
+                    "ckp-seed-1",
+                    sourceVersion,
+                    supportMode);
+        }
         return out;
+    }
+
+    private static Map<String, Object> auditInputContext(Map<String, Object> body, String tenantId) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("tenant_id", tenantId);
+        m.put("diagnoses", body.get("diagnoses"));
+        m.put("proposedMedications", body.get("proposedMedications"));
+        m.put("activeMedications", body.get("activeMedications"));
+        m.put("facility_level", body.get("facility_level"));
+        m.put("patient_age_days", body.get("patient_age_days"));
+        m.put("weight_kg", body.get("weight_kg"));
+        return m;
     }
 
     private static Map<String, Object> neonatalHint(ClinicalEvaluationContext ctx) {

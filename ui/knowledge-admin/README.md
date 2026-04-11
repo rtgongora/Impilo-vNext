@@ -1,16 +1,22 @@
-# Knowledge admin console (bootstrap)
+# Knowledge admin console
 
-This folder reserves the **national knowledge governance UI** (source upload, extraction review, rule harness, version compare, audit viewer).
+Minimal **Next.js 14** operator UI for the national clinical knowledge **curation queue** (approve/reject proposed PDF excerpts into `clinical_knowledge_items`).
 
-## Current state
+## Run
 
-v1 admin flows are exercised via **OpenAPI** on `clinical-knowledge-platform-service` (`/swagger-ui.html` when running locally on port 8270). A dedicated Next.js console will land here in a follow-up change-set once OIDC roles for `KNOWLEDGE_CURATOR` and `CLINICAL_GOVERNANCE` are wired through the Experience BFF.
+```powershell
+cd ui/knowledge-admin
+npm install
+npm run dev
+```
 
-## APIs to wire first
+Open `http://localhost:3021`. Paste a JWT with **SYSTEM_ADMIN**, **FACILITY_ADMIN**, or **DEVELOPER** (same rule gate as BFF `/internal/v1/clinical/curation/**`). Requests proxy via `next.config.mjs` rewrites to `NEXT_PUBLIC_BFF_URL` (default `http://localhost:8160`).
 
-- `POST /internal/v1/clinical/assistant/ask` — scenario testing
-- `GET /internal/v1/clinical/assistant/traces/{id}` — audit inspection
-- `GET /internal/v1/clinical/pathways` — pathway registry
-- `POST /internal/v1/clinical/audit/overrides` — override capture
+Companion headers are sent explicitly from the page (tenant/pod/request/correlation).
 
-See `docs/runbooks/clinical-knowledge-platform-dev.md`.
+## Related APIs
+
+- `GET /internal/v1/clinical/curation/review-items?status=PROPOSED`
+- `POST /internal/v1/clinical/curation/review-items/{id}/decision` — body `{ "decision": "APPROVED"|"REJECTED", "reviewer": "...", "notes": "..." }`
+
+Upstream: `clinical-knowledge-platform-service` (see `docs/runbooks/clinical-knowledge-platform-dev.md`).

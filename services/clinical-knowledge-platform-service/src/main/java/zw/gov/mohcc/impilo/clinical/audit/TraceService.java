@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import zw.gov.mohcc.impilo.clinical.events.ClinicalOutboxWriter;
 import zw.gov.mohcc.impilo.clinical.persistence.entity.RecommendationTraceEntity;
 import zw.gov.mohcc.impilo.clinical.persistence.repository.RecommendationTraceRepository;
 
@@ -15,10 +16,15 @@ public class TraceService {
 
     private final RecommendationTraceRepository traceRepository;
     private final ObjectMapper objectMapper;
+    private final ClinicalOutboxWriter clinicalOutboxWriter;
 
-    public TraceService(RecommendationTraceRepository traceRepository, ObjectMapper objectMapper) {
+    public TraceService(
+            RecommendationTraceRepository traceRepository,
+            ObjectMapper objectMapper,
+            ClinicalOutboxWriter clinicalOutboxWriter) {
         this.traceRepository = traceRepository;
         this.objectMapper = objectMapper;
+        this.clinicalOutboxWriter = clinicalOutboxWriter;
     }
 
     @Transactional
@@ -49,7 +55,9 @@ public class TraceService {
         e.setKnowledgeVersion(knowledgeVersion);
         e.setSourceVersion(sourceVersion);
         e.setSupportMode(supportMode);
-        return traceRepository.save(e);
+        RecommendationTraceEntity saved = traceRepository.save(e);
+        clinicalOutboxWriter.enqueueRecommendationTrace(saved);
+        return saved;
     }
 
     public JsonNode findTraceJson(java.util.UUID id) {

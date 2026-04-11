@@ -54,6 +54,18 @@ public class ClinicalKnowledgePlatformClient {
         return extractData(response);
     }
 
+    public JsonNode startPathwaySession(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/clinical/pathways/sessions";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode advancePathwaySession(UUID sessionId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/clinical/pathways/sessions/" + sessionId + "/advance";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
     /** PDF → source_sections for a {@code source_documents} row (operator tooling). */
     public JsonNode ingestPdfSections(UUID documentId, Map<String, Object> body) {
         String url = baseUrl + "/internal/v1/clinical/source/documents/" + documentId + "/ingest-pdf";
@@ -72,6 +84,18 @@ public class ClinicalKnowledgePlatformClient {
     public JsonNode defaultEdlizSourceDocumentId() {
         String url = baseUrl + "/internal/v1/clinical/source/edliz-default-document-id";
         ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode listKnowledgeReviewItems(String status) {
+        String url = baseUrl + "/internal/v1/clinical/curation/review-items?status=" + status;
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode decideKnowledgeReviewItem(UUID id, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/clinical/curation/review-items/" + id + "/decision";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
         return extractData(response);
     }
 

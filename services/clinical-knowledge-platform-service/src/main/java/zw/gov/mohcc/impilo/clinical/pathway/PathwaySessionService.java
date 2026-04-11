@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import zw.gov.mohcc.impilo.clinical.events.ClinicalOutboxWriter;
 import zw.gov.mohcc.impilo.clinical.persistence.entity.PathwayDefinitionEntity;
 import zw.gov.mohcc.impilo.clinical.persistence.entity.PathwaySessionEntity;
 import zw.gov.mohcc.impilo.clinical.persistence.entity.PathwayStepEntity;
@@ -22,14 +23,17 @@ public class PathwaySessionService {
     private final PathwayDefinitionRepository pathwayDefinitionRepository;
     private final PathwaySessionRepository sessionRepository;
     private final ObjectMapper objectMapper;
+    private final ClinicalOutboxWriter clinicalOutboxWriter;
 
     public PathwaySessionService(
             PathwayDefinitionRepository pathwayDefinitionRepository,
             PathwaySessionRepository sessionRepository,
-            ObjectMapper objectMapper) {
+            ObjectMapper objectMapper,
+            ClinicalOutboxWriter clinicalOutboxWriter) {
         this.pathwayDefinitionRepository = pathwayDefinitionRepository;
         this.sessionRepository = sessionRepository;
         this.objectMapper = objectMapper;
+        this.clinicalOutboxWriter = clinicalOutboxWriter;
     }
 
     @Transactional
@@ -71,6 +75,16 @@ public class PathwaySessionService {
         }
         s.setStateJson(state);
         sessionRepository.save(s);
+        if ("COMPLETED".equals(s.getStatus())) {
+            clinicalOutboxWriter.enqueue(
+                    "PATHWAY_SESSION_COMPLETED",
+                    s.getTenantId(),
+                    "PathwaySession",
+                    s.getId().toString(),
+                    Map.of(
+                            "session_id", s.getId().toString(),
+                            "pathway_id", s.getPathwayId().toString()));
+        }
 
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("session_id", s.getId().toString());

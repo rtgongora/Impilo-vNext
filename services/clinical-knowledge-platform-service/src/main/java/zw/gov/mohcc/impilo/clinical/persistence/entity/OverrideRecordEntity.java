@@ -35,4 +35,12 @@ public class OverrideRecordEntity {
     public void setOverriddenBy(String overriddenBy) {
         this.overriddenBy = overriddenBy;
     }
+
+    public UUID getId() {
+        return id;
+    }
+
+    public UUID getRecommendationTraceId() {
+        return recommendationTraceId;
+    }
 }
