@@ -1,0 +1,9 @@
+{
+  "name": "@impilo/bff-routes",
+  "private": true,
+  "description": "Generate Experience BFF /internal/v1 controller index (Phase C)",
+  "type": "module",
+  "scripts": {
+    "generate": "node list-bff-internal-routes.mjs"
+  }
+}

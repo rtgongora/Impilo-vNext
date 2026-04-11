@@ -75,6 +75,7 @@ Ports should match [`docs/runbooks/port-allocation.md`](../runbooks/port-allocat
 
 ## Related
 
+- BFF **`/internal/v1` surface** (generated controller index): [`experience-bff-internal-routes.md`](./experience-bff-internal-routes.md) — `cd scripts/bff-routes && node list-bff-internal-routes.mjs`
 - OpenAPI inventory: [`contracts/openapi/`](../../contracts/openapi/)
 - Completeness dimensions: [`scripts/completeness/`](../../scripts/completeness/)
 - Roadmap: [`docs/roadmaps/agent-led-fullstack-completeness-roadmap.md`](../roadmaps/agent-led-fullstack-completeness-roadmap.md)
