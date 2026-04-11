@@ -18,7 +18,7 @@ import { matchRouteDefinition } from "@/lib/routes";
 import { isSchedulingClusterPath } from "@/lib/scheduling-paths";
 
 /** Paths that bypass the consent gate (legal pages, consent page itself, auth). */
-const CONSENT_EXEMPT_PREFIXES = ["/auth", "/consent", "/privacy", "/terms", "/kiosk", "/verify", "/share"];
+const CONSENT_EXEMPT_PREFIXES = ["/auth", "/consent", "/privacy", "/terms", "/account-deletion", "/kiosk", "/verify", "/share"];
 
 /**
  * Map abstract role-group names used in routes.ts to concrete Keycloak roles.

@@ -53,6 +53,8 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/privacy", zone: "auth", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Privacy Policy", navLabel: "Privacy Policy" },
   { path: "/terms", zone: "auth", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Terms of Use", navLabel: "Terms of Use" },
   { path: "/consent", zone: "auth", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Review Policies", navLabel: "Consent" },
+  { path: "/account-deletion", zone: "auth", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Account Deletion", navLabel: "Account Deletion" },
+  { path: "/privacy/app-stores", zone: "auth", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "App Store Privacy", navLabel: "App Store Privacy" },
 
   // ── Zone: Home ──────────────────────────────────────────────────
   // ── Zone: Clinical Hub ──────────────────────────────────────────

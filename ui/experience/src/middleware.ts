@@ -17,6 +17,7 @@ const PUBLIC_PREFIXES = [
   "/privacy",
   "/terms",
   "/consent",
+  "/account-deletion",
   "/_next",
   "/api",
 ];
