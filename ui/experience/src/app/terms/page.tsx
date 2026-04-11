@@ -324,11 +324,19 @@ export default function TermsOfUsePage() {
 
         {/* Footer */}
         <footer className="mt-8 text-center text-xs text-gray-400 space-y-2">
-          <div className="flex items-center justify-center gap-4">
+          <div className="flex items-center justify-center gap-4 flex-wrap">
             <span className="text-gray-300">Terms of Use</span>
             <span>&middot;</span>
             <Link href="/privacy" className="hover:text-gray-600 transition-colors">
               Privacy Policy
+            </Link>
+            <span>&middot;</span>
+            <Link href="/account-deletion" className="hover:text-gray-600 transition-colors">
+              Account Deletion
+            </Link>
+            <span>&middot;</span>
+            <Link href="/privacy/app-stores" className="hover:text-gray-600 transition-colors">
+              App Store Privacy
             </Link>
             <span>&middot;</span>
             <Link href="/auth/login" className="hover:text-gray-600 transition-colors">

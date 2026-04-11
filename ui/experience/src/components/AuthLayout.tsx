@@ -93,6 +93,10 @@ export function AuthLayout({ children }: { children: ReactNode }) {
               <Link href="/terms" className="hover:text-gray-600 transition-colors">
                 Terms of Use
               </Link>
+              <span>&middot;</span>
+              <Link href="/account-deletion" className="hover:text-gray-600 transition-colors">
+                Account Deletion
+              </Link>
             </p>
           </div>
         </div>

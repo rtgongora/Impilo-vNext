@@ -350,6 +350,48 @@ export default function PrivacySettingsPage() {
               )}
             </section>
 
+            {/* ── Legal Documents ───────────────────────────── */}
+            <section className="bg-white rounded-lg border border-gray-200 p-6">
+              <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                <FileText className="w-4 h-4 text-gray-500" />
+                Legal Documents
+              </h3>
+              <div className="flex flex-wrap gap-3">
+                <Link
+                  href="/privacy"
+                  target="_blank"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-700 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  Privacy Policy
+                </Link>
+                <Link
+                  href="/terms"
+                  target="_blank"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-700 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  Terms of Use
+                </Link>
+                <Link
+                  href="/account-deletion"
+                  target="_blank"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-700 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  Account Deletion Notice
+                </Link>
+                <Link
+                  href="/privacy/app-stores"
+                  target="_blank"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-700 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  App Store Privacy
+                </Link>
+              </div>
+            </section>
+
             {/* ── Contact ─────────────────────────────────── */}
             <section className="bg-gray-50 rounded-lg border border-gray-200 p-5">
               <p className="text-xs text-gray-500">
