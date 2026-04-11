@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-04-11T20:15:12.874Z",
+  "generated_at": "2026-04-11T20:22:44.071Z",
   "registry": "docs/registry/services-registry.yaml",
   "service_count": 69,
   "aggregate": {
     "backend_avg": 3,
-    "bff_avg": 0.71,
-    "contract_avg": 0.96,
-    "api_docs_avg": 1.99,
+    "bff_avg": 0.88,
+    "contract_avg": 1.22,
+    "api_docs_avg": 2.07,
     "kafka_avg": 0.59,
     "experience_hooks_avg": 2.39,
     "experience_pages_avg": 2.84
@@ -60,54 +60,6 @@
         }
       },
       "composite_score": 0.238
-    },
-    {
-      "maven_module": "notification-service",
-      "product_names": [
-        "Notification"
-      ],
-      "plane": "integration",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "NotificationApplication",
-          "flyway_migrations": 3,
-          "java_files": 41
-        },
-        "bff": {
-          "level": "none",
-          "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": null
-        },
-        "contract": {
-          "level": "none",
-          "openapi_file": null,
-          "present": false
-        },
-        "api_docs": {
-          "level": "stub",
-          "springdoc_in_pom": false
-        },
-        "integration_kafka": {
-          "level": "none",
-          "kafka_listener_count": 0
-        },
-        "experience_hooks": {
-          "level": "none",
-          "files_with_hits": 0,
-          "search_terms_sample": [
-            "notification"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 10
-        }
-      },
-      "composite_score": 0.333
     },
     {
       "maven_module": "reporting-service",
@@ -306,54 +258,6 @@
       "composite_score": 0.429
     },
     {
-      "maven_module": "forms-service",
-      "product_names": [
-        "Forms"
-      ],
-      "plane": "knowledge",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "FormsApplication",
-          "flyway_migrations": 1,
-          "java_files": 17
-        },
-        "bff": {
-          "level": "none",
-          "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": null
-        },
-        "contract": {
-          "level": "none",
-          "openapi_file": null,
-          "present": false
-        },
-        "api_docs": {
-          "level": "stub",
-          "springdoc_in_pom": false
-        },
-        "integration_kafka": {
-          "level": "none",
-          "kafka_listener_count": 0
-        },
-        "experience_hooks": {
-          "level": "partial",
-          "files_with_hits": 1,
-          "search_terms_sample": [
-            "forms"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 5
-        }
-      },
-      "composite_score": 0.429
-    },
-    {
       "maven_module": "observability-service",
       "product_names": [
         "Observability"
@@ -501,59 +405,6 @@
         "experience_pages": {
           "level": "substantial",
           "files_with_hits": 6
-        }
-      },
-      "composite_score": 0.476
-    },
-    {
-      "maven_module": "butano-service",
-      "product_names": [
-        "BUTANO",
-        "HAPI SHR"
-      ],
-      "plane": "clinical",
-      "sovereign_group": "BUTANO",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "ButanoApplication",
-          "flyway_migrations": 1,
-          "java_files": 29
-        },
-        "bff": {
-          "level": "none",
-          "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": null
-        },
-        "contract": {
-          "level": "none",
-          "openapi_file": null,
-          "present": false
-        },
-        "api_docs": {
-          "level": "partial",
-          "springdoc_in_pom": true
-        },
-        "integration_kafka": {
-          "level": "none",
-          "kafka_listener_count": 0
-        },
-        "experience_hooks": {
-          "level": "partial",
-          "files_with_hits": 1,
-          "search_terms_sample": [
-            "butano",
-            "hapishr",
-            "hapi",
-            "shr"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 63
         }
       },
       "composite_score": 0.476
@@ -850,54 +701,6 @@
         "experience_pages": {
           "level": "substantial",
           "files_with_hits": 52
-        }
-      },
-      "composite_score": 0.476
-    },
-    {
-      "maven_module": "rules-service",
-      "product_names": [
-        "Rules"
-      ],
-      "plane": "knowledge",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "RulesApplication",
-          "flyway_migrations": 2,
-          "java_files": 27
-        },
-        "bff": {
-          "level": "none",
-          "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": null
-        },
-        "contract": {
-          "level": "none",
-          "openapi_file": null,
-          "present": false
-        },
-        "api_docs": {
-          "level": "stub",
-          "springdoc_in_pom": false
-        },
-        "integration_kafka": {
-          "level": "none",
-          "kafka_listener_count": 0
-        },
-        "experience_hooks": {
-          "level": "substantial",
-          "files_with_hits": 4,
-          "search_terms_sample": [
-            "rules"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 8
         }
       },
       "composite_score": 0.476
@@ -1563,58 +1366,6 @@
       "composite_score": 0.524
     },
     {
-      "maven_module": "butano-fhir",
-      "product_names": [
-        "BUTANO FHIR"
-      ],
-      "plane": "clinical",
-      "sovereign_group": "BUTANO",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "ButanoFhirApplication",
-          "flyway_migrations": 1,
-          "java_files": 10
-        },
-        "bff": {
-          "level": "none",
-          "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": null
-        },
-        "contract": {
-          "level": "none",
-          "openapi_file": null,
-          "present": false
-        },
-        "api_docs": {
-          "level": "partial",
-          "springdoc_in_pom": true
-        },
-        "integration_kafka": {
-          "level": "none",
-          "kafka_listener_count": 0
-        },
-        "experience_hooks": {
-          "level": "substantial",
-          "files_with_hits": 2,
-          "search_terms_sample": [
-            "butano-fhir",
-            "butanofhir",
-            "butano",
-            "fhir"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 10
-        }
-      },
-      "composite_score": 0.524
-    },
-    {
       "maven_module": "pharmacy-elmis-adapter",
       "product_names": [
         "Pharmacy eLMIS"
@@ -1709,6 +1460,54 @@
         "experience_pages": {
           "level": "substantial",
           "files_with_hits": 3
+        }
+      },
+      "composite_score": 0.524
+    },
+    {
+      "maven_module": "notification-service",
+      "product_names": [
+        "Notification"
+      ],
+      "plane": "integration",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "NotificationApplication",
+          "flyway_migrations": 3,
+          "java_files": 41
+        },
+        "bff": {
+          "level": "none",
+          "is_bff_shell": false,
+          "expected_client": null,
+          "client_file_present": false,
+          "referenced_in_controller": false,
+          "proxy": null
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "notification.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "partial",
+          "springdoc_in_pom": false
+        },
+        "integration_kafka": {
+          "level": "none",
+          "kafka_listener_count": 0
+        },
+        "experience_hooks": {
+          "level": "none",
+          "files_with_hits": 0,
+          "search_terms_sample": [
+            "notification"
+          ]
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 10
         }
       },
       "composite_score": 0.524
@@ -2064,54 +1863,6 @@
       "composite_score": 0.571
     },
     {
-      "maven_module": "search-service",
-      "product_names": [
-        "Search"
-      ],
-      "plane": "knowledge",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "SearchApplication",
-          "flyway_migrations": 1,
-          "java_files": 11
-        },
-        "bff": {
-          "level": "partial",
-          "is_bff_shell": false,
-          "expected_client": "SearchServiceClient",
-          "client_file_present": true,
-          "referenced_in_controller": false,
-          "proxy": null
-        },
-        "contract": {
-          "level": "none",
-          "openapi_file": null,
-          "present": false
-        },
-        "api_docs": {
-          "level": "stub",
-          "springdoc_in_pom": false
-        },
-        "integration_kafka": {
-          "level": "none",
-          "kafka_listener_count": 0
-        },
-        "experience_hooks": {
-          "level": "substantial",
-          "files_with_hits": 24,
-          "search_terms_sample": [
-            "search"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 123
-        }
-      },
-      "composite_score": 0.571
-    },
-    {
       "maven_module": "data-ingestion-service",
       "product_names": [
         "Data Ingestion"
@@ -2314,24 +2065,26 @@
       "composite_score": 0.619
     },
     {
-      "maven_module": "costing-engine-service",
+      "maven_module": "butano-service",
       "product_names": [
-        "COSTA"
+        "BUTANO",
+        "HAPI SHR"
       ],
-      "plane": "finance",
+      "plane": "clinical",
+      "sovereign_group": "BUTANO",
       "dimensions": {
         "backend": {
           "level": "substantial",
-          "application_class": "CostaApplication",
+          "application_class": "ButanoApplication",
           "flyway_migrations": 1,
-          "java_files": 95
+          "java_files": 29
         },
         "bff": {
-          "level": "none",
+          "level": "substantial",
           "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
+          "expected_client": "ButanoServiceClient",
+          "client_file_present": true,
+          "referenced_in_controller": true,
           "proxy": null
         },
         "contract": {
@@ -2344,20 +2097,22 @@
           "springdoc_in_pom": true
         },
         "integration_kafka": {
-          "level": "substantial",
-          "kafka_listener_count": 7
+          "level": "none",
+          "kafka_listener_count": 0
         },
         "experience_hooks": {
           "level": "partial",
           "files_with_hits": 1,
           "search_terms_sample": [
-            "costing-engine",
-            "costa"
+            "butano",
+            "hapishr",
+            "hapi",
+            "shr"
           ]
         },
         "experience_pages": {
           "level": "substantial",
-          "files_with_hits": 5
+          "files_with_hits": 63
         }
       },
       "composite_score": 0.619
@@ -2616,6 +2371,58 @@
       "composite_score": 0.714
     },
     {
+      "maven_module": "butano-fhir",
+      "product_names": [
+        "BUTANO FHIR"
+      ],
+      "plane": "clinical",
+      "sovereign_group": "BUTANO",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "ButanoFhirApplication",
+          "flyway_migrations": 1,
+          "java_files": 10
+        },
+        "bff": {
+          "level": "none",
+          "is_bff_shell": false,
+          "expected_client": null,
+          "client_file_present": false,
+          "referenced_in_controller": false,
+          "proxy": null
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "butano.custom.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": true
+        },
+        "integration_kafka": {
+          "level": "none",
+          "kafka_listener_count": 0
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 2,
+          "search_terms_sample": [
+            "butano-fhir",
+            "butanofhir",
+            "butano",
+            "fhir"
+          ]
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 10
+        }
+      },
+      "composite_score": 0.714
+    },
+    {
       "maven_module": "credential-verification-service",
       "product_names": [
         "Credential Verification"
@@ -2818,6 +2625,102 @@
       "composite_score": 0.762
     },
     {
+      "maven_module": "forms-service",
+      "product_names": [
+        "Forms"
+      ],
+      "plane": "knowledge",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "FormsApplication",
+          "flyway_migrations": 1,
+          "java_files": 17
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": "ExtensionServiceClient",
+          "client_file_present": true,
+          "referenced_in_controller": true,
+          "proxy": null
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "forms.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "partial",
+          "springdoc_in_pom": false
+        },
+        "integration_kafka": {
+          "level": "none",
+          "kafka_listener_count": 0
+        },
+        "experience_hooks": {
+          "level": "partial",
+          "files_with_hits": 1,
+          "search_terms_sample": [
+            "forms"
+          ]
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 5
+        }
+      },
+      "composite_score": 0.762
+    },
+    {
+      "maven_module": "search-service",
+      "product_names": [
+        "Search"
+      ],
+      "plane": "knowledge",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "SearchApplication",
+          "flyway_migrations": 1,
+          "java_files": 11
+        },
+        "bff": {
+          "level": "partial",
+          "is_bff_shell": false,
+          "expected_client": "SearchServiceClient",
+          "client_file_present": true,
+          "referenced_in_controller": false,
+          "proxy": null
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "search.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "partial",
+          "springdoc_in_pom": false
+        },
+        "integration_kafka": {
+          "level": "none",
+          "kafka_listener_count": 0
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 24,
+          "search_terms_sample": [
+            "search"
+          ]
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 123
+        }
+      },
+      "composite_score": 0.762
+    },
+    {
       "maven_module": "experience-bff",
       "product_names": [
         "Experience BFF"
@@ -2912,6 +2815,54 @@
         "experience_pages": {
           "level": "substantial",
           "files_with_hits": 16
+        }
+      },
+      "composite_score": 0.81
+    },
+    {
+      "maven_module": "rules-service",
+      "product_names": [
+        "Rules"
+      ],
+      "plane": "knowledge",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "RulesApplication",
+          "flyway_migrations": 2,
+          "java_files": 27
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": "ExtensionServiceClient",
+          "client_file_present": true,
+          "referenced_in_controller": true,
+          "proxy": null
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "rules.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "partial",
+          "springdoc_in_pom": false
+        },
+        "integration_kafka": {
+          "level": "none",
+          "kafka_listener_count": 0
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 4,
+          "search_terms_sample": [
+            "rules"
+          ]
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 8
         }
       },
       "composite_score": 0.81
@@ -3304,6 +3255,55 @@
         "experience_pages": {
           "level": "substantial",
           "files_with_hits": 25
+        }
+      },
+      "composite_score": 0.952
+    },
+    {
+      "maven_module": "costing-engine-service",
+      "product_names": [
+        "COSTA"
+      ],
+      "plane": "finance",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "CostaApplication",
+          "flyway_migrations": 1,
+          "java_files": 95
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": "CostaServiceClient",
+          "client_file_present": true,
+          "referenced_in_controller": true,
+          "proxy": null
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "costa.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": true
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 7
+        },
+        "experience_hooks": {
+          "level": "partial",
+          "files_with_hits": 1,
+          "search_terms_sample": [
+            "costing-engine",
+            "costa"
+          ]
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 5
         }
       },
       "composite_score": 0.952

@@ -24,14 +24,15 @@ const UI_ROOT = path.join(REPO_ROOT, 'ui/experience/src');
 
 /** Explicit OpenAPI contract filename (under contracts/openapi) per maven module. */
 const OPENAPI_BY_MODULE = {
-  'butano-fhir-service': 'butano.custom.openapi.yaml',
-  'butano-fhir-agent': 'butano.custom.openapi.yaml',
+  'butano-fhir': 'butano.custom.openapi.yaml',
   'card-print-agent': 'card-print.openapi.yaml',
   'clinical-knowledge-platform-service': 'clinical-knowledge-platform.openapi.yaml',
   'costa-service': 'costa.openapi.yaml',
+  'costing-engine-service': 'costa.openapi.yaml',
   'coverage-service': 'coverage.openapi.yaml',
   'credential-verification-service': 'credential-verification.openapi.yaml',
   'document-service': 'document-store.openapi.yaml',
+  'forms-service': 'forms.openapi.yaml',
   'guidance-service': 'guidance.openapi.yaml',
   'indawo-service': 'indawo.openapi.yaml',
   'inventory-service': 'inventory.openapi.yaml',
@@ -39,8 +40,11 @@ const OPENAPI_BY_MODULE = {
   'msika-flow-service': 'msika-flow.openapi.yaml',
   'msika-service': 'msika-core.openapi.yaml',
   'mushex-service': 'mushex.openapi.yaml',
+  'notification-service': 'notification.openapi.yaml',
   'oros-service': 'oros.openapi.yaml',
   'pct-service': 'pct.openapi.yaml',
+  'rules-service': 'rules.openapi.yaml',
+  'search-service': 'search.openapi.yaml',
   'product-registry-service': 'product-registry.openapi.yaml',
   'pharmacy-service': 'pharmacy.openapi.yaml',
   'share-slip-service': 'share-slip.openapi.yaml',
@@ -53,12 +57,13 @@ const OPENAPI_BY_MODULE = {
 
 /** Dedicated BFF Feign client simple class name(s) per maven module. */
 const BFF_CLIENT_BY_MODULE = {
-  'butano-fhir-service': 'ButanoServiceClient',
+  'butano-service': 'ButanoServiceClient',
   'clinical-knowledge-platform-service': 'ClinicalKnowledgePlatformClient',
   'costa-service': 'CostaServiceClient',
+  'costing-engine-service': 'CostaServiceClient',
   'coverage-service': 'CoverageServiceClient',
   'document-service': 'DocumentServiceClient',
-  'extension-service': 'ExtensionServiceClient',
+  'forms-service': 'ExtensionServiceClient',
   'fhir-gateway-service': 'FhirGatewayServiceClient',
   'guidance-service': 'GuidanceServiceClient',
   'msika-flow-service': 'MsikaFlowServiceClient',
@@ -67,6 +72,7 @@ const BFF_CLIENT_BY_MODULE = {
   'oros-service': 'OrosServiceClient',
   'pct-service': 'PctServiceClient',
   'pharmacy-service': 'PharmacyServiceClient',
+  'rules-service': 'ExtensionServiceClient',
   'search-service': 'SearchServiceClient',
   'tuso-service': 'TusoServiceClient',
   'varapi-service': 'VarapiServiceClient',

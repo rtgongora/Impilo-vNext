@@ -144,9 +144,11 @@ flowchart LR
 
 **A2 (done):** seven-dimension completeness report — `scripts/completeness` (`npm run report`) → `docs/reports/completeness-report.{json,md}`; CI job **Completeness report (informational)** uploads artifacts (see `.github/workflows/ci.yml`).
 
-**Phase B (in progress):** OpenAPI baselines under [`contracts/openapi/`](../../contracts/openapi/) — registry slice (VARAPI, TUSO, UBOMI) landed; **+** INDAWO, Product Registry, Coverage, Guidance, Clinical Knowledge Platform. Remaining domains: trust/TSHEPO decomposition, finance remainder, integration adapters, FHIR-only BUTANO narrative.
+**Phase B (in progress):** OpenAPI baselines under [`contracts/openapi/`](../../contracts/openapi/) — registry slice (VARAPI, TUSO, UBOMI) landed; **+** INDAWO, Product Registry, Coverage, Guidance, Clinical Knowledge Platform; **+** Search, Forms, Notification, Rules; **+** registry mapping fixes (`costing-engine-service` → COSTA contract, `butano-fhir` module key). Remaining: trust/TSHEPO decomposition, more integration adapters, FHIR-only narrative for BUTANO stack.
 
-**Next:** extend Phase B (remaining REST services + Spectral/policy when ready), then **Phase C** BFF route map / client alignment per domain.
+**Phase C (started):** downstream index — [`docs/architecture/experience-bff-downstream-route-map.md`](../architecture/experience-bff-downstream-route-map.md) (expand per-controller paths next).
+
+**Next:** extend Phase B for remaining REST modules; Phase C — normalize BFF paths vs contracts per domain and add controller-level route tables.
 
 ---
 
@@ -161,3 +163,5 @@ flowchart LR
 | 2026-04-11 | Phase A2: `scripts/completeness` + `docs/reports/` + informational CI artifact job. |
 | 2026-04-11 | Phase B (slice): OpenAPI baselines for registry plane VARAPI, TUSO, UBOMI (`contracts/openapi/`). |
 | 2026-04-11 | Phase B (slice): INDAWO, Product Registry, Coverage, Guidance, Clinical Knowledge Platform OpenAPI baselines. |
+| 2026-04-11 | Phase B: Search, Forms, Notification, Rules OpenAPI; completeness mapper fixes (BUTANO/COSTA module keys, Extension client for forms/rules). |
+| 2026-04-11 | Phase C seed: `docs/architecture/experience-bff-downstream-route-map.md`. |
