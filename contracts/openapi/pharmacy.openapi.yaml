@@ -1175,9 +1175,16 @@ components:
         dispenseOrderId:
           type: string
           format: uuid
+        drugCodingSystem:
+          type: string
+          description: |
+            Terminology system URI for the drug code (default: ATC).
+            See docs/doctrine/healthcare-coding-standards.md.
+          example: "http://www.whocc.no/atc"
+          default: "http://www.whocc.no/atc"
         drugCode:
           type: string
-          description: Drug code from formulary/catalog
+          description: Drug code from the coding system (e.g., ATC code J01CA04 for Amoxicillin)
         drugName:
           type: string
           description: Drug display name

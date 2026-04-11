@@ -1520,12 +1520,28 @@ components:
       properties:
         catalogCode:
           type: string
-          description: Catalog item code (e.g., LOINC code)
+          description: |
+            Item code from a recognized coding system (LOINC for lab tests,
+            SNOMED CT for procedures, ATC for medications).
+            See docs/doctrine/healthcare-coding-standards.md.
           example: "2160-0"
         catalogSystem:
           type: string
-          description: Code system URI
+          description: |
+            Terminology system URI identifying the coding standard.
+            Must be a recognized URI from the CodingSystem registry.
           example: "http://loinc.org"
+          enum:
+            - "http://loinc.org"
+            - "http://snomed.info/sct"
+            - "http://www.whocc.no/atc"
+            - "http://id.who.int/icd/release/11"
+            - "http://hl7.org/fhir/sid/icd-10"
+            - "http://www.ama-assn.org/go/cpt"
+            - "http://hl7.org/fhir/sid/cvx"
+            - "http://dicom.nema.org/resources/ontology/DCM"
+            - "http://unitsofmeasure.org"
+            - "http://impilo.gov.zw/coding"
         name:
           type: string
           description: Human-readable item name
@@ -1538,9 +1554,17 @@ components:
           type: string
           description: Required specimen type (for lab orders)
           example: "BLOOD"
+        specimenTypeSystem:
+          type: string
+          description: Terminology system URI for specimen type (typically SNOMED CT)
+          example: "http://snomed.info/sct"
         bodysite:
           type: string
           description: Target body site (for imaging/procedure orders)
+        bodysiteSystem:
+          type: string
+          description: Terminology system URI for body site (typically SNOMED CT)
+          example: "http://snomed.info/sct"
         notes:
           type: string
           maxLength: 500
