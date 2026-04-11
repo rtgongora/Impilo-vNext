@@ -7,7 +7,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { User, ShieldCheck, Monitor, Bell, Plug } from "lucide-react";
+import { User, ShieldCheck, Monitor, Bell, Plug, Shield } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { OrganizationPlaneContextBar } from "@/components/experience/OrganizationPlaneContextBar";
 import { PageShell } from "@/components/PageShell";
@@ -47,6 +47,13 @@ const SETTINGS_SECTIONS = [
     href: "/settings/integrations",
     icon: Plug,
     color: "bg-green-100 text-green-600",
+  },
+  {
+    title: "Privacy & Data",
+    description: "Consent management, data rights, and account deletion",
+    href: "/settings/privacy",
+    icon: Shield,
+    color: "bg-indigo-100 text-indigo-600",
   },
 ] as const;
 
