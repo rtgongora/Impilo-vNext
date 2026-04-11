@@ -102,6 +102,10 @@ public class AuthorizeController {
                             String.join(",", decision.obligations().maskFields()));
                     }
                     builder.header(TrustHeaders.LOGGING_LEVEL, decision.obligations().loggingLevel());
+                    // Health OS §8: Propagate graduated friction level to downstream
+                    if (decision.obligations().frictionLevel() != null) {
+                        builder.header("X-Friction-Level", decision.obligations().frictionLevel());
+                    }
                 }
 
                 yield builder.body(AuthorizeResponse.allowed(decision.obligations()));
