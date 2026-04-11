@@ -45,4 +45,20 @@ public class SourceDocumentEntity {
     public String getStatus() {
         return status;
     }
+
+    public String getFileReference() {
+        return fileReference;
+    }
+
+    public String getIngestionStatus() {
+        return ingestionStatus;
+    }
+
+    public void setIngestionStatus(String ingestionStatus) {
+        this.ingestionStatus = ingestionStatus;
+    }
+
+    public void setUpdatedAt(Instant updatedAt) {
+        this.updatedAt = updatedAt;
+    }
 }

@@ -16,5 +16,9 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY --from=build /build/services/clinical-knowledge-platform-service/target/clinical-knowledge-platform-service-*.jar app.jar
+# National reference PDF for optional in-container ingestion (path aligned with application.yml defaults)
+COPY docs/reference/edliz-2025/EDLIZ-2025-final-for-circulation.pdf edliz/EDLIZ-2025-final-for-circulation.pdf
+ENV CLINICAL_INGESTION_WORKING_DIR=/app
+ENV EDLIZ_REFERENCE_PDF_PATH=edliz/EDLIZ-2025-final-for-circulation.pdf
 EXPOSE 8270
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]

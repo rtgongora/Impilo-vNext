@@ -440,6 +440,9 @@ services:
       DB_NAME: clinical_knowledge
       DB_USER: ${POSTGRES_USER:-impilo}
       DB_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      # PDF ingestion defaults (image copies PDF under /app/edliz — see service Dockerfile)
+      CLINICAL_INGESTION_WORKING_DIR: /app
+      EDLIZ_REFERENCE_PDF_PATH: edliz/EDLIZ-2025-final-for-circulation.pdf
     ports:
       - "8270:8270"
     depends_on:

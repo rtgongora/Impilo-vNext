@@ -9,6 +9,7 @@ import java.util.UUID;
 public class SourceSectionEntity {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @Column(name = "document_id", nullable = false)
@@ -28,23 +29,51 @@ public class SourceSectionEntity {
         return id;
     }
 
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
     public UUID getDocumentId() {
         return documentId;
+    }
+
+    public void setDocumentId(UUID documentId) {
+        this.documentId = documentId;
     }
 
     public Integer getPageNumber() {
         return pageNumber;
     }
 
+    public void setPageNumber(Integer pageNumber) {
+        this.pageNumber = pageNumber;
+    }
+
     public String getSectionTitle() {
         return sectionTitle;
+    }
+
+    public void setSectionTitle(String sectionTitle) {
+        this.sectionTitle = sectionTitle;
     }
 
     public String getSectionPath() {
         return sectionPath;
     }
 
+    public void setSectionPath(String sectionPath) {
+        this.sectionPath = sectionPath;
+    }
+
     public String getRawText() {
         return rawText;
+    }
+
+    public void setRawText(String rawText) {
+        this.rawText = rawText;
+    }
+
+    public void setCreatedAt(Instant createdAt) {
+        this.createdAt = createdAt;
     }
 }

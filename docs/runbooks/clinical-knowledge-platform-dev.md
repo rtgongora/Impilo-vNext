@@ -49,6 +49,48 @@ Content-Type: application/json
 }
 ```
 
+### PDF → `source_sections` ingestion (EDLIZ reference)
+
+Run from the **repository root** so the default relative PDF path resolves (`impilo.clinical.edliz.reference-pdf-path`). The seeded national document id is `a0000001-0001-4001-8001-000000000001` (see Flyway `V002` / `V003`).
+
+**Summary** (counts of `pdf/*` vs all sections):
+
+```http
+GET http://localhost:8270/internal/v1/clinical/source/documents/a0000001-0001-4001-8001-000000000001/ingestion-summary
+```
+
+**First ingest** (no prior `pdf/` rows — uses configured PDF path and optional SHA verify):
+
+```http
+POST http://localhost:8270/internal/v1/clinical/source/documents/a0000001-0001-4001-8001-000000000001/ingest-pdf
+Content-Type: application/json
+
+{
+  "verify_sha256": true
+}
+```
+
+**Re-ingest** (replace only `section_path` rows under `pdf/`):
+
+```http
+POST http://localhost:8270/internal/v1/clinical/source/documents/a0000001-0001-4001-8001-000000000001/ingest-pdf
+Content-Type: application/json
+
+{
+  "replace_pdf_sections": true,
+  "verify_sha256": true
+}
+```
+
+Override path (resolved against `CLINICAL_INGESTION_WORKING_DIR` when relative):
+
+```json
+{
+  "pdf_path": "docs/reference/edliz-2025/EDLIZ-2025-final-for-circulation.pdf",
+  "replace_pdf_sections": true
+}
+```
+
 ## Docker
 
 From repository root (after databases exist):
