@@ -15,6 +15,8 @@ import { RegistryPlaneContextBar } from "@/components/experience/RegistryPlaneCo
 import { PageShell } from "@/components/PageShell";
 import { usePatients, type PatientResource } from "@/hooks/queries/usePatients";
 import { getPatientDisplayName, getPatientQueueSummary } from "@/lib/queue-workflows";
+import { usePrivacyDisplayStore } from "@/hooks/usePrivacyDisplayStore";
+import { maskDob, displayCpid } from "@/lib/pii-mask";
 
 export default function RegistryClientDirectoryPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -99,8 +101,8 @@ export default function RegistryClientDirectoryPage() {
                       <span className="font-medium text-gray-900">{getPatientDisplayName(patient)}</span>
                       <p className="text-xs text-gray-500">{getPatientQueueSummary(patient)}</p>
                     </td>
-                    <td className="px-4 py-3 font-mono text-xs text-gray-700">{patient.attributes.cpid}</td>
-                    <td className="px-4 py-3 text-gray-600">{patient.attributes.dateOfBirth}</td>
+                    <td className="px-4 py-3 font-mono text-xs text-gray-700">{displayCpid(patient.attributes.cpid)}</td>
+                    <td className="px-4 py-3 text-gray-600">{maskDob(patient.attributes.dateOfBirth, usePrivacyDisplayStore.getState().level)}</td>
                     <td className="px-4 py-3 text-right">
                       <Link
                         href={`/ehr/${patient.id}?entry=registry`}

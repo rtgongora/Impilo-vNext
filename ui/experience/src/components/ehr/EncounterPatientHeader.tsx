@@ -8,6 +8,8 @@
  */
 
 import { User, Stethoscope, MapPin, Calendar } from "lucide-react";
+import { usePrivacyDisplayStore } from "@/hooks/usePrivacyDisplayStore";
+import { maskName, maskDob, maskId, safeAge, genderChar } from "@/lib/pii-mask";
 
 // ---------------------------------------------------------------------------
 // Mock data
@@ -68,7 +70,8 @@ function formatDate(iso: string): string {
 export function EncounterPatientHeader() {
   const patient = MOCK_PATIENT;
   const encounter = MOCK_ENCOUNTER;
-  const age = calculateAge(patient.dateOfBirth);
+  const privacyLevel = usePrivacyDisplayStore((s) => s.level);
+  const age = safeAge(patient.dateOfBirth);
   const los = daysBetween(encounter.admissionDate, new Date());
   const primaryDiagnosis = MOCK_PRIMARY_DIAGNOSIS;
 
@@ -79,8 +82,7 @@ export function EncounterPatientHeader() {
         ? "bg-blue-50 text-blue-600 border-blue-200"
         : "bg-purple-50 text-purple-600 border-purple-200";
 
-  const genderLabel =
-    patient.gender === "female" ? "F" : patient.gender === "male" ? "M" : "O";
+  const genderLabel = genderChar(patient.gender);
 
   return (
     <div className="bg-white border-b border-gray-200 px-4 py-2">
@@ -93,21 +95,21 @@ export function EncounterPatientHeader() {
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-sm font-semibold text-gray-900">
-                {patient.name}
+                {maskName(patient.name, privacyLevel)}
               </h2>
               <span className="text-[10px] font-mono border rounded px-1.5 py-0.5 text-gray-500 border-gray-200">
-                {patient.mrn}
+                {maskId(patient.mrn, privacyLevel)}
               </span>
               <span
                 className={`text-[10px] border rounded px-1.5 py-0.5 ${genderBadgeClasses}`}
               >
-                {genderLabel} &bull; {age}y
+                {genderLabel} &bull; {age != null ? `${age}y` : "—"}
               </span>
             </div>
             <div className="flex items-center gap-3 text-xs text-gray-500 mt-0.5">
               <span className="flex items-center gap-1">
                 <Calendar className="w-3 h-3" />
-                DOB: {formatDate(patient.dateOfBirth)}
+                {maskDob(patient.dateOfBirth, privacyLevel)}
               </span>
               <span className="flex items-center gap-1">
                 <MapPin className="w-3 h-3" />

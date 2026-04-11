@@ -555,7 +555,7 @@ export default function ConsultsPage() {
                       <Sparkles className="h-3.5 w-3.5 text-blue-600" />
                       Unified consults workspace
                     </div>
-                    <h3 className="mt-3 text-xl font-semibold text-slate-900">{patient.attributes.displayName}</h3>
+                    <h3 className="mt-3 text-xl font-semibold text-slate-900">{patientName}</h3>
                     <p className="mt-1 text-sm text-slate-600">
                       Consultations, referrals, and teleconsults now run as one coordinated encounter surface.
                     </p>

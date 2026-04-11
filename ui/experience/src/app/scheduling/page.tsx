@@ -38,6 +38,8 @@ import { useAuthStore } from "@/hooks/useAuthStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { usePatients, type PatientResource } from "@/hooks/queries/usePatients";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
+import { usePrivacyDisplayStore } from "@/hooks/usePrivacyDisplayStore";
+import { maskName, maskDob, displayCpid } from "@/lib/pii-mask";
 
 interface AppointmentResource {
   id: string;
@@ -378,7 +380,7 @@ export default function SchedulingPage() {
                 {selectedPatient && (
                   <div className="mt-1 flex items-center gap-2 text-xs text-green-700 bg-green-50 px-2 py-1 rounded">
                     <User className="w-3 h-3" />
-                    {selectedPatient.attributes.displayName} — CPID: {selectedPatient.attributes.cpid}
+                    {maskName(selectedPatient.attributes.displayName, usePrivacyDisplayStore.getState().level)} — CPID: {displayCpid(selectedPatient.attributes.cpid)}
                   </div>
                 )}
                 {showPatientDropdown && patients.length > 0 && !selectedPatient && (
@@ -391,8 +393,8 @@ export default function SchedulingPage() {
                       >
                         <User className="w-4 h-4 text-gray-400" />
                         <div>
-                          <p className="text-sm font-medium text-gray-900">{p.attributes.displayName}</p>
-                          <p className="text-xs text-gray-500">CPID: {p.attributes.cpid} · {p.attributes.gender} · DOB: {p.attributes.dateOfBirth}</p>
+                          <p className="text-sm font-medium text-gray-900">{maskName(p.attributes.displayName, usePrivacyDisplayStore.getState().level)}</p>
+                          <p className="text-xs text-gray-500">CPID: {displayCpid(p.attributes.cpid)} · {p.attributes.gender} · {maskDob(p.attributes.dateOfBirth, usePrivacyDisplayStore.getState().level)}</p>
                         </div>
                       </button>
                     ))}
