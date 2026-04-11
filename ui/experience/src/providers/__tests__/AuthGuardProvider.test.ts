@@ -33,4 +33,18 @@ describe("matchesRequiredRole", () => {
   it("REGISTRY_ADMIN denies FINANCE-only operators", () => {
     expect(matchesRequiredRole((r) => r === "FINANCE", "REGISTRY_ADMIN")).toBe(false);
   });
+
+  it("PAYER_OPS excludes FACILITY_ADMIN but includes FINANCE", () => {
+    expect(matchesRequiredRole((r) => r === "FACILITY_ADMIN", "PAYER_OPS")).toBe(false);
+    expect(matchesRequiredRole((r) => r === "FINANCE", "PAYER_OPS")).toBe(true);
+  });
+
+  it("MSIKA_GOVERNANCE allows FACILITY_ADMIN and FINANCE", () => {
+    expect(matchesRequiredRole((r) => r === "FACILITY_ADMIN", "MSIKA_GOVERNANCE")).toBe(true);
+    expect(matchesRequiredRole((r) => r === "FINANCE", "MSIKA_GOVERNANCE")).toBe(true);
+  });
+
+  it("COMMERCE still allows cross-functional operators like SUPPORT_AGENT", () => {
+    expect(matchesRequiredRole((r) => r === "SUPPORT_AGENT", "COMMERCE")).toBe(true);
+  });
 });

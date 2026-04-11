@@ -7,7 +7,7 @@ import { PageShell } from "@/components/PageShell";
 import {
   SIDECAR_RETIREMENT_LEDGER,
   type SidecarRetirementStatus,
-} from "@/lib/sidecar-retirement-ledger";
+} from "@/lib/sidecar-retirement-ledger-v2";
 
 const STATUS_ORDER: SidecarRetirementStatus[] = [
   "absorbed into Experience",
@@ -71,6 +71,8 @@ export default function SidecarRetirementPage() {
                   <p className="mt-1 text-sm normal-case">
                     {status === "absorbed into Experience"
                       ? "These capabilities have an inspected Experience entry point and should not be accepted through the sidecar."
+                      : status === "partially absorbed into Experience"
+                        ? "These capabilities have real Experience entry points, but some parity or canonical route work is still incomplete."
                       : status === "retired sidecar path"
                         ? "These sidecar entry points are superseded by an existing Experience route in the accepted shell."
                         : "These flows remain blocked until the stated Experience BFF, gateway, or canonical route contract exists."}

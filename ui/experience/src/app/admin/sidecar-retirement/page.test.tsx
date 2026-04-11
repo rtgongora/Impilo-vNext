@@ -40,8 +40,9 @@ describe("SidecarRetirementPage", () => {
     expect(screen.getByRole("heading", { level: 1, name: /Sidecar Retirement Ledger/i })).toBeInTheDocument();
     expect(screen.getByText(/Facility marketplace shell/i)).toBeInTheDocument();
     expect(screen.getByText(/ui\/msika-web:\/catalogs/i)).toBeInTheDocument();
-    expect(screen.getByText(/ui\/butano-web:\/ips/i)).toBeInTheDocument();
-    expect(screen.getByText(/blocked by missing backend contract/i)).toBeInTheDocument();
+    expect(screen.getByText(/ui\/butano-web:\/ips,\/timeline,\/triggers/i)).toBeInTheDocument();
+    expect(screen.getByText(/partially absorbed into Experience/i)).toBeInTheDocument();
+    expect(screen.getByText(/retired sidecar path/i)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Integration status/i })).toHaveAttribute(
       "href",
       "/admin/integration-status",

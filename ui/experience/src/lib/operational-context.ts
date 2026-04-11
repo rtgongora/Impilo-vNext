@@ -8,7 +8,7 @@
 /** Subset of auth profile needed for mode resolution (avoids circular imports). */
 export interface OperationalAuthPrincipal {
   roles: string[];
-  actorType: "PROVIDER" | "OPERATOR" | "CITIZEN" | "SYSTEM";
+  actorType: "PROVIDER" | "OPERATOR" | "CITIZEN" | "SYSTEM" | "CAREGIVER";
 }
 
 /** Primary post-login operational modes shown in the experience shell. */

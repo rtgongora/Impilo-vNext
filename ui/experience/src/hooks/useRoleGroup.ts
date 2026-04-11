@@ -24,6 +24,9 @@ export function useRoleGroup() {
   return {
     isAdmin: hasGroupRole(hasRole, "ADMIN"),
     isFinance: hasGroupRole(hasRole, "FINANCE"),
+    isPayerOps: hasGroupRole(hasRole, "PAYER_OPS"),
+    isMsikaGovernance: hasGroupRole(hasRole, "MSIKA_GOVERNANCE"),
+    isCommerce: hasGroupRole(hasRole, "COMMERCE"),
     isClinical: hasGroupRole(hasRole, "CLINICAL"),
     isPrescriber: hasGroupRole(hasRole, "PRESCRIBER"),
     isDispenser: hasGroupRole(hasRole, "DISPENSER"),

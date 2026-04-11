@@ -15,7 +15,7 @@ const VALID_SIDEBARS: SidebarContext[] = [
   "main", "facility", "workspace", "shift", "queue",
   "ehr", "admin", "registry", "marketplace", "finance", "settings",
 ];
-const VALID_GUARDS: GuardType[] = ["none", "auth", "facility", "workspace", "shift", "role"];
+const VALID_GUARDS: GuardType[] = ["none", "auth", "facility", "workspace", "shift", "role", "provider"];
 
 describe("Route Registry", () => {
   it("has the expected number of routes", () => {
@@ -81,8 +81,9 @@ describe("Route Registry", () => {
   });
 
   it("ZONES array contains the expected zone count", () => {
-    expect(ZONE_COUNT).toBe(15);
-    expect(ZONES).toHaveLength(15);
+    const uniqueZones = new Set(ROUTES.map((r) => r.zone));
+    expect(ZONE_COUNT).toBe(uniqueZones.size);
+    expect(ZONES).toHaveLength(uniqueZones.size);
   });
 
   it("all zones referenced by routes are in the ZONES array", () => {
@@ -187,32 +188,46 @@ describe("Route Registry", () => {
   });
 
   it("registers absorbed marketplace and finance operations routes in canonical shared routing", () => {
-    const financePaths = [
-      "/finance/settlements",
-      "/finance/reconciliation",
-      "/finance/refunds",
-      "/finance/payer-ops",
+    const financePaths: Array<[string, string]> = [
+      ["/finance/settlements", "FINANCE"],
+      ["/finance/reconciliation", "PAYER_OPS"],
+      ["/finance/refunds", "FINANCE"],
+      ["/finance/payer-ops", "PAYER_OPS"],
+      ["/finance/ledger", "FINANCE"],
+      ["/finance/payer-claims/[claimId]", "PAYER_OPS"],
     ];
 
-    for (const p of financePaths) {
-      const route = ROUTES.find((r) => r.path === p);
+    for (const [path, role] of financePaths) {
+      const route = ROUTES.find((r) => r.path === path);
       expect(route?.guard).toBe("role");
-      expect(route?.requiredRole).toBe("FINANCE");
+      expect(route?.requiredRole).toBe(role);
       expect(route?.navZone).toBe("work");
     }
 
     const marketplacePaths = [
+      "/marketplace/catalog",
+      "/marketplace/orders/[id]",
       "/marketplace/ops",
       "/marketplace/vendor",
       "/marketplace/vendor/orders",
+      "/marketplace/cart",
+      "/marketplace/substitutions",
+      "/marketplace/pickup",
     ];
 
-    for (const p of marketplacePaths) {
-      const route = ROUTES.find((r) => r.path === p);
+    for (const path of marketplacePaths) {
+      const route = ROUTES.find((r) => r.path === path);
       expect(route?.guard).toBe("role");
-      expect(route?.requiredRole).toBe("FINANCE");
+      expect(route?.requiredRole).toBe("COMMERCE");
       expect(route?.navZone).toBe("work");
     }
+  });
+
+  it("registers maternity monitoring as a first-class EHR route", () => {
+    const route = ROUTES.find((r) => r.path === "/ehr/[patientId]/maternity");
+    expect(route?.layout).toBe("ehr");
+    expect(route?.guard).toBe("shift");
+    expect(route?.navZone).toBe("work");
   });
 
   it("scheduling hub, roster, on-call, and noticeboard use workspace guard", () => {

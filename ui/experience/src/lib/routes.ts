@@ -1,7 +1,7 @@
 /**
  * Experience UI — Complete Route Registry
  *
- * 214 routes across 26 zones.
+ * 218 routes across 26 zones.
  * Each route specifies: path, zone, layout, sidebar context, guard, page title, and nav label.
  *
  * Zones: auth, home, facility, workspace, shift, queue, ehr, admin, registry,
@@ -128,6 +128,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/ehr/[patientId]/summary", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Patient Summary", navLabel: "Summary", navZone: "work" },
   { path: "/ehr/[patientId]/ips", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "International Patient Summary", navLabel: "IPS", navZone: "work" },
   { path: "/ehr/[patientId]/vitals", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Vitals", navLabel: "Vitals", navZone: "work" },
+  { path: "/ehr/[patientId]/maternity", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Maternity Monitoring", navLabel: "Maternity", navZone: "work" },
   { path: "/ehr/[patientId]/history", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Medical History", navLabel: "History", navZone: "work" },
   { path: "/ehr/[patientId]/conditions", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Conditions", navLabel: "Conditions", navZone: "work" },
   { path: "/ehr/[patientId]/medications", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Medications", navLabel: "Medications", navZone: "work" },
@@ -197,12 +198,13 @@ export const ROUTES: RouteDefinition[] = [
 
   // ── Zone: Marketplace ───────────────────────────────────────────
   { path: "/marketplace", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "auth", pageTitle: "Health Marketplace", navLabel: "Marketplace", navZone: "work" },
-  { path: "/marketplace/catalog", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "auth", pageTitle: "Service Catalog", navLabel: "Catalog", navZone: "work" },
+  { path: "/marketplace/catalog", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "role", requiredRole: "COMMERCE", pageTitle: "Service Catalog", navLabel: "Catalog", navZone: "work" },
   { path: "/marketplace/orders", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "auth", pageTitle: "My Orders", navLabel: "Orders", navZone: "work" },
-  { path: "/marketplace/orders/[id]", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "auth", pageTitle: "Order Details", navLabel: "Order", navZone: "work" },
-  { path: "/marketplace/ops", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "role", requiredRole: "FINANCE", pageTitle: "Marketplace Operations", navLabel: "Marketplace Ops", navZone: "work" },
-  { path: "/marketplace/vendor", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "role", requiredRole: "FINANCE", pageTitle: "Vendor Fulfilment", navLabel: "Vendor Fulfilment", navZone: "work" },
-  { path: "/marketplace/vendor/orders", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "role", requiredRole: "FINANCE", pageTitle: "Vendor Orders", navLabel: "Vendor Orders", navZone: "work" },
+  { path: "/marketplace/orders/[id]", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "role", requiredRole: "COMMERCE", pageTitle: "Order Details", navLabel: "Order", navZone: "work" },
+  { path: "/marketplace/ops", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "role", requiredRole: "COMMERCE", pageTitle: "Marketplace Operations", navLabel: "Marketplace Ops", navZone: "work" },
+  { path: "/marketplace/vendor", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "role", requiredRole: "COMMERCE", pageTitle: "Vendor Fulfilment", navLabel: "Vendor Fulfilment", navZone: "work" },
+  { path: "/marketplace/vendor/orders", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "role", requiredRole: "COMMERCE", pageTitle: "Vendor Orders", navLabel: "Vendor Orders", navZone: "work" },
+  { path: "/marketplace/pickup", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "role", requiredRole: "COMMERCE", pageTitle: "Pickup Handoff", navLabel: "Pickup", navZone: "work" },
   { path: "/marketplace/vendors", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "auth", pageTitle: "Vendors", navLabel: "Vendors", navZone: "work" },
   { path: "/marketplace/bookings", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "auth", pageTitle: "Bookings", navLabel: "Bookings", navZone: "work" },
 
@@ -213,10 +215,12 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/finance/billing", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Billing", navLabel: "Billing", navZone: "work" },
   { path: "/finance/billing/[id]", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Bill Details", navLabel: "Bill", navZone: "work" },
   { path: "/finance/payments", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Payments", navLabel: "Payments", navZone: "work" },
+  { path: "/finance/ledger", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Ledger", navLabel: "Ledger", navZone: "work" },
   { path: "/finance/settlements", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Settlements", navLabel: "Settlements", navZone: "work" },
-  { path: "/finance/reconciliation", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Reconciliation", navLabel: "Reconciliation", navZone: "work" },
+  { path: "/finance/reconciliation", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "PAYER_OPS", pageTitle: "Reconciliation", navLabel: "Reconciliation", navZone: "work" },
   { path: "/finance/refunds", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Refunds", navLabel: "Refunds", navZone: "work" },
-  { path: "/finance/payer-ops", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Payer Operations", navLabel: "Payer Ops", navZone: "work" },
+  { path: "/finance/payer-ops", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "PAYER_OPS", pageTitle: "Payer Operations", navLabel: "Payer Ops", navZone: "work" },
+  { path: "/finance/payer-claims/[claimId]", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "PAYER_OPS", pageTitle: "Payer Claim", navLabel: "Payer Claim", navZone: "work" },
   { path: "/finance/tariffs", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Tariff Management", navLabel: "Tariffs", navZone: "work" },
   { path: "/finance/commerce-integrations", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Commerce & Payer Stack", navLabel: "Commerce Integrations", navZone: "work" },
 
@@ -320,8 +324,8 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/home/documents", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Documents", navLabel: "Documents", navZone: "life" },
 
   // ── Marketplace: Cart & Substitutions (absorbs msika-flow-portal sidecar) ──
-  { path: "/marketplace/cart", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "auth", pageTitle: "Shopping Cart", navLabel: "Cart", navZone: "work" },
-  { path: "/marketplace/substitutions", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "auth", pageTitle: "Substitutions", navLabel: "Substitutions", navZone: "work" },
+  { path: "/marketplace/cart", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "role", requiredRole: "COMMERCE", pageTitle: "Shopping Cart", navLabel: "Cart", navZone: "work" },
+  { path: "/marketplace/substitutions", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "role", requiredRole: "COMMERCE", pageTitle: "Substitutions", navLabel: "Substitutions", navZone: "work" },
 
   // ── Zone: Intelligent Experience (Health OS §2a, §16a) ─────────────
   { path: "/ask", zone: "intelligent", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Ask", navLabel: "Ask", navZone: "life" },
@@ -332,7 +336,7 @@ export const ROUTES: RouteDefinition[] = [
 ];
 
 // Total route count assertion
-export const EXPECTED_ROUTE_COUNT = 214;
+export const EXPECTED_ROUTE_COUNT = 218;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

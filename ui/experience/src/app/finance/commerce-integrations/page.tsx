@@ -107,6 +107,25 @@ export default function CommerceIntegrationsPage() {
                   </tr>
                   <tr>
                     <td className="px-3 py-2">
+                      <Link href="/marketplace/pickup" className="text-blue-700 hover:underline">
+                        /marketplace/pickup
+                      </Link>
+                      {" "}and{" "}
+                      <Link href="/marketplace/substitutions" className="text-blue-700 hover:underline">
+                        /marketplace/substitutions
+                      </Link>
+                    </td>
+                    <td className="px-3 py-2 font-mono text-xs">
+                      POST /internal/v1/commerce/orders/*/pickup/issue, POST /internal/v1/commerce/pickup/claim, GET/POST
+                      /internal/v1/commerce/substitutions*
+                    </td>
+                    <td className="px-3 py-2 text-slate-600">
+                      Pickup token handoff and substitution decisions now run in Experience instead of the MSIKA Flow
+                      portal sidecar.
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="px-3 py-2">
                       <Link href="/marketplace/vendor" className="text-blue-700 hover:underline">
                         /marketplace/vendor
                       </Link>
@@ -120,6 +139,19 @@ export default function CommerceIntegrationsPage() {
                     </td>
                     <td className="px-3 py-2 text-slate-600">
                       Trusted Experience-operator vendor queue and fulfilment (explicit vendor ID scope; not a vendor actor plane).
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="px-3 py-2">
+                      <Link href="/marketplace/ops" className="text-blue-700 hover:underline">
+                        /marketplace/ops
+                      </Link>
+                    </td>
+                    <td className="px-3 py-2 font-mono text-xs">
+                      GET/POST /internal/v1/commerce/ops/*
+                    </td>
+                    <td className="px-3 py-2 text-slate-600">
+                      Reviews, stuck orders, audit, and vendor governance now have a real Experience workspace.
                     </td>
                   </tr>
                   <tr>
@@ -163,15 +195,33 @@ export default function CommerceIntegrationsPage() {
                   </tr>
                   <tr>
                     <td className="px-3 py-2">
-                      <Link href="/finance/payer-ops" className="text-blue-700 hover:underline">
-                        /finance/payer-ops
+                      <Link href="/finance/ledger" className="text-blue-700 hover:underline">
+                        /finance/ledger
                       </Link>
                     </td>
                     <td className="px-3 py-2 font-mono text-xs">
-                      GET/POST /internal/v1/finance/payer-ops/*
+                      GET /internal/v1/finance/ledger?intentId=...
                     </td>
                     <td className="px-3 py-2 text-slate-600">
-                      Intents, remittance, adapters, fraud flags, ops reviews (MusheX). Tighter finance/admin roles on BFF.
+                      Ledger inspection is now handled in Experience instead of the MusheX finance sidecar.
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="px-3 py-2">
+                      <Link href="/finance/payer-ops" className="text-blue-700 hover:underline">
+                        /finance/payer-ops
+                      </Link>
+                      {" "}and{" "}
+                      <Link href="/finance/payer-claims/[claimId]" className="text-blue-700 hover:underline">
+                        /finance/payer-claims/[claimId]
+                      </Link>
+                    </td>
+                    <td className="px-3 py-2 font-mono text-xs">
+                      GET/POST /internal/v1/finance/payer-ops/*, GET/POST /internal/v1/finance/payer-claims/*
+                    </td>
+                    <td className="px-3 py-2 text-slate-600">
+                      Intents, remittance, adapters, fraud flags, ops reviews, and payer-claim detail actions (MusheX).
+                      Tighter finance/admin roles apply on the BFF.
                     </td>
                   </tr>
                   <tr>
@@ -235,9 +285,10 @@ export default function CommerceIntegrationsPage() {
               MSIKA — partially wired (registry + commerce)
             </h2>
             <p className="text-sm text-slate-600 mb-3">
-              Experience proxies <strong>registry lookup</strong> and <strong>commerce flow</strong> under{" "}
+              Experience now proxies <strong>registry lookup</strong>, <strong>commerce flow</strong>, <strong>pickup</strong>,
+              <strong> substitutions</strong>, and <strong>marketplace ops</strong> under{" "}
               <code className="text-xs">/internal/v1/product-registry/*</code> and <code className="text-xs">/internal/v1/commerce/*</code>.
-              Remaining MSIKA governance and ops paths from sidecars still require additional Experience BFF routes.
+              The remaining MSIKA gap is governance parity, not day-to-day operator rails.
             </p>
             <div className="overflow-x-auto rounded-lg border border-amber-200 bg-amber-50/40">
               <table className="w-full text-sm">
@@ -267,9 +318,9 @@ export default function CommerceIntegrationsPage() {
                       /v1/rx/substitutions, …
                     </td>
                     <td className="px-3 py-2">
-                      Partially present via <code className="text-xs">/internal/v1/commerce/*</code> and{" "}
-                      <code className="text-xs">/internal/v1/product-registry/*</code>. Still missing list/browse parity (e.g.
-                      order listing), pickup token/claim, and substitutions endpoints under the canonical commerce family.
+                      Now covered in Experience via <code className="text-xs">/internal/v1/commerce/*</code> and{" "}
+                      <code className="text-xs">/internal/v1/product-registry/*</code> across catalog, order detail, cart, pickup,
+                      and substitutions.
                     </td>
                   </tr>
                   <tr>
@@ -289,7 +340,13 @@ export default function CommerceIntegrationsPage() {
                     <td className="px-3 py-2 font-mono text-[11px]">
                       GET /v1/ops/reviews/pending, GET /v1/ops/stuck-orders, …
                     </td>
-                    <td className="px-3 py-2">BFF ops review / stuck-order contract (not present).</td>
+                    <td className="px-3 py-2">
+                      Now covered in Experience via <code className="text-xs">/internal/v1/commerce/ops/*</code> and{" "}
+                      <Link href="/marketplace/ops" className="text-blue-700 hover:underline">
+                        /marketplace/ops
+                      </Link>
+                      .
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -303,7 +360,11 @@ export default function CommerceIntegrationsPage() {
             <p className="text-sm text-slate-600 mb-3">
               Sidecars call <code className="text-xs">/mushex/v1/…</code> on the same API host as MSIKA. Experience still
               exposes <strong>no</strong> generic <code className="text-xs">/internal/v1/mushex/…</code> pass-through.
-              Instead, typed finance routes proxy MusheX: settlements (
+              Instead, typed finance routes proxy MusheX: ledger (
+              <Link href="/finance/ledger" className="text-blue-700 hover:underline">
+                /finance/ledger
+              </Link>
+              ), settlements (
               <Link href="/finance/settlements" className="text-blue-700 hover:underline">
                 /finance/settlements
               </Link>
@@ -319,7 +380,11 @@ export default function CommerceIntegrationsPage() {
               <Link href="/finance/payer-ops" className="text-blue-700 hover:underline">
                 /finance/payer-ops
               </Link>
-              ). Other MusheX paths (for example claims queues not mapped here) may still be absent.
+              ), payer claims (
+              <Link href="/finance/payer-claims/[claimId]" className="text-blue-700 hover:underline">
+                /finance/payer-claims/[claimId]
+              </Link>
+              ). Other MusheX paths, such as a claims queue or list route, may still be absent.
             </p>
             <div className="overflow-x-auto rounded-lg border border-amber-200 bg-amber-50/40">
               <table className="w-full text-sm">
@@ -338,10 +403,10 @@ export default function CommerceIntegrationsPage() {
                       /mushex/v1/payment-intents/&#123;id&#125;/refund, …
                     </td>
                     <td className="px-3 py-2">
-                      Core console flows map to <code className="text-xs">/internal/v1/finance/settlements/*</code>,{" "}
+                      Core console flows map to <code className="text-xs">/internal/v1/finance/ledger</code>,{" "}
+                      <code className="text-xs">/internal/v1/finance/settlements/*</code>,{" "}
                       <code className="text-xs">/internal/v1/finance/reconciliation/*</code>, and{" "}
-                      <code className="text-xs">/internal/v1/finance/refunds/*</code>. Ledger-only or other console tabs
-                      without a matching internal route remain integration follow-ups.
+                      <code className="text-xs">/internal/v1/finance/refunds/*</code>.
                     </td>
                   </tr>
                   <tr>
@@ -361,8 +426,9 @@ export default function CommerceIntegrationsPage() {
                     </td>
                     <td className="px-3 py-2">
                       Adapters, fraud flags, and ops reviews are proxied under{" "}
-                      <code className="text-xs">/internal/v1/finance/payer-ops/*</code>. MusheX claims paths not listed on
-                      that controller may still be missing from Experience.
+                      <code className="text-xs">/internal/v1/finance/payer-ops/*</code>. MusheX claim detail actions are
+                      partially represented by <code className="text-xs">/internal/v1/finance/payer-claims/*</code>, but a
+                      claims queue or list surface is still missing.
                     </td>
                   </tr>
                 </tbody>
