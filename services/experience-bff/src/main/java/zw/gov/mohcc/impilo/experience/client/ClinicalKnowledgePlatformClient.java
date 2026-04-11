@@ -9,9 +9,10 @@ import org.springframework.web.client.RestTemplate;
 import zw.gov.mohcc.impilo.experience.config.ClinicalPlatformProperties;
 
 import java.util.Map;
+import java.util.UUID;
 
 /**
- * HTTP client for the Clinical Knowledge Platform (EDLIZ-aligned rules, assistant, pathways).
+ * HTTP client for the Clinical Knowledge Platform (EDLIZ-aligned rules, assistant, pathways, source PDF ingestion).
  */
 @Component
 public class ClinicalKnowledgePlatformClient {
@@ -49,6 +50,27 @@ public class ClinicalKnowledgePlatformClient {
 
     public JsonNode listPathways() {
         String url = baseUrl + "/internal/v1/clinical/pathways";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** PDF → source_sections for a {@code source_documents} row (operator tooling). */
+    public JsonNode ingestPdfSections(UUID documentId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/clinical/source/documents/" + documentId + "/ingest-pdf";
+        log.debug("Clinical platform: ingest PDF sections documentId={}", documentId);
+        Object payload = body != null ? body : Map.of();
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, payload, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode sourceIngestionSummary(UUID documentId) {
+        String url = baseUrl + "/internal/v1/clinical/source/documents/" + documentId + "/ingestion-summary";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode defaultEdlizSourceDocumentId() {
+        String url = baseUrl + "/internal/v1/clinical/source/edliz-default-document-id";
         ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
         return extractData(response);
     }

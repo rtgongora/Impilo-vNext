@@ -91,6 +91,18 @@ Override path (resolved against `CLINICAL_INGESTION_WORKING_DIR` when relative):
 }
 ```
 
+### Via Experience BFF (port 8160)
+
+Same paths under the BFF base URL (`NEXT_PUBLIC_BFF_URL` / default `http://localhost:8160`). Send standard companion headers (`X-Tenant-ID`, `X-Pod-ID`, `X-Request-ID`, `X-Correlation-ID`) and a JWT with an **admin-equivalent** realm role (`SYSTEM_ADMIN`, `FACILITY_ADMIN`, or `DEVELOPER`); other authenticated roles receive **403** on `/internal/v1/clinical/source/**`.
+
+Example:
+
+```http
+GET http://localhost:8160/internal/v1/clinical/source/documents/a0000001-0001-4001-8001-000000000001/ingestion-summary
+```
+
+Experience UI hooks: `useClinicalSourceIngestionSummary`, `useClinicalDefaultEdlizDocumentId`, `useIngestClinicalPdf` in `ui/experience/src/hooks/queries/useGuidance.ts`.
+
 ## Docker
 
 From repository root (after databases exist):
