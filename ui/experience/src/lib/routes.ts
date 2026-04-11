@@ -1,7 +1,7 @@
 /**
  * Experience UI — Complete Route Registry
  *
- * 218 routes across 26 zones.
+ * 220 routes across 26 zones.
  * Each route specifies: path, zone, layout, sidebar context, guard, page title, and nav label.
  *
  * Zones: auth, home, facility, workspace, shift, queue, ehr, admin, registry,
@@ -155,6 +155,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/ehr/[patientId]/care-team", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Care Team", navLabel: "Care Team", navZone: "work" },
   { path: "/ehr/[patientId]/goals", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Goals", navLabel: "Goals", navZone: "work" },
   { path: "/ehr/[patientId]/assessments", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Assessments", navLabel: "Assessments", navZone: "work" },
+  { path: "/ehr/[patientId]/charts", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Ward Charts", navLabel: "Charts", navZone: "work" },
 
   // ── Zone: Admin / TSHEPO Governance ─────────────────────────────
   { path: "/admin", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Administration", navLabel: "Admin", navZone: "professional" },
@@ -238,6 +239,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/inventory/movements", zone: "inventory", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Stock Movements", navLabel: "Movements", navZone: "work" },
   { path: "/inventory/counts", zone: "inventory", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Stock Counts", navLabel: "Counts", navZone: "work" },
   { path: "/inventory/requisitions", zone: "inventory", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Requisitions", navLabel: "Requisitions", navZone: "work" },
+  { path: "/inventory/stock-management", zone: "inventory", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Stock Management", navLabel: "Stock Management", navZone: "work" },
 
   // ── Zone: Reports ───────────────────────────────────────────────
   { path: "/reports", zone: "reports", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Reports", navLabel: "Reports", navZone: "professional" },
@@ -336,7 +338,7 @@ export const ROUTES: RouteDefinition[] = [
 ];
 
 // Total route count assertion
-export const EXPECTED_ROUTE_COUNT = 218;
+export const EXPECTED_ROUTE_COUNT = 220;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary
