@@ -1,0 +1,64 @@
+# =============================================================================
+# Data Governance — datasets, grants, policies (OpenAPI 3.0)
+# Phase B baseline: `GovernanceController` dataset registration (expand to grants/rules/exports).
+# =============================================================================
+openapi: "3.0.3"
+
+info:
+  title: Data Governance Service API
+  version: "1.0.0"
+  description: |
+    Dataset registration, access grants, policy publication, and governance
+    decisions. Consumed by platform data plane services and BFF via
+    `data-governance-base-url` where wired.
+  contact:
+    name: Impilo Platform Team
+  license:
+    name: Proprietary
+
+servers:
+  - url: http://localhost:8220
+    description: Local development
+  - url: https://{tenant}.impilo.health/api
+    description: Production (per-tenant)
+    variables:
+      tenant:
+        default: demo
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Internal-Governance
+    description: Datasets and policy
+
+paths:
+  /internal/v1/governance/datasets:
+    post:
+      operationId: dataGovernanceCreateDataset
+      tags: [Internal-Governance]
+      summary: Register a governed dataset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "201":
+          description: Dataset registered
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        "400":
+          description: Validation error
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

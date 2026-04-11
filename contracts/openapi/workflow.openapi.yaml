@@ -1,0 +1,86 @@
+# =============================================================================
+# Workflow — definitions, instances, snapshots (OpenAPI 3.0)
+# Phase B baseline: companion-enforced internal routes (`Workflow*Controller`).
+# =============================================================================
+openapi: "3.0.3"
+
+info:
+  title: Workflow Service API
+  version: "1.0.0"
+  description: |
+    Governed workflow definitions, instance lifecycle, and snapshots. Requires
+    Manifest v1.1 request context and idempotency headers on mutating routes.
+  contact:
+    name: Impilo Platform Team
+  license:
+    name: Proprietary
+
+servers:
+  - url: http://localhost:8250
+    description: Local development
+  - url: https://{tenant}.impilo.health/api
+    description: Production (per-tenant)
+    variables:
+      tenant:
+        default: demo
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Internal-Workflow
+    description: Definitions and instances
+
+paths:
+  /internal/v1/workflows/definitions:
+    post:
+      operationId: workflowCreateDefinition
+      tags: [Internal-Workflow]
+      summary: Create workflow definition
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "201":
+          description: Definition created
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/workflows/instances:
+    post:
+      operationId: workflowStartInstance
+      tags: [Internal-Workflow]
+      summary: Start workflow instance
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "201":
+          description: Instance started
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        "404":
+          description: Definition not found
+        "422":
+          description: Invalid transition
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
