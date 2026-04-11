@@ -1,12 +1,11 @@
 /**
  * Experience UI — Complete Route Registry
  *
- * All 98 routes across 15 zones as documented in 01_site_map.md.
+ * All 161 routes across 15 zones.
  * Each route specifies: path, zone, layout, sidebar context, guard, page title, and nav label.
  *
- * SPEC CONFLICT #1: Docs 01-07 contain summaries only, not detailed route tables.
- * Routes reconstructed from: zone count (15), route count (98), auth model, golden paths,
- * and existing codebase patterns. Revision expected when full specs are available.
+ * Zones: auth, home, facility, workspace, shift, queue, ehr, admin, registry,
+ * marketplace, finance, pharmacy, inventory, reports, settings
  */
 
 export type LayoutVariant = "app" | "ehr" | "auth" | "minimal";
