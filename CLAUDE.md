@@ -114,6 +114,22 @@ Trust headers defined in `CompanionHeaders.java` ↔ `api-client.ts` ↔ `envoy.
 - Keycloak 25.x, Envoy 1.31.x, HAPI FHIR 7.4, Orthanc PACS
 - Docker/K8s, Helm, GitHub Actions
 
+## Healthcare Coding Standards
+All clinical data MUST use internationally recognized coding systems. See `docs/doctrine/healthcare-coding-standards.md`.
+
+| Standard | URI | Domain |
+|----------|-----|--------|
+| ICD-11 | `http://id.who.int/icd/release/11` | Diagnoses, mortality |
+| SNOMED CT | `http://snomed.info/sct` | Clinical findings, procedures |
+| LOINC | `http://loinc.org` | Lab tests, observations, vitals |
+| ATC | `http://www.whocc.no/atc` | Medication classification |
+| DICOM | `http://dicom.nema.org/resources/ontology/DCM` | Imaging metadata |
+| CVX | `http://hl7.org/fhir/sid/cvx` | Vaccine codes |
+| CPT | `http://www.ama-assn.org/go/cpt` | Procedure coding (claims) |
+| UCUM | `http://unitsofmeasure.org` | Units of measure |
+
+**Key artifacts**: `CodingSystem` enum in `libs/shared-kernel-java`, TypeScript types in `contracts/coding-standards.ts`, ZIBO service validates codes at runtime.
+
 ## Service Port Map (local dev)
 - TSHEPO: 8081, VITO: 8082, VARAPI: 8083, TUSO: 8084, ZIBO: 8085
 - Msika: 8086, PCT: 8088, OROS: 8089, HAPI FHIR: 8090
