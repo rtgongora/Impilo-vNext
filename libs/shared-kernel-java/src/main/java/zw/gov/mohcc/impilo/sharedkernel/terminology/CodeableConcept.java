@@ -1,5 +1,6 @@
 package zw.gov.mohcc.impilo.sharedkernel.terminology;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -159,6 +160,7 @@ public final class CodeableConcept {
      *
      * @return the best available display text, or {@code null}
      */
+    @JsonIgnore
     public String getDisplayText() {
         for (Coding c : coding) {
             if (c.getDisplay() != null && !c.getDisplay().isBlank()) {
@@ -169,6 +171,7 @@ public final class CodeableConcept {
     }
 
     /** Returns {@code true} if this concept has no codings and no text. */
+    @JsonIgnore
     public boolean isEmpty() {
         return coding.isEmpty() && (text == null || text.isBlank());
     }

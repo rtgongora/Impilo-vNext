@@ -1,5 +1,6 @@
 package zw.gov.mohcc.impilo.sharedkernel.terminology;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -116,6 +117,7 @@ public final class Coding {
      *
      * @return the CodingSystem, or {@code null} if the URI is not a known system
      */
+    @JsonIgnore
     public CodingSystem getCodingSystem() {
         if (system == null) return null;
         try {
