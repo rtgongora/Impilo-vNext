@@ -98,7 +98,10 @@ Trust headers defined in `CompanionHeaders.java` ↔ `api-client.ts` ↔ `envoy.
 - One coherent experience shell, not fragmented portals
 - Role-based: adapts visibility/enablement by active role and context
 - "Unified" ≠ identical — workspaces may differ but share governed trust model
-- Experience UI (`ui/experience/`) is the primary shell; other UIs are being consolidated
+- Experience UI (`ui/experience/`) is the primary shell; all 22 sidecars absorbed
+- **Intelligent**: searchable, conversational, context-aware, proactive guidance
+- **Consumer-grade wellness**: diet, sleep, fitness, clubs, coaching — genuine product pillars
+- **Graduated friction**: MINIMAL (wellness/search) → MAXIMUM (prescribing/claims)
 
 ## Golden Thread (UI → DB proof path)
 1. `ui/experience/src/lib/api-client.ts` — injects trust headers

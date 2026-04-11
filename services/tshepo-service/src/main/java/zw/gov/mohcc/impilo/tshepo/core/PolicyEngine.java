@@ -468,11 +468,16 @@ public class PolicyEngine {
     static FrictionLevel classifyFriction(String action, String resourceType, PurposeOfUse purpose) {
         if (resourceType == null) return FrictionLevel.STANDARD;
 
-        // Wellness, lifestyle, community — minimal friction
+        // Wellness, lifestyle, community, search, conversational — minimal friction
+        // Health OS §8: "low-risk wellness exploration should be easy"
+        // Health OS §16a: "searching for governed knowledge should be easy within safe boundaries"
         if (resourceType.startsWith("wellness") || resourceType.startsWith("clubs")
                 || resourceType.startsWith("community") || resourceType.startsWith("challenges")
                 || resourceType.startsWith("routes") || resourceType.startsWith("diet")
-                || resourceType.startsWith("sleep") || resourceType.startsWith("coaching")) {
+                || resourceType.startsWith("sleep") || resourceType.startsWith("coaching")
+                || resourceType.startsWith("search") || resourceType.startsWith("ask")
+                || resourceType.startsWith("guidance") || resourceType.startsWith("education")
+                || resourceType.startsWith("knowledge")) {
             return FrictionLevel.MINIMAL;
         }
 

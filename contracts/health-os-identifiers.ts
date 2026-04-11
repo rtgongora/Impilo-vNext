@@ -85,6 +85,9 @@ export type WellnessActivityEventId = string;
 export type SleepEventId = string;
 export type DietaryIntakeEventId = string;
 export type IoTEventId = string;
+export type ConversationalEventId = string;
+export type PromptReminderEventId = string;
+export type KnowledgeArtifactId = string;
 
 // ── Purpose of Use ──────────────────────────────────────────────────
 

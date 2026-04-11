@@ -4,22 +4,18 @@
 > extensible, interoperable, and person-centered national digital environment in which
 > health identities, records, workflows, services, transactions, intelligence, assets,
 > devices, communities, wellness experiences, dietary and sleep-related participation,
-> marketplace functions, and applications operate coherently. Its role-based unified UI/UX
-> is the common experience shell of that operating system, allowing diverse actors to
-> participate through one coherent interaction model while adapting safely to role,
-> authority, setting, task, risk, and device context. Each natural person is anchored by
-> one primary Client / Health / Impilo ID, while other lawful identifiers such as Provider
-> ID, Facility ID, Product ID, Prescription ID, Asset ID, Equipment ID, and Device ID are
-> attached to their relevant identity, context, object, transaction, infrastructure, or
-> connected-device classes. In this way, Impilo preserves person-centered continuity while
-> supporting multiple roles, multiple contexts, modular applications, device-mediated
-> participation, wellness participation, consumer-grade lifestyle experiences, proportionate
-> marketplace access, and governed participation across the full continuum of health-related
-> life and work.
+> searchable knowledge, conversational guidance, marketplace functions, and applications
+> operate coherently. Its role-based unified UI/UX is the common experience shell of that
+> operating system, allowing diverse actors to participate through one coherent interaction
+> model while adapting safely to role, authority, setting, task, risk, device context, and
+> lawful personalization. Each natural person is anchored by one primary Client / Health /
+> Impilo ID, while other lawful identifiers such as Provider ID, Facility ID, Product ID,
+> Prescription ID, Asset ID, Equipment ID, and Device ID are attached to their relevant
+> identity, context, object, transaction, infrastructure, or connected-device classes.
 
 > **Short doctrine line**: One Health Operating System, one experience shell, one person
 > anchor, many roles, many IDs, many contexts, many experience modes, many connected
-> entities, one governed runtime.
+> entities, one governed **intelligent** runtime.
 
 ---
 
@@ -65,6 +61,35 @@ acknowledged.
 
 ---
 
+## 2a. Intelligent Experience Layer Doctrine
+
+The Impilo experience layer is **intelligent**. It is not merely a passive interface for
+viewing records, entering data, requesting services, or completing transactions. It is a
+context-aware, knowledge-enabled, searchable, conversational, and action-supporting layer
+that can receive information, interpret relevant signals, and respond to users with timely,
+useful, and governed guidance.
+
+The intelligent experience layer shall be capable of:
+
+- Understanding who the actor is and in what role they are participating
+- Using lawful context such as age, sex, life stage, location, health status, medications,
+  goals, activity, diet, sleep, device data, exposures, and care plans
+- Enabling search across governed health, wellness, lifestyle, diet, sleep, service, and
+  marketplace knowledge domains
+- Interacting through conversational and chat-based experiences
+- Surfacing relevant education, reminders, prompts, alerts, and recommendations
+- Supporting preventive, promotive, curative, rehabilitative, and wellness-oriented action
+- Helping users discover services, communities, products, and knowledge relevant to needs
+- Responding proactively where appropriate — adherence, screening, follow-up, campaigns,
+  outbreaks, environmental risks, and healthy living support
+- Operating within user preferences, consent settings, safety guardrails, and applicable
+  legal and policy limits
+
+> The experience layer is intelligent: it listens, understands, searches, responds,
+> guides, reminds, alerts, and acts within governed boundaries.
+
+---
+
 ## 3. Health Operating System Doctrine
 
 The Health Operating System must provide, at minimum:
@@ -80,7 +105,9 @@ The Health Operating System must provide, at minimum:
 9. Audit and traceability
 10. Standards-based interoperability
 11. Extension points for modules, apps, and integrations
-12. A coherent unified experience shell
+12. **Governed knowledge services**
+13. **Conversational and guidance services**
+14. A coherent unified experience shell
 
 ---
 
@@ -269,6 +296,33 @@ context, Club or community context, Device or IoT operating context**.
 | **Transaction IDs** | Specific action instances | Prescription ID, Order ID, Claim ID, **purchase transaction ID, booking ID, device-link transaction ID, wellness participation transaction ID** |
 | **Record IDs** | Persistent information objects | Observation ID, Consent ID, Document ID, Care Plan ID, **wellness plan ID, sleep record ID, dietary record ID** |
 | **Event IDs** | Discrete runtime events | Alert ID, Audit Event ID, **wellness activity event ID, sleep event ID, dietary intake event ID, IoT event ID** |
+
+---
+
+## 16a. Knowledge, Search, and Conversational Doctrine
+
+The experience layer shall function as an active knowledge, guidance, search, and
+conversational environment that can respond to the person, support decision-making,
+surface relevant health information, and deliver timely prompts, reminders, warnings,
+and recommendations appropriate to context, profile, preferences, and consent.
+
+The experience layer must be:
+
+- **Searchable** — users can look for health, wellness, lifestyle, diet, sleep, service,
+  and marketplace information
+- **Knowledge-enabled** — draws from governed repositories of health knowledge
+- **Conversational** — users interact through natural dialogue, prompts, guided exchanges
+- **Responsive** — talks back with relevant information, reminders, alerts, suggestions
+- **Context-aware** — reflects who the person is, what is known, where they are, what
+  services or risks apply, what they have opted into
+- **Personalizable** — adapted to role, age, sex, life stage, conditions, medications,
+  wellness goals, exposures, location, and other lawful context
+- **Consent-aware** — prompts, nudges, and personalized guidance governed by the person's
+  permissions, preferences, and applicable law or policy
+
+The experience layer may also **proactively** surface useful, timely, and relevant
+information — adherence support, screening reminders, follow-up prompts, campaign
+outreach, environmental risk alerts, and healthy living encouragement.
 
 ---
 

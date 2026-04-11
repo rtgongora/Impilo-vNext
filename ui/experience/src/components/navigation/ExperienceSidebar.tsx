@@ -24,7 +24,9 @@ import {
   IdCard,
   LayoutDashboard,
   LifeBuoy,
+  Lightbulb,
   Menu,
+  MessageSquare,
   Monitor,
   Package,
   Pill,
@@ -112,6 +114,10 @@ const ZONES: SidebarZone[] = [
     label: "My Life",
       items: [
         { href: "/home", label: "Home", icon: LayoutDashboard },
+        // Health OS §2a: Intelligent experience layer
+        { href: "/ask", label: "Ask", icon: MessageSquare },
+        { href: "/search", label: "Search", icon: Search },
+        { href: "/guidance", label: "Guidance", icon: Lightbulb },
         { href: "/citizen", label: "Citizen services", icon: IdCard },
         // Health OS §2: Wellness — prevention, self-care, fitness
         { href: "/wellness", label: "Wellness", icon: Sparkles },
