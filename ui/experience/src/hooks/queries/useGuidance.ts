@@ -25,6 +25,30 @@ export function useAskGuidance() {
   });
 }
 
+/** Governed EDLIZ-aligned assistant (structured citations, rules, traces). */
+export interface ClinicalAskResponse {
+  answer_summary: string;
+  support_mode: string;
+  source_citations: Array<Record<string, unknown>>;
+  warnings: string[];
+  trace_id?: string;
+  question_classification?: string;
+  disclaimer?: string;
+  [key: string]: unknown;
+}
+
+export function useAskEdlizClinical() {
+  return useMutation({
+    mutationFn: (body: {
+      question: string;
+      citizen_mode?: boolean;
+      role?: string;
+      patient_context?: Record<string, unknown>;
+      encounter_id?: string;
+    }) => apiClient.post<ApiResponse<ClinicalAskResponse>>("/internal/v1/clinical/assistant/ask", body),
+  });
+}
+
 // ── Reminders & Prompts ─────────────────────────────────────────────
 
 export interface Reminder {

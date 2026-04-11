@@ -1,0 +1,6 @@
+apiVersion: v2
+name: clinical-knowledge-platform
+description: National clinical knowledge and EDLIZ-aligned guidance platform
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

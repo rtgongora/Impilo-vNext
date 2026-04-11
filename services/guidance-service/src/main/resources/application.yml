@@ -12,8 +12,14 @@ spring:
     hibernate:
       ddl-auto: validate
     open-in-view: false
+    properties:
+      hibernate:
+        default_schema: guidance
   flyway:
     enabled: true
+    create-schemas: true
+    schemas: guidance
+    default-schema: guidance
     locations: classpath:db/migration
     baseline-on-migrate: true
   kafka:

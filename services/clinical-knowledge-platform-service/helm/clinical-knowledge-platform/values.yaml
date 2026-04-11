@@ -1,0 +1,42 @@
+replicaCount: 1
+
+image:
+  repository: ghcr.io/mohcc/impilo/clinical-knowledge-platform
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 8270
+
+containerPort: 8270
+
+env:
+  SERVER_PORT: "8270"
+  SPRING_DATASOURCE_URL: jdbc:postgresql://postgresql:5432/clinical_knowledge
+  SPRING_DATASOURCE_USERNAME: impilo
+  SPRING_DATASOURCE_PASSWORD: impilo
+  SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+  SPRING_FLYWAY_ENABLED: "true"
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: "1"
+    memory: 1Gi
+
+livenessProbe:
+  httpGet:
+    path: /actuator/health/liveness
+    port: 8270
+  initialDelaySeconds: 45
+  periodSeconds: 15
+
+readinessProbe:
+  httpGet:
+    path: /actuator/health/readiness
+    port: 8270
+  initialDelaySeconds: 30
+  periodSeconds: 10

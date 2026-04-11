@@ -158,6 +158,9 @@
         <module>schema-registry-service</module>
         <!-- Experience Platform BFF -->
         <module>experience-bff</module>
+        <!-- Clinical Knowledge & EDLIZ-aligned guidance platform -->
+        <module>clinical-knowledge-platform-service</module>
+        <module>guidance-service</module>
     </modules>
 
     <dependencyManagement>
