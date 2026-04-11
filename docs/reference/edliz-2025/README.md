@@ -8,9 +8,9 @@ This reference bundle stores the original EDLIZ 2025 document inside the repo in
 
 ## Source
 
-- Original filename: `EDLIZ 2025 final for circulation_260411_085436.pdf`
-- Original location: `C:\Users\rgong\Downloads\EDLIZ 2025 final for circulation_260411_085436.pdf`
-- Imported on: `2026-04-11`
+- Circulation filename: `EDLIZ 2025 final for circulation_260411_085436.pdf`
+- Canonical copy in repo: `EDLIZ-2025-final-for-circulation.pdf` (this folder)
+- Bundled in repository: `2026-04-11`
 
 ## File Metadata
 

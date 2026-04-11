@@ -119,7 +119,7 @@ Trust headers defined in `CompanionHeaders.java` ↔ `api-client.ts` ↔ `envoy.
 - Msika: 8086, PCT: 8088, OROS: 8089, HAPI FHIR: 8090
 - Landela: 8092, Document Store: 8093, Pharmacy: 8096
 - Msika Flow: 8100, Costa: 8101, Mushex: 8102
-- Coverage: 8140, Indawo: 8150, Experience BFF: 8160
+- Coverage: 8140, Indawo: 8150, Experience BFF: 8160, Clinical Knowledge Platform: 8270
 - Surveillance: 8180, Campaigns: 8190, Notification: 8200
 - Data Governance: 8220
 - Envoy: 10000 (public), 9901 (admin)

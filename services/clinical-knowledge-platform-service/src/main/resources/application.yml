@@ -1,0 +1,58 @@
+server:
+  port: ${SERVER_PORT:8270}
+
+spring:
+  application:
+    name: clinical-knowledge-platform-service
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:clinical_knowledge}
+    username: ${DB_USER:impilo}
+    password: ${DB_PASSWORD:impilo}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        default_schema: clinical
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+    create-schemas: true
+    schemas: clinical
+    default-schema: clinical
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+impilo:
+  clinical:
+    steward:
+      broad-spectrum-days-threshold: ${STEWARDSHIP_BROAD_SPECTRUM_DAYS:3}
+    edliz:
+      # Repo-relative path to national reference PDF (same bundle as docs/reference/edliz-2025/)
+      reference-pdf-path: ${EDLIZ_REFERENCE_PDF_PATH:docs/reference/edliz-2025/EDLIZ-2025-final-for-circulation.pdf}
+      reference-sha256: ${EDLIZ_REFERENCE_SHA256:9b9b52e22f7d6aaa2e0dbcdbf40f92c90d592eeaa2cd5f83ddafc33703b24581}
+    ingestion:
+      # Resolve relative PDF paths against this directory (default: JVM working directory, e.g. repo root in dev)
+      working-directory: ${CLINICAL_INGESTION_WORKING_DIR:}
+      # Split long pages into multiple sections (characters per chunk)
+      max-chunk-chars: ${CLINICAL_INGEST_MAX_CHUNK_CHARS:12000}
+      chunk-overlap-chars: ${CLINICAL_INGEST_CHUNK_OVERLAP:400}
+    disclaimer: >-
+      EDLIZ-guided support assists licensed decision-making; it does not replace
+      clinical judgment, bedside assessment, or local protocol where stricter.
+
+logging:
+  level:
+    zw.gov.mohcc.impilo.clinical: INFO

@@ -220,6 +220,12 @@ public class SecurityConfig {
                     // ── Guidance/knowledge endpoints (Health OS §2a) ──────
                     .requestMatchers("/internal/v1/guidance/**")
                             .authenticated()
+                    // ── Clinical source PDF ingestion (operators / admin only) ──
+                    .requestMatchers("/internal/v1/clinical/source/**")
+                            .hasAnyRole(ADMIN_ROLES)
+                    // ── National clinical knowledge (EDLIZ-aligned) ───────
+                    .requestMatchers("/internal/v1/clinical/**")
+                            .authenticated()
                     .requestMatchers("/internal/v1/search/**")
                             .authenticated()
 

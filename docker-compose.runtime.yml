@@ -407,8 +407,8 @@ services:
   # ── Guidance Service — Conversational & Knowledge (port 8260) ────────
   guidance:
     build:
-      context: ./services/guidance-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: services/guidance-service/Dockerfile
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
@@ -428,6 +428,32 @@ services:
       timeout: 5s
       retries: 15
       start_period: 30s
+
+  # ── Clinical Knowledge Platform — EDLIZ-aligned (port 8270) ──────────
+  clinical-knowledge-platform:
+    build:
+      context: .
+      dockerfile: services/clinical-knowledge-platform-service/Dockerfile
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: clinical_knowledge
+      DB_USER: ${POSTGRES_USER:-impilo}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      # PDF ingestion defaults (image copies PDF under /app/edliz — see service Dockerfile)
+      CLINICAL_INGESTION_WORKING_DIR: /app
+      EDLIZ_REFERENCE_PDF_PATH: edliz/EDLIZ-2025-final-for-circulation.pdf
+    ports:
+      - "8270:8270"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8270/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 40s
 
   # ===========================================================================
   # EXPERIENCE LAYER
@@ -474,12 +500,15 @@ services:
       ORTHANC_BASE_URL: http://orthanc:8042
       ORTHANC_DICOMWEB_URL: http://orthanc:8042/dicom-web
       GUIDANCE_BASE_URL: http://guidance:8260
+      CLINICAL_KNOWLEDGE_PLATFORM_BASE_URL: http://clinical-knowledge-platform:8270
     ports:
       - "8160:8160"
     depends_on:
       postgres:
         condition: service_healthy
       kafka:
+        condition: service_healthy
+      clinical-knowledge-platform:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8160/actuator/health || exit 1"]

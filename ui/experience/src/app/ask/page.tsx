@@ -12,16 +12,18 @@
  */
 
 import { useState, useRef, useEffect } from "react";
-import { MessageSquare, Send, Loader2, Sparkles, ShieldCheck } from "lucide-react";
+import { MessageSquare, Send, Loader2, Sparkles, ShieldCheck, BookMarked } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { apiClient } from "@/lib/api-client";
+import { useAskEdlizClinical } from "@/hooks/queries/useGuidance";
 
 interface Message {
   id: string;
   role: "user" | "assistant";
   content: string;
   timestamp: string;
+  clinicalMeta?: { traceId?: string; supportMode?: string };
 }
 
 export default function AskPage() {
@@ -37,6 +39,8 @@ export default function AskPage() {
   const [sending, setSending] = useState(false);
   const [consentChecked, setConsentChecked] = useState(false);
   const [consentGranted, setConsentGranted] = useState(false);
+  const [mode, setMode] = useState<"general" | "edliz">("general");
+  const askEdliz = useAskEdlizClinical();
   const endRef = useRef<HTMLDivElement>(null);
 
   // Health OS §16a: consent-aware — check if user has opted into personalized guidance
@@ -73,7 +77,48 @@ export default function AskPage() {
     setInput("");
     setSending(true);
 
-    // Call BFF guidance endpoint with consent context
+    if (mode === "edliz") {
+      askEdliz
+        .mutateAsync({
+          question: text,
+          citizen_mode: !consentGranted,
+          role: consentGranted ? "PROVIDER" : "CITIZEN",
+        })
+        .then((res) => {
+          const d = res?.data;
+          const citations =
+            Array.isArray(d?.source_citations) && d.source_citations.length > 0
+              ? `\n\nSources: ${d.source_citations
+                  .map((c: Record<string, unknown>) => (c.section_title as string) || (c.excerpt as string)?.slice?.(0, 80))
+                  .filter(Boolean)
+                  .join(" · ")}`
+              : "";
+          const warnings =
+            Array.isArray(d?.warnings) && d.warnings.length > 0 ? `\n\nWarnings: ${d.warnings.join(" ")}` : "";
+          const assistantMsg: Message = {
+            id: crypto.randomUUID(),
+            role: "assistant",
+            content: (d?.answer_summary as string) || "No indexed answer was available for that question." + citations + warnings,
+            timestamp: new Date().toISOString(),
+            clinicalMeta: { traceId: d?.trace_id as string | undefined, supportMode: d?.support_mode as string | undefined },
+          };
+          setMessages((prev) => [...prev, assistantMsg]);
+        })
+        .catch(() => {
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: crypto.randomUUID(),
+              role: "assistant",
+              content: "The clinical knowledge service is unavailable. Try general guidance or retry later.",
+              timestamp: new Date().toISOString(),
+            },
+          ]);
+        })
+        .finally(() => setSending(false));
+      return;
+    }
+
     apiClient
       .post<{ data: { response: string } }>("/internal/v1/guidance/ask", {
         question: text,
@@ -102,8 +147,24 @@ export default function AskPage() {
 
   return (
     <AppLayout>
-      <PageShell title="Ask" subtitle="Conversational health and wellness guidance" icon={<MessageSquare className="h-6 w-6" />}>
+      <PageShell title="Ask" subtitle="General guidance or governed Ask EDLIZ (national clinical knowledge)" icon={<MessageSquare className="h-6 w-6" />}>
         <div className="flex flex-col h-[calc(100vh-220px)] max-w-2xl mx-auto">
+          <div className="flex gap-2 mb-3">
+            <button
+              type="button"
+              onClick={() => setMode("general")}
+              className={`text-xs px-3 py-1.5 rounded-full border ${mode === "general" ? "bg-blue-600 text-white border-blue-600" : "bg-white text-gray-700 border-gray-300"}`}
+            >
+              General guidance
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode("edliz")}
+              className={`text-xs px-3 py-1.5 rounded-full border inline-flex items-center gap-1 ${mode === "edliz" ? "bg-emerald-700 text-white border-emerald-700" : "bg-white text-gray-700 border-gray-300"}`}
+            >
+              <BookMarked className="h-3 w-3" /> Ask EDLIZ
+            </button>
+          </div>
           {/* Health OS §16a: consent-aware guidance banner */}
           {consentChecked && !consentGranted && (
             <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 flex items-start gap-2">
@@ -125,10 +186,14 @@ export default function AskPage() {
                 }`}>
                   {msg.role === "assistant" && (
                     <div className="flex items-center gap-1 mb-1 text-xs text-gray-500">
-                      <Sparkles className="h-3 w-3" /> Health OS Guidance
+                      <Sparkles className="h-3 w-3" />{" "}
+                      {msg.clinicalMeta?.traceId ? "EDLIZ clinical knowledge" : "Health OS Guidance"}
                     </div>
                   )}
                   <p className="whitespace-pre-wrap">{msg.content}</p>
+                  {msg.clinicalMeta?.traceId && (
+                    <p className="mt-2 text-[10px] text-gray-400">Trace: {msg.clinicalMeta.traceId}</p>
+                  )}
                 </div>
               </div>
             ))}

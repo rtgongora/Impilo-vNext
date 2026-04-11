@@ -85,6 +85,9 @@ impilo:
     # Health OS §13: Conversational & Guidance
     guidance-base-url: ${GUIDANCE_BASE_URL:http://localhost:8260}
 
+  clinical-platform:
+    base-url: ${CLINICAL_KNOWLEDGE_PLATFORM_BASE_URL:http://localhost:8270}
+
 logging:
   level:
     zw.gov.mohcc.impilo: INFO

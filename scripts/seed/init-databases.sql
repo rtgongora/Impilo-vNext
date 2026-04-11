@@ -56,6 +56,8 @@ CREATE DATABASE keycloak;
 
 -- Experience Platform
 CREATE DATABASE experience_bff;
+CREATE DATABASE guidance;
+CREATE DATABASE clinical_knowledge;
 
 -- Reporting & Analytics
 CREATE DATABASE reporting;

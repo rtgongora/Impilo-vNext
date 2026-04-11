@@ -25,6 +25,72 @@ export function useAskGuidance() {
   });
 }
 
+/** Governed EDLIZ-aligned assistant (structured citations, rules, traces). */
+export interface ClinicalAskResponse {
+  answer_summary: string;
+  support_mode: string;
+  source_citations: Array<Record<string, unknown>>;
+  warnings: string[];
+  trace_id?: string;
+  question_classification?: string;
+  disclaimer?: string;
+  [key: string]: unknown;
+}
+
+export function useAskEdlizClinical() {
+  return useMutation({
+    mutationFn: (body: {
+      question: string;
+      citizen_mode?: boolean;
+      role?: string;
+      patient_context?: Record<string, unknown>;
+      encounter_id?: string;
+    }) => apiClient.post<ApiResponse<ClinicalAskResponse>>("/internal/v1/clinical/assistant/ask", body),
+  });
+}
+
+/** BFF → clinical platform: counts of pdf/* vs all sections (admin-equivalent JWT roles). */
+export interface ClinicalSourceIngestionSummary {
+  document_id: string;
+  pdf_derived_section_count: number;
+  total_section_count: number;
+}
+
+export function useClinicalSourceIngestionSummary(documentId: string | undefined) {
+  return useQuery({
+    queryKey: ["clinical", "source", "ingestion-summary", documentId],
+    queryFn: () =>
+      apiClient.get<ApiResponse<ClinicalSourceIngestionSummary>>(
+        `/internal/v1/clinical/source/documents/${documentId}/ingestion-summary`
+      ),
+    enabled: Boolean(documentId),
+  });
+}
+
+export function useClinicalDefaultEdlizDocumentId() {
+  return useQuery({
+    queryKey: ["clinical", "source", "edliz-default-document-id"],
+    queryFn: () =>
+      apiClient.get<ApiResponse<{ document_id: string; note: string }>>(
+        "/internal/v1/clinical/source/edliz-default-document-id"
+      ),
+  });
+}
+
+/** Trigger PDF → source_sections indexing for a source_documents row. */
+export function useIngestClinicalPdf() {
+  return useMutation({
+    mutationFn: (args: {
+      documentId: string;
+      body?: { pdf_path?: string; replace_pdf_sections?: boolean; verify_sha256?: boolean };
+    }) =>
+      apiClient.post<ApiResponse<Record<string, unknown>>>(
+        `/internal/v1/clinical/source/documents/${args.documentId}/ingest-pdf`,
+        args.body ?? {}
+      ),
+  });
+}
+
 // ── Reminders & Prompts ─────────────────────────────────────────────
 
 export interface Reminder {
