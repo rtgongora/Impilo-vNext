@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-04-11T20:22:44.071Z",
+  "generated_at": "2026-04-11T23:08:15.456Z",
   "registry": "docs/registry/services-registry.yaml",
   "service_count": 69,
   "aggregate": {
     "backend_avg": 3,
     "bff_avg": 0.88,
-    "contract_avg": 1.22,
-    "api_docs_avg": 2.07,
+    "contract_avg": 1.48,
+    "api_docs_avg": 2.16,
     "kafka_avg": 0.59,
     "experience_hooks_avg": 2.39,
     "experience_pages_avg": 2.84
@@ -202,57 +202,6 @@
         "experience_pages": {
           "level": "none",
           "files_with_hits": 0
-        }
-      },
-      "composite_score": 0.429
-    },
-    {
-      "maven_module": "integration-hub",
-      "product_names": [
-        "Integration Hub"
-      ],
-      "plane": "integration",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "IntegrationHubApplication",
-          "flyway_migrations": 3,
-          "java_files": 35
-        },
-        "bff": {
-          "level": "none",
-          "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": null
-        },
-        "contract": {
-          "level": "none",
-          "openapi_file": null,
-          "present": false
-        },
-        "api_docs": {
-          "level": "stub",
-          "springdoc_in_pom": false
-        },
-        "integration_kafka": {
-          "level": "none",
-          "kafka_listener_count": 0
-        },
-        "experience_hooks": {
-          "level": "partial",
-          "files_with_hits": 1,
-          "search_terms_sample": [
-            "integration-hub",
-            "integrationhub",
-            "integration",
-            "hub"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 65
         }
       },
       "composite_score": 0.429
@@ -658,54 +607,6 @@
       "composite_score": 0.476
     },
     {
-      "maven_module": "workflow-service",
-      "product_names": [
-        "Workflow"
-      ],
-      "plane": "integration",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "WorkflowServiceApplication",
-          "flyway_migrations": 2,
-          "java_files": 20
-        },
-        "bff": {
-          "level": "none",
-          "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": null
-        },
-        "contract": {
-          "level": "none",
-          "openapi_file": null,
-          "present": false
-        },
-        "api_docs": {
-          "level": "stub",
-          "springdoc_in_pom": false
-        },
-        "integration_kafka": {
-          "level": "none",
-          "kafka_listener_count": 0
-        },
-        "experience_hooks": {
-          "level": "substantial",
-          "files_with_hits": 3,
-          "search_terms_sample": [
-            "workflow"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 52
-        }
-      },
-      "composite_score": 0.476
-    },
-    {
       "maven_module": "ndr-service",
       "product_names": [
         "NDR"
@@ -800,57 +701,6 @@
         "experience_pages": {
           "level": "substantial",
           "files_with_hits": 225
-        }
-      },
-      "composite_score": 0.476
-    },
-    {
-      "maven_module": "data-governance-service",
-      "product_names": [
-        "Data Governance"
-      ],
-      "plane": "data",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "DataGovernanceServiceApplication",
-          "flyway_migrations": 4,
-          "java_files": 34
-        },
-        "bff": {
-          "level": "none",
-          "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": null
-        },
-        "contract": {
-          "level": "none",
-          "openapi_file": null,
-          "present": false
-        },
-        "api_docs": {
-          "level": "stub",
-          "springdoc_in_pom": false
-        },
-        "integration_kafka": {
-          "level": "none",
-          "kafka_listener_count": 0
-        },
-        "experience_hooks": {
-          "level": "substantial",
-          "files_with_hits": 35,
-          "search_terms_sample": [
-            "data-governance",
-            "datagovernance",
-            "data",
-            "governance"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 230
         }
       },
       "composite_score": 0.476
@@ -1667,54 +1517,6 @@
       "composite_score": 0.524
     },
     {
-      "maven_module": "campaigns-service",
-      "product_names": [
-        "Campaigns"
-      ],
-      "plane": "data",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "CampaignsApplication",
-          "flyway_migrations": 1,
-          "java_files": 18
-        },
-        "bff": {
-          "level": "stub",
-          "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": "PublicHealthController"
-        },
-        "contract": {
-          "level": "none",
-          "openapi_file": null,
-          "present": false
-        },
-        "api_docs": {
-          "level": "partial",
-          "springdoc_in_pom": true
-        },
-        "integration_kafka": {
-          "level": "none",
-          "kafka_listener_count": 0
-        },
-        "experience_hooks": {
-          "level": "partial",
-          "files_with_hits": 1,
-          "search_terms_sample": [
-            "campaigns"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 4
-        }
-      },
-      "composite_score": 0.524
-    },
-    {
       "maven_module": "identity-assurance-service",
       "product_names": [
         "Identity Assurance"
@@ -1914,54 +1716,6 @@
       "composite_score": 0.571
     },
     {
-      "maven_module": "surveillance-service",
-      "product_names": [
-        "Surveillance"
-      ],
-      "plane": "data",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "SurveillanceApplication",
-          "flyway_migrations": 2,
-          "java_files": 28
-        },
-        "bff": {
-          "level": "stub",
-          "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": "PublicHealthController"
-        },
-        "contract": {
-          "level": "none",
-          "openapi_file": null,
-          "present": false
-        },
-        "api_docs": {
-          "level": "partial",
-          "springdoc_in_pom": true
-        },
-        "integration_kafka": {
-          "level": "none",
-          "kafka_listener_count": 0
-        },
-        "experience_hooks": {
-          "level": "substantial",
-          "files_with_hits": 2,
-          "search_terms_sample": [
-            "surveillance"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 4
-        }
-      },
-      "composite_score": 0.571
-    },
-    {
       "maven_module": "iot-ingestion-service",
       "product_names": [
         "IoT Ingestion"
@@ -2118,6 +1872,57 @@
       "composite_score": 0.619
     },
     {
+      "maven_module": "integration-hub",
+      "product_names": [
+        "Integration Hub"
+      ],
+      "plane": "integration",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "IntegrationHubApplication",
+          "flyway_migrations": 3,
+          "java_files": 35
+        },
+        "bff": {
+          "level": "none",
+          "is_bff_shell": false,
+          "expected_client": null,
+          "client_file_present": false,
+          "referenced_in_controller": false,
+          "proxy": null
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "integration-hub.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "partial",
+          "springdoc_in_pom": false
+        },
+        "integration_kafka": {
+          "level": "none",
+          "kafka_listener_count": 0
+        },
+        "experience_hooks": {
+          "level": "partial",
+          "files_with_hits": 1,
+          "search_terms_sample": [
+            "integration-hub",
+            "integrationhub",
+            "integration",
+            "hub"
+          ]
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 65
+        }
+      },
+      "composite_score": 0.619
+    },
+    {
       "maven_module": "tshepo-service",
       "product_names": [
         "TSHEPO",
@@ -2219,35 +2024,34 @@
       "composite_score": 0.667
     },
     {
-      "maven_module": "fhir-gateway-service",
+      "maven_module": "workflow-service",
       "product_names": [
-        "FHIR Gateway"
+        "Workflow"
       ],
-      "plane": "clinical",
-      "sovereign_group": "BUTANO",
+      "plane": "integration",
       "dimensions": {
         "backend": {
           "level": "substantial",
-          "application_class": "FhirGatewayApplication",
-          "flyway_migrations": 1,
-          "java_files": 12
+          "application_class": "WorkflowServiceApplication",
+          "flyway_migrations": 2,
+          "java_files": 20
         },
         "bff": {
-          "level": "substantial",
+          "level": "none",
           "is_bff_shell": false,
-          "expected_client": "FhirGatewayServiceClient",
-          "client_file_present": true,
-          "referenced_in_controller": true,
+          "expected_client": null,
+          "client_file_present": false,
+          "referenced_in_controller": false,
           "proxy": null
         },
         "contract": {
-          "level": "none",
-          "openapi_file": null,
-          "present": false
+          "level": "substantial",
+          "openapi_file": "workflow.openapi.yaml",
+          "present": true
         },
         "api_docs": {
           "level": "partial",
-          "springdoc_in_pom": true
+          "springdoc_in_pom": false
         },
         "integration_kafka": {
           "level": "none",
@@ -2257,15 +2061,63 @@
           "level": "substantial",
           "files_with_hits": 3,
           "search_terms_sample": [
-            "fhir-gateway",
-            "fhirgateway",
-            "fhir",
-            "gateway"
+            "workflow"
           ]
         },
         "experience_pages": {
           "level": "substantial",
-          "files_with_hits": 12
+          "files_with_hits": 52
+        }
+      },
+      "composite_score": 0.667
+    },
+    {
+      "maven_module": "data-governance-service",
+      "product_names": [
+        "Data Governance"
+      ],
+      "plane": "data",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "DataGovernanceServiceApplication",
+          "flyway_migrations": 4,
+          "java_files": 34
+        },
+        "bff": {
+          "level": "none",
+          "is_bff_shell": false,
+          "expected_client": null,
+          "client_file_present": false,
+          "referenced_in_controller": false,
+          "proxy": null
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "data-governance.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "partial",
+          "springdoc_in_pom": false
+        },
+        "integration_kafka": {
+          "level": "none",
+          "kafka_listener_count": 0
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 35,
+          "search_terms_sample": [
+            "data-governance",
+            "datagovernance",
+            "data",
+            "governance"
+          ]
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 230
         }
       },
       "composite_score": 0.667
@@ -2525,6 +2377,54 @@
       "composite_score": 0.714
     },
     {
+      "maven_module": "campaigns-service",
+      "product_names": [
+        "Campaigns"
+      ],
+      "plane": "data",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "CampaignsApplication",
+          "flyway_migrations": 1,
+          "java_files": 18
+        },
+        "bff": {
+          "level": "stub",
+          "is_bff_shell": false,
+          "expected_client": null,
+          "client_file_present": false,
+          "referenced_in_controller": false,
+          "proxy": "PublicHealthController"
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "campaigns.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": true
+        },
+        "integration_kafka": {
+          "level": "none",
+          "kafka_listener_count": 0
+        },
+        "experience_hooks": {
+          "level": "partial",
+          "files_with_hits": 1,
+          "search_terms_sample": [
+            "campaigns"
+          ]
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 4
+        }
+      },
+      "composite_score": 0.714
+    },
+    {
       "maven_module": "coverage-service",
       "product_names": [
         "Coverage"
@@ -2716,6 +2616,54 @@
         "experience_pages": {
           "level": "substantial",
           "files_with_hits": 123
+        }
+      },
+      "composite_score": 0.762
+    },
+    {
+      "maven_module": "surveillance-service",
+      "product_names": [
+        "Surveillance"
+      ],
+      "plane": "data",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "SurveillanceApplication",
+          "flyway_migrations": 2,
+          "java_files": 28
+        },
+        "bff": {
+          "level": "stub",
+          "is_bff_shell": false,
+          "expected_client": null,
+          "client_file_present": false,
+          "referenced_in_controller": false,
+          "proxy": "PublicHealthController"
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "surveillance.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": true
+        },
+        "integration_kafka": {
+          "level": "none",
+          "kafka_listener_count": 0
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 2,
+          "search_terms_sample": [
+            "surveillance"
+          ]
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 4
         }
       },
       "composite_score": 0.762
@@ -2961,6 +2909,58 @@
         "experience_pages": {
           "level": "substantial",
           "files_with_hits": 15
+        }
+      },
+      "composite_score": 0.857
+    },
+    {
+      "maven_module": "fhir-gateway-service",
+      "product_names": [
+        "FHIR Gateway"
+      ],
+      "plane": "clinical",
+      "sovereign_group": "BUTANO",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "FhirGatewayApplication",
+          "flyway_migrations": 1,
+          "java_files": 12
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": "FhirGatewayServiceClient",
+          "client_file_present": true,
+          "referenced_in_controller": true,
+          "proxy": null
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "fhir-gateway.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": true
+        },
+        "integration_kafka": {
+          "level": "none",
+          "kafka_listener_count": 0
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 3,
+          "search_terms_sample": [
+            "fhir-gateway",
+            "fhirgateway",
+            "fhir",
+            "gateway"
+          ]
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 12
         }
       },
       "composite_score": 0.857
