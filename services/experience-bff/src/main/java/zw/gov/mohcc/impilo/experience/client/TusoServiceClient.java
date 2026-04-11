@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
 
 import java.time.OffsetDateTime;
@@ -65,7 +66,10 @@ public class TusoServiceClient {
      * List bookings for a resource in a time range.
      */
     public JsonNode listBookings(UUID resourceId, OffsetDateTime from, OffsetDateTime to) {
-        String url = baseUrl + "/v1/resources/" + resourceId + "/bookings?from=" + from + "&to=" + to;
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/resources/" + resourceId + "/bookings")
+                .queryParam("from", from)
+                .queryParam("to", to)
+                .toUriString();
         ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
         return extractData(response);
     }
@@ -74,7 +78,9 @@ public class TusoServiceClient {
      * Cancel a booking.
      */
     public JsonNode cancelBooking(UUID bookingId, String reason) {
-        String url = baseUrl + "/v1/bookings/" + bookingId + "?reason=" + reason;
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/bookings/" + bookingId)
+                .queryParam("reason", reason)
+                .toUriString();
         log.info("TUSO: Cancelling booking={}, reason={}", bookingId, reason);
         restTemplate.delete(url);
         return null;
@@ -84,9 +90,9 @@ public class TusoServiceClient {
      * List resources for a facility.
      */
     public JsonNode listFacilityResources(long facilityId, String resourceType) {
-        StringBuilder url = new StringBuilder(baseUrl + "/v1/facilities/" + facilityId + "/resources");
-        if (resourceType != null) url.append("?resourceType=").append(resourceType);
-        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url.toString(), JsonNode.class);
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/facilities/" + facilityId + "/resources");
+        if (resourceType != null) builder.queryParam("resourceType", resourceType);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(builder.toUriString(), JsonNode.class);
         return extractData(response);
     }
 

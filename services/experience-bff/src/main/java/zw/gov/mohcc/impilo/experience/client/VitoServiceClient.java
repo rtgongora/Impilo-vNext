@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
 
 import java.util.LinkedHashMap;
@@ -66,7 +67,9 @@ public class VitoServiceClient {
 
     /** Search clients in the registry. */
     public JsonNode searchClients(String query) {
-        String url = baseUrl + "/v1/internal/clients?search=" + query;
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/internal/clients")
+                .queryParam("search", query)
+                .toUriString();
         log.info("VITO: Searching clients query={}", query);
         ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
         return extractData(response);

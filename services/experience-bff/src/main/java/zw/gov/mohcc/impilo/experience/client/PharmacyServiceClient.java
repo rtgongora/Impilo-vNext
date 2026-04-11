@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
 
 import java.util.LinkedHashMap;
@@ -57,9 +58,10 @@ public class PharmacyServiceClient {
      * Get the pharmacy worklist for a facility.
      */
     public JsonNode getWorklist(String facilityId, String status) {
-        StringBuilder url = new StringBuilder(baseUrl + "/v1/worklists?facilityId=" + facilityId);
-        if (status != null) url.append("&status=").append(status);
-        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url.toString(), JsonNode.class);
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/worklists")
+                .queryParam("facilityId", facilityId);
+        if (status != null) builder.queryParam("status", status);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(builder.toUriString(), JsonNode.class);
         return extractData(response);
     }
 

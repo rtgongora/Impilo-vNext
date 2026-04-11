@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
 
 import java.util.LinkedHashMap;
@@ -155,12 +156,14 @@ public class CostaServiceClient {
      * @return paginated bill list from COSTA
      */
     public JsonNode listBills(int page, int size, String status) {
-        StringBuilder url = new StringBuilder(baseUrl + "/costa/v1/bills?page=" + page + "&size=" + size);
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl + "/costa/v1/bills")
+                .queryParam("page", page)
+                .queryParam("size", size);
         if (status != null && !status.isBlank()) {
-            url.append("&status=").append(status);
+            builder.queryParam("status", status);
         }
         log.info("COSTA: Listing bills page={}, size={}, status={}", page, size, status);
-        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url.toString(), JsonNode.class);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(builder.toUriString(), JsonNode.class);
         return extractData(response);
     }
 
@@ -178,7 +181,10 @@ public class CostaServiceClient {
      * List tariffs (paginated, tenant-scoped via trust headers).
      */
     public JsonNode listTariffs(int page, int size) {
-        String url = baseUrl + "/costa/v1/tariffs?page=" + page + "&size=" + size;
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/costa/v1/tariffs")
+                .queryParam("page", page)
+                .queryParam("size", size)
+                .toUriString();
         log.info("COSTA: Listing tariffs page={}, size={}", page, size);
         ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
         return extractData(response);
@@ -188,7 +194,10 @@ public class CostaServiceClient {
      * List payments (paginated, tenant-scoped via trust headers).
      */
     public JsonNode listPayments(int page, int size) {
-        String url = baseUrl + "/costa/v1/payments?page=" + page + "&size=" + size;
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/costa/v1/payments")
+                .queryParam("page", page)
+                .queryParam("size", size)
+                .toUriString();
         log.info("COSTA: Listing payments page={}, size={}", page, size);
         ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
         return extractData(response);
@@ -208,7 +217,10 @@ public class CostaServiceClient {
      * List claims (paginated, tenant-scoped via trust headers).
      */
     public JsonNode listClaims(int page, int size) {
-        String url = baseUrl + "/costa/v1/claims?page=" + page + "&size=" + size;
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/costa/v1/claims")
+                .queryParam("page", page)
+                .queryParam("size", size)
+                .toUriString();
         log.info("COSTA: Listing claims page={}, size={}", page, size);
         ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
         return extractData(response);

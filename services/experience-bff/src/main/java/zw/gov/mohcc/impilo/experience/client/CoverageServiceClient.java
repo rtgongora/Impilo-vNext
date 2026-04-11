@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
 
 import java.util.Map;
@@ -60,7 +61,9 @@ public class CoverageServiceClient {
     }
 
     public JsonNode listClaims(String coverageId) {
-        String url = baseUrl + "/internal/v1/coverage/claims?coverageId=" + coverageId;
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/coverage/claims")
+                .queryParam("coverageId", coverageId)
+                .toUriString();
         return extractData(restTemplate.getForEntity(url, JsonNode.class));
     }
 
@@ -82,7 +85,9 @@ public class CoverageServiceClient {
     }
 
     public JsonNode listMembers(String planId) {
-        String url = baseUrl + "/internal/v1/coverage/members?plan_id=" + planId;
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/coverage/members")
+                .queryParam("plan_id", planId)
+                .toUriString();
         return extractData(restTemplate.getForEntity(url, JsonNode.class));
     }
 
