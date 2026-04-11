@@ -201,6 +201,11 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.POST, "/internal/v1/mobile/provider/discharge")
                             .hasAnyRole(CLINICAL_ROLES)
 
+                    // ── Citizen wellness (web + mobile): any authenticated user may manage own rows;
+                    //     patientId must match actor in a future ABAC pass. Placed before stricter citizen/**.
+                    .requestMatchers("/internal/v1/mobile/citizen/wellness/**")
+                            .authenticated()
+
                     // ── Citizen mobile endpoints ──────────────────────────
                     .requestMatchers("/internal/v1/mobile/citizen/**")
                             .hasAnyRole(CITIZEN_ROLES)
