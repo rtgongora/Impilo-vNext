@@ -1,66 +1,17 @@
 {
-  "generated_at": "2026-04-11T17:15:41.515Z",
+  "generated_at": "2026-04-11T20:01:25.853Z",
   "registry": "docs/registry/services-registry.yaml",
   "service_count": 69,
   "aggregate": {
     "backend_avg": 3,
     "bff_avg": 0.71,
-    "contract_avg": 0.61,
-    "api_docs_avg": 1.87,
+    "contract_avg": 0.74,
+    "api_docs_avg": 1.91,
     "kafka_avg": 0.59,
     "experience_hooks_avg": 2.39,
     "experience_pages_avg": 2.84
   },
   "services": [
-    {
-      "maven_module": "ubomi-service",
-      "product_names": [
-        "UBOMI"
-      ],
-      "plane": "registry",
-      "sovereign_group": "UBOMI",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "UbomiApplication",
-          "flyway_migrations": 1,
-          "java_files": 18
-        },
-        "bff": {
-          "level": "none",
-          "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": null
-        },
-        "contract": {
-          "level": "none",
-          "openapi_file": null,
-          "present": false
-        },
-        "api_docs": {
-          "level": "partial",
-          "springdoc_in_pom": true
-        },
-        "integration_kafka": {
-          "level": "none",
-          "kafka_listener_count": 0
-        },
-        "experience_hooks": {
-          "level": "none",
-          "files_with_hits": 0,
-          "search_terms_sample": [
-            "ubomi"
-          ]
-        },
-        "experience_pages": {
-          "level": "none",
-          "files_with_hits": 0
-        }
-      },
-      "composite_score": 0.238
-    },
     {
       "maven_module": "data-access-governance-service",
       "product_names": [
@@ -253,6 +204,55 @@
         }
       },
       "composite_score": 0.381
+    },
+    {
+      "maven_module": "ubomi-service",
+      "product_names": [
+        "UBOMI"
+      ],
+      "plane": "registry",
+      "sovereign_group": "UBOMI",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "UbomiApplication",
+          "flyway_migrations": 1,
+          "java_files": 18
+        },
+        "bff": {
+          "level": "none",
+          "is_bff_shell": false,
+          "expected_client": null,
+          "client_file_present": false,
+          "referenced_in_controller": false,
+          "proxy": null
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "ubomi.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": true
+        },
+        "integration_kafka": {
+          "level": "none",
+          "kafka_listener_count": 0
+        },
+        "experience_hooks": {
+          "level": "none",
+          "files_with_hits": 0,
+          "search_terms_sample": [
+            "ubomi"
+          ]
+        },
+        "experience_pages": {
+          "level": "none",
+          "files_with_hits": 0
+        }
+      },
+      "composite_score": 0.429
     },
     {
       "maven_module": "integration-hub",
@@ -1611,55 +1611,6 @@
       "composite_score": 0.524
     },
     {
-      "maven_module": "tuso-service",
-      "product_names": [
-        "TUSO"
-      ],
-      "plane": "registry",
-      "sovereign_group": "TUSO",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "TusoApplication",
-          "flyway_migrations": 4,
-          "java_files": 112
-        },
-        "bff": {
-          "level": "substantial",
-          "is_bff_shell": false,
-          "expected_client": "TusoServiceClient",
-          "client_file_present": true,
-          "referenced_in_controller": true,
-          "proxy": null
-        },
-        "contract": {
-          "level": "none",
-          "openapi_file": null,
-          "present": false
-        },
-        "api_docs": {
-          "level": "partial",
-          "springdoc_in_pom": true
-        },
-        "integration_kafka": {
-          "level": "none",
-          "kafka_listener_count": 0
-        },
-        "experience_hooks": {
-          "level": "none",
-          "files_with_hits": 0,
-          "search_terms_sample": [
-            "tuso"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 3
-        }
-      },
-      "composite_score": 0.524
-    },
-    {
       "maven_module": "product-registry-service",
       "product_names": [
         "Product Registry"
@@ -2612,55 +2563,6 @@
       "composite_score": 0.667
     },
     {
-      "maven_module": "varapi-service",
-      "product_names": [
-        "VARAPI"
-      ],
-      "plane": "registry",
-      "sovereign_group": "VARAPI",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "VarapiApplication",
-          "flyway_migrations": 4,
-          "java_files": 109
-        },
-        "bff": {
-          "level": "substantial",
-          "is_bff_shell": false,
-          "expected_client": "VarapiServiceClient",
-          "client_file_present": true,
-          "referenced_in_controller": true,
-          "proxy": null
-        },
-        "contract": {
-          "level": "none",
-          "openapi_file": null,
-          "present": false
-        },
-        "api_docs": {
-          "level": "partial",
-          "springdoc_in_pom": true
-        },
-        "integration_kafka": {
-          "level": "none",
-          "kafka_listener_count": 0
-        },
-        "experience_hooks": {
-          "level": "substantial",
-          "files_with_hits": 5,
-          "search_terms_sample": [
-            "varapi"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 5
-        }
-      },
-      "composite_score": 0.667
-    },
-    {
       "maven_module": "fhir-gateway-service",
       "product_names": [
         "FHIR Gateway"
@@ -2811,6 +2713,55 @@
         }
       },
       "composite_score": 0.667
+    },
+    {
+      "maven_module": "tuso-service",
+      "product_names": [
+        "TUSO"
+      ],
+      "plane": "registry",
+      "sovereign_group": "TUSO",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "TusoApplication",
+          "flyway_migrations": 4,
+          "java_files": 112
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": "TusoServiceClient",
+          "client_file_present": true,
+          "referenced_in_controller": true,
+          "proxy": null
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "tuso.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": true
+        },
+        "integration_kafka": {
+          "level": "none",
+          "kafka_listener_count": 0
+        },
+        "experience_hooks": {
+          "level": "none",
+          "files_with_hits": 0,
+          "search_terms_sample": [
+            "tuso"
+          ]
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 3
+        }
+      },
+      "composite_score": 0.714
     },
     {
       "maven_module": "credential-verification-service",
@@ -3064,6 +3015,55 @@
         }
       },
       "composite_score": 0.81
+    },
+    {
+      "maven_module": "varapi-service",
+      "product_names": [
+        "VARAPI"
+      ],
+      "plane": "registry",
+      "sovereign_group": "VARAPI",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "VarapiApplication",
+          "flyway_migrations": 4,
+          "java_files": 109
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": "VarapiServiceClient",
+          "client_file_present": true,
+          "referenced_in_controller": true,
+          "proxy": null
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "varapi.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": true
+        },
+        "integration_kafka": {
+          "level": "none",
+          "kafka_listener_count": 0
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 5,
+          "search_terms_sample": [
+            "varapi"
+          ]
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 5
+        }
+      },
+      "composite_score": 0.857
     },
     {
       "maven_module": "msika-service",

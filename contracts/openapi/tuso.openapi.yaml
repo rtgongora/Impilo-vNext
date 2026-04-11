@@ -1,0 +1,230 @@
+# =============================================================================
+# TUSO — Facility, Workspace & Shift Context API (OpenAPI 3.0)
+#
+# Phase B baseline: public facility discovery, internal/admin surfaces, snapshots,
+# and v1.1 companion probes. Expand paths to match remaining controllers.
+# =============================================================================
+openapi: "3.0.3"
+
+info:
+  title: TUSO — Facility, Workspace & Shift Context API
+  version: "1.0.0"
+  description: |
+    TUSO holds facility master data, workspaces, shifts, and operational context
+    consumed across the Health OS experience and clinical planes.
+
+    Trust headers are enforced by Envoy + TSHEPO; internal probes require
+    Manifest v1.2 mandatory headers (`CompanionHeaders`).
+  contact:
+    name: Impilo Platform Team
+  license:
+    name: Proprietary
+
+servers:
+  - url: http://localhost:8084
+    description: Local development
+  - url: https://{tenant}.impilo.health/api
+    description: Production (per-tenant)
+    variables:
+      tenant:
+        default: demo
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Internal-Probe
+    description: Tech-companion v1.1 proofs
+  - name: Public-Facility
+    description: Redacted facility directory for external consumers
+
+paths:
+  /internal/v1/health:
+    get:
+      operationId: tusoInternalHealth
+      tags: [Internal-Probe]
+      summary: v1.1 probe — trust context echo
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+      responses:
+        "200":
+          description: Service UP
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProbeHealthBody"
+
+  /internal/v1/test-command:
+    post:
+      operationId: tusoInternalTestCommand
+      tags: [Internal-Probe]
+      summary: v1.1 probe — echo
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "201":
+          description: Echo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProbeCommandBody"
+
+  /internal/v1/test-federation:
+    post:
+      operationId: tusoInternalTestFederation
+      tags: [Internal-Probe]
+      summary: v1.1 probe — federation authority
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "201":
+          description: Federation proof
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProbeFederationBody"
+
+  /v1/public/facilities/search:
+    get:
+      operationId: tusoPublicFacilitySearch
+      tags: [Public-Facility]
+      summary: Search public facility directory
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - name: query
+          in: query
+          schema:
+            type: string
+        - name: facilityType
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: province
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        "200":
+          description: Paged facility summaries (ApiResponse envelope)
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    TenantId:
+      name: X-Tenant-ID
+      in: header
+      required: true
+      schema:
+        type: string
+    PodId:
+      name: X-Pod-ID
+      in: header
+      required: true
+      schema:
+        type: string
+    RequestId:
+      name: X-Request-ID
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+    CorrelationId:
+      name: X-Correlation-ID
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+    ActorId:
+      name: X-Actor-ID
+      in: header
+      required: true
+      schema:
+        type: string
+    ActorType:
+      name: X-Actor-Type
+      in: header
+      required: true
+      schema:
+        type: string
+
+  schemas:
+    ProbeHealthBody:
+      type: object
+      properties:
+        service:
+          type: string
+          example: tuso
+        status:
+          type: string
+        tenant_id:
+          type: string
+        pod_id:
+          type: string
+        request_id:
+          type: string
+        correlation_id:
+          type: string
+      additionalProperties: true
+
+    ProbeCommandBody:
+      type: object
+      additionalProperties: true
+
+    ProbeFederationBody:
+      type: object
+      additionalProperties: true

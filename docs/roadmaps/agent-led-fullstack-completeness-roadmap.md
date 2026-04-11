@@ -157,3 +157,4 @@ flowchart LR
 | 2026-04-11 | Operating rule 5: wave end = commit → pull --rebase → push (`CLAUDE.md`). |
 | 2026-04-11 | Phase A1: `docs/registry/services-registry.yaml` + Node generator (`scripts/registry`). |
 | 2026-04-11 | Phase A2: `scripts/completeness` + `docs/reports/` + informational CI artifact job. |
+| 2026-04-11 | Phase B (slice): OpenAPI baselines for registry plane VARAPI, TUSO, UBOMI (`contracts/openapi/`). |

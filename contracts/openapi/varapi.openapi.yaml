@@ -1,0 +1,232 @@
+# =============================================================================
+# VARAPI — Provider & Professional Registry API (OpenAPI 3.0)
+#
+# Phase B baseline: portal self-service, internal registry surfaces, and v1.1
+# companion probe routes. Expand paths incrementally to match controllers.
+# =============================================================================
+openapi: "3.0.3"
+
+info:
+  title: VARAPI — Provider & Professional Registry API
+  version: "1.0.0"
+  description: |
+    VARAPI is the national provider registry: licensure, councils, CPD, eligibility,
+    and portal APIs for regulated professionals.
+
+    Trust headers are enforced by Envoy + TSHEPO; internal probes additionally
+    require Health OS Manifest v1.2 mandatory headers (see `CompanionHeaders`).
+  contact:
+    name: Impilo Platform Team
+  license:
+    name: Proprietary
+
+servers:
+  - url: http://localhost:8083
+    description: Local development
+  - url: https://{tenant}.impilo.health/api
+    description: Production (per-tenant)
+    variables:
+      tenant:
+        default: demo
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Internal-Probe
+    description: Tech-companion v1.1 header and federation proofs
+  - name: Portal
+    description: Authenticated provider self-service
+
+paths:
+  /internal/v1/health:
+    get:
+      operationId: varapiInternalHealth
+      tags: [Internal-Probe]
+      summary: v1.1 probe — returns trust context echo
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+      responses:
+        "200":
+          description: Service UP with context echo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProbeHealthBody"
+
+  /internal/v1/test-command:
+    post:
+      operationId: varapiInternalTestCommand
+      tags: [Internal-Probe]
+      summary: v1.1 probe — idempotency / echo
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "201":
+          description: Echo payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProbeCommandBody"
+
+  /internal/v1/test-federation:
+    post:
+      operationId: varapiInternalTestFederation
+      tags: [Internal-Probe]
+      summary: v1.1 probe — national federation authority
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "201":
+          description: Federation proof accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProbeFederationBody"
+
+  /v1/portal/me:
+    get:
+      operationId: varapiPortalMe
+      tags: [Portal]
+      summary: Current provider portal profile
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+      responses:
+        "200":
+          description: Portal profile envelope
+          content:
+            application/json:
+              schema:
+                type: object
+                description: ApiResponse wrapper — see shared-kernel `ApiResponse`
+                additionalProperties: true
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    TenantId:
+      name: X-Tenant-ID
+      in: header
+      required: true
+      schema:
+        type: string
+    PodId:
+      name: X-Pod-ID
+      in: header
+      required: true
+      schema:
+        type: string
+    RequestId:
+      name: X-Request-ID
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+    CorrelationId:
+      name: X-Correlation-ID
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+    ActorId:
+      name: X-Actor-ID
+      in: header
+      required: true
+      schema:
+        type: string
+    ActorType:
+      name: X-Actor-Type
+      in: header
+      required: true
+      schema:
+        type: string
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid authentication
+
+  schemas:
+    ProbeHealthBody:
+      type: object
+      properties:
+        service:
+          type: string
+          example: varapi
+        status:
+          type: string
+          example: UP
+        tenant_id:
+          type: string
+        pod_id:
+          type: string
+        request_id:
+          type: string
+        correlation_id:
+          type: string
+      additionalProperties: true
+
+    ProbeCommandBody:
+      type: object
+      properties:
+        service:
+          type: string
+        action:
+          type: string
+        request_id:
+          type: string
+        correlation_id:
+          type: string
+        echo:
+          type: object
+          additionalProperties: true
+      additionalProperties: true
+
+    ProbeFederationBody:
+      type: object
+      properties:
+        service:
+          type: string
+        action:
+          type: string
+        pod_id:
+          type: string
+        request_id:
+          type: string
+        correlation_id:
+          type: string
+      additionalProperties: true

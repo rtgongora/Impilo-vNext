@@ -40,6 +40,9 @@ const OPENAPI_BY_MODULE = {
   'pharmacy-service': 'pharmacy.openapi.yaml',
   'share-slip-service': 'share-slip.openapi.yaml',
   'vito-service': 'vito.openapi.yaml',
+  'varapi-service': 'varapi.openapi.yaml',
+  'tuso-service': 'tuso.openapi.yaml',
+  'ubomi-service': 'ubomi.openapi.yaml',
   'zibo-service': 'zibo.openapi.yaml',
 };
 

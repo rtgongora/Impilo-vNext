@@ -1,0 +1,205 @@
+# =============================================================================
+# UBOMI — Civil Registry Handshake (Birth / Death) API (OpenAPI 3.0)
+#
+# Phase B baseline: birth and death notification REST surfaces plus v1.1 probes.
+# =============================================================================
+openapi: "3.0.3"
+
+info:
+  title: UBOMI — Civil Registry Notifications API
+  version: "1.0.0"
+  description: |
+    UBOMI receives birth and death notifications, coordinates verification with
+    civil registry rules, and publishes registry events for downstream identity
+    issuance (VITO) and national reporting.
+
+    Trust headers are enforced by Envoy + TSHEPO; internal probes require
+    Manifest v1.2 mandatory headers (`CompanionHeaders`).
+  contact:
+    name: Impilo Platform Team
+  license:
+    name: Proprietary
+
+servers:
+  - url: http://localhost:8087
+    description: Local development
+  - url: https://{tenant}.impilo.health/api
+    description: Production (per-tenant)
+    variables:
+      tenant:
+        default: demo
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Internal-Probe
+    description: Tech-companion v1.1 proofs
+  - name: Birth
+    description: Birth notification intake and listing
+  - name: Death
+    description: Death notification workflows
+
+paths:
+  /internal/v1/health:
+    get:
+      operationId: ubomiInternalHealth
+      tags: [Internal-Probe]
+      summary: v1.1 probe — trust context echo
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+      responses:
+        "200":
+          description: Service UP
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProbeHealthBody"
+
+  /internal/v1/test-command:
+    post:
+      operationId: ubomiInternalTestCommand
+      tags: [Internal-Probe]
+      summary: v1.1 probe — echo
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "201":
+          description: Echo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProbeCommandBody"
+
+  /v1/births:
+    get:
+      operationId: ubomiListBirths
+      tags: [Birth]
+      summary: List birth notifications (paginated)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 50
+      responses:
+        "200":
+          description: Page of birth notifications (ApiResponse envelope)
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+    post:
+      operationId: ubomiSubmitBirth
+      tags: [Birth]
+      summary: Submit a birth notification
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: BirthNotificationEntity — align with service DTO in later revision
+              additionalProperties: true
+      responses:
+        "200":
+          description: Stored notification
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    TenantId:
+      name: X-Tenant-ID
+      in: header
+      required: true
+      schema:
+        type: string
+    PodId:
+      name: X-Pod-ID
+      in: header
+      required: true
+      schema:
+        type: string
+    RequestId:
+      name: X-Request-ID
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+    CorrelationId:
+      name: X-Correlation-ID
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+    ActorId:
+      name: X-Actor-ID
+      in: header
+      required: true
+      schema:
+        type: string
+    ActorType:
+      name: X-Actor-Type
+      in: header
+      required: true
+      schema:
+        type: string
+
+  schemas:
+    ProbeHealthBody:
+      type: object
+      properties:
+        service:
+          type: string
+          example: ubomi
+        status:
+          type: string
+      additionalProperties: true
+
+    ProbeCommandBody:
+      type: object
+      additionalProperties: true
