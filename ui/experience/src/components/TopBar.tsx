@@ -24,6 +24,9 @@ import { useAuthStore } from "@/hooks/useAuthStore";
 import { useRoleGroup } from "@/hooks/useRoleGroup";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useShiftStore } from "@/hooks/useShiftStore";
+import { usePrivacyDisplayStore } from "@/hooks/usePrivacyDisplayStore";
+import { PRIVACY_LEVEL_LABELS } from "@/lib/pii-mask";
+import { Eye, EyeOff } from "lucide-react";
 
 const EHR_ACTIONS = [
   { label: "Pharmacy", href: "/pharmacy/dispense", icon: Pill },
@@ -117,6 +120,7 @@ export function TopBar() {
       </nav>
 
       <div className="ml-2 pl-2 border-l flex items-center gap-3">
+        <PrivacyToggle />
         {facility && (
           <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-xs font-medium">
             {facility.name}
@@ -142,6 +146,28 @@ export function TopBar() {
         </Link>
       </div>
     </header>
+  );
+}
+
+const PRIVACY_BADGE_STYLES: Record<string, string> = {
+  FULL: "bg-green-50 text-green-700 border-green-200",
+  PARTIAL: "bg-amber-50 text-amber-700 border-amber-200",
+  MINIMAL: "bg-red-50 text-red-700 border-red-200",
+};
+
+function PrivacyToggle() {
+  const { level, cycleLevel } = usePrivacyDisplayStore();
+  const PrivacyIcon = level === "FULL" ? Eye : EyeOff;
+
+  return (
+    <button
+      onClick={cycleLevel}
+      className={`flex items-center gap-1 px-2 py-0.5 rounded border text-xs font-medium transition-colors hover:opacity-80 ${PRIVACY_BADGE_STYLES[level]}`}
+      title={`Privacy: ${PRIVACY_LEVEL_LABELS[level]} — Click to cycle`}
+    >
+      <PrivacyIcon className="w-3 h-3" />
+      <span className="hidden sm:inline">{PRIVACY_LEVEL_LABELS[level]}</span>
+    </button>
   );
 }
 
