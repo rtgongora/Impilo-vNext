@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { getShareSlipPublicBaseUrl } from "@/lib/shareSlipPublic";
 
 interface ClaimResult {
@@ -19,6 +19,8 @@ export default function ShareClaimPage() {
   const [result, setResult] = useState<ClaimResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const lastClaimSubmitRef = useRef<number>(0);
+  const CLAIM_COOLDOWN_MS = 2000;
 
   if (!base) {
     return (
@@ -55,6 +57,12 @@ export default function ShareClaimPage() {
 
   async function handleClaim(e: React.FormEvent) {
     e.preventDefault();
+    const now = Date.now();
+    if (now - lastClaimSubmitRef.current < CLAIM_COOLDOWN_MS) {
+      setError("Please wait before trying again.");
+      return;
+    }
+    lastClaimSubmitRef.current = now;
     setLoading(true);
     setError("");
     try {
