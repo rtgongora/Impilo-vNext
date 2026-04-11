@@ -1,6 +1,8 @@
 # Health OS Doctrine — Implementation Gap Matrix
 
-> Living document. Updated 2026-04-11 after foundational doctrine adoption.
+> Living document. Updated 2026-04-11 after expanded doctrine adoption
+> (wellness/lifestyle/diet/sleep/clubs, graduated trust, progressive identity assurance,
+> marketplace risk graduation, device/IoT as first-class participants).
 
 ## Legend
 - **DONE** — Implemented and aligned with doctrine

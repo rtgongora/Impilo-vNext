@@ -447,8 +447,68 @@ public class PolicyEngine {
                action.contains("RECOVERY");
     }
 
+    // ------------------------------------------------------------------
+    // Health OS §8: Graduated trust and friction
+    // "Friction must be proportionate to risk."
+    // ------------------------------------------------------------------
+
+    /**
+     * Determines the friction level for a given resource type and action.
+     * Used by obligation computation to signal the UI how much verification
+     * to apply. The graduated levels are:
+     *
+     * MINIMAL — wellness exploration, club browsing, lifestyle content
+     * LOW — buying non-regulated goods, connecting ordinary devices
+     * STANDARD — authenticated access to personal records, scheduling
+     * ELEVATED — clinical record access, write operations on health data
+     * MAXIMUM — prescribing, claims, controlled substance fulfilment
+     */
+    enum FrictionLevel { MINIMAL, LOW, STANDARD, ELEVATED, MAXIMUM }
+
+    static FrictionLevel classifyFriction(String action, String resourceType, PurposeOfUse purpose) {
+        if (resourceType == null) return FrictionLevel.STANDARD;
+
+        // Wellness, lifestyle, community — minimal friction
+        if (resourceType.startsWith("wellness") || resourceType.startsWith("clubs")
+                || resourceType.startsWith("community") || resourceType.startsWith("challenges")
+                || resourceType.startsWith("routes") || resourceType.startsWith("diet")
+                || resourceType.startsWith("sleep") || resourceType.startsWith("coaching")) {
+            return FrictionLevel.MINIMAL;
+        }
+
+        // Marketplace browse, low-risk products — low friction
+        if (resourceType.startsWith("marketplace") || resourceType.startsWith("catalog")
+                || resourceType.equals("products") || resourceType.equals("vendors")) {
+            if (action != null && action.startsWith("GET:")) return FrictionLevel.LOW;
+            return FrictionLevel.STANDARD; // writes to marketplace = standard
+        }
+
+        // Clinical reads — elevated
+        if (resourceType.startsWith("Patient") || resourceType.startsWith("Encounter")
+                || resourceType.startsWith("Observation")) {
+            if (action != null && action.startsWith("GET:")) return FrictionLevel.ELEVATED;
+            return FrictionLevel.MAXIMUM; // clinical writes = maximum
+        }
+
+        // Prescriptions, controlled substances — maximum
+        if (resourceType.equals("prescriptions") || resourceType.equals("dispense")
+                || resourceType.equals("claims")) {
+            return FrictionLevel.MAXIMUM;
+        }
+
+        // Default
+        return FrictionLevel.STANDARD;
+    }
+
     private Obligations computeObligations(AuthorizationRequest request, PurposeOfUse purpose, int riskScore) {
         String loggingLevel = riskScore > 50 ? "ELEVATED" : "STANDARD";
+
+        // Health OS §8: classify friction level for the UI
+        FrictionLevel friction = classifyFriction(request.action(), request.resourceType(), purpose);
+        // Wellness/lifestyle actions get lighter logging unless risk-scored
+        if (friction == FrictionLevel.MINIMAL && riskScore < 30) {
+            loggingLevel = "LIGHT";
+        }
 
         // Purpose-based masking
         if (purpose == PurposeOfUse.RESEARCH || purpose == PurposeOfUse.PUBLIC_HEALTH) {
@@ -456,7 +516,7 @@ public class PolicyEngine {
                 "ANONYMIZED",
                 List.of("name", "phone", "address", "dateOfBirth"),
                 loggingLevel,
-                null
+                friction.name()
             );
         }
 
@@ -465,10 +525,10 @@ public class PolicyEngine {
                 "FACILITY_SCOPE",
                 List.of("name", "phone"),
                 loggingLevel,
-                null
+                friction.name()
             );
         }
 
-        return new Obligations(null, null, loggingLevel, null);
+        return new Obligations(null, null, loggingLevel, friction.name());
     }
 }

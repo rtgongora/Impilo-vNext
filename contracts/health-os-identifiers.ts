@@ -53,6 +53,9 @@ export type ServiceId = string;
 export type AssetId = string;
 export type EquipmentId = string;
 export type DeviceId = string;
+export type IoTDeviceId = string;
+export type MarketplaceItemId = string;
+export type WellnessSupportObjectId = string;
 
 // ── Transaction IDs — specific operational or clinical action instances
 
@@ -78,6 +81,10 @@ export type AlertId = string;
 export type NotificationId = string;
 export type AuditEventId = string;
 export type WorkflowEventId = string;
+export type WellnessActivityEventId = string;
+export type SleepEventId = string;
+export type DietaryIntakeEventId = string;
+export type IoTEventId = string;
 
 // ── Purpose of Use ──────────────────────────────────────────────────
 
@@ -142,6 +149,34 @@ export interface CaregiverLinkage {
   linkageType: CaregiverLinkageType;
   grantedScopes: string[];
   consentRef?: string;
+}
+
+// ── Graduated Trust and Friction (Health OS §8) ─────────────────────
+
+/** Friction must be proportionate to risk. */
+export type FrictionLevel = "MINIMAL" | "LOW" | "STANDARD" | "ELEVATED" | "MAXIMUM";
+
+// ── Progressive Identity Assurance (Health OS §10, §11) ─────────────
+
+export type IdentityAssuranceState =
+  | "SELF_REGISTERED"        // Self-registration, no proofing
+  | "ASSISTED_REGISTRATION"  // Registered by authorized actor (CHW, facility)
+  | "FACILITY_CONFIRMED"     // Confirmed at a facility with basic evidence
+  | "REGISTRY_MATCHED"       // Matched to trusted registry (MOSIP, civil registry)
+  | "COUNCIL_VALIDATED"      // Professional council validation (for providers)
+  | "FULLY_VERIFIED";        // Full identity proofing complete
+
+export interface TemporaryIdentity {
+  tempId: string;
+  assuranceState: IdentityAssuranceState;
+  reason: string;
+  permissionsAvailable: string[];
+  upgradeRequirements: string[];
+  eligibleUpgradePathways: string[];
+  nextBestStep: string;
+  createdBy: string;
+  createdAt: string;
+  expiresAt?: string;
 }
 
 // ── Header name constants (must match CompanionHeaders.java) ────────

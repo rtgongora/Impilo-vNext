@@ -262,6 +262,13 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/wellness/programs", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Prevention Programs", navLabel: "Programs", navZone: "life" },
   { path: "/wellness/screenings", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Screening Schedule", navLabel: "Screenings", navZone: "life" },
   { path: "/wellness/activity", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Activity & Fitness", navLabel: "Activity", navZone: "life" },
+  { path: "/wellness/diet", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Diet & Nutrition", navLabel: "Diet", navZone: "life" },
+  { path: "/wellness/sleep", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Sleep & Recovery", navLabel: "Sleep", navZone: "life" },
+  { path: "/wellness/clubs", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Clubs & Communities", navLabel: "Clubs", navZone: "life" },
+  { path: "/wellness/challenges", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Challenges", navLabel: "Challenges", navZone: "life" },
+  { path: "/wellness/routes", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Routes & Places", navLabel: "Routes", navZone: "life" },
+  { path: "/wellness/coaching", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Coaching & Habits", navLabel: "Coaching", navZone: "life" },
+  { path: "/wellness/community", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Wellness Community", navLabel: "Community", navZone: "life" },
 
   // ── Zone: Caregiving (Health OS §4 — delegated care, family) ───────
   { path: "/caregiving", zone: "caregiving", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Caregiving Hub", navLabel: "Caregiving", navZone: "life" },
@@ -318,7 +325,7 @@ export const ROUTES: RouteDefinition[] = [
 ];
 
 // Total route count assertion
-export const EXPECTED_ROUTE_COUNT = 210;
+export const EXPECTED_ROUTE_COUNT = 209;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

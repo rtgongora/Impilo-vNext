@@ -2,12 +2,15 @@
 
 ## Foundational Doctrine
 
-> Impilo is a **Health Operating System**: a trusted, governed, extensible, and
-> interoperable national digital environment in which health identities, records, workflows,
-> services, transactions, intelligence, assets, and applications operate coherently.
+> Impilo is a **Health Operating System**: a trusted, governed, extensible, interoperable,
+> and person-centered national digital environment in which health identities, records,
+> workflows, services, transactions, intelligence, assets, devices, communities, wellness
+> experiences, dietary and sleep-related participation, marketplace functions, and
+> applications operate coherently.
 
 > **Short doctrine line**: One Health Operating System, one experience shell, one person
-> anchor, many roles, many IDs, many contexts, one governed runtime.
+> anchor, many roles, many IDs, many contexts, many experience modes, many connected
+> entities, one governed runtime.
 
 Full doctrine: [`docs/doctrine/health-os-doctrine.md`](docs/doctrine/health-os-doctrine.md)
 

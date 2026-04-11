@@ -8,13 +8,17 @@ import java.util.List;
 
 /**
  * Obligations that downstream services MUST honor after an ALLOW decision.
+ *
+ * <p>Aligned with Health OS Graduated Trust Doctrine (§8):
+ * {@code frictionLevel} signals the UI how much verification/friction to apply.
+ * Values: MINIMAL, LOW, STANDARD, ELEVATED, MAXIMUM.</p>
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record Obligations(
     String maxScope,
     List<String> maskFields,
     String loggingLevel,
-    String consentScopeRef
+    String frictionLevel
 ) {
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
