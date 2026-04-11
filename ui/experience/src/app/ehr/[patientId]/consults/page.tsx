@@ -62,6 +62,8 @@ import {
   parseConsultationCoordinationMeta,
   toDateTimeLocalValue,
 } from "@/lib/consult-workflows";
+import { usePrivacyDisplayStore } from "@/hooks/usePrivacyDisplayStore";
+import { maskName, maskDob } from "@/lib/pii-mask";
 import { ReferralPackageBuilder } from "@/components/ReferralPackageBuilder";
 import { useQuery } from "@tanstack/react-query";
 
@@ -155,9 +157,13 @@ export default function ConsultsPage() {
   const patientMedications = (medsData?.data ?? []).map((m) => (m.attributes.medication_name as string) ?? "").filter(Boolean);
 
   const patient = patientData?.data;
-  const patientName = (patient?.attributes as Record<string, unknown>)?.displayName as string
-    ?? (patient?.attributes as Record<string, unknown>)?.givenName as string ?? "Patient";
-  const patientDob = (patient?.attributes as Record<string, unknown>)?.dateOfBirth as string | undefined;
+  const privacyLevel = usePrivacyDisplayStore((s) => s.level);
+  const patientName = maskName(
+    ((patient?.attributes as Record<string, unknown>)?.displayName as string)
+    ?? ((patient?.attributes as Record<string, unknown>)?.givenName as string) ?? "Patient",
+    privacyLevel,
+  );
+  const patientDob = maskDob((patient?.attributes as Record<string, unknown>)?.dateOfBirth as string | undefined, privacyLevel);
   const encounters = encountersData?.data ?? [];
   const activeEncounter = encounters.find(
     (e) => e.attributes.status === "IN_PROGRESS" || e.attributes.status === "ACTIVE"

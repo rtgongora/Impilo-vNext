@@ -8,6 +8,8 @@ import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { useEncounters } from "@/hooks/queries/useEncounters";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
+import { usePrivacyDisplayStore } from "@/hooks/usePrivacyDisplayStore";
+import { maskPhone, maskEmail } from "@/lib/pii-mask";
 
 interface CareTeamMember {
   id: string;
@@ -195,12 +197,12 @@ export default function CareTeamPage() {
                       <p className="text-xs text-gray-400">{member.facility}</p>
                       <div className="mt-3 border-t border-gray-100 pt-3">
                         <a href={`tel:${member.phone}`} className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-blue-600">
-                          <Phone className="h-3 w-3" /> {member.phone}
+                          <Phone className="h-3 w-3" /> {maskPhone(member.phone, usePrivacyDisplayStore.getState().level)}
                         </a>
                       </div>
                       <div className="mt-1">
                         <a href={`mailto:${member.email}`} className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-blue-600">
-                          <Mail className="h-3 w-3" /> {member.email}
+                          <Mail className="h-3 w-3" /> {maskEmail(member.email, usePrivacyDisplayStore.getState().level)}
                         </a>
                       </div>
                     </div>
@@ -248,7 +250,7 @@ export default function CareTeamPage() {
                         <td className="px-4 py-3 text-gray-700">{member.role}</td>
                         <td className="px-4 py-3 text-gray-700">{member.specialty}</td>
                         <td className="px-4 py-3 text-gray-500">{member.facility}</td>
-                        <td className="px-4 py-3 text-xs text-gray-500">{member.phone}</td>
+                        <td className="px-4 py-3 text-xs text-gray-500">{maskPhone(member.phone, usePrivacyDisplayStore.getState().level)}</td>
                         <td className="px-4 py-3">
                           <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${member.status === "Active" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"}`}>{member.status}</span>
                         </td>
