@@ -69,3 +69,49 @@ zibo:
     ttl-minutes: 60
   validation:
     default-mode: LENIENT
+  # Healthcare Coding Standards — Adopted international terminology systems
+  # See: docs/doctrine/healthcare-coding-standards.md
+  # These canonical URIs are used by the ValidationEngine for code system lookup.
+  adopted-systems:
+    # Primary international standards
+    - uri: "http://id.who.int/icd/release/11"
+      name: "ICD-11"
+      domain: "Diagnoses, mortality, morbidity"
+    - uri: "http://hl7.org/fhir/sid/icd-10"
+      name: "ICD-10"
+      domain: "Legacy diagnosis coding (transitional)"
+    - uri: "http://snomed.info/sct"
+      name: "SNOMED CT"
+      domain: "Clinical findings, procedures, body structures, substances"
+    - uri: "http://loinc.org"
+      name: "LOINC"
+      domain: "Laboratory tests, observations, vital signs, document sections"
+    - uri: "http://www.whocc.no/atc"
+      name: "ATC"
+      domain: "Medication classification"
+    - uri: "http://dicom.nema.org/resources/ontology/DCM"
+      name: "DICOM"
+      domain: "Medical imaging metadata, modality codes"
+    # Supplementary standards
+    - uri: "http://unitsofmeasure.org"
+      name: "UCUM"
+      domain: "Units of measure"
+    - uri: "http://hl7.org/fhir/sid/cvx"
+      name: "CVX"
+      domain: "Vaccine codes"
+    - uri: "http://www.ama-assn.org/go/cpt"
+      name: "CPT"
+      domain: "Procedure coding for claims"
+    - uri: "http://www.nlm.nih.gov/research/umls/rxnorm"
+      name: "RxNorm"
+      domain: "Drug terminology cross-mapping"
+    # HL7 vocabulary
+    - uri: "http://terminology.hl7.org/CodeSystem/v3-ActCode"
+      name: "HL7 ActCode"
+      domain: "Encounter type classification"
+    - uri: "http://terminology.hl7.org/CodeSystem/v3-RouteOfAdministration"
+      name: "HL7 Route of Administration"
+      domain: "Medication routes"
+    - uri: "http://terminology.hl7.org/CodeSystem/observation-category"
+      name: "HL7 Observation Category"
+      domain: "Observation category classification"

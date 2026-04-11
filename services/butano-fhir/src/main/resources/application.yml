@@ -38,3 +38,25 @@ management:
 impilo:
   companion:
     enabled: true
+
+# ═══════════════════════════════════════════════════════════
+# Healthcare Coding Standards — FHIR terminology configuration
+# See: docs/doctrine/healthcare-coding-standards.md
+# ═══════════════════════════════════════════════════════════
+terminology:
+  zibo-base-url: ${ZIBO_BASE_URL:http://localhost:8085}
+  validation-enabled: ${TERMINOLOGY_VALIDATION_ENABLED:false}
+  # Supported coding systems for FHIR resource validation
+  code-systems:
+    icd-11: "http://id.who.int/icd/release/11"
+    icd-10: "http://hl7.org/fhir/sid/icd-10"
+    snomed-ct: "http://snomed.info/sct"
+    loinc: "http://loinc.org"
+    atc: "http://www.whocc.no/atc"
+    cvx: "http://hl7.org/fhir/sid/cvx"
+    cpt: "http://www.ama-assn.org/go/cpt"
+    ucum: "http://unitsofmeasure.org"
+    dicom: "http://dicom.nema.org/resources/ontology/DCM"
+    hl7-act-code: "http://terminology.hl7.org/CodeSystem/v3-ActCode"
+    hl7-route: "http://terminology.hl7.org/CodeSystem/v3-RouteOfAdministration"
+    hl7-observation-category: "http://terminology.hl7.org/CodeSystem/observation-category"
