@@ -95,20 +95,21 @@
 
 ## Priority Roadmap
 
-### Phase 1: Trust Layer Alignment (Immediate)
-1. Extend `TrustHeaders.java` with 6 missing v1.2 headers
-2. Extend `AuthorizationRequest.java` with providerId, assuranceLevel, subjectId
-3. Add PolicyEngine Step 8 (Provider ID activation check)
+### Phase 1: Trust Layer Alignment (Immediate) — DONE
+1. ~~Extend `TrustHeaders.java` with 6 missing v1.2 headers~~ DONE (886f33a)
+2. ~~Extend `AuthorizationRequest.java` with providerId, assuranceLevel, subjectId~~ DONE (886f33a)
+3. ~~Add PolicyEngine Steps 7–8 (Provider ID + Assurance Level)~~ DONE (886f33a)
 
-### Phase 2: Experience Shell Enrichment (Near-term)
-4. Add wellness, caregiving, remote monitoring, service discovery zones to routes.ts
-5. Implement Provider ID activation flow (post-login step)
-6. Implement in-session role context switching
-7. Accelerate sidecar app retirement
+### Phase 2: Experience Shell Enrichment (Near-term) — DONE
+4. ~~Add wellness, caregiving, remote monitoring, service discovery zones~~ DONE (4 new zones, 24 routes)
+5. ~~Implement Provider ID activation flow (post-login step)~~ DONE (/provider/activate page)
+6. ~~Add `provider` guard to AuthGuardProvider~~ DONE
+7. ~~useAuthStore: activateProvider/deactivateProvider/hasActiveProvider~~ DONE
+8. Accelerate sidecar app retirement — IN PROGRESS (tracked in sidecar-retirement-ledger.ts)
 
 ### Phase 3: Full Doctrine Completion (Mid-term)
-8. Separate Equipment from Assets
-9. Add LOA1–LOA4 assurance level gate to PolicyEngine
+9. Separate Equipment from Assets
 10. Merge mobile apps into single role-adaptive codebase
 11. Implement caregiver linkage model
 12. Add workflow state to access control evaluation
+13. In-session role context switching (role selector in sidebar)

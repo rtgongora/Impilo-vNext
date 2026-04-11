@@ -1,11 +1,12 @@
 /**
  * Experience UI — Complete Route Registry
  *
- * All 161 routes across 15 zones.
+ * 185 routes across 19 zones.
  * Each route specifies: path, zone, layout, sidebar context, guard, page title, and nav label.
  *
  * Zones: auth, home, facility, workspace, shift, queue, ehr, admin, registry,
- * marketplace, finance, pharmacy, inventory, reports, settings
+ * marketplace, finance, pharmacy, inventory, reports, settings,
+ * wellness, caregiving, monitoring, discovery
  */
 
 export type LayoutVariant = "app" | "ehr" | "auth" | "minimal";
@@ -22,7 +23,7 @@ export type SidebarContext =
   | "finance"
   | "settings";
 
-export type GuardType = "none" | "auth" | "facility" | "workspace" | "shift" | "role";
+export type GuardType = "none" | "auth" | "facility" | "workspace" | "shift" | "role" | "provider";
 
 export interface RouteDefinition {
   path: string;
@@ -250,10 +251,41 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/settings/integrations", zone: "settings", layout: "app", sidebar: "settings", guard: "auth", pageTitle: "Integrations", navLabel: "Integrations", navZone: "professional" },
   { path: "/telemedicine", zone: "queue", layout: "app", sidebar: "queue", guard: "shift", pageTitle: "Telemedicine Hub", navLabel: "Telemedicine", navZone: "work" },
   { path: "/telemedicine/session/[sessionId]", zone: "queue", layout: "app", sidebar: "queue", guard: "shift", pageTitle: "Telemedicine Session", navLabel: "Session", navZone: "work" },
+
+  // ── Zone: Provider Activation (Health OS §6) ───────────────────────
+  { path: "/provider/activate", zone: "auth", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Activate Provider Role", navLabel: "Provider Activation" },
+
+  // ── Zone: Wellness (Health OS §2 — prevention, self-care, fitness) ─
+  { path: "/wellness", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Wellness Hub", navLabel: "Wellness", navZone: "life" },
+  { path: "/wellness/goals", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Health Goals", navLabel: "Goals", navZone: "life" },
+  { path: "/wellness/programs", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Prevention Programs", navLabel: "Programs", navZone: "life" },
+  { path: "/wellness/screenings", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Screening Schedule", navLabel: "Screenings", navZone: "life" },
+  { path: "/wellness/activity", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Activity & Fitness", navLabel: "Activity", navZone: "life" },
+
+  // ── Zone: Caregiving (Health OS §4 — delegated care, family) ───────
+  { path: "/caregiving", zone: "caregiving", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Caregiving Hub", navLabel: "Caregiving", navZone: "life" },
+  { path: "/caregiving/dependants", zone: "caregiving", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Dependants", navLabel: "Dependants", navZone: "life" },
+  { path: "/caregiving/delegation", zone: "caregiving", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Care Delegation", navLabel: "Delegation", navZone: "life" },
+  { path: "/caregiving/tasks", zone: "caregiving", layout: "app", sidebar: "main", guard: "role", requiredRole: "CAREGIVER", pageTitle: "Care Tasks", navLabel: "Tasks", navZone: "life" },
+  { path: "/caregiving/notifications", zone: "caregiving", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Care Alerts", navLabel: "Alerts", navZone: "life" },
+
+  // ── Zone: Remote Monitoring (Health OS §2 — devices, chronic care) ─
+  { path: "/monitoring", zone: "monitoring", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Remote Monitoring", navLabel: "Monitoring", navZone: "life" },
+  { path: "/monitoring/devices", zone: "monitoring", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Devices", navLabel: "Devices", navZone: "life" },
+  { path: "/monitoring/readings", zone: "monitoring", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Readings & Trends", navLabel: "Readings", navZone: "life" },
+  { path: "/monitoring/alerts", zone: "monitoring", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Monitoring Alerts", navLabel: "Alerts", navZone: "life" },
+  { path: "/monitoring/care-plans", zone: "monitoring", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Chronic Care Plans", navLabel: "Care Plans", navZone: "life" },
+  { path: "/monitoring/provider-dashboard", zone: "monitoring", layout: "app", sidebar: "queue", guard: "shift", pageTitle: "Patient Monitoring Dashboard", navLabel: "Monitoring Dashboard", navZone: "work" },
+
+  // ── Zone: Service Discovery (Health OS §2 — find providers, facilities, services) ─
+  { path: "/discover", zone: "discovery", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Find Services", navLabel: "Discover", navZone: "life" },
+  { path: "/discover/providers", zone: "discovery", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Find a Provider", navLabel: "Providers", navZone: "life" },
+  { path: "/discover/facilities", zone: "discovery", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Find a Facility", navLabel: "Facilities", navZone: "life" },
+  { path: "/discover/services", zone: "discovery", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Browse Services", navLabel: "Services", navZone: "life" },
 ];
 
 // Total route count assertion
-export const EXPECTED_ROUTE_COUNT = 161;
+export const EXPECTED_ROUTE_COUNT = 185;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

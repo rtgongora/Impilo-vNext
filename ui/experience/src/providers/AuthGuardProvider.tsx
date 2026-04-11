@@ -59,7 +59,7 @@ export function matchesRequiredRole(hasRole: (r: string) => boolean, requiredRol
 export function AuthGuardProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { isAuthenticated, hasRole } = useAuthStore();
+  const { isAuthenticated, hasRole, hasActiveProvider } = useAuthStore();
   const { hasFacility } = useFacilityStore();
   const { hasWorkspace } = useWorkspaceStore();
   const { hasShift } = useShiftStore();
@@ -99,12 +99,21 @@ export function AuthGuardProvider({ children }: { children: ReactNode }) {
         if (!hasWorkspace) { router.replace("/workspace"); return; }
         if (!hasShift) { router.replace("/shift"); return; }
         break;
+      case "provider":
+        // Health OS §6: "Sign in as a person; practice as a provider only under activated Provider ID."
+        if (!isAuthenticated) { router.replace("/auth/login"); return; }
+        if (!hasActiveProvider()) {
+          router.replace(`/provider/activate?returnTo=${encodeURIComponent(pathname)}`);
+          return;
+        }
+        if (!hasFacility) { router.replace("/facility"); return; }
+        break;
       case "role":
         if (!isAuthenticated) { router.replace("/auth/login"); return; }
         if (requiredRole && !matchesRequiredRole(hasRole, requiredRole)) { router.replace("/home"); return; }
         break;
     }
-  }, [pathname, isAuthenticated, hasFacility, hasWorkspace, hasShift, hasRole, router]);
+  }, [pathname, isAuthenticated, hasFacility, hasWorkspace, hasShift, hasRole, hasActiveProvider, router]);
 
   return <>{children}</>;
 }

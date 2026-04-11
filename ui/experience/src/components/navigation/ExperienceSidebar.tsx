@@ -13,16 +13,21 @@ import {
   Building2,
   Calendar,
   ClipboardList,
+  Compass,
   CreditCard,
   FileBarChart2,
   Heart,
+  HeartHandshake,
   IdCard,
   LayoutDashboard,
   Menu,
+  Monitor,
   Package,
   Pill,
+  Search,
   Shield,
   ShieldCheck,
+  Sparkles,
   Stethoscope,
   User,
   Users,
@@ -98,6 +103,14 @@ const ZONES: SidebarZone[] = [
       items: [
         { href: "/home", label: "Home", icon: LayoutDashboard },
         { href: "/citizen", label: "Citizen services", icon: IdCard },
+        // Health OS §2: Wellness — prevention, self-care, fitness
+        { href: "/wellness", label: "Wellness", icon: Sparkles },
+        // Health OS §4: Caregiving — delegated care, family, dependants
+        { href: "/caregiving", label: "Caregiving", icon: HeartHandshake },
+        // Health OS §2: Remote monitoring — devices, chronic care, readings
+        { href: "/monitoring", label: "Monitoring", icon: Monitor },
+        // Health OS §2: Service discovery — find providers, facilities, services
+        { href: "/discover", label: "Discover", icon: Search },
         { href: "/share/claim", label: "Claim shared docs", icon: ClipboardList },
         { href: "/home/notifications", label: "Notifications", icon: Bell },
         { href: "/home/profile", label: "Profile", icon: User },

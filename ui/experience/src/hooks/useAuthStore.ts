@@ -44,6 +44,12 @@ interface AuthState {
   setTokens: (token: string, refreshToken?: string | null, expiresAt?: string | null) => void;
   clearAuth: () => void;
   hasRole: (role: string) => boolean;
+  /** Health OS §6: true when Provider ID is activated for this session. */
+  hasActiveProvider: () => boolean;
+  /** Health OS §6: activate a Provider ID for regulated professional work. */
+  activateProvider: (providerId: string) => void;
+  /** Health OS §6: deactivate Provider ID (return to person-only context). */
+  deactivateProvider: () => void;
   isTokenExpired: () => boolean;
   getRefreshToken: () => string | null;
 }
@@ -117,6 +123,39 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const { expiresAt } = get();
     if (!expiresAt) return false;
     return new Date(expiresAt).getTime() - 60000 < Date.now();
+  },
+
+  hasActiveProvider: () => {
+    const { user } = get();
+    if (user?.providerId) return true;
+    if (typeof window !== "undefined") {
+      return !!sessionStorage.getItem("exp:provider_id");
+    }
+    return false;
+  },
+
+  activateProvider: (providerId: string) => {
+    const { user, token, refreshToken, expiresAt } = get();
+    if (!user || !token) return;
+    const updated = { ...user, providerId };
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("exp:provider_id", providerId);
+      sessionStorage.setItem("exp:auth_user", JSON.stringify(updated));
+    }
+    set({ user: updated });
+  },
+
+  deactivateProvider: () => {
+    const { user } = get();
+    if (!user) return;
+    const updated = { ...user, providerId: undefined };
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem("exp:provider_id");
+      sessionStorage.removeItem("exp:provider_display");
+      sessionStorage.removeItem("exp:provider_cadre");
+      sessionStorage.setItem("exp:auth_user", JSON.stringify(updated));
+    }
+    set({ user: updated });
   },
 
   getRefreshToken: () => {
