@@ -23,11 +23,23 @@ public class FormularyEntity {
     @Column(name = "facility_id")
     private UUID facilityId;
 
+    @Column(name = "drug_coding_system", nullable = false)
+    private String drugCodingSystem = "http://www.whocc.no/atc";
+
     @Column(name = "drug_code", nullable = false)
     private String drugCode;
 
     @Column(name = "drug_display")
     private String drugDisplay;
+
+    @Column(name = "drug_coding_version")
+    private String drugCodingVersion;
+
+    @Column(name = "atc_code")
+    private String atcCode;
+
+    @Column(name = "snomed_code")
+    private String snomedCode;
 
     @Column(name = "allowed", nullable = false)
     private boolean allowed;
@@ -63,11 +75,23 @@ public class FormularyEntity {
     public UUID getFacilityId() { return facilityId; }
     public void setFacilityId(UUID facilityId) { this.facilityId = facilityId; }
 
+    public String getDrugCodingSystem() { return drugCodingSystem; }
+    public void setDrugCodingSystem(String drugCodingSystem) { this.drugCodingSystem = drugCodingSystem; }
+
     public String getDrugCode() { return drugCode; }
     public void setDrugCode(String drugCode) { this.drugCode = drugCode; }
 
     public String getDrugDisplay() { return drugDisplay; }
     public void setDrugDisplay(String drugDisplay) { this.drugDisplay = drugDisplay; }
+
+    public String getDrugCodingVersion() { return drugCodingVersion; }
+    public void setDrugCodingVersion(String drugCodingVersion) { this.drugCodingVersion = drugCodingVersion; }
+
+    public String getAtcCode() { return atcCode; }
+    public void setAtcCode(String atcCode) { this.atcCode = atcCode; }
+
+    public String getSnomedCode() { return snomedCode; }
+    public void setSnomedCode(String snomedCode) { this.snomedCode = snomedCode; }
 
     public boolean isAllowed() { return allowed; }
     public void setAllowed(boolean allowed) { this.allowed = allowed; }

@@ -28,11 +28,17 @@ public class CatalogItemEntity {
     @Column(name = "order_type", nullable = false, length = 20)
     private OrderType orderType;
 
+    @Column(name = "coding_system", nullable = false, length = 255)
+    private String codingSystem = "http://impilo.gov.zw/coding";
+
     @Column(name = "code", nullable = false, length = 100)
     private String code;
 
     @Column(name = "display_name", nullable = false, length = 500)
     private String displayName;
+
+    @Column(name = "coding_version", length = 50)
+    private String codingVersion;
 
     @Column(name = "category", length = 100)
     private String category;
@@ -66,11 +72,17 @@ public class CatalogItemEntity {
     public OrderType getOrderType() { return orderType; }
     public void setOrderType(OrderType orderType) { this.orderType = orderType; }
 
+    public String getCodingSystem() { return codingSystem; }
+    public void setCodingSystem(String codingSystem) { this.codingSystem = codingSystem; }
+
     public String getCode() { return code; }
     public void setCode(String code) { this.code = code; }
 
     public String getDisplayName() { return displayName; }
     public void setDisplayName(String displayName) { this.displayName = displayName; }
+
+    public String getCodingVersion() { return codingVersion; }
+    public void setCodingVersion(String codingVersion) { this.codingVersion = codingVersion; }
 
     public String getCategory() { return category; }
     public void setCategory(String category) { this.category = category; }

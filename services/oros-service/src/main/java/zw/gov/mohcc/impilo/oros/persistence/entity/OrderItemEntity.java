@@ -20,11 +20,17 @@ public class OrderItemEntity {
     @Column(name = "order_id", nullable = false, length = 26)
     private String orderId;
 
+    @Column(name = "coding_system", nullable = false)
+    private String codingSystem = "http://impilo.gov.zw/coding";
+
     @Column(name = "code", nullable = false)
     private String code;
 
     @Column(name = "display_name")
     private String displayName;
+
+    @Column(name = "coding_version")
+    private String codingVersion;
 
     @Column(name = "quantity", nullable = false)
     private int quantity = 1;
@@ -35,8 +41,14 @@ public class OrderItemEntity {
     @Column(name = "specimen_type")
     private String specimenType;
 
+    @Column(name = "specimen_type_system")
+    private String specimenTypeSystem;
+
     @Column(name = "body_site")
     private String bodySite;
+
+    @Column(name = "body_site_system")
+    private String bodySiteSystem;
 
     @Column(name = "metadata", columnDefinition = "jsonb")
     private String metadata;
@@ -60,11 +72,17 @@ public class OrderItemEntity {
     public String getOrderId() { return orderId; }
     public void setOrderId(String orderId) { this.orderId = orderId; }
 
+    public String getCodingSystem() { return codingSystem; }
+    public void setCodingSystem(String codingSystem) { this.codingSystem = codingSystem; }
+
     public String getCode() { return code; }
     public void setCode(String code) { this.code = code; }
 
     public String getDisplayName() { return displayName; }
     public void setDisplayName(String displayName) { this.displayName = displayName; }
+
+    public String getCodingVersion() { return codingVersion; }
+    public void setCodingVersion(String codingVersion) { this.codingVersion = codingVersion; }
 
     public int getQuantity() { return quantity; }
     public void setQuantity(int quantity) { this.quantity = quantity; }
@@ -75,8 +93,14 @@ public class OrderItemEntity {
     public String getSpecimenType() { return specimenType; }
     public void setSpecimenType(String specimenType) { this.specimenType = specimenType; }
 
+    public String getSpecimenTypeSystem() { return specimenTypeSystem; }
+    public void setSpecimenTypeSystem(String specimenTypeSystem) { this.specimenTypeSystem = specimenTypeSystem; }
+
     public String getBodySite() { return bodySite; }
     public void setBodySite(String bodySite) { this.bodySite = bodySite; }
+
+    public String getBodySiteSystem() { return bodySiteSystem; }
+    public void setBodySiteSystem(String bodySiteSystem) { this.bodySiteSystem = bodySiteSystem; }
 
     public String getMetadata() { return metadata; }
     public void setMetadata(String metadata) { this.metadata = metadata; }

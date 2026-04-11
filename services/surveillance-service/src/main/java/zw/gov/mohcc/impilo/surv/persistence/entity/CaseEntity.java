@@ -32,6 +32,21 @@ public class CaseEntity {
     @Column(name = "case_type", nullable = false)
     private String caseType;
 
+    @Column(name = "disease_coding_system")
+    private String diseaseCodingSystem;
+
+    @Column(name = "disease_code")
+    private String diseaseCode;
+
+    @Column(name = "disease_display")
+    private String diseaseDisplay;
+
+    @Column(name = "snomed_finding_code")
+    private String snomedFindingCode;
+
+    @Column(name = "snomed_finding_display")
+    private String snomedFindingDisplay;
+
     @Column(name = "title", nullable = false)
     private String title;
 
@@ -80,6 +95,16 @@ public class CaseEntity {
     public void setSignalHitId(Long signalHitId) { this.signalHitId = signalHitId; }
     public String getCaseType() { return caseType; }
     public void setCaseType(String caseType) { this.caseType = caseType; }
+    public String getDiseaseCodingSystem() { return diseaseCodingSystem; }
+    public void setDiseaseCodingSystem(String diseaseCodingSystem) { this.diseaseCodingSystem = diseaseCodingSystem; }
+    public String getDiseaseCode() { return diseaseCode; }
+    public void setDiseaseCode(String diseaseCode) { this.diseaseCode = diseaseCode; }
+    public String getDiseaseDisplay() { return diseaseDisplay; }
+    public void setDiseaseDisplay(String diseaseDisplay) { this.diseaseDisplay = diseaseDisplay; }
+    public String getSnomedFindingCode() { return snomedFindingCode; }
+    public void setSnomedFindingCode(String snomedFindingCode) { this.snomedFindingCode = snomedFindingCode; }
+    public String getSnomedFindingDisplay() { return snomedFindingDisplay; }
+    public void setSnomedFindingDisplay(String snomedFindingDisplay) { this.snomedFindingDisplay = snomedFindingDisplay; }
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
     public String getDescription() { return description; }

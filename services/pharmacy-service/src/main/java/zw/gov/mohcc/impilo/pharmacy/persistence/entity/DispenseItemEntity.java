@@ -22,11 +22,17 @@ public class DispenseItemEntity {
     @Column(name = "dispense_order_id", nullable = false)
     private UUID dispenseOrderId;
 
+    @Column(name = "drug_coding_system", nullable = false)
+    private String drugCodingSystem = "http://www.whocc.no/atc";
+
     @Column(name = "drug_code", nullable = false)
     private String drugCode;
 
     @Column(name = "drug_display")
     private String drugDisplay;
+
+    @Column(name = "drug_coding_version")
+    private String drugCodingVersion;
 
     @Column(name = "qty_requested", nullable = false)
     private int qtyRequested;
@@ -90,11 +96,17 @@ public class DispenseItemEntity {
     public UUID getDispenseOrderId() { return dispenseOrderId; }
     public void setDispenseOrderId(UUID dispenseOrderId) { this.dispenseOrderId = dispenseOrderId; }
 
+    public String getDrugCodingSystem() { return drugCodingSystem; }
+    public void setDrugCodingSystem(String drugCodingSystem) { this.drugCodingSystem = drugCodingSystem; }
+
     public String getDrugCode() { return drugCode; }
     public void setDrugCode(String drugCode) { this.drugCode = drugCode; }
 
     public String getDrugDisplay() { return drugDisplay; }
     public void setDrugDisplay(String drugDisplay) { this.drugDisplay = drugDisplay; }
+
+    public String getDrugCodingVersion() { return drugCodingVersion; }
+    public void setDrugCodingVersion(String drugCodingVersion) { this.drugCodingVersion = drugCodingVersion; }
 
     public int getQtyRequested() { return qtyRequested; }
     public void setQtyRequested(int qtyRequested) { this.qtyRequested = qtyRequested; }
