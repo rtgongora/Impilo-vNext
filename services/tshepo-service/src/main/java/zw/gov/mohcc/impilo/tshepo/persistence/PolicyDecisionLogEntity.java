@@ -63,6 +63,13 @@ public class PolicyDecisionLogEntity {
     @Column(name = "reason_codes")
     private String reasonCodes;
 
+    // Health OS §6, §12: Provider ID and Subject ID for doctrine-aligned audit
+    @Column(name = "provider_id")
+    private String providerId;
+
+    @Column(name = "subject_id")
+    private String subjectId;
+
     // --- Getters and Setters ---
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -100,4 +107,8 @@ public class PolicyDecisionLogEntity {
     public void setPolicyVersion(String policyVersion) { this.policyVersion = policyVersion; }
     public String getReasonCodes() { return reasonCodes; }
     public void setReasonCodes(String reasonCodes) { this.reasonCodes = reasonCodes; }
+    public String getProviderId() { return providerId; }
+    public void setProviderId(String providerId) { this.providerId = providerId; }
+    public String getSubjectId() { return subjectId; }
+    public void setSubjectId(String subjectId) { this.subjectId = subjectId; }
 }

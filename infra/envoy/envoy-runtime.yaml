@@ -142,7 +142,7 @@ static_resources:
                           route: { cluster: tshepo_service }
 
                 http_filters:
-                  # ── OPA ext_authz (v1.1 header + idempotency enforcement) ──
+                  # ── OPA ext_authz (Health OS v1.2 header enforcement) ──
                   - name: envoy.filters.http.ext_authz
                     typed_config:
                       "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthz
@@ -156,12 +156,31 @@ static_resources:
                         authorization_request:
                           allowed_headers:
                             patterns:
+                              # ── Mandatory v1.2 ──
                               - exact: "x-tenant-id"
                               - exact: "x-pod-id"
                               - exact: "x-request-id"
                               - exact: "x-correlation-id"
                               - exact: "idempotency-key"
                               - exact: "authorization"
+                              # ── Actor identity (Health OS §5–§6) ──
+                              - exact: "x-actor-id"
+                              - exact: "x-actor-type"
+                              - exact: "x-provider-id"
+                              # ── Operational context (Health OS §7) ──
+                              - exact: "x-facility-id"
+                              - exact: "x-department-id"
+                              - exact: "x-ward-id"
+                              - exact: "x-workspace-id"
+                              - exact: "x-programme-id"
+                              - exact: "x-shift-id"
+                              # ── Governance (Health OS §11) ──
+                              - exact: "x-purpose-of-use"
+                              - exact: "x-assurance-level"
+                              - exact: "x-subject-id"
+                              - exact: "x-access-mode"
+                              - exact: "x-device-fingerprint"
+                              - exact: "x-client-timeout-ms"
                         authorization_response:
                           allowed_upstream_headers:
                             patterns:

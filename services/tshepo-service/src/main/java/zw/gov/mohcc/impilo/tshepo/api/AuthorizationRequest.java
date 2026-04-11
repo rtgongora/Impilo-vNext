@@ -7,17 +7,31 @@ import java.util.UUID;
 /**
  * Represents the parsed authorization check request from Envoy ext_authz.
  * Constructed from HTTP headers forwarded by Envoy.
+ *
+ * <p>Aligned with Health OS Manifest v1.2 and Access Control Doctrine (§11) —
+ * carries all 10 access-decision dimensions where available.</p>
  */
 public record AuthorizationRequest(
+    // ── Mandatory ──
     UUID tenantId,
-    String actorId,
+    String actorId,             // Health ID — person anchor
     String actorType,
     String purposeOfUse,
     String deviceFingerprint,
     UUID correlationId,
+    // ── Actor identity (Health OS §6) ──
+    String providerId,          // Regulated professional role ID (may be null)
+    // ── Operational context (Health OS §7) ──
     UUID facilityId,
+    String departmentId,
+    String wardId,
     UUID workspaceId,
+    String programmeId,
     String shiftId,
+    // ── Governance (Health OS §11) ──
+    String assuranceLevel,      // LOA1–LOA4
+    String subjectId,           // Patient/subject of action
+    // ── Derived from request ──
     String action,
     String resourceType,
     String resourceId
@@ -42,15 +56,26 @@ public record AuthorizationRequest(
             String path) {
 
         return new AuthorizationRequest(
+            // Mandatory
             parseUuid(headerGetter.apply(TrustHeaders.TENANT_ID)),
             headerGetter.apply(TrustHeaders.ACTOR_ID),
             headerGetter.apply(TrustHeaders.ACTOR_TYPE),
             headerGetter.apply(TrustHeaders.PURPOSE_OF_USE),
             headerGetter.apply(TrustHeaders.DEVICE_FINGERPRINT),
             parseUuidOrGenerate(headerGetter.apply(TrustHeaders.CORRELATION_ID)),
+            // Actor identity (Health OS §6)
+            headerGetter.apply(TrustHeaders.PROVIDER_ID),
+            // Operational context (Health OS §7)
             parseUuid(headerGetter.apply(TrustHeaders.FACILITY_ID)),
+            headerGetter.apply(TrustHeaders.DEPARTMENT_ID),
+            headerGetter.apply(TrustHeaders.WARD_ID),
             parseUuid(headerGetter.apply(TrustHeaders.WORKSPACE_ID)),
+            headerGetter.apply(TrustHeaders.PROGRAMME_ID),
             headerGetter.apply(TrustHeaders.SHIFT_ID),
+            // Governance (Health OS §11)
+            headerGetter.apply(TrustHeaders.ASSURANCE_LEVEL),
+            headerGetter.apply(TrustHeaders.SUBJECT_ID),
+            // Derived from request
             deriveAction(method, path),
             deriveResourceType(path),
             deriveResourceId(path)

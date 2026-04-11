@@ -16,15 +16,21 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Policy Decision Point (PDP) for the Impilo platform.
+ * Policy Decision Point (PDP) for the Impilo Health Operating System.
+ *
+ * <p>Aligned with Health OS Access Control Doctrine (§11) — evaluates all
+ * 10 access-decision dimensions where applicable.</p>
  *
  * Evaluates every request against:
- *   1. Authentication assurance (actor type + session validity)
- *   2. RBAC/ABAC policy (role, facility scope, workspace scope)
- *   3. Purpose-of-use constraints
- *   4. Consent requirements (for clinical/portal-sensitive resources)
- *   5. Device risk scoring
- *   6. Break-glass rules
+ *   1. Device risk scoring
+ *   2. Purpose-of-use validation
+ *   3. Break-glass rules
+ *   4. RBAC/ABAC policy (role, facility scope, workspace scope)
+ *   5. Consent enforcement (for clinical/portal-sensitive resources)
+ *   6. Risk-based step-up
+ *   7. Provider ID activation check (Health OS §6)
+ *   8. Assurance level gate (Health OS §11)
+ *   9. ALLOW with appropriate obligations
  *
  * After evaluation, persists the decision to the policy decision log
  * and appends a tamper-evident audit chain entry (serialized via
@@ -143,7 +149,30 @@ public class PolicyEngine {
             return decision;
         }
 
-        // --- Step 7: ALLOW with appropriate obligations ---
+        // --- Step 7: Provider ID activation check (Health OS §6) ---
+        // "Sign in as a person; practice as a provider only under activated Provider ID."
+        // Clinical write actions by PROVIDER actors require an active Provider ID header.
+        if (requiresProviderActivation(request) && !hasActivatedProvider(request)) {
+            Decision decision = Decision.deny("PROVIDER_NOT_ACTIVATED",
+                "Regulated professional action requires an activated Provider ID (x-provider-id header)", riskScore);
+            persistDecision(request, decision, startTime);
+            appendAuditEntry(request, "DENY");
+            return decision;
+        }
+
+        // --- Step 8: Assurance level gate (Health OS §11) ---
+        // High-sensitivity resources require elevated identity assurance (LOA3+).
+        if (requiresElevatedAssurance(request.action(), request.resourceType())
+                && !meetsAssuranceThreshold(request.assuranceLevel(), "LOA3")) {
+            Decision decision = Decision.stepUpRequired(
+                List.of("IDENTITY_PROOFING", "BIOMETRIC"), riskScore
+            );
+            persistDecision(request, decision, startTime);
+            appendAuditEntry(request, "STEP_UP_ASSURANCE");
+            return decision;
+        }
+
+        // --- Step 9: ALLOW with appropriate obligations ---
         Obligations obligations = computeObligations(request, purpose, riskScore);
         Decision decision = Decision.allow(obligations, riskScore);
         persistDecision(request, decision, startTime);
@@ -242,6 +271,9 @@ public class PolicyEngine {
         entry.setPurposeOfUse(request.purposeOfUse());
         entry.setFacilityId(request.facilityId());
         entry.setWorkspaceId(request.workspaceId());
+        // Health OS §12: audit must capture providerId and subjectId where available
+        entry.setProviderId(request.providerId());
+        entry.setSubjectId(request.subjectId());
         entry.setDecision(decision.verdict().name());
         entry.setObligations(decision.obligations() != null ? decision.obligations().toJson() : null);
         entry.setRiskScore((short) decision.riskScore());
@@ -328,6 +360,82 @@ public class PolicyEngine {
         return consentRepo.existsActiveConsent(
             tenantId, resourceId, actorId, purpose.name()
         );
+    }
+
+    // ------------------------------------------------------------------
+    // Health OS §6: Provider ID activation
+    // ------------------------------------------------------------------
+
+    /**
+     * Determines if this request requires an activated Provider ID.
+     * Clinical write actions by PROVIDER-type actors are regulated professional acts.
+     */
+    private boolean requiresProviderActivation(AuthorizationRequest request) {
+        if (!"PROVIDER".equalsIgnoreCase(request.actorType())) {
+            return false; // Only provider-type actors need Provider ID activation
+        }
+        String action = request.action();
+        if (action == null) return false;
+        // Clinical writes: POST/PUT/PATCH/DELETE on clinical resources
+        boolean isMutating = action.startsWith("POST:") || action.startsWith("PUT:")
+                || action.startsWith("PATCH:") || action.startsWith("DELETE:");
+        if (!isMutating) return false;
+        String resourceType = request.resourceType();
+        return resourceType != null && (
+            resourceType.startsWith("Patient") ||
+            resourceType.startsWith("Encounter") ||
+            resourceType.startsWith("Observation") ||
+            resourceType.equals("prescriptions") ||
+            resourceType.equals("dispense") ||
+            resourceType.equals("referrals") ||
+            resourceType.equals("lab-orders") ||
+            resourceType.equals("clinical-notes") ||
+            resourceType.equals("vitals") ||
+            resourceType.equals("triage")
+        );
+    }
+
+    private boolean hasActivatedProvider(AuthorizationRequest request) {
+        return request.providerId() != null && !request.providerId().isBlank();
+    }
+
+    // ------------------------------------------------------------------
+    // Health OS §11: Assurance level
+    // ------------------------------------------------------------------
+
+    /**
+     * Determines if a resource/action pair requires elevated identity assurance.
+     * Merge, export, and break-glass-adjacent actions require LOA3+.
+     */
+    private boolean requiresElevatedAssurance(String action, String resourceType) {
+        if (action == null) return false;
+        if (action.contains("MERGE") || action.contains("EXPORT") || action.contains("BULK")) {
+            return true;
+        }
+        // PII-heavy resources always require elevated assurance
+        return "clients".equalsIgnoreCase(resourceType)
+            || "identity".equalsIgnoreCase(resourceType);
+    }
+
+    /**
+     * Checks if the provided assurance level meets the required threshold.
+     * Levels: LOA1 < LOA2 < LOA3 < LOA4. Null/missing treated as LOA1.
+     */
+    private boolean meetsAssuranceThreshold(String actual, String required) {
+        int actualLevel = parseLoaLevel(actual);
+        int requiredLevel = parseLoaLevel(required);
+        return actualLevel >= requiredLevel;
+    }
+
+    private int parseLoaLevel(String loa) {
+        if (loa == null || loa.isBlank()) return 1;
+        return switch (loa.toUpperCase()) {
+            case "LOA1" -> 1;
+            case "LOA2" -> 2;
+            case "LOA3" -> 3;
+            case "LOA4" -> 4;
+            default -> 1;
+        };
     }
 
     private boolean isHighRiskAction(String action) {

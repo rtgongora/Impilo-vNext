@@ -84,6 +84,14 @@ public class SecurityConfig {
     private static final String[] CITIZEN_ROLES = {
             "CITIZEN", "SYSTEM_ADMIN", "DEVELOPER"};
 
+    // Health OS §4: Caregiving roles — delegated care partners and family caregivers
+    private static final String[] CAREGIVER_ROLES = {
+            "CAREGIVER", "CARE_PARTNER", "CITIZEN", "SYSTEM_ADMIN"};
+
+    // Health OS §7: Public health and community health roles
+    private static final String[] PUBLIC_HEALTH_ROLES = {
+            "PUBLIC_HEALTH_OFFICER", "ENV_HEALTH", "CHW", "FACILITY_ADMIN", "SYSTEM_ADMIN"};
+
     @Autowired(required = false)
     private JwtDecoder jwtDecoder;
 
