@@ -1,0 +1,694 @@
+# Impilo service registry (Phase A1)
+# Human-editable. Regenerate index: cd scripts/registry && npm run generate
+
+registry_version: '1'
+schema:
+  id: Stable kebab id (often equals maven_module without -service suffix)
+  maven_module: Directory name under services/ (Maven artifact folder)
+  plane: trust | registry | clinical | finance | marketplace | integration | knowledge | data | experience | ops
+  sovereign: Member of a national dual-mode sovereign boundary (see TODO.md nine)
+  sovereign_group: Logical sovereign name when multiple modules (TSHEPO, BUTANO, …)
+  primary_protocol: rest | fhir | grpc | mixed
+  default_http_port: Local default HTTP port (see docs/runbooks/port-allocation.md)
+  product_names: Human-facing names
+  owner_team: Owning squad — set to TBD until RACI assigned
+owner_team_default: TBD
+port_allocation_doc: docs/runbooks/port-allocation.md
+libraries:
+  - id: shared-kernel-java
+    maven_module: shared-kernel-java
+    path: libs/shared-kernel-java
+  - id: security-baseline
+    maven_module: security-baseline
+    path: libs/security-baseline
+  - id: shared-core
+    maven_module: shared-core
+    path: services/shared-core
+  - id: tshepo-contracts
+    maven_module: tshepo-contracts
+    path: libs/tshepo-contracts
+  - id: tshepo-sdk
+    maven_module: tshepo-sdk
+    path: libs/tshepo-sdk
+  - id: tech-companion
+    maven_module: tech-companion
+    path: libs/tech-companion
+  - id: federation-connector
+    maven_module: federation-connector
+    path: libs/federation-connector
+  - id: tech-companion-harness
+    maven_module: tech-companion-harness
+    path: libs/tech-companion-harness
+  - id: tech-companion-mock
+    maven_module: tech-companion-mock
+    path: libs/tech-companion-mock
+  - id: ops-instrumentation
+    maven_module: ops-instrumentation
+    path: libs/ops-instrumentation
+  - id: offline-sdk
+    maven_module: offline-sdk
+    path: libs/offline-sdk
+  - id: contract-tests
+    maven_module: contract-tests
+    path: libs/contract-tests
+services:
+  - id: tshepo-service
+    maven_module: tshepo-service
+    plane: trust
+    sovereign: true
+    sovereign_group: TSHEPO
+    primary_protocol: rest
+    default_http_port: 8079
+    product_names:
+      - TSHEPO
+      - legacy monolith
+    owner_team: TBD
+  - id: tshepo-authz-service
+    maven_module: tshepo-authz-service
+    plane: trust
+    sovereign: true
+    sovereign_group: TSHEPO
+    primary_protocol: mixed
+    default_http_port: 8081
+    product_names:
+      - TSHEPO Authz
+    owner_team: TBD
+  - id: tshepo-identity-service
+    maven_module: tshepo-identity-service
+    plane: trust
+    sovereign: true
+    sovereign_group: TSHEPO
+    primary_protocol: rest
+    default_http_port: 8181
+    product_names:
+      - TSHEPO Identity
+    owner_team: TBD
+  - id: tshepo-consent-service
+    maven_module: tshepo-consent-service
+    plane: trust
+    sovereign: true
+    sovereign_group: TSHEPO
+    primary_protocol: rest
+    default_http_port: 8182
+    product_names:
+      - TSHEPO Consent
+    owner_team: TBD
+  - id: tshepo-audit-service
+    maven_module: tshepo-audit-service
+    plane: trust
+    sovereign: true
+    sovereign_group: TSHEPO
+    primary_protocol: rest
+    default_http_port: 8183
+    product_names:
+      - TSHEPO Audit
+    owner_team: TBD
+  - id: tshepo-keys-service
+    maven_module: tshepo-keys-service
+    plane: trust
+    sovereign: true
+    sovereign_group: TSHEPO
+    primary_protocol: rest
+    default_http_port: 8184
+    product_names:
+      - TSHEPO Keys
+    owner_team: TBD
+  - id: tshepo-offline-service
+    maven_module: tshepo-offline-service
+    plane: trust
+    sovereign: true
+    sovereign_group: TSHEPO
+    primary_protocol: rest
+    default_http_port: 8185
+    product_names:
+      - TSHEPO Offline
+    owner_team: TBD
+  - id: vito-service
+    maven_module: vito-service
+    plane: registry
+    sovereign: true
+    sovereign_group: VITO
+    primary_protocol: rest
+    default_http_port: 8082
+    product_names:
+      - VITO
+    owner_team: TBD
+  - id: varapi-service
+    maven_module: varapi-service
+    plane: registry
+    sovereign: true
+    sovereign_group: VARAPI
+    primary_protocol: rest
+    default_http_port: 8083
+    product_names:
+      - VARAPI
+    owner_team: TBD
+  - id: tuso-service
+    maven_module: tuso-service
+    plane: registry
+    sovereign: true
+    sovereign_group: TUSO
+    primary_protocol: rest
+    default_http_port: 8084
+    product_names:
+      - TUSO
+    owner_team: TBD
+  - id: zibo-service
+    maven_module: zibo-service
+    plane: registry
+    sovereign: true
+    sovereign_group: ZIBO
+    primary_protocol: rest
+    default_http_port: 8085
+    product_names:
+      - ZIBO
+    owner_team: TBD
+  - id: msika-service
+    maven_module: msika-service
+    plane: registry
+    sovereign: true
+    sovereign_group: MSIKA
+    primary_protocol: rest
+    default_http_port: 8086
+    product_names:
+      - MSIKA
+    owner_team: TBD
+  - id: ubomi-service
+    maven_module: ubomi-service
+    plane: registry
+    sovereign: true
+    sovereign_group: UBOMI
+    primary_protocol: rest
+    default_http_port: 8087
+    product_names:
+      - UBOMI
+    owner_team: TBD
+  - id: indawo-service
+    maven_module: indawo-service
+    plane: registry
+    sovereign: false
+    primary_protocol: rest
+    default_http_port: 8150
+    product_names:
+      - INDAWO
+    owner_team: TBD
+  - id: product-registry-service
+    maven_module: product-registry-service
+    plane: registry
+    sovereign: false
+    primary_protocol: rest
+    default_http_port: 8097
+    product_names:
+      - Product Registry
+    owner_team: TBD
+  - id: butano-service
+    maven_module: butano-service
+    plane: clinical
+    sovereign: true
+    sovereign_group: BUTANO
+    primary_protocol: fhir
+    default_http_port: 8090
+    product_names:
+      - BUTANO
+      - HAPI SHR
+    owner_team: TBD
+  - id: butano-fhir
+    maven_module: butano-fhir
+    plane: clinical
+    sovereign: true
+    sovereign_group: BUTANO
+    primary_protocol: fhir
+    default_http_port: 8289
+    product_names:
+      - BUTANO FHIR
+    owner_team: TBD
+  - id: fhir-gateway-service
+    maven_module: fhir-gateway-service
+    plane: clinical
+    sovereign: true
+    sovereign_group: BUTANO
+    primary_protocol: fhir
+    default_http_port: 8091
+    product_names:
+      - FHIR Gateway
+    owner_team: TBD
+  - id: pct-service
+    maven_module: pct-service
+    plane: clinical
+    sovereign: false
+    primary_protocol: rest
+    default_http_port: 8088
+    product_names:
+      - PCT
+    owner_team: TBD
+  - id: oros-service
+    maven_module: oros-service
+    plane: clinical
+    sovereign: false
+    primary_protocol: rest
+    default_http_port: 8089
+    product_names:
+      - OROS
+    owner_team: TBD
+  - id: pharmacy-service
+    maven_module: pharmacy-service
+    plane: clinical
+    sovereign: false
+    primary_protocol: rest
+    default_http_port: 8096
+    product_names:
+      - Pharmacy
+    owner_team: TBD
+  - id: pharmacy-elmis-adapter
+    maven_module: pharmacy-elmis-adapter
+    plane: clinical
+    sovereign: false
+    primary_protocol: rest
+    default_http_port: 8099
+    product_names:
+      - Pharmacy eLMIS
+    owner_team: TBD
+  - id: inpatient-service
+    maven_module: inpatient-service
+    plane: clinical
+    sovereign: false
+    primary_protocol: rest
+    default_http_port: 8121
+    product_names:
+      - Inpatient
+    owner_team: TBD
+  - id: inventory-service
+    maven_module: inventory-service
+    plane: clinical
+    sovereign: false
+    primary_protocol: rest
+    default_http_port: 8098
+    product_names:
+      - Inventory
+    owner_team: TBD
+  - id: inventory-elmis-adapter
+    maven_module: inventory-elmis-adapter
+    plane: clinical
+    sovereign: false
+    primary_protocol: rest
+    default_http_port: 8108
+    product_names:
+      - Inventory eLMIS
+    owner_team: TBD
+  - id: document-service
+    maven_module: document-service
+    plane: clinical
+    sovereign: false
+    primary_protocol: rest
+    default_http_port: 8093
+    product_names:
+      - Document Store
+    owner_team: TBD
+  - id: pacs-adapter-service
+    maven_module: pacs-adapter-service
+    plane: clinical
+    sovereign: false
+    primary_protocol: rest
+    default_http_port: 8113
+    product_names:
+      - PACS Adapter
+    owner_team: TBD
+  - id: clinical-knowledge-platform-service
+    maven_module: clinical-knowledge-platform-service
+    plane: knowledge
+    sovereign: false
+    primary_protocol: rest
+    default_http_port: 8270
+    product_names:
+      - Clinical Knowledge Platform
+    owner_team: TBD
+  - id: guidance-service
+    maven_module: guidance-service
+    plane: knowledge
+    sovereign: false
+    primary_protocol: rest
+    default_http_port: 8260
+    product_names:
+      - Guidance
+    owner_team: TBD
+  - id: connector-fhir-adapter
+    maven_module: connector-fhir-adapter
+    plane: integration
+    sovereign: false
+    primary_protocol: fhir
+    default_http_port: 8151
+    product_names:
+      - Connector FHIR
+    owner_team: TBD
+  - id: mushex-service
+    maven_module: mushex-service
+    plane: finance
+    sovereign: true
+    sovereign_group: MUSheX
+    primary_protocol: rest
+    default_http_port: 8102
+    product_names:
+      - MUSheX
+    owner_team: TBD
+  - id: costing-engine-service
+    maven_module: costing-engine-service
+    plane: finance
+    sovereign: false
+    primary_protocol: rest
+    default_http_port: 8101
+    product_names:
+      - COSTA
+    owner_team: TBD
+  - id: coverage-service
+    maven_module: coverage-service
+    plane: finance
+    sovereign: false
+    primary_protocol: rest
+    default_http_port: 8140
+    product_names:
+      - Coverage
+    owner_team: TBD
+  - id: credential-verification-service
+    maven_module: credential-verification-service
+    plane: finance
+    sovereign: false
+    primary_protocol: rest
+    default_http_port: 8094
+    product_names:
+      - Credential Verification
+    owner_team: TBD
+  - id: share-slip-service
+    maven_module: share-slip-service
+    plane: finance
+    sovereign: false
+    primary_protocol: rest
+    default_http_port: 8104
+    product_names:
+      - Share Slip
+    owner_team: TBD
+  - id: msika-flow-service
+    maven_module: msika-flow-service
+    plane: marketplace
+    sovereign: false
+    primary_protocol: rest
+    default_http_port: 8100
+    product_names:
+      - Msika Flow
+    owner_team: TBD
+  - id: landela-adapter-service
+    maven_module: landela-adapter-service
+    plane: integration
+    sovereign: false
+    primary_protocol: rest
+    default_http_port: 8092
+    product_names:
+      - Landela
+    owner_team: TBD
+  - id: integration-hub
+    maven_module: integration-hub
+    plane: integration
+    sovereign: false
+    primary_protocol: rest
+    default_http_port: 8110
+    product_names:
+      - Integration Hub
+    owner_team: TBD
+  - id: notification-service
+    maven_module: notification-service
+    plane: integration
+    sovereign: false
+    primary_protocol: rest
+    default_http_port: 8200
+    product_names:
+      - Notification
+    owner_team: TBD
+  - id: jobs-service
+    maven_module: jobs-service
+    plane: integration
+    sovereign: false
+    primary_protocol: rest
+    default_http_port: 8109
+    product_names:
+      - Jobs
+    owner_team: TBD
+  - id: offline-sync-service
+    maven_module: offline-sync-service
+    plane: integration
+    sovereign: false
+    primary_protocol: rest
+    default_http_port: 8095
+    product_names:
+      - Offline Sync
+    owner_team: TBD
+  - id: card-print-agent
+    maven_module: card-print-agent
+    plane: integration
+    sovereign: false
+    primary_protocol: rest
+    default_http_port: 8291
+    product_names:
+      - Card Print Agent
+    owner_team: TBD
+  - id: channels-service
+    maven_module: channels-service
+    plane: integration
+    sovereign: false
+    primary_protocol: rest
+    default_http_port: 8130
+    product_names:
+      - Channels
+    owner_team: TBD
+  - id: workflow-service
+    maven_module: workflow-service
+    plane: integration
+    sovereign: false
+    primary_protocol: rest
+    default_http_port: 8250
+    product_names:
+      - Workflow
+    owner_team: TBD
+  - id: rules-service
+    maven_module: rules-service
+    plane: knowledge
+    sovereign: false
+    primary_protocol: rest
+    default_http_port: 8241
+    product_names:
+      - Rules
+    owner_team: TBD
+  - id: forms-service
+    maven_module: forms-service
+    plane: knowledge
+    sovereign: false
+    primary_protocol: rest
+    default_http_port: 8240
+    product_names:
+      - Forms
+    owner_team: TBD
+  - id: search-service
+    maven_module: search-service
+    plane: knowledge
+    sovereign: false
+    primary_protocol: rest
+    default_http_port: 8230
+    product_names:
+      - Search
+    owner_team: TBD
+  - id: data-pipeline-service
+    maven_module: data-pipeline-service
+    plane: data
+    sovereign: false
+    primary_protocol: rest
+    default_http_port: 8215
+    product_names:
+      - Data Pipeline
+    owner_team: TBD
+  - id: national-data-repository-service
+    maven_module: national-data-repository-service
+    plane: data
+    sovereign: false
+    primary_protocol: rest
+    default_http_port: 8152
+    product_names:
+      - National Data Repository
+    owner_team: TBD
+  - id: ndr-service
+    maven_module: ndr-service
+    plane: data
+    sovereign: false
+    primary_protocol: rest
+    default_http_port: 8232
+    product_names:
+      - NDR
+    owner_team: TBD
+  - id: reporting-service
+    maven_module: reporting-service
+    plane: data
+    sovereign: false
+    primary_protocol: rest
+    default_http_port: 8176
+    product_names:
+      - Reporting
+    owner_team: TBD
+  - id: data-warehouse-service
+    maven_module: data-warehouse-service
+    plane: data
+    sovereign: false
+    primary_protocol: rest
+    default_http_port: 8233
+    product_names:
+      - Data Warehouse
+    owner_team: TBD
+  - id: data-ingestion-service
+    maven_module: data-ingestion-service
+    plane: data
+    sovereign: false
+    primary_protocol: rest
+    default_http_port: 8210
+    product_names:
+      - Data Ingestion
+    owner_team: TBD
+  - id: data-governance-service
+    maven_module: data-governance-service
+    plane: data
+    sovereign: false
+    primary_protocol: rest
+    default_http_port: 8220
+    product_names:
+      - Data Governance
+    owner_team: TBD
+  - id: data-access-governance-service
+    maven_module: data-access-governance-service
+    plane: data
+    sovereign: false
+    primary_protocol: rest
+    default_http_port: 8170
+    product_names:
+      - DAGS
+    owner_team: TBD
+  - id: surveillance-service
+    maven_module: surveillance-service
+    plane: data
+    sovereign: false
+    primary_protocol: rest
+    default_http_port: 8180
+    product_names:
+      - Surveillance
+    owner_team: TBD
+  - id: campaigns-service
+    maven_module: campaigns-service
+    plane: data
+    sovereign: false
+    primary_protocol: rest
+    default_http_port: 8190
+    product_names:
+      - Campaigns
+    owner_team: TBD
+  - id: observability-service
+    maven_module: observability-service
+    plane: ops
+    sovereign: false
+    primary_protocol: rest
+    default_http_port: 8211
+    product_names:
+      - Observability
+    owner_team: TBD
+  - id: security-hardening-service
+    maven_module: security-hardening-service
+    plane: ops
+    sovereign: false
+    primary_protocol: rest
+    default_http_port: 8221
+    product_names:
+      - Security Hardening
+    owner_team: TBD
+  - id: identity-assurance-service
+    maven_module: identity-assurance-service
+    plane: trust
+    sovereign: false
+    primary_protocol: rest
+    default_http_port: 8201
+    product_names:
+      - Identity Assurance
+    owner_team: TBD
+  - id: audit-ledger-service
+    maven_module: audit-ledger-service
+    plane: ops
+    sovereign: false
+    primary_protocol: rest
+    default_http_port: 8350
+    product_names:
+      - Audit Ledger
+    owner_team: TBD
+  - id: asset-registry-service
+    maven_module: asset-registry-service
+    plane: ops
+    sovereign: false
+    primary_protocol: rest
+    default_http_port: 8310
+    product_names:
+      - Asset Registry
+    owner_team: TBD
+  - id: dispatch-service
+    maven_module: dispatch-service
+    plane: ops
+    sovereign: false
+    primary_protocol: rest
+    default_http_port: 8320
+    product_names:
+      - Dispatch
+    owner_team: TBD
+  - id: iot-ingestion-service
+    maven_module: iot-ingestion-service
+    plane: ops
+    sovereign: false
+    primary_protocol: rest
+    default_http_port: 8330
+    product_names:
+      - IoT Ingestion
+    owner_team: TBD
+  - id: support-service
+    maven_module: support-service
+    plane: ops
+    sovereign: false
+    primary_protocol: rest
+    default_http_port: 8340
+    product_names:
+      - Support
+    owner_team: TBD
+  - id: offline-edge-service
+    maven_module: offline-edge-service
+    plane: ops
+    sovereign: false
+    primary_protocol: rest
+    default_http_port: 8360
+    product_names:
+      - Offline Edge
+    owner_team: TBD
+  - id: developer-portal-service
+    maven_module: developer-portal-service
+    plane: ops
+    sovereign: false
+    primary_protocol: rest
+    default_http_port: 8370
+    product_names:
+      - Developer Portal
+    owner_team: TBD
+  - id: schema-registry-service
+    maven_module: schema-registry-service
+    plane: ops
+    sovereign: false
+    primary_protocol: rest
+    default_http_port: 8371
+    product_names:
+      - Schema Registry
+    owner_team: TBD
+  - id: experience-bff
+    maven_module: experience-bff
+    plane: experience
+    sovereign: false
+    primary_protocol: rest
+    default_http_port: 8160
+    product_names:
+      - Experience BFF
+    owner_team: TBD

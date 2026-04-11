@@ -1,0 +1,2 @@
+# Dev-only: generate service index from docs/registry/services-registry.yaml
+PyYAML>=6.0,<7

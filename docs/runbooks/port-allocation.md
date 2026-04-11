@@ -6,6 +6,8 @@ Override any port with **`SERVER_PORT`** (or the service-specific env documented
 
 Canonical process: [`docs/roadmaps/agent-led-fullstack-completeness-roadmap.md`](../roadmaps/agent-led-fullstack-completeness-roadmap.md).
 
+Service metadata (plane, sovereign, product names): [`docs/registry/services-registry.yaml`](../registry/services-registry.yaml) and generated [`services-index.md`](../registry/services-index.md).
+
 ---
 
 ## Reserved / infrastructure (do not bind Java services here)

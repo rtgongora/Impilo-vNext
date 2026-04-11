@@ -1,0 +1,12 @@
+{
+  "name": "@impilo/registry-tools",
+  "private": true,
+  "description": "Generate docs/registry/services-index.md from services-registry.yaml",
+  "type": "module",
+  "scripts": {
+    "generate": "node generate-service-index.mjs"
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.0"
+  }
+}

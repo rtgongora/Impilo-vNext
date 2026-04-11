@@ -64,9 +64,9 @@ Each service (or product cluster) should be scored **None / Stub / Partial / Sub
 ```text
 Cycle 1 (serial):     A0 port matrix + compose/env alignment (merge first)
 
-Cycle 2 (parallel):   Agent-1: A1 registry YAML + generator
-                      Agent-2: A2 completeness script skeleton
-                      Agent-3: B-clinical OpenAPI deltas (pct/oros/pharmacy)
+Cycle 2 (parallel):   Agent-1: A2 completeness script skeleton
+                      Agent-2: B-clinical OpenAPI deltas (pct/oros/pharmacy)
+                      Agent-3: B-registry OpenAPI stubs (varapi/tuso/zibo/ubomi)
 
 Cycle 3 (parallel):   Agent-1: B-registry (varapi/tuso/zibo/ubomi)
                       Agent-2: B-finance (coverage + mushex + costa alignment)
@@ -140,7 +140,9 @@ flowchart LR
 
 **A0 (done):** authoritative port matrix and aligned defaults — see [`docs/runbooks/port-allocation.md`](../runbooks/port-allocation.md).
 
-**Next:** **A1** service registry (YAML) + generator, and **A2** completeness script — parallelizable per the map above.
+**A1 (done):** service registry — [`docs/registry/services-registry.yaml`](../registry/services-registry.yaml); regenerate tables with `cd scripts/registry && npm install && npm run generate` (see [`docs/registry/README.md`](../registry/README.md)).
+
+**Next:** **A2** completeness script (seven dimensions) + optional CI job — parallelizable once registry paths are stable.
 
 ---
 
@@ -151,3 +153,4 @@ flowchart LR
 | 2026-04-11 | Initial agent-led roadmap (retimed phases, parallelization, operating rules). |
 | 2026-04-11 | Phase A0 completed: linked `docs/runbooks/port-allocation.md`. |
 | 2026-04-11 | Operating rule 5: wave end = commit → pull --rebase → push (`CLAUDE.md`). |
+| 2026-04-11 | Phase A1: `docs/registry/services-registry.yaml` + Node generator (`scripts/registry`). |
