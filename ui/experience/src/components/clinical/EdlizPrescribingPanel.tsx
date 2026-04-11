@@ -7,7 +7,11 @@
 
 import { useState, useMemo } from "react";
 import { useClinicalPrescribingEvaluate } from "@/hooks/queries/useGuidance";
-import { Pill, Loader2, ShieldAlert } from "lucide-react";
+import { Pill, Loader2, ShieldAlert, ClipboardCopy } from "lucide-react";
+import {
+  CLINICAL_ORDER_DRAFT_EVENT,
+  type ClinicalOrderDraftDetail,
+} from "@/lib/clinical-guidance-events";
 
 type Props = {
   patientId: string;
@@ -16,6 +20,8 @@ type Props = {
   role?: string;
   diagnoses: string[];
   activeMedicationGenerics: string[];
+  /** When set, show a control to emit {@link CLINICAL_ORDER_DRAFT_EVENT} for the orders UI. */
+  showOrderDraftBridge?: boolean;
 };
 
 function readTenantId(): string {
@@ -30,6 +36,7 @@ export function EdlizPrescribingPanel({
   role = "CLINICIAN",
   diagnoses,
   activeMedicationGenerics,
+  showOrderDraftBridge = false,
 }: Props) {
   const [generic, setGeneric] = useState("");
   const [doseMg, setDoseMg] = useState("");
@@ -81,6 +88,20 @@ export function EdlizPrescribingPanel({
   const data = evalRx.data?.data as Record<string, unknown> | undefined;
   const alerts = (data?.alerts as Array<Record<string, unknown>> | undefined) ?? [];
 
+  function emitOrderDraft() {
+    if (typeof window === "undefined") return;
+    const detail: ClinicalOrderDraftDetail = {
+      source: "edliz-prescribing",
+      patientId,
+      encounterId,
+      generic: generic.trim() || undefined,
+      doseMg: doseMg.trim() || undefined,
+      alerts,
+      therapyEvaluation: data?.therapy_evaluation ?? data?.therapyEvaluation,
+    };
+    window.dispatchEvent(new CustomEvent(CLINICAL_ORDER_DRAFT_EVENT, { detail }));
+  }
+
   return (
     <div className="rounded-lg border border-emerald-200 bg-emerald-50/40 p-4">
       <div className="flex items-center gap-2 text-sm font-medium text-emerald-900">
@@ -130,6 +151,16 @@ export function EdlizPrescribingPanel({
         </ul>
       )}
       {evalRx.isError && <p className="mt-2 text-xs text-red-600">Request failed — check BFF and clinical service.</p>}
+      {showOrderDraftBridge && data && !evalRx.isPending && (
+        <button
+          type="button"
+          onClick={emitOrderDraft}
+          className="mt-3 inline-flex items-center gap-2 rounded-md border border-emerald-300 bg-white px-3 py-1.5 text-xs font-medium text-emerald-900 hover:bg-emerald-50"
+        >
+          <ClipboardCopy className="h-3.5 w-3.5" />
+          Send summary to orders workspace
+        </button>
+      )}
     </div>
   );
 }

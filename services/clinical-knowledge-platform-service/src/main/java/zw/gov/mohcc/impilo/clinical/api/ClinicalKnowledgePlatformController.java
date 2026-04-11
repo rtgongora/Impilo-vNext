@@ -119,6 +119,7 @@ public class ClinicalKnowledgePlatformController {
         d.put("pathway_id", s.getPathwayId().toString());
         d.put("current_step_order", s.getCurrentStepOrder());
         d.put("status", s.getStatus());
+        d.putAll(pathwaySessionService.currentStepSnapshot(s));
         return ResponseEntity.ok(Map.of("data", d));
     }
 

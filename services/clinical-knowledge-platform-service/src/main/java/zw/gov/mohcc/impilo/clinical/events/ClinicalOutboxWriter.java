@@ -29,6 +29,10 @@ public class ClinicalOutboxWriter {
         this.objectMapper = objectMapper;
     }
 
+    /**
+     * Uses default {@code REQUIRED} propagation so callers such as {@code PathwaySessionService.advance}
+     * persist session state and outbox rows in the same transaction (no {@code REQUIRES_NEW}).
+     */
     @Transactional
     public void enqueue(String eventType, String tenantId, String subjectType, String subjectId, Map<String, Object> payload) {
         ClinicalEventOutboxEntity e = new ClinicalEventOutboxEntity();

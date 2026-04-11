@@ -52,6 +52,25 @@ public class PathwaySessionService {
         return sessionRepository.save(s);
     }
 
+    /**
+     * Snapshot of the session's current pathway step (prompt + capture schema) for UI start/advance flows.
+     */
+    public Map<String, Object> currentStepSnapshot(PathwaySessionEntity s) {
+        PathwayDefinitionEntity def = pathwayDefinitionRepository.findByIdWithSteps(s.getPathwayId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "pathway not found"));
+        return def.getSteps().stream()
+                .filter(st -> Objects.equals(st.getStepOrder(), s.getCurrentStepOrder()))
+                .findFirst()
+                .map(st -> {
+                    Map<String, Object> m = new LinkedHashMap<>();
+                    m.put("current_prompt", st.getPrompt());
+                    m.put("current_step_type", st.getStepType());
+                    m.put("data_capture_schema", st.getDataCaptureSchema());
+                    return m;
+                })
+                .orElseGet(LinkedHashMap::new);
+    }
+
     @Transactional
     public Map<String, Object> advance(UUID sessionId, Map<String, Object> stepAnswers) {
         PathwaySessionEntity s = sessionRepository.findById(sessionId)

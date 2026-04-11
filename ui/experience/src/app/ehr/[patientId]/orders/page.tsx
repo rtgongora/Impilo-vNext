@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import {
   Activity,
@@ -31,6 +31,10 @@ import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useRoleGroup } from "@/hooks/useRoleGroup";
 import { useProductRegistrySearch } from "@/hooks/queries/useProductRegistry";
 import { apiClient } from "@/lib/api-client";
+import {
+  CLINICAL_ORDER_DRAFT_EVENT,
+  type ClinicalOrderDraftDetail,
+} from "@/lib/clinical-guidance-events";
 
 const STATUS_BADGE: Record<string, string> = {
   ORDERED: "bg-blue-100 text-blue-700",
@@ -125,6 +129,18 @@ export default function OrdersPage() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(buildFormState);
   const [catalogQuery, setCatalogQuery] = useState("");
+  const [guidanceDraft, setGuidanceDraft] = useState<ClinicalOrderDraftDetail | null>(null);
+
+  useEffect(() => {
+    function onDraft(e: Event) {
+      const ce = e as CustomEvent<ClinicalOrderDraftDetail>;
+      const d = ce.detail;
+      if (!d?.patientId || d.patientId !== patientId) return;
+      setGuidanceDraft(d);
+    }
+    window.addEventListener(CLINICAL_ORDER_DRAFT_EVENT, onDraft);
+    return () => window.removeEventListener(CLINICAL_ORDER_DRAFT_EVENT, onDraft);
+  }, [patientId]);
 
   const productSearch = useProductRegistrySearch({
     q: catalogQuery.trim() || undefined,
@@ -173,6 +189,33 @@ export default function OrdersPage() {
           </div>
         ) : (
           <div className="space-y-6">
+            {guidanceDraft && (
+              <div className="flex items-start justify-between gap-3 rounded-lg border border-emerald-200 bg-emerald-50/90 p-3 text-sm text-emerald-900">
+                <div>
+                  <p className="font-medium">Clinical guidance (reference only)</p>
+                  <p className="mt-1 text-xs text-emerald-800/90">
+                    {guidanceDraft.generic
+                      ? `Medication context: ${guidanceDraft.generic}${guidanceDraft.doseMg ? `, ${guidanceDraft.doseMg} mg` : ""}.`
+                      : "Prescribing evaluation summary received."}{" "}
+                    This does not create a lab order; use it while you complete the order form.
+                  </p>
+                  {guidanceDraft.alerts && guidanceDraft.alerts.length > 0 && (
+                    <ul className="mt-2 list-disc pl-4 text-xs text-amber-900">
+                      {guidanceDraft.alerts.slice(0, 5).map((a, i) => (
+                        <li key={i}>{String(a.message ?? a.code ?? "Alert")}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  className="shrink-0 text-xs text-emerald-800 underline hover:text-emerald-950"
+                  onClick={() => setGuidanceDraft(null)}
+                >
+                  Dismiss
+                </button>
+              </div>
+            )}
             <ClinicalReviewHeader
               badge="Diagnostics ordering"
               badgeIcon={ClipboardList}

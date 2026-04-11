@@ -61,9 +61,12 @@ public class ClinicalKnowledgeController {
     @PostMapping("/prescribing/evaluate")
     public ResponseEntity<Map<String, Object>> prescribing(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(value = CompanionHeaders.SKIP_PRESCRIBING_TRACE, required = false) String skipTrace,
+            @RequestHeader(value = CompanionHeaders.PRESCRIBING_RECORD_TRACE, required = false) String tracePolicy,
             @RequestBody Map<String, Object> body) {
         try {
-            JsonNode data = clinicalClient.prescribingEvaluate(body);
+            Map<String, Object> merged = mergePrescribingEvaluateBody(skipTrace, tracePolicy, body);
+            JsonNode data = clinicalClient.prescribingEvaluate(merged);
             return ResponseEntity.ok(Map.of("data", data != null ? data : Map.of()));
         } catch (Exception e) {
             log.error("Clinical prescribing evaluate failed: {}", e.getMessage());
@@ -110,6 +113,33 @@ public class ClinicalKnowledgeController {
             log.error("Clinical pathway advance failed: {}", e.getMessage());
             return ResponseEntity.ok(Map.of("data", Map.of("error", "unavailable")));
         }
+    }
+
+    /**
+     * Default {@code record_trace} is {@code true} for governed audit; headers override JSON body.
+     * Skip wins over explicit trace policy for sandbox flows.
+     */
+    static Map<String, Object> mergePrescribingEvaluateBody(
+            String skipTraceHeader, String tracePolicyHeader, Map<String, Object> body) {
+        Map<String, Object> merged = new LinkedHashMap<>(body != null ? body : Map.of());
+        boolean skip = "true".equalsIgnoreCase(trimOrEmpty(skipTraceHeader));
+        if (skip) {
+            merged.put("record_trace", false);
+            return merged;
+        }
+        String policy = trimOrEmpty(tracePolicyHeader);
+        if ("false".equalsIgnoreCase(policy)) {
+            merged.put("record_trace", false);
+        } else if ("true".equalsIgnoreCase(policy)) {
+            merged.put("record_trace", true);
+        } else if (!merged.containsKey("record_trace")) {
+            merged.put("record_trace", true);
+        }
+        return merged;
+    }
+
+    private static String trimOrEmpty(String s) {
+        return s == null ? "" : s.trim();
     }
 
     private static Map<String, Object> fallbackUnsupported() {

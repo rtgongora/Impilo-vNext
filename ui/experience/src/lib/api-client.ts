@@ -287,13 +287,18 @@ function handleAuthFailure(): void {
   }
 }
 
+export type ApiRequestOptions = {
+  extraHeaders?: Record<string, string>;
+};
+
 async function request<T>(
   method: string,
   path: string,
   body?: unknown,
   responseType: "json" | "text" = "json",
+  opts?: ApiRequestOptions,
 ): Promise<T> {
-  const headers = getV11Headers();
+  const headers = { ...getV11Headers(), ...opts?.extraHeaders };
 
   if (["POST", "PUT", "PATCH"].includes(method)) {
     headers["Idempotency-Key"] = crypto.randomUUID();
@@ -310,7 +315,7 @@ async function request<T>(
     const refreshed = await attemptRefresh();
     if (refreshed) {
       // Retry the original request with the new token
-      const retryHeaders = getV11Headers();
+      const retryHeaders = { ...getV11Headers(), ...opts?.extraHeaders };
       if (["POST", "PUT", "PATCH"].includes(method)) {
         retryHeaders["Idempotency-Key"] = crypto.randomUUID();
       }
@@ -358,7 +363,7 @@ async function request<T>(
 export const apiClient = {
   get: <T>(path: string) => request<T>("GET", path),
   getText: (path: string) => request<string>("GET", path, undefined, "text"),
-  post: <T>(path: string, body?: unknown) => request<T>("POST", path, body),
+  post: <T>(path: string, body?: unknown, opts?: ApiRequestOptions) => request<T>("POST", path, body, "json", opts),
   put: <T>(path: string, body?: unknown) => request<T>("PUT", path, body),
   patch: <T>(path: string, body?: unknown) => request<T>("PATCH", path, body),
   delete: <T>(path: string) => request<T>("DELETE", path),

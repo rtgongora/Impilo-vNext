@@ -18,11 +18,12 @@ import {
   ClipboardList,
   Search,
   ChevronRight,
-  X,
+  BookOpen,
 } from "lucide-react";
 import { cn } from "@/lib/accessibility";
 import type { FormComplexity } from "@/hooks/useCadreFormConfig";
 import { MedscapeTools } from "@/components/clinical/MedscapeTools";
+import { useClinicalGuidanceOptional } from "@/components/clinical/ClinicalGuidanceContext";
 
 // ── Tool definitions ──────────────────────────────────────
 
@@ -80,6 +81,7 @@ interface ClinicalToolsMenuProps {
 }
 
 export function ClinicalToolsMenu({ complexity = "comprehensive" }: ClinicalToolsMenuProps) {
+  const guidance = useClinicalGuidanceOptional();
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeToolId, setActiveToolId] = useState<string | null>(null);
@@ -104,7 +106,7 @@ export function ClinicalToolsMenu({ complexity = "comprehensive" }: ClinicalTool
   };
 
   return (
-    <>
+    <div className="relative shrink-0">
       {/* Trigger button */}
       <button
         className={cn(
@@ -121,13 +123,41 @@ export function ClinicalToolsMenu({ complexity = "comprehensive" }: ClinicalTool
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute left-3 top-full z-50 mt-1 w-80 rounded-lg border border-gray-200 bg-white shadow-lg">
+          <div className="absolute left-0 top-full z-50 mt-1 w-80 rounded-lg border border-gray-200 bg-white shadow-lg">
             <div className="p-3 pb-2">
               <h3 className="font-semibold text-sm">Clinical Tools</h3>
               <p className="text-xs text-gray-500">
                 Drug references, calculators & formulary
               </p>
             </div>
+
+            {guidance && (
+              <div className="px-3 pb-2 space-y-1">
+                <p className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">National guidance</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    guidance.openDock("pathways");
+                    setOpen(false);
+                  }}
+                  className="flex w-full items-center gap-2 rounded-md border border-blue-100 bg-blue-50/50 px-2 py-2 text-left text-xs text-blue-900 hover:bg-blue-50"
+                >
+                  <BookOpen className="h-3.5 w-3.5 shrink-0" />
+                  <span>Pathways &amp; structured flows</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    guidance.openDock("prescribing");
+                    setOpen(false);
+                  }}
+                  className="flex w-full items-center gap-2 rounded-md border border-emerald-100 bg-emerald-50/50 px-2 py-2 text-left text-xs text-emerald-900 hover:bg-emerald-50"
+                >
+                  <Pill className="h-3.5 w-3.5 shrink-0" />
+                  <span>EDLIZ prescribing check</span>
+                </button>
+              </div>
+            )}
 
             <div className="px-3 pb-2">
               <div className="relative">
@@ -190,6 +220,6 @@ export function ClinicalToolsMenu({ complexity = "comprehensive" }: ClinicalTool
           onClose={() => setActiveToolId(null)}
         />
       )}
-    </>
+    </div>
   );
 }

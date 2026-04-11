@@ -68,6 +68,18 @@ public final class CompanionHeaders {
     public static final String POLICY_VERSION  = "X-Policy-Version";
     public static final String DECISION_REASON = "X-Decision-Reason";
 
+    /**
+     * Experience BFF → clinical-knowledge-platform prescribing evaluate:
+     * when present, overrides JSON {@code record_trace} after gateway policy merge.
+     * Values: {@code true} / {@code false} (case-insensitive).
+     */
+    public static final String PRESCRIBING_RECORD_TRACE = "X-Impilo-Prescribing-Record-Trace";
+
+    /**
+     * When {@code true}, forces {@code record_trace: false} on prescribing evaluate (dry-run / sandbox).
+     */
+    public static final String SKIP_PRESCRIBING_TRACE = "X-Impilo-Skip-Prescribing-Trace";
+
     // ── Hard-required headers (missing any of these => 400) ─────
     // Manifest v1.2 spec: ALL FOUR must be present on every v1.2 request.
     public static final String[] HARD_REQUIRED = {
