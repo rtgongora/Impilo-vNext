@@ -76,6 +76,7 @@ impilo:
     data-governance-base-url: ${DATA_GOVERNANCE_BASE_URL:http://localhost:8220}
     landela-base-url: ${LANDELA_BASE_URL:http://localhost:8092}
     notification-base-url: ${NOTIFICATION_BASE_URL:http://localhost:8200}
+    credential-base-url: ${CREDENTIAL_BASE_URL:http://localhost:8094}
     fhir-base-url: ${FHIR_BASE_URL:http://localhost:8090/fhir}
     fhir-gateway-base-url: ${FHIR_GATEWAY_BASE_URL:http://localhost:8091}
     search-base-url: ${SEARCH_BASE_URL:http://localhost:8230}

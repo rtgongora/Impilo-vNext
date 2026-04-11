@@ -8,6 +8,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.CredentialServiceClient;
+import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -48,7 +49,36 @@ class CredentialVaultControllerTest {
 
     private static final class StubCredentialClient extends CredentialServiceClient {
         private StubCredentialClient() {
-            super(new RestTemplate(), "http://credentials");
+            super(
+                    new RestTemplate(),
+                    new ServiceClientConfig.ServiceEndpoints(
+                            "http://pct",
+                            "http://oros",
+                            "http://pharmacy",
+                            "http://butano",
+                            "http://msika",
+                            "http://msika-flow",
+                            "http://mushex",
+                            "http://vito",
+                            "http://tuso",
+                            "http://varapi",
+                            "http://documents",
+                            "http://costa",
+                            "http://coverage",
+                            "http://surveillance",
+                            "http://campaigns",
+                            "http://indawo",
+                            "http://governance",
+                            "http://landela",
+                            "http://notifications",
+                            "http://credentials",
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null));
         }
 
         @Override

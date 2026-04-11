@@ -47,6 +47,7 @@ public class ServiceClientConfig {
             String dataGovernanceBaseUrl,
             String landelaBaseUrl,
             String notificationBaseUrl,
+            String credentialBaseUrl,
             // Health OS §10: Interoperability
             String fhirBaseUrl,
             String fhirGatewayBaseUrl,
@@ -107,6 +108,7 @@ public class ServiceClientConfig {
                     null,
                     null,
                     null,
+                    null,
                     null
             );
         }
@@ -131,6 +133,7 @@ public class ServiceClientConfig {
             if (dataGovernanceBaseUrl == null) dataGovernanceBaseUrl = "http://localhost:8220";
             if (landelaBaseUrl == null) landelaBaseUrl = "http://localhost:8092";
             if (notificationBaseUrl == null) notificationBaseUrl = "http://localhost:8200";
+            if (credentialBaseUrl == null) credentialBaseUrl = "http://localhost:8094";
             if (fhirBaseUrl == null) fhirBaseUrl = "http://localhost:8090/fhir";
             if (fhirGatewayBaseUrl == null) fhirGatewayBaseUrl = "http://localhost:8091";
             if (searchBaseUrl == null) searchBaseUrl = "http://localhost:8230";
