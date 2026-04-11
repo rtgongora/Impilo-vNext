@@ -396,6 +396,38 @@ export function ExperienceSidebar() {
           </div>
         )}
 
+        {/* Health OS §4: Role context switching — switch roles in-session */}
+        {!collapsed && user && (
+          <div className="border-b border-white/10 px-4 py-3">
+            <p className="text-[10px] uppercase tracking-widest text-slate-500 mb-2">Active Role</p>
+            <div className="flex items-center gap-2 mb-2">
+              <ShieldCheck className="h-4 w-4 text-emerald-400" />
+              <span className="text-xs font-medium text-white">{user.actorType}</span>
+              {user.providerId && (
+                <span className="text-[10px] bg-blue-500/20 text-blue-300 rounded-full px-2 py-0.5">Provider</span>
+              )}
+            </div>
+            <div className="flex gap-1 flex-wrap">
+              {(["PROVIDER", "OPERATOR", "CITIZEN"] as const)
+                .filter((r) => r !== user.actorType && user.roles.some((role) =>
+                  r === "PROVIDER" ? ["CLINICIAN", "NURSE", "PHARMACIST"].includes(role) :
+                  r === "OPERATOR" ? ["FACILITY_ADMIN", "SYSTEM_ADMIN", "FINANCE"].includes(role) :
+                  true
+                ))
+                .map((role) => (
+                  <Link
+                    key={role}
+                    href={role === "PROVIDER" ? "/provider/activate?returnTo=" + encodeURIComponent(pathname) : "/home"}
+                    className="text-[10px] rounded-full border border-white/10 px-2 py-1 text-slate-400 hover:bg-white/10 hover:text-white transition"
+                  >
+                    Switch to {role.charAt(0) + role.slice(1).toLowerCase()}
+                  </Link>
+                ))
+              }
+            </div>
+          </div>
+        )}
+
         {!collapsed && (
           <div className="border-b border-white/10 px-4 py-4">
             <div className={`rounded-3xl border p-4 ${spotlight.tone}`}>

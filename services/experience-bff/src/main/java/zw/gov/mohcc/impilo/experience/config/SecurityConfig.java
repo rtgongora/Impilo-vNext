@@ -205,6 +205,32 @@ public class SecurityConfig {
                     .requestMatchers("/internal/v1/mobile/citizen/**")
                             .hasAnyRole(CITIZEN_ROLES)
 
+                    // ── Caregiving endpoints (Health OS §4) ──────────────
+                    .requestMatchers("/internal/v1/caregiving/**")
+                            .hasAnyRole(CAREGIVER_ROLES)
+
+                    // ── Public health endpoints (Health OS §7) ────────────
+                    .requestMatchers("/internal/v1/public-health/**")
+                            .hasAnyRole(PUBLIC_HEALTH_ROLES)
+
+                    // ── Device registry endpoints (Health OS §17) ─────────
+                    .requestMatchers("/internal/v1/devices/**")
+                            .authenticated()
+
+                    // ── Guidance/knowledge endpoints (Health OS §2a) ──────
+                    .requestMatchers("/internal/v1/guidance/**")
+                            .authenticated()
+                    .requestMatchers("/internal/v1/search/**")
+                            .authenticated()
+
+                    // ── Temp ID review (admin only, Health OS §13) ────────
+                    .requestMatchers("/internal/v1/admin/temp-id-review/**")
+                            .hasAnyRole(ADMIN_ROLES)
+
+                    // ── Emergency care-first (Health OS §12) ─────────────
+                    .requestMatchers("/internal/v1/emergency/**")
+                            .hasAnyRole(CLINICAL_ROLES)
+
                     // ── All other endpoints — authenticated ───────────────
                     .anyRequest().authenticated()
                 )

@@ -60,6 +60,13 @@ public class AuditEventEntity {
     @Column(name = "entry_hash", nullable = false)
     private String entryHash;
 
+    // Health OS §22: doctrine-complete audit dimensions
+    @Column(name = "device_channel")
+    private String deviceChannel;
+
+    @Column(name = "module_id")
+    private String moduleId;
+
     // --- Getters and Setters ---
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -95,4 +102,8 @@ public class AuditEventEntity {
     public void setPrevHash(String prevHash) { this.prevHash = prevHash; }
     public String getEntryHash() { return entryHash; }
     public void setEntryHash(String entryHash) { this.entryHash = entryHash; }
+    public String getDeviceChannel() { return deviceChannel; }
+    public void setDeviceChannel(String deviceChannel) { this.deviceChannel = deviceChannel; }
+    public String getModuleId() { return moduleId; }
+    public void setModuleId(String moduleId) { this.moduleId = moduleId; }
 }

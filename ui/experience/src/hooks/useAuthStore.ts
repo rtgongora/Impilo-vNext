@@ -108,7 +108,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       sessionStorage.removeItem("exp:expires_at");
     }
     if (typeof document !== "undefined") {
-      document.cookie = "exp:has_session=;path=/;expires=Thu, 01 Jan 1970 00:00:00 GMT";
+      document.cookie = "exp_has_session=;path=/;expires=Thu, 01 Jan 1970 00:00:00 GMT";
     }
     resetExperienceContinuity();
     set({ user: null, token: null, refreshToken: null, expiresAt: null, isAuthenticated: false });

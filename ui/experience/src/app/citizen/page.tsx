@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { IdentityAssuranceBanner } from "@/components/citizen/IdentityAssuranceBanner";
 
 const LINKS: { href: string; label: string; note: string }[] = [
   { href: "/citizen/health-id/qr", label: "My Health ID QR", note: "VITO portal contract via gateway" },
@@ -14,6 +15,9 @@ const LINKS: { href: string; label: string; note: string }[] = [
 export default function CitizenHubPage() {
   return (
     <div className="space-y-6">
+      {/* Health OS §10–§11: Progressive identity assurance — guided journey */}
+      <IdentityAssuranceBanner />
+
       <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-xs text-gray-700">
         <p className="font-medium text-gray-900 mb-1">Life-context hub</p>
         <p>
