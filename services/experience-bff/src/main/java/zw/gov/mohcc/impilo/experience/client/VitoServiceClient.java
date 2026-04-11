@@ -70,7 +70,7 @@ public class VitoServiceClient {
         String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/internal/clients")
                 .queryParam("search", query)
                 .toUriString();
-        log.info("VITO: Searching clients query={}", query);
+        log.info("VITO: Searching clients queryLength={}", query != null ? query.length() : 0);
         ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
         return extractData(response);
     }

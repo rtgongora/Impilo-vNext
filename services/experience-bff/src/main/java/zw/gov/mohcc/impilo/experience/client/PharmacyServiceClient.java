@@ -39,7 +39,8 @@ public class PharmacyServiceClient {
      */
     public JsonNode getPatientDispenseOrders(String cpid) {
         String url = baseUrl + "/v1/dispense-orders/patient/" + cpid;
-        log.debug("Pharmacy: Getting dispense orders for patient={}", cpid);
+        log.debug("Pharmacy: Getting dispense orders for patient={}...",
+                cpid.substring(0, Math.min(8, cpid.length())));
         ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
         return extractData(response);
     }

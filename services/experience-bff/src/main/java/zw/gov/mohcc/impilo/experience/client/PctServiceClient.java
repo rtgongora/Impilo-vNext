@@ -57,7 +57,8 @@ public class PctServiceClient {
         if (referralSource != null) body.put("referralSource", referralSource);
         if (referralId != null) body.put("referralId", referralId);
 
-        log.info("PCT: Starting journey for patient={} at facility={}", patientCpid, facilityId);
+        log.info("PCT: Starting journey for patient={}... at facility={}",
+                patientCpid.substring(0, Math.min(8, patientCpid.length())), facilityId);
         ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
         return extractData(response);
     }
@@ -155,7 +156,8 @@ public class PctServiceClient {
      */
     public JsonNode getPatientTimeline(String cpid) {
         String url = baseUrl + "/v1/patient/" + cpid + "/timeline";
-        log.debug("PCT: Getting timeline for patient={}", cpid);
+        log.debug("PCT: Getting timeline for patient={}...",
+                cpid.substring(0, Math.min(8, cpid.length())));
         ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
         return extractData(response);
     }

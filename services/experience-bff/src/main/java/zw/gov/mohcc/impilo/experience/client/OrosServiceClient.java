@@ -58,8 +58,8 @@ public class OrosServiceClient {
         if (clinicalNotes != null) body.put("clinicalNotes", clinicalNotes);
         if (items != null && !items.isEmpty()) body.put("items", items);
 
-        log.info("OROS: Placing order type={} for patient={}, encounter={}",
-                orderType, patientCpid, encounterRef);
+        log.info("OROS: Placing order type={} for patient={}..., encounter={}",
+                orderType, patientCpid.substring(0, Math.min(8, patientCpid.length())), encounterRef);
         ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
         return extractData(response);
     }
