@@ -1,8 +1,19 @@
 /**
- * Experience UI — API Client with v1.1 Header Injection and Token Refresh
+ * Experience UI — API Client with v1.2 Header Injection and Token Refresh
  *
- * Every outbound request to the Experience-BFF carries the mandatory v1.1 headers:
+ * Aligned with Health OS Manifest v1.2 (see docs/doctrine/health-os-doctrine.md).
+ *
+ * Every outbound request carries mandatory v1.2 headers:
  *   X-Tenant-ID, X-Pod-ID, X-Request-ID, X-Correlation-ID
+ *
+ * Actor identity headers (who):
+ *   X-Actor-ID (Health ID — person anchor), X-Actor-Type, X-Provider-ID (regulated role)
+ *
+ * Context headers (where):
+ *   X-Facility-ID, X-Department-ID, X-Ward-ID, X-Workspace-ID, X-Programme-ID, X-Shift-ID
+ *
+ * Governance headers (why):
+ *   X-Purpose-Of-Use, X-Assurance-Level, X-Access-Mode
  *
  * Command requests (POST/PUT/PATCH) also carry Idempotency-Key.
  *
@@ -42,7 +53,7 @@ export interface ApiError {
 // Refresh state to prevent concurrent refresh attempts
 let refreshPromise: Promise<boolean> | null = null;
 
-function getV11Headers(): Record<string, string> {
+function getV12Headers(): Record<string, string> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     "X-Tenant-ID": getTenantId(),
@@ -56,24 +67,58 @@ function getV11Headers(): Record<string, string> {
     headers["Authorization"] = `Bearer ${token}`;
   }
 
+  // ── Actor identity (Health OS §5–§6: who is acting) ──────────
   const authUser = getStoredAuthUser();
   if (authUser?.id) {
-    headers["X-Actor-ID"] = authUser.id;
+    headers["X-Actor-ID"] = authUser.id;           // Health ID — person anchor
   }
   if (authUser?.actorType) {
     headers["X-Actor-Type"] = authUser.actorType;
   }
 
+  // Provider ID — activated regulated professional role (sign in as person, practice as provider)
+  const providerId = getContextString("exp:provider_id");
+  if (providerId) {
+    headers["X-Provider-ID"] = providerId;
+  }
+
+  // ── Governance (Health OS §11: why / under what authority) ────
   headers["X-Purpose-Of-Use"] = getPurposeOfUse();
 
+  const accessMode = getContextString("exp:access_mode");
+  if (accessMode) {
+    headers["X-Access-Mode"] = accessMode;
+  }
+
+  const assuranceLevel = getContextString("exp:assurance_level");
+  if (assuranceLevel) {
+    headers["X-Assurance-Level"] = assuranceLevel;
+  }
+
+  // ── Operational context (Health OS §7: where / under what) ────
   const facilityId = getContextId("exp:facility");
   if (facilityId) {
     headers["X-Facility-ID"] = facilityId;
   }
 
+  const departmentId = getContextString("exp:department_id");
+  if (departmentId) {
+    headers["X-Department-ID"] = departmentId;
+  }
+
+  const wardId = getContextString("exp:ward_id");
+  if (wardId) {
+    headers["X-Ward-ID"] = wardId;
+  }
+
   const workspaceId = getContextId("exp:workspace");
   if (workspaceId) {
     headers["X-Workspace-ID"] = workspaceId;
+  }
+
+  const programmeId = getContextString("exp:programme_id");
+  if (programmeId) {
+    headers["X-Programme-ID"] = programmeId;
   }
 
   const shiftId = getContextId("exp:shift");
@@ -83,6 +128,9 @@ function getV11Headers(): Record<string, string> {
 
   return headers;
 }
+
+/** @deprecated Use getV12Headers — kept as alias during migration */
+const getV11Headers = getV12Headers;
 
 function getStoredJson<T>(key: string): T | null {
   if (typeof window === "undefined") return null;
@@ -104,6 +152,12 @@ function getStoredAuthUser(): { id?: string; actorType?: string } | null {
 function getContextId(key: string): string | null {
   const context = getStoredJson<{ id?: string }>(key);
   return context?.id ?? null;
+}
+
+/** Read a plain string from sessionStorage (for flat context values like provider_id). */
+function getContextString(key: string): string | null {
+  if (typeof window === "undefined") return null;
+  return sessionStorage.getItem(key) || null;
 }
 
 function getTenantId(): string {

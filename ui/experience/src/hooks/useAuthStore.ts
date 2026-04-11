@@ -1,19 +1,37 @@
 /**
  * Experience UI — Auth Context Store (Zustand)
  *
+ * Aligned with Health OS Identity Doctrine (§5–§6):
+ *   "Sign in as a person; practice as a provider only under activated Provider ID."
+ *
  * Provider tree position: QueryClient > [AuthProvider] > Facility > Workspace > Shift > Router
- * Persistence keys: exp:auth_token, exp:auth_user, exp:refresh_token, exp:expires_at (sessionStorage)
+ * Persistence keys: exp:auth_token, exp:auth_user, exp:refresh_token, exp:expires_at,
+ *   exp:provider_id (sessionStorage)
  */
 
 import { create } from "zustand";
 import { hasPersistedExperienceContinuity, resetExperienceContinuity } from "@/lib/session-continuity";
 
+/**
+ * Authenticated user — the person anchor within the Health Operating System.
+ *
+ * Per Health OS Identity Doctrine (§5–§6):
+ * - `id` is the Health ID (person anchor / canonical health identity)
+ * - `providerId` is the optional Provider ID (regulated professional role)
+ * - A person signs in with their Health ID; professional work requires
+ *   explicit activation of a valid Provider ID
+ */
 export interface AuthUser {
+  /** Health ID — canonical person anchor (VITO-issued). */
   id: string;
   email: string;
   displayName: string;
   roles: string[];
-  actorType: "PROVIDER" | "OPERATOR" | "CITIZEN" | "SYSTEM";
+  actorType: "PROVIDER" | "OPERATOR" | "CITIZEN" | "SYSTEM" | "CAREGIVER";
+  /** Provider ID — regulated professional role identifier (VARAPI-issued). Present only when activated. */
+  providerId?: string;
+  /** Staff / employee ID within the current organization. */
+  staffId?: string;
 }
 
 interface AuthState {
@@ -54,9 +72,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       sessionStorage.setItem("exp:auth_user", JSON.stringify(user));
       if (refreshToken) sessionStorage.setItem("exp:refresh_token", refreshToken);
       if (expiresAt) sessionStorage.setItem("exp:expires_at", expiresAt);
+      // Health OS §6: persist Provider ID for header injection (api-client.ts reads exp:provider_id)
+      if (user.providerId) {
+        sessionStorage.setItem("exp:provider_id", user.providerId);
+      } else {
+        sessionStorage.removeItem("exp:provider_id");
+      }
     }
     if (typeof document !== "undefined") {
-      document.cookie = "exp:has_session=1;path=/;SameSite=Lax";
+      document.cookie = "exp_has_session=1;path=/;SameSite=Lax";
     }
     set({ user, token, refreshToken: refreshToken ?? null, expiresAt: expiresAt ?? null, isAuthenticated: true });
   },

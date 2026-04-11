@@ -19,6 +19,11 @@ import { isSchedulingClusterPath } from "@/lib/scheduling-paths";
 /**
  * Map abstract role-group names used in routes.ts to concrete Keycloak roles.
  * Must stay aligned with backend SecurityConfig.java role-group arrays.
+ *
+ * Per Health OS Doctrine §4: Role-based means the system adapts what is visible,
+ * enabled, required, or emphasized according to the active role and context.
+ * This includes regulated professional roles, caregiving roles, operational roles,
+ * administrative roles, and non-clinical participation roles.
  */
 export const ROLE_GROUPS: Record<string, string[]> = {
   /** Sovereign registry / HIE governance plane — distinct from facility org admin. */
@@ -37,6 +42,12 @@ export const ROLE_GROUPS: Record<string, string[]> = {
   DISPENSER: ["PHARMACIST", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"],
   QUEUE: ["CLINICIAN", "NURSE", "SUPPORT_AGENT", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"],
   CITIZEN: ["CITIZEN", "SYSTEM_ADMIN", "DEVELOPER"],
+  /** Health OS §4: Caregiving roles — delegated care partners and family caregivers. */
+  CAREGIVER: ["CAREGIVER", "CARE_PARTNER", "CITIZEN", "SYSTEM_ADMIN"],
+  /** Health OS §7: Broad operational and public health roles. */
+  PUBLIC_HEALTH: ["PUBLIC_HEALTH_OFFICER", "ENV_HEALTH", "CHW", "FACILITY_ADMIN", "SYSTEM_ADMIN"],
+  /** Health OS §10: App/module extensibility — roles for governed extensions. */
+  COMMERCE: ["FINANCE", "CLINICIAN", "NURSE", "PHARMACIST", "SUPPORT_AGENT", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"],
 };
 
 export function matchesRequiredRole(hasRole: (r: string) => boolean, requiredRole: string): boolean {
