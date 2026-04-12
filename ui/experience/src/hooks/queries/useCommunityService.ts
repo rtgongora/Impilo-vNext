@@ -26,12 +26,13 @@ export function useCommunityUnit(id?: string | number | null) {
   });
 }
 
-export function useOutreachVisits(unitId?: string | number | null) {
+export function useOutreachVisits(tenantId?: string | null, unitId?: string | number | null) {
   return useQuery<OutreachVisitsResponse>({
-    queryKey: ["community-visits", unitId ?? null],
+    queryKey: ["community-visits", tenantId ?? null, unitId ?? null],
     queryFn: () => {
       const searchParams = new URLSearchParams();
-      if (unitId != null && unitId !== "") searchParams.set("unit_id", String(unitId));
+      if (tenantId != null && tenantId !== "") searchParams.set("tenantId", tenantId);
+      if (unitId != null && unitId !== "") searchParams.set("unitId", String(unitId));
       const qs = searchParams.toString();
       const path = `/internal/v1/community/visits${qs ? `?${qs}` : ""}`;
       return apiClient.get<OutreachVisitsResponse>(path);
@@ -39,12 +40,13 @@ export function useOutreachVisits(unitId?: string | number | null) {
   });
 }
 
-export function useChwAssignments(unitId?: string | number | null) {
+export function useChwAssignments(tenantId?: string | null, unitId?: string | number | null) {
   return useQuery<ChwAssignmentsResponse>({
-    queryKey: ["community-assignments", unitId ?? null],
+    queryKey: ["community-assignments", tenantId ?? null, unitId ?? null],
     queryFn: () => {
       const searchParams = new URLSearchParams();
-      if (unitId != null && unitId !== "") searchParams.set("unit_id", String(unitId));
+      if (tenantId != null && tenantId !== "") searchParams.set("tenantId", tenantId);
+      if (unitId != null && unitId !== "") searchParams.set("unitId", String(unitId));
       const qs = searchParams.toString();
       const path = `/internal/v1/community/assignments${qs ? `?${qs}` : ""}`;
       return apiClient.get<ChwAssignmentsResponse>(path);
@@ -81,7 +83,10 @@ export function useStartVisit() {
 
   return useMutation<OutreachVisitResponse, unknown, { id: string | number; body?: unknown }>({
     mutationFn: ({ id, body }) =>
-      apiClient.put<OutreachVisitResponse>(`/internal/v1/community/visits/${id}/start`, body),
+      apiClient.put<OutreachVisitResponse>(
+        `/internal/v1/community/visits/${id}/start`,
+        body ?? undefined,
+      ),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["community-visits"] });
     },

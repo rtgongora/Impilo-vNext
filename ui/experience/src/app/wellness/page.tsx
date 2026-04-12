@@ -13,7 +13,7 @@
 import Link from "next/link";
 import {
   Sparkles, Target, BookOpen, CalendarCheck, Activity,
-  UtensilsCrossed, Moon, Users2, Trophy, MapPin, HeartHandshake,
+  UtensilsCrossed, Moon, Users2, Trophy, MapPin, HeartHandshake, LayoutDashboard,
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
@@ -80,6 +80,25 @@ export default function WellnessPage() {
   return (
     <AppLayout>
       <PageShell title="Wellness Hub" subtitle="Move. Eat. Sleep. Rest. Recover. Live." icon={<Sparkles className="h-6 w-6" />}>
+        <Link
+          href="/wellness/dashboard"
+          className="mb-6 block rounded-xl border-2 border-teal-200 bg-gradient-to-r from-teal-50 to-cyan-50 p-5 shadow-sm hover:border-teal-400 hover:shadow-md transition-all group"
+        >
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="rounded-lg bg-teal-600 p-3 text-white shadow">
+              <LayoutDashboard className="h-7 w-7" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h2 className="text-lg font-semibold text-gray-900 group-hover:text-teal-700 transition-colors">
+                My Wellness Dashboard
+              </h2>
+              <p className="text-sm text-gray-600 mt-0.5">
+                SIMBA snapshot: activity, sleep, diet, mood, goals, clubs, and challenges in one place.
+              </p>
+            </div>
+            <span className="text-sm font-medium text-teal-700 whitespace-nowrap">Open dashboard →</span>
+          </div>
+        </Link>
         <TodaySnapshot />
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {SECTIONS.map(({ href, label, description, Icon, color }) => (
