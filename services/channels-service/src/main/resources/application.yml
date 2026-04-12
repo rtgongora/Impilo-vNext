@@ -49,3 +49,5 @@ management:
 impilo:
   companion:
     enabled: true
+  services:
+    mushe-wallet-base-url: ${MUSHE_WALLET_BASE_URL:http://localhost:8126}
