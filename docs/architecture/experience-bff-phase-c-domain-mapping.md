@@ -82,5 +82,6 @@ No open items from the original Phase C gap list. **Phase D** (Experience shell)
 
 ## Related
 
+- Kafka topic inventory (Phase E): [`kafka-event-catalog.md`](./kafka-event-catalog.md)
 - Registry: [`docs/registry/services-registry.yaml`](../registry/services-registry.yaml)
 - Completeness mapper: [`scripts/completeness/generate-completeness-report.mjs`](../../scripts/completeness/generate-completeness-report.mjs) (`OPENAPI_BY_MODULE`, `BFF_CLIENT_BY_MODULE`)

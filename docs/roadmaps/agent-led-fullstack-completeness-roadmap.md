@@ -36,7 +36,7 @@ Phases are ordered by **dependency**. **Agent cycles** = bounded agent run + hum
 | **B** | Contracts: policy + backfill **per domain** (TSHEPO, registry, clinical, finance, data, knowledge) | **Yes — one agent per domain** once naming convention locked | **~1 cycle per domain** for first pass; **+1** per domain if Spectral + sample contract tests added |
 | **C** | BFF: route map doc + client normalization **per domain** | Parallel **per domain** after B contracts for that domain exist | **Baseline complete** (2026-04-11 — 2026-04-12); per-domain polish as needed |
 | **D** | Experience: remove placeholders, wire search, public-health hardening | Parallel **per feature** (search vs public-health vs friction) | **Baseline complete** (2026-04-12 — search, public-health honesty, admin integration hub, guard/BFF alignment) |
-| **E** | Event catalog + AsyncAPI or schema table for Kafka surfaces | Parallel **per bounded context** (e.g. clinical vs finance outbox) | **1–2** cycles total if starting with inventory + highest-traffic topics, not exhaustive day-one |
+| **E** | Event catalog + AsyncAPI or schema table for Kafka surfaces | Parallel **per bounded context** (e.g. clinical vs finance outbox) | **Slice 1 done** (2026-04-12): [`kafka-event-catalog.md`](../architecture/kafka-event-catalog.md) + `contracts/asyncapi/` layout; **+1** cycle for AsyncAPI per rail + naming reconciliation |
 | **F** | Per-service playbook to “green” in completeness report | **Highly parallel — one agent per service** once A–E patterns exist | **~0.5–1 cycle** per small service; **2–4 cycles** for TSHEPO, BUTANO stack, or BFF-heavy surfaces |
 
 **Baseline credible** (A0–A2 + one contract domain + matching BFF + one smoke): often **~3–6** agent cycles with review.
@@ -150,7 +150,7 @@ flowchart LR
 
 **Phase D (complete):** Experience UI — honest surfaces vs `/internal/v1/...`, TanStack Query hooks. **Delivered:** federated search → [`useKnowledgeSearch`](../../ui/experience/src/hooks/queries/useKnowledgeSearch.ts) + BFF `/internal/v1/search`; public-health tabs stripped of fabricated operational rows (weekly IDSR, field rosters) with explicit “no API” states where the BFF has no contract; [`/public-health`](../../ui/experience/src/lib/routes.ts) route guard aligned to **`PUBLIC_HEALTH`** (matches BFF `PUBLIC_HEALTH_ROLES`, including **`DEVELOPER`** for governed dev access); admin **Integration status** → [`useIntegrationHub`](../../ui/experience/src/hooks/queries/useIntegrationHub.ts) calling BFF `/internal/v1/integration-hub/routes` and `.../deadletters` (BFF restricts hub to **`ADMIN_ROLES`**). **Residual:** other Experience routes may still carry placeholders — track as **F** per-route waivers or small **D+** slices.
 
-**Next concrete wave:** **Phase E** — event catalog + AsyncAPI or schema table for Kafka surfaces (can overlap Phase B where topic naming is stable).
+**Phase E (in progress):** **Slice 1 (done)** — [`kafka-event-catalog.md`](../architecture/kafka-event-catalog.md) (BFF fan-in topics, governance `impilo.*` streams, sample listeners, outbox publisher index, **known topic naming gaps**); [`contracts/asyncapi/README.md`](../../contracts/asyncapi/README.md) for future AsyncAPI files. **Next slice:** reconcile `pct.encounter.*` / `surv.*` producer vs consumer names, then add first AsyncAPI channel doc for one bounded context (e.g. PCT encounter lifecycle).
 
 **Parallel:** finish Phase B tails (TSHEPO REST slices, integration adapters, BUTANO FHIR narrative) where still missing contracts.
 
@@ -173,3 +173,4 @@ flowchart LR
 | 2026-04-12 | Phase C: `scripts/bff-routes` + generated `experience-bff-internal-routes.md`; roadmap next step → D after C domain mapping. |
 | 2026-04-12 | Phase C **closed**: integration hub + search/pharmacy upstream BFF; shared `RestTemplate`; internal routes regenerated; Phase **D** opened (search UI wired to `/internal/v1/search`). |
 | 2026-04-12 | Phase D **closed** (roadmap slices): public-health UI honesty + counters; admin integration-status wired to hub APIs; `/public-health` guard + BFF `PUBLIC_HEALTH_ROLES` include `DEVELOPER`; integration hub BFF path restricted to admin-equivalent roles; Vitest coverage for `PUBLIC_HEALTH` guard matching. |
+| 2026-04-12 | Phase E **slice 1**: `docs/architecture/kafka-event-catalog.md` + `contracts/asyncapi/README.md`; documented BFF upstream topics and producer/consumer naming gaps (PCT encounter, surveillance). |
