@@ -76,8 +76,8 @@ HC parity ingest and read-backs live on **`wellness-service`** (`WellnessHealthC
 
 | Check | Command |
 |-------|---------|
-| BFF → wellness forwarding (contract-style) | From `services/`: `mvn -pl experience-bff -Dtest=WellnessServiceProxyControllerTest test` |
-| Citizen smoke — wellness + monitoring + cart (BFF mocked) | From `ui/experience/`: `npm run e2e -- citizen-life-smoke.spec.ts --project=chromium` — set `PLAYWRIGHT_BFF_URL` if the UI does not use the default `http://localhost:8160` |
+| Wellness HTTP + Postgres (Flyway, real JDBC) | From `services/`: `mvn -pl wellness-service test` — `WellnessCitizenApiDockerIntegrationTest` runs when **Docker** is available; otherwise it is **skipped** (no mocks). |
+| Full stack (BFF + wellness + UI) | `docker compose -f compose/experience/docker-compose.yml up` then open Experience UI on port **3020** (see compose file). |
 
 ---
 
@@ -87,3 +87,4 @@ HC parity ingest and read-backs live on **`wellness-service`** (`WellnessHealthC
 |------|--------|
 | 2026-04-12 | Initial roadmap + Wave 0 contract pointers + HC wrap-up checklist. |
 | 2026-04-12 | Wave 1: BFF `WellnessServiceProxyControllerTest` + Playwright `citizen-life-smoke.spec.ts`; quality command table. |
+| 2026-04-12 | Removed mock-based BFF/E2E tests; monitoring path aligned BFF↔wellness; Experience devices page calls real APIs; `WellnessCitizenApiDockerIntegrationTest` (Testcontainers Postgres, `@EnabledIfDockerAvailable`). |
