@@ -62,6 +62,7 @@ public class ProvenanceStampingInterceptor {
     private static final String TAG_PURPOSE     = "purpose";
     private static final String TAG_CORRELATION = "correlation";
     private static final String TAG_BREAK_GLASS = "break-glass";
+    private static final String TAG_MODE        = "mode";
 
     private static final String BREAK_GLASS_VALUE = "BREAK_GLASS";
 
@@ -110,6 +111,7 @@ public class ProvenanceStampingInterceptor {
         String correlationId = getUserData(requestDetails, HeaderValidationInterceptor.UD_CORRELATION_ID);
         String decision = getUserData(requestDetails, HeaderValidationInterceptor.UD_DECISION);
         Boolean breakGlass = getBreakGlass(requestDetails);
+        String connectivityMode = getUserData(requestDetails, HeaderValidationInterceptor.UD_CONNECTIVITY_MODE);
 
         // Remove existing provenance tags of the same type to prevent unbounded growth
         List<Coding> existingTags = meta.getTag();
@@ -121,7 +123,8 @@ public class ProvenanceStampingInterceptor {
                         tag.getCode().startsWith(TAG_ACTOR + ":") ||
                         tag.getCode().startsWith(TAG_PURPOSE + ":") ||
                         tag.getCode().startsWith(TAG_CORRELATION + ":") ||
-                        tag.getCode().equals(TAG_BREAK_GLASS)
+                        tag.getCode().equals(TAG_BREAK_GLASS) ||
+                        tag.getCode().startsWith(TAG_MODE + ":")
                 )
         ));
 
@@ -187,6 +190,15 @@ public class ProvenanceStampingInterceptor {
                     .setDisplay("Break-Glass Override — requires post-hoc audit review");
         }
 
+        // Stamp connectivity mode tag (ONLINE, DEGRADED, or OFFLINE)
+        String mode = (connectivityMode != null && !connectivityMode.isBlank())
+                ? connectivityMode.toUpperCase()
+                : "ONLINE";
+        meta.addTag()
+                .setSystem(tagSystem)
+                .setCode(TAG_MODE + ":" + mode)
+                .setDisplay("Mode: " + mode);
+
         // Set meta.source to the BUTANO tenant URN
         if (tenantId != null && !tenantId.isBlank()) {
             meta.setSource("urn:impilo:butano:" + tenantId);
@@ -197,10 +209,10 @@ public class ProvenanceStampingInterceptor {
         // Set meta.lastUpdated to current server time
         meta.setLastUpdated(new Date());
 
-        log.debug("Provenance stamped on {}/{} — tenant={}, actor={}, correlation={}, breakGlass={}",
+        log.debug("Provenance stamped on {}/{} — tenant={}, actor={}, correlation={}, breakGlass={}, mode={}",
                 resource.fhirType(),
                 resource.getIdElement() != null ? resource.getIdElement().getIdPart() : "new",
-                tenantId, actorId, correlationId, breakGlass);
+                tenantId, actorId, correlationId, breakGlass, mode);
     }
 
     // ── Private helpers ─────────────────────────────────────────────────

@@ -66,6 +66,7 @@ public class HeaderValidationInterceptor {
     public static final String H_DEVICE_FINGERPRINT = "X-Device-Fingerprint";
     public static final String H_SHIFT_ID           = "X-Shift-Id";
     public static final String H_DECISION           = "X-Decision";
+    public static final String H_CONNECTIVITY_MODE  = "X-Connectivity-Mode";
 
     // ── User data keys (used by downstream interceptors) ────────────────
     public static final String UD_TENANT_ID          = "TRUST_TENANT_ID";
@@ -79,6 +80,7 @@ public class HeaderValidationInterceptor {
     public static final String UD_SHIFT_ID           = "TRUST_SHIFT_ID";
     public static final String UD_DECISION           = "TRUST_DECISION";
     public static final String UD_BREAK_GLASS        = "TRUST_BREAK_GLASS";
+    public static final String UD_CONNECTIVITY_MODE  = "TRUST_CONNECTIVITY_MODE";
 
     // Mandatory headers that must be present on every request
     private static final String[] MANDATORY_HEADERS = {
@@ -125,6 +127,7 @@ public class HeaderValidationInterceptor {
         String deviceFingerprint = httpRequest.getHeader(H_DEVICE_FINGERPRINT);
         String shiftId = httpRequest.getHeader(H_SHIFT_ID);
         String decision = httpRequest.getHeader(H_DECISION);
+        String connectivityMode = httpRequest.getHeader(H_CONNECTIVITY_MODE);
 
         // Determine break-glass status
         boolean breakGlass = decision != null && decision.contains(BREAK_GLASS_VALUE);
@@ -173,8 +176,11 @@ public class HeaderValidationInterceptor {
         requestDetails.getUserData().put(UD_SHIFT_ID, shiftId);
         requestDetails.getUserData().put(UD_DECISION, decision);
         requestDetails.getUserData().put(UD_BREAK_GLASS, breakGlass);
+        requestDetails.getUserData().put(UD_CONNECTIVITY_MODE,
+                connectivityMode != null ? connectivityMode : "ONLINE");
 
-        log.debug("Trust headers validated — tenant={}, actor={}, correlation={}, breakGlass={}",
-                tenantId, actorId, correlationId, breakGlass);
+        log.debug("Trust headers validated — tenant={}, actor={}, correlation={}, breakGlass={}, mode={}",
+                tenantId, actorId, correlationId, breakGlass,
+                connectivityMode != null ? connectivityMode : "ONLINE");
     }
 }
