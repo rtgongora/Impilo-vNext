@@ -1,0 +1,4 @@
+# Integration tests: datasource + OAuth2 exclusion come from @DynamicPropertySource / @SpringBootTest properties.
+spring:
+  flyway:
+    enabled: true

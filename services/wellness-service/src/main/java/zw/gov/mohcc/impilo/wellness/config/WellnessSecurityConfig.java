@@ -52,6 +52,8 @@ public class WellnessSecurityConfig {
                             .authenticated()
                             .requestMatchers("/internal/v1/mobile/citizen/wellness/**")
                             .authenticated()
+                            .requestMatchers("/internal/v1/mobile/citizen/monitoring/**")
+                            .authenticated()
                             .requestMatchers("/internal/v1/mobile/citizen/**")
                             .hasAnyRole(CITIZEN_ROLES)
                             .anyRequest()
