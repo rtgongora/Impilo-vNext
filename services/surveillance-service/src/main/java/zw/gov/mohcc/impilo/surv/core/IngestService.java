@@ -1,5 +1,6 @@
 package zw.gov.mohcc.impilo.surv.core;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 import org.slf4j.Logger;
@@ -37,7 +38,8 @@ public class IngestService {
 
     @Transactional
     public IngestResult ingest(UUID tenantId, String actorId, UUID correlationId,
-                               String eventType, String payload, UUID facilityId) {
+                               String eventType, String payload, UUID facilityId,
+                               String idempotencyKey) {
         List<SignalEntity> activeSignals =
                 signalRepository.findByTenantIdAndEventTypeAndStatus(tenantId, eventType, SignalStatus.ACTIVE);
 
@@ -57,7 +59,7 @@ public class IngestService {
 
             publishEvent("SIGNAL_HIT", hit.getId().toString(), "SIGNAL_HIT",
                     buildHitPayload(hit, signal.getName()),
-                    tenantId.toString(), correlationId);
+                    tenantId.toString(), correlationId, idempotencyKey);
 
             if (signal.getThreshold() <= 1) {
                 CaseEntity caseEntity = new CaseEntity();
@@ -74,7 +76,7 @@ public class IngestService {
 
                 publishEvent("CASE", caseEntity.getId().toString(), "CASE_OPENED",
                         buildCasePayload(caseEntity),
-                        tenantId.toString(), correlationId);
+                        tenantId.toString(), correlationId, idempotencyKey);
 
                 log.info("Case #{} auto-opened from signal '{}' hit #{}",
                         caseEntity.getId(), signal.getName(), hit.getId());
@@ -88,7 +90,7 @@ public class IngestService {
 
     private void publishEvent(String aggregateType, String aggregateId,
                               String eventType, String payload,
-                              String tenantId, UUID correlationId) {
+                              String tenantId, UUID correlationId, String idempotencyKey) {
         EventOutboxEntity event = new EventOutboxEntity();
         event.setAggregateType(aggregateType);
         event.setAggregateId(aggregateId);
@@ -96,6 +98,8 @@ public class IngestService {
         event.setPayload(payload);
         event.setTenantId(tenantId);
         event.setCorrelationId(correlationId != null ? correlationId.toString() : null);
+        event.setIdempotencyKey(idempotencyKey);
+        event.setOccurredAt(OffsetDateTime.now());
         outboxRepository.save(event);
     }
 

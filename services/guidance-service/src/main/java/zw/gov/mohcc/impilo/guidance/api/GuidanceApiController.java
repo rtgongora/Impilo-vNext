@@ -4,6 +4,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.guidance.core.GuidanceService;
+import zw.gov.mohcc.impilo.guidance.events.GuidanceOutboxAppender;
 import zw.gov.mohcc.impilo.guidance.persistence.entity.KnowledgeArticleEntity;
 import zw.gov.mohcc.impilo.guidance.persistence.entity.ReminderEntity;
 
@@ -21,9 +22,11 @@ import java.util.stream.Collectors;
 public class GuidanceApiController {
 
     private final GuidanceService guidanceService;
+    private final GuidanceOutboxAppender outboxAppender;
 
-    public GuidanceApiController(GuidanceService guidanceService) {
+    public GuidanceApiController(GuidanceService guidanceService, GuidanceOutboxAppender outboxAppender) {
         this.guidanceService = guidanceService;
+        this.outboxAppender = outboxAppender;
     }
 
     @PostMapping("/ask")
@@ -36,6 +39,7 @@ public class GuidanceApiController {
         boolean personalized = Boolean.TRUE.equals(body.get("personalized"));
 
         Map<String, Object> result = guidanceService.ask(tenantId, actorId, question, personalized);
+        outboxAppender.recordAskCompleted(tenantId, actorId, question, personalized, result);
         return ResponseEntity.ok(Map.of("data", result));
     }
 

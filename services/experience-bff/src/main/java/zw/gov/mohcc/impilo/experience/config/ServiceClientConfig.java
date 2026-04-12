@@ -77,7 +77,18 @@ public class ServiceClientConfig {
             String pacsBaseUrl,
             String communityBaseUrl,
             String simbaBaseUrl,
-            String musheWalletBaseUrl
+            String musheWalletBaseUrl,
+            String inventoryBaseUrl,
+            String assetRegistryBaseUrl,
+            String inventoryElmisBaseUrl,
+            /** National Data Repository — canonical datasets & query */
+            String ndrNationalBaseUrl,
+            /** NDR ring — bronze/gold ingest & query */
+            String ndrQueryBaseUrl,
+            String dataPipelineBaseUrl,
+            String reportingBaseUrl,
+            String dataWarehouseBaseUrl,
+            String dataIngestionBaseUrl
     ) {
         public ServiceEndpoints(
                 String pctBaseUrl,
@@ -120,6 +131,15 @@ public class ServiceClientConfig {
                     dataGovernanceBaseUrl,
                     landelaBaseUrl,
                     notificationBaseUrl,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
                     null,
                     null,
                     null,
@@ -189,6 +209,15 @@ public class ServiceClientConfig {
             if (communityBaseUrl == null) communityBaseUrl = "http://localhost:8122";
             if (simbaBaseUrl == null) simbaBaseUrl = "http://localhost:8125";
             if (musheWalletBaseUrl == null) musheWalletBaseUrl = "http://localhost:8126";
+            if (inventoryBaseUrl == null) inventoryBaseUrl = "http://localhost:8098";
+            if (assetRegistryBaseUrl == null) assetRegistryBaseUrl = "http://localhost:8310";
+            if (inventoryElmisBaseUrl == null) inventoryElmisBaseUrl = "http://localhost:8108";
+            if (ndrNationalBaseUrl == null) ndrNationalBaseUrl = "http://localhost:8152";
+            if (ndrQueryBaseUrl == null) ndrQueryBaseUrl = "http://localhost:8232";
+            if (dataPipelineBaseUrl == null) dataPipelineBaseUrl = "http://localhost:8215";
+            if (reportingBaseUrl == null) reportingBaseUrl = "http://localhost:8176";
+            if (dataWarehouseBaseUrl == null) dataWarehouseBaseUrl = "http://localhost:8233";
+            if (dataIngestionBaseUrl == null) dataIngestionBaseUrl = "http://localhost:8210";
         }
     }
 

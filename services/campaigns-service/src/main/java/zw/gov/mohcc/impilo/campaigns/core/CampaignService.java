@@ -55,6 +55,18 @@ public class CampaignService {
                 .orElseThrow(() -> new IllegalArgumentException("Campaign not found: " + id));
     }
 
+    @Transactional
+    public CampaignEntity completeCampaign(Long id, UUID tenantId, String actorId, UUID correlationId) {
+        CampaignEntity campaign = findById(id, tenantId);
+        campaign.setStatus(CampaignStatus.COMPLETED);
+        campaign = campaignRepository.save(campaign);
+
+        publishEvent("CAMPAIGN", campaign.getId().toString(), "CAMPAIGN_COMPLETED",
+                buildCampaignPayload(campaign), tenantId.toString(), correlationId);
+
+        return campaign;
+    }
+
     private void publishEvent(String aggregateType, String aggregateId,
                               String eventType, String payload,
                               String tenantId, UUID correlationId) {

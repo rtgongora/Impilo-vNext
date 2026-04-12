@@ -69,6 +69,13 @@ impilo:
     coverage-base-url: ${COVERAGE_BASE_URL:http://localhost:8140}
     surveillance-base-url: ${SURVEILLANCE_BASE_URL:http://localhost:8180}
     campaigns-base-url: ${CAMPAIGNS_BASE_URL:http://localhost:8190}
+    # Public Health & Data Plane — national repository, pipelines, warehouse, ingestion, reporting
+    ndr-national-base-url: ${NDR_NATIONAL_BASE_URL:http://localhost:8152}
+    ndr-query-base-url: ${NDR_QUERY_BASE_URL:http://localhost:8232}
+    data-pipeline-base-url: ${DATA_PIPELINE_BASE_URL:http://localhost:8215}
+    reporting-base-url: ${REPORTING_BASE_URL:http://localhost:8176}
+    data-warehouse-base-url: ${DATA_WAREHOUSE_BASE_URL:http://localhost:8233}
+    data-ingestion-base-url: ${DATA_INGESTION_BASE_URL:http://localhost:8210}
     indawo-base-url: ${INDAWO_BASE_URL:http://localhost:8150}
     tshepo-identity-base-url: ${TSHEPO_IDENTITY_BASE_URL:http://localhost:8181}
     tshepo-keys-base-url: ${TSHEPO_KEYS_BASE_URL:http://localhost:8184}
@@ -80,6 +87,9 @@ impilo:
     community-base-url: ${COMMUNITY_BASE_URL:http://localhost:8122}
     simba-base-url: ${SIMBA_BASE_URL:http://localhost:8125}
     mushe-wallet-base-url: ${MUSHE_WALLET_BASE_URL:http://localhost:8126}
+    inventory-base-url: ${INVENTORY_BASE_URL:http://localhost:8098}
+    asset-registry-base-url: ${ASSET_REGISTRY_BASE_URL:http://localhost:8310}
+    inventory-elmis-base-url: ${INVENTORY_ELMIS_BASE_URL:http://localhost:8108}
     orthanc-base-url: ${ORTHANC_BASE_URL:http://localhost:8042}
     orthanc-dicomweb-url: ${ORTHANC_DICOMWEB_URL:http://localhost:8042/dicom-web}
     data-governance-base-url: ${DATA_GOVERNANCE_BASE_URL:http://localhost:8220}

@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -31,7 +32,7 @@ class SurvOutboxPublisherTest {
 
     @BeforeEach
     void setUp() {
-        publisher = new SurvOutboxPublisher(outboxRepository, kafkaTemplate);
+        publisher = new SurvOutboxPublisher(outboxRepository, kafkaTemplate, "LEGACY_ONLY");
     }
 
     @Nested
@@ -40,26 +41,32 @@ class SurvOutboxPublisherTest {
 
         @Test
         void routesSignalCreated() {
-            assertThat(SurvOutboxPublisher.resolveTopic("SIGNAL_CREATED"))
-                    .isEqualTo("impilo.surv.signal.created.v1");
+            assertThat(SurvOutboxPublisher.resolveAnalyticsTopic("SIGNAL_CREATED"))
+                    .isEqualTo("analytics.surveillance.event");
         }
 
         @Test
         void routesSignalHit() {
-            assertThat(SurvOutboxPublisher.resolveTopic("SIGNAL_HIT"))
-                    .isEqualTo("impilo.surv.signal.hit.v1");
+            assertThat(SurvOutboxPublisher.resolveAnalyticsTopic("SIGNAL_HIT"))
+                    .isEqualTo("analytics.surveillance.event");
         }
 
         @Test
         void routesCaseOpened() {
-            assertThat(SurvOutboxPublisher.resolveTopic("CASE_OPENED"))
-                    .isEqualTo("impilo.surv.case.opened.v1");
+            assertThat(SurvOutboxPublisher.resolveAnalyticsTopic("CASE_OPENED"))
+                    .isEqualTo("analytics.surveillance.event");
+        }
+
+        @Test
+        void routesAlertTriggered() {
+            assertThat(SurvOutboxPublisher.resolveAnalyticsTopic("ALERT_TRIGGERED"))
+                    .isEqualTo("analytics.surveillance.alert");
         }
 
         @Test
         void routesUnknownToFallback() {
-            assertThat(SurvOutboxPublisher.resolveTopic("OTHER"))
-                    .isEqualTo("impilo.surv.unknown");
+            assertThat(SurvOutboxPublisher.resolveAnalyticsTopic("OTHER"))
+                    .isEqualTo("analytics.surveillance.event");
         }
     }
 
@@ -72,7 +79,7 @@ class SurvOutboxPublisherTest {
             when(outboxRepository.findTop100ByPublishedAtIsNullOrderByCreatedAtAsc())
                     .thenReturn(Collections.emptyList());
 
-            publisher.publishPendingEvents();
+            publisher.poll();
 
             verify(kafkaTemplate, never()).send(any(), any(), any());
         }
@@ -85,16 +92,18 @@ class SurvOutboxPublisherTest {
             event.setAggregateId("sig-1");
             event.setEventType("SIGNAL_CREATED");
             event.setPayload("{\"id\":1}");
+            event.setOccurredAt(java.time.OffsetDateTime.now());
 
             when(outboxRepository.findTop100ByPublishedAtIsNullOrderByCreatedAtAsc())
                     .thenReturn(List.of(event));
+            when(outboxRepository.findById(1L)).thenReturn(Optional.of(event));
 
-            publisher.publishPendingEvents();
+            publisher.poll();
 
-            verify(kafkaTemplate).send(eq("impilo.surv.signal.created.v1"), eq("sig-1"), eq("{\"id\":1}"));
+            verify(kafkaTemplate).send(eq("analytics.surveillance.event"), eq("sig-1"), eq("{\"id\":1}"));
 
             ArgumentCaptor<EventOutboxEntity> captor = ArgumentCaptor.forClass(EventOutboxEntity.class);
-            verify(outboxRepository).save(captor.capture());
+            verify(outboxRepository, org.mockito.Mockito.atLeastOnce()).save(captor.capture());
             assertThat(captor.getValue().getPublishedAt()).isNotNull();
         }
     }

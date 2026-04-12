@@ -13,6 +13,7 @@ import zw.gov.mohcc.impilo.surv.persistence.entity.DailyCounterEntity;
 import zw.gov.mohcc.impilo.surv.persistence.repository.AlertDefinitionRepository;
 import zw.gov.mohcc.impilo.surv.persistence.repository.AlertEventRepository;
 import zw.gov.mohcc.impilo.surv.persistence.repository.DailyCounterRepository;
+import zw.gov.mohcc.impilo.surv.persistence.repository.EventOutboxRepository;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -37,7 +38,7 @@ class CounterServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new CounterService(counterRepository, alertDefRepository, alertEventRepository);
+        service = new CounterService(counterRepository, alertDefRepository, alertEventRepository, outboxRepository);
     }
 
     @Test
@@ -95,8 +96,14 @@ class CounterServiceTest {
         alertDef.setId(1L);
         alertDef.setThreshold(5);
         alertDef.setSyndromeCode("MEASLES");
+        alertDef.setName("Measles surge");
         when(alertDefRepository.findByTenantIdAndSyndromeCodeAndActiveTrue(any(), eq("MEASLES")))
                 .thenReturn(List.of(alertDef));
+        when(alertEventRepository.save(any())).thenAnswer(inv -> {
+            AlertEventEntity e = inv.getArgument(0);
+            e.setId(42L);
+            return e;
+        });
 
         service.incrementCounter(tenantId, facilityId, "MEASLES", LocalDate.now());
 
@@ -105,6 +112,7 @@ class CounterServiceTest {
         AlertEventEntity alert = captor.getValue();
         assertThat(alert.getTriggerCount()).isEqualTo(5);
         assertThat(alert.getThreshold()).isEqualTo(5);
+        verify(outboxRepository).save(any());
     }
 
     @Test

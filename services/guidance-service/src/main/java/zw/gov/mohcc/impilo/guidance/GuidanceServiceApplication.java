@@ -2,6 +2,7 @@ package zw.gov.mohcc.impilo.guidance;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * Guidance Service — Health OS §13: Conversational and Guidance Services.
@@ -14,6 +15,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * <p>Port: 8260</p>
  */
 @SpringBootApplication
+@EnableScheduling
 public class GuidanceServiceApplication {
     public static void main(String[] args) {
         SpringApplication.run(GuidanceServiceApplication.class, args);

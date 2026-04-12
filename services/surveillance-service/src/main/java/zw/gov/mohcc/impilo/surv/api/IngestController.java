@@ -55,7 +55,7 @@ public class IngestController {
                 request.eventType(),
                 request.payload(),
                 request.facilityId(),
-                idempotencyKey);
+                idempotencyKey != null ? idempotencyKey : ctx.correlationId().toString());
 
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(result);
     }

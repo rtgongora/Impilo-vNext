@@ -64,7 +64,7 @@ public class BronzeEventEntity {
     @Column(name = "stored_at", nullable = false)
     private OffsetDateTime storedAt = OffsetDateTime.now();
 
-    protected BronzeEventEntity() {}
+    public BronzeEventEntity() {}
 
     // Getters
     public UUID getReceiptId() { return receiptId; }

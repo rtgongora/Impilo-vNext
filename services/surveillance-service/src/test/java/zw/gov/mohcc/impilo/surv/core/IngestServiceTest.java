@@ -55,7 +55,7 @@ class IngestServiceTest {
 
             IngestService.IngestResult result = ingestService.ingest(
                     tenantId, "user-1", UUID.randomUUID(),
-                    "UNKNOWN_EVENT", "{}", null);
+                    "UNKNOWN_EVENT", "{}", null, "idem-1");
 
             assertThat(result.signalsMatched()).isZero();
             assertThat(result.hitsRecorded()).isZero();
@@ -85,7 +85,7 @@ class IngestServiceTest {
 
             IngestService.IngestResult result = ingestService.ingest(
                     tenantId, "user-1", UUID.randomUUID(),
-                    "DISEASE_NOTIFICATION", "{\"code\":\"A00\"}", null);
+                    "DISEASE_NOTIFICATION", "{\"code\":\"A00\"}", null, "idem-2");
 
             assertThat(result.signalsMatched()).isEqualTo(1);
             assertThat(result.hitsRecorded()).isEqualTo(1);
@@ -124,7 +124,7 @@ class IngestServiceTest {
 
             IngestService.IngestResult result = ingestService.ingest(
                     tenantId, "user-1", UUID.randomUUID(),
-                    "CRITICAL_LAB", "{}", null);
+                    "CRITICAL_LAB", "{}", null, "idem-3");
 
             assertThat(result.casesOpened()).isEqualTo(1);
             verify(caseRepository).save(any());
@@ -161,7 +161,7 @@ class IngestServiceTest {
             when(caseRepository.save(any())).thenReturn(savedCase);
 
             ingestService.ingest(tenantId, "user-1", UUID.randomUUID(),
-                    "EVENT_X", "{}", null);
+                    "EVENT_X", "{}", null, "idem-4");
 
             ArgumentCaptor<EventOutboxEntity> captor =
                     ArgumentCaptor.forClass(EventOutboxEntity.class);
