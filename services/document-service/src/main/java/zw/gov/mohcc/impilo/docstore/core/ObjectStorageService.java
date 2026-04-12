@@ -142,13 +142,8 @@ public class ObjectStorageService {
 
             entity = objectRepository.save(entity);
 
-            // Publish outbox event
-            publishEvent("DOCUMENT", objectId.toString(), "DOCUMENT_STORED",
-                    Map.of("objectId", objectId.toString(),
-                            "tenantId", ctx.tenantId().toString(),
-                            "mimeType", request.mimeType(),
-                            "fileSizeBytes", String.valueOf(content.length),
-                            "hashSha256", sha256));
+            // Publish outbox event (legacy + v1.1 dual emit via DocumentOutboxPublisher)
+            publishDocumentStoredEvent(objectId, request, content.length, sha256, ctx);
 
             return toResponse(entity);
 
@@ -266,11 +261,7 @@ public class ObjectStorageService {
 
         log.info("Soft-deleted object {}, will be purged from MinIO by background job", objectId);
 
-        // Publish outbox event
-        publishEvent("DOCUMENT", objectId.toString(), "DOCUMENT_DELETED",
-                Map.of("objectId", objectId.toString(),
-                        "tenantId", entity.getTenantId().toString(),
-                        "deletedBy", ctx.actorId() != null ? ctx.actorId() : "system"));
+        publishDocumentDeletedEvent(objectId, entity, ctx);
     }
 
     /**
@@ -377,17 +368,75 @@ public class ObjectStorageService {
         );
     }
 
-    private void publishEvent(String aggregateType, String aggregateId, String eventType,
-                              Map<String, String> payload) {
+    private void publishDocumentStoredEvent(UUID objectId, StoreObjectRequest request,
+                                            int fileSizeBytes, String sha256, TrustContext ctx) {
         try {
+            Map<String, Object> payload = new LinkedHashMap<>();
+            payload.put("document_id", objectId.toString());
+            payload.put("tenant_id", ctx.tenantId().toString());
+            payload.put("content_type", request.mimeType());
+            payload.put("file_size_bytes", fileSizeBytes);
+            payload.put("hash_sha256", sha256);
+            String patientCpid = metadataFirst(request.metadata(), "patient_cpid", "patientCpid");
+            if (patientCpid != null) {
+                payload.put("patient_cpid", patientCpid);
+            }
+            String encounterId = metadataFirst(request.metadata(), "encounter_id", "encounterId");
+            if (encounterId != null) {
+                payload.put("encounter_id", encounterId);
+            }
+
             EventOutboxEntity event = new EventOutboxEntity();
-            event.setAggregateType(aggregateType);
-            event.setAggregateId(aggregateId);
-            event.setEventType(eventType);
+            event.setAggregateType("DOCUMENT");
+            event.setAggregateId(objectId.toString());
+            event.setEventType("document.stored");
             event.setPayload(objectMapper.writeValueAsString(payload));
+            event.setTenantId(ctx.tenantId().toString());
+            event.setCorrelationId(ctx.correlationId() != null ? ctx.correlationId().toString() : null);
+            event.setSubjectType("DOCUMENT");
+            event.setSubjectId(objectId.toString());
+            event.setPartitionKey(objectId.toString());
+            event.setOccurredAt(OffsetDateTime.now());
             outboxRepository.save(event);
         } catch (JsonProcessingException e) {
             log.error("Failed to serialize outbox event payload: {}", e.getMessage(), e);
         }
+    }
+
+    private void publishDocumentDeletedEvent(UUID objectId, ObjectEntity entity, TrustContext ctx) {
+        try {
+            Map<String, Object> payload = new LinkedHashMap<>();
+            payload.put("document_id", objectId.toString());
+            payload.put("tenant_id", entity.getTenantId().toString());
+            payload.put("deleted_by", ctx.actorId() != null ? ctx.actorId() : "system");
+
+            EventOutboxEntity event = new EventOutboxEntity();
+            event.setAggregateType("DOCUMENT");
+            event.setAggregateId(objectId.toString());
+            event.setEventType("document.deleted");
+            event.setPayload(objectMapper.writeValueAsString(payload));
+            event.setTenantId(entity.getTenantId().toString());
+            event.setCorrelationId(ctx.correlationId() != null ? ctx.correlationId().toString() : null);
+            event.setSubjectType("DOCUMENT");
+            event.setSubjectId(objectId.toString());
+            event.setPartitionKey(objectId.toString());
+            event.setOccurredAt(OffsetDateTime.now());
+            outboxRepository.save(event);
+        } catch (JsonProcessingException e) {
+            log.error("Failed to serialize outbox event payload: {}", e.getMessage(), e);
+        }
+    }
+
+    private static String metadataFirst(Map<String, String> metadata, String... keys) {
+        if (metadata == null) {
+            return null;
+        }
+        for (String k : keys) {
+            String v = metadata.get(k);
+            if (v != null && !v.isBlank()) {
+                return v;
+            }
+        }
+        return null;
     }
 }

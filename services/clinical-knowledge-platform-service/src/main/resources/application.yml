@@ -4,6 +4,12 @@ server:
 spring:
   application:
     name: clinical-knowledge-platform-service
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:impilo}/protocol/openid-connect/certs
+          issuer-uri: ${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:impilo}
   autoconfigure:
     exclude:
       # Manual Kafka producer when impilo.clinical.kafka.relay-enabled=true (see ClinicalKafkaConfig).
@@ -38,6 +44,7 @@ management:
         include: health,info,metrics,prometheus
   endpoint:
     health:
+      show-details: when-authorized
       probes:
         enabled: true
 
