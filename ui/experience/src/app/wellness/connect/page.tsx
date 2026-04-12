@@ -14,10 +14,23 @@ import { getHealthConnectManifest, postHealthConnectChangeSet } from "@/lib/heal
 const SAMPLE_JSON = `{
   "patientId": "REPLACE_ME",
   "dataOrigin": { "platform": "web_simulator", "appPackage": "zw.gov.mohcc.impilo.experience", "appVersion": "1.0" },
-  "grantedScopes": ["write.steps", "write.hydration"],
+  "grantedScopes": ["write.steps", "write.distance", "write.hydration", "write.sleep", "write.heart_rate"],
   "records": [
-    { "id": "hc-demo-steps-1", "type": "Steps", "startTime": "2026-04-12T06:00:00Z", "endTime": "2026-04-12T22:00:00Z", "count": 3200 },
-    { "id": "hc-demo-water-1", "type": "Hydration", "startTime": "2026-04-12T12:00:00Z", "volumeLiters": 0.35 }
+    { "id": "hc-parity-steps-1", "type": "StepsRecord", "startTime": "2026-04-12T06:00:00Z", "endTime": "2026-04-12T22:00:00Z", "count": 3200 },
+    { "id": "hc-parity-distance-1", "type": "DistanceRecord", "startTime": "2026-04-12T07:00:00Z", "endTime": "2026-04-12T08:00:00Z", "distanceMeters": 2100 },
+    { "id": "hc-parity-water-1", "type": "HydrationRecord", "startTime": "2026-04-12T12:00:00Z", "volume": 0.35 },
+    { "id": "hc-parity-sleep-1", "type": "SleepSessionRecord", "startTime": "2026-04-11T22:30:00Z", "endTime": "2026-04-12T06:15:00Z", "sleepQuality": 4,
+      "sleepStages": [
+        { "stage": "DEEP", "startTime": "2026-04-11T23:00:00Z", "endTime": "2026-04-12T01:00:00Z" },
+        { "stage": "REM", "startTime": "2026-04-12T05:00:00Z", "endTime": "2026-04-12T06:00:00Z" }
+      ]
+    },
+    { "id": "hc-parity-hr-1", "type": "HeartRateRecord", "startTime": "2026-04-12T08:00:00Z", "endTime": "2026-04-12T08:05:00Z",
+      "samples": [
+        { "time": "2026-04-12T08:01:00Z", "beatsPerMinute": 72 },
+        { "time": "2026-04-12T08:03:00Z", "beatsPerMinute": 78 }
+      ]
+    }
   ]
 }`;
 

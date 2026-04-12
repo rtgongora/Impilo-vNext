@@ -1,6 +1,6 @@
 /**
- * Impilo Health Connect–equivalent ingest (BFF).
- * @see Android Health Connect https://developer.android.com/health-and-fitness/guides/health-connect
+ * Impilo Health Connect parity client (Experience BFF).
+ * @see https://developer.android.com/health-and-fitness/health-connect
  */
 
 import { apiClient } from "@/lib/api-client";
@@ -13,18 +13,45 @@ export type HealthConnectDataOrigin = {
   appVersion?: string;
 };
 
+/** Superset of fields aligned with Android Health Connect flattened JSON. */
 export type HealthConnectRecord = {
   id: string;
   type: string;
-  metadata?: { recording_method?: string; device?: string };
+  metadata?: { recording_method?: string; device?: string; clientRecordId?: string; dataOriginPackage?: string };
   startTime: string;
   endTime?: string;
+  startZoneOffset?: string;
+  endZoneOffset?: string;
   count?: number;
+  /** Liters — alias `volume` accepted by BFF */
+  volume?: number;
   volumeLiters?: number;
   hoursSlept?: number;
   sleepQuality?: number;
+  sleepStages?: Array<{ stage: string; startTime: string; endTime: string }>;
   beatsPerMinute?: number;
   samples?: Array<{ time: string; beatsPerMinute: number }>;
+  distance?: number;
+  distanceMeters?: number;
+  floors?: number;
+  floorsClimbed?: number;
+  activeEnergyKcal?: number;
+  totalEnergyKcal?: number;
+  weightKg?: number;
+  heightCm?: number;
+  bodyFatPercent?: number;
+  bloodPressureSystolic?: number;
+  bloodPressureDiastolic?: number;
+  bloodGlucose?: number;
+  oxygenSaturation?: number;
+  restingHeartRate?: number;
+  hrvRmssdMs?: number;
+  nutritionEnergyKcal?: number;
+  energy?: number;
+  exerciseType?: string;
+  exerciseTitle?: string;
+  exerciseEnergyKcal?: number;
+  exerciseDistanceMeters?: number;
 };
 
 export type HealthConnectChangeSet = {
@@ -37,6 +64,20 @@ export type HealthConnectChangeSet = {
 export async function getHealthConnectManifest(): Promise<Record<string, unknown>> {
   const res = await apiClient.get<{ data: Record<string, unknown> }>(`${BASE}/manifest`);
   return res.data ?? {};
+}
+
+export async function getHealthConnectSleepSegments(patientId: string, limit = 100): Promise<unknown[]> {
+  const res = await apiClient.get<{ data: unknown[] }>(
+    `${BASE}/sleep-segments?patientId=${encodeURIComponent(patientId)}&limit=${limit}`,
+  );
+  return res.data ?? [];
+}
+
+export async function getHealthConnectExerciseSessions(patientId: string, days = 30): Promise<unknown[]> {
+  const res = await apiClient.get<{ data: unknown[] }>(
+    `${BASE}/exercise-sessions?patientId=${encodeURIComponent(patientId)}&days=${days}`,
+  );
+  return res.data ?? [];
 }
 
 export async function postHealthConnectChangeSet(body: HealthConnectChangeSet): Promise<{
