@@ -32,6 +32,23 @@ export async function fetchHealthConnectExerciseSessions(patientId: string, days
   return response.data.data ?? [];
 }
 
+export async function fetchHealthConnectIngestLog(
+  patientId: string,
+  limit = 100,
+  includePayload = false,
+): Promise<unknown[]> {
+  const q = new URLSearchParams({ patientId, limit: String(limit), includePayload: String(includePayload) });
+  const response = await apiClient.get<{ data: unknown[] }>(`${BASE}/ingest-log?${q.toString()}`);
+  return response.data.data ?? [];
+}
+
+export async function fetchHealthConnectExtensionRecords(patientId: string, limit = 100): Promise<unknown[]> {
+  const response = await apiClient.get<{ data: unknown[] }>(
+    `${BASE}/extension-records?patientId=${encodeURIComponent(patientId)}&limit=${limit}`,
+  );
+  return response.data.data ?? [];
+}
+
 export async function ingestHealthConnectChangeSet(body: HealthConnectChangeSet): Promise<{
   applied: number;
   skipped: number;

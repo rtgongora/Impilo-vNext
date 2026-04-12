@@ -16,5 +16,10 @@ class WellnessHealthConnectCanonicalTypeTest {
         assertEquals("FLOORS_CLIMBED", WellnessHealthConnectIngestService.canonicalRecordType("FloorsClimbedRecord"));
         assertEquals("EXERCISE_SESSION", WellnessHealthConnectIngestService.canonicalRecordType("ExerciseSessionRecord"));
         assertEquals("HRV_RMSSD", WellnessHealthConnectIngestService.canonicalRecordType("HeartRateVariabilityRmssdRecord"));
+        assertEquals("WHEELCHAIR_PUSHES", WellnessHealthConnectIngestService.canonicalRecordType("WheelchairPushesRecord"));
+        assertEquals("ELEVATION_GAINED", WellnessHealthConnectIngestService.canonicalRecordType("ElevationGainedDuringExerciseRecord"));
+        assertEquals("ACTIVE_MINUTES", WellnessHealthConnectIngestService.canonicalRecordType("ActiveMinutesBurnedRecord"));
+        assertEquals("RESPIRATORY_RATE", WellnessHealthConnectIngestService.canonicalRecordType("RespiratoryRateRecord"));
+        assertEquals("MENSTRUATION_FLOW", WellnessHealthConnectIngestService.canonicalRecordType("MenstruationFlowRecord"));
     }
 }

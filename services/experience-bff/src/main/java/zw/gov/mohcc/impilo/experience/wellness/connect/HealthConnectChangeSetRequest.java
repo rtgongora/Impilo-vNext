@@ -44,12 +44,19 @@ public record HealthConnectChangeSetRequest(
             @Valid Metadata metadata,
             @NotBlank String startTime,
             String endTime,
-            /** HC zone offsets (ISO-8601 offset strings); reserved for future local-day boundary use */
+            /**
+             * HC zone offsets (ISO-8601 offset strings). When {@code startTime} has no zone, combined with
+             * local date-time for {@code activity_date} bucketing on daily rollups.
+             */
             String startZoneOffset,
             String endZoneOffset,
 
-            /** {@link android.health.connect.datatypes.StepsRecord#getCount()} */
+            /** Steps count — HC {@code StepsRecord} count. */
             Long count,
+
+            /** Wheelchair pushes — merged into {@code wellness_activities.steps} (HC parity). */
+            @JsonAlias({"wheelchairPushes", "wheelchair_push_count"})
+            Long wheelchairPushes,
 
             /** Liters — HC {@code HydrationRecord} volume often serialized as {@code volume} (liters). */
             @JsonProperty("volumeLiters")
@@ -107,7 +114,58 @@ public record HealthConnectChangeSetRequest(
             String exerciseType,
             String exerciseTitle,
             BigDecimal exerciseEnergyKcal,
-            BigDecimal exerciseDistanceMeters
+            BigDecimal exerciseDistanceMeters,
+
+            @JsonAlias({"elevationGainedMeters", "elevationGained", "elevation", "verticalDistanceMeters"})
+            BigDecimal elevationGainedMeters,
+
+            @JsonAlias({"activeMinutes", "activeMinutesBurned", "activeMinutesInt"})
+            Integer activeMinutes,
+
+            @JsonAlias({"stepsCadenceRpm", "stepsCadence", "rpm"})
+            BigDecimal stepsCadenceRpm,
+
+            @JsonAlias({"cyclingPedalingCadenceRpm", "cyclingPedalingCadence", "pedalingCadenceRpm"})
+            BigDecimal cyclingPedalingCadenceRpm,
+
+            @JsonAlias({"powerWatts", "power"})
+            BigDecimal powerWatts,
+
+            @JsonAlias({"speedMetersPerSecond", "speed", "speedMs"})
+            BigDecimal speedMetersPerSecond,
+
+            @JsonAlias({"respiratoryRateBpm", "respiratoryRate", "breathsPerMinute"})
+            BigDecimal respiratoryRateBpm,
+
+            @JsonAlias({"bodyTemperatureCelsius", "bodyTemperature", "temperatureCelsius"})
+            BigDecimal bodyTemperatureCelsius,
+
+            @JsonAlias({"basalMetabolicRateKcal", "bmrKcal", "basalMetabolicRate"})
+            BigDecimal basalMetabolicRateKcal,
+
+            @JsonAlias({"leanBodyMassKg", "leanBodyMass"})
+            BigDecimal leanBodyMassKg,
+
+            @JsonAlias({"boneMassKg", "boneMass"})
+            BigDecimal boneMassKg,
+
+            @JsonAlias({"vo2MaxMlKgMin", "vo2Max"})
+            BigDecimal vo2MaxMlKgMin,
+
+            @JsonAlias({"bodyWaterMassKg", "bodyWaterMass"})
+            BigDecimal bodyWaterMassKg,
+
+            @JsonAlias({"mindfulnessSessionMinutes", "mindfulnessMinutes"})
+            BigDecimal mindfulnessSessionMinutes,
+
+            @JsonAlias({"nutritionProteinG", "proteinGrams", "protein"})
+            BigDecimal nutritionProteinG,
+
+            @JsonAlias({"nutritionCarbsG", "carbohydratesGrams", "carbsGrams", "carbs"})
+            BigDecimal nutritionCarbsG,
+
+            @JsonAlias({"nutritionFatG", "totalFatGrams", "fatGrams", "fat"})
+            BigDecimal nutritionFatG
     ) {
         @JsonIgnoreProperties(ignoreUnknown = true)
         public record Metadata(

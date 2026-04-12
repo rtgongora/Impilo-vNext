@@ -12,7 +12,9 @@ import org.springframework.transaction.support.TransactionTemplate;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +23,8 @@ import java.util.UUID;
 
 /**
  * Maps Health Connect–style records into {@code wellness_activities}, {@code wellness_vitals_log},
- * {@code wellness_sleep_segments}, and {@code wellness_exercise_sessions}.
+ * {@code wellness_sleep_segments}, {@code wellness_exercise_sessions}, and
+ * {@code wellness_connect_extension} for long-tail / unmapped HC datatypes (full JSON payload).
  */
 @Service
 public class WellnessHealthConnectIngestService {
@@ -85,6 +88,7 @@ public class WellnessHealthConnectIngestService {
         String c = canonicalRecordType(record.type());
         switch (c) {
             case "STEPS" -> mergeSteps(tenantId, patientId, record);
+            case "WHEELCHAIR_PUSHES" -> mergeWheelchairPushes(tenantId, patientId, record);
             case "HYDRATION" -> mergeHydration(tenantId, patientId, record);
             case "SLEEPSESSION" -> mergeSleep(tenantId, patientId, record);
             case "HEARTRATE" -> insertHeartRate(tenantId, patientId, record);
@@ -100,9 +104,29 @@ public class WellnessHealthConnectIngestService {
             case "OXYGEN_SATURATION" -> insertScalarVital(tenantId, patientId, record, "OXYGEN_SATURATION", record.oxygenSaturationPercent(), "percent", record.startTime());
             case "RESTING_HEART_RATE" -> insertScalarVital(tenantId, patientId, record, "RESTING_HEART_RATE", restingHr(record), "bpm", record.startTime());
             case "HRV_RMSSD" -> insertScalarVital(tenantId, patientId, record, "HRV_RMSSD_MS", hrv(record), "ms", record.startTime());
-            case "NUTRITION" -> mergeNutritionEnergy(tenantId, patientId, record);
+            case "NUTRITION" -> mergeNutritionFull(tenantId, patientId, record);
             case "EXERCISE_SESSION" -> upsertExerciseSession(tenantId, patientId, record);
-            default -> throw new IllegalArgumentException("Unsupported record type: " + record.type());
+            case "ELEVATION_GAINED" -> insertScalarVital(
+                    tenantId, patientId, record, "ELEVATION_GAINED_M", record.elevationGainedMeters(), "m", record.startTime());
+            case "ACTIVE_MINUTES" -> mergeActiveMinutes(tenantId, patientId, record);
+            case "STEPS_CADENCE" -> insertScalarVital(
+                    tenantId, patientId, record, "STEPS_CADENCE_RPM", record.stepsCadenceRpm(), "rpm", record.startTime());
+            case "CYCLING_PEDALING_CADENCE" -> insertScalarVital(
+                    tenantId, patientId, record, "CYCLING_PEDALING_CADENCE_RPM", record.cyclingPedalingCadenceRpm(), "rpm", record.startTime());
+            case "POWER" -> insertScalarVital(tenantId, patientId, record, "POWER_W", record.powerWatts(), "W", record.startTime());
+            case "SPEED" -> insertScalarVital(tenantId, patientId, record, "SPEED_MS", record.speedMetersPerSecond(), "m/s", record.startTime());
+            case "RESPIRATORY_RATE" -> insertScalarVital(
+                    tenantId, patientId, record, "RESPIRATORY_RATE", record.respiratoryRateBpm(), "breaths/min", record.startTime());
+            case "BODY_TEMPERATURE" -> insertScalarVital(
+                    tenantId, patientId, record, "BODY_TEMPERATURE_C", record.bodyTemperatureCelsius(), "C", record.startTime());
+            case "BASAL_METABOLIC_RATE" -> insertScalarVital(
+                    tenantId, patientId, record, "BASAL_METABOLIC_RATE_KCAL", record.basalMetabolicRateKcal(), "kcal/day", record.startTime());
+            case "LEAN_BODY_MASS" -> insertScalarVital(tenantId, patientId, record, "LEAN_BODY_MASS_KG", record.leanBodyMassKg(), "kg", record.startTime());
+            case "BONE_MASS" -> insertScalarVital(tenantId, patientId, record, "BONE_MASS_KG", record.boneMassKg(), "kg", record.startTime());
+            case "VO2_MAX" -> insertScalarVital(tenantId, patientId, record, "VO2_MAX", record.vo2MaxMlKgMin(), "mL/kg/min", record.startTime());
+            case "BODY_WATER_MASS" -> insertScalarVital(tenantId, patientId, record, "BODY_WATER_MASS_KG", record.bodyWaterMassKg(), "kg", record.startTime());
+            case "MINDFULNESS_SESSION" -> mergeMindfulnessMinutes(tenantId, patientId, record);
+            default -> upsertExtension(tenantId, patientId, record);
         }
     }
 
@@ -131,6 +155,27 @@ public class WellnessHealthConnectIngestService {
             case "HEART_RATE_VARIABILITY_RMSSD", "HEARTRATEVARIABILITYRMSSD", "HEARTRATEVARIABILITY_RMSSD", "HRV_RMSSD" -> "HRV_RMSSD";
             case "NUTRITION", "NUTRITIONRECORD" -> "NUTRITION";
             case "EXERCISE_SESSION", "EXERCISESESSION" -> "EXERCISE_SESSION";
+            case "WHEELCHAIRPUSHES", "WHEELCHAIR_PUSHES" -> "WHEELCHAIR_PUSHES";
+            case "ELEVATIONGAINED",
+                    "ELEVATION_GAINED",
+                    "ELEVATIONGAINEDDURINGEXERCISE",
+                    "ELEVATION_GAINED_DURING_EXERCISE",
+                    "ELEVATIONGAINED_DURING_EXERCISE",
+                    "ELEVATION_GAINED_DURINGEXERCISE" -> "ELEVATION_GAINED";
+            case "ACTIVE_MINUTES", "ACTIVE_MINUTES_BURNED", "ACTIVEMINUTESBURNED" -> "ACTIVE_MINUTES";
+            case "STEPS_CADENCE", "STEP_CADENCE" -> "STEPS_CADENCE";
+            case "CYCLING_PEDALING_CADENCE", "CYCLINGPEDALINGCADENCE" -> "CYCLING_PEDALING_CADENCE";
+            case "POWER" -> "POWER";
+            case "SPEED" -> "SPEED";
+            case "RESPIRATORY_RATE", "RESPIRATORYRATE" -> "RESPIRATORY_RATE";
+            case "BODY_TEMPERATURE", "BODYTEMPERATURE", "BASAL_BODY_TEMPERATURE", "BASALBODYTEMPERATURE" -> "BODY_TEMPERATURE";
+            case "BASAL_METABOLIC_RATE", "BASALMETABOLICRATE" -> "BASAL_METABOLIC_RATE";
+            case "LEAN_BODY_MASS", "LEANBODYMASS" -> "LEAN_BODY_MASS";
+            case "BONE_MASS", "BONEMASS" -> "BONE_MASS";
+            case "VO2_MAX", "VO2MAX" -> "VO2_MAX";
+            case "BODY_WATER_MASS", "BODYWATERMASS" -> "BODY_WATER_MASS";
+            case "MINDFULNESS_SESSION", "MINDFULNESSSESSION" -> "MINDFULNESS_SESSION";
+            case "MENSTRUATIONFLOW", "MENSTRUATION_FLOW" -> "MENSTRUATION_FLOW";
             default -> u;
         };
     }
@@ -161,8 +206,17 @@ public class WellnessHealthConnectIngestService {
         if (record.count() == null || record.count() < 0) {
             throw new IllegalArgumentException("Steps.count required and must be >= 0");
         }
-        LocalDate day = parseLocalDate(record.startTime());
-        int delta = record.count().intValue();
+        addStepsDelta(tenantId, patientId, activityLocalDate(record), record.count().intValue());
+    }
+
+    private void mergeWheelchairPushes(String tenantId, String patientId, HealthConnectChangeSetRequest.HealthRecord record) {
+        if (record.wheelchairPushes() == null || record.wheelchairPushes() < 0) {
+            throw new IllegalArgumentException("WheelchairPushes requires wheelchairPushes count >= 0");
+        }
+        addStepsDelta(tenantId, patientId, activityLocalDate(record), record.wheelchairPushes().intValue());
+    }
+
+    private void addStepsDelta(String tenantId, String patientId, LocalDate day, int delta) {
         jdbc.update(
                 """
                 INSERT INTO wellness_activities (tenant_id, patient_id, activity_date, steps, calories_burned, active_minutes, distance_km, sleep_hours, sleep_quality, water_ml)
@@ -179,7 +233,7 @@ public class WellnessHealthConnectIngestService {
             throw new IllegalArgumentException("Hydration requires volume (liters) as volumeLiters or volume alias");
         }
         int ml = vol.multiply(BigDecimal.valueOf(1000)).setScale(0, RoundingMode.HALF_UP).intValue();
-        LocalDate day = parseLocalDate(record.startTime());
+        LocalDate day = activityLocalDate(record);
         jdbc.update(
                 """
                 INSERT INTO wellness_activities (tenant_id, patient_id, activity_date, steps, calories_burned, active_minutes, distance_km, sleep_hours, sleep_quality, water_ml)
@@ -260,7 +314,7 @@ public class WellnessHealthConnectIngestService {
             throw new IllegalArgumentException("Distance requires distanceMeters (or alias distance)");
         }
         BigDecimal deltaKm = record.distanceMeters().divide(BigDecimal.valueOf(1000), 4, RoundingMode.HALF_UP);
-        LocalDate day = parseLocalDate(record.startTime());
+        LocalDate day = activityLocalDate(record);
         jdbc.update(
                 """
                 INSERT INTO wellness_activities (tenant_id, patient_id, activity_date, steps, calories_burned, active_minutes, distance_km, sleep_hours, sleep_quality, water_ml)
@@ -284,7 +338,7 @@ public class WellnessHealthConnectIngestService {
             throw new IllegalArgumentException("Active energy requires activeEnergyKcal");
         }
         int delta = kcal.setScale(0, RoundingMode.HALF_UP).intValue();
-        LocalDate day = parseLocalDate(record.startTime());
+        LocalDate day = activityLocalDate(record);
         jdbc.update(
                 """
                 INSERT INTO wellness_activities (tenant_id, patient_id, activity_date, steps, calories_burned, active_minutes, distance_km, sleep_hours, sleep_quality, water_ml)
@@ -301,7 +355,7 @@ public class WellnessHealthConnectIngestService {
             throw new IllegalArgumentException("Total energy requires totalEnergyKcal");
         }
         int delta = kcal.setScale(0, RoundingMode.HALF_UP).intValue();
-        LocalDate day = parseLocalDate(record.startTime());
+        LocalDate day = activityLocalDate(record);
         jdbc.update(
                 """
                 INSERT INTO wellness_activities (tenant_id, patient_id, activity_date, steps, calories_burned, active_minutes, distance_km, sleep_hours, sleep_quality, water_ml)
@@ -318,7 +372,7 @@ public class WellnessHealthConnectIngestService {
             throw new IllegalArgumentException("Nutrition requires nutritionEnergyKcal (or alias energy)");
         }
         int delta = kcal.setScale(0, RoundingMode.HALF_UP).intValue();
-        LocalDate day = parseLocalDate(record.startTime());
+        LocalDate day = activityLocalDate(record);
         jdbc.update(
                 """
                 INSERT INTO wellness_activities (tenant_id, patient_id, activity_date, steps, calories_burned, active_minutes, distance_km, sleep_hours, sleep_quality, water_ml)
@@ -327,6 +381,158 @@ public class WellnessHealthConnectIngestService {
                     calories_burned = wellness_activities.calories_burned + EXCLUDED.calories_burned
                 """,
                 tenantId, patientId, day, delta);
+    }
+
+    private void mergeNutritionFull(String tenantId, String patientId, HealthConnectChangeSetRequest.HealthRecord record) {
+        if (record.nutritionEnergyKcal() != null && record.nutritionEnergyKcal().compareTo(BigDecimal.ZERO) >= 0) {
+            mergeNutritionEnergy(tenantId, patientId, record);
+        }
+        mergeNutritionMacros(tenantId, patientId, record);
+    }
+
+    private void mergeNutritionMacros(String tenantId, String patientId, HealthConnectChangeSetRequest.HealthRecord record) {
+        OffsetDateTime t = parseOffset(record.startTime());
+        if (record.nutritionProteinG() != null && record.nutritionProteinG().compareTo(BigDecimal.ZERO) >= 0) {
+            insertOneVital(tenantId, patientId, t, "NUTRITION_PROTEIN_G", record.nutritionProteinG(), "g", null);
+        }
+        if (record.nutritionCarbsG() != null && record.nutritionCarbsG().compareTo(BigDecimal.ZERO) >= 0) {
+            insertOneVital(tenantId, patientId, t, "NUTRITION_CARBS_G", record.nutritionCarbsG(), "g", null);
+        }
+        if (record.nutritionFatG() != null && record.nutritionFatG().compareTo(BigDecimal.ZERO) >= 0) {
+            insertOneVital(tenantId, patientId, t, "NUTRITION_FAT_G", record.nutritionFatG(), "g", null);
+        }
+        if ((record.nutritionEnergyKcal() == null || record.nutritionEnergyKcal().compareTo(BigDecimal.ZERO) < 0)
+                && record.nutritionProteinG() == null
+                && record.nutritionCarbsG() == null
+                && record.nutritionFatG() == null) {
+            throw new IllegalArgumentException("Nutrition requires nutritionEnergyKcal and/or macro grams");
+        }
+    }
+
+    private void mergeActiveMinutes(String tenantId, String patientId, HealthConnectChangeSetRequest.HealthRecord record) {
+        if (record.activeMinutes() == null || record.activeMinutes() < 0) {
+            throw new IllegalArgumentException("Active minutes requires activeMinutes >= 0");
+        }
+        LocalDate day = activityLocalDate(record);
+        int m = record.activeMinutes();
+        jdbc.update(
+                """
+                INSERT INTO wellness_activities (tenant_id, patient_id, activity_date, steps, calories_burned, active_minutes, distance_km, sleep_hours, sleep_quality, water_ml)
+                VALUES (?, ?, ?, 0, 0, ?, 0, NULL, NULL, 0)
+                ON CONFLICT (tenant_id, patient_id, activity_date) DO UPDATE SET
+                    active_minutes = wellness_activities.active_minutes + EXCLUDED.active_minutes
+                """,
+                tenantId, patientId, day, m);
+    }
+
+    private void mergeMindfulnessMinutes(String tenantId, String patientId, HealthConnectChangeSetRequest.HealthRecord record) {
+        if (record.mindfulnessSessionMinutes() == null || record.mindfulnessSessionMinutes().compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("MindfulnessSession requires mindfulnessSessionMinutes >= 0");
+        }
+        int m = record.mindfulnessSessionMinutes().setScale(0, RoundingMode.HALF_UP).intValue();
+        LocalDate day = activityLocalDate(record);
+        jdbc.update(
+                """
+                INSERT INTO wellness_activities (tenant_id, patient_id, activity_date, steps, calories_burned, active_minutes, distance_km, sleep_hours, sleep_quality, water_ml)
+                VALUES (?, ?, ?, 0, 0, ?, 0, NULL, NULL, 0)
+                ON CONFLICT (tenant_id, patient_id, activity_date) DO UPDATE SET
+                    active_minutes = wellness_activities.active_minutes + EXCLUDED.active_minutes
+                """,
+                tenantId, patientId, day, m);
+    }
+
+    private void upsertExtension(String tenantId, String patientId, HealthConnectChangeSetRequest.HealthRecord record) {
+        String c = canonicalRecordType(record.type());
+        String payload = serializeRecord(record);
+        OffsetDateTime start = tryParseOffset(record.startTime());
+        OffsetDateTime end = tryParseOffset(record.endTime());
+        jdbc.update(
+                """
+                INSERT INTO wellness_connect_extension (id, tenant_id, patient_id, external_record_id, canonical_type, start_at, end_at, payload)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?::jsonb)
+                ON CONFLICT (tenant_id, patient_id, external_record_id) DO UPDATE SET
+                    canonical_type = EXCLUDED.canonical_type,
+                    start_at = EXCLUDED.start_at,
+                    end_at = EXCLUDED.end_at,
+                    payload = EXCLUDED.payload
+                """,
+                UUID.randomUUID(),
+                tenantId,
+                patientId,
+                record.id(),
+                c,
+                start,
+                end,
+                payload != null && !payload.isBlank() ? payload : "{}");
+    }
+
+    private static OffsetDateTime tryParseOffset(String iso) {
+        if (iso == null || iso.isBlank()) {
+            return null;
+        }
+        try {
+            return parseOffset(iso);
+        } catch (RuntimeException e) {
+            return null;
+        }
+    }
+
+    /**
+     * Local calendar day for daily rollups: uses {@code startZoneOffset} with zone-less {@code startTime},
+     * or converts an instant {@code startTime} into the wall date for that offset when offset is present.
+     */
+    private LocalDate activityLocalDate(HealthConnectChangeSetRequest.HealthRecord record) {
+        String zo = record.startZoneOffset();
+        if (zo != null && !zo.isBlank()) {
+            try {
+                ZoneOffset offset = ZoneOffset.of(zo.trim());
+                String s = record.startTime();
+                if (s != null && (s.endsWith("Z") || hasTimeZoneSuffix(s))) {
+                    return parseOffset(s).withOffsetSameInstant(offset).toLocalDate();
+                }
+                LocalDateTime ldt = LocalDateTime.parse(trimFractionalSeconds(s));
+                return ldt.atOffset(offset).toLocalDate();
+            } catch (Exception ignored) {
+                // fall through
+            }
+        }
+        return parseOffset(record.startTime()).toLocalDate();
+    }
+
+    private static boolean hasTimeZoneSuffix(String iso) {
+        if (iso.length() < 6) {
+            return false;
+        }
+        int t = iso.indexOf('T');
+        if (t < 0) {
+            return false;
+        }
+        for (int i = iso.length() - 1; i > t; i--) {
+            char c = iso.charAt(i);
+            if (c == 'Z') {
+                return true;
+            }
+            if ((c == '+' || c == '-') && i > t + 2) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static String trimFractionalSeconds(String iso) {
+        int dot = iso.indexOf('.');
+        if (dot < 0) {
+            return iso;
+        }
+        int t = iso.indexOf('T');
+        if (dot <= t) {
+            return iso;
+        }
+        int i = dot + 1;
+        while (i < iso.length() && Character.isDigit(iso.charAt(i))) {
+            i++;
+        }
+        return iso.substring(0, dot) + iso.substring(i);
     }
 
     private void insertBloodPressure(String tenantId, String patientId, HealthConnectChangeSetRequest.HealthRecord record) {
@@ -425,10 +631,6 @@ public class WellnessHealthConnectIngestService {
                 unit,
                 measuredAt,
                 notes);
-    }
-
-    private static LocalDate parseLocalDate(String iso) {
-        return parseOffset(iso).toLocalDate();
     }
 
     private static OffsetDateTime parseOffset(String iso) {

@@ -52,6 +52,24 @@ export type HealthConnectRecord = {
   exerciseTitle?: string;
   exerciseEnergyKcal?: number;
   exerciseDistanceMeters?: number;
+  wheelchairPushes?: number;
+  elevationGainedMeters?: number;
+  activeMinutes?: number;
+  stepsCadenceRpm?: number;
+  cyclingPedalingCadenceRpm?: number;
+  powerWatts?: number;
+  speedMetersPerSecond?: number;
+  respiratoryRateBpm?: number;
+  bodyTemperatureCelsius?: number;
+  basalMetabolicRateKcal?: number;
+  leanBodyMassKg?: number;
+  boneMassKg?: number;
+  vo2MaxMlKgMin?: number;
+  bodyWaterMassKg?: number;
+  mindfulnessSessionMinutes?: number;
+  nutritionProteinG?: number;
+  nutritionCarbsG?: number;
+  nutritionFatG?: number;
 };
 
 export type HealthConnectChangeSet = {
@@ -76,6 +94,23 @@ export async function getHealthConnectSleepSegments(patientId: string, limit = 1
 export async function getHealthConnectExerciseSessions(patientId: string, days = 30): Promise<unknown[]> {
   const res = await apiClient.get<{ data: unknown[] }>(
     `${BASE}/exercise-sessions?patientId=${encodeURIComponent(patientId)}&days=${days}`,
+  );
+  return res.data ?? [];
+}
+
+export async function getHealthConnectIngestLog(
+  patientId: string,
+  limit = 100,
+  includePayload = false,
+): Promise<unknown[]> {
+  const q = new URLSearchParams({ patientId, limit: String(limit), includePayload: String(includePayload) });
+  const res = await apiClient.get<{ data: unknown[] }>(`${BASE}/ingest-log?${q.toString()}`);
+  return res.data ?? [];
+}
+
+export async function getHealthConnectExtensionRecords(patientId: string, limit = 100): Promise<unknown[]> {
+  const res = await apiClient.get<{ data: unknown[] }>(
+    `${BASE}/extension-records?patientId=${encodeURIComponent(patientId)}&limit=${limit}`,
   );
   return res.data ?? [];
 }

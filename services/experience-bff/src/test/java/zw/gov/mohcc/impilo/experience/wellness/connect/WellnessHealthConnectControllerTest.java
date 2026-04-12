@@ -7,6 +7,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -56,5 +57,21 @@ class WellnessHealthConnectControllerTest {
         assertEquals(2, data.get("applied"));
         assertEquals(1, data.get("skipped"));
         verify(ingestService).ingest(eq("tenant-moh-zw"), eq(req));
+    }
+
+    @Test
+    void ingestLogDelegatesToQueryService() {
+        when(queryService.ingestLog("tenant-moh-zw", "patient-1", 50, true)).thenReturn(Collections.emptyList());
+        ResponseEntity<Map<String, Object>> res = controller.ingestLog("tenant-moh-zw", "patient-1", 50, true);
+        assertEquals(200, res.getStatusCode().value());
+        verify(queryService).ingestLog("tenant-moh-zw", "patient-1", 50, true);
+    }
+
+    @Test
+    void extensionRecordsDelegatesToQueryService() {
+        when(queryService.extensionRecords("tenant-moh-zw", "patient-1", 20)).thenReturn(Collections.emptyList());
+        ResponseEntity<Map<String, Object>> res = controller.extensionRecords("tenant-moh-zw", "patient-1", 20);
+        assertEquals(200, res.getStatusCode().value());
+        verify(queryService).extensionRecords("tenant-moh-zw", "patient-1", 20);
     }
 }

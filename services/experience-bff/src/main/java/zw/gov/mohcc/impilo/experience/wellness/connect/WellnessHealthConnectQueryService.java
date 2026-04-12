@@ -39,4 +39,42 @@ public class WellnessHealthConnectQueryService {
                 """,
                 tenantId, patientId, days);
     }
+
+    /** Dedupe log rows (optionally include JSON payload for replay). */
+    public List<Map<String, Object>> ingestLog(String tenantId, String patientId, int limit, boolean includePayload) {
+        int lim = Math.min(Math.max(limit, 1), 500);
+        if (includePayload) {
+            return jdbc.queryForList(
+                    """
+                    SELECT id, external_record_id, record_type, data_origin_platform, data_origin_package, ingested_at, payload
+                    FROM wellness_connect_ingest_log
+                    WHERE tenant_id = ? AND patient_id = ?
+                    ORDER BY ingested_at DESC
+                    LIMIT ?
+                    """,
+                    tenantId, patientId, lim);
+        }
+        return jdbc.queryForList(
+                """
+                SELECT id, external_record_id, record_type, data_origin_platform, data_origin_package, ingested_at
+                FROM wellness_connect_ingest_log
+                WHERE tenant_id = ? AND patient_id = ?
+                ORDER BY ingested_at DESC
+                LIMIT ?
+                """,
+                tenantId, patientId, lim);
+    }
+
+    /** Extension-store rows (unmapped / long-tail HC types). */
+    public List<Map<String, Object>> extensionRecords(String tenantId, String patientId, int limit) {
+        return jdbc.queryForList(
+                """
+                SELECT id, external_record_id, canonical_type, start_at, end_at, payload, created_at
+                FROM wellness_connect_extension
+                WHERE tenant_id = ? AND patient_id = ?
+                ORDER BY created_at DESC
+                LIMIT ?
+                """,
+                tenantId, patientId, Math.min(Math.max(limit, 1), 500));
+    }
 }

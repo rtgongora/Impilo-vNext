@@ -37,13 +37,21 @@ public class WellnessHealthConnectController {
         body.put("api", "impilo.wellness.connect.v1");
         body.put("alignment", "Parity with Android Health Connect datatype semantics; not a licensed Google API.");
         body.put("supportedRecordTypes", List.of(
-                "Steps", "Distance", "FloorsClimbed",
+                "Steps", "WheelchairPushes", "Distance", "FloorsClimbed",
                 "ActiveCaloriesBurned", "TotalCaloriesBurned",
                 "Hydration", "Nutrition",
                 "SleepSession", "HeartRate", "RestingHeartRate", "HeartRateVariabilityRmssd",
                 "Weight", "Height", "BodyFat",
                 "BloodPressure", "BloodGlucose", "OxygenSaturation",
-                "ExerciseSession"));
+                "ExerciseSession",
+                "ElevationGained", "ActiveMinutesBurned",
+                "StepsCadence", "CyclingPedalingCadence", "Power", "Speed",
+                "RespiratoryRate", "BodyTemperature", "BasalMetabolicRate",
+                "LeanBodyMass", "BoneMass", "Vo2Max", "BodyWaterMass",
+                "MindfulnessSession"));
+        body.put(
+                "extensionPassthrough",
+                "Any other Health Connect datatype is accepted on ingest and stored in wellness_connect_extension (dedupe key + full JSON payload).");
         body.put("typeAliases", Map.of(
                 "description", "Incoming type may include Record suffix (e.g. StepsRecord) or omit it.",
                 "canonicalization", "See WellnessHealthConnectIngestService.canonicalRecordType"));
@@ -55,7 +63,13 @@ public class WellnessHealthConnectController {
                 Map.of("types", List.of("SleepSession"), "store", "wellness_activities.sleep_hours + sleep_quality", "extra", "wellness_sleep_segments from sleepStages[]"),
                 Map.of("types", List.of("HeartRate", "RestingHeartRate", "BloodPressure", "BloodGlucose", "OxygenSaturation", "FloorsClimbed", "HeartRateVariabilityRmssd", "Weight", "Height", "BodyFat"),
                         "store", "wellness_vitals_log", "aggregate", "append row per sample or per scalar reading"),
-                Map.of("types", List.of("ExerciseSession"), "store", "wellness_exercise_sessions", "aggregate", "upsert by external_record_id")));
+                Map.of("types", List.of("ExerciseSession"), "store", "wellness_exercise_sessions", "aggregate", "upsert by external_record_id"),
+                Map.of("types", List.of("WheelchairPushes"), "store", "wellness_activities.steps", "aggregate", "sum pushes into steps column (HC parity)"),
+                Map.of("types", List.of("ElevationGained"), "store", "wellness_vitals_log", "aggregate", "append ELEVATION_GAINED_M"),
+                Map.of("types", List.of("ActiveMinutesBurned", "MindfulnessSession"),
+                        "store", "wellness_activities.active_minutes", "aggregate", "sum minutes by activity_date"),
+                Map.of("types", List.of("Other HC types (e.g. MenstruationFlow, OvulationTest, PlannedExerciseSession)"),
+                        "store", "wellness_connect_extension", "aggregate", "upsert JSON payload by external_record_id")));
         body.put("suggestedScopes", List.of(
                 "read.steps", "write.steps",
                 "read.distance", "write.distance",
@@ -78,7 +92,9 @@ public class WellnessHealthConnectController {
         body.put("payloadEcho", "Full JSON record stored in wellness_connect_ingest_log.payload for audit/replay.");
         body.put("readEndpoints", List.of(
                 "GET /sleep-segments?patientId=&limit=",
-                "GET /exercise-sessions?patientId=&days="));
+                "GET /exercise-sessions?patientId=&days=",
+                "GET /ingest-log?patientId=&limit=&includePayload=",
+                "GET /extension-records?patientId=&limit="));
         return ResponseEntity.ok(Map.of("data", body));
     }
 
@@ -97,6 +113,25 @@ public class WellnessHealthConnectController {
             @RequestParam String patientId,
             @RequestParam(defaultValue = "30") int days) {
         List<Map<String, Object>> rows = queryService.exerciseSessions(tenantId, patientId, days);
+        return ResponseEntity.ok(Map.of("data", rows));
+    }
+
+    @GetMapping("/ingest-log")
+    public ResponseEntity<Map<String, Object>> ingestLog(
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @RequestParam String patientId,
+            @RequestParam(defaultValue = "100") int limit,
+            @RequestParam(defaultValue = "false") boolean includePayload) {
+        List<Map<String, Object>> rows = queryService.ingestLog(tenantId, patientId, limit, includePayload);
+        return ResponseEntity.ok(Map.of("data", rows));
+    }
+
+    @GetMapping("/extension-records")
+    public ResponseEntity<Map<String, Object>> extensionRecords(
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @RequestParam String patientId,
+            @RequestParam(defaultValue = "100") int limit) {
+        List<Map<String, Object>> rows = queryService.extensionRecords(tenantId, patientId, limit);
         return ResponseEntity.ok(Map.of("data", rows));
     }
 
