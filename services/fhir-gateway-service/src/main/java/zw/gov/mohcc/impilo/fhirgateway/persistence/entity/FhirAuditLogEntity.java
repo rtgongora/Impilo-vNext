@@ -39,6 +39,9 @@ public class FhirAuditLogEntity {
     @Column(name = "correlation_id")
     private UUID correlationId;
 
+    @Column(name = "consent_outcome", length = 32)
+    private String consentOutcome;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
@@ -63,6 +66,8 @@ public class FhirAuditLogEntity {
     public void setOutcome(String outcome) { this.outcome = outcome; }
     public UUID getCorrelationId() { return correlationId; }
     public void setCorrelationId(UUID correlationId) { this.correlationId = correlationId; }
+    public String getConsentOutcome() { return consentOutcome; }
+    public void setConsentOutcome(String consentOutcome) { this.consentOutcome = consentOutcome; }
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }
 }

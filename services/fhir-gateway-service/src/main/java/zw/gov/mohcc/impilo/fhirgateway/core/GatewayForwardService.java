@@ -21,19 +21,45 @@ public class GatewayForwardService {
     private final FhirRouteRepository routeRepository;
     private final FhirAuditLogRepository auditLogRepository;
     private final EventOutboxRepository outboxRepository;
+    private final ConsentEnforcementService consentEnforcementService;
 
     public GatewayForwardService(FhirRouteRepository routeRepository,
                                  FhirAuditLogRepository auditLogRepository,
-                                 EventOutboxRepository outboxRepository) {
+                                 EventOutboxRepository outboxRepository,
+                                 ConsentEnforcementService consentEnforcementService) {
         this.routeRepository = routeRepository;
         this.auditLogRepository = auditLogRepository;
         this.outboxRepository = outboxRepository;
+        this.consentEnforcementService = consentEnforcementService;
     }
 
     @Transactional
     public ForwardResult forward(UUID tenantId, String actorId, UUID correlationId,
                                  String sourceIp, String resourceType,
-                                 String operation, String payload) {
+                                 String operation, String payload,
+                                 String subjectCpid, String purposeOfUse) {
+
+        // ── Consent enforcement (Health OS: Privacy by Architecture) ──
+        ConsentOutcome consentOutcome = consentEnforcementService.evaluate(
+                actorId, subjectCpid, resourceType, purposeOfUse, tenantId);
+
+        if (consentOutcome == ConsentOutcome.DENY) {
+            log.warn("Consent DENIED: actor={} subject={} resourceType={} tenant={}",
+                    actorId, subjectCpid, resourceType, tenantId);
+
+            FhirAuditLogEntity auditLog = buildAuditLog(tenantId, resourceType, operation,
+                    sourceIp, actorId, "CONSENT_DENIED", consentOutcome, correlationId);
+            auditLogRepository.save(auditLog);
+
+            EventOutboxEntity event = buildOutboxEvent(auditLog, operation,
+                    "CONSENT_DENIED", null, tenantId, correlationId);
+            outboxRepository.save(event);
+
+            return new ForwardResult(auditLog.getId(), resourceType, operation,
+                    "CONSENT_DENIED", null, correlationId, consentOutcome.name());
+        }
+
+        // ── Route lookup ──
         List<FhirRouteEntity> routes = routeRepository
                 .findByTenantIdAndResourceTypeAndEnabledTrue(tenantId, resourceType);
 
@@ -52,6 +78,34 @@ public class GatewayForwardService {
                     targetEndpoint, tenantId);
         }
 
+        FhirAuditLogEntity auditLog = buildAuditLog(tenantId, resourceType, operation,
+                sourceIp, actorId, outcome, consentOutcome, correlationId);
+        auditLogRepository.save(auditLog);
+
+        EventOutboxEntity event = buildOutboxEvent(auditLog, operation,
+                outcome, targetEndpoint, tenantId, correlationId);
+        outboxRepository.save(event);
+
+        return new ForwardResult(auditLog.getId(), resourceType, operation,
+                outcome, targetEndpoint, correlationId, consentOutcome.name());
+    }
+
+    /**
+     * Backward-compatible overload for callers that do not yet supply consent parameters.
+     */
+    @Transactional
+    public ForwardResult forward(UUID tenantId, String actorId, UUID correlationId,
+                                 String sourceIp, String resourceType,
+                                 String operation, String payload) {
+        return forward(tenantId, actorId, correlationId, sourceIp,
+                resourceType, operation, payload, null, null);
+    }
+
+    private FhirAuditLogEntity buildAuditLog(UUID tenantId, String resourceType,
+                                              String operation, String sourceIp,
+                                              String actorId, String outcome,
+                                              ConsentOutcome consentOutcome,
+                                              UUID correlationId) {
         FhirAuditLogEntity auditLog = new FhirAuditLogEntity();
         auditLog.setTenantId(tenantId);
         auditLog.setResourceType(resourceType);
@@ -59,23 +113,27 @@ public class GatewayForwardService {
         auditLog.setSourceIp(sourceIp);
         auditLog.setActorId(actorId);
         auditLog.setOutcome(outcome);
+        auditLog.setConsentOutcome(consentOutcome != null ? consentOutcome.name() : null);
         auditLog.setCorrelationId(correlationId);
-        auditLogRepository.save(auditLog);
+        return auditLog;
+    }
 
+    private EventOutboxEntity buildOutboxEvent(FhirAuditLogEntity auditLog,
+                                                String operation, String outcome,
+                                                String targetEndpoint,
+                                                UUID tenantId, UUID correlationId) {
         EventOutboxEntity event = new EventOutboxEntity();
         event.setAggregateType("FHIR_REQUEST");
         event.setAggregateId(auditLog.getId().toString());
         event.setEventType("FHIR_" + operation + "_FORWARDED");
-        event.setPayload(buildForwardPayload(resourceType, operation, outcome, targetEndpoint));
+        event.setPayload(buildForwardPayload(auditLog.getResourceType(), operation,
+                outcome, targetEndpoint));
         event.setTenantId(tenantId.toString());
         event.setCorrelationId(correlationId != null ? correlationId.toString() : null);
         event.setSubjectType("FhirAuditLog");
         event.setSubjectId(auditLog.getId().toString());
         event.setPartitionKey(tenantId.toString());
-        outboxRepository.save(event);
-
-        return new ForwardResult(auditLog.getId(), resourceType, operation,
-                outcome, targetEndpoint, correlationId);
+        return event;
     }
 
     private String buildForwardPayload(String resourceType, String operation,
@@ -93,6 +151,7 @@ public class GatewayForwardService {
             String operation,
             String outcome,
             String targetEndpoint,
-            UUID correlationId
+            UUID correlationId,
+            String consentOutcome
     ) {}
 }

@@ -81,7 +81,9 @@ public class GatewayRouteController {
                 request.sourceIp(),
                 request.resourceType(),
                 request.operation(),
-                request.payload());
+                request.payload(),
+                request.subjectCpid(),
+                request.purposeOfUse());
 
         return ResponseEntity.ok(Map.of(
                 "status", "ok",
@@ -122,6 +124,8 @@ public class GatewayRouteController {
             String sourceIp,
             String resourceType,
             String operation,
-            String payload
+            String payload,
+            String subjectCpid,
+            String purposeOfUse
     ) {}
 }

@@ -34,6 +34,8 @@ spring:
 fhir-gateway:
   outbox:
     poll-interval-ms: 2000
+  consent:
+    base-url: ${CONSENT_SERVICE_BASE_URL:http://localhost:8182}
 
 management:
   endpoints:
