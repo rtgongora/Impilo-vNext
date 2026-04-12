@@ -96,9 +96,12 @@ public class EncounterService {
             journeyStateMachine.transition(journey, JourneyState.IN_SERVICE);
         }
 
-        // Outbox event
+        // Outbox event (Kafka: pct.encounter.started — include tenant/event id for downstream idempotency)
         Map<String, Object> payload = new LinkedHashMap<>();
-        payload.put("encounterRef", encounter.getEncounterRef().toString());
+        String encounterRefStr = encounter.getEncounterRef().toString();
+        payload.put("eventId", encounterRefStr + ":ENCOUNTER_STARTED");
+        payload.put("tenantId", ctx.tenantId().toString());
+        payload.put("encounterRef", encounterRefStr);
         payload.put("journeyId", journeyId);
         payload.put("patientCpid", journey.getPatientCpid());
         payload.put("encounterType", encounterType);
@@ -135,9 +138,14 @@ public class EncounterService {
         encounter.setEndedAt(OffsetDateTime.now());
         encounter = encounterRepository.save(encounter);
 
+        TrustContext ctx = TrustContextHolder.require();
         Map<String, Object> payload = new LinkedHashMap<>();
-        payload.put("encounterRef", encounter.getEncounterRef().toString());
+        String encounterRefStr = encounter.getEncounterRef().toString();
+        payload.put("eventId", encounterRefStr + ":ENCOUNTER_COMPLETED");
+        payload.put("tenantId", ctx.tenantId().toString());
+        payload.put("encounterRef", encounterRefStr);
         payload.put("journeyId", encounter.getJourneyId());
+        payload.put("patientCpid", encounter.getSubjectCpid());
         payload.put("encounterType", encounter.getEncounterType());
         payload.put("endedAt", encounter.getEndedAt().toString());
         writeOutbox("ENCOUNTER", encounter.getEncounterRef().toString(),

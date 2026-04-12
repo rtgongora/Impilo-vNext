@@ -1,0 +1,121 @@
+asyncapi: '2.6.0'
+info:
+  title: Impilo — PCT encounter lifecycle & surveillance case opened (Kafka)
+  version: '0.1.0'
+  description: |
+    Channels aligned with pct-service `OutboxPublisher` + `EncounterService` payloads,
+    costing-engine `CostaEventConsumer`, experience-bff `UpstreamEventConsumer`,
+    and surveillance-service `SurvOutboxPublisher` for CASE_OPENED.
+defaultContentType: application/json
+
+channels:
+  pct.encounter.started:
+    description: Emitted when a clinical encounter starts (PCT transactional outbox).
+    subscribe:
+      operationId: consumePctEncounterStarted
+      message:
+        $ref: '#/components/messages/PctEncounterStarted'
+  pct.encounter.completed:
+    description: Emitted when a clinical encounter completes.
+    subscribe:
+      operationId: consumePctEncounterCompleted
+      message:
+        $ref: '#/components/messages/PctEncounterCompleted'
+  impilo.surv.case.opened.v1:
+    description: Surveillance case auto-opened from signal ingestion (see `IngestService`).
+    subscribe:
+      operationId: consumeSurvCaseOpened
+      message:
+        $ref: '#/components/messages/SurvCaseOpened'
+
+components:
+  messages:
+    PctEncounterStarted:
+      summary: ENCOUNTER_STARTED → pct.encounter.started
+      payload:
+        type: object
+        required:
+          - eventId
+          - tenantId
+          - encounterRef
+          - journeyId
+          - patientCpid
+          - encounterType
+          - facilityId
+          - startedAt
+        properties:
+          eventId:
+            type: string
+            description: Idempotency key, format `{encounterRef}:ENCOUNTER_STARTED`
+          tenantId:
+            type: string
+            format: uuid
+          encounterRef:
+            type: string
+            format: uuid
+          journeyId:
+            type: string
+          patientCpid:
+            type: string
+          encounterType:
+            type: string
+          assignedProvider:
+            type: string
+          workspaceId:
+            type: string
+            nullable: true
+          facilityId:
+            type: string
+            format: uuid
+          startedAt:
+            type: string
+            description: ISO-8601 offset datetime
+    PctEncounterCompleted:
+      summary: ENCOUNTER_COMPLETED → pct.encounter.completed
+      payload:
+        type: object
+        required:
+          - eventId
+          - tenantId
+          - encounterRef
+          - journeyId
+          - patientCpid
+          - encounterType
+          - endedAt
+        properties:
+          eventId:
+            type: string
+            description: Idempotency key, format `{encounterRef}:ENCOUNTER_COMPLETED`
+          tenantId:
+            type: string
+            format: uuid
+          encounterRef:
+            type: string
+            format: uuid
+          journeyId:
+            type: string
+          patientCpid:
+            type: string
+          encounterType:
+            type: string
+          endedAt:
+            type: string
+            description: ISO-8601 offset datetime
+    SurvCaseOpened:
+      summary: CASE_OPENED → impilo.surv.case.opened.v1
+      payload:
+        type: object
+        properties:
+          id:
+            type: integer
+          tenantId:
+            type: string
+            format: uuid
+          caseType:
+            type: string
+          title:
+            type: string
+          severity:
+            type: string
+          status:
+            type: string

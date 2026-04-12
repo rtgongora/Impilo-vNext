@@ -151,7 +151,7 @@ Kafka is an **event transport**, not a source of truth. All domain state origina
 | Topic Category | Retention | Compaction | Example Topics |
 |---------------|-----------|:----------:|----------------|
 | Platform audit events | 30 days | No | `platform.audit.events`, `tshepo.audit.events` |
-| Clinical events | 14 days | No | `pct.encounter.opened`, `oros.order.placed` |
+| Clinical events | 14 days | No | `pct.encounter.started`, `oros.order.placed` |
 | Pharmacy/inventory events | 14 days | No | `pharmacy.dispense.completed`, `inventory.ledger.event_posted` |
 | Financial events | 30 days | No | `mushex.payment.status_changed`, `costa.bill.finalized` |
 | Control channels | 7 days | Yes | `impilo.control.revocation.v1` |

@@ -79,6 +79,9 @@ TOPICS=(
 
     # Clinical
     "pct.encounter.events:3:1"
+    "pct.encounter.started:6:1"
+    "pct.encounter.completed:6:1"
+    "impilo.surv.case.opened.v1:6:1"
     "oros.order.events:3:1"
     "oros.result.events:3:1"
     "ubomi.visit.events:3:1"

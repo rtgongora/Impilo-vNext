@@ -179,7 +179,7 @@ kafka-topics.sh --bootstrap-server localhost:9092 --create \
   --config retention.ms=2592000000  # 30 days
 
 # Clinical events
-for topic in pct.encounter.opened pct.encounter.closed \
+for topic in pct.encounter.started pct.encounter.completed \
   oros.order.placed oros.order.status_changed oros.result.available; do
   kafka-topics.sh --bootstrap-server localhost:9092 --create \
     --topic "${topic}" --partitions 6 --replication-factor 3 \

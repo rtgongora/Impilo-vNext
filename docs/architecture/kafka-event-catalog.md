@@ -25,8 +25,8 @@ Group id: **`experience-bff`**. Intended for cache/local projection sync; handle
 
 | Kafka topic | Notable JSON paths (from handler) |
 |-------------|-----------------------------------|
-| `pct.encounter.opened` | `encounterId`, `patientId` |
-| `pct.encounter.closed` | `encounterId` |
+| `pct.encounter.started` | `encounterRef`, `journeyId`, `patientCpid` (see [`EncounterService`](../../services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/core/EncounterService.java) for full payload incl. `eventId`, `tenantId`) |
+| `pct.encounter.completed` | `encounterRef`, `journeyId` |
 | `oros.order.status_changed` | `orderId`, `status` |
 | `oros.result.available` | `orderId`, `resultId` |
 | `pharmacy.dispense.completed` | `prescriptionId` |
@@ -36,19 +36,18 @@ Group id: **`experience-bff`**. Intended for cache/local projection sync; handle
 | `tuso.workspace.updated` | `workspaceId` |
 | `tuso.facility.profile.updated` | `facilityId` |
 | `pacs.study.available` | `studyInstanceUid`, `modality`, `patientId`, `orderId` |
-| `surv.case.reported` | `caseId`, `disease` |
-| `surv.outbreak.declared` | `outbreakId`, `disease` |
+| `impilo.surv.case.opened.v1` | `id`, `caseType`, `title`, `severity`, `status`, `tenantId` (from surveillance [`IngestService.buildCasePayload`](../../services/surveillance-service/src/main/java/zw/gov/mohcc/impilo/surv/core/IngestService.java)) |
 
 ---
 
-## 3. Known producer ↔ consumer naming gaps (code-derived)
+## 3. Producer ↔ consumer reconciliation log
 
-These are **mismatches visible from static analysis** — they may be intentional bridges elsewhere or future work.
+| Area | Resolution (2026-04-12) |
+|------|-------------------------|
+| PCT encounter lifecycle | **Costa** + **Experience BFF** now subscribe to `pct.encounter.started` / `pct.encounter.completed` (matching PCT `OutboxPublisher`). Encounter outbox payloads include **`eventId`** and **`tenantId`** for Costa idempotency and tenant scoping. |
+| Surveillance case opened | **Experience BFF** now subscribes to **`impilo.surv.case.opened.v1`** (matching `SurvOutboxPublisher` for `CASE_OPENED`). Removed unused BFF subscription to `surv.outbreak.declared` (no producer in surveillance-service yet). |
 
-| Consumer expects | Producer (current code) | Notes |
-|------------------|-------------------------|--------|
-| `pct.encounter.opened` / `pct.encounter.closed` | PCT `OutboxPublisher` emits `pct.encounter.started` / `pct.encounter.completed` for `ENCOUNTER_STARTED` / `ENCOUNTER_COMPLETED` | Costa `CostaEventConsumer` also listens on `opened` / `closed`. Align naming or add dual-publish. |
-| `surv.case.reported`, `surv.outbreak.declared` | Surveillance `SurvOutboxPublisher` maps to `impilo.surv.signal.created.v1`, `impilo.surv.signal.hit.v1`, `impilo.surv.case.opened.v1`, fallback `impilo.surv.unknown` | BFF surveillance listeners may never fire until topics are reconciled. |
+**Residual (inventory):** other topic pairs across the fleet may still drift — extend this table as `@KafkaListener` / outbox routing is audited.
 
 ---
 
@@ -102,7 +101,7 @@ Each file maps **outbox `eventType`** (or aggregate) → **Kafka topic**. Tests 
 
 ## 7. AsyncAPI and schema ownership
 
-Machine-readable AsyncAPI specs are **not** generated for most topics yet. Placeholder layout and conventions: [`contracts/asyncapi/README.md`](../../contracts/asyncapi/README.md).
+Starter specs: [`pct-clinical-encounter.asyncapi.yaml`](../../contracts/asyncapi/pct-clinical-encounter.asyncapi.yaml). Conventions and backlog: [`contracts/asyncapi/README.md`](../../contracts/asyncapi/README.md).
 
 ---
 

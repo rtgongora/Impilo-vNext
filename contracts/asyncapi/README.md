@@ -14,6 +14,12 @@ The authoritative **human-maintained inventory** of topics and known producer/co
 
 [`docs/architecture/kafka-event-catalog.md`](../../docs/architecture/kafka-event-catalog.md)
 
+## Published specs
+
+| Document | Topics |
+|----------|--------|
+| [`pct-clinical-encounter.asyncapi.yaml`](./pct-clinical-encounter.asyncapi.yaml) | `pct.encounter.started`, `pct.encounter.completed`, `impilo.surv.case.opened.v1` |
+
 ## Phase E status
 
-Baseline catalog + this layout landed **2026-04-12**. Adding AsyncAPI per channel is incremental work after topic names are stabilised (see catalog §3 for naming gaps to resolve first).
+Baseline catalog landed **2026-04-12**; **slice 2** added the AsyncAPI file above after reconciling BFF/Costa/PCT/surveillance topic names (see [`kafka-event-catalog.md`](../../docs/architecture/kafka-event-catalog.md) §3).

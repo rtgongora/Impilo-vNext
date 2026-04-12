@@ -31,25 +31,28 @@ public class UpstreamEventConsumer {
 
     // ── PCT Events: encounter lifecycle ─────────────────────────────
 
-    @KafkaListener(topics = "pct.encounter.opened", groupId = "experience-bff")
-    public void onEncounterOpened(String payload) {
+    @KafkaListener(topics = "pct.encounter.started", groupId = "experience-bff")
+    public void onEncounterStarted(String payload) {
         try {
             JsonNode node = objectMapper.readTree(payload);
-            log.info("Encounter opened: encounterId={}, patientId={}",
-                    node.path("encounterId").asText(),
-                    node.path("patientId").asText());
+            log.info("Encounter started: encounterRef={}, journeyId={}, patientCpid={}",
+                    node.path("encounterRef").asText(),
+                    node.path("journeyId").asText(),
+                    node.path("patientCpid").asText());
         } catch (Exception e) {
-            log.error("Failed to process pct.encounter.opened: {}", e.getMessage());
+            log.error("Failed to process pct.encounter.started: {}", e.getMessage());
         }
     }
 
-    @KafkaListener(topics = "pct.encounter.closed", groupId = "experience-bff")
-    public void onEncounterClosed(String payload) {
+    @KafkaListener(topics = "pct.encounter.completed", groupId = "experience-bff")
+    public void onEncounterCompleted(String payload) {
         try {
             JsonNode node = objectMapper.readTree(payload);
-            log.info("Encounter closed: encounterId={}", node.path("encounterId").asText());
+            log.info("Encounter completed: encounterRef={}, journeyId={}",
+                    node.path("encounterRef").asText(),
+                    node.path("journeyId").asText());
         } catch (Exception e) {
-            log.error("Failed to process pct.encounter.closed: {}", e.getMessage());
+            log.error("Failed to process pct.encounter.completed: {}", e.getMessage());
         }
     }
 
@@ -170,27 +173,18 @@ public class UpstreamEventConsumer {
 
     // ── Surveillance Events ─────────────────────────────────────────
 
-    @KafkaListener(topics = "surv.case.reported", groupId = "experience-bff")
-    public void onSurveillanceCaseReported(String payload) {
+    /** Aligned with surveillance-service {@code SurvOutboxPublisher} for {@code CASE_OPENED}. */
+    @KafkaListener(topics = "impilo.surv.case.opened.v1", groupId = "experience-bff")
+    public void onSurveillanceCaseOpened(String payload) {
         try {
             JsonNode node = objectMapper.readTree(payload);
-            log.info("Surveillance case reported: caseId={}, disease={}",
-                    node.path("caseId").asText(),
-                    node.path("disease").asText());
+            String caseType = node.path("caseType").asText();
+            log.info("Surveillance case opened: id={}, caseType={}, title={}",
+                    node.path("id").asText(),
+                    caseType,
+                    node.path("title").asText());
         } catch (Exception e) {
-            log.error("Failed to process surv.case.reported: {}", e.getMessage());
-        }
-    }
-
-    @KafkaListener(topics = "surv.outbreak.declared", groupId = "experience-bff")
-    public void onOutbreakDeclared(String payload) {
-        try {
-            JsonNode node = objectMapper.readTree(payload);
-            log.info("Outbreak declared: outbreakId={}, disease={}",
-                    node.path("outbreakId").asText(),
-                    node.path("disease").asText());
-        } catch (Exception e) {
-            log.error("Failed to process surv.outbreak.declared: {}", e.getMessage());
+            log.error("Failed to process impilo.surv.case.opened.v1: {}", e.getMessage());
         }
     }
 }
