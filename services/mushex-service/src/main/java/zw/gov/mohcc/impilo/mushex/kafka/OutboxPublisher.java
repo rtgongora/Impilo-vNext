@@ -53,7 +53,7 @@ public class OutboxPublisher {
             case "STATUS_CHANGED" -> "mushex.payment.status.changed";
             case "REFUND_REQUESTED", "REFUND_COMPLETED", "REFUND_FAILED" -> "mushex.refund.status.changed";
             case "CLAIM_SUBMITTED" -> "mushex.claim.submitted";
-            case "CLAIM_ADJUDICATED" -> "mushex.claim.adjudicated";
+            case "CLAIM_ADJUDICATED", "CLAIM_PAID" -> "mushex.claim.adjudicated";
             case "SETTLEMENT_BATCH_RELEASED" -> "mushex.settlement.batch.released";
             case "FRAUD_FLAGGED" -> "mushex.fraud.flagged";
             case "REMITTANCE_ISSUED" -> "mushex.remittance.issued";

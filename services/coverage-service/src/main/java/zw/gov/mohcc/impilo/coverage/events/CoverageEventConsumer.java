@@ -12,6 +12,7 @@ import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import zw.gov.mohcc.impilo.coverage.core.PreauthUtilizationService;
 import zw.gov.mohcc.impilo.coverage.domain.ClaimEntity;
 import zw.gov.mohcc.impilo.coverage.repository.ClaimRepository;
 
@@ -30,10 +31,14 @@ public class CoverageEventConsumer {
 
     private final ClaimRepository claimRepository;
     private final ObjectMapper objectMapper;
+    private final PreauthUtilizationService preauthUtilizationService;
 
-    public CoverageEventConsumer(ClaimRepository claimRepository, ObjectMapper objectMapper) {
+    public CoverageEventConsumer(ClaimRepository claimRepository,
+                                  ObjectMapper objectMapper,
+                                  PreauthUtilizationService preauthUtilizationService) {
         this.claimRepository = claimRepository;
         this.objectMapper = objectMapper;
+        this.preauthUtilizationService = preauthUtilizationService;
     }
 
     @KafkaListener(
@@ -117,6 +122,12 @@ public class CoverageEventConsumer {
     }
 
     private void handleClaimAdjudicated(JsonNode event, String correlationId) {
+        String status = text(event, "status", "claimStatus", "claim_status");
+        if (status != null && "PAID".equalsIgnoreCase(status.trim())) {
+            recordUtilizationForPaidClaim(event, correlationId);
+            return;
+        }
+
         String claimKey = text(event, "claimId", "claim_id");
         if (claimKey == null) {
             log.warn("MUSHEX claim adjudicated missing claimId [correlation_id={}]", correlationId);
@@ -151,6 +162,29 @@ public class CoverageEventConsumer {
                     claim.getId(), correlationId);
         } catch (JsonProcessingException e) {
             log.error("Failed to serialize adjudication payload for claim {}: {}", claim.getId(), e.getMessage());
+        }
+    }
+
+    private void recordUtilizationForPaidClaim(JsonNode event, String correlationId) {
+        String tenantStr = text(event, "tenantId", "tenant_id");
+        String patientCpid = text(event, "patientCpid", "patient_cpid");
+        String planCode = text(event, "planCode", "plan_code");
+        String serviceCode = text(event, "serviceCode", "service_code", "benefitCode", "benefit_code");
+        if (tenantStr == null || patientCpid == null || planCode == null) {
+            log.info("Skipping utilization record — missing tenant/cpid/plan on PAID claim event [correlation_id={}]",
+                    correlationId);
+            return;
+        }
+        BigDecimal amount = decimal(event, "insurerPayable", "insurer_payable", "amount", "amountPaid", "amount_paid");
+        if (amount == null) {
+            amount = BigDecimal.ZERO;
+        }
+        try {
+            preauthUtilizationService.recordUtilization(tenantStr, patientCpid, planCode, serviceCode, amount);
+            log.info("Recorded utilization for PAID claim tenant={} member={} plan={} benefit={} amount={} [correlation_id={}]",
+                    tenantStr, patientCpid, planCode, serviceCode, amount, correlationId);
+        } catch (Exception e) {
+            log.error("Failed to record utilization for PAID claim [correlation_id={}]: {}", correlationId, e.getMessage(), e);
         }
     }
 

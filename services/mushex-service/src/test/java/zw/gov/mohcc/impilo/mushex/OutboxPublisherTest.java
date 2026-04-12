@@ -89,6 +89,12 @@ class OutboxPublisherTest {
     }
 
     @Test
+    void routeTopic_claimPaid_routesToClaimAdjudicatedTopic() {
+        assertEquals("mushex.claim.adjudicated",
+            OutboxPublisher.routeTopic("CLAIM_PAID"));
+    }
+
+    @Test
     void routeTopic_settlementBatchReleased_returnsCorrectTopic() {
         assertEquals("mushex.settlement.batch.released",
             OutboxPublisher.routeTopic("SETTLEMENT_BATCH_RELEASED"));

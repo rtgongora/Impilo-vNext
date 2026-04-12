@@ -32,9 +32,16 @@ public class InternalEligibilityCheckController {
             @Valid @RequestBody InternalEligibilityCheckRequest request) {
 
         UUID tenantId = UUID.fromString(tenantIdHeader);
-        boolean eligible = eligibilityCheckService.isEligible(
-                tenantId, request.patientCpid(), request.planCode());
-        String reason = eligible ? "ELIGIBLE" : "COVERAGE_INELIGIBLE";
-        return ResponseEntity.ok(new InternalEligibilityCheckResponse(eligible, reason));
+        InternalEligibilityCheckService.EligibilityCheckOutcome outcome = eligibilityCheckService.evaluate(
+                tenantId,
+                request.patientCpid(),
+                request.planCode(),
+                request.serviceCode() != null ? request.serviceCode() : "");
+        return ResponseEntity.ok(new InternalEligibilityCheckResponse(
+                outcome.eligible(),
+                outcome.reason(),
+                outcome.utilizationLimit(),
+                outcome.utilizationUsed(),
+                outcome.remainingAmount()));
     }
 }

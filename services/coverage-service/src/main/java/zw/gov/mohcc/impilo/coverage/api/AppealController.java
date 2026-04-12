@@ -26,6 +26,7 @@ import zw.gov.mohcc.impilo.coverage.api.dto.ReviewAppealRequest;
 import zw.gov.mohcc.impilo.coverage.api.dto.SubmitAppealRequest;
 import zw.gov.mohcc.impilo.coverage.core.CoverageEventService;
 import zw.gov.mohcc.impilo.coverage.domain.AppealEntity;
+import zw.gov.mohcc.impilo.coverage.integration.MushexClaimResubmitClient;
 import zw.gov.mohcc.impilo.coverage.domain.ClaimEntity;
 import zw.gov.mohcc.impilo.coverage.repository.AppealRepository;
 import zw.gov.mohcc.impilo.coverage.repository.ClaimRepository;
@@ -44,15 +45,18 @@ public class AppealController {
     private final AppealRepository appealRepository;
     private final ClaimRepository claimRepository;
     private final CoverageEventService eventService;
+    private final MushexClaimResubmitClient mushexClaimResubmitClient;
     private final ObjectMapper objectMapper;
 
     public AppealController(AppealRepository appealRepository,
                             ClaimRepository claimRepository,
                             CoverageEventService eventService,
+                            MushexClaimResubmitClient mushexClaimResubmitClient,
                             ObjectMapper objectMapper) {
         this.appealRepository = appealRepository;
         this.claimRepository = claimRepository;
         this.eventService = eventService;
+        this.mushexClaimResubmitClient = mushexClaimResubmitClient;
         this.objectMapper = objectMapper;
     }
 
@@ -203,11 +207,28 @@ public class AppealController {
 
         UUID corr = CorrelationIds.fromHeader(correlationId);
         Map<String, Object> payload = new LinkedHashMap<>();
-        payload.put("appeal_id", appeal.getId().toString());
-        payload.put("decision", d);
         payload.put("status", appeal.getStatus());
         payload.put("meta", CoverageEventService.meta(corr));
-        eventService.emitAppealDecided(appeal.getId(), corr, tid, podId, appeal.getClaimId(), payload);
+        eventService.emitAppealDecided(
+                appeal.getId(),
+                corr,
+                tid,
+                podId,
+                appeal.getClaimId(),
+                d,
+                body.decisionReason(),
+                body.decidedBy(),
+                appeal.getDecidedAt(),
+                payload);
+
+        if ("OVERTURNED".equals(d) || "PARTIAL".equals(d)) {
+            mushexClaimResubmitClient.notifyClaimResubmitAfterAppeal(tid, podId, corr, appeal.getClaimId());
+            Map<String, Object> resubmitPayload = new LinkedHashMap<>();
+            resubmitPayload.put("meta", CoverageEventService.meta(corr));
+            resubmitPayload.put("source", "appeal_overturned");
+            resubmitPayload.put("appeal_id", appeal.getId().toString());
+            eventService.emitClaimResubmitted(corr, tid, podId, appeal.getClaimId(), resubmitPayload);
+        }
 
         return ResponseEntity.ok(ApiResponse.of(toResponse(appeal)));
     }

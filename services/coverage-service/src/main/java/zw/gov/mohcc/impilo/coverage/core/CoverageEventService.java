@@ -10,6 +10,7 @@ import zw.gov.mohcc.impilo.coverage.domain.OutboxEventEntity;
 import zw.gov.mohcc.impilo.coverage.repository.OutboxEventRepository;
 import zw.gov.mohcc.impilo.sharedkernel.events.EventTopicRegistry;
 
+import java.time.OffsetDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -99,11 +100,37 @@ public class CoverageEventService {
                 correlationId, tenantId, podId, claimKey, "APPEAL", payload);
     }
 
+    /**
+     * Appeal final disposition for downstream rails (explicit legacy-style {@code coverage.appeal.decided} type).
+     */
     @Transactional
     public void emitAppealDecided(UUID appealId, UUID correlationId, UUID tenantId, String podId,
-                                  String claimKey, Map<String, Object> payload) {
-        emit("APPEAL", appealId.toString(), TOPICS.eventType("appeal", "decided"),
-                correlationId, tenantId, podId, claimKey, "APPEAL", payload);
+                                  String claimId, String decision, String decisionReason, String decidedBy,
+                                  OffsetDateTime decidedAt, Map<String, Object> payload) {
+        LinkedHashMap<String, Object> body = new LinkedHashMap<>();
+        if (payload != null) {
+            body.putAll(payload);
+        }
+        body.put("appeal_id", appealId.toString());
+        body.put("claim_id", claimId);
+        body.put("decision", decision);
+        body.put("decision_reason", decisionReason);
+        body.put("decided_by", decidedBy);
+        body.put("decided_at", decidedAt != null ? decidedAt.toString() : null);
+        emit("APPEAL", appealId.toString(), "coverage.appeal.decided",
+                correlationId, tenantId, podId, appealId.toString(), "APPEAL", body);
+    }
+
+    @Transactional
+    public void emitClaimResubmitted(UUID correlationId, UUID tenantId, String podId,
+                                      String mushexClaimId, Map<String, Object> payload) {
+        LinkedHashMap<String, Object> body = new LinkedHashMap<>();
+        if (payload != null) {
+            body.putAll(payload);
+        }
+        body.putIfAbsent("claim_id", mushexClaimId);
+        emit("CLAIM", mushexClaimId, "coverage.claim.resubmitted",
+                correlationId, tenantId, podId, mushexClaimId, "CLAIM", body);
     }
 
     /**
