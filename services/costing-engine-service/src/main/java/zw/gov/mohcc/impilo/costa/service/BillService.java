@@ -38,10 +38,12 @@ public class BillService {
     private final EncounterRepository encounterRepository;
     private final ApprovalRepository approvalRepository;
     private final EventOutboxRepository outboxRepository;
+    private final OperationalFinanceService operationalFinanceService;
     private final CostEngineRegistry costEngineRegistry;
     private final ChargingRuleEngine chargingRuleEngine;
     private final ExemptionEngine exemptionEngine;
     private final ObjectMapper objectMapper;
+    private final PatientAccountService patientAccountService;
 
     public BillService(BillHeaderRepository billHeaderRepository,
                        BillLineRepository billLineRepository,
@@ -49,20 +51,24 @@ public class BillService {
                        EncounterRepository encounterRepository,
                        ApprovalRepository approvalRepository,
                        EventOutboxRepository outboxRepository,
+                       OperationalFinanceService operationalFinanceService,
                        CostEngineRegistry costEngineRegistry,
                        ChargingRuleEngine chargingRuleEngine,
                        ExemptionEngine exemptionEngine,
-                       ObjectMapper objectMapper) {
+                       ObjectMapper objectMapper,
+                       PatientAccountService patientAccountService) {
         this.billHeaderRepository = billHeaderRepository;
         this.billLineRepository = billLineRepository;
         this.billPartyRepository = billPartyRepository;
         this.encounterRepository = encounterRepository;
         this.approvalRepository = approvalRepository;
         this.outboxRepository = outboxRepository;
+        this.operationalFinanceService = operationalFinanceService;
         this.costEngineRegistry = costEngineRegistry;
         this.chargingRuleEngine = chargingRuleEngine;
         this.exemptionEngine = exemptionEngine;
         this.objectMapper = objectMapper;
+        this.patientAccountService = patientAccountService;
     }
 
     /**
@@ -264,6 +270,14 @@ public class BillService {
         publishEvent("BILL", billId, "BILL_FINALIZED",
                 Map.of("billId", billId, "totalPayable", bill.getTotalPayable()),
                 ctx.tenantId());
+
+        operationalFinanceService.onBillFinalized(bill);
+
+        try {
+            patientAccountService.recordBillFinalized(bill);
+        } catch (Exception e) {
+            log.warn("Patient account charge not recorded for bill {}: {}", billId, e.getMessage());
+        }
 
         return bill;
     }

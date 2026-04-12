@@ -32,22 +32,33 @@ public class PaymentIntegrationService {
     private final InvoiceRepository invoiceRepository;
     private final ClaimPackRepository claimPackRepository;
     private final EventOutboxRepository outboxRepository;
+    private final ReceivablesService receivablesService;
     private final ObjectMapper objectMapper;
+    private final EncounterRepository encounterRepository;
+    private final PatientAccountService patientAccountService;
 
     public PaymentIntegrationService(BillHeaderRepository billHeaderRepository,
+                                     EncounterRepository encounterRepository,
                                      PaymentRepository paymentRepository,
                                      RefundRepository refundRepository,
                                      InvoiceRepository invoiceRepository,
                                      ClaimPackRepository claimPackRepository,
                                      EventOutboxRepository outboxRepository,
-                                     ObjectMapper objectMapper) {
+                                     ReceivablesService receivablesService,
+                                     ObjectMapper objectMapper,
+                                     EncounterRepository encounterRepository,
+                                     PatientAccountService patientAccountService) {
         this.billHeaderRepository = billHeaderRepository;
+        this.encounterRepository = encounterRepository;
         this.paymentRepository = paymentRepository;
         this.refundRepository = refundRepository;
         this.invoiceRepository = invoiceRepository;
         this.claimPackRepository = claimPackRepository;
         this.outboxRepository = outboxRepository;
+        this.receivablesService = receivablesService;
         this.objectMapper = objectMapper;
+        this.encounterRepository = encounterRepository;
+        this.patientAccountService = patientAccountService;
     }
 
     public List<PaymentEntity> getPaymentsForBill(String billId) {
@@ -79,6 +90,8 @@ public class PaymentIntegrationService {
         invoice.setBillId(billId);
         invoice.setInvoiceNumber(invoiceNumber);
         invoice = invoiceRepository.save(invoice);
+
+        receivablesService.attachInvoice(bill.getTenantId(), billId, invoice.getInvoiceId());
 
         TrustContext ctx = TrustContextHolder.require();
         publishEvent("INVOICE", invoice.getInvoiceId(), "INVOICE_ISSUED",
@@ -168,9 +181,20 @@ public class PaymentIntegrationService {
 
         BillHeaderEntity bill = billHeaderRepository.findById(payment.getBillId()).orElse(null);
         if (bill != null) {
+            if (newStatus == PaymentStatus.PAID && paidAmount != null) {
+                receivablesService.applyPaymentToBill(bill, paidAmount);
+            }
             publishEvent("PAYMENT", payment.getId().toString(), "PAYMENT_STATUS_CHANGED",
                     Map.of("billId", payment.getBillId(), "status", status, "paidAmount", paidAmount),
                     bill.getTenantId());
+            if (newStatus == PaymentStatus.PAID) {
+                try {
+                    patientAccountService.recordPatientPaymentCaptured(payment, bill);
+                } catch (Exception e) {
+                    log.warn("Patient account payment not recorded for payment {}: {}",
+                            payment.getId(), e.getMessage());
+                }
+            }
         }
     }
 
@@ -256,7 +280,12 @@ public class PaymentIntegrationService {
     }
 
     private String getPatientCpid(BillHeaderEntity bill) {
-        return ""; // Would be resolved from encounter
+        if (bill.getEncounterId() == null) {
+            return "";
+        }
+        return encounterRepository.findById(bill.getEncounterId())
+                .map(EncounterEntity::getPatientCpid)
+                .orElse("");
     }
 
     private void publishEvent(String aggregateType, String aggregateId,

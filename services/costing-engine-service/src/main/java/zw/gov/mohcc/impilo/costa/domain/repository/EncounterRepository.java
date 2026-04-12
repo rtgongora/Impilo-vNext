@@ -14,4 +14,6 @@ public interface EncounterRepository extends JpaRepository<EncounterEntity, Stri
     Optional<EncounterEntity> findByPctJourneyId(String pctJourneyId);
     List<EncounterEntity> findByTenantIdAndFacilityIdAndStatus(UUID tenantId, UUID facilityId, EncounterStatus status);
     List<EncounterEntity> findByPatientCpidOrderByOpenedAtDesc(String patientCpid);
+
+    List<EncounterEntity> findByTenantIdAndPatientCpid(UUID tenantId, String patientCpid);
 }
