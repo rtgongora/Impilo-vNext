@@ -19,22 +19,30 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 import zw.gov.mohcc.impilo.experience.service.FetalMonitoringStreamService;
 
 @RestController
 @RequestMapping("/internal/v1/maternity/ctg")
 public class FetalMonitoringController {
 
+    private static final Logger log = LoggerFactory.getLogger(FetalMonitoringController.class);
     private static final TypeReference<List<BigDecimal>> SAMPLE_LIST_TYPE = new TypeReference<>() {};
 
-    private final JdbcTemplate jdbc;
+    private final JdbcTemplate jdbc; // TODO: remove after verification
     private final ObjectMapper objectMapper;
     private final FetalMonitoringStreamService streamService;
+    private final PctServiceClient pctClient;
 
-    public FetalMonitoringController(JdbcTemplate jdbc, ObjectMapper objectMapper, FetalMonitoringStreamService streamService) {
+    public FetalMonitoringController(JdbcTemplate jdbc, ObjectMapper objectMapper,
+                                     FetalMonitoringStreamService streamService,
+                                     PctServiceClient pctClient) {
         this.jdbc = jdbc;
         this.objectMapper = objectMapper;
         this.streamService = streamService;
+        this.pctClient = pctClient;
     }
 
     @PostMapping("/sessions")
@@ -47,6 +55,25 @@ public class FetalMonitoringController {
             return ResponseEntity.badRequest().body(Map.of("error", "patientId is required"));
         }
 
+        // STRANGLER: delegate to PctServiceClient first
+        try {
+            Map<String, Object> pctBody = new LinkedHashMap<>();
+            pctBody.put("patientId", request.patientId());
+            pctBody.put("encounterId", request.encounterId());
+            pctBody.put("startedAt", request.startedAt());
+            pctBody.put("startedBy", request.startedBy());
+            pctBody.put("deviceId", request.deviceId());
+            pctBody.put("monitoringMode", request.monitoringMode());
+            pctBody.put("baselineFhrBpm", request.baselineFhrBpm());
+            pctBody.put("baselineMaternalHrBpm", request.baselineMaternalHrBpm());
+            pctBody.put("summaryNotes", request.summaryNotes());
+            pctClient.createFetalMonitoringSession(pctBody);
+            log.info("PCT fetal monitoring session created for patient={}", request.patientId());
+        } catch (Exception e) {
+            log.warn("PCT createFetalMonitoringSession failed (non-blocking): {}", e.getMessage());
+        }
+
+        // STRANGLER: migrated to PctServiceClient — dual-write to local BFF table as backup cache
         UUID id = UUID.randomUUID();
         OffsetDateTime startedAt = parseDateTime(request.startedAt());
         jdbc.update("""

@@ -1,11 +1,15 @@
 package zw.gov.mohcc.impilo.experience.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -20,10 +24,14 @@ import java.util.UUID;
 @RequestMapping("/internal/v1/maternity/partograph")
 public class MaternityPartographController {
 
-    private final JdbcTemplate jdbc;
+    private static final Logger log = LoggerFactory.getLogger(MaternityPartographController.class);
 
-    public MaternityPartographController(JdbcTemplate jdbc) {
+    private final JdbcTemplate jdbc; // TODO: remove after verification
+    private final PctServiceClient pctClient;
+
+    public MaternityPartographController(JdbcTemplate jdbc, PctServiceClient pctClient) {
         this.jdbc = jdbc;
+        this.pctClient = pctClient;
     }
 
     @PostMapping("/sessions")
@@ -36,6 +44,23 @@ public class MaternityPartographController {
             return ResponseEntity.badRequest().body(Map.of("error", "patientId is required"));
         }
 
+        // STRANGLER: delegate to PctServiceClient first
+        try {
+            Map<String, Object> pctBody = new LinkedHashMap<>();
+            pctBody.put("patientId", request.patientId());
+            pctBody.put("encounterId", request.encounterId());
+            pctBody.put("labourPhase", request.labourPhase());
+            pctBody.put("startedAt", request.startedAt());
+            pctBody.put("startedBy", request.startedBy());
+            pctBody.put("outcome", request.outcome());
+            pctBody.put("summaryNotes", request.summaryNotes());
+            pctClient.createPartographSession(pctBody);
+            log.info("PCT partograph session created for patient={}", request.patientId());
+        } catch (Exception e) {
+            log.warn("PCT createPartographSession failed (non-blocking): {}", e.getMessage());
+        }
+
+        // STRANGLER: migrated to PctServiceClient — dual-write to local BFF table as backup cache
         UUID id = UUID.randomUUID();
         OffsetDateTime startedAt = parseDateTime(request.startedAt());
         jdbc.update("""

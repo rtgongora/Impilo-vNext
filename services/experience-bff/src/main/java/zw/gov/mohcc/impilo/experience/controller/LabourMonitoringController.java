@@ -1,10 +1,14 @@
 package zw.gov.mohcc.impilo.experience.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -19,10 +23,14 @@ import java.util.UUID;
 @RequestMapping("/internal/v1/labour-monitoring")
 public class LabourMonitoringController {
 
-    private final JdbcTemplate jdbc;
+    private static final Logger log = LoggerFactory.getLogger(LabourMonitoringController.class);
 
-    public LabourMonitoringController(JdbcTemplate jdbc) {
+    private final JdbcTemplate jdbc; // TODO: remove after verification
+    private final PctServiceClient pctClient;
+
+    public LabourMonitoringController(JdbcTemplate jdbc, PctServiceClient pctClient) {
         this.jdbc = jdbc;
+        this.pctClient = pctClient;
     }
 
     @GetMapping
@@ -31,6 +39,14 @@ public class LabourMonitoringController {
             @RequestParam String patientId,
             @RequestParam(required = false) String encounterId
     ) {
+        // STRANGLER: delegate to PctServiceClient
+        try {
+            JsonNode pctData = pctClient.listLabourMonitoring(patientId, encounterId);
+            if (pctData != null) return ResponseEntity.ok(Map.of("data", pctData));
+        } catch (Exception e) {
+            log.warn("PCT listLabourMonitoring failed, falling back to local: {}", e.getMessage());
+        }
+        // STRANGLER: migrated to PctServiceClient — fallback to local JDBC
         List<Map<String, Object>> rows = encounterId == null || encounterId.isBlank()
                 ? jdbc.queryForList(
                 "SELECT * FROM labour_monitoring_entries WHERE tenant_id = ? AND patient_id = ?::uuid ORDER BY recorded_at DESC LIMIT 50",
@@ -56,6 +72,23 @@ public class LabourMonitoringController {
             return ResponseEntity.badRequest().body(Map.of("error", "At least one labour monitoring measurement is required"));
         }
 
+        // STRANGLER: delegate to PctServiceClient first
+        try {
+            Map<String, Object> pctBody = new LinkedHashMap<>();
+            pctBody.put("patientId", request.patientId());
+            pctBody.put("encounterId", request.encounterId());
+            pctBody.put("phase", request.phase());
+            pctBody.put("recordedAt", request.recordedAt());
+            pctBody.put("recordedBy", request.recordedBy());
+            pctBody.put("fetalHeartRateBpm", request.fetalHeartRateBpm());
+            pctBody.put("cervicalDilationCm", request.cervicalDilationCm());
+            pctClient.recordLabourMonitoring(pctBody);
+            log.info("PCT labour monitoring recorded for patient={}", request.patientId());
+        } catch (Exception e) {
+            log.warn("PCT recordLabourMonitoring failed (non-blocking): {}", e.getMessage());
+        }
+
+        // STRANGLER: migrated to PctServiceClient — dual-write to local BFF table as backup cache
         UUID id = UUID.randomUUID();
         OffsetDateTime recordedAt = parseRecordedAt(request.recordedAt());
         jdbc.update("""
