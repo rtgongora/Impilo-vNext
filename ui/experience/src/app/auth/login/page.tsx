@@ -24,7 +24,9 @@ import {
 import { AuthLayout } from "@/components/AuthLayout";
 import { useLogin } from "@/hooks/queries/useAuth";
 import { useAuthStore } from "@/hooks/useAuthStore";
+import { useConsentStore, CURRENT_CONSENT_VERSION } from "@/hooks/useConsentStore";
 import { useWorkModeStore } from "@/hooks/useWorkModeStore";
+import { apiClient } from "@/lib/api-client";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -81,6 +83,25 @@ export default function LoginPage() {
             expiresAt
           );
           useWorkModeStore.getState().deriveFromRoles(user.roles);
+
+          // Check server-side consent status — if already accepted, hydrate client store
+          // so the consent gate is skipped for returning users
+          apiClient
+            .get<{ data: Array<{ attributes: { policyType: string; accepted: boolean } }> }>(
+              `/internal/v1/consent/status?version=${CURRENT_CONSENT_VERSION}`
+            )
+            .then((res) => {
+              const records = res?.data ?? [];
+              const hasPrivacy = records.some((r) => r.attributes.policyType === "PRIVACY_POLICY" && r.attributes.accepted);
+              const hasTerms = records.some((r) => r.attributes.policyType === "TERMS_OF_USE" && r.attributes.accepted);
+              if (hasPrivacy && hasTerms) {
+                useConsentStore.getState().acceptConsent(user.id);
+              }
+            })
+            .catch(() => {
+              // If consent check fails, the consent gate will catch it on redirect
+            });
+
           router.push("/home");
         },
         onError: (err: unknown) => {
