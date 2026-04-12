@@ -11,7 +11,7 @@ import java.util.List;
  *
  * <p>Supports the transactional outbox pattern. The primary query
  * retrieves the oldest 100 unpublished events for batch delivery
- * to Kafka by the {@link zw.gov.mohcc.impilo.butano.events.OutboxPublisher}.</p>
+ * to Kafka by the {@link zw.gov.mohcc.impilo.butano.events.ButanoOutboxPublisher}.</p>
  */
 @Repository
 public interface EventOutboxRepository extends JpaRepository<EventOutboxEntity, Long> {
