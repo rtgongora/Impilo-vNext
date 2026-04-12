@@ -1,4 +1,4 @@
-package zw.gov.mohcc.impilo.experience.wellness.connect;
+package zw.gov.mohcc.impilo.wellness.connect;
 
 import org.junit.jupiter.api.Test;
 

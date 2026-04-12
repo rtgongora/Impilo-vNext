@@ -1,0 +1,37 @@
+openapi: 3.0.3
+info:
+  title: Impilo Wellness Service API
+  description: >
+    Citizen wellness (activities, vitals, mood, challenges), health wallet, and Health Connect–style ingest.
+    Stable paths mirror Experience BFF `/internal/v1/mobile/citizen/**` and `/internal/v1/wellness/connect/v1/**`;
+    the BFF proxies to this service by default (`impilo.services.wellness-base-url`).
+  version: 0.1.0
+servers:
+  - url: http://localhost:8161
+    description: Local default (see docs/runbooks/port-allocation.md)
+paths:
+  /internal/v1/wellness/connect/v1/manifest:
+    get:
+      summary: Health Connect capability manifest
+      operationId: wellnessConnectManifest
+      responses:
+        '200':
+          description: Manifest envelope
+  /internal/v1/mobile/citizen/wellness/activities:
+    get:
+      summary: List wellness activity rows
+      operationId: listWellnessActivities
+      parameters:
+        - name: X-Tenant-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: patientId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Activity list

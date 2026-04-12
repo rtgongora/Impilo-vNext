@@ -34,6 +34,7 @@ Links **typed HTTP clients**, **`impilo.services` / other config**, **downstream
 | `IntegrationHubServiceClient` | `integration-hub-base-url` | 8110 | `integration-hub` | `integration-hub.openapi.yaml` |
 | `GuidanceServiceClient` | `guidance-base-url` | 8260 | `guidance-service` | `guidance.openapi.yaml` |
 | `ClinicalKnowledgePlatformClient` | `impilo.clinical-platform.base-url` | 8270 | `clinical-knowledge-platform-service` | `clinical-knowledge-platform.openapi.yaml` |
+| *(HTTP proxy, no named `*Client` bean)* | `impilo.services.wellness-base-url` | 8161 | `wellness-service` | `wellness.openapi.yaml` |
 
 `RestTemplate` + `ServiceEndpoints` (no dedicated bean): **`PublicHealthController`** → `surveillance-base-url`, `campaigns-base-url`, `indawo-base-url`; **`AccessChannelsController`**, **`ClinicalToolsController`**, **`AiGovernanceController`**, **`MobileGovernanceController`** → `landela-base-url`, `data-governance-base-url`, etc. (see each controller).
 
@@ -71,6 +72,8 @@ These are **aggregates** (one prefix may fan out to several downstream calls). F
 ## 3. BFF-local surfaces (no downstream typed client)
 
 Some controllers use **BFF PostgreSQL** (`JdbcTemplate`, JPA repositories) only — e.g. **`PatientController`**, **`InventoryController`** under `/internal/v1/patients`, `/inventory`. **`PharmacyController`** is hybrid: prescriptions and local dispense stay on the BFF DB; **`/internal/v1/pharmacy/upstream/**`** delegates to `PharmacyServiceClient`.
+
+**Citizen wellness, health wallet, and Health Connect** (`/internal/v1/mobile/citizen/wellness/**`, `/wallet`, `/internal/v1/wellness/connect/**`) are **no longer BFF-local**: the BFF **`WellnessServiceProxyController`** forwards (same paths + trust headers) to **`wellness-service`** (port **8161**, `impilo.services.wellness-base-url`). Persistence remains on the Experience BFF PostgreSQL database by default (`DB_NAME=experience_bff`) until a dedicated wellness database is introduced in ops.
 
 ---
 

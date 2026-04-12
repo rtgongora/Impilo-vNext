@@ -136,7 +136,7 @@ Summary:
 - Share slip: **8104**, Offline sync: **8095**, Jobs: **8109**, Credential verification: **8094**
 - Connector FHIR adapter: **8151**, Indawo: **8150**, National data repository: **8152**
 - Coverage: **8140**, Data pipeline: **8215**, Workflow: **8250**
-- Experience BFF: **8160**, Reporting: **8176**, Search: **8230**, Forms: **8240**, Rules: **8241**, Guidance: **8260**, Clinical Knowledge Platform: **8270**
+- Experience BFF: **8160**, Wellness: **8161**, Reporting: **8176**, Search: **8230**, Forms: **8240**, Rules: **8241**, Guidance: **8260**, Clinical Knowledge Platform: **8270**
 - NDR: **8232**, Data warehouse: **8233**, Data governance: **8220**, Security hardening: **8221**, Observability: **8211**, Data ingestion: **8210**
 - Surveillance: **8180**, Campaigns: **8190**, Notification: **8200**, Identity assurance: **8201**
 - Card print agent: **8291**, Product registry: **8097**, Inventory eLMIS adapter: **8108**

@@ -147,6 +147,7 @@ Service metadata (plane, sovereign, product names): [`docs/registry/services-reg
 | Port | Service / module |
 |------|------------------|
 | **8160** | `experience-bff` |
+| **8161** | `wellness-service` (citizen wellness, health wallet, Health Connect ingest — BFF proxies same paths) |
 
 ---
 
@@ -183,6 +184,7 @@ These match `ServiceClientConfig` / `impilo.services` in `experience-bff` (local
 | Workflow | `http://localhost:8250` |
 | Guidance | `http://localhost:8260` |
 | Clinical Knowledge Platform | `http://localhost:8270` (`impilo.clinical-platform.base-url`) |
+| Wellness | `http://localhost:8161` (`impilo.services.wellness-base-url` / `WELLNESS_SERVICE_BASE_URL`) |
 
 ---
 
@@ -190,4 +192,5 @@ These match `ServiceClientConfig` / `impilo.services` in `experience-bff` (local
 
 | Date | Change |
 |------|--------|
+| 2026-04-12 | Added **8161** `wellness-service` (citizen wellness + Health Connect); BFF `wellness-base-url` default. |
 | 2026-04-11 | Phase A0: unique defaults, BFF alignment, compose + manifest sync. |

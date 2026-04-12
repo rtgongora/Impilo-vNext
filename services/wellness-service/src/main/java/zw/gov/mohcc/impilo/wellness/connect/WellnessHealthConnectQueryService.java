@@ -1,4 +1,4 @@
-package zw.gov.mohcc.impilo.experience.wellness.connect;
+package zw.gov.mohcc.impilo.wellness.connect;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
