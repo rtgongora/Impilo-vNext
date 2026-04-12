@@ -50,6 +50,10 @@ spring:
 air:
   security:
     oauth2-enabled: true
+  outbox:
+    poll-interval-ms: ${AIR_OUTBOX_POLL_INTERVAL_MS:2000}
+  v11:
+    emit-mode: ${AIR_V11_EMIT_MODE:}
 
 management:
   endpoints:

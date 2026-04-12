@@ -1,0 +1,712 @@
+# =============================================================================
+# AI Model Registry — governance, versions, inference audit, drift (OpenAPI 3.0)
+# =============================================================================
+openapi: "3.0.3"
+
+info:
+  title: AI Model Registry Service
+  version: "1.1.0"
+  description: |
+    Ring-0 registry for AI models, approved versions, inference records, and drift events.
+    Trust headers are enforced by Envoy + TSHEPO; internal probes use Health OS Manifest v1.1
+    mandatory headers (see `CompanionHeaders`).
+  contact:
+    name: Impilo Platform Team
+  license:
+    name: Proprietary
+
+servers:
+  - url: http://localhost:8280
+    description: Local development (ai-model-registry-service)
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Internal-Probe
+    description: Tech-companion v1.1 health and test-command
+  - name: Models
+    description: Registered AI models (create, list, update, approve, withdraw)
+  - name: ModelVersions
+    description: Versioned artifacts and policy per model
+  - name: InferenceRecords
+    description: Inference audit trail
+  - name: DriftEvents
+    description: Drift signals per model
+
+paths:
+  /internal/v1/health:
+    get:
+      operationId: aiRegistryInternalHealth
+      tags: [Internal-Probe]
+      summary: v1.1 probe — returns trust context echo
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+      responses:
+        "200":
+          description: Service UP with context echo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProbeHealthBody"
+
+  /internal/v1/test-command:
+    post:
+      operationId: aiRegistryInternalTestCommand
+      tags: [Internal-Probe]
+      summary: v1.1 probe — echo payload
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "201":
+          description: Echo payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProbeCommandBody"
+
+  /internal/v1/ai-registry/models:
+    get:
+      operationId: listModels
+      tags: [Models]
+      summary: List models for tenant
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+      responses:
+        "200":
+          description: Models
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ModelResponse"
+    post:
+      operationId: createModel
+      tags: [Models]
+      summary: Register a new model (DRAFT)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateModelRequest"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ModelResponse"
+
+  /internal/v1/ai-registry/models/{modelId}:
+    get:
+      operationId: getModel
+      tags: [Models]
+      summary: Get model by id
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: modelId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Model
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ModelResponse"
+        "404":
+          description: Not found
+    put:
+      operationId: updateModel
+      tags: [Models]
+      summary: Update model metadata
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - name: modelId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateModelRequest"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ModelResponse"
+
+  /internal/v1/ai-registry/models/{modelId}/approve:
+    post:
+      operationId: approveModel
+      tags: [Models]
+      summary: Approve a DRAFT model
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - name: modelId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApproveModelRequest"
+      responses:
+        "200":
+          description: Approved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ModelResponse"
+
+  /internal/v1/ai-registry/models/{modelId}/withdraw:
+    post:
+      operationId: withdrawModel
+      tags: [Models]
+      summary: Withdraw a model
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - name: modelId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WithdrawModelRequest"
+      responses:
+        "200":
+          description: Withdrawn
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ModelResponse"
+
+  /internal/v1/ai-registry/models/{modelId}/versions:
+    get:
+      operationId: listModelVersions
+      tags: [ModelVersions]
+      summary: List versions for a model
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: modelId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Versions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/VersionResponse"
+    post:
+      operationId: createModelVersion
+      tags: [ModelVersions]
+      summary: Register a new model version
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - name: modelId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateVersionRequest"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VersionResponse"
+
+  /internal/v1/ai-registry/inference-records:
+    get:
+      operationId: queryInferenceRecords
+      tags: [InferenceRecords]
+      summary: List inference records by workflow or subject
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: workflow_ref
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: subject_type
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: subject_id
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InferenceResponse"
+        "400":
+          description: Missing query mode
+    post:
+      operationId: recordInference
+      tags: [InferenceRecords]
+      summary: Record an inference execution
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateInferenceRequest"
+      responses:
+        "201":
+          description: Recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InferenceResponse"
+
+  /internal/v1/ai-registry/drift-events:
+    get:
+      operationId: listDriftEventsByModel
+      tags: [DriftEvents]
+      summary: List drift events for a model
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: model_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Drift events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DriftResponse"
+    post:
+      operationId: recordDriftEvent
+      tags: [DriftEvents]
+      summary: Record a drift signal
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDriftRequest"
+      responses:
+        "201":
+          description: Recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DriftResponse"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    TenantId:
+      name: X-Tenant-ID
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+    PodId:
+      name: X-Pod-ID
+      in: header
+      required: true
+      schema:
+        type: string
+    RequestId:
+      name: X-Request-ID
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+    CorrelationId:
+      name: X-Correlation-ID
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: false
+      schema:
+        type: string
+
+  schemas:
+    ProbeHealthBody:
+      type: object
+      properties:
+        service:
+          type: string
+          example: ai-model-registry-service
+        status:
+          type: string
+          example: UP
+        tenant_id:
+          type: string
+        pod_id:
+          type: string
+        request_id:
+          type: string
+        correlation_id:
+          type: string
+      additionalProperties: true
+
+    ProbeCommandBody:
+      type: object
+      properties:
+        service:
+          type: string
+        action:
+          type: string
+        request_id:
+          type: string
+        correlation_id:
+          type: string
+        echo:
+          type: object
+          additionalProperties: true
+      additionalProperties: true
+
+    CreateModelRequest:
+      type: object
+      required: [name, modelType]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        modelType:
+          type: string
+        owner:
+          type: string
+
+    UpdateModelRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        modelType:
+          type: string
+        owner:
+          type: string
+
+    ApproveModelRequest:
+      type: object
+      properties:
+        approvedBy:
+          type: string
+
+    WithdrawModelRequest:
+      type: object
+      properties:
+        reason:
+          type: string
+
+    ModelResponse:
+      type: object
+      properties:
+        modelId:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        modelType:
+          type: string
+        owner:
+          type: string
+        status:
+          type: string
+        approvedBy:
+          type: string
+        approvedAt:
+          type: string
+          format: date-time
+        withdrawnAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreateVersionRequest:
+      type: object
+      required: [version]
+      properties:
+        version:
+          type: string
+        artifactRef:
+          type: string
+        configJson:
+          type: string
+        approvedUseCases:
+          type: string
+        prohibitedUseCases:
+          type: string
+        driftThreshold:
+          type: number
+        status:
+          type: string
+
+    VersionResponse:
+      type: object
+      properties:
+        versionId:
+          type: string
+          format: uuid
+        modelId:
+          type: string
+          format: uuid
+        version:
+          type: string
+        artifactRef:
+          type: string
+        configJson:
+          type: string
+        approvedUseCases:
+          type: string
+        prohibitedUseCases:
+          type: string
+        driftThreshold:
+          type: number
+        status:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    CreateInferenceRequest:
+      type: object
+      required: [modelId, inferenceClass]
+      properties:
+        modelId:
+          type: string
+          format: uuid
+        modelVersion:
+          type: string
+        inferenceClass:
+          type: string
+        workflowRef:
+          type: string
+        subjectType:
+          type: string
+        subjectId:
+          type: string
+        outputSummary:
+          type: string
+        score:
+          type: number
+        confidence:
+          type: number
+        humanReviewRequired:
+          type: boolean
+        humanAccepted:
+          type: boolean
+        overrideReason:
+          type: string
+
+    InferenceResponse:
+      type: object
+      properties:
+        recordId:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        modelId:
+          type: string
+          format: uuid
+        modelVersion:
+          type: string
+        inferenceClass:
+          type: string
+        workflowRef:
+          type: string
+        subjectType:
+          type: string
+        subjectId:
+          type: string
+        outputSummary:
+          type: string
+        score:
+          type: number
+        confidence:
+          type: number
+        humanReviewRequired:
+          type: boolean
+        humanAccepted:
+          type: boolean
+        overrideReason:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    CreateDriftRequest:
+      type: object
+      required: [modelId]
+      properties:
+        modelId:
+          type: string
+          format: uuid
+        modelVersion:
+          type: string
+        driftMetric:
+          type: string
+        driftValue:
+          type: number
+        threshold:
+          type: number
+        severity:
+          type: string
+
+    DriftResponse:
+      type: object
+      properties:
+        eventId:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        modelId:
+          type: string
+          format: uuid
+        modelVersion:
+          type: string
+        driftMetric:
+          type: string
+        driftValue:
+          type: number
+        threshold:
+          type: number
+        severity:
+          type: string
+        detectedAt:
+          type: string
+          format: date-time
