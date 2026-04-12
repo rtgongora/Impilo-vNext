@@ -1,4 +1,4 @@
-# Experience BFF — downstream route map (Phase C seed)
+# Experience BFF — downstream route map
 
 Authoritative **base URLs** and defaults live in:
 

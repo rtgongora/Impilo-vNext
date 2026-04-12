@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Phase C: emit docs/architecture/experience-bff-internal-routes.md from @RequestMapping literals.
+ * Emit docs/architecture/experience-bff-internal-routes.md from @RequestMapping literals (Phase C artifact; regenerate after BFF controller changes).
  */
 import fs from 'node:fs';
 import path from 'node:path';

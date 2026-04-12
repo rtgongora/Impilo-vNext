@@ -34,8 +34,8 @@ Phases are ordered by **dependency**. **Agent cycles** = bounded agent run + hum
 | **A1** | Service registry (YAML) + small generator script for completeness report | After A0 schema frozen | **1** cycle |
 | **A2** | Completeness script (seven dimensions) + CI optional job | With A1 once paths known | **1** (completed 2026-04-11) |
 | **B** | Contracts: policy + backfill **per domain** (TSHEPO, registry, clinical, finance, data, knowledge) | **Yes — one agent per domain** once naming convention locked | **~1 cycle per domain** for first pass; **+1** per domain if Spectral + sample contract tests added |
-| **C** | BFF: route map doc + client normalization **per domain** | Parallel **per domain** after B contracts for that domain exist | **~1–2 cycles per domain** |
-| **D** | Experience: remove placeholders, wire search, public-health hardening | Parallel **per feature** (search vs public-health vs friction) | **1 cycle** per major feature slice |
+| **C** | BFF: route map doc + client normalization **per domain** | Parallel **per domain** after B contracts for that domain exist | **Baseline complete** (2026-04-11 — 2026-04-12); per-domain polish as needed |
+| **D** | Experience: remove placeholders, wire search, public-health hardening | Parallel **per feature** (search vs public-health vs friction) | **1 cycle** per major feature slice (**active**) |
 | **E** | Event catalog + AsyncAPI or schema table for Kafka surfaces | Parallel **per bounded context** (e.g. clinical vs finance outbox) | **1–2** cycles total if starting with inventory + highest-traffic topics, not exhaustive day-one |
 | **F** | Per-service playbook to “green” in completeness report | **Highly parallel — one agent per service** once A–E patterns exist | **~0.5–1 cycle** per small service; **2–4 cycles** for TSHEPO, BUTANO stack, or BFF-heavy surfaces |
 
@@ -146,9 +146,9 @@ flowchart LR
 
 **Phase B (in progress):** OpenAPI baselines under [`contracts/openapi/`](../../contracts/openapi/) — registry slice (VARAPI, TUSO, UBOMI) landed; **+** INDAWO, Product Registry, Coverage, Guidance, Clinical Knowledge Platform; **+** Search, Forms, Notification, Rules; **+** registry mapping fixes (`costing-engine-service` → COSTA contract, `butano-fhir` module key); **+** workflow, integration-hub, FHIR gateway control plane, data governance, surveillance, campaigns. Remaining: trust/TSHEPO decomposition, more integration adapters, FHIR-only narrative for BUTANO stack.
 
-**Phase C (in progress):** BFF documentation — [`experience-bff-downstream-route-map.md`](../architecture/experience-bff-downstream-route-map.md) (downstream base URLs + clients); **+** generated [`experience-bff-internal-routes.md`](../architecture/experience-bff-internal-routes.md) via `scripts/bff-routes/list-bff-internal-routes.mjs`. **Next within C:** map each BFF prefix to downstream OpenAPI operation groups (domain tables); optional Feign vs `RestTemplate` normalization.
+**Phase C (complete):** BFF — [`experience-bff-downstream-route-map.md`](../architecture/experience-bff-downstream-route-map.md); [`experience-bff-phase-c-domain-mapping.md`](../architecture/experience-bff-phase-c-domain-mapping.md) (clients ↔ config ↔ contracts); generated [`experience-bff-internal-routes.md`](../architecture/experience-bff-internal-routes.md) (`scripts/bff-routes/list-bff-internal-routes.mjs`); integration hub + search + pharmacy upstream proxies; shared `RestTemplate` for Keycloak / Orthanc / FHIR publish / admin Keycloak calls.
 
-**Phase D (next after C matures):** Experience UI — replace placeholders, wire search and public-health journeys, align TanStack hooks to `/internal/v1/...`.
+**Phase D (active):** Experience UI — remove placeholders, wire journeys to `/internal/v1/...`, TanStack Query hooks. **Started:** search page → [`useKnowledgeSearch`](../../ui/experience/src/hooks/queries/useKnowledgeSearch.ts) + BFF `/internal/v1/search`. **Next slices:** public-health journeys, friction/guard alignment, remaining placeholder pages.
 
 **Parallel:** finish Phase B tails (TSHEPO REST slices, integration adapters, BUTANO FHIR narrative) where still missing contracts.
 
@@ -169,3 +169,4 @@ flowchart LR
 | 2026-04-11 | Phase C seed: `docs/architecture/experience-bff-downstream-route-map.md`. |
 | 2026-04-11 | Phase B: workflow, integration-hub, FHIR gateway, data governance, surveillance, campaigns OpenAPI baselines. |
 | 2026-04-12 | Phase C: `scripts/bff-routes` + generated `experience-bff-internal-routes.md`; roadmap next step → D after C domain mapping. |
+| 2026-04-12 | Phase C **closed**: integration hub + search/pharmacy upstream BFF; shared `RestTemplate`; internal routes regenerated; Phase **D** opened (search UI wired to `/internal/v1/search`). |
