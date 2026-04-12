@@ -46,7 +46,12 @@ spring:
       ack-mode: manual
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+      retries: 3
+      properties:
+        enable.idempotence: true
+        max.in.flight.requests.per.connection: 5
   security:
     oauth2:
       resourceserver:
@@ -55,6 +60,8 @@ spring:
 
 # --- TSHEPO Audit specific ---
 tshepo-audit:
+  outbox:
+    poll-interval-ms: 2000
   keys-service:
     base-url: ${TSHEPO_KEYS_SERVICE_URL:http://localhost:8184}
     sign-endpoint: /v1/sign
