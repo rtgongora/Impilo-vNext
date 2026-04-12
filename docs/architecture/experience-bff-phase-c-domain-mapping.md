@@ -73,7 +73,7 @@ These are **aggregates** (one prefix may fan out to several downstream calls). F
 
 Some controllers use **BFF PostgreSQL** (`JdbcTemplate`, JPA repositories) only — e.g. **`PatientController`**, **`InventoryController`** under `/internal/v1/patients`, `/inventory`. **`PharmacyController`** is hybrid: prescriptions and local dispense stay on the BFF DB; **`/internal/v1/pharmacy/upstream/**`** delegates to `PharmacyServiceClient`.
 
-**Citizen wellness, health wallet, and Health Connect** (`/internal/v1/mobile/citizen/wellness/**`, `/wallet`, `/internal/v1/wellness/connect/**`) are **no longer BFF-local**: the BFF **`WellnessServiceProxyController`** forwards (same paths + trust headers) to **`wellness-service`** (port **8161**, `impilo.services.wellness-base-url`). Persistence remains on the Experience BFF PostgreSQL database by default (`DB_NAME=experience_bff`) until a dedicated wellness database is introduced in ops.
+**Citizen “My Life” mobile API** (`/internal/v1/mobile/citizen/**`, including health ID, wellness, wallet, SOS, clubs, crowdfunding, service discovery) and **Health Connect** (`/internal/v1/wellness/connect/**`) are **not BFF-local**: the BFF **`WellnessServiceProxyController`** forwards the same paths + trust headers to **`wellness-service`** (port **8161**, `impilo.services.wellness-base-url` / `WELLNESS_SERVICE_BASE_URL`). By default persistence stays on the Experience BFF PostgreSQL database (`DB_NAME=experience_bff`); profile **`wellness-own-db`** points the service at a separate database for ops splits.
 
 ---
 
@@ -85,6 +85,6 @@ No open items from the original Phase C gap list. **Phase D** (Experience shell)
 
 ## Related
 
-- Kafka topic inventory (Phase E): [`kafka-event-catalog.md`](./kafka-event-catalog.md)
+- Kafka topic inventory (**Phase E complete**): [`kafka-event-catalog.md`](./kafka-event-catalog.md) · AsyncAPI [`../../contracts/asyncapi/README.md`](../../contracts/asyncapi/README.md)
 - Registry: [`docs/registry/services-registry.yaml`](../registry/services-registry.yaml)
 - Completeness mapper: [`scripts/completeness/generate-completeness-report.mjs`](../../scripts/completeness/generate-completeness-report.mjs) (`OPENAPI_BY_MODULE`, `BFF_CLIENT_BY_MODULE`)

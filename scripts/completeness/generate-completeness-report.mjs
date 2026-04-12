@@ -16,9 +16,10 @@ const BFF_CLIENT_DIR = path.join(
   REPO_ROOT,
   'services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/client'
 );
-const BFF_CONTROLLER_DIR = path.join(
+/** All Experience BFF Java (controllers + wellness proxy, etc.) for downstream / proxy detection. */
+const BFF_EXPERIENCE_JAVA_ROOT = path.join(
   REPO_ROOT,
-  'services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller'
+  'services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience'
 );
 const UI_ROOT = path.join(REPO_ROOT, 'ui/experience/src');
 
@@ -58,6 +59,7 @@ const OPENAPI_BY_MODULE = {
   'tuso-service': 'tuso.openapi.yaml',
   'ubomi-service': 'ubomi.openapi.yaml',
   'workflow-service': 'workflow.openapi.yaml',
+  'wellness-service': 'wellness.openapi.yaml',
   'zibo-service': 'zibo.openapi.yaml',
 };
 
@@ -90,6 +92,7 @@ const BFF_PROXY_BY_MODULE = {
   'surveillance-service': 'PublicHealthController',
   'campaigns-service': 'PublicHealthController',
   'indawo-service': 'PublicHealthController',
+  'wellness-service': 'WellnessServiceProxyController',
 };
 
 function walkFiles(dir, filter = () => true, acc = []) {
@@ -166,7 +169,7 @@ function countFlywayMigrations(serviceRoot) {
 }
 
 function loadBffControllerText() {
-  const files = walkFiles(BFF_CONTROLLER_DIR, (p) => p.endsWith('.java'));
+  const files = walkFiles(BFF_EXPERIENCE_JAVA_ROOT, (p) => p.endsWith('.java'));
   return files.map((f) => readText(f)).join('\n');
 }
 

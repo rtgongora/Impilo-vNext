@@ -1,0 +1,32 @@
+asyncapi: '2.6.0'
+info:
+  title: Impilo — BUTANO SHR resource events (Kafka)
+  version: '0.1.0'
+  description: |
+    Topics from `butano-service` transactional outbox (`OutboxPublisher`).
+defaultContentType: application/json
+
+channels:
+  butano.resource.created:
+    subscribe:
+      message:
+        $ref: '#/components/messages/JsonPayload'
+  butano.resource.updated:
+    subscribe:
+      message:
+        $ref: '#/components/messages/JsonPayload'
+  butano.reconcile.completed:
+    subscribe:
+      message:
+        $ref: '#/components/messages/JsonPayload'
+  butano.events:
+    subscribe:
+      message:
+        $ref: '#/components/messages/JsonPayload'
+
+components:
+  messages:
+    JsonPayload:
+      payload:
+        type: object
+        additionalProperties: true

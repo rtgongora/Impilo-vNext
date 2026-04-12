@@ -1,14 +1,14 @@
 # Service completeness report (Phase A2)
 
-Generated: 2026-04-11T23:08:15.456Z
+Generated: 2026-04-12T00:34:27.656Z
 
 | Module | Composite | backend | bff | contract | api_docs | kafka | ui_hooks | ui_pages |
 |--------|-----------|---------|-----|----------|----------|-------|----------|----------|
 | data-access-governance-service | 0.238 | substantial | none | none | partial | none | none | none |
 | reporting-service | 0.381 | substantial | none | none | partial | none | none | substantial |
-| dispatch-service | 0.381 | substantial | none | none | stub | none | partial | partial |
 | ubomi-service | 0.429 | substantial | none | substantial | substantial | none | none | none |
 | observability-service | 0.429 | substantial | none | none | partial | none | partial | partial |
+| dispatch-service | 0.429 | substantial | none | none | stub | none | substantial | partial |
 | tshepo-authz-service | 0.476 | substantial | none | none | partial | none | partial | substantial |
 | tshepo-offline-service | 0.476 | substantial | none | none | partial | none | partial | substantial |
 | inventory-elmis-adapter | 0.476 | substantial | none | none | partial | none | partial | substantial |
@@ -41,9 +41,9 @@ Generated: 2026-04-11T23:08:15.456Z
 | iot-ingestion-service | 0.571 | substantial | none | none | stub | partial | substantial | substantial |
 | tshepo-audit-service | 0.619 | substantial | none | none | partial | partial | substantial | substantial |
 | butano-service | 0.619 | substantial | substantial | none | partial | none | partial | substantial |
-| integration-hub | 0.619 | substantial | none | substantial | partial | none | partial | substantial |
 | tshepo-service | 0.667 | substantial | none | none | partial | substantial | substantial | substantial |
 | indawo-service | 0.667 | substantial | stub | substantial | partial | none | partial | substantial |
+| integration-hub | 0.667 | substantial | none | substantial | partial | none | substantial | substantial |
 | workflow-service | 0.667 | substantial | none | substantial | partial | none | substantial | substantial |
 | data-governance-service | 0.667 | substantial | none | substantial | partial | none | substantial | substantial |
 | tuso-service | 0.714 | substantial | substantial | substantial | substantial | none | none | substantial |
@@ -55,11 +55,12 @@ Generated: 2026-04-11T23:08:15.456Z
 | coverage-service | 0.762 | substantial | substantial | substantial | partial | none | partial | substantial |
 | card-print-agent | 0.762 | substantial | none | substantial | substantial | partial | partial | substantial |
 | forms-service | 0.762 | substantial | substantial | substantial | partial | none | partial | substantial |
-| search-service | 0.762 | substantial | partial | substantial | partial | none | substantial | substantial |
 | surveillance-service | 0.762 | substantial | stub | substantial | substantial | none | substantial | substantial |
+| wellness-service | 0.762 | substantial | stub | substantial | substantial | none | substantial | substantial |
 | experience-bff | 0.762 | substantial | substantial | none | stub | substantial | substantial | substantial |
 | inventory-service | 0.81 | substantial | none | substantial | substantial | substantial | partial | substantial |
 | rules-service | 0.81 | substantial | substantial | substantial | partial | none | substantial | substantial |
+| search-service | 0.81 | substantial | substantial | substantial | partial | none | substantial | substantial |
 | varapi-service | 0.857 | substantial | substantial | substantial | substantial | none | substantial | substantial |
 | msika-service | 0.857 | substantial | substantial | substantial | substantial | none | substantial | substantial |
 | fhir-gateway-service | 0.857 | substantial | substantial | substantial | substantial | none | substantial | substantial |
@@ -68,20 +69,20 @@ Generated: 2026-04-11T23:08:15.456Z
 | clinical-knowledge-platform-service | 0.857 | substantial | substantial | substantial | substantial | none | substantial | substantial |
 | guidance-service | 0.857 | substantial | substantial | substantial | substantial | none | substantial | substantial |
 | pct-service | 0.952 | substantial | substantial | substantial | substantial | substantial | partial | substantial |
-| pharmacy-service | 0.952 | substantial | partial | substantial | substantial | substantial | substantial | substantial |
 | costing-engine-service | 0.952 | substantial | substantial | substantial | substantial | substantial | partial | substantial |
 | vito-service | 1 | substantial | substantial | substantial | substantial | substantial | substantial | substantial |
+| pharmacy-service | 1 | substantial | substantial | substantial | substantial | substantial | substantial | substantial |
 | mushex-service | 1 | substantial | substantial | substantial | substantial | substantial | substantial | substantial |
 | msika-flow-service | 1 | substantial | substantial | substantial | substantial | substantial | substantial | substantial |
 
 ## Aggregate (0–3 per dimension)
 
 - backend: 3
-- bff: 0.88
-- contract: 1.48
-- api_docs: 2.16
+- bff: 0.91
+- contract: 1.5
+- api_docs: 2.17
 - kafka: 0.59
-- experience_hooks: 2.39
+- experience_hooks: 2.43
 - experience_pages: 2.84
 
 Regenerate: `cd scripts/completeness && npm install && npm run report`

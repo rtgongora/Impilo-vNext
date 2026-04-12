@@ -1,7 +1,7 @@
 ##
 ## Impilo vNext — Experience Platform Dev Runtime
 ##
-## Starts: Postgres, Experience-BFF, Experience UI
+## Starts: Postgres, Wellness-service, Experience-BFF, Experience UI
 ## Usage:  docker compose -f compose/experience/docker-compose.yml up
 ##
 version: "3.9"
@@ -23,6 +23,31 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+
+  # ── Wellness domain (citizen My Life + Health Connect) ─────────
+  wellness-service:
+    build:
+      context: ../../
+      dockerfile: services/wellness-service/Dockerfile
+    environment:
+      DB_HOST: experience-db
+      DB_PORT: 5432
+      DB_NAME: experience_bff
+      DB_USER: impilo
+      DB_PASSWORD: impilo
+      SERVER_PORT: "8161"
+      SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
+    ports:
+      - "8161:8161"
+    depends_on:
+      experience-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8161/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 45s
 
   # ── Experience BFF ───────────────────────────────────────────────
   experience-bff:
@@ -53,10 +78,13 @@ services:
       ORTHANC_BASE_URL: http://host.docker.internal:8042
       ORTHANC_DICOMWEB_URL: http://host.docker.internal:8042/dicom-web
       FHIR_BASE_URL: http://host.docker.internal:8090/fhir
+      WELLNESS_SERVICE_BASE_URL: http://wellness-service:8161
     ports:
       - "8160:8160"
     depends_on:
       experience-db:
+        condition: service_healthy
+      wellness-service:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:8160/actuator/health || exit 1"]

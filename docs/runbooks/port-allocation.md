@@ -149,6 +149,8 @@ Service metadata (plane, sovereign, product names): [`docs/registry/services-reg
 | **8160** | `experience-bff` |
 | **8161** | `wellness-service` (citizen wellness, health wallet, Health Connect ingest — BFF proxies same paths) |
 
+**Optional DB split:** run `wellness-service` with Spring profile `wellness-own-db` and database `impilo_wellness` (see `services/wellness-service/src/main/resources/application-wellness-own-db.yml`) after provisioning an empty Postgres DB and running Flyway once.
+
 ---
 
 ## Experience BFF downstream defaults

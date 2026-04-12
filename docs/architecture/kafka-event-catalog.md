@@ -1,8 +1,8 @@
-# Kafka event catalog (Phase E — inventory)
+# Kafka event catalog (Phase E — complete baseline)
 
-Living inventory of **Kafka topic names** and **how they are produced/consumed** in this repository. It complements REST OpenAPI under `contracts/openapi/` and supports the agent-led roadmap **Phase E** (event surfaces).
+Living inventory of **Kafka topic names** and **how they are produced/consumed** in this repository. It complements REST OpenAPI under `contracts/openapi/` and closes the agent-led roadmap **Phase E** (event catalog + AsyncAPI anchors) for the **Java services in this repo** as of the inventory date in §3.
 
-**Not exhaustive:** many services use transactional outbox + `routeTopic` / `resolveTopic` helpers; this document prioritises **cross-service fan-in** (especially Experience BFF) and **governance/control** topics. Extend by copying patterns from each service’s `*OutboxPublisher.java` and `@KafkaListener` usages.
+**Scope:** transactional outboxes (`routeTopic` / `resolveTopic`), explicit `@KafkaListener` classes, and config-driven topics. Services **without** Kafka code paths (e.g. many REST-only adapters) are omitted here but remain in the **Phase F** completeness playbook. **Schema evolution:** payloads are JSON strings unless noted; prefer `$ref` JSON Schemas in a later wave when envelopes stabilise.
 
 ---
 
@@ -49,7 +49,7 @@ Group id: **`experience-bff`**. Intended for cache/local projection sync; handle
 | Pharmacy dispense | Pharmacy-service publishes **`pharmacy.dispense.complete`** (`DISPENSE_COMPLETED`). **OROS** `OrosEventConsumer` and **Experience BFF** previously listened on the non-existent typo topic `pharmacy.dispense.completed`; **slice 3** aligns them to **`pharmacy.dispense.complete`** (Costa was already correct). |
 | Mushex payment status | Mushex publishes **`mushex.payment.status.changed`** (`STATUS_CHANGED`). **Costa**, **BFF**, **Pharmacy**, **PCT**, and **Msika Flow** previously listened on **`mushex.payment.status_changed`** (underscore); **slice 3** aligns consumers to the producer topic. |
 
-**Residual (inventory):** other topic pairs across the fleet may still drift — extend this table as `@KafkaListener` / outbox routing is audited.
+**Ongoing hygiene:** add a row here whenever a new producer/consumer pair ships; optional CI drift checks belong in **Phase F** (per-service playbook).
 
 ---
 
@@ -63,22 +63,39 @@ Group id: **`experience-bff`**. Intended for cache/local projection sync; handle
 
 ---
 
-## 5. Other `@KafkaListener` anchors (sample)
+## 5. All explicit `@KafkaListener` topics (`services/`, inventory snapshot)
 
-Use ripgrep to extend: `@KafkaListener` under `services/`.
-
-| Topic | Service / class |
-|-------|-----------------|
-| `oros.order.placed` | Pharmacy `OrosConsumer` |
-| `mushex.payment.status.changed` | Pharmacy `MushexConsumer`; PCT `PctEventConsumer`; Msika Flow `PaymentEventConsumer`; Costa `CostaEventConsumer` |
-| `lims.order.status_changed`, `lims.result.available` | OROS `OrosEventConsumer` |
-| `pacs.study.available` | OROS `OrosEventConsumer`; Experience BFF (above) |
-| `pharmacy.dispense.complete` | OROS `OrosEventConsumer`; Experience BFF; Costa `CostaEventConsumer` |
-| `elmis.stock.position.snapshot` | Inventory `ElmisConsumer` |
-| `pharmacy.stock.movement.requested` | Inventory `PharmacyConsumer` |
-| `inventory.reservation.status_changed`, `pharmacy.fulfillment.status_changed` | Msika Flow `InventoryEventConsumer` |
-| `msika.flow.order.paid`, `msika.flow.refund.requested` | Mushex `MsikaFlowEventConsumer` |
-| `impilo.iot.telemetry.device.raw` (config default) | IoT ingestion `TelemetryKafkaConsumer` |
+| Topic (literal or default) | Consumer service | Class |
+|----------------------------|------------------|-------|
+| `pct.encounter.started` | costing-engine | `CostaEventConsumer` |
+| `pct.encounter.completed` | costing-engine | `CostaEventConsumer` |
+| `oros.order.placed` | costing-engine, pharmacy | `CostaEventConsumer`, `OrosConsumer` |
+| `pharmacy.dispense.complete` | costing-engine, oros, experience-bff | `CostaEventConsumer`, `OrosEventConsumer`, `UpstreamEventConsumer` |
+| `inventory.ledger.event.created` | costing-engine | `CostaEventConsumer` |
+| `mushex.payment.status.changed` | costing-engine, experience-bff, pharmacy, pct, msika-flow | `CostaEventConsumer`, `UpstreamEventConsumer`, `MushexConsumer`, `PctEventConsumer`, `PaymentEventConsumer` |
+| `mushex.refund.status.changed` | costing-engine, experience-bff | `CostaEventConsumer`, `UpstreamEventConsumer` |
+| `oros.order.status_changed` | experience-bff, pct | `UpstreamEventConsumer`, `PctEventConsumer` |
+| `oros.result.available` | experience-bff, pct | `UpstreamEventConsumer`, `PctEventConsumer` |
+| `costa.bill.finalized` | experience-bff, mushex | `UpstreamEventConsumer`, `mushex.kafka.CostaEventConsumer` |
+| `costa.invoice.issued` | mushex | `mushex.kafka.CostaEventConsumer` |
+| `costa.refund.issued` | mushex | `mushex.kafka.CostaEventConsumer` |
+| `tuso.workspace.updated` | experience-bff, pct, zibo | `UpstreamEventConsumer`, `PctEventConsumer`, `ZiboEventConsumer` |
+| `tuso.facility.profile.updated` | experience-bff, zibo | `UpstreamEventConsumer`, `ZiboEventConsumer` |
+| `pacs.study.available` | experience-bff, oros | `UpstreamEventConsumer`, `OrosEventConsumer` |
+| `impilo.surv.case.opened.v1` | experience-bff | `UpstreamEventConsumer` |
+| `lims.order.status_changed`, `lims.result.available` | oros | `OrosEventConsumer` |
+| `elmis.stock.position.snapshot` | inventory | `ElmisConsumer` |
+| `pharmacy.stock.movement.requested` | inventory | `PharmacyConsumer` |
+| `inventory.reservation.status_changed`, `pharmacy.fulfillment.status_changed` | msika-flow | `InventoryEventConsumer` |
+| `msika.flow.order.paid`, `msika.flow.refund.requested` | mushex | `MsikaFlowEventConsumer` |
+| `pharmacy.mushex.charge`, `pharmacy.mushex.credit` | mushex | `PharmacyEventConsumer` |
+| `impilo.control.revocation.v1` | pct, vito | `RevocationControlChannelConsumer` (each) |
+| `impilo.federation.pod.revoked.v1` | tshepo, vito | `FederationPodRevocationConsumer` |
+| `impilo.federation.pod.reinstated.v1` | tshepo | `FederationPodRevocationConsumer` |
+| `tshepo.audit.events` | tshepo-audit | `AuditKafkaConsumer` |
+| `vito.print` | card-print-agent | `PrintJobListener` |
+| `${impilo.telemetry.kafka.topic:impilo.iot.telemetry.device.raw}` | iot-ingestion | `TelemetryKafkaConsumer` |
+| `${ingestion.kafka.topic-pattern:impilo\..*}` | data-ingestion | `BronzeEventKafkaConsumer` (topic **pattern**) |
 
 ---
 
@@ -97,7 +114,7 @@ Each file maps **outbox `eventType`** (or aggregate) → **Kafka topic**. Tests 
 | Surveillance | [`SurvOutboxPublisher.resolveTopic`](../../services/surveillance-service/src/main/java/zw/gov/mohcc/impilo/surv/events/SurvOutboxPublisher.java) |
 | Document store | [`OutboxPublisher`](../../services/document-service/src/main/java/zw/gov/mohcc/impilo/docstore/events/OutboxPublisher.java) |
 | Campaigns | [`CampaignsOutboxPublisher`](../../services/campaigns-service/src/main/java/zw/gov/mohcc/impilo/campaigns/events/CampaignsOutboxPublisher.java) |
-| Msika Flow | [`OutboxPublisher`](../../services/msika-flow-service/src/main/java/zw/gov/mohcc/impilo/msikaflow/events/OutboxPublisher.java) |
+| Msika Flow | [`OutboxPublisher.routeTopic`](../../services/msika-flow-service/src/main/java/zw/gov/mohcc/impilo/msikaflow/events/OutboxPublisher.java) |
 
 ---
 
@@ -136,14 +153,70 @@ Each file maps **outbox `eventType`** (or aggregate) → **Kafka topic**. Tests 
 
 ---
 
-## 9. AsyncAPI and schema ownership
+## 9. BUTANO (Shared Health Record) outbox
 
-Starter specs:
+Producer: [`butano/.../OutboxPublisher`](../../services/butano-service/src/main/java/zw/gov/mohcc/impilo/butano/events/OutboxPublisher.java).
+
+| Event type | Kafka topic |
+|------------|-------------|
+| `RESOURCE_CREATED` | `butano.resource.created` |
+| `RESOURCE_UPDATED` | `butano.resource.updated` |
+| `RECONCILE_COMPLETED` | `butano.reconcile.completed` |
+| default | `butano.events` |
+
+Downstream analytics, NDR, and connector adapters typically subscribe via **`data-ingestion-service`** topic patterns (`impilo.*`) rather than per-topic listeners in-repo.
+
+---
+
+## 10. Campaigns (versioned `impilo.campaigns.*`)
+
+Producer: [`CampaignsOutboxPublisher.resolveTopic`](../../services/campaigns-service/src/main/java/zw/gov/mohcc/impilo/campaigns/events/CampaignsOutboxPublisher.java).
+
+| Event type | Kafka topic |
+|------------|-------------|
+| `CAMPAIGN_CREATED` | `impilo.campaigns.created.v1` |
+| `ENROLLMENT_CREATED` | `impilo.campaigns.enrolled.v1` |
+| `CAMPAIGN_DISPATCHED` | `impilo.campaigns.dispatched.v1` |
+| default | `impilo.campaigns.unknown` |
+
+---
+
+## 11. Document store outbox
+
+Producer: [`docstore/.../OutboxPublisher`](../../services/document-service/src/main/java/zw/gov/mohcc/impilo/docstore/events/OutboxPublisher.java).
+
+| Aggregate | Kafka topic |
+|-----------|-------------|
+| `DOCUMENT` | `docstore.documents` |
+| default | `docstore.events` |
+
+---
+
+## 12. Msika Flow (marketplace order rail)
+
+Producer: [`msikaflow/.../OutboxPublisher.routeTopic`](../../services/msika-flow-service/src/main/java/zw/gov/mohcc/impilo/msikaflow/events/OutboxPublisher.java) — topics `msika.flow.order.*`, `msika.flow.pickup.*`, `msika.flow.vendor.*`, `msika.flow.refund.*`, default `msika.flow.events`. **Mushex** consumes `msika.flow.order.paid` and `msika.flow.refund.requested` via [`MsikaFlowEventConsumer`](../../services/mushex-service/src/main/java/zw/gov/mohcc/impilo/mushex/kafka/MsikaFlowEventConsumer.java).
+
+---
+
+## 13. Data ingestion (bronze lake)
+
+[`BronzeEventKafkaConsumer`](../../services/data-ingestion-service/src/main/java/zw/gov/mohcc/impilo/dataingestion/kafka/BronzeEventKafkaConsumer.java) uses **`topicPattern`** `${ingestion.kafka.topic-pattern}` (default regex **`impilo\..*`**) to ingest **EventEnvelope** JSON into the bronze store — catch-all for many `impilo.*` versioned streams (campaigns, surveillance, future normalised types).
+
+---
+
+## 14. AsyncAPI and schema ownership
+
+Machine-readable anchors (incrementally enrich payloads under `components/messages`):
 
 - [`pct-clinical-encounter.asyncapi.yaml`](../../contracts/asyncapi/pct-clinical-encounter.asyncapi.yaml) — PCT encounter + surveillance case opened
-- [`finance-oros-pharmacy.asyncapi.yaml`](../../contracts/asyncapi/finance-oros-pharmacy.asyncapi.yaml) — Costa/Mushex/OROS/pharmacy inventory anchors
+- [`finance-oros-pharmacy.asyncapi.yaml`](../../contracts/asyncapi/finance-oros-pharmacy.asyncapi.yaml) — Costa / Mushex / OROS / pharmacy / inventory
+- [`trust-governance.asyncapi.yaml`](../../contracts/asyncapi/trust-governance.asyncapi.yaml) — revocation + federation + tshepo audit
+- [`butano-shr.asyncapi.yaml`](../../contracts/asyncapi/butano-shr.asyncapi.yaml) — BUTANO SHR resource lifecycle
+- [`campaigns-outbound.asyncapi.yaml`](../../contracts/asyncapi/campaigns-outbound.asyncapi.yaml) — `impilo.campaigns.*`
+- [`document-store.asyncapi.yaml`](../../contracts/asyncapi/document-store.asyncapi.yaml) — `docstore.*`
+- [`data-ingestion-bronze.asyncapi.yaml`](../../contracts/asyncapi/data-ingestion-bronze.asyncapi.yaml) — topic pattern consumer
 
-Conventions and backlog: [`contracts/asyncapi/README.md`](../../contracts/asyncapi/README.md).
+Conventions: [`contracts/asyncapi/README.md`](../../contracts/asyncapi/README.md).
 
 ---
 

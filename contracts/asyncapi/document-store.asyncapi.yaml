@@ -1,0 +1,23 @@
+asyncapi: '2.6.0'
+info:
+  title: Impilo — Document store (`docstore.*`)
+  version: '0.1.0'
+  description: Topics from `document-service` `OutboxPublisher`.
+defaultContentType: application/json
+
+channels:
+  docstore.documents:
+    subscribe:
+      message:
+        $ref: '#/components/messages/JsonPayload'
+  docstore.events:
+    subscribe:
+      message:
+        $ref: '#/components/messages/JsonPayload'
+
+components:
+  messages:
+    JsonPayload:
+      payload:
+        type: object
+        additionalProperties: true

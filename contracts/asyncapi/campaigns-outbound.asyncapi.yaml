@@ -1,0 +1,31 @@
+asyncapi: '2.6.0'
+info:
+  title: Impilo — Campaigns outbound (`impilo.campaigns.*`)
+  version: '0.1.0'
+  description: Topics from `campaigns-service` `CampaignsOutboxPublisher`.
+defaultContentType: application/json
+
+channels:
+  impilo.campaigns.created.v1:
+    subscribe:
+      message:
+        $ref: '#/components/messages/JsonPayload'
+  impilo.campaigns.enrolled.v1:
+    subscribe:
+      message:
+        $ref: '#/components/messages/JsonPayload'
+  impilo.campaigns.dispatched.v1:
+    subscribe:
+      message:
+        $ref: '#/components/messages/JsonPayload'
+  impilo.campaigns.unknown:
+    subscribe:
+      message:
+        $ref: '#/components/messages/JsonPayload'
+
+components:
+  messages:
+    JsonPayload:
+      payload:
+        type: object
+        additionalProperties: true

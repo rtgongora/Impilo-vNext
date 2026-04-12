@@ -52,7 +52,7 @@ public class WellnessSecurityConfig {
                             .authenticated()
                             .requestMatchers("/internal/v1/mobile/citizen/wellness/**")
                             .authenticated()
-                            .requestMatchers("/internal/v1/mobile/citizen/wallet", "/internal/v1/mobile/citizen/wallet/**")
+                            .requestMatchers("/internal/v1/mobile/citizen/**")
                             .hasAnyRole(CITIZEN_ROLES)
                             .anyRequest()
                             .denyAll())

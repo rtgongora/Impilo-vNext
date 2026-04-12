@@ -50,12 +50,7 @@ public class WellnessServiceProxyController {
     }
 
     @RequestMapping(
-            value = {
-                "/internal/v1/wellness/**",
-                "/internal/v1/mobile/citizen/wellness/**",
-                "/internal/v1/mobile/citizen/wallet",
-                "/internal/v1/mobile/citizen/wallet/**"
-            },
+            value = {"/internal/v1/wellness/**", "/internal/v1/mobile/citizen/**"},
             method = {
                 RequestMethod.GET,
                 RequestMethod.POST,
