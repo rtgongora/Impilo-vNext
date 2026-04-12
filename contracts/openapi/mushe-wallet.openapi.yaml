@@ -1,0 +1,935 @@
+# =============================================================================
+# Mushe Wallet — Health Payment Wallet & Smart Card Platform (OpenAPI 3.0)
+#
+# Wallet accounts, merchant payments, funding channels, smart card lifecycle,
+# encrypted health data on card, and v1.1 companion probes.
+# =============================================================================
+openapi: "3.0.3"
+
+info:
+  title: Mushe Wallet — Health Payment Wallet & Smart Card Platform
+  version: "1.0.0"
+  description: |
+    Mushe Wallet is the health payment platform of Impilo vNext. It provides
+    individual wallets (CPID-based), merchant accounts (Provider Number as
+    Merchant ID), payment rails, funding channels, and a Java Card smart
+    card platform with encrypted health data and IPS on card.
+  contact:
+    name: Impilo Platform Team
+  license:
+    name: Proprietary
+
+servers:
+  - url: http://localhost:8126
+    description: Local development
+  - url: https://{tenant}.impilo.health/api
+    description: Production (per-tenant)
+    variables:
+      tenant:
+        default: demo
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Internal-Probe
+    description: Tech-companion v1.1 probes
+  - name: Wallet
+    description: Wallet account management and transactions
+  - name: Merchant
+    description: Merchant account registration and payments
+  - name: Hold
+    description: Payment authorization holds
+  - name: Funding
+    description: Funding sources and deposits
+  - name: Card
+    description: Smart card lifecycle and health data
+
+paths:
+  /internal/v1/health:
+    get:
+      operationId: musheHealth
+      tags: [Internal-Probe]
+      summary: v1.1 probe — trust context echo
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+      responses:
+        "200":
+          description: Service UP
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProbeHealthBody"
+
+  /internal/v1/wallets:
+    post:
+      operationId: createWallet
+      tags: [Wallet]
+      summary: Create a new wallet (individual, merchant, or institutional)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateWalletRequest"
+      responses:
+        "201":
+          description: Wallet created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /internal/v1/wallets/{walletId}:
+    get:
+      operationId: getWallet
+      tags: [Wallet]
+      summary: Get wallet by ID
+      parameters:
+        - name: walletId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Wallet details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /internal/v1/wallets/by-owner:
+    get:
+      operationId: getWalletByOwner
+      tags: [Wallet]
+      summary: Get wallet by owner type and reference
+      parameters:
+        - name: owner_type
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [INDIVIDUAL, MERCHANT, INSTITUTIONAL]
+        - name: owner_ref
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Wallet details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /internal/v1/wallets/{walletId}/balance:
+    get:
+      operationId: getBalance
+      tags: [Wallet]
+      summary: Get wallet balance
+      parameters:
+        - name: walletId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Balance
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /internal/v1/wallets/{walletId}/transactions:
+    get:
+      operationId: getTransactions
+      tags: [Wallet]
+      summary: List wallet transactions (paginated)
+      parameters:
+        - name: walletId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Transaction list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /internal/v1/wallets/{walletId}/credit:
+    post:
+      operationId: creditWallet
+      tags: [Wallet]
+      summary: Credit wallet (deposit money)
+      parameters:
+        - name: walletId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreditWalletRequest"
+      responses:
+        "200":
+          description: Transaction created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /internal/v1/wallets/{walletId}/debit:
+    post:
+      operationId: debitWallet
+      tags: [Wallet]
+      summary: Debit wallet (withdraw money)
+      parameters:
+        - name: walletId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DebitWalletRequest"
+      responses:
+        "200":
+          description: Transaction created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /internal/v1/wallets/transfer:
+    post:
+      operationId: transfer
+      tags: [Wallet]
+      summary: Transfer between wallets
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TransferRequest"
+      responses:
+        "200":
+          description: Transfer completed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /internal/v1/merchants:
+    post:
+      operationId: registerMerchant
+      tags: [Merchant]
+      summary: Register provider as merchant (Provider Number = Merchant ID)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterMerchantRequest"
+      responses:
+        "201":
+          description: Merchant registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /internal/v1/merchants/{merchantId}:
+    get:
+      operationId: getMerchant
+      tags: [Merchant]
+      summary: Get merchant by ID
+      parameters:
+        - name: merchantId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Merchant details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /internal/v1/merchants/by-provider:
+    get:
+      operationId: getMerchantByProvider
+      tags: [Merchant]
+      summary: Get merchant by provider number
+      parameters:
+        - name: provider_number
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Merchant details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /internal/v1/merchants/pay:
+    post:
+      operationId: payMerchant
+      tags: [Merchant]
+      summary: Pay a merchant from individual wallet
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PayMerchantRequest"
+      responses:
+        "200":
+          description: Payment completed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /internal/v1/holds:
+    post:
+      operationId: placeHold
+      tags: [Hold]
+      summary: Place authorization hold on wallet funds
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlaceHoldRequest"
+      responses:
+        "201":
+          description: Hold placed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /internal/v1/holds/{holdId}/capture:
+    post:
+      operationId: captureHold
+      tags: [Hold]
+      summary: Capture held funds (convert to debit)
+      parameters:
+        - name: holdId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Hold captured
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /internal/v1/holds/{holdId}/release:
+    post:
+      operationId: releaseHold
+      tags: [Hold]
+      summary: Release held funds back to available balance
+      parameters:
+        - name: holdId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Hold released
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /internal/v1/funding/{walletId}/sources:
+    post:
+      operationId: addFundingSource
+      tags: [Funding]
+      summary: Add a funding source (bank, mobile money)
+      parameters:
+        - name: walletId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddFundingSourceRequest"
+      responses:
+        "201":
+          description: Source added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+    get:
+      operationId: listFundingSources
+      tags: [Funding]
+      summary: List funding sources for wallet
+      parameters:
+        - name: walletId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Source list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /internal/v1/funding/{walletId}/deposit:
+    post:
+      operationId: deposit
+      tags: [Funding]
+      summary: Deposit from linked funding source
+      parameters:
+        - name: walletId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DepositRequest"
+      responses:
+        "200":
+          description: Deposit completed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /internal/v1/funding/{walletId}/cash-deposit:
+    post:
+      operationId: cashDeposit
+      tags: [Funding]
+      summary: Cash deposit at health facility
+      parameters:
+        - name: walletId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CashDepositRequest"
+      responses:
+        "200":
+          description: Cash deposit recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /internal/v1/cards:
+    post:
+      operationId: issueCard
+      tags: [Card]
+      summary: Issue smart card (Java Card dual-interface — health + payment)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [walletId]
+              properties:
+                walletId:
+                  type: string
+                  format: uuid
+                cardType:
+                  type: string
+                  enum: [DUAL, PAYMENT_ONLY, HEALTH_ONLY]
+                  default: DUAL
+                cardNetwork:
+                  type: string
+                  enum: [VISA, ZIMSWITCH, DUAL_NETWORK]
+                  default: ZIMSWITCH
+      responses:
+        "201":
+          description: Card issued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /internal/v1/cards/{cardId}:
+    get:
+      operationId: getCard
+      tags: [Card]
+      summary: Get card details (card number masked)
+      parameters:
+        - name: cardId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Card details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /internal/v1/cards/{cardId}/activate:
+    post:
+      operationId: activateCard
+      tags: [Card]
+      summary: Activate card with PIN
+      parameters:
+        - name: cardId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pin]
+              properties:
+                pin:
+                  type: string
+      responses:
+        "200":
+          description: Card activated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /internal/v1/cards/{cardId}/block:
+    post:
+      operationId: blockCard
+      tags: [Card]
+      summary: Block card
+      parameters:
+        - name: cardId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason:
+                  type: string
+      responses:
+        "200":
+          description: Card blocked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /internal/v1/cards/{cardId}/unblock:
+    post:
+      operationId: unblockCard
+      tags: [Card]
+      summary: Unblock card
+      parameters:
+        - name: cardId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Card unblocked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /internal/v1/cards/{cardId}/replace:
+    post:
+      operationId: replaceCard
+      tags: [Card]
+      summary: Replace card (blocks old, issues new linked to same wallet)
+      parameters:
+        - name: cardId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "201":
+          description: New card issued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /internal/v1/cards/{cardId}/health-data:
+    get:
+      operationId: getCardHealthData
+      tags: [Card]
+      summary: Get health data status on card (metadata only — not encrypted content)
+      parameters:
+        - name: cardId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Health data metadata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /internal/v1/cards/{cardId}/health-data/sync:
+    post:
+      operationId: syncHealthData
+      tags: [Card]
+      summary: Trigger health data update (fetches from BUTANO, encrypts, queues for card)
+      parameters:
+        - name: cardId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "202":
+          description: Sync queued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /internal/v1/cards/{cardId}/pending-updates:
+    get:
+      operationId: getPendingUpdates
+      tags: [Card]
+      summary: List pending card updates
+      parameters:
+        - name: cardId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Pending updates
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /internal/v1/cards/by-wallet/{walletId}:
+    get:
+      operationId: listCardsByWallet
+      tags: [Card]
+      summary: List cards for a wallet
+      parameters:
+        - name: walletId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Card list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    TenantId:
+      name: X-Tenant-ID
+      in: header
+      required: true
+      schema:
+        type: string
+    PodId:
+      name: X-Pod-ID
+      in: header
+      required: true
+      schema:
+        type: string
+    RequestId:
+      name: X-Request-ID
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+    CorrelationId:
+      name: X-Correlation-ID
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    ApiResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          additionalProperties: true
+        meta:
+          type: object
+          properties:
+            correlation_id:
+              type: string
+            request_id:
+              type: string
+
+    ProbeHealthBody:
+      type: object
+      properties:
+        service:
+          type: string
+          example: mushe-wallet
+        status:
+          type: string
+          example: UP
+      additionalProperties: true
+
+    CreateWalletRequest:
+      type: object
+      required: [ownerType, ownerRef]
+      properties:
+        ownerType:
+          type: string
+          enum: [INDIVIDUAL, MERCHANT, INSTITUTIONAL]
+        ownerRef:
+          type: string
+          description: CPID for individuals, Provider Number for merchants
+        displayName:
+          type: string
+        currency:
+          type: string
+          default: ZWL
+
+    CreditWalletRequest:
+      type: object
+      required: [amount, txnType]
+      properties:
+        amount:
+          type: number
+        txnType:
+          type: string
+        channel:
+          type: string
+          enum: [APP, USSD, CARD, POS, BANK_TRANSFER, MOBILE_MONEY, CASH_DEPOSIT]
+        reference:
+          type: string
+        description:
+          type: string
+
+    DebitWalletRequest:
+      type: object
+      required: [amount, txnType]
+      properties:
+        amount:
+          type: number
+        txnType:
+          type: string
+        channel:
+          type: string
+        reference:
+          type: string
+        description:
+          type: string
+
+    TransferRequest:
+      type: object
+      required: [fromWalletId, toWalletId, amount]
+      properties:
+        fromWalletId:
+          type: string
+          format: uuid
+        toWalletId:
+          type: string
+          format: uuid
+        amount:
+          type: number
+        reference:
+          type: string
+        description:
+          type: string
+        channel:
+          type: string
+
+    RegisterMerchantRequest:
+      type: object
+      required: [providerNumber, merchantName]
+      properties:
+        providerNumber:
+          type: string
+          description: Provider Number becomes the Merchant ID
+        facilityId:
+          type: string
+          format: uuid
+        merchantName:
+          type: string
+        merchantType:
+          type: string
+          enum: [HEALTH_PROVIDER, PHARMACY, LAB, IMAGING]
+        settlementAccount:
+          type: string
+        settlementBank:
+          type: string
+
+    PayMerchantRequest:
+      type: object
+      required: [fromWalletId, merchantProviderNumber, amount]
+      properties:
+        fromWalletId:
+          type: string
+          format: uuid
+        merchantProviderNumber:
+          type: string
+        amount:
+          type: number
+        reference:
+          type: string
+        channel:
+          type: string
+
+    PlaceHoldRequest:
+      type: object
+      required: [walletId, amount]
+      properties:
+        walletId:
+          type: string
+          format: uuid
+        amount:
+          type: number
+        reason:
+          type: string
+        reference:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+
+    AddFundingSourceRequest:
+      type: object
+      required: [sourceType, provider]
+      properties:
+        sourceType:
+          type: string
+          enum: [BANK_ACCOUNT, MOBILE_MONEY, REMITTANCE]
+        provider:
+          type: string
+          description: "EcoCash, InnBucks, OneMoney, CBZ, Stanbic, etc."
+        accountRef:
+          type: string
+        accountName:
+          type: string
+
+    DepositRequest:
+      type: object
+      required: [sourceId, amount]
+      properties:
+        sourceId:
+          type: string
+          format: uuid
+        amount:
+          type: number
+        reference:
+          type: string
+
+    CashDepositRequest:
+      type: object
+      required: [cashierId, facilityId, amount]
+      properties:
+        cashierId:
+          type: string
+        facilityId:
+          type: string
+          format: uuid
+        amount:
+          type: number
+        reference:
+          type: string
