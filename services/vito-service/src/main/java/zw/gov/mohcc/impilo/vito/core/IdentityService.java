@@ -76,8 +76,8 @@ public class IdentityService {
         // Publish IDENTITY_CREATED event
         publishEvent("CLIENT", client.getHealthId().toString(),
                 "IDENTITY_CREATED",
-                String.format("{\"healthId\":\"%s\",\"status\":\"PROVISIONAL\",\"did\":\"%s\"}",
-                        client.getHealthId(), did));
+                String.format("{\"healthId\":\"%s\",\"status\":\"PROVISIONAL\",\"did\":\"%s\",\"tenantId\":\"%s\"}",
+                        client.getHealthId(), did, client.getTenantId()));
 
         return new ClientRegistrationResult(client, did);
     }
@@ -98,7 +98,8 @@ public class IdentityService {
         client = clientRepository.save(client);
 
         publishEvent("CLIENT", healthId.toString(), "IDENTITY_VERIFIED",
-                String.format("{\"healthId\":\"%s\",\"verifiedBy\":\"%s\"}", healthId, verifiedBy));
+                String.format("{\"healthId\":\"%s\",\"verifiedBy\":\"%s\",\"tenantId\":\"%s\"}",
+                        healthId, verifiedBy, tenantId));
 
         return client;
     }
@@ -118,8 +119,8 @@ public class IdentityService {
         aliasService.revokeAll(tenantId, healthId);
 
         publishEvent("CLIENT", healthId.toString(), "IDENTITY_DECEASED",
-                String.format("{\"healthId\":\"%s\",\"deathNotificationRef\":\"%s\"}",
-                        healthId, deathNotificationRef));
+                String.format("{\"healthId\":\"%s\",\"deathNotificationRef\":\"%s\",\"tenantId\":\"%s\"}",
+                        healthId, deathNotificationRef, tenantId));
 
         return client;
     }

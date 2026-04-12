@@ -4,6 +4,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchRestClientAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import zw.gov.mohcc.impilo.butano.config.ButanoProperties;
 
@@ -24,6 +25,7 @@ import zw.gov.mohcc.impilo.butano.config.ButanoProperties;
         ElasticsearchRestClientAutoConfiguration.class
 })
 @EnableScheduling
+@EnableKafka
 @EnableConfigurationProperties(ButanoProperties.class)
 public class ButanoApplication {
 

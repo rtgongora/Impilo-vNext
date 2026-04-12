@@ -118,9 +118,6 @@ public class FhirServerConfig {
         // Auto-versioning of references (for provenance tracking)
         settings.setAutoVersionReferenceAtPaths();
 
-        // Resource counts
-        settings.setResourceCountCacheEnabled(true);
-
         return settings;
     }
 

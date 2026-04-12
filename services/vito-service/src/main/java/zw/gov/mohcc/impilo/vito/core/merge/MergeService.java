@@ -108,7 +108,9 @@ public class MergeService {
         }
 
         publishEvent("MERGE", history.getId().toString(), "vito.merge.executed",
-                "{\"tenantId\":\"" + tenantId + "\",\"survivor\":\"" + survivorCrid + "\",\"merged\":\"" + mergedCrid + "\"}");
+                "{\"tenantId\":\"" + tenantId + "\",\"survivor\":\"" + survivorCrid + "\",\"merged\":\"" + mergedCrid
+                        + "\",\"survivorHealthId\":\"" + survivor.getHealthId() + "\",\"mergedHealthId\":\""
+                        + merged.getHealthId() + "\"}");
 
         return history;
     }
@@ -133,13 +135,15 @@ public class MergeService {
         // Restore merged client (lookup by CRID)
         ClientEntity merged = clientRepo.findByTenantIdAndCrid(tenantId, history.getMergedCrid())
                 .orElseThrow();
+        ClientEntity survivor = clientRepo.findByTenantIdAndCrid(tenantId, history.getSurvivorCrid())
+                .orElseThrow();
         merged.setStatus(IdentityStatus.ACTIVE);
         clientRepo.save(merged);
 
         // Transfer aliases back (re-associate aliases that originally belonged to merged)
         // Note: This is a best-effort reversal; some aliases may have been modified since merge
         List<IdentityAliasEntity> survivorAliases = aliasRepo.findByTenantIdAndHealthIdAndStatus(
-                tenantId, history.getSurvivorCrid(), "ACTIVE");
+                tenantId, survivor.getHealthId(), "ACTIVE");
         // We can't deterministically know which aliases came from the merged record,
         // so we rely on the field_decisions stored in merge history for audit.
 
@@ -148,7 +152,9 @@ public class MergeService {
         history = mergeRepo.save(history);
 
         publishEvent("MERGE", history.getId().toString(), "vito.merge.reversed",
-                "{\"tenantId\":\"" + tenantId + "\",\"survivor\":\"" + history.getSurvivorCrid() + "\",\"merged\":\"" + history.getMergedCrid() + "\"}");
+                "{\"tenantId\":\"" + tenantId + "\",\"survivor\":\"" + history.getSurvivorCrid() + "\",\"merged\":\""
+                        + history.getMergedCrid() + "\",\"survivorHealthId\":\"" + survivor.getHealthId()
+                        + "\",\"mergedHealthId\":\"" + merged.getHealthId() + "\"}");
 
         return history;
     }
