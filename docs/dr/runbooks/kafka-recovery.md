@@ -187,15 +187,15 @@ for topic in pct.encounter.started pct.encounter.completed \
 done
 
 # Pharmacy & inventory events
-for topic in pharmacy.dispense.completed pharmacy.fulfillment.status_changed \
-  inventory.reservation.status_changed inventory.ledger.event_posted; do
+for topic in pharmacy.dispense.complete pharmacy.fulfillment.status_changed \
+  inventory.reservation.status_changed inventory.ledger.event.created; do
   kafka-topics.sh --bootstrap-server localhost:9092 --create \
     --topic "${topic}" --partitions 3 --replication-factor 3 \
     --config retention.ms=1209600000  # 14 days
 done
 
 # Finance events
-for topic in mushex.payment.status_changed costa.bill.finalized costa.invoice.issued; do
+for topic in mushex.payment.status.changed costa.bill.finalized costa.invoice.issued; do
   kafka-topics.sh --bootstrap-server localhost:9092 --create \
     --topic "${topic}" --partitions 3 --replication-factor 3 \
     --config retention.ms=2592000000  # 30 days

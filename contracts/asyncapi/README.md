@@ -19,7 +19,8 @@ The authoritative **human-maintained inventory** of topics and known producer/co
 | Document | Topics |
 |----------|--------|
 | [`pct-clinical-encounter.asyncapi.yaml`](./pct-clinical-encounter.asyncapi.yaml) | `pct.encounter.started`, `pct.encounter.completed`, `impilo.surv.case.opened.v1` |
+| [`finance-oros-pharmacy.asyncapi.yaml`](./finance-oros-pharmacy.asyncapi.yaml) | `mushex.payment.status.changed`, `mushex.refund.status.changed`, `costa.bill.finalized`, `oros.order.placed`, `pharmacy.dispense.complete`, `inventory.ledger.event.created` |
 
 ## Phase E status
 
-Baseline catalog landed **2026-04-12**; **slice 2** added the AsyncAPI file above after reconciling BFF/Costa/PCT/surveillance topic names (see [`kafka-event-catalog.md`](../../docs/architecture/kafka-event-catalog.md) §3).
+Baseline catalog landed **2026-04-12**; **slice 2** added PCT/surveillance AsyncAPI; **slice 3** added finance/OROS/pharmacy catalog sections, `finance-oros-pharmacy.asyncapi.yaml`, and reconciled **`pharmacy.dispense.complete`** + **`mushex.payment.status.changed`** consumers (see [`kafka-event-catalog.md`](../../docs/architecture/kafka-event-catalog.md) §3).

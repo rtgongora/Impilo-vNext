@@ -84,13 +84,14 @@ public class UpstreamEventConsumer {
 
     // ── Pharmacy Events: dispense lifecycle ─────────────────────────
 
-    @KafkaListener(topics = "pharmacy.dispense.completed", groupId = "experience-bff")
+    /** Matches pharmacy-service {@code OutboxPublisher} ({@code DISPENSE_COMPLETED} → {@code pharmacy.dispense.complete}). */
+    @KafkaListener(topics = "pharmacy.dispense.complete", groupId = "experience-bff")
     public void onDispenseCompleted(String payload) {
         try {
             JsonNode node = objectMapper.readTree(payload);
             log.info("Dispense completed: prescriptionId={}", node.path("prescriptionId").asText());
         } catch (Exception e) {
-            log.error("Failed to process pharmacy.dispense.completed: {}", e.getMessage());
+            log.error("Failed to process pharmacy.dispense.complete: {}", e.getMessage());
         }
     }
 
@@ -108,7 +109,8 @@ public class UpstreamEventConsumer {
         }
     }
 
-    @KafkaListener(topics = "mushex.payment.status_changed", groupId = "experience-bff")
+    /** Matches mushex-service {@code OutboxPublisher} ({@code STATUS_CHANGED} → {@code mushex.payment.status.changed}). */
+    @KafkaListener(topics = "mushex.payment.status.changed", groupId = "experience-bff")
     public void onPaymentStatusChanged(String payload) {
         try {
             JsonNode node = objectMapper.readTree(payload);
@@ -116,7 +118,7 @@ public class UpstreamEventConsumer {
                     node.path("paymentId").asText(),
                     node.path("status").asText());
         } catch (Exception e) {
-            log.error("Failed to process mushex.payment.status_changed: {}", e.getMessage());
+            log.error("Failed to process mushex.payment.status.changed: {}", e.getMessage());
         }
     }
 

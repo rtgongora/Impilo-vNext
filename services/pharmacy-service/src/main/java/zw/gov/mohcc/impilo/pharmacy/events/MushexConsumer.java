@@ -19,7 +19,7 @@ import java.util.UUID;
 /**
  * Kafka consumer for MUSHEX payment status events.
  *
- * <p>Listens to the {@code mushex.payment.status_changed} topic. When a
+ * <p>Listens to the {@code mushex.payment.status.changed} topic. When a
  * payment for a pharmacy-correlated charge is confirmed as PAID, this
  * consumer publishes a PCT discharge blocker clearance event via the
  * outbox, allowing the patient to proceed through the discharge flow.</p>
@@ -73,7 +73,7 @@ public class MushexConsumer {
      *
      * @param message the Kafka message payload (JSON)
      */
-    @KafkaListener(topics = "mushex.payment.status_changed", groupId = "pharmacy-service")
+    @KafkaListener(topics = "mushex.payment.status.changed", groupId = "pharmacy-service")
     @Transactional
     public void consumePaymentStatus(String message) {
         try {

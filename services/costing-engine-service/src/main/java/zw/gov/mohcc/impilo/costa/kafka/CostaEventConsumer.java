@@ -275,7 +275,7 @@ public class CostaEventConsumer {
             markProcessed(eventId, "PHARMACY");
             ack.acknowledge();
         } catch (Exception e) {
-            log.error("Failed to process pharmacy.dispense.completed", e);
+            log.error("Failed to process pharmacy.dispense.complete", e);
             ack.acknowledge();
         }
     }
@@ -305,7 +305,7 @@ public class CostaEventConsumer {
         }
     }
 
-    @KafkaListener(topics = "mushex.payment.status_changed", groupId = "costa-costing-engine")
+    @KafkaListener(topics = "mushex.payment.status.changed", groupId = "costa-costing-engine")
     @Transactional
     public void onPaymentStatusChanged(String message, Acknowledgment ack) {
         try {
@@ -324,7 +324,7 @@ public class CostaEventConsumer {
             ack.acknowledge();
             log.info("MUSHEX payment {} -> {}", paymentIntentId, status);
         } catch (Exception e) {
-            log.error("Failed to process mushex.payment.status_changed", e);
+            log.error("Failed to process mushex.payment.status.changed", e);
             ack.acknowledge();
         }
     }

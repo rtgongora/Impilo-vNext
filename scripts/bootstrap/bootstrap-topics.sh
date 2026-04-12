@@ -83,11 +83,15 @@ TOPICS=(
     "pct.encounter.completed:6:1"
     "impilo.surv.case.opened.v1:6:1"
     "oros.order.events:3:1"
+    "oros.order.placed:6:1"
+    "oros.order.status_changed:6:1"
+    "oros.result.available:6:1"
     "oros.result.events:3:1"
     "ubomi.visit.events:3:1"
 
     # Pharmacy & Supply Chain
     "pharmacy.dispensing.events:3:1"
+    "pharmacy.dispense.complete:6:1"
     "pharmacy.stock.receipt:3:1"
     "pharmacy.reconcile.result:3:1"
     "inventory.stock.receipt:3:1"
@@ -98,6 +102,7 @@ TOPICS=(
     "msika.procurement.events:3:1"
 
     # Finance
+    "mushex.payment.status.changed:6:1"
     "mushex.claim.events:3:1"
     "costing.allocation.events:3:1"
 

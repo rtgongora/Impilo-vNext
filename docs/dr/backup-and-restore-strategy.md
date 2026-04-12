@@ -152,8 +152,8 @@ Kafka is an **event transport**, not a source of truth. All domain state origina
 |---------------|-----------|:----------:|----------------|
 | Platform audit events | 30 days | No | `platform.audit.events`, `tshepo.audit.events` |
 | Clinical events | 14 days | No | `pct.encounter.started`, `oros.order.placed` |
-| Pharmacy/inventory events | 14 days | No | `pharmacy.dispense.completed`, `inventory.ledger.event_posted` |
-| Financial events | 30 days | No | `mushex.payment.status_changed`, `costa.bill.finalized` |
+| Pharmacy/inventory events | 14 days | No | `pharmacy.dispense.complete`, `inventory.ledger.event.created` |
+| Financial events | 30 days | No | `mushex.payment.status.changed`, `costa.bill.finalized` |
 | Control channels | 7 days | Yes | `impilo.control.revocation.v1` |
 | IoT telemetry | 3 days | No | `impilo.iot.telemetry.device.raw` |
 

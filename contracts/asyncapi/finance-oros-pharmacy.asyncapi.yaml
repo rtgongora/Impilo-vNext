@@ -1,0 +1,117 @@
+asyncapi: '2.6.0'
+info:
+  title: Impilo — Finance (Mushex/Costa), OROS orders, pharmacy dispense (Kafka anchors)
+  version: '0.1.0'
+  description: |
+    High-traffic rails documented in Phase E slice 3. Producer routing lives in
+    `mushex/kafka/OutboxPublisher`, `costa/kafka/OutboxPublisher`, `oros/events/OutboxPublisher`,
+    `pharmacy/events/OutboxPublisher`; Costa/OROS/BFF consumption in `CostaEventConsumer`,
+    `OrosEventConsumer`, `UpstreamEventConsumer`.
+defaultContentType: application/json
+
+channels:
+  mushex.payment.status.changed:
+    description: Mushex payment intent status (`STATUS_CHANGED` outbox).
+    subscribe:
+      operationId: consumeMushexPaymentStatus
+      message:
+        $ref: '#/components/messages/MushexPaymentStatus'
+  mushex.refund.status.changed:
+    description: Mushex refund lifecycle (`REFUND_*` outbox types).
+    subscribe:
+      operationId: consumeMushexRefundStatus
+      message:
+        $ref: '#/components/messages/MushexRefundStatus'
+  costa.bill.finalized:
+    description: COSTA bill finalized (`BILL_FINALIZED`); consumed by Experience BFF among others.
+    subscribe:
+      operationId: consumeCostaBillFinalized
+      message:
+        $ref: '#/components/messages/CostaBillFinalized'
+  oros.order.placed:
+    description: OROS order placed; Costa posts bill lines; Pharmacy consumes for fulfilment.
+    subscribe:
+      operationId: consumeOrosOrderPlaced
+      message:
+        $ref: '#/components/messages/OrosOrderPlaced'
+  pharmacy.dispense.complete:
+    description: Pharmacy dispense completed (`DISPENSE_COMPLETED`); Costa + OROS + BFF.
+    subscribe:
+      operationId: consumePharmacyDispenseComplete
+      message:
+        $ref: '#/components/messages/PharmacyDispenseComplete'
+  inventory.ledger.event.created:
+    description: Inventory ledger event; Costa `CostaEventConsumer` observes ISSUE/WASTAGE patterns.
+    subscribe:
+      operationId: consumeInventoryLedgerEvent
+      message:
+        $ref: '#/components/messages/InventoryLedgerEvent'
+
+components:
+  messages:
+    MushexPaymentStatus:
+      summary: Payment intent update
+      payload:
+        type: object
+        properties:
+          eventId: { type: string }
+          paymentIntentId: { type: string }
+          paymentId: { type: string, description: Legacy / alternate field name in some payloads }
+          status: { type: string }
+          paidAmount: { type: string, description: Decimal as string }
+    MushexRefundStatus:
+      summary: Refund update
+      payload:
+        type: object
+        properties:
+          eventId: { type: string }
+          refundId: { type: string }
+          intentId: { type: string }
+          billId: { type: string }
+          status: { type: string }
+          amount: { type: string }
+    CostaBillFinalized:
+      summary: Bill finalized for downstream finance UX
+      payload:
+        type: object
+        properties:
+          billId: { type: string }
+          totalAmount: { type: string }
+    OrosOrderPlaced:
+      summary: Clinical order placed (Costa line posting)
+      payload:
+        type: object
+        properties:
+          eventId: { type: string }
+          orderId: { type: string }
+          encounterRef: { type: string }
+          encounterId: { type: string }
+          patientCpid: { type: string }
+          orderType: { type: string }
+          ziboOrderCode: { type: string }
+          clinicalNotes: { type: string }
+    PharmacyDispenseComplete:
+      summary: Dispense completed (canonical pharmacy-service topic)
+      payload:
+        type: object
+        properties:
+          eventId: { type: string }
+          orderId: { type: string }
+          dispenseId: { type: string }
+          prescriptionId: { type: string }
+          patientCpid: { type: string }
+          orosOrderId: { type: string }
+          drugCode: { type: string }
+          drugDisplay: { type: string }
+          qtyDispensed: { type: string }
+          unitCost: { type: string }
+    InventoryLedgerEvent:
+      summary: Stock ledger movement
+      payload:
+        type: object
+        properties:
+          eventId: { type: string }
+          eventType: { type: string }
+          itemCode: { type: string }
+          qtyDelta: { type: string }
+          unitCost: { type: string }
