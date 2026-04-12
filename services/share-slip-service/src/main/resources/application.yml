@@ -27,9 +27,17 @@ spring:
     schemas: share_slip
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: share-slip-service
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      enable-auto-commit: false
+      properties:
+        isolation.level: read_committed
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
   data:
     redis:
       host: ${REDIS_HOST:localhost}
@@ -38,6 +46,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
+          jwk-set-uri: ${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:impilo}/protocol/openid-connect/certs
           issuer-uri: ${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:impilo}
 
 # ---- Share Slip configuration ----
@@ -49,7 +58,7 @@ share-slip:
     max-attempts: 3
   link:
     default-expiry-hours: 24
-    max-expiry-hours: 168   # 7 days
+    max-expiry-hours: 720   # 30 days — supports automated claim / remittance proofs
   hmac:
     pepper: ${SHARE_SLIP_HMAC_PEPPER:changeme-not-for-production}
   landela:
@@ -61,7 +70,10 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,prometheus,metrics
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
   metrics:
     tags:
       application: share-slip-service

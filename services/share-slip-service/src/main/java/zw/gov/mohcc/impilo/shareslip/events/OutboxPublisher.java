@@ -58,6 +58,7 @@ public class OutboxPublisher {
     private String resolveTopic(String aggregateType) {
         return switch (aggregateType) {
             case "SHARE_LINK" -> "share.link";
+            case "SHARE_SLIP" -> "share.events";
             default -> "share.events";
         };
     }

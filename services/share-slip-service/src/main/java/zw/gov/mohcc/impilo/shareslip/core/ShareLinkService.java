@@ -1,5 +1,7 @@
 package zw.gov.mohcc.impilo.shareslip.core;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -21,7 +23,9 @@ import zw.gov.mohcc.impilo.shareslip.persistence.repository.ShareLinkRepository;
 
 import java.security.SecureRandom;
 import java.time.OffsetDateTime;
+import java.util.LinkedHashMap;
 import java.util.HexFormat;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -42,17 +46,20 @@ public class ShareLinkService {
     private final EventOutboxRepository eventOutboxRepository;
     private final OtpService otpService;
     private final ShareSlipProperties properties;
+    private final ObjectMapper objectMapper;
 
     public ShareLinkService(ShareLinkRepository shareLinkRepository,
                             ShareAuditRepository shareAuditRepository,
                             EventOutboxRepository eventOutboxRepository,
                             OtpService otpService,
-                            ShareSlipProperties properties) {
+                            ShareSlipProperties properties,
+                            ObjectMapper objectMapper) {
         this.shareLinkRepository = shareLinkRepository;
         this.shareAuditRepository = shareAuditRepository;
         this.eventOutboxRepository = eventOutboxRepository;
         this.otpService = otpService;
         this.properties = properties;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -68,37 +75,59 @@ public class ShareLinkService {
     @Transactional
     public ShareLinkResponse createShareLink(CreateShareLinkRequest request) {
         TrustContext ctx = TrustContextHolder.require();
+        int expiryHours = resolveExpiryHours(request);
+        ShareLinkEntity entity = createShareLinkInternal(request, ctx.tenantId(), ctx.actorId(), expiryHours);
+        log.info("Share link created: linkId={}, subjectType={}, subjectId={}, expiryHours={}",
+                entity.getLinkId(), entity.getSubjectType(), entity.getSubjectId(), expiryHours);
+        return toResponse(entity);
+    }
 
-        // Generate share token: 32 random bytes, hex-encoded = 64 chars
+    /**
+     * Create a share link from Kafka-driven automation (no HTTP {@link TrustContext}).
+     * Emits {@code share.link.created} plus {@code shareslip.link.auto_generated} on the outbox.
+     */
+    @Transactional
+    public ShareLinkResponse createAutomatedShareLink(CreateShareLinkRequest request, UUID tenantId,
+                                                      String correlationId, String automationKind) {
+        int expiryHours = Math.min(30 * 24, properties.getLink().getMaxExpiryHours());
+        ShareLinkEntity entity = createShareLinkInternal(request, tenantId, "kafka:share-slip-service", expiryHours);
+        recordOutboxEvent("SHARE_SLIP", entity.getLinkId().toString(),
+                "shareslip.link.auto_generated",
+                buildAutomationPayload(entity, correlationId, automationKind));
+        log.info("Share slip auto-generated link: linkId={}, kind={}, subjectType={}, subjectId={}, "
+                        + "correlationId={}",
+                entity.getLinkId(), automationKind, entity.getSubjectType(), entity.getSubjectId(), correlationId);
+        return toResponse(entity);
+    }
+
+    private int resolveExpiryHours(CreateShareLinkRequest request) {
+        if (request.expiryHours() != null) {
+            return Math.min(request.expiryHours(), properties.getLink().getMaxExpiryHours());
+        }
+        return properties.getLink().getDefaultExpiryHours();
+    }
+
+    private ShareLinkEntity createShareLinkInternal(CreateShareLinkRequest request, UUID tenantId,
+                                                    String actorId, int expiryHours) {
         byte[] tokenBytes = new byte[32];
         SECURE_RANDOM.nextBytes(tokenBytes);
         String shareToken = HexFormat.of().formatHex(tokenBytes);
 
-        // Determine expiry
-        int expiryHours = request.expiryHours() != null
-                ? Math.min(request.expiryHours(), properties.getLink().getMaxExpiryHours())
-                : properties.getLink().getDefaultExpiryHours();
-
-        // Determine verification method
         String verificationMethod = request.verificationMethod() != null
                 ? request.verificationMethod()
                 : "OTP";
 
-        // Generate and hash OTP
         String otp = otpService.generateOtp(properties.getOtp().getLength());
         String otpHash = otpService.hashOtp(otp);
-
-        // Log OTP in dev mode (sendOtp also logs it)
         otpService.sendOtp("SMS", "dev-console", otp);
 
-        // Build entity
         ShareLinkEntity entity = new ShareLinkEntity();
-        entity.setTenantId(ctx.tenantId());
+        entity.setTenantId(tenantId);
         entity.setShareToken(shareToken);
         entity.setSubjectType(request.subjectType());
         entity.setSubjectId(request.subjectId());
         entity.setSubjectName(request.subjectName());
-        entity.setCreatedBy(ctx.actorId());
+        entity.setCreatedBy(actorId);
         entity.setPurpose(request.purpose());
         entity.setDocumentIds(request.documentIds());
         entity.setVerificationMethod(verificationMethod);
@@ -108,18 +137,12 @@ public class ShareLinkService {
 
         entity = shareLinkRepository.save(entity);
 
-        // Record audit
-        recordAudit(entity.getLinkId(), "CREATED", ctx.actorId(), null, null,
+        recordAudit(entity.getLinkId(), "CREATED", actorId, null, null,
                 "{\"verificationMethod\":\"" + verificationMethod + "\"}");
 
-        // Outbox event
         recordOutboxEvent("SHARE_LINK", entity.getLinkId().toString(),
                 "share.link.created", buildEventPayload(entity));
-
-        log.info("Share link created: linkId={}, subjectType={}, subjectId={}, expiryHours={}",
-                entity.getLinkId(), entity.getSubjectType(), entity.getSubjectId(), expiryHours);
-
-        return toResponse(entity);
+        return entity;
     }
 
     /**
@@ -248,5 +271,20 @@ public class ShareLinkService {
                         entity.getStatus(),
                         entity.getExpiresAt()
                 );
+    }
+
+    private String buildAutomationPayload(ShareLinkEntity entity, String correlationId, String kind) {
+        Map<String, Object> map = new LinkedHashMap<>();
+        map.put("linkId", entity.getLinkId().toString());
+        map.put("tenantId", entity.getTenantId().toString());
+        map.put("subjectType", entity.getSubjectType());
+        map.put("subjectId", entity.getSubjectId());
+        map.put("correlationId", correlationId);
+        map.put("kind", kind);
+        try {
+            return objectMapper.writeValueAsString(map);
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("Failed to serialize automation outbox payload", e);
+        }
     }
 }

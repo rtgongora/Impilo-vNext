@@ -1,25 +1,20 @@
 # =============================================================================
-# COSTA — Costing Engine Service API (OpenAPI 3.0)
+# COSTA — Costing Engine & Claims API (OpenAPI 3.0)
+#
+# COSTA (costing-engine-service) provides encounter billing, tariffs, estimates,
+# claim packs, payments, refunds, and v1.1 companion probes for the Health OS.
 # =============================================================================
 openapi: "3.0.3"
 
 info:
-  title: "COSTA — Costing Engine Service API"
-  version: "1.0.0"
+  title: COSTA — Costing Engine & Claims API
+  version: "1.1.0"
   description: |
-    COSTA manages the complete costing, billing, and payment lifecycle for the
-    Impilo platform:
+    COSTA is Impilo's costing engine: bill lifecycle, tariffs, charging rulesets,
+    estimates, claim packs, invoices, payments, refunds, and audit views.
 
-    * **Estimates** — Pre-encounter cost estimation with party splitting
-    * **Bills** — Full lifecycle: draft → accumulate → approve → finalize
-    * **Tariffs** — National tariff schedule management and CSV import
-    * **Rulesets** — JSON-based charging rules with versioned publishing
-    * **Audit** — Complete bill audit trail with all linked entities
-
-    Five cost methods: Micro-costing, ABC, Tariff, Standard (with variance), Stock Average.
-    Exemption engine splits across patient, insurer, subsidy, and write-off parties.
-
-    All endpoints require TSHEPO trust headers injected by Envoy ext_authz.
+    Trust headers are enforced by Envoy + TSHEPO; internal probes require
+    Health OS Manifest v1.2 mandatory headers (see `CompanionHeaders`).
   contact:
     name: Impilo Platform Team
   license:
@@ -27,10 +22,8 @@ info:
 
 servers:
   - url: http://localhost:8101
-    description: Local development (direct)
-  - url: http://localhost:10000
-    description: Local development (via Envoy gateway)
-  - url: https://{tenant}.impilo.health/api
+    description: Local development
+  - url: https://{tenant}.impilo.health/costa
     description: Production (per-tenant)
     variables:
       tenant:
@@ -40,49 +33,105 @@ security:
   - bearerAuth: []
 
 tags:
-  - name: Estimate
-    description: Pre-encounter cost estimation
-  - name: Bill
-    description: Bill lifecycle management (draft, approve, finalize, pay, refund)
-  - name: Tariff
-    description: National tariff schedule management
-  - name: Ruleset
-    description: Charging ruleset configuration and publishing
+  - name: Internal-Probe
+    description: Tech-companion v1.1 header and idempotency proofs
+  - name: Bills
+    description: Bill draft, lines, approval, invoice, and payment operations
+  - name: Claims
+    description: Insurance claim packs derived from finalized bills
+  - name: Payments
+    description: Cross-bill payment listing
+  - name: Estimates
+    description: Encounter cost estimates
+  - name: Tariffs
+    description: Tariff catalog and CSV import
+  - name: Rulesets
+    description: Charging ruleset publication
   - name: Audit
-    description: Bill audit trail and compliance
+    description: Bill-level audit trail aggregation
 
 paths:
-  /costa/v1/estimate:
+
+  /internal/v1/health:
+    get:
+      operationId: costaInternalHealth
+      tags: [Internal-Probe]
+      summary: v1.1 probe — returns trust context echo
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+      responses:
+        "200":
+          description: Service UP with context echo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProbeHealthBody"
+
+  /internal/v1/test-command:
     post:
-      operationId: createEstimate
-      tags: [Estimate]
-      summary: Create a cost estimate
-      description: |
-        Computes a pre-encounter cost estimate for one or more line items.
-        Applies cost engines, charging rules, and exemption/insurance splitting.
+      operationId: costaInternalTestCommand
+      tags: [Internal-Probe]
+      summary: v1.1 probe — idempotency / echo
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/EstimateRequest"
+              type: object
+              additionalProperties: true
       responses:
-        "200":
-          description: Estimate computed
+        "201":
+          description: Echo payload
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse_EstimateResult"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
+                $ref: "#/components/schemas/ProbeCommandBody"
+
+  /costa/v1/bills:
+    get:
+      operationId: costaListBills
+      tags: [Bills]
+      summary: List bills (paged)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: page
+          in: query
+          schema: { type: integer, default: 0 }
+        - name: size
+          in: query
+          schema: { type: integer, default: 50 }
+        - name: status
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: Paged bill headers
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponsePagedBillHeader"
 
   /costa/v1/bills/draft:
     post:
-      operationId: createBillDraft
-      tags: [Bill]
-      summary: Create a new bill draft
+      operationId: costaCreateBillDraft
+      tags: [Bills]
+      summary: Create a draft bill
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
       requestBody:
         required: true
         content:
@@ -91,38 +140,48 @@ paths:
               $ref: "#/components/schemas/BillDraftRequest"
       responses:
         "201":
-          description: Draft bill created
+          description: Draft created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse_BillHeader"
-        "400":
-          $ref: "#/components/responses/BadRequest"
+                $ref: "#/components/schemas/ApiResponseBillHeader"
 
   /costa/v1/bills/{id}:
     get:
-      operationId: getBill
-      tags: [Bill]
+      operationId: costaGetBill
+      tags: [Bills]
       summary: Get bill with lines and parties
       parameters:
-        - $ref: "#/components/parameters/BillId"
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
       responses:
         "200":
-          description: Bill detail
+          description: Bill aggregate
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse_BillDetail"
-        "404":
-          $ref: "#/components/responses/NotFound"
+                $ref: "#/components/schemas/ApiResponseBillAggregate"
 
   /costa/v1/bills/{id}/lines:
     post:
-      operationId: postBillLine
-      tags: [Bill]
-      summary: Post a charge line to a bill
+      operationId: costaPostBillLine
+      tags: [Bills]
+      summary: Post a bill line
       parameters:
-        - $ref: "#/components/parameters/BillId"
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
       requestBody:
         required: true
         content:
@@ -130,50 +189,77 @@ paths:
             schema:
               $ref: "#/components/schemas/PostLineRequest"
       responses:
-        "201":
-          description: Line posted
+        "200":
+          description: No line created (noop)
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse_BillLine"
+                $ref: "#/components/schemas/ApiResponseBillLineNullable"
+        "201":
+          description: Line created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseBillLine"
 
   /costa/v1/bills/{id}/recompute:
     post:
-      operationId: recomputeBill
-      tags: [Bill]
-      summary: Recompute bill totals from current lines
+      operationId: costaRecomputeBill
+      tags: [Bills]
+      summary: Recompute bill totals
       parameters:
-        - $ref: "#/components/parameters/BillId"
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
       responses:
         "200":
-          description: Bill recomputed
+          description: Updated bill header
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse_BillHeader"
+                $ref: "#/components/schemas/ApiResponseBillHeader"
 
   /costa/v1/bills/{id}/submit-approval:
     post:
-      operationId: submitBillApproval
-      tags: [Bill]
+      operationId: costaSubmitBillApproval
+      tags: [Bills]
       summary: Submit bill for approval
       parameters:
-        - $ref: "#/components/parameters/BillId"
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
       responses:
         "200":
-          description: Bill submitted for approval
+          description: Bill header
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse_BillHeader"
+                $ref: "#/components/schemas/ApiResponseBillHeader"
 
   /costa/v1/bills/{id}/approve:
     post:
-      operationId: approveBill
-      tags: [Bill]
-      summary: Approve a bill
+      operationId: costaApproveBill
+      tags: [Bills]
+      summary: Approve bill
       parameters:
-        - $ref: "#/components/parameters/BillId"
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
       requestBody:
         required: true
         content:
@@ -182,49 +268,70 @@ paths:
               $ref: "#/components/schemas/ApprovalRequest"
       responses:
         "200":
-          description: Bill approved
+          description: Bill header
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse_BillHeader"
+                $ref: "#/components/schemas/ApiResponseBillHeader"
 
   /costa/v1/bills/{id}/finalize:
     post:
-      operationId: finalizeBill
-      tags: [Bill]
-      summary: Finalize a bill (lock from further edits)
+      operationId: costaFinalizeBill
+      tags: [Bills]
+      summary: Finalize bill
       parameters:
-        - $ref: "#/components/parameters/BillId"
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
       responses:
         "200":
-          description: Bill finalized
+          description: Bill header
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse_BillHeader"
+                $ref: "#/components/schemas/ApiResponseBillHeader"
 
   /costa/v1/bills/{id}/issue-invoice:
     post:
-      operationId: issueInvoice
-      tags: [Bill]
-      summary: Issue an invoice for the finalized bill
+      operationId: costaIssueInvoice
+      tags: [Bills]
+      summary: Issue invoice for bill
       parameters:
-        - $ref: "#/components/parameters/BillId"
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
       responses:
         "201":
-          description: Invoice issued
+          description: Invoice created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse_Invoice"
+                $ref: "#/components/schemas/ApiResponseInvoice"
 
   /costa/v1/bills/{id}/create-payment-intent:
     post:
-      operationId: createPaymentIntent
-      tags: [Bill]
-      summary: Create a payment intent (MUSHEX integration)
+      operationId: costaCreatePaymentIntent
+      tags: [Bills]
+      summary: Create payment intent for bill
       parameters:
-        - $ref: "#/components/parameters/BillId"
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
       requestBody:
         required: true
         content:
@@ -233,19 +340,48 @@ paths:
               $ref: "#/components/schemas/PaymentIntentRequest"
       responses:
         "201":
-          description: Payment intent created
+          description: Payment intent
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse_Payment"
+                $ref: "#/components/schemas/ApiResponsePayment"
+
+  /costa/v1/bills/{id}/refunds:
+    get:
+      operationId: costaListBillRefunds
+      tags: [Bills]
+      summary: List refunds for bill
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Refunds
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseRefundList"
 
   /costa/v1/bills/{id}/refund:
     post:
-      operationId: refundBill
-      tags: [Bill]
-      summary: Create a refund against a bill
+      operationId: costaCreateRefund
+      tags: [Bills]
+      summary: Create refund for bill
       parameters:
-        - $ref: "#/components/parameters/BillId"
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
       requestBody:
         required: true
         content:
@@ -258,118 +394,272 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse_Refund"
+                $ref: "#/components/schemas/ApiResponseRefund"
 
-  /costa/v1/tariffs:
+  /costa/v1/bills/{id}/payments:
     get:
-      operationId: listTariffs
-      tags: [Tariff]
-      summary: List tariffs for the current tenant
+      operationId: costaListBillPayments
+      tags: [Bills]
+      summary: List payments for bill
       parameters:
-        - name: page
-          in: query
-          schema:
-            type: integer
-            default: 0
-        - name: size
-          in: query
-          schema:
-            type: integer
-            default: 50
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
       responses:
         "200":
-          description: Paginated tariff list
+          description: Payments
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse_PagedTariff"
+                $ref: "#/components/schemas/ApiResponsePaymentList"
+
+  /costa/v1/bills/{id}/payments/{paymentId}/cancel:
+    post:
+      operationId: costaCancelPayment
+      tags: [Bills]
+      summary: Cancel a payment on a bill
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: paymentId
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      responses:
+        "200":
+          description: Payment updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponsePayment"
+
+  /costa/v1/claims:
+    get:
+      operationId: costaListClaims
+      tags: [Claims]
+      summary: List claim packs
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: page
+          in: query
+          schema: { type: integer, default: 0 }
+        - name: size
+          in: query
+          schema: { type: integer, default: 50 }
+      responses:
+        "200":
+          description: Paged claims
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponsePagedClaimPack"
+
+  /costa/v1/claims/{id}:
+    get:
+      operationId: costaGetClaim
+      tags: [Claims]
+      summary: Get claim pack by id
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      responses:
+        "200":
+          description: Claim pack
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseClaimPack"
+
+  /costa/v1/payments:
+    get:
+      operationId: costaListPayments
+      tags: [Payments]
+      summary: List payments across bills
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: page
+          in: query
+          schema: { type: integer, default: 0 }
+        - name: size
+          in: query
+          schema: { type: integer, default: 50 }
+      responses:
+        "200":
+          description: Paged payments
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponsePagedPayment"
+
+  /costa/v1/estimate:
+    post:
+      operationId: costaCreateEstimate
+      tags: [Estimates]
+      summary: Run costing estimate
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EstimateRequest"
+      responses:
+        "200":
+          description: Estimate result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseEstimateResult"
+
+  /costa/v1/tariffs:
+    get:
+      operationId: costaListTariffs
+      tags: [Tariffs]
+      summary: List tariffs
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: page
+          in: query
+          schema: { type: integer, default: 0 }
+        - name: size
+          in: query
+          schema: { type: integer, default: 50 }
+      responses:
+        "200":
+          description: Paged tariffs
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponsePagedTariff"
 
   /costa/v1/tariffs/import:
     post:
-      operationId: importTariffCsv
-      tags: [Tariff]
-      summary: Import tariffs from a CSV file
+      operationId: costaImportTariffsCsv
+      tags: [Tariffs]
+      summary: Import tariffs from CSV
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
       requestBody:
         required: true
         content:
           multipart/form-data:
             schema:
               type: object
+              required: [file]
               properties:
                 file:
                   type: string
                   format: binary
       responses:
         "200":
-          description: Tariffs imported
+          description: Imported tariffs
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse_TariffList"
+                $ref: "#/components/schemas/ApiResponseTariffList"
+        "400":
+          description: Import failed
 
   /costa/v1/rulesets:
     get:
-      operationId: listRulesets
-      tags: [Ruleset]
-      summary: List charging rulesets for the current tenant
+      operationId: costaListRulesets
+      tags: [Rulesets]
+      summary: List charging rulesets
       parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
         - name: page
           in: query
-          schema:
-            type: integer
-            default: 0
+          schema: { type: integer, default: 0 }
         - name: size
           in: query
-          schema:
-            type: integer
-            default: 50
+          schema: { type: integer, default: 50 }
       responses:
         "200":
-          description: Paginated ruleset list
+          description: Paged rulesets
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse_PagedRuleset"
+                $ref: "#/components/schemas/ApiResponsePagedRuleset"
 
   /costa/v1/rulesets/{id}/publish:
     post:
-      operationId: publishRuleset
-      tags: [Ruleset]
-      summary: Publish a charging ruleset (archives previous version)
+      operationId: costaPublishRuleset
+      tags: [Rulesets]
+      summary: Publish a ruleset
       parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
         - name: id
           in: path
           required: true
-          schema:
-            type: integer
-            format: int64
+          schema: { type: integer, format: int64 }
       responses:
         "200":
-          description: Ruleset published
+          description: Published ruleset
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse_Ruleset"
+                $ref: "#/components/schemas/ApiResponseRuleset"
 
   /costa/v1/audit/bill/{id}:
     get:
-      operationId: auditBill
+      operationId: costaAuditBill
       tags: [Audit]
-      summary: Get complete bill audit trail
-      description: |
-        Returns the full audit trail for a bill including all lines, parties,
-        approvals, payments, refunds, claims, and invoice.
+      summary: Aggregate audit view for a bill
       parameters:
-        - $ref: "#/components/parameters/BillId"
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
       responses:
         "200":
-          description: Complete audit trail
+          description: Audit bundle
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse_AuditTrail"
-        "404":
-          $ref: "#/components/responses/NotFound"
+                $ref: "#/components/schemas/ApiResponseBillAudit"
 
 components:
   securitySchemes:
@@ -379,47 +669,126 @@ components:
       bearerFormat: JWT
 
   parameters:
-    BillId:
-      name: id
-      in: path
+    TenantId:
+      name: X-Tenant-ID
+      in: header
       required: true
-      description: ULID bill identifier
       schema:
         type: string
-        pattern: "^[0-9A-HJKMNP-TV-Z]{26}$"
-
-  responses:
-    BadRequest:
-      description: Invalid request
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/ApiError"
-    Unauthorized:
-      description: Missing or invalid authentication
-    NotFound:
-      description: Resource not found
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/ApiError"
+        format: uuid
+    PodId:
+      name: X-Pod-ID
+      in: header
+      required: true
+      schema:
+        type: string
+    RequestId:
+      name: X-Request-ID
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+    CorrelationId:
+      name: X-Correlation-ID
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
 
   schemas:
-    ApiError:
+    ProbeHealthBody:
       type: object
       properties:
-        success:
-          type: boolean
-          example: false
-        error:
+        service:
+          type: string
+          example: costa
+        status:
+          type: string
+          example: UP
+        tenant_id:
+          type: string
+        pod_id:
+          type: string
+        request_id:
+          type: string
+        correlation_id:
+          type: string
+      additionalProperties: true
+
+    ProbeCommandBody:
+      type: object
+      properties:
+        service:
+          type: string
+        action:
+          type: string
+        request_id:
+          type: string
+        correlation_id:
+          type: string
+        echo:
+          type: object
+          additionalProperties: true
+      additionalProperties: true
+
+    ApiResponseEnvelope:
+      type: object
+      description: Standard ApiResponse wrapper (data + meta.correlation_id)
+      properties:
+        data:
+          description: Response payload
+        meta:
           type: object
           properties:
-            code:
+            correlation_id:
               type: string
-            message:
-              type: string
-            status:
-              type: integer
+      additionalProperties: true
+
+    BillDraftRequest:
+      type: object
+      properties:
+        encounterId: { type: string }
+        msikaOrderId: { type: string }
+        billType:
+          type: string
+          description: BillType enum name (e.g. ENCOUNTER)
+
+    PostLineRequest:
+      type: object
+      properties:
+        msikaCode: { type: string }
+        description: { type: string }
+        kind: { type: string }
+        qty: { type: number }
+        costMethod: { type: string }
+        sourceEvent: { type: string }
+        sourceRef: { type: string }
+        context:
+          type: object
+          additionalProperties: true
+
+    ApprovalRequest:
+      type: object
+      properties:
+        note: { type: string }
+
+    PaymentIntentRequest:
+      type: object
+      required: [paymentType, amount]
+      properties:
+        paymentType: { type: string }
+        amount: { type: number }
+
+    RefundRequest:
+      type: object
+      required: [amount]
+      properties:
+        amount: { type: number }
+        reason: { type: string }
+        reasonCode: { type: string }
+        refundType: { type: string }
 
     EstimateRequest:
       type: object
@@ -428,445 +797,77 @@ components:
         items:
           type: array
           items:
-            $ref: "#/components/schemas/EstimateLineInput"
-        exemptionCategory:
-          type: string
-          enum: [CHILD, ELDERLY, MATERNITY, CHRONIC, DISABLED, VETERAN, HEALTHCARE_WORKER, INDIGENT, EMERGENCY, GOVERNMENT, OTHER]
-        insurancePlanId:
-          type: integer
-          format: int64
+            type: object
+            required: [msikaCode, kind, qty]
+            properties:
+              msikaCode: { type: string }
+              description: { type: string }
+              kind: { type: string }
+              qty: { type: number }
+              costMethod: { type: string }
+              extras:
+                type: object
+                additionalProperties: true
+        exemptionCategory: { type: string }
+        insurancePlanId: { type: integer, format: int64 }
         context:
           type: object
           additionalProperties: true
 
-    EstimateLineInput:
-      type: object
-      required: [msikaCode, kind, qty]
-      properties:
-        msikaCode:
-          type: string
-        description:
-          type: string
-        kind:
-          type: string
-          enum: [SERVICE, PRODUCT, FEE, BEDDAY, PROCEDURE, THEATRE, IMPLANT, NURSING, OVERHEAD, TRANSPORT, PER_DIEM, COLD_CHAIN, DELIVERY, BUNDLE]
-        qty:
-          type: number
-        costMethod:
-          type: string
-          enum: [MICRO, ABC, TARIFF, STANDARD, STOCK_AVERAGE]
-        extras:
-          type: object
-          additionalProperties: true
-
-    BillDraftRequest:
-      type: object
-      properties:
-        encounterId:
-          type: string
-        msikaOrderId:
-          type: string
-        billType:
-          type: string
-          enum: [ENCOUNTER, INPATIENT, OUTREACH, MSIKA_ORDER, INSURANCE_CLAIM]
-
-    PostLineRequest:
-      type: object
-      required: [msikaCode, kind, qty]
-      properties:
-        msikaCode:
-          type: string
-        description:
-          type: string
-        kind:
-          type: string
-          enum: [SERVICE, PRODUCT, FEE, BEDDAY, PROCEDURE, THEATRE, IMPLANT, NURSING, OVERHEAD, TRANSPORT, PER_DIEM, COLD_CHAIN, DELIVERY, BUNDLE]
-        qty:
-          type: number
-        costMethod:
-          type: string
-          enum: [MICRO, ABC, TARIFF, STANDARD, STOCK_AVERAGE]
-        sourceEvent:
-          type: string
-        sourceRef:
-          type: string
-        context:
-          type: object
-          additionalProperties: true
-
-    ApprovalRequest:
-      type: object
-      properties:
-        note:
-          type: string
-
-    PaymentIntentRequest:
-      type: object
-      required: [paymentType, amount]
-      properties:
-        paymentType:
-          type: string
-          enum: [CASH, MOBILE_MONEY, CARD, BANK_TRANSFER, INSURANCE_CLAIM, VOUCHER]
-        amount:
-          type: number
-
-    RefundRequest:
-      type: object
-      required: [amount, reason, reasonCode, refundType]
-      properties:
-        amount:
-          type: number
-        reason:
-          type: string
-        reasonCode:
-          type: string
-        refundType:
-          type: string
-
-    BillHeader:
-      type: object
-      properties:
-        id:
-          type: string
-        tenantId:
-          type: string
-          format: uuid
-        facilityId:
-          type: string
-          format: uuid
-        encounterId:
-          type: string
-        status:
-          type: string
-          enum: [DRAFT, ACCUMULATING, PENDING_APPROVAL, APPROVED, FINALIZED, INVOICED, PAID, PARTIALLY_PAID, REFUNDED, VOIDED]
-        billType:
-          type: string
-        currency:
-          type: string
-        totalCharge:
-          type: number
-        totalDiscount:
-          type: number
-        totalNet:
-          type: number
-
-    BillLine:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int64
-        billId:
-          type: string
-        msikaCode:
-          type: string
-        description:
-          type: string
-        kind:
-          type: string
-        qty:
-          type: number
-        unitCost:
-          type: number
-        chargeAmount:
-          type: number
-        netAmount:
-          type: number
-        voided:
-          type: boolean
-
-    Invoice:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int64
-        billId:
-          type: string
-        invoiceNumber:
-          type: string
-        totalDue:
-          type: number
-        currency:
-          type: string
-
-    Payment:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int64
-        billId:
-          type: string
-        paymentType:
-          type: string
-        amount:
-          type: number
-        status:
-          type: string
-
-    Refund:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int64
-        billId:
-          type: string
-        amount:
-          type: number
-        reason:
-          type: string
-        status:
-          type: string
-
-    Tariff:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int64
-        tenantId:
-          type: string
-          format: uuid
-        tariffCode:
-          type: string
-        msikaCode:
-          type: string
-        description:
-          type: string
-        price:
-          type: number
-        currency:
-          type: string
-        facilityCategory:
-          type: string
-        patientCategory:
-          type: string
-        effectiveFrom:
-          type: string
-          format: date
-        effectiveTo:
-          type: string
-          format: date
-
-    Ruleset:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int64
-        tenantId:
-          type: string
-          format: uuid
-        name:
-          type: string
-        version:
-          type: integer
-        status:
-          type: string
-          enum: [DRAFT, PUBLISHED, ARCHIVED]
-        rules:
-          type: string
-          description: JSON array of rule definitions
-        effectiveFrom:
-          type: string
-          format: date
-
-    # -- Wrapped response types --
-    ApiResponse_EstimateResult:
-      type: object
-      properties:
-        success:
-          type: boolean
-        data:
-          type: object
-          description: Estimate result with lines, totals, and party split
-        correlationId:
-          type: string
-
-    ApiResponse_BillHeader:
-      type: object
-      properties:
-        success:
-          type: boolean
-        data:
-          $ref: "#/components/schemas/BillHeader"
-        correlationId:
-          type: string
-
-    ApiResponse_BillDetail:
-      type: object
-      properties:
-        success:
-          type: boolean
-        data:
-          type: object
-          properties:
-            bill:
-              $ref: "#/components/schemas/BillHeader"
-            lines:
-              type: array
-              items:
-                $ref: "#/components/schemas/BillLine"
-            parties:
-              type: array
-              items:
-                type: object
-        correlationId:
-          type: string
-
-    ApiResponse_BillLine:
-      type: object
-      properties:
-        success:
-          type: boolean
-        data:
-          $ref: "#/components/schemas/BillLine"
-        correlationId:
-          type: string
-
-    ApiResponse_Invoice:
-      type: object
-      properties:
-        success:
-          type: boolean
-        data:
-          $ref: "#/components/schemas/Invoice"
-        correlationId:
-          type: string
-
-    ApiResponse_Payment:
-      type: object
-      properties:
-        success:
-          type: boolean
-        data:
-          $ref: "#/components/schemas/Payment"
-        correlationId:
-          type: string
-
-    ApiResponse_Refund:
-      type: object
-      properties:
-        success:
-          type: boolean
-        data:
-          $ref: "#/components/schemas/Refund"
-        correlationId:
-          type: string
-
-    ApiResponse_PagedTariff:
-      type: object
-      properties:
-        success:
-          type: boolean
-        data:
-          type: object
-          properties:
-            items:
-              type: array
-              items:
-                $ref: "#/components/schemas/Tariff"
-            page:
-              type: integer
-            size:
-              type: integer
-            totalElements:
-              type: integer
-            totalPages:
-              type: integer
-            hasNext:
-              type: boolean
-        correlationId:
-          type: string
-
-    ApiResponse_TariffList:
-      type: object
-      properties:
-        success:
-          type: boolean
-        data:
-          type: array
-          items:
-            $ref: "#/components/schemas/Tariff"
-        correlationId:
-          type: string
-
-    ApiResponse_PagedRuleset:
-      type: object
-      properties:
-        success:
-          type: boolean
-        data:
-          type: object
-          properties:
-            items:
-              type: array
-              items:
-                $ref: "#/components/schemas/Ruleset"
-            page:
-              type: integer
-            size:
-              type: integer
-            totalElements:
-              type: integer
-            totalPages:
-              type: integer
-            hasNext:
-              type: boolean
-        correlationId:
-          type: string
-
-    ApiResponse_Ruleset:
-      type: object
-      properties:
-        success:
-          type: boolean
-        data:
-          $ref: "#/components/schemas/Ruleset"
-        correlationId:
-          type: string
-
-    ApiResponse_AuditTrail:
-      type: object
-      properties:
-        success:
-          type: boolean
-        data:
-          type: object
-          properties:
-            bill:
-              $ref: "#/components/schemas/BillHeader"
-            lines:
-              type: array
-              items:
-                $ref: "#/components/schemas/BillLine"
-            lines_count:
-              type: integer
-            voided_lines:
-              type: integer
-            parties:
-              type: array
-              items:
-                type: object
-            approvals:
-              type: array
-              items:
-                type: object
-            payments:
-              type: array
-              items:
-                $ref: "#/components/schemas/Payment"
-            refunds:
-              type: array
-              items:
-                $ref: "#/components/schemas/Refund"
-            claims:
-              type: array
-              items:
-                type: object
-            invoice:
-              $ref: "#/components/schemas/Invoice"
-        correlationId:
-          type: string
+    ApiResponsePagedBillHeader:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponseEnvelope"
+    ApiResponseBillHeader:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponseEnvelope"
+    ApiResponseBillAggregate:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponseEnvelope"
+    ApiResponseBillLine:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponseEnvelope"
+    ApiResponseBillLineNullable:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponseEnvelope"
+    ApiResponseInvoice:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponseEnvelope"
+    ApiResponsePayment:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponseEnvelope"
+    ApiResponsePaymentList:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponseEnvelope"
+    ApiResponseRefund:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponseEnvelope"
+    ApiResponseRefundList:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponseEnvelope"
+    ApiResponsePagedClaimPack:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponseEnvelope"
+    ApiResponseClaimPack:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponseEnvelope"
+    ApiResponsePagedPayment:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponseEnvelope"
+    ApiResponseEstimateResult:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponseEnvelope"
+    ApiResponsePagedTariff:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponseEnvelope"
+    ApiResponseTariffList:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponseEnvelope"
+    ApiResponsePagedRuleset:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponseEnvelope"
+    ApiResponseRuleset:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponseEnvelope"
+    ApiResponseBillAudit:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponseEnvelope"
