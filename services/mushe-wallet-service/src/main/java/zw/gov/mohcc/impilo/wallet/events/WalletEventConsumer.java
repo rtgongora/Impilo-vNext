@@ -8,6 +8,7 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.wallet.card.CardHealthDataService;
+import zw.gov.mohcc.impilo.wallet.core.WalletService;
 import zw.gov.mohcc.impilo.wallet.persistence.entity.CardEntity;
 import zw.gov.mohcc.impilo.wallet.persistence.entity.MerchantAccountEntity;
 import zw.gov.mohcc.impilo.wallet.persistence.entity.WalletEntity;
@@ -41,17 +42,20 @@ public class WalletEventConsumer {
     private final MerchantAccountRepository merchantRepository;
     private final CardRepository cardRepository;
     private final CardHealthDataService cardHealthDataService;
+    private final WalletService walletService;
     private final ObjectMapper objectMapper;
 
     public WalletEventConsumer(WalletRepository walletRepository,
                                 MerchantAccountRepository merchantRepository,
                                 CardRepository cardRepository,
                                 CardHealthDataService cardHealthDataService,
+                                WalletService walletService,
                                 ObjectMapper objectMapper) {
         this.walletRepository = walletRepository;
         this.merchantRepository = merchantRepository;
         this.cardRepository = cardRepository;
         this.cardHealthDataService = cardHealthDataService;
+        this.walletService = walletService;
         this.objectMapper = objectMapper;
     }
 
@@ -245,6 +249,67 @@ public class WalletEventConsumer {
 
         } catch (Exception e) {
             log.error("Failed to process encounter event: {}", e.getMessage(), e);
+        }
+    }
+
+    // ── VITO Identity Events (Auto-Create Wallet) ────────────────────────
+
+    /**
+     * Handle VITO identity events.
+     * When a patient registers (CLIENT_CREATED), auto-create an INDIVIDUAL wallet
+     * so every registered patient has a wallet ready for use.
+     */
+    @KafkaListener(
+            topics = {"vito.identity", "impilo.vito.identity"},
+            groupId = "mushe-wallet-vito"
+    )
+    @Transactional
+    public void onVitoIdentityEvent(String message) {
+        try {
+            JsonNode node = objectMapper.readTree(message);
+
+            String eventType = node.path("event_type").asText(
+                    node.path("eventType").asText(""));
+
+            if (!"CLIENT_CREATED".equalsIgnoreCase(eventType)) {
+                log.debug("Ignoring VITO identity event with type={}", eventType);
+                return;
+            }
+
+            // Extract patient CPID — the unique person identifier
+            String cpid = node.path("cpid").asText(
+                    node.path("payload").path("cpid").asText(""));
+            String tenantIdStr = node.path("tenant_id").asText(
+                    node.path("tenantId").asText(""));
+            String displayName = node.path("display_name").asText(
+                    node.path("displayName").asText(
+                            node.path("payload").path("display_name").asText("")));
+
+            if (cpid.isBlank()) {
+                log.warn("VITO CLIENT_CREATED event missing cpid, cannot auto-create wallet");
+                return;
+            }
+
+            if (tenantIdStr.isBlank()) {
+                log.warn("VITO CLIENT_CREATED event missing tenantId for cpid={}", cpid);
+                return;
+            }
+
+            UUID tenantId = UUID.fromString(tenantIdStr);
+
+            // Use WalletService.createWallet which is idempotent (returns existing if present)
+            WalletEntity wallet = walletService.createWallet(
+                    tenantId,
+                    "INDIVIDUAL",
+                    cpid,
+                    displayName.isBlank() ? "Patient " + cpid : displayName,
+                    null); // default currency
+
+            log.info("Auto-created wallet for new patient: cpid={} walletId={} tenantId={}",
+                    cpid, wallet.getWalletId(), tenantId);
+
+        } catch (Exception e) {
+            log.error("Failed to process VITO identity event: {}", e.getMessage(), e);
         }
     }
 
