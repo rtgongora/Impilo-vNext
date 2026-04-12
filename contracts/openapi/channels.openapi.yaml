@@ -1,0 +1,486 @@
+# =============================================================================
+# Channels — Multi-channel Messaging & Session API (OpenAPI 3.0)
+#
+# Phase B baseline: sessions, outbound/inbound messaging, assisted interactions,
+# and snapshot. No v1.1 probe controller found in this service.
+# =============================================================================
+openapi: "3.0.3"
+
+info:
+  title: Channels — Multi-channel Messaging & Session API
+  version: "1.0.0"
+  description: |
+    Channels manages multi-channel communication sessions (SMS, WhatsApp, USSD,
+    voice, etc.), outbound and inbound messaging, assisted interactions for
+    agent-mediated conversations, and session snapshots.
+
+    Trust headers are enforced by Envoy + TSHEPO; internal routes require
+    Health OS Manifest v1.2 mandatory headers (see `CompanionHeaders`).
+  contact:
+    name: Impilo Platform Team
+  license:
+    name: Proprietary
+
+servers:
+  - url: http://localhost:8130
+    description: Local development
+  - url: https://{tenant}.impilo.health/api
+    description: Production (per-tenant)
+    variables:
+      tenant:
+        default: demo
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Session
+    description: Channel session lifecycle — create, list, get, escalate
+  - name: Message
+    description: Outbound message dispatch
+  - name: Inbound
+    description: External inbound message ingestion
+  - name: Assisted-Interaction
+    description: Agent-assisted interaction recording
+  - name: Snapshot
+    description: Active session snapshot
+
+paths:
+  # ---------------------------------------------------------------------------
+  # Session endpoints
+  # ---------------------------------------------------------------------------
+  /internal/v1/channels/sessions:
+    get:
+      operationId: channelsListSessions
+      tags: [Session]
+      summary: List sessions for the current actor context
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+      responses:
+        "200":
+          description: Array of session objects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SessionResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+    post:
+      operationId: channelsCreateSession
+      tags: [Session]
+      summary: Create a new channel session
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSessionRequest"
+      responses:
+        "201":
+          description: Session created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /internal/v1/channels/sessions/{id}:
+    get:
+      operationId: channelsGetSession
+      tags: [Session]
+      summary: Retrieve a single session by ID
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Session detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionResponse"
+        "404":
+          description: Session not found
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /internal/v1/channels/sessions/{sessionId}/escalate:
+    post:
+      operationId: channelsEscalateSession
+      tags: [Session]
+      summary: Escalate a session to a human agent
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EscalateRequest"
+      responses:
+        "200":
+          description: Session escalated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionResponse"
+        "404":
+          description: Session not found
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  # ---------------------------------------------------------------------------
+  # Message endpoints
+  # ---------------------------------------------------------------------------
+  /internal/v1/channels/messages:
+    post:
+      operationId: channelsSendOutbound
+      tags: [Message]
+      summary: Send an outbound message on a session
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateMessageRequest"
+      responses:
+        "201":
+          description: Message accepted for delivery
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  # ---------------------------------------------------------------------------
+  # Inbound endpoints
+  # ---------------------------------------------------------------------------
+  /external/v1/channels/inbound:
+    post:
+      operationId: channelsReceiveInbound
+      tags: [Inbound]
+      summary: Receive an inbound message from an external channel provider
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: Idempotency-Key
+          in: header
+          required: false
+          description: Optional idempotency key; auto-generated if absent
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InboundMessageRequest"
+      responses:
+        "201":
+          description: Inbound message accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  # ---------------------------------------------------------------------------
+  # Assisted Interaction endpoints
+  # ---------------------------------------------------------------------------
+  /internal/v1/channels/assisted-interactions:
+    post:
+      operationId: channelsRecordAssistedInteraction
+      tags: [Assisted-Interaction]
+      summary: Record an agent-assisted interaction on a session
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAssistedInteractionRequest"
+      responses:
+        "201":
+          description: Assisted interaction recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssistedInteractionResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  # ---------------------------------------------------------------------------
+  # Snapshot endpoints
+  # ---------------------------------------------------------------------------
+  /internal/v1/channels/sessions/snapshot:
+    get:
+      operationId: channelsSessionSnapshot
+      tags: [Snapshot]
+      summary: Snapshot of all active sessions for the current context
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+      responses:
+        "200":
+          description: Array of active session objects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SessionResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    TenantId:
+      name: X-Tenant-ID
+      in: header
+      required: true
+      schema:
+        type: string
+    PodId:
+      name: X-Pod-ID
+      in: header
+      required: true
+      schema:
+        type: string
+    RequestId:
+      name: X-Request-ID
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+    CorrelationId:
+      name: X-Correlation-ID
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+    ActorId:
+      name: X-Actor-ID
+      in: header
+      required: true
+      schema:
+        type: string
+    ActorType:
+      name: X-Actor-Type
+      in: header
+      required: true
+      schema:
+        type: string
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: Client-supplied idempotency key
+      schema:
+        type: string
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid authentication
+
+  schemas:
+    # --- Session ---
+    CreateSessionRequest:
+      type: object
+      required: [channelType]
+      properties:
+        channelType:
+          type: string
+          description: Channel type (e.g. SMS, WHATSAPP, USSD, VOICE)
+          example: WHATSAPP
+        subjectRef:
+          type: string
+          description: Optional subject reference (Health ID or CPID)
+        facilityId:
+          type: string
+          description: Optional facility context for the session
+
+    EscalateRequest:
+      type: object
+      required: [agentId]
+      properties:
+        agentId:
+          type: string
+          description: ID of the human agent to escalate to
+        reason:
+          type: string
+          description: Optional escalation reason
+
+    SessionResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        channelType:
+          type: string
+          example: WHATSAPP
+        status:
+          type: string
+          example: ACTIVE
+        subjectRef:
+          type: string
+        agentId:
+          type: string
+        facilityId:
+          type: string
+        startedAt:
+          type: string
+          format: date-time
+        lastActivity:
+          type: string
+          format: date-time
+        closedAt:
+          type: string
+          format: date-time
+
+    # --- Message ---
+    CreateMessageRequest:
+      type: object
+      required: [sessionId, payloadJson]
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+        contentType:
+          type: string
+          description: MIME content type of the payload
+        payloadJson:
+          type: string
+          description: JSON-encoded message payload
+
+    InboundMessageRequest:
+      type: object
+      required: [sessionId, channelType, payloadJson]
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+        channelType:
+          type: string
+          example: WHATSAPP
+        contentType:
+          type: string
+        payloadJson:
+          type: string
+          description: JSON-encoded inbound message payload
+        senderId:
+          type: string
+          description: External sender identifier
+
+    MessageResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        sessionId:
+          type: string
+          format: uuid
+        direction:
+          type: string
+          enum: [INBOUND, OUTBOUND]
+        channelType:
+          type: string
+        contentType:
+          type: string
+        deliveryStatus:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    # --- Assisted Interaction ---
+    CreateAssistedInteractionRequest:
+      type: object
+      required: [sessionId, agentId]
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+        agentId:
+          type: string
+          description: ID of the assisting agent
+        clientId:
+          type: string
+          description: Optional client/person reference
+        notesJson:
+          type: string
+          description: Optional JSON-encoded interaction notes
+
+    AssistedInteractionResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        sessionId:
+          type: string
+          format: uuid
+        agentId:
+          type: string
+        clientId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time

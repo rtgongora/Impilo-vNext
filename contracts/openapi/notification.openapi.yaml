@@ -1,15 +1,27 @@
 # =============================================================================
-# Notification — enqueue and template API (OpenAPI 3.0)
-# Phase B baseline: core notify + list (`NotifyController`); extend for templates/worker.
+# Notification — Enqueue, Template, Delivery Receipt & Worker API (OpenAPI 3.0)
+#
+# Phase B baseline: core notify + list (NotifyController), template management
+# (TemplateController), delivery receipts (DeliveryReceiptController), and
+# worker trigger (WorkerController).
 # =============================================================================
 openapi: "3.0.3"
 
 info:
   title: Notification Service API
-  version: "1.0.0"
+  version: "1.1.0"
   description: |
-    Internal notification enqueue and history. Additional controllers live under
-    `/internal/v1/templates`, `/internal/v1/delivery-receipts`, `/internal/v1/worker`.
+    Internal notification enqueue, history, template management, delivery receipt
+    tracking, and worker dispatch.
+
+    Controllers:
+      - `/internal/v1/notify` + `/internal/v1/notifications` — enqueue & list
+      - `/internal/v1/templates` — template CRUD, publish, retire, versioning
+      - `/internal/v1/delivery-receipts` — receipt recording & querying
+      - `/internal/v1/worker` — trigger pending notification processing
+
+    Trust headers are enforced by Envoy + TSHEPO; internal routes require
+    Health OS Manifest v1.2 mandatory headers (see `CompanionHeaders`).
   contact:
     name: Impilo Platform Team
   license:
@@ -30,29 +42,42 @@ security:
 tags:
   - name: Internal-Notify
     description: Notification enqueue and listing
+  - name: Template
+    description: Notification template management, versioning, and lifecycle
+  - name: Delivery-Receipt
+    description: Delivery receipt recording and querying
+  - name: Worker
+    description: Worker trigger for pending notification processing
 
 paths:
+  # ---------------------------------------------------------------------------
+  # Notify endpoints (existing)
+  # ---------------------------------------------------------------------------
   /internal/v1/notify:
     post:
       operationId: notificationEnqueue
       tags: [Internal-Notify]
       summary: Enqueue a notification for delivery
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              description: NotifyRequest
-              additionalProperties: true
+              $ref: "#/components/schemas/NotifyRequest"
       responses:
         "201":
           description: Accepted for delivery
           content:
             application/json:
               schema:
-                type: object
-                additionalProperties: true
+                $ref: "#/components/schemas/NotifyResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
   /internal/v1/notifications:
     get:
@@ -60,6 +85,10 @@ paths:
       tags: [Internal-Notify]
       summary: Page notifications for tenant
       parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
         - name: page
           in: query
           schema:
@@ -76,8 +105,321 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                additionalProperties: true
+                $ref: "#/components/schemas/PagedNotificationResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  # ---------------------------------------------------------------------------
+  # Template endpoints (NEW)
+  # ---------------------------------------------------------------------------
+  /internal/v1/templates:
+    post:
+      operationId: templateCreate
+      tags: [Template]
+      summary: Create a new notification template (national federation required)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TemplateRequest"
+      responses:
+        "201":
+          description: Template created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TemplateResponse"
+        "403":
+          description: Caller lacks national federation authority
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+    get:
+      operationId: templateList
+      tags: [Template]
+      summary: List all templates for the current tenant
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+      responses:
+        "200":
+          description: Array of templates
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TemplateResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /internal/v1/templates/{key}:
+    get:
+      operationId: templateGetByKey
+      tags: [Template]
+      summary: Retrieve a template by its unique key
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Template detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TemplateResponse"
+        "404":
+          description: Template not found
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /internal/v1/templates/{id}/publish:
+    post:
+      operationId: templatePublish
+      tags: [Template]
+      summary: Publish a draft template (national federation required)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Template published
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TemplateResponse"
+        "403":
+          description: Caller lacks national federation authority
+        "404":
+          description: Template not found
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /internal/v1/templates/{id}/retire:
+    post:
+      operationId: templateRetire
+      tags: [Template]
+      summary: Retire a published template (national federation required)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Template retired
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TemplateResponse"
+        "403":
+          description: Caller lacks national federation authority
+        "404":
+          description: Template not found
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /internal/v1/templates/{id}/versions:
+    post:
+      operationId: templateVersionCreate
+      tags: [Template]
+      summary: Create a new version of a template (national federation required)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TemplateVersionRequest"
+      responses:
+        "201":
+          description: Template version created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TemplateVersionResponse"
+        "403":
+          description: Caller lacks national federation authority
+        "404":
+          description: Template not found
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+    get:
+      operationId: templateVersionList
+      tags: [Template]
+      summary: List all versions of a template
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Array of template versions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TemplateVersionResponse"
+        "404":
+          description: Template not found
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  # ---------------------------------------------------------------------------
+  # Delivery Receipt endpoints (NEW)
+  # ---------------------------------------------------------------------------
+  /internal/v1/delivery-receipts:
+    post:
+      operationId: deliveryReceiptRecord
+      tags: [Delivery-Receipt]
+      summary: Record a delivery receipt from a channel provider
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeliveryReceiptRequest"
+      responses:
+        "201":
+          description: Receipt recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeliveryReceiptResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+    get:
+      operationId: deliveryReceiptQuery
+      tags: [Delivery-Receipt]
+      summary: Query delivery receipts by notification ID or by status
+      description: |
+        Supports two query modes via mutually exclusive query parameters:
+        - `notificationId` — returns all receipts for a specific notification
+        - `status` — returns a paged list of receipts filtered by delivery status
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: notificationId
+          in: query
+          description: Filter receipts by notification ID (mutually exclusive with status)
+          schema:
+            type: string
+        - name: status
+          in: query
+          description: Filter receipts by delivery status (mutually exclusive with notificationId)
+          schema:
+            type: string
+        - name: page
+          in: query
+          description: Page number (used with status filter)
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: size
+          in: query
+          description: Page size (used with status filter)
+          schema:
+            type: integer
+            minimum: 1
+            default: 20
+      responses:
+        "200":
+          description: |
+            When queried by `notificationId`: array of DeliveryReceiptResponse.
+            When queried by `status`: Spring Data page of DeliveryReceiptResponse.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: array
+                    items:
+                      $ref: "#/components/schemas/DeliveryReceiptResponse"
+                  - $ref: "#/components/schemas/PagedDeliveryReceiptResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  # ---------------------------------------------------------------------------
+  # Worker endpoints (NEW)
+  # ---------------------------------------------------------------------------
+  /internal/v1/worker/run:
+    post:
+      operationId: workerRun
+      tags: [Worker]
+      summary: Trigger processing of pending notifications
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: limit
+          in: query
+          description: Maximum number of pending notifications to process
+          schema:
+            type: integer
+            minimum: 1
+            default: 10
+      responses:
+        "200":
+          description: Worker execution summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkerResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
 components:
   securitySchemes:
@@ -85,3 +427,297 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+
+  parameters:
+    TenantId:
+      name: X-Tenant-ID
+      in: header
+      required: true
+      schema:
+        type: string
+    PodId:
+      name: X-Pod-ID
+      in: header
+      required: true
+      schema:
+        type: string
+    RequestId:
+      name: X-Request-ID
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+    CorrelationId:
+      name: X-Correlation-ID
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+    ActorId:
+      name: X-Actor-ID
+      in: header
+      required: true
+      schema:
+        type: string
+    ActorType:
+      name: X-Actor-Type
+      in: header
+      required: true
+      schema:
+        type: string
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid authentication
+
+  schemas:
+    # --- Notify schemas ---
+    NotifyRequest:
+      type: object
+      required: [channel, to]
+      properties:
+        templateKey:
+          type: string
+          maxLength: 128
+          description: Template key to render (optional if sending raw)
+        channel:
+          type: string
+          maxLength: 32
+          description: Delivery channel (SMS, EMAIL, PUSH, WHATSAPP)
+          example: SMS
+        to:
+          type: string
+          maxLength: 256
+          description: Recipient address (phone number, email, device token)
+        variables:
+          type: object
+          additionalProperties:
+            type: string
+          description: Template variable substitutions
+
+    NotifyResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+        channel:
+          type: string
+        to:
+          type: string
+
+    NotificationResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        templateKey:
+          type: string
+        channel:
+          type: string
+        to:
+          type: string
+        status:
+          type: string
+        attempts:
+          type: integer
+        lastError:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        sentAt:
+          type: string
+          format: date-time
+
+    PagedNotificationResponse:
+      type: object
+      description: Spring Data Page wrapper
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/NotificationResponse"
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+        number:
+          type: integer
+        size:
+          type: integer
+      additionalProperties: true
+
+    # --- Template schemas ---
+    TemplateRequest:
+      type: object
+      required: [key, channel, body]
+      properties:
+        key:
+          type: string
+          maxLength: 128
+          description: Unique template key
+        channel:
+          type: string
+          maxLength: 32
+          description: Channel this template applies to
+          example: SMS
+        subject:
+          type: string
+          maxLength: 512
+          description: Optional subject line (for email)
+        body:
+          type: string
+          description: Template body with placeholder syntax
+        enabled:
+          type: boolean
+          description: Whether the template is active (defaults to true)
+
+    TemplateResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        key:
+          type: string
+        channel:
+          type: string
+        subject:
+          type: string
+        body:
+          type: string
+        enabled:
+          type: boolean
+        status:
+          type: string
+          description: Lifecycle status (DRAFT, PUBLISHED, RETIRED)
+        currentVersion:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    TemplateVersionRequest:
+      type: object
+      required: [content]
+      properties:
+        content:
+          type: string
+          description: Version content / template body
+        subject:
+          type: string
+          maxLength: 512
+          description: Optional updated subject line
+        changelog:
+          type: string
+          maxLength: 1024
+          description: Change description for this version
+
+    TemplateVersionResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        templateId:
+          type: string
+        version:
+          type: integer
+        content:
+          type: string
+        subject:
+          type: string
+        changelog:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    # --- Delivery Receipt schemas ---
+    DeliveryReceiptRequest:
+      type: object
+      required: [notificationId, channel, recipientAddr, status]
+      properties:
+        notificationId:
+          type: string
+          maxLength: 36
+        channel:
+          type: string
+          maxLength: 32
+        recipientAddr:
+          type: string
+          maxLength: 256
+        status:
+          type: string
+          maxLength: 32
+          description: Delivery status (DELIVERED, FAILED, BOUNCED, etc.)
+        providerRef:
+          type: string
+          maxLength: 256
+          description: Provider-assigned reference ID
+        failureReason:
+          type: string
+          description: Reason for failure (if applicable)
+
+    DeliveryReceiptResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        notificationId:
+          type: string
+        channel:
+          type: string
+        recipientAddr:
+          type: string
+        status:
+          type: string
+        providerRef:
+          type: string
+        deliveredAt:
+          type: string
+          format: date-time
+        failureReason:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    PagedDeliveryReceiptResponse:
+      type: object
+      description: Spring Data Page wrapper
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/DeliveryReceiptResponse"
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+        number:
+          type: integer
+        size:
+          type: integer
+      additionalProperties: true
+
+    # --- Worker schemas ---
+    WorkerResponse:
+      type: object
+      properties:
+        processed:
+          type: integer
+          description: Total notifications processed in this run
+        sent:
+          type: integer
+          description: Successfully sent count
+        failed:
+          type: integer
+          description: Failed delivery count
