@@ -8,7 +8,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { ArrowLeft, Loader2, AlertTriangle, Building2, Search } from "lucide-react";
+import { ArrowLeft, Loader2, AlertTriangle, Building2, Search, Plus } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { RegistryPlaneContextBar } from "@/components/experience/RegistryPlaneContextBar";
 import { PageShell } from "@/components/PageShell";
@@ -41,6 +41,15 @@ export default function FacilityRegistryPage() {
           >
             <ArrowLeft className="w-4 h-4" />
             {fromRegistryAdmin ? "Back to registry administration" : "Back to registry hub"}
+          </Link>
+        </div>
+        <div className="mb-4 flex flex-wrap items-center justify-end">
+          <Link
+            href="/registry/facilities/new"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            New Facility
           </Link>
         </div>
         {/* Search */}
