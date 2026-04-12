@@ -43,6 +43,16 @@ public class InpatientEventConsumer {
     public void consumePctJourney(String message) {
         try {
             JsonNode root = objectMapper.readTree(message);
+            String correlationId = firstNonBlank(text(root, "correlation_id"), text(root, "correlationId"));
+            String eventType = firstNonBlank(text(root, "event_type"), text(root, "eventType"), "pct.journey");
+
+            String tenantId = root.path("tenant_id").asText(null);
+            if (tenantId == null || tenantId.isBlank()) {
+                log.warn("Event missing tenant_id — skipping: correlation={}", correlationId);
+                return;
+            }
+            log.info("Processing {} event for tenant={} correlation={}", eventType, tenantId, correlationId);
+
             JsonNode payload = extractPayload(root);
             if (payload == null || payload.isNull()) {
                 log.warn("INPATIENT: PCT journey event missing payload, skipping");
@@ -82,23 +92,14 @@ public class InpatientEventConsumer {
             UUID facilityId = UUID.fromString(facilityIdStr.trim());
             List<AdmissionEntity> active = admissionService.findActiveAdmissionsForPatientAtFacility(
                     patientCpid, facilityId);
-
-            UUID eventTenant = parseUuid(firstNonBlank(
-                    text(root, "tenant_id"),
-                    text(root, "tenantId"),
-                    text(payload, "tenant_id"),
-                    text(payload, "tenantId")));
-            if (eventTenant != null) {
-                List<AdmissionEntity> matching = active.stream()
-                        .filter(a -> eventTenant.equals(a.getTenantId()))
-                        .toList();
-                if (matching.isEmpty()) {
-                    log.warn("INPATIENT: no active admission for tenant {} — skipping auto-discharge "
-                                    + "(patientCpid={}, facilityId={})",
-                            eventTenant, patientCpid, facilityId);
-                    return;
-                }
-                active = matching;
+            active = active.stream()
+                    .filter(a -> tenantId.equals(a.getTenantId().toString()))
+                    .toList();
+            if (active.isEmpty()) {
+                log.warn("INPATIENT: no active admission for tenant {} — skipping auto-discharge "
+                                + "(patientCpid={}, facilityId={})",
+                        tenantId, patientCpid, facilityId);
+                return;
             }
 
             for (AdmissionEntity admission : active) {
@@ -161,17 +162,6 @@ public class InpatientEventConsumer {
             return !payload.get("consentGranted").asBoolean();
         }
         return false;
-    }
-
-    private static UUID parseUuid(String raw) {
-        if (raw == null || raw.isBlank()) {
-            return null;
-        }
-        try {
-            return UUID.fromString(raw.trim());
-        } catch (IllegalArgumentException e) {
-            return null;
-        }
     }
 
     private static String text(JsonNode node, String field) {

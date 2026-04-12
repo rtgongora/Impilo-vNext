@@ -82,6 +82,9 @@ public class PacsOutboxPublisher extends CompanionOutboxPublisher {
         if ("pacs.study.available".equals(row.eventType())) {
             return "pacs.imaging_study";
         }
+        if ("pacs.study.correlated".equals(row.eventType())) {
+            return "pacs.study.correlated";
+        }
         return null;
     }
 }

@@ -172,6 +172,11 @@ public class ImagingStudyService {
             Map<String, Object> payload = new LinkedHashMap<>();
             payload.put("study_id", study.getId());
             payload.put("oros_order_id", study.getOrosOrderId());
+            payload.put("patient_cpid", study.getPatientCpid());
+            payload.put("tenant_id", study.getTenantId().toString());
+            payload.put("modality", study.getModality());
+            payload.put("accession_number", study.getAccessionNumber());
+            payload.put("studyInstanceUid", study.getStudyUid());
 
             EventOutboxEntity row = new EventOutboxEntity();
             row.setAggregateType(AGGREGATE_IMAGING_STUDY);
