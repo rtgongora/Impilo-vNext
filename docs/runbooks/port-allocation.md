@@ -62,11 +62,13 @@ Service metadata (plane, sovereign, product names): [`docs/registry/services-reg
 | Port | Service / module | Notes |
 |------|------------------|--------|
 | 8088 | `pct-service` | |
+| **8125** | `simba-service` | SIMBA — wellness & lifestyle orchestration |
 | 8089 | `oros-service` | |
 | 8090 | `butano-service` | HAPI host mapping may also use 8090 in compose — container network isolates |
 | **8091** | `fhir-gateway-service` | BFF `fhir-gateway-base-url` |
 | **8289** | `butano-fhir` | FHIR orchestration layer; not the same as gateway |
 | **8121** | `inpatient-service` | |
+| **8122** | `community-service` | Community health / CHW / outreach (PCT care setting) |
 | 8093 | `document-service` | Document Store |
 | **8113** | `pacs-adapter-service` | |
 | 8096 | `pharmacy-service` | |

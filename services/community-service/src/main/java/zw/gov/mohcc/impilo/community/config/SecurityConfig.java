@@ -1,0 +1,50 @@
+package zw.gov.mohcc.impilo.community.config;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.SecurityFilterChain;
+
+/**
+ * OAuth2 JWT for business APIs; actuator, probes, and OpenAPI paths permitted.
+ */
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http,
+            @Value("${community.security.oauth2-enabled:true}") boolean oauth2Enabled) throws Exception {
+
+        http.csrf(csrf -> csrf.disable())
+                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+
+        if (oauth2Enabled) {
+            http.authorizeHttpRequests(auth -> auth
+                            .requestMatchers(
+                                    "/actuator/health",
+                                    "/actuator/health/**",
+                                    "/actuator/info",
+                                    "/actuator/prometheus",
+                                    "/actuator/metrics",
+                                    "/actuator/metrics/**",
+                                    "/internal/v1/health",
+                                    "/internal/v1/test-command",
+                                    "/v3/api-docs/**",
+                                    "/swagger-ui/**",
+                                    "/swagger-ui.html"
+                            ).permitAll()
+                            .anyRequest().authenticated())
+                    .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
+        } else {
+            http.authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
+        }
+
+        return http.build();
+    }
+}
