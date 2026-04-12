@@ -9,10 +9,13 @@ import ca.uhn.fhir.rest.param.TokenParam;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.hl7.fhir.r4.model.CodeableConcept;
 import org.hl7.fhir.r4.model.Coding;
 import org.hl7.fhir.r4.model.IdType;
+import org.hl7.fhir.r4.model.ImagingStudy;
 import org.hl7.fhir.r4.model.Meta;
 import org.hl7.fhir.r4.model.Patient;
+import org.hl7.fhir.r4.model.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,8 +32,9 @@ import java.util.UUID;
 /**
  * Kafka consumers for BUTANO (Shared Health Record) reacting to kernel events.
  *
- * <p>Listens to VITO identity and dedup topics (legacy + v1.1 namespaces) and
- * consent revocation notifications. Processing is idempotent where possible:
+ * <p>Listens to VITO identity and dedup topics (legacy + v1.1 namespaces),
+ * PACS imaging study metadata (legacy + v1.1), and consent revocation notifications.
+ * Processing is idempotent where possible:
  * duplicate patient creations and duplicate reconciliation mappings are skipped.</p>
  *
  * <p>Wire format:</p>
@@ -45,6 +49,8 @@ public class ButanoEventConsumer {
     private static final Logger log = LoggerFactory.getLogger(ButanoEventConsumer.class);
 
     private static final String CPID_SYSTEM = "https://impilo.gov.zw/cpid";
+    /** DICOM Study Instance UID as an FHIR identifier system. */
+    private static final String STUDY_UID_SYSTEM = "urn:dicom:uid";
     private static final String REQUESTED_BY_KAFKA = "kafka:butano-shr";
 
     private final ObjectMapper objectMapper;
@@ -234,6 +240,166 @@ public class ButanoEventConsumer {
         } catch (RuntimeException e) {
             log.error("BUTANO SHR: error handling consent event: {}", e.getMessage(), e);
         }
+    }
+
+    /**
+     * PACS imaging study stream — study-level metadata for the SHR as FHIR {@link ImagingStudy}.
+     *
+     * <p>Legacy emits the inner JSON only; v1.1 uses the canonical envelope. Correlation-only
+     * payloads (no DICOM study UID) are ignored.</p>
+     */
+    @KafkaListener(
+            topics = {"pacs.imaging_study", "impilo.pacs.imaging_study"},
+            groupId = "butano-shr"
+    )
+    public void consumePacsImagingStudy(String message) {
+        try {
+            JsonNode root = objectMapper.readTree(message);
+            String correlationId = extractCorrelationId(root);
+            JsonNode payload = extractPayload(root);
+            if (payload == null || payload.isNull()) {
+                log.warn("BUTANO SHR: PACS imaging event missing payload, skipping correlationId={}",
+                        correlationId);
+                return;
+            }
+
+            String studyUid = firstNonBlank(
+                    text(payload, "studyInstanceUid"),
+                    text(payload, "study_instance_uid"));
+            if (studyUid == null || studyUid.isBlank()) {
+                log.debug("BUTANO SHR: PACS event without studyInstanceUid (likely correlate-only), "
+                                + "skipping correlationId={}",
+                        correlationId);
+                return;
+            }
+
+            if (isConsentDenied(payload)) {
+                log.info("BUTANO SHR: skipping PACS imaging upsert for denied/revoked consent "
+                                + "studyUid={} correlationId={}",
+                        studyUid, correlationId);
+                return;
+            }
+
+            String cpid = firstNonBlank(
+                    text(payload, "patient_cpid"),
+                    text(payload, "patientCpid"),
+                    text(payload, "cpid"));
+            if (cpid == null || cpid.isBlank()) {
+                log.warn("BUTANO SHR: PACS imaging event missing patient CPID, skipping studyUid={} "
+                                + "correlationId={}",
+                        studyUid, correlationId);
+                return;
+            }
+
+            UUID tenantId = resolveTenantId(root, payload, cpid);
+            if (tenantId == null) {
+                log.warn("BUTANO SHR: PACS imaging event missing tenant_id, skipping studyUid={} "
+                                + "correlationId={}",
+                        studyUid, correlationId);
+                return;
+            }
+
+            upsertImagingStudyInShr(tenantId, cpid, studyUid, payload, correlationId);
+        } catch (JsonProcessingException e) {
+            log.error("BUTANO SHR: failed to parse PACS imaging event: {}", e.getMessage(), e);
+        } catch (RuntimeException e) {
+            log.error("BUTANO SHR: error handling PACS imaging event: {}", e.getMessage(), e);
+        }
+    }
+
+    private void upsertImagingStudyInShr(UUID tenantId, String cpid, String studyInstanceUid,
+                                         JsonNode payload, String correlationId) {
+        IFhirResourceDao<Patient> patientDao = daoRegistry.getResourceDao(Patient.class);
+        Optional<String> patientPid = findPatientId(patientDao, tenantId, cpid);
+        if (patientPid.isEmpty()) {
+            log.warn("BUTANO SHR: no FHIR Patient for CPID — cannot persist ImagingStudy studyUid={} "
+                            + "tenant={} correlationId={}",
+                    studyInstanceUid, tenantId, correlationId);
+            return;
+        }
+
+        IFhirResourceDao<ImagingStudy> studyDao = daoRegistry.getResourceDao(ImagingStudy.class);
+        Optional<String> existing = findImagingStudyId(studyDao, tenantId, studyInstanceUid);
+
+        String modality = firstNonBlank(text(payload, "modality"), "OT");
+        String description = firstNonBlank(
+                text(payload, "reportSummary"),
+                text(payload, "description"),
+                "Imaging study");
+
+        if (existing.isPresent()) {
+            ImagingStudy study = studyDao.read(new IdType("ImagingStudy", existing.get()),
+                    (RequestDetails) null);
+            applyImagingStudyContent(study, patientPid.get(), studyInstanceUid, modality, description);
+            studyDao.update(study, (RequestDetails) null);
+            log.info("BUTANO SHR: updated FHIR ImagingStudy id={} studyUid={} tenant={} correlationId={}",
+                    existing.get(), studyInstanceUid, tenantId, correlationId);
+        } else {
+            ImagingStudy study = new ImagingStudy();
+            study.setMeta(new Meta().addTag(new Coding(tenantTagSystem, tenantId.toString(), null)));
+            applyImagingStudyContent(study, patientPid.get(), studyInstanceUid, modality, description);
+            studyDao.create(study, (RequestDetails) null);
+            log.info("BUTANO SHR: created FHIR ImagingStudy studyUid={} tenant={} correlationId={}",
+                    studyInstanceUid, tenantId, correlationId);
+        }
+    }
+
+    private static void applyImagingStudyContent(ImagingStudy study, String patientPid,
+                                                 String studyInstanceUid, String modality,
+                                                 String description) {
+        study.setStatus(ImagingStudy.ImagingStudyStatus.AVAILABLE);
+        study.setSubject(new Reference("Patient/" + patientPid));
+        study.setUid(studyInstanceUid);
+        boolean hasStudyIdentifier = study.getIdentifier().stream()
+                .anyMatch(i -> STUDY_UID_SYSTEM.equals(i.getSystem())
+                        && studyInstanceUid.equals(i.getValue()));
+        if (!hasStudyIdentifier) {
+            study.addIdentifier().setSystem(STUDY_UID_SYSTEM).setValue(studyInstanceUid);
+        }
+        study.setDescription(description);
+        study.setNumberOfSeries(1);
+        study.setNumberOfInstances(1);
+
+        ImagingStudy.ImagingStudySeriesComponent series;
+        if (study.getSeries().isEmpty()) {
+            series = study.addSeries();
+        } else {
+            series = study.getSeries().get(0);
+        }
+        series.setUid(studyInstanceUid + ".series1");
+        series.setModality(new CodeableConcept().addCoding(
+                new Coding("http://dicom.nema.org/resources/ontology/DCM", modality, null)));
+        if (series.getInstance().isEmpty()) {
+            ImagingStudy.ImagingStudySeriesInstanceComponent inst = series.addInstance();
+            inst.setUid(studyInstanceUid + ".1");
+        }
+    }
+
+    private Optional<String> findImagingStudyId(IFhirResourceDao<ImagingStudy> studyDao, UUID tenantId,
+                                                String studyInstanceUid) {
+        SearchParameterMap params = new SearchParameterMap();
+        params.add(ImagingStudy.SP_UID, new TokenParam(null, studyInstanceUid));
+        params.add("_tag", new TokenParam(tenantTagSystem, tenantId.toString()));
+        params.setCount(1);
+        IBundleProvider results = studyDao.search(params, (RequestDetails) null);
+        List<?> resources = results.getResources(0, 1);
+        if (resources.isEmpty()) {
+            return Optional.empty();
+        }
+        ImagingStudy st = (ImagingStudy) resources.get(0);
+        return Optional.ofNullable(st.getIdElement().getIdPart());
+    }
+
+    private static boolean isConsentDenied(JsonNode payload) {
+        String consentStatus = text(payload, "consentStatus");
+        if (consentStatus != null && (consentStatus.equalsIgnoreCase("REVOKED")
+                || consentStatus.equalsIgnoreCase("DENIED"))) {
+            return true;
+        }
+        if (payload.has("consentGranted") && payload.get("consentGranted").isBoolean()) {
+            return !payload.get("consentGranted").asBoolean();
+        }
+        return false;
     }
 
     private void ensurePatientForCpid(UUID tenantId, String cpid, String correlationId) {

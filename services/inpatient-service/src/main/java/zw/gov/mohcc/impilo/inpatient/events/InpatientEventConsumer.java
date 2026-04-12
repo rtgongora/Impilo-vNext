@@ -49,6 +49,11 @@ public class InpatientEventConsumer {
                 return;
             }
 
+            if (isConsentDenied(payload)) {
+                log.debug("INPATIENT: skipping PCT journey handling due to consent flags");
+                return;
+            }
+
             String newState = text(payload, "newState");
             if (newState == null) {
                 newState = text(payload, "state");
@@ -78,6 +83,24 @@ public class InpatientEventConsumer {
             List<AdmissionEntity> active = admissionService.findActiveAdmissionsForPatientAtFacility(
                     patientCpid, facilityId);
 
+            UUID eventTenant = parseUuid(firstNonBlank(
+                    text(root, "tenant_id"),
+                    text(root, "tenantId"),
+                    text(payload, "tenant_id"),
+                    text(payload, "tenantId")));
+            if (eventTenant != null) {
+                List<AdmissionEntity> matching = active.stream()
+                        .filter(a -> eventTenant.equals(a.getTenantId()))
+                        .toList();
+                if (matching.isEmpty()) {
+                    log.warn("INPATIENT: no active admission for tenant {} — skipping auto-discharge "
+                                    + "(patientCpid={}, facilityId={})",
+                            eventTenant, patientCpid, facilityId);
+                    return;
+                }
+                active = matching;
+            }
+
             for (AdmissionEntity admission : active) {
                 try {
                     admissionService.dischargePatient(admission.getAdmissionRef());
@@ -106,11 +129,49 @@ public class InpatientEventConsumer {
         };
     }
 
-    private static JsonNode extractPayload(JsonNode root) {
-        if (root.has("payload") && root.get("payload").isObject()) {
-            return root.get("payload");
+    private JsonNode extractPayload(JsonNode root) {
+        if (!root.has("payload")) {
+            return root;
         }
-        return root;
+        JsonNode p = root.get("payload");
+        if (p == null || p.isNull()) {
+            return null;
+        }
+        if (p.isObject()) {
+            return p;
+        }
+        if (p.isTextual()) {
+            try {
+                return objectMapper.readTree(p.asText());
+            } catch (JsonProcessingException e) {
+                log.warn("INPATIENT: failed to parse textual envelope payload: {}", e.getMessage());
+                return null;
+            }
+        }
+        return p;
+    }
+
+    private static boolean isConsentDenied(JsonNode payload) {
+        String consentStatus = text(payload, "consentStatus");
+        if (consentStatus != null && (consentStatus.equalsIgnoreCase("REVOKED")
+                || consentStatus.equalsIgnoreCase("DENIED"))) {
+            return true;
+        }
+        if (payload.has("consentGranted") && payload.get("consentGranted").isBoolean()) {
+            return !payload.get("consentGranted").asBoolean();
+        }
+        return false;
+    }
+
+    private static UUID parseUuid(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        try {
+            return UUID.fromString(raw.trim());
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 
     private static String text(JsonNode node, String field) {

@@ -153,7 +153,7 @@ public class UpstreamEventConsumer {
 
     // ── PACS Events: imaging study lifecycle ───────────────────────
 
-    @KafkaListener(topics = "pacs.study.available", groupId = "experience-bff")
+    @KafkaListener(topics = {"pacs.imaging_study", "pacs.study.available"}, groupId = "experience-bff")
     public void onPacsStudyAvailable(String payload) {
         try {
             JsonNode node = objectMapper.readTree(payload);

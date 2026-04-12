@@ -80,7 +80,7 @@ public class PacsOutboxPublisher extends CompanionOutboxPublisher {
     @Override
     protected String resolveLegacyTopic(OutboxRow row) {
         if ("pacs.study.available".equals(row.eventType())) {
-            return "pacs.study.available";
+            return "pacs.imaging_study";
         }
         return null;
     }

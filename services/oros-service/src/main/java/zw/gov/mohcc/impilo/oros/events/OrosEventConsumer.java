@@ -225,7 +225,7 @@ public class OrosEventConsumer {
      *
      * @param message the Kafka message payload (JSON)
      */
-    @KafkaListener(topics = "pacs.study.available", groupId = "oros-service")
+    @KafkaListener(topics = {"pacs.imaging_study", "pacs.study.available"}, groupId = "oros-service")
     @Transactional
     public void consumePacsStudy(String message) {
         try {
