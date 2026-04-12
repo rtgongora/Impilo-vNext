@@ -1,0 +1,128 @@
+openapi: 3.0.3
+info:
+  title: Impilo Citizen Monitoring API (v1)
+  description: |
+    **Monitoring v1** — citizen-owned device registry (pair, list, sync heartbeat). Implemented today on
+    `wellness-service` under `/internal/v1/mobile/citizen/monitoring/**`; Experience BFF forwards the same
+    paths via `WellnessServiceProxyController` (`impilo.services.wellness-base-url`).
+
+    **Wave 4 alignment:** Readings ingestion, federated vitals, and **timeline** events sourced from devices are
+    *not* part of this contract revision; they extend this surface without breaking list/pair/sync semantics.
+
+    **Person scope (`patientId`):** Same as wellness v1 — expect **CPID** for the authenticated citizen within
+    `X-Tenant-ID`; TSHEPO must enforce subject match for production.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8161
+    description: Local default (`wellness-service`; see docs/runbooks/port-allocation.md)
+tags:
+  - name: MonitoringDevices
+    description: Registry and sync stubs (readings → timeline in later waves)
+paths:
+  /internal/v1/mobile/citizen/monitoring/devices:
+    get:
+      tags: [MonitoringDevices]
+      summary: List paired monitoring devices for a person
+      operationId: listMonitoringDevices
+      parameters:
+        - $ref: '#/components/parameters/XTenantId'
+        - $ref: '#/components/parameters/PatientIdQuery'
+      responses:
+        '200':
+          description: Wrapped list in `data` array
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CitizenListEnvelope'
+    post:
+      tags: [MonitoringDevices]
+      summary: Pair or register a monitoring device
+      operationId: pairMonitoringDevice
+      parameters:
+        - $ref: '#/components/parameters/XTenantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PairDeviceRequest'
+      responses:
+        '201':
+          description: Device created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PairDeviceResponse'
+  /internal/v1/mobile/citizen/monitoring/devices/{id}/sync:
+    post:
+      tags: [MonitoringDevices]
+      summary: Record a sync completion for a device
+      operationId: syncMonitoringDevice
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Sync acknowledged
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+components:
+  parameters:
+    XTenantId:
+      name: X-Tenant-ID
+      in: header
+      required: true
+      schema:
+        type: string
+    PatientIdQuery:
+      name: patientId
+      in: query
+      required: true
+      schema:
+        type: string
+        description: CPID (or equivalent canonical patient key) for the citizen.
+  schemas:
+    CitizenListEnvelope:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+    PairDeviceRequest:
+      type: object
+      required: [patientId, deviceName, deviceType]
+      properties:
+        patientId:
+          type: string
+        deviceName:
+          type: string
+        deviceType:
+          type: string
+        manufacturer:
+          type: string
+        model:
+          type: string
+        connectionType:
+          type: string
+          default: BLUETOOTH
+    PairDeviceResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            status:
+              type: string
+              example: PAIRED

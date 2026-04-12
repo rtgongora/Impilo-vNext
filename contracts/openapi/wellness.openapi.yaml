@@ -1,37 +1,718 @@
 openapi: 3.0.3
 info:
   title: Impilo Wellness Service API
-  description: >
-    Citizen wellness (activities, vitals, mood, challenges), health wallet, and Health Connect–style ingest.
-    Stable paths mirror Experience BFF `/internal/v1/mobile/citizen/**` and `/internal/v1/wellness/connect/v1/**`;
-    the BFF proxies to this service by default (`impilo.services.wellness-base-url`).
-  version: 0.1.0
+  description: |
+    **Wellness v1 (BFF-facing)** — citizen daily wellness (activities, vitals, mood, challenges), health wallet,
+    SOS, queue, clubs, providers, crowdfunding, marketplace service discovery, **Health Connect–style** ingest,
+    and related read APIs.
+
+    **Routing:** Experience BFF proxies `/internal/v1/mobile/citizen/**` and `/internal/v1/wellness/**` to
+    `wellness-service` using `impilo.services.wellness-base-url` (default **8161**).
+
+    **Companion contract:** device registry under [`monitoring.openapi.yaml`](./monitoring.openapi.yaml).
+
+    **Person scope (`patientId`):** For authenticated citizen flows from web or mobile shells, `patientId` in
+    query strings or JSON bodies is the **row scope** for tenant-partitioned data. Callers MUST use the
+    **CPID** (canonical patient identifier) of the signed-in person. This OpenAPI surface does not, by itself,
+    prove the caller is that person — **Envoy `ext_authz` → TSHEPO** and BFF/session policy must bind
+    `X-Actor-ID` / session claims to the requested `patientId` before production traffic.
+
+    **Health Connect:** Ingest is *parity-style* with Android Health Connect datatype semantics; not a licensed
+    Google API. See `GET /internal/v1/wellness/connect/v1/manifest` for supported types and storage mapping.
+  version: 1.0.0
 servers:
   - url: http://localhost:8161
     description: Local default (see docs/runbooks/port-allocation.md)
+tags:
+  - name: HealthConnect
+    description: Typed changesets, manifest, HC read-backs
+  - name: CitizenWellness
+    description: Activities, vitals, mood, challenges
+  - name: CitizenWallet
+  - name: CitizenSos
+  - name: CitizenQueue
+  - name: CitizenClubs
+  - name: CitizenProviders
+  - name: CitizenCrowdfunding
+  - name: CitizenMarketplace
+  - name: CitizenHealthId
 paths:
   /internal/v1/wellness/connect/v1/manifest:
     get:
+      tags: [HealthConnect]
       summary: Health Connect capability manifest
       operationId: wellnessConnectManifest
       responses:
         '200':
-          description: Manifest envelope
+          description: Manifest under `data`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeObject'
+  /internal/v1/wellness/connect/v1/changesets:
+    post:
+      tags: [HealthConnect]
+      summary: Ingest a Health Connect–style changeset (idempotent, deduped)
+      operationId: wellnessConnectIngestChangeset
+      parameters:
+        - $ref: '#/components/parameters/XTenantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HealthConnectChangeSetRequest'
+      responses:
+        '200':
+          description: Counts under `data` — applied, skipped, errors
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IngestResultEnvelope'
+  /internal/v1/wellness/connect/v1/sleep-segments:
+    get:
+      tags: [HealthConnect]
+      summary: Sleep stage segments derived from HC ingest
+      operationId: wellnessConnectSleepSegments
+      parameters:
+        - $ref: '#/components/parameters/XTenantId'
+        - $ref: '#/components/parameters/PatientIdQuery'
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CitizenListEnvelope'
+  /internal/v1/wellness/connect/v1/exercise-sessions:
+    get:
+      tags: [HealthConnect]
+      summary: Exercise sessions from HC ingest
+      operationId: wellnessConnectExerciseSessions
+      parameters:
+        - $ref: '#/components/parameters/XTenantId'
+        - $ref: '#/components/parameters/PatientIdQuery'
+        - name: days
+          in: query
+          schema:
+            type: integer
+            default: 30
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CitizenListEnvelope'
+  /internal/v1/wellness/connect/v1/ingest-log:
+    get:
+      tags: [HealthConnect]
+      summary: Recent ingest audit rows (optional payload echo)
+      operationId: wellnessConnectIngestLog
+      parameters:
+        - $ref: '#/components/parameters/XTenantId'
+        - $ref: '#/components/parameters/PatientIdQuery'
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+        - name: includePayload
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CitizenListEnvelope'
+  /internal/v1/wellness/connect/v1/extension-records:
+    get:
+      tags: [HealthConnect]
+      summary: Passthrough HC types stored as extension JSON
+      operationId: wellnessConnectExtensionRecords
+      parameters:
+        - $ref: '#/components/parameters/XTenantId'
+        - $ref: '#/components/parameters/PatientIdQuery'
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CitizenListEnvelope'
+
+  /internal/v1/mobile/citizen/health-id:
+    get:
+      tags: [CitizenHealthId]
+      summary: Active citizen health ID card row
+      operationId: getCitizenHealthId
+      parameters:
+        - $ref: '#/components/parameters/XTenantId'
+        - $ref: '#/components/parameters/PatientIdQuery'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeObject'
+    post:
+      tags: [CitizenHealthId]
+      summary: Issue a health ID card row
+      operationId: createCitizenHealthId
+      parameters:
+        - $ref: '#/components/parameters/XTenantId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeObject'
+
   /internal/v1/mobile/citizen/wellness/activities:
     get:
-      summary: List wellness activity rows
+      tags: [CitizenWellness]
+      summary: List wellness activity rows (daily rollups)
       operationId: listWellnessActivities
       parameters:
-        - name: X-Tenant-ID
-          in: header
-          required: true
-          schema:
-            type: string
-        - name: patientId
+        - $ref: '#/components/parameters/XTenantId'
+        - $ref: '#/components/parameters/PatientIdQuery'
+        - name: days
           in: query
-          required: true
+          schema:
+            type: integer
+            default: 7
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CitizenListEnvelope'
+    post:
+      tags: [CitizenWellness]
+      summary: Upsert manual or aggregated daily activity row
+      operationId: logWellnessActivity
+      parameters:
+        - $ref: '#/components/parameters/XTenantId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/mobile/citizen/wellness/vitals:
+    get:
+      tags: [CitizenWellness]
+      summary: List vitals log entries
+      operationId: listWellnessVitals
+      parameters:
+        - $ref: '#/components/parameters/XTenantId'
+        - $ref: '#/components/parameters/PatientIdQuery'
+        - name: type
+          in: query
           schema:
             type: string
       responses:
         '200':
-          description: Activity list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CitizenListEnvelope'
+    post:
+      tags: [CitizenWellness]
+      summary: Append a vital reading
+      operationId: logWellnessVital
+      parameters:
+        - $ref: '#/components/parameters/XTenantId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeObject'
+
+  /internal/v1/mobile/citizen/wellness/mood:
+    get:
+      tags: [CitizenWellness]
+      operationId: listWellnessMood
+      parameters:
+        - $ref: '#/components/parameters/XTenantId'
+        - $ref: '#/components/parameters/PatientIdQuery'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CitizenListEnvelope'
+    post:
+      tags: [CitizenWellness]
+      operationId: logWellnessMood
+      parameters:
+        - $ref: '#/components/parameters/XTenantId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeObject'
+
+  /internal/v1/mobile/citizen/wellness/challenges:
+    get:
+      tags: [CitizenWellness]
+      operationId: listWellnessChallenges
+      parameters:
+        - $ref: '#/components/parameters/XTenantId'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CitizenListEnvelope'
+
+  /internal/v1/mobile/citizen/wellness/challenges/{id}/join:
+    post:
+      tags: [CitizenWellness]
+      operationId: joinWellnessChallenge
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                patientId:
+                  type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/mobile/citizen/wallet:
+    get:
+      tags: [CitizenWallet]
+      operationId: getHealthWallet
+      parameters:
+        - $ref: '#/components/parameters/XTenantId'
+        - $ref: '#/components/parameters/PatientIdQuery'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeObject'
+
+  /internal/v1/mobile/citizen/wallet/transactions:
+    get:
+      tags: [CitizenWallet]
+      operationId: listWalletTransactions
+      parameters:
+        - $ref: '#/components/parameters/XTenantId'
+        - $ref: '#/components/parameters/PatientIdQuery'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CitizenListEnvelope'
+
+  /internal/v1/mobile/citizen/sos/contacts:
+    get:
+      tags: [CitizenSos]
+      operationId: listSosContacts
+      parameters:
+        - $ref: '#/components/parameters/XTenantId'
+        - $ref: '#/components/parameters/PatientIdQuery'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CitizenListEnvelope'
+    post:
+      tags: [CitizenSos]
+      operationId: addSosContact
+      parameters:
+        - $ref: '#/components/parameters/XTenantId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeObject'
+
+  /internal/v1/mobile/citizen/sos/contacts/{id}:
+    delete:
+      tags: [CitizenSos]
+      operationId: deleteSosContact
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/mobile/citizen/sos/alert:
+    post:
+      tags: [CitizenSos]
+      operationId: triggerSosAlert
+      parameters:
+        - $ref: '#/components/parameters/XTenantId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeObject'
+
+  /internal/v1/mobile/citizen/queue/status:
+    get:
+      tags: [CitizenQueue]
+      operationId: getQueueStatus
+      parameters:
+        - $ref: '#/components/parameters/XTenantId'
+        - $ref: '#/components/parameters/PatientIdQuery'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CitizenListEnvelope'
+
+  /internal/v1/mobile/citizen/queue/join:
+    post:
+      tags: [CitizenQueue]
+      operationId: joinQueue
+      parameters:
+        - $ref: '#/components/parameters/XTenantId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeObject'
+
+  /internal/v1/mobile/citizen/clubs:
+    get:
+      tags: [CitizenClubs]
+      operationId: listClubs
+      parameters:
+        - $ref: '#/components/parameters/XTenantId'
+        - name: category
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CitizenListEnvelope'
+
+  /internal/v1/mobile/citizen/clubs/{id}/join:
+    post:
+      tags: [CitizenClubs]
+      operationId: joinClub
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                patientId:
+                  type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/mobile/citizen/providers:
+    get:
+      tags: [CitizenProviders]
+      operationId: listProviders
+      parameters:
+        - $ref: '#/components/parameters/XTenantId'
+        - name: specialty
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CitizenListEnvelope'
+
+  /internal/v1/mobile/citizen/providers/{id}:
+    get:
+      tags: [CitizenProviders]
+      operationId: getProvider
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/XTenantId'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeObject'
+        '404':
+          description: Unknown provider
+
+  /internal/v1/mobile/citizen/crowdfunding:
+    get:
+      tags: [CitizenCrowdfunding]
+      operationId: listCrowdfundingCampaigns
+      parameters:
+        - $ref: '#/components/parameters/XTenantId'
+        - name: category
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CitizenListEnvelope'
+
+  /internal/v1/mobile/citizen/crowdfunding/{id}/donate:
+    post:
+      tags: [CitizenCrowdfunding]
+      operationId: donateToCampaign
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeObject'
+
+  /internal/v1/mobile/citizen/services/discover:
+    get:
+      tags: [CitizenMarketplace]
+      summary: Discover marketplace services (stub listing)
+      operationId: discoverMarketplaceServices
+      parameters:
+        - $ref: '#/components/parameters/XTenantId'
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: query
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CitizenListEnvelope'
+
+components:
+  parameters:
+    XTenantId:
+      name: X-Tenant-ID
+      in: header
+      required: true
+      schema:
+        type: string
+    PatientIdQuery:
+      name: patientId
+      in: query
+      required: true
+      schema:
+        type: string
+        description: CPID for the citizen in tenant scope.
+  schemas:
+    EnvelopeObject:
+      type: object
+      properties:
+        data:
+          type: object
+          additionalProperties: true
+    CitizenListEnvelope:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+    IngestResultEnvelope:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            applied:
+              type: integer
+            skipped:
+              type: integer
+            errors:
+              type: array
+              items:
+                type: object
+                additionalProperties: true
+    HealthConnectChangeSetRequest:
+      type: object
+      required: [patientId, dataOrigin]
+      description: >
+        Full field matrix matches `HealthConnectChangeSetRequest` in wellness-service; additional HC fields
+        are accepted on records and mapped or stored per manifest.
+      properties:
+        patientId:
+          type: string
+        dataOrigin:
+          $ref: '#/components/schemas/HcDataOrigin'
+        grantedScopes:
+          type: array
+          items:
+            type: string
+          maxItems: 128
+        records:
+          type: array
+          maxItems: 500
+          items:
+            $ref: '#/components/schemas/HcHealthRecord'
+    HcDataOrigin:
+      type: object
+      required: [platform]
+      properties:
+        platform:
+          type: string
+          example: android_health_connect
+        appPackage:
+          type: string
+        appVersion:
+          type: string
+    HcHealthRecord:
+      type: object
+      required: [id, type, startTime]
+      description: >
+        Per-record payload; see Java `HealthConnectChangeSetRequest.HealthRecord` for the complete property
+        list (steps, sleepStages, samples, vitals, exercise, nutrition, etc.). Unknown JSON keys are ignored.
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        startTime:
+          type: string
+        endTime:
+          type: string
+        startZoneOffset:
+          type: string
+        endZoneOffset:
+          type: string
+        metadata:
+          type: object
+          additionalProperties: true
+        sleepStages:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        samples:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+      additionalProperties: true
