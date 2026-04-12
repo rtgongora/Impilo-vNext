@@ -1,17 +1,18 @@
 # =============================================================================
 # VARAPI — Provider & Professional Registry API (OpenAPI 3.0)
 #
-# Phase B baseline: portal self-service, internal registry surfaces, and v1.1
-# companion probe routes. Expand paths incrementally to match controllers.
+# Full Phase B contract: provider CRUD, council management, CPD, licensure,
+# privilege grants, eligibility checks, FHIR projections, portal self-service,
+# provider tokens, reconciliation, snapshots, and v1.1 companion probes.
 # =============================================================================
 openapi: "3.0.3"
 
 info:
   title: VARAPI — Provider & Professional Registry API
-  version: "1.0.0"
+  version: "1.1.0"
   description: |
     VARAPI is the national provider registry: licensure, councils, CPD, eligibility,
-    and portal APIs for regulated professionals.
+    privilege management, and portal APIs for regulated professionals.
 
     Trust headers are enforced by Envoy + TSHEPO; internal probes additionally
     require Health OS Manifest v1.2 mandatory headers (see `CompanionHeaders`).
@@ -35,10 +36,32 @@ security:
 tags:
   - name: Internal-Probe
     description: Tech-companion v1.1 header and federation proofs
+  - name: Provider
+    description: Provider CRUD and status management
+  - name: Council
+    description: Professional council management and imports
+  - name: CPD
+    description: Continuing Professional Development tracking
+  - name: License
+    description: Licensure lifecycle (issue, renew, suspend, revoke)
+  - name: Privilege
+    description: Facility-level clinical privilege grants
+  - name: Eligibility
+    description: Provider eligibility checks
+  - name: FHIR
+    description: FHIR R4 Practitioner/PractitionerRole projections
   - name: Portal
     description: Authenticated provider self-service
+  - name: Token
+    description: Provider token issuance and recovery
+  - name: Reconciliation
+    description: Deduplication case reconciliation
+  - name: Snapshot
+    description: Full-state snapshot emit for downstream sync
 
 paths:
+
+  # ── Internal Probe ────────────────────────────────────────────────────
   /internal/v1/health:
     get:
       operationId: varapiInternalHealth
@@ -107,6 +130,666 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProbeFederationBody"
 
+  # ── Provider CRUD ─────────────────────────────────────────────────────
+  /v1/internal/providers:
+    post:
+      operationId: createProvider
+      tags: [Provider]
+      summary: Register a new provider in the national registry
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProviderRequest"
+      responses:
+        "201":
+          description: Provider registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /v1/internal/providers/search:
+    post:
+      operationId: searchProviders
+      tags: [Provider]
+      summary: Search providers by criteria
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                givenName:
+                  type: string
+                familyName:
+                  type: string
+                councilCode:
+                  type: string
+                profession:
+                  type: string
+                status:
+                  type: string
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /v1/internal/providers/{providerPublicId}:
+    get:
+      operationId: getProvider
+      tags: [Provider]
+      summary: Retrieve a provider by public ID (ULID)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ProviderPublicId"
+      responses:
+        "200":
+          description: Provider profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+        "404":
+          description: Provider not found
+    put:
+      operationId: updateProvider
+      tags: [Provider]
+      summary: Update provider demographics and contacts
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ProviderPublicId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProviderRequest"
+      responses:
+        "200":
+          description: Provider updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /v1/internal/providers/{providerPublicId}/status:
+    post:
+      operationId: changeProviderStatus
+      tags: [Provider]
+      summary: Change provider status (activate, suspend, deactivate)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ProviderPublicId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status, reason]
+              properties:
+                status:
+                  type: string
+                  enum: [ACTIVE, SUSPENDED, DEACTIVATED]
+                reason:
+                  type: string
+      responses:
+        "200":
+          description: Status changed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  # ── Council Management ────────────────────────────────────────────────
+  /v1/internal/councils:
+    post:
+      operationId: createCouncil
+      tags: [Council]
+      summary: Register a professional council (MCAZ, NMCZ, PCAZ, ORG_HR)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [councilCode, councilType, name]
+              properties:
+                councilCode:
+                  type: string
+                councilType:
+                  type: string
+                  enum: [HPA, PROFESSIONAL_COUNCIL, ORG_HR]
+                name:
+                  type: string
+      responses:
+        "201":
+          description: Council registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+    get:
+      operationId: listCouncils
+      tags: [Council]
+      summary: List all registered councils
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: Council list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /v1/internal/councils/{councilId}:
+    get:
+      operationId: getCouncil
+      tags: [Council]
+      summary: Get council by ID
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: councilId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Council details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /v1/internal/councils/{councilId}/imports:
+    post:
+      operationId: importCouncilData
+      tags: [Council]
+      summary: Bulk import council registration data
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: councilId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+                additionalProperties: true
+      responses:
+        "200":
+          description: Import results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  # ── CPD ───────────────────────────────────────────────────────────────
+  /v1/internal/providers/{providerPublicId}/cpd/cycles:
+    post:
+      operationId: createCpdCycle
+      tags: [CPD]
+      summary: Create a new CPD cycle for a provider
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ProviderPublicId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                startDate:
+                  type: string
+                  format: date
+                endDate:
+                  type: string
+                  format: date
+                requiredCredits:
+                  type: integer
+      responses:
+        "201":
+          description: CPD cycle created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /v1/internal/providers/{providerPublicId}/cpd/cycles/{cycleId}/events:
+    post:
+      operationId: recordCpdEvent
+      tags: [CPD]
+      summary: Record a CPD event (training, conference, workshop)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ProviderPublicId"
+        - name: cycleId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                eventType:
+                  type: string
+                credits:
+                  type: number
+                description:
+                  type: string
+      responses:
+        "201":
+          description: CPD event recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /v1/internal/providers/{providerPublicId}/cpd/events/{eventId}/verify:
+    post:
+      operationId: verifyCpdEvent
+      tags: [CPD]
+      summary: Verify a CPD event (mark as confirmed)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ProviderPublicId"
+        - name: eventId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: CPD event verified
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /v1/internal/providers/{providerPublicId}/cpd/summary:
+    get:
+      operationId: getCpdSummary
+      tags: [CPD]
+      summary: Get CPD compliance summary for a provider
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ProviderPublicId"
+      responses:
+        "200":
+          description: CPD summary with credits earned vs required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  # ── License Lifecycle ─────────────────────────────────────────────────
+  /v1/internal/providers/{providerPublicId}/licenses:
+    post:
+      operationId: issueLicense
+      tags: [License]
+      summary: Issue a new license to a provider
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ProviderPublicId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                licenseType:
+                  type: string
+                councilCode:
+                  type: string
+                validFrom:
+                  type: string
+                  format: date
+                validTo:
+                  type: string
+                  format: date
+      responses:
+        "201":
+          description: License issued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+    get:
+      operationId: listLicenses
+      tags: [License]
+      summary: List all licenses for a provider
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ProviderPublicId"
+      responses:
+        "200":
+          description: License list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /v1/internal/providers/{providerPublicId}/licenses/{licenseId}/renew:
+    post:
+      operationId: renewLicense
+      tags: [License]
+      summary: Renew an existing license
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ProviderPublicId"
+        - name: licenseId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: License renewed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /v1/internal/providers/{providerPublicId}/licenses/{licenseId}/suspend:
+    post:
+      operationId: suspendLicense
+      tags: [License]
+      summary: Suspend a license pending investigation
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ProviderPublicId"
+        - name: licenseId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: License suspended
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /v1/internal/providers/{providerPublicId}/licenses/{licenseId}/revoke:
+    post:
+      operationId: revokeLicense
+      tags: [License]
+      summary: Permanently revoke a license
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ProviderPublicId"
+        - name: licenseId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: License revoked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  # ── Privilege Management ──────────────────────────────────────────────
+  /v1/internal/providers/{providerPublicId}/privileges:
+    get:
+      operationId: listPrivileges
+      tags: [Privilege]
+      summary: List facility-level clinical privileges for a provider
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ProviderPublicId"
+      responses:
+        "200":
+          description: Privilege list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /v1/internal/providers/{providerPublicId}/privileges/grant:
+    post:
+      operationId: grantPrivilege
+      tags: [Privilege]
+      summary: Grant a clinical privilege at a facility
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ProviderPublicId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [facilityId, privilege]
+              properties:
+                facilityId:
+                  type: string
+                  format: uuid
+                privilege:
+                  type: string
+                  enum: [CONSULTATION, SURGERY, PRESCRIBING, ADMIN, SUPERVISION]
+      responses:
+        "201":
+          description: Privilege granted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /v1/internal/providers/{providerPublicId}/privileges/revoke:
+    post:
+      operationId: revokePrivilege
+      tags: [Privilege]
+      summary: Revoke a clinical privilege
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ProviderPublicId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [facilityId, privilege, reason]
+              properties:
+                facilityId:
+                  type: string
+                  format: uuid
+                privilege:
+                  type: string
+                reason:
+                  type: string
+      responses:
+        "200":
+          description: Privilege revoked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /v1/internal/privileges/pending:
+    get:
+      operationId: listPendingPrivileges
+      tags: [Privilege]
+      summary: List pending privilege decisions for review
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: Pending privilege list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /v1/internal/privileges/{privilegeId}/decide:
+    post:
+      operationId: decidePrivilege
+      tags: [Privilege]
+      summary: Approve or reject a privilege request
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: privilegeId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [decision]
+              properties:
+                decision:
+                  type: string
+                  enum: [APPROVED, REJECTED]
+                reason:
+                  type: string
+      responses:
+        "200":
+          description: Decision recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  # ── Eligibility ───────────────────────────────────────────────────────
+  /v1/internal/eligibility/check:
+    post:
+      operationId: checkEligibility
+      tags: [Eligibility]
+      summary: Check provider eligibility for a workspace/role/facility
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [providerPublicId]
+              properties:
+                providerPublicId:
+                  type: string
+                facilityId:
+                  type: string
+                  format: uuid
+                workspaceId:
+                  type: string
+                  format: uuid
+                role:
+                  type: string
+      responses:
+        "200":
+          description: Eligibility result (eligible / ineligible with reasons)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  # ── FHIR Projections ──────────────────────────────────────────────────
+  /v1/fhir/practitioner/{providerPublicId}:
+    get:
+      operationId: getFhirPractitioner
+      tags: [FHIR]
+      summary: FHIR R4 Practitioner resource for a provider
+      parameters:
+        - $ref: "#/components/parameters/ProviderPublicId"
+      responses:
+        "200":
+          description: FHIR Practitioner JSON
+          content:
+            application/fhir+json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /v1/fhir/practitionerrole/{providerPublicId}:
+    get:
+      operationId: getFhirPractitionerRole
+      tags: [FHIR]
+      summary: FHIR R4 PractitionerRole resource
+      parameters:
+        - $ref: "#/components/parameters/ProviderPublicId"
+      responses:
+        "200":
+          description: FHIR PractitionerRole JSON
+          content:
+            application/fhir+json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /v1/fhir/bundle/provider/{providerPublicId}:
+    get:
+      operationId: getFhirProviderBundle
+      tags: [FHIR]
+      summary: FHIR R4 Bundle (Practitioner + PractitionerRole + Organization)
+      parameters:
+        - $ref: "#/components/parameters/ProviderPublicId"
+      responses:
+        "200":
+          description: FHIR Bundle JSON
+          content:
+            application/fhir+json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  # ── Portal Self-Service ───────────────────────────────────────────────
   /v1/portal/me:
     get:
       operationId: varapiPortalMe
@@ -123,11 +806,248 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                description: ApiResponse wrapper — see shared-kernel `ApiResponse`
-                additionalProperties: true
+                $ref: "#/components/schemas/ApiResponse"
         "401":
           $ref: "#/components/responses/Unauthorized"
+
+  /v1/portal/cpd:
+    get:
+      operationId: portalGetCpd
+      tags: [Portal]
+      summary: Get own CPD summary via portal
+      responses:
+        "200":
+          description: CPD summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /v1/portal/cpd/evidence:
+    post:
+      operationId: portalUploadEvidence
+      tags: [Portal]
+      summary: Upload CPD evidence via portal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "201":
+          description: Evidence uploaded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /v1/portal/certificates:
+    get:
+      operationId: portalListCertificates
+      tags: [Portal]
+      summary: List own certificates via portal
+      responses:
+        "200":
+          description: Certificate list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /v1/portal/certificates/{id}/download:
+    get:
+      operationId: portalDownloadCertificate
+      tags: [Portal]
+      summary: Download a certificate PDF
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Certificate PDF
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+
+  # ── Provider Tokens ───────────────────────────────────────────────────
+  /v1/internal/provider-token/issue:
+    post:
+      operationId: issueProviderToken
+      tags: [Token]
+      summary: Issue a scoped provider token
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [providerPublicId]
+              properties:
+                providerPublicId:
+                  type: string
+                scope:
+                  type: string
+      responses:
+        "201":
+          description: Token issued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /v1/internal/provider-token/rotate:
+    post:
+      operationId: rotateProviderToken
+      tags: [Token]
+      summary: Rotate a provider token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Token rotated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /v1/internal/provider-token/recovery/start:
+    post:
+      operationId: startTokenRecovery
+      tags: [Token]
+      summary: Start provider token recovery flow
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Recovery started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /v1/internal/provider-token/recovery/verify:
+    post:
+      operationId: verifyTokenRecovery
+      tags: [Token]
+      summary: Verify provider token recovery
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Recovery verified
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  # ── Reconciliation ────────────────────────────────────────────────────
+  /v1/internal/reconciliation/queue:
+    get:
+      operationId: listReconciliationQueue
+      tags: [Reconciliation]
+      summary: List pending deduplication cases for reconciliation
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: Queue of pending cases
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /v1/internal/reconciliation/{caseId}/decision:
+    post:
+      operationId: decideReconciliation
+      tags: [Reconciliation]
+      summary: Decide a reconciliation case (merge, keep-separate, defer)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: caseId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [decision]
+              properties:
+                decision:
+                  type: string
+                  enum: [MERGE, KEEP_SEPARATE, DEFER]
+                reason:
+                  type: string
+      responses:
+        "200":
+          description: Decision recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  # ── Snapshots ─────────────────────────────────────────────────────────
+  /internal/v1/snapshots/providers:
+    get:
+      operationId: getProviderSnapshots
+      tags: [Snapshot]
+      summary: List provider snapshot watermarks
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: Snapshot metadata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /internal/v1/snapshots/providers/emit:
+    post:
+      operationId: emitProviderSnapshots
+      tags: [Snapshot]
+      summary: Trigger full-state snapshot emit for downstream sync
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+      responses:
+        "202":
+          description: Snapshot emit accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
 
 components:
   securitySchemes:
@@ -175,12 +1095,79 @@ components:
       required: true
       schema:
         type: string
+    ProviderPublicId:
+      name: providerPublicId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Provider ULID (public identifier)
 
   responses:
     Unauthorized:
       description: Missing or invalid authentication
 
   schemas:
+    ApiResponse:
+      type: object
+      description: Standard API response wrapper (see shared-kernel ApiResponse)
+      properties:
+        data:
+          type: object
+          additionalProperties: true
+        meta:
+          type: object
+          properties:
+            correlation_id:
+              type: string
+            request_id:
+              type: string
+      additionalProperties: true
+
+    CreateProviderRequest:
+      type: object
+      required: [givenName, familyName, profession]
+      properties:
+        givenName:
+          type: string
+        familyName:
+          type: string
+        profession:
+          type: string
+        cadre:
+          type: string
+        dateOfBirth:
+          type: string
+          format: date
+        sex:
+          type: string
+          enum: [MALE, FEMALE, OTHER]
+        councilCode:
+          type: string
+        registrationNumber:
+          type: string
+
+    UpdateProviderRequest:
+      type: object
+      properties:
+        givenName:
+          type: string
+        familyName:
+          type: string
+        profession:
+          type: string
+        cadre:
+          type: string
+        contacts:
+          type: array
+          items:
+            type: object
+            properties:
+              contactType:
+                type: string
+              value:
+                type: string
+
     ProbeHealthBody:
       type: object
       properties:

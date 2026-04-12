@@ -1,17 +1,19 @@
 # =============================================================================
 # TUSO — Facility, Workspace & Shift Context API (OpenAPI 3.0)
 #
-# Phase B baseline: public facility discovery, internal/admin surfaces, snapshots,
-# and v1.1 companion probes. Expand paths to match remaining controllers.
+# Full Phase B contract: facility CRUD, public directory, workspaces, resources,
+# bookings, calendar slots, shifts, control tower telemetry, facility config,
+# snapshots, and v1.1 companion probes.
 # =============================================================================
 openapi: "3.0.3"
 
 info:
   title: TUSO — Facility, Workspace & Shift Context API
-  version: "1.0.0"
+  version: "1.1.0"
   description: |
-    TUSO holds facility master data, workspaces, shifts, and operational context
-    consumed across the Health OS experience and clinical planes.
+    TUSO holds facility master data, workspaces, shifts, resources, bookings,
+    and operational context consumed across the Health OS experience and
+    clinical planes. Includes control tower telemetry and facility config.
 
     Trust headers are enforced by Envoy + TSHEPO; internal probes require
     Manifest v1.2 mandatory headers (`CompanionHeaders`).
@@ -35,10 +37,26 @@ security:
 tags:
   - name: Internal-Probe
     description: Tech-companion v1.1 proofs
-  - name: Public-Facility
-    description: Redacted facility directory for external consumers
+  - name: Facility
+    description: Facility CRUD, search, merge, close
+  - name: Public-Directory
+    description: Public facility directory (redacted, read-only)
+  - name: Workspace
+    description: Departments, clinics, wards, theatres, service points
+  - name: Resource
+    description: Equipment, rooms, and resource bookings
+  - name: Shift
+    description: Operational shift start and context
+  - name: Control-Tower
+    description: Multi-facility oversight and telemetry ingest
+  - name: Config
+    description: Facility configuration management
+  - name: Snapshot
+    description: Full-state snapshot emit for downstream sync
 
 paths:
+
+  # ── Internal Probe ────────────────────────────────────────────────────
   /internal/v1/health:
     get:
       operationId: tusoInternalHealth
@@ -107,16 +125,170 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProbeFederationBody"
 
+  # ── Facility CRUD ─────────────────────────────────────────────────────
+  /v1/internal/facilities:
+    post:
+      operationId: createFacility
+      tags: [Facility]
+      summary: Register a new facility in the national registry
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateFacilityRequest"
+      responses:
+        "201":
+          description: Facility registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /v1/internal/facilities/search:
+    post:
+      operationId: searchFacilities
+      tags: [Facility]
+      summary: Search facilities by criteria
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                query:
+                  type: string
+                facilityType:
+                  type: string
+                province:
+                  type: string
+                district:
+                  type: string
+                level:
+                  type: string
+                  enum: [TERTIARY, SECONDARY, PRIMARY, CLINIC]
+                status:
+                  type: string
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /v1/internal/facilities/{id}:
+    get:
+      operationId: getFacility
+      tags: [Facility]
+      summary: Retrieve a facility by ID
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/FacilityId"
+      responses:
+        "200":
+          description: Facility details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+        "404":
+          description: Facility not found
+    put:
+      operationId: updateFacility
+      tags: [Facility]
+      summary: Update facility details
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/FacilityId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateFacilityRequest"
+      responses:
+        "200":
+          description: Facility updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /v1/internal/facilities/{id}/merge:
+    post:
+      operationId: mergeFacility
+      tags: [Facility]
+      summary: Merge duplicate facility into target
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/FacilityId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [targetFacilityId]
+              properties:
+                targetFacilityId:
+                  type: integer
+                  format: int64
+                reason:
+                  type: string
+      responses:
+        "200":
+          description: Facility merged
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /v1/internal/facilities/{id}/close:
+    post:
+      operationId: closeFacility
+      tags: [Facility]
+      summary: Close/deactivate a facility
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/FacilityId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason:
+                  type: string
+      responses:
+        "200":
+          description: Facility closed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  # ── Public Directory ──────────────────────────────────────────────────
   /v1/public/facilities/search:
     get:
       operationId: tusoPublicFacilitySearch
-      tags: [Public-Facility]
+      tags: [Public-Directory]
       summary: Search public facility directory
       parameters:
         - $ref: "#/components/parameters/TenantId"
         - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
         - name: query
           in: query
           schema:
@@ -137,23 +309,604 @@ paths:
           in: query
           schema:
             type: integer
-            minimum: 0
             default: 0
         - name: size
           in: query
           schema:
             type: integer
-            minimum: 1
-            maximum: 100
             default: 20
       responses:
         "200":
-          description: Paged facility summaries (ApiResponse envelope)
+          description: Paged facility summaries
           content:
             application/json:
               schema:
-                type: object
-                additionalProperties: true
+                $ref: "#/components/schemas/ApiResponse"
+
+  /v1/public/facilities/{id}/profile:
+    get:
+      operationId: tusoPublicFacilityProfile
+      tags: [Public-Directory]
+      summary: Get public facility profile (redacted)
+      parameters:
+        - $ref: "#/components/parameters/FacilityId"
+      responses:
+        "200":
+          description: Public facility profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  # ── Workspace Management ──────────────────────────────────────────────
+  /v1/internal/facilities/{facilityId}/workspaces:
+    post:
+      operationId: createWorkspace
+      tags: [Workspace]
+      summary: Create a workspace (department, clinic, ward, theatre, service point)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: facilityId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, type]
+              properties:
+                name:
+                  type: string
+                type:
+                  type: string
+                  enum: [DEPARTMENT, CLINIC, WARD, THEATRE, SERVICE_POINT, STORE]
+                parentWorkspaceId:
+                  type: integer
+                  format: int64
+      responses:
+        "201":
+          description: Workspace created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+    get:
+      operationId: listWorkspaces
+      tags: [Workspace]
+      summary: List workspaces for a facility
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: facilityId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Workspace list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /v1/internal/workspaces/{workspaceId}:
+    get:
+      operationId: getWorkspace
+      tags: [Workspace]
+      summary: Get workspace by ID
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: workspaceId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Workspace details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+    put:
+      operationId: updateWorkspace
+      tags: [Workspace]
+      summary: Update workspace details
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: workspaceId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                status:
+                  type: string
+      responses:
+        "200":
+          description: Workspace updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /v1/internal/workspaces/{workspaceId}/override:
+    post:
+      operationId: overrideWorkspace
+      tags: [Workspace]
+      summary: Override workspace settings (supervisor escalation)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: workspaceId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Override applied
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  # ── Resource & Booking Management ─────────────────────────────────────
+  /v1/internal/facilities/{facilityId}/resources:
+    post:
+      operationId: createResource
+      tags: [Resource]
+      summary: Register a resource (equipment, room, bed)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: facilityId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, resourceType]
+              properties:
+                name:
+                  type: string
+                resourceType:
+                  type: string
+                workspaceId:
+                  type: integer
+                  format: int64
+      responses:
+        "201":
+          description: Resource registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+    get:
+      operationId: listResources
+      tags: [Resource]
+      summary: List resources for a facility
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: facilityId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Resource list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /v1/internal/resources/{resourceId}/bookings:
+    post:
+      operationId: createBooking
+      tags: [Resource]
+      summary: Book a resource (theatre, equipment, room)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: resourceId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [startTime, endTime]
+              properties:
+                startTime:
+                  type: string
+                  format: date-time
+                endTime:
+                  type: string
+                  format: date-time
+                purpose:
+                  type: string
+                bookedBy:
+                  type: string
+      responses:
+        "201":
+          description: Booking created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+    get:
+      operationId: listBookings
+      tags: [Resource]
+      summary: List bookings for a resource
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: resourceId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Booking list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /v1/internal/bookings/{bookingId}:
+    delete:
+      operationId: cancelBooking
+      tags: [Resource]
+      summary: Cancel a booking
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: bookingId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "204":
+          description: Booking cancelled
+
+  /v1/internal/facilities/{facilityId}/calendars/slots:
+    get:
+      operationId: getCalendarSlots
+      tags: [Resource]
+      summary: Get available calendar slots for a facility
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: facilityId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: resourceType
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Available slots
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  # ── Shift Management ──────────────────────────────────────────────────
+  /v1/internal/facilities/{facilityId}/start-shift/options:
+    get:
+      operationId: getShiftOptions
+      tags: [Shift]
+      summary: Get available shift start options for current user
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: facilityId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Shift options
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /v1/internal/facilities/{facilityId}/start-shift:
+    post:
+      operationId: startShift
+      tags: [Shift]
+      summary: Start a new shift at a facility
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: facilityId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [workspaceId]
+              properties:
+                workspaceId:
+                  type: integer
+                  format: int64
+                shiftType:
+                  type: string
+      responses:
+        "201":
+          description: Shift started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  # ── Control Tower ─────────────────────────────────────────────────────
+  /v1/internal/telemetry/pct:
+    post:
+      operationId: ingestPctTelemetry
+      tags: [Control-Tower]
+      summary: Ingest PCT telemetry (queue depth, wait times)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "202":
+          description: Telemetry accepted
+
+  /v1/internal/telemetry/oros:
+    post:
+      operationId: ingestOrosTelemetry
+      tags: [Control-Tower]
+      summary: Ingest OROS telemetry (order turnaround times)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "202":
+          description: Telemetry accepted
+
+  /v1/internal/control-tower/facilities/{facilityId}/summary:
+    get:
+      operationId: getFacilitySummary
+      tags: [Control-Tower]
+      summary: Get real-time operational summary for a facility
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: facilityId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Facility operational summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /v1/internal/control-tower/alerts:
+    get:
+      operationId: getControlTowerAlerts
+      tags: [Control-Tower]
+      summary: Get active operational alerts
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: Active alerts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  # ── Facility Config ───────────────────────────────────────────────────
+  /v1/internal/facilities/{facilityId}/config/effective:
+    get:
+      operationId: getEffectiveConfig
+      tags: [Config]
+      summary: Get effective (merged) configuration for a facility
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: facilityId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Effective config
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /v1/internal/facilities/{facilityId}/config:
+    put:
+      operationId: updateConfig
+      tags: [Config]
+      summary: Update facility configuration
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: facilityId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Config updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /v1/internal/facilities/{facilityId}/config/history:
+    get:
+      operationId: getConfigHistory
+      tags: [Config]
+      summary: Get configuration change history for a facility
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: facilityId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Config history
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /v1/internal/facilities/{facilityId}/config/rollback:
+    post:
+      operationId: rollbackConfig
+      tags: [Config]
+      summary: Rollback facility config to a previous version
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: facilityId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [targetVersion]
+              properties:
+                targetVersion:
+                  type: integer
+                reason:
+                  type: string
+      responses:
+        "200":
+          description: Config rolled back
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  # ── Snapshots ─────────────────────────────────────────────────────────
+  /internal/v1/snapshots/facilities:
+    get:
+      operationId: getFacilitySnapshots
+      tags: [Snapshot]
+      summary: List facility snapshot watermarks
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: Snapshot metadata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /internal/v1/snapshots/facilities/emit:
+    post:
+      operationId: emitFacilitySnapshots
+      tags: [Snapshot]
+      summary: Trigger full-state snapshot emit for downstream sync
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+      responses:
+        "202":
+          description: Snapshot emit accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
 
 components:
   securitySchemes:
@@ -201,8 +954,78 @@ components:
       required: true
       schema:
         type: string
+    FacilityId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+      description: Facility database ID
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid authentication
 
   schemas:
+    ApiResponse:
+      type: object
+      description: Standard API response wrapper
+      properties:
+        data:
+          type: object
+          additionalProperties: true
+        meta:
+          type: object
+          properties:
+            correlation_id:
+              type: string
+            request_id:
+              type: string
+      additionalProperties: true
+
+    CreateFacilityRequest:
+      type: object
+      required: [facilityCode, name, type]
+      properties:
+        facilityCode:
+          type: string
+          description: National facility code (unique)
+        name:
+          type: string
+        type:
+          type: string
+        level:
+          type: string
+          enum: [TERTIARY, SECONDARY, PRIMARY, CLINIC]
+        ownership:
+          type: string
+          enum: [PUBLIC, PRIVATE, NGO, FAITH_BASED]
+        province:
+          type: string
+        district:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+
+    UpdateFacilityRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+        level:
+          type: string
+        ownership:
+          type: string
+        province:
+          type: string
+        district:
+          type: string
+
     ProbeHealthBody:
       type: object
       properties:
