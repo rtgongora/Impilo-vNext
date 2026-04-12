@@ -1,0 +1,536 @@
+# =============================================================================
+# DAGS — Data Access Governance Service API (OpenAPI 3.0)
+#
+# Privacy by Architecture (Health OS Doctrine Brief §6): governance policies,
+# access-request workflows, and permit-token issuance for sensitive data.
+# =============================================================================
+openapi: "3.0.3"
+
+info:
+  title: DAGS — Data Access Governance Service API
+  version: "1.0.0"
+  description: |
+    DAGS enforces Privacy by Architecture for the Health Operating System.
+    It manages governance policies that control access to sensitive resource
+    types, and provides a formal access-request / approve / deny workflow
+    with permit-token issuance.
+
+    Trust headers are enforced by Envoy + TSHEPO; internal probes additionally
+    require Health OS Manifest v1.2 mandatory headers (see `CompanionHeaders`).
+  contact:
+    name: Impilo Platform Team
+  license:
+    name: Proprietary
+
+servers:
+  - url: http://localhost:8170
+    description: Local development
+  - url: https://{tenant}.impilo.health/api
+    description: Production (per-tenant)
+    variables:
+      tenant:
+        default: demo
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Internal-Probe
+    description: Tech-companion v1.1 header and federation proofs
+  - name: Policies
+    description: Governance policy management
+  - name: Access-Requests
+    description: Access request submission and adjudication
+
+paths:
+  /internal/v1/health:
+    get:
+      operationId: dagsInternalHealth
+      tags: [Internal-Probe]
+      summary: v1.1 probe — returns trust context echo
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+      responses:
+        "200":
+          description: Service UP with context echo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProbeHealthBody"
+
+  /internal/v1/policies:
+    post:
+      operationId: dagsCreatePolicy
+      tags: [Policies]
+      summary: Create a governance policy
+      description: |
+        Creates a new governance policy that controls access to resources of
+        the specified type. The policy conditions are evaluated at access-request
+        adjudication time.
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePolicyRequest"
+      responses:
+        "201":
+          description: Policy created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PolicyApiResponse"
+        "400":
+          description: Invalid request body
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+    get:
+      operationId: dagsListPolicies
+      tags: [Policies]
+      summary: List governance policies
+      description: |
+        Returns all governance policies for the current tenant.
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+      responses:
+        "200":
+          description: List of policies
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PolicyListApiResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /internal/v1/access-requests:
+    post:
+      operationId: dagsSubmitAccessRequest
+      tags: [Access-Requests]
+      summary: Submit an access request
+      description: |
+        Submits a formal request to access a protected resource. The request
+        enters SUBMITTED status and awaits adjudication (approve/deny).
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmitAccessRequest"
+      responses:
+        "201":
+          description: Access request submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccessRequestApiResponse"
+        "400":
+          description: Invalid request body
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+    get:
+      operationId: dagsListAccessRequests
+      tags: [Access-Requests]
+      summary: List access requests with optional status filter and pagination
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: status
+          in: query
+          required: false
+          description: Filter by access request status
+          schema:
+            $ref: "#/components/schemas/AccessRequestStatus"
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+          description: Zero-based page number
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 50
+            minimum: 1
+            maximum: 200
+          description: Page size
+      responses:
+        "200":
+          description: Paged list of access requests
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccessRequestPagedApiResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /internal/v1/access-requests/{id}/approve:
+    post:
+      operationId: dagsApproveAccessRequest
+      tags: [Access-Requests]
+      summary: Approve an access request
+      description: |
+        Approves the access request identified by `id`. An optional reason
+        may be supplied for the audit trail.
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: Access request ID
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DecisionRequest"
+      responses:
+        "200":
+          description: Access request approved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccessRequestApiResponse"
+        "404":
+          description: Access request not found
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /internal/v1/access-requests/{id}/deny:
+    post:
+      operationId: dagsDenyAccessRequest
+      tags: [Access-Requests]
+      summary: Deny an access request
+      description: |
+        Denies the access request identified by `id`. An optional reason
+        may be supplied for the audit trail.
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/ActorType"
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: Access request ID
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DecisionRequest"
+      responses:
+        "200":
+          description: Access request denied
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccessRequestApiResponse"
+        "404":
+          description: Access request not found
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    TenantId:
+      name: X-Tenant-ID
+      in: header
+      required: true
+      schema:
+        type: string
+    PodId:
+      name: X-Pod-ID
+      in: header
+      required: true
+      schema:
+        type: string
+    RequestId:
+      name: X-Request-ID
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+    CorrelationId:
+      name: X-Correlation-ID
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+    ActorId:
+      name: X-Actor-ID
+      in: header
+      required: true
+      schema:
+        type: string
+    ActorType:
+      name: X-Actor-Type
+      in: header
+      required: true
+      schema:
+        type: string
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid authentication
+
+  schemas:
+    # ---------- Request bodies ----------
+    CreatePolicyRequest:
+      type: object
+      required: [name, resourceType, effect]
+      properties:
+        name:
+          type: string
+          description: Human-readable policy name
+          example: "Restrict HIV results"
+        description:
+          type: string
+          description: Optional detailed description
+          example: "Restricts access to HIV test results to authorized providers"
+        resourceType:
+          type: string
+          description: The resource type this policy governs
+          example: "Observation"
+        conditions:
+          type: string
+          description: JSONB conditions expression
+          example: '{"category":"hiv-test"}'
+        effect:
+          $ref: "#/components/schemas/PolicyEffect"
+
+    SubmitAccessRequest:
+      type: object
+      required: [resourceType, purpose]
+      properties:
+        resourceType:
+          type: string
+          description: Type of resource being requested
+          example: "Observation"
+        resourceId:
+          type: string
+          description: Optional specific resource identifier
+          example: "obs-12345"
+        purpose:
+          type: string
+          description: Purpose of access (mapped to Purpose of Use taxonomy)
+          example: "TREATMENT"
+        justification:
+          type: string
+          description: Free-text justification for the request
+          example: "Patient referred for HIV treatment continuation"
+
+    DecisionRequest:
+      type: object
+      properties:
+        reason:
+          type: string
+          description: Optional reason for the approval or denial
+          example: "Verified clinical need"
+
+    # ---------- Enums ----------
+    PolicyEffect:
+      type: string
+      enum: [ALLOW, DENY]
+      description: Whether the policy allows or denies access
+
+    PolicyStatus:
+      type: string
+      enum: [ACTIVE, INACTIVE]
+      description: Lifecycle status of a policy
+
+    AccessRequestStatus:
+      type: string
+      enum: [SUBMITTED, APPROVED, DENIED]
+      description: Lifecycle status of an access request
+
+    # ---------- Domain objects ----------
+    Policy:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        tenantId:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: "Restrict HIV results"
+        description:
+          type: string
+        resourceType:
+          type: string
+          example: "Observation"
+        conditions:
+          type: string
+          description: JSONB conditions
+        effect:
+          $ref: "#/components/schemas/PolicyEffect"
+        status:
+          $ref: "#/components/schemas/PolicyStatus"
+        createdBy:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    AccessRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        tenantId:
+          type: string
+          format: uuid
+        requesterId:
+          type: string
+        resourceType:
+          type: string
+          example: "Observation"
+        resourceId:
+          type: string
+        purpose:
+          type: string
+          example: "TREATMENT"
+        justification:
+          type: string
+        status:
+          $ref: "#/components/schemas/AccessRequestStatus"
+        permitToken:
+          type: string
+          description: Opaque permit token issued on approval
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    # ---------- API response wrappers ----------
+    PolicyApiResponse:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/Policy"
+        correlation_id:
+          type: string
+      additionalProperties: true
+
+    PolicyListApiResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Policy"
+        correlation_id:
+          type: string
+      additionalProperties: true
+
+    AccessRequestApiResponse:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/AccessRequest"
+        correlation_id:
+          type: string
+      additionalProperties: true
+
+    AccessRequestPagedApiResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            content:
+              type: array
+              items:
+                $ref: "#/components/schemas/AccessRequest"
+            page:
+              type: integer
+            size:
+              type: integer
+            totalElements:
+              type: integer
+              format: int64
+            totalPages:
+              type: integer
+          additionalProperties: true
+        correlation_id:
+          type: string
+      additionalProperties: true
+
+    # ---------- Probe ----------
+    ProbeHealthBody:
+      type: object
+      properties:
+        service:
+          type: string
+          example: data-access-governance
+        status:
+          type: string
+          example: UP
+        tenant_id:
+          type: string
+        pod_id:
+          type: string
+        request_id:
+          type: string
+        correlation_id:
+          type: string
+      additionalProperties: true

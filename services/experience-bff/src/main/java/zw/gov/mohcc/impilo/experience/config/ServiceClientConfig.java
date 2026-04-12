@@ -61,7 +61,9 @@ public class ServiceClientConfig {
             // Health OS §13: Conversational & Guidance
             String guidanceBaseUrl,
             // Integration / cross-tenant routing (integration-hub-service)
-            String integrationHubBaseUrl
+            String integrationHubBaseUrl,
+            // Health OS §6: Privacy by Architecture — Data Access Governance
+            String dagsBaseUrl
     ) {
         public ServiceEndpoints(
                 String pctBaseUrl,
@@ -112,6 +114,7 @@ public class ServiceClientConfig {
                     null,
                     null,
                     null,
+                    null,
                     null
             );
         }
@@ -145,6 +148,7 @@ public class ServiceClientConfig {
             if (workflowBaseUrl == null) workflowBaseUrl = "http://localhost:8250";
             if (guidanceBaseUrl == null) guidanceBaseUrl = "http://localhost:8260";
             if (integrationHubBaseUrl == null) integrationHubBaseUrl = "http://localhost:8110";
+            if (dagsBaseUrl == null) dagsBaseUrl = "http://localhost:8170";
         }
     }
 

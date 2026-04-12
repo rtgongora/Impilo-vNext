@@ -85,6 +85,8 @@ impilo:
     # Health OS §13: Conversational & Guidance
     guidance-base-url: ${GUIDANCE_BASE_URL:http://localhost:8260}
     integration-hub-base-url: ${INTEGRATION_HUB_BASE_URL:http://localhost:8110}
+    # Health OS §6: Privacy by Architecture — Data Access Governance
+    dags-base-url: ${DAGS_BASE_URL:http://localhost:8170}
 
   clinical-platform:
     base-url: ${CLINICAL_KNOWLEDGE_PLATFORM_BASE_URL:http://localhost:8270}
