@@ -2,6 +2,8 @@
 
 This document captures the **execution-oriented** roadmap for closing gaps across **backend → contracts → BFF → Experience → integration hooks**, aligned with the Health OS experience doctrine ([`docs/doctrine/health-os-doctrine.md`](../doctrine/health-os-doctrine.md)). It is tuned for **implementation by AI agents (e.g. Cursor) with optional parallelization**, not for calendar-week estimates of a human-only team.
 
+**Citizen life–linked product waves** (wellness, intelligence, marketplace, IoT) — including Wave **0** contract gate and release definition of done — live in [`citizen-life-full-implementation.md`](./citizen-life-full-implementation.md).
+
 ---
 
 ## Context (why this exists)
@@ -180,3 +182,4 @@ flowchart LR
 | 2026-04-12 | Phase E **slice 2**: aligned PCT encounter Kafka topics + payloads (pct-service, costing-engine, experience-bff); BFF surveillance → `impilo.surv.case.opened.v1`; `pct-clinical-encounter.asyncapi.yaml`; catalog §3 reconciliation log; DR + bootstrap topic lists. |
 | 2026-04-12 | Phase E **slice 3**: finance/OROS/pharmacy catalog + `finance-oros-pharmacy.asyncapi.yaml`; `pharmacy.dispense.complete` + `mushex.payment.status.changed` consumer alignment; inventory ledger topic in DR docs. |
 | 2026-04-12 | Phase E **closed**: expanded `kafka-event-catalog.md` (BUTANO, campaigns, docstore, Msika Flow, bronze ingest, full listener table); added trust/butano/campaigns/document/data-ingestion AsyncAPI stubs; roadmap + registry mark **E complete**; **Phase F** is next primary execution wave. |
+| 2026-04-12 | Linked **citizen life–linked** roadmap (`citizen-life-full-implementation.md`); wellness v1 + monitoring v1 OpenAPI baselines for Wave 0. |

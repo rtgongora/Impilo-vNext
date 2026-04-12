@@ -34,7 +34,7 @@ Links **typed HTTP clients**, **`impilo.services` / other config**, **downstream
 | `IntegrationHubServiceClient` | `integration-hub-base-url` | 8110 | `integration-hub` | `integration-hub.openapi.yaml` |
 | `GuidanceServiceClient` | `guidance-base-url` | 8260 | `guidance-service` | `guidance.openapi.yaml` |
 | `ClinicalKnowledgePlatformClient` | `impilo.clinical-platform.base-url` | 8270 | `clinical-knowledge-platform-service` | `clinical-knowledge-platform.openapi.yaml` |
-| *(HTTP proxy, no named `*Client` bean)* | `impilo.services.wellness-base-url` | 8161 | `wellness-service` | `wellness.openapi.yaml` |
+| *(HTTP proxy, no named `*Client` bean)* | `impilo.services.wellness-base-url` | 8161 | `wellness-service` | `wellness.openapi.yaml` (wellness v1) + [`monitoring.openapi.yaml`](../../contracts/openapi/monitoring.openapi.yaml) (monitoring v1 device registry) |
 
 `RestTemplate` + `ServiceEndpoints` (no dedicated bean): **`PublicHealthController`** → `surveillance-base-url`, `campaigns-base-url`, `indawo-base-url`; **`AccessChannelsController`**, **`ClinicalToolsController`**, **`AiGovernanceController`**, **`MobileGovernanceController`** → `landela-base-url`, `data-governance-base-url`, etc. (see each controller).
 
