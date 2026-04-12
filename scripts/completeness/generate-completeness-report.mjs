@@ -7,6 +7,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import yaml from 'js-yaml';
+import { OPENAPI_BY_MODULE, stemMavenModule } from './openapi-contracts.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, '../..');
@@ -22,48 +23,6 @@ const BFF_EXPERIENCE_JAVA_ROOT = path.join(
   'services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience'
 );
 const UI_ROOT = path.join(REPO_ROOT, 'ui/experience/src');
-
-/** Explicit OpenAPI contract filename (under contracts/openapi) per maven module. */
-const OPENAPI_BY_MODULE = {
-  'butano-fhir': 'butano.custom.openapi.yaml',
-  /** HAPI FHIR façade module shares the same contract file as butano-fhir. */
-  'butano-service': 'butano.custom.openapi.yaml',
-  'card-print-agent': 'card-print.openapi.yaml',
-  'campaigns-service': 'campaigns.openapi.yaml',
-  'clinical-knowledge-platform-service': 'clinical-knowledge-platform.openapi.yaml',
-  'costa-service': 'costa.openapi.yaml',
-  'costing-engine-service': 'costa.openapi.yaml',
-  'coverage-service': 'coverage.openapi.yaml',
-  'credential-verification-service': 'credential-verification.openapi.yaml',
-  'data-governance-service': 'data-governance.openapi.yaml',
-  'document-service': 'document-store.openapi.yaml',
-  'forms-service': 'forms.openapi.yaml',
-  'fhir-gateway-service': 'fhir-gateway.openapi.yaml',
-  'guidance-service': 'guidance.openapi.yaml',
-  'indawo-service': 'indawo.openapi.yaml',
-  'integration-hub': 'integration-hub.openapi.yaml',
-  'inventory-service': 'inventory.openapi.yaml',
-  'landela-adapter-service': 'landela-adapter.openapi.yaml',
-  'msika-flow-service': 'msika-flow.openapi.yaml',
-  'msika-service': 'msika-core.openapi.yaml',
-  'mushex-service': 'mushex.openapi.yaml',
-  'notification-service': 'notification.openapi.yaml',
-  'oros-service': 'oros.openapi.yaml',
-  'pct-service': 'pct.openapi.yaml',
-  'rules-service': 'rules.openapi.yaml',
-  'search-service': 'search.openapi.yaml',
-  'product-registry-service': 'product-registry.openapi.yaml',
-  'pharmacy-service': 'pharmacy.openapi.yaml',
-  'share-slip-service': 'share-slip.openapi.yaml',
-  'surveillance-service': 'surveillance.openapi.yaml',
-  'vito-service': 'vito.openapi.yaml',
-  'varapi-service': 'varapi.openapi.yaml',
-  'tuso-service': 'tuso.openapi.yaml',
-  'ubomi-service': 'ubomi.openapi.yaml',
-  'workflow-service': 'workflow.openapi.yaml',
-  'wellness-service': 'wellness.openapi.yaml',
-  'zibo-service': 'zibo.openapi.yaml',
-};
 
 /** Dedicated BFF Feign client simple class name(s) per maven module. */
 const BFF_CLIENT_BY_MODULE = {
@@ -126,7 +85,7 @@ function readText(p) {
 
 function guessOpenApiFile(module) {
   if (OPENAPI_BY_MODULE[module]) return OPENAPI_BY_MODULE[module];
-  let base = module.replace(/-service$/, '').replace(/-adapter$/, '').replace(/-agent$/, '');
+  const base = stemMavenModule(module);
   const candidates = [`${base}.openapi.yaml`, `${base}.openapi.yml`];
   for (const c of candidates) {
     if (fs.existsSync(path.join(OPENAPI_DIR, c))) return c;
@@ -212,7 +171,7 @@ function loadClientNames() {
 function uiSearchTerms(service) {
   const terms = new Set();
   const mod = service.maven_module || '';
-  terms.add(mod.replace(/-service$/, '').replace(/-adapter$/, '').replace(/-agent$/, ''));
+  terms.add(stemMavenModule(mod));
   for (const pn of service.product_names || []) {
     terms.add(String(pn).toLowerCase().replace(/\s+/g, ''));
     for (const w of String(pn).toLowerCase().split(/\s+/)) {

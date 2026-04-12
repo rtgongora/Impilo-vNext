@@ -4,7 +4,8 @@
   "description": "Seven-dimension service completeness report (Phase A2)",
   "type": "module",
   "scripts": {
-    "report": "node generate-completeness-report.mjs"
+    "report": "node generate-completeness-report.mjs",
+    "emit-stubs": "node emit-missing-openapi-stubs.mjs"
   },
   "dependencies": {
     "js-yaml": "^4.1.0"
