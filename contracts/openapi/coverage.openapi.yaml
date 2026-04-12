@@ -1,23 +1,27 @@
 # =============================================================================
 # Coverage Service — OpenAPI 3.0
 #
-# Contract aligned with Spring controllers under
-# services/coverage-service/.../coverage/api (internal rails).
-# Trust headers mirror VARAPI / CompanionHeaders conventions.
+# Full internal contract: controllers under
+# `services/coverage-service/.../coverage/api` (plus utilization reads).
+# Format follows `varapi.openapi.yaml` (tags, trust headers, bearerAuth).
+#
+# There is no dedicated v1.1 tech-companion probe controller in coverage-service
+# (`/internal/v1/health` is not implemented here). `ProbeHealthBody` is included
+# in components for shared tooling / future alignment with Envoy companion probes.
 # =============================================================================
 openapi: "3.0.3"
 
 info:
   title: Coverage Service API
-  version: "1.0.0"
+  version: "2.0.0"
   description: |
     Internal coverage plane: eligibility (member + mesh-internal), plans,
     claims, pre-authorisation, remittances, appeals, utilization, member
     contributions, provider contracts, and provider networks.
 
-    Header requirements follow controller method signatures: many write paths
-    require `X-Tenant-ID`, `X-Pod-ID`, and `X-Correlation-ID`; some reads only
-    require `X-Tenant-ID`.
+    Write paths that emit domain events use mandatory companion-style headers
+    (`X-Tenant-ID`, `X-Pod-ID`, `X-Request-ID`, `X-Correlation-ID`) where the
+    Spring controllers require them; some reads only require `X-Tenant-ID`.
   contact:
     name: Impilo Platform Team
   license:
@@ -36,6 +40,8 @@ security:
   - bearerAuth: []
 
 tags:
+  - name: Internal-Probe
+    description: Reserved — v1.1 companion probe schema only (no `/health` route in this service)
   - name: Internal-Eligibility-Mesh
     description: CPID-based mesh eligibility (MUSHEX and other rails)
   - name: Eligibility
@@ -111,6 +117,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/TenantId"
         - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
         - $ref: "#/components/parameters/CorrelationId"
       requestBody:
         required: true
@@ -134,6 +141,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/TenantId"
         - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
         - $ref: "#/components/parameters/CorrelationId"
       requestBody:
         required: true
@@ -173,6 +181,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/TenantId"
         - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
         - $ref: "#/components/parameters/CorrelationId"
       requestBody:
         required: true
@@ -357,6 +366,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/TenantId"
         - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
         - $ref: "#/components/parameters/CorrelationId"
       requestBody:
         required: true
@@ -404,6 +414,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/TenantId"
         - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
         - $ref: "#/components/parameters/CorrelationId"
       requestBody:
         required: true
@@ -450,6 +461,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/TenantId"
         - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
         - $ref: "#/components/parameters/CorrelationId"
         - name: id
           in: path
@@ -499,6 +511,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/TenantId"
         - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
         - $ref: "#/components/parameters/CorrelationId"
       requestBody:
         required: true
@@ -589,11 +602,8 @@ paths:
       parameters:
         - $ref: "#/components/parameters/TenantId"
         - $ref: "#/components/parameters/PodId"
-        - name: X-Correlation-ID
-          in: header
-          required: false
-          schema:
-            type: string
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationIdOptional"
       requestBody:
         required: true
         content:
@@ -639,11 +649,8 @@ paths:
       parameters:
         - $ref: "#/components/parameters/TenantId"
         - $ref: "#/components/parameters/PodId"
-        - name: X-Correlation-ID
-          in: header
-          required: false
-          schema:
-            type: string
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationIdOptional"
         - name: id
           in: path
           required: true
@@ -676,11 +683,8 @@ paths:
       parameters:
         - $ref: "#/components/parameters/TenantId"
         - $ref: "#/components/parameters/PodId"
-        - name: X-Correlation-ID
-          in: header
-          required: false
-          schema:
-            type: string
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationIdOptional"
         - name: id
           in: path
           required: true
@@ -743,6 +747,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/TenantId"
         - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
         - $ref: "#/components/parameters/CorrelationId"
       requestBody:
         required: true
@@ -789,6 +794,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/TenantId"
         - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
         - $ref: "#/components/parameters/CorrelationId"
         - name: contractId
           in: path
@@ -818,6 +824,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/TenantId"
         - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
         - $ref: "#/components/parameters/CorrelationId"
         - name: contractId
           in: path
@@ -864,6 +871,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/TenantId"
         - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
         - $ref: "#/components/parameters/CorrelationId"
       requestBody:
         required: true
@@ -908,6 +916,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/TenantId"
         - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
         - $ref: "#/components/parameters/CorrelationId"
         - name: networkId
           in: path
@@ -937,6 +946,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/TenantId"
         - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
         - $ref: "#/components/parameters/CorrelationId"
         - name: networkId
           in: path
@@ -974,10 +984,23 @@ components:
       required: true
       schema:
         type: string
+    RequestId:
+      name: X-Request-ID
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
     CorrelationId:
       name: X-Correlation-ID
       in: header
       required: true
+      schema:
+        type: string
+    CorrelationIdOptional:
+      name: X-Correlation-ID
+      in: header
+      required: false
       schema:
         type: string
 
@@ -985,4 +1008,24 @@ components:
     JsonObject:
       type: object
       description: Align JSON fields with Java DTOs in coverage-service (iterative tightening).
+      additionalProperties: true
+
+    ProbeHealthBody:
+      type: object
+      description: Same shape as VARAPI v1.1 internal health echo (not returned by coverage-service today).
+      properties:
+        service:
+          type: string
+          example: coverage
+        status:
+          type: string
+          example: UP
+        tenant_id:
+          type: string
+        pod_id:
+          type: string
+        request_id:
+          type: string
+        correlation_id:
+          type: string
       additionalProperties: true

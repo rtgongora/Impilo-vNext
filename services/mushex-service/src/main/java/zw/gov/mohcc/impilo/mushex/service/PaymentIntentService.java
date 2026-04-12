@@ -108,7 +108,15 @@ public class PaymentIntentService {
         }
         log.info("Provider credential verification passed before intent create: providerId={} status={} ref={}",
                 providerId, cred.status(), cred.verificationRef());
-        assertActiveProviderContractIfApplicable(ctx.tenantId(), metadata, facility);
+
+        String payerId = readMetadataField(metadata, "payer_id", "payerId", "insurer_id", "insurerId");
+        if (payerId != null && !payerId.isBlank()) {
+            if (!providerContractClient.hasActiveContract(ctx.tenantId().toString(), facility.toString(), payerId)) {
+                log.warn("No active contract for facility={} payer={} — blocking payment", facility, payerId);
+                throw new IllegalStateException(
+                        "No active provider contract for this facility and payer combination");
+            }
+        }
 
         // Idempotency check: return existing intent if key already used
         Optional<PaymentIntentEntity> existing = intentRepository.findByIdempotencyKey(idempotencyKey);
@@ -316,23 +324,6 @@ public class PaymentIntentService {
         }
         String metaPid = readMetadataField(intent.getMetadata(), "provider_id", "providerId");
         return subjectId.equals(metaPid);
-    }
-
-    private void assertActiveProviderContractIfApplicable(UUID tenantId, String metadataJson, UUID facilityId) {
-        String payer = readMetadataField(metadataJson, "payer_id", "payerId", "insurer_id", "insurerId");
-        String provider = readMetadataField(metadataJson, "provider_id", "providerId");
-        if (provider == null || provider.isBlank()) {
-            provider = facilityId != null ? facilityId.toString() : null;
-        }
-        if (payer == null || payer.isBlank() || provider == null || provider.isBlank()) {
-            log.debug("Skipping payer–provider contract gate (missing payer/provider in metadata) tenant={} facility={}",
-                    tenantId, facilityId);
-            return;
-        }
-        if (!providerContractClient.hasActiveContract(tenantId.toString(), provider, payer)) {
-            throw new IllegalStateException(
-                    "No active provider contract for payer=" + payer + " provider=" + provider);
-        }
     }
 
     private String readMetadataField(String metadataJson, String... keys) {
