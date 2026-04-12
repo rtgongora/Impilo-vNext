@@ -1,0 +1,25 @@
+asyncapi: '2.6.0'
+info:
+  title: Impilo — Data ingestion bronze (pattern consumer)
+  version: '0.1.0'
+  description: |
+    Runtime uses Spring `topicPattern` (`ingestion.kafka.topic-pattern`, default `impilo\..*`), not a
+    fixed topic list. This file documents the **envelope** shape only; see `BronzeEventKafkaConsumer`.
+defaultContentType: application/json
+
+channels:
+  impilo.example.topic:
+    description: >
+      Illustrative channel only. Production consumes all topics matching the configured regex.
+    subscribe:
+      operationId: consumeBronzeEnvelope
+      message:
+        $ref: '#/components/messages/IngestEventRequest'
+
+components:
+  messages:
+    IngestEventRequest:
+      summary: Parsed JSON from Kafka value (see data-ingestion-service DTO)
+      payload:
+        type: object
+        additionalProperties: true

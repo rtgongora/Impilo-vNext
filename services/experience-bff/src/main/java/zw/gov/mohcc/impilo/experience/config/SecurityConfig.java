@@ -217,6 +217,10 @@ public class SecurityConfig {
                     .requestMatchers("/internal/v1/mobile/citizen/wellness/**")
                             .authenticated()
 
+                    // ── Citizen monitoring devices (shell + mobile): same trust bar as wellness until ABAC binds patientId.
+                    .requestMatchers("/internal/v1/mobile/citizen/monitoring/**")
+                            .authenticated()
+
                     // ── Citizen mobile endpoints ──────────────────────────
                     .requestMatchers("/internal/v1/mobile/citizen/**")
                             .hasAnyRole(CITIZEN_ROLES)
@@ -238,6 +242,9 @@ public class SecurityConfig {
                             .authenticated()
                     // ── Integration hub (national routing / dispatch) ───────
                     .requestMatchers("/internal/v1/integration-hub/**")
+                            .hasAnyRole(ADMIN_ROLES)
+                    // ── Registry downstream / shell health (ops / integration validation) ───
+                    .requestMatchers("/internal/v1/registry-downstream/**", "/internal/v1/registry-shell/**")
                             .hasAnyRole(ADMIN_ROLES)
                     // ── Clinical knowledge curation (admin-equivalent) ─────────
                     .requestMatchers("/internal/v1/clinical/curation/**")

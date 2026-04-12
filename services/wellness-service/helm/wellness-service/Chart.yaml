@@ -1,0 +1,6 @@
+apiVersion: v2
+name: wellness-service
+description: "Citizen wellness, wallet, and Health Connect domain API"
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

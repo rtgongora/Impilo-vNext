@@ -683,6 +683,15 @@ services:
     product_names:
       - Schema Registry
     owner_team: TBD
+  - id: wellness-service
+    maven_module: wellness-service
+    plane: experience
+    sovereign: false
+    primary_protocol: rest
+    default_http_port: 8161
+    product_names:
+      - Citizen Wellness & Health Connect
+    owner_team: TBD
   - id: experience-bff
     maven_module: experience-bff
     plane: experience

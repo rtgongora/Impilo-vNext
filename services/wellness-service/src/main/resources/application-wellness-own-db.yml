@@ -1,0 +1,11 @@
+# Optional: run wellness-service on a dedicated PostgreSQL database (ops split from experience_bff).
+# Activate with: SPRING_PROFILES_ACTIVE=wellness-own-db
+# Create database and user in Postgres before first boot; Flyway will apply the same migration set.
+spring:
+  config:
+    activate:
+      on-profile: wellness-own-db
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:impilo_wellness}
+    username: ${DB_USER:impilo}
+    password: ${DB_PASSWORD:impilo}

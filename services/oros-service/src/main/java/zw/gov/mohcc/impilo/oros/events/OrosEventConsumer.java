@@ -38,7 +38,7 @@ import java.util.UUID;
  *   <li>{@code lims.order.status_changed} -- updates order status and progresses worksteps</li>
  *   <li>{@code lims.result.available} -- creates lab results and reconciles if needed</li>
  *   <li>{@code pacs.study.available} -- creates imaging results from PACS studies</li>
- *   <li>{@code pharmacy.dispense.completed} -- creates pharmacy results from dispense events</li>
+ *   <li>{@code pharmacy.dispense.complete} -- creates pharmacy results from dispense events</li>
  * </ul>
  */
 @Service
@@ -304,7 +304,7 @@ public class OrosEventConsumer {
      *
      * @param message the Kafka message payload (JSON)
      */
-    @KafkaListener(topics = "pharmacy.dispense.completed", groupId = "oros-service")
+    @KafkaListener(topics = "pharmacy.dispense.complete", groupId = "oros-service")
     @Transactional
     public void consumePharmacyDispense(String message) {
         try {

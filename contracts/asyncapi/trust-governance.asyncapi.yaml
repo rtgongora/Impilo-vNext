@@ -1,0 +1,42 @@
+asyncapi: '2.6.0'
+info:
+  title: Impilo — Trust, federation, and audit (Kafka)
+  version: '0.1.0'
+  description: |
+    Versioned control-plane topics consumed by PCT, VITO, and TSHEPO; plus tshepo-audit
+    stream. See `kafka-event-catalog.md` §4 and §5.
+defaultContentType: application/json
+
+channels:
+  impilo.control.revocation.v1:
+    description: Cross-service revocation control plane.
+    subscribe:
+      operationId: consumeControlRevocation
+      message:
+        $ref: '#/components/messages/JsonPayload'
+  impilo.federation.pod.revoked.v1:
+    description: Pod federation revocation.
+    subscribe:
+      operationId: consumePodRevoked
+      message:
+        $ref: '#/components/messages/JsonPayload'
+  impilo.federation.pod.reinstated.v1:
+    description: Pod federation reinstatement.
+    subscribe:
+      operationId: consumePodReinstated
+      message:
+        $ref: '#/components/messages/JsonPayload'
+  tshepo.audit.events:
+    description: TSHEPO audit event stream (tshepo-audit-service).
+    subscribe:
+      operationId: consumeTshepoAudit
+      message:
+        $ref: '#/components/messages/JsonPayload'
+
+components:
+  messages:
+    JsonPayload:
+      summary: Service-specific JSON (compact envelope TBD in Phase F)
+      payload:
+        type: object
+        additionalProperties: true

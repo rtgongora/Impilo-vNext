@@ -79,12 +79,31 @@ TOPICS=(
 
     # Clinical
     "pct.encounter.events:3:1"
+    "pct.encounter.started:6:1"
+    "pct.encounter.completed:6:1"
+    "impilo.surv.case.opened.v1:6:1"
+    "impilo.control.revocation.v1:3:1"
+    "impilo.federation.pod.revoked.v1:3:1"
+    "impilo.federation.pod.reinstated.v1:3:1"
+    "butano.resource.created:6:1"
+    "butano.resource.updated:6:1"
+    "butano.reconcile.completed:6:1"
+    "impilo.campaigns.created.v1:3:1"
+    "impilo.campaigns.enrolled.v1:3:1"
+    "impilo.campaigns.dispatched.v1:3:1"
+    "docstore.documents:3:1"
+    "costa.bill.finalized:6:1"
+    "mushex.refund.status.changed:6:1"
     "oros.order.events:3:1"
+    "oros.order.placed:6:1"
+    "oros.order.status_changed:6:1"
+    "oros.result.available:6:1"
     "oros.result.events:3:1"
     "ubomi.visit.events:3:1"
 
     # Pharmacy & Supply Chain
     "pharmacy.dispensing.events:3:1"
+    "pharmacy.dispense.complete:6:1"
     "pharmacy.stock.receipt:3:1"
     "pharmacy.reconcile.result:3:1"
     "inventory.stock.receipt:3:1"
@@ -95,6 +114,7 @@ TOPICS=(
     "msika.procurement.events:3:1"
 
     # Finance
+    "mushex.payment.status.changed:6:1"
     "mushex.claim.events:3:1"
     "costing.allocation.events:3:1"
 

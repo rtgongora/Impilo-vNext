@@ -53,9 +53,9 @@ public class CostaEventConsumer {
         this.objectMapper = objectMapper;
     }
 
-    @KafkaListener(topics = "pct.encounter.opened", groupId = "costa-costing-engine")
+    @KafkaListener(topics = "pct.encounter.started", groupId = "costa-costing-engine")
     @Transactional
-    public void onEncounterOpened(String message, Acknowledgment ack) {
+    public void onEncounterStarted(String message, Acknowledgment ack) {
         try {
             JsonNode event = objectMapper.readTree(message);
             String eventId = text(event, "eventId");
@@ -93,14 +93,14 @@ public class CostaEventConsumer {
             ack.acknowledge();
             log.info("Created encounter {} for PCT journey {}", encounter.getEncounterId(), journeyId);
         } catch (Exception e) {
-            log.error("Failed to process pct.encounter.opened", e);
+            log.error("Failed to process pct.encounter.started", e);
             ack.acknowledge();
         }
     }
 
-    @KafkaListener(topics = "pct.encounter.closed", groupId = "costa-costing-engine")
+    @KafkaListener(topics = "pct.encounter.completed", groupId = "costa-costing-engine")
     @Transactional
-    public void onEncounterClosed(String message, Acknowledgment ack) {
+    public void onEncounterCompleted(String message, Acknowledgment ack) {
         try {
             JsonNode event = objectMapper.readTree(message);
             String eventId = text(event, "eventId");
@@ -116,7 +116,7 @@ public class CostaEventConsumer {
             markProcessed(eventId, "PCT");
             ack.acknowledge();
         } catch (Exception e) {
-            log.error("Failed to process pct.encounter.closed", e);
+            log.error("Failed to process pct.encounter.completed", e);
             ack.acknowledge();
         }
     }
@@ -275,7 +275,7 @@ public class CostaEventConsumer {
             markProcessed(eventId, "PHARMACY");
             ack.acknowledge();
         } catch (Exception e) {
-            log.error("Failed to process pharmacy.dispense.completed", e);
+            log.error("Failed to process pharmacy.dispense.complete", e);
             ack.acknowledge();
         }
     }
@@ -305,7 +305,7 @@ public class CostaEventConsumer {
         }
     }
 
-    @KafkaListener(topics = "mushex.payment.status_changed", groupId = "costa-costing-engine")
+    @KafkaListener(topics = "mushex.payment.status.changed", groupId = "costa-costing-engine")
     @Transactional
     public void onPaymentStatusChanged(String message, Acknowledgment ack) {
         try {
@@ -324,7 +324,7 @@ public class CostaEventConsumer {
             ack.acknowledge();
             log.info("MUSHEX payment {} -> {}", paymentIntentId, status);
         } catch (Exception e) {
-            log.error("Failed to process mushex.payment.status_changed", e);
+            log.error("Failed to process mushex.payment.status.changed", e);
             ack.acknowledge();
         }
     }

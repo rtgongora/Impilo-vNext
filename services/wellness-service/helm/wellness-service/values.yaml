@@ -1,0 +1,43 @@
+replicaCount: 2
+
+image:
+  repository: ghcr.io/mohcc/impilo/wellness-service
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 8161
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: "1"
+    memory: 1Gi
+
+env:
+  SPRING_DATASOURCE_URL: jdbc:postgresql://postgresql.impilo-data.svc.cluster.local:5432/experience_bff
+  SPRING_DATASOURCE_USERNAME: impilo
+  SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://auth.impilo.gov.zw/realms/impilo
+
+livenessProbe:
+  httpGet:
+    path: /actuator/health/liveness
+    port: 8161
+  initialDelaySeconds: 45
+  periodSeconds: 15
+
+readinessProbe:
+  httpGet:
+    path: /actuator/health/readiness
+    port: 8161
+  initialDelaySeconds: 20
+  periodSeconds: 10
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 70

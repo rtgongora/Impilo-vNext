@@ -4,7 +4,13 @@
   "description": "Seven-dimension service completeness report (Phase A2)",
   "type": "module",
   "scripts": {
-    "report": "node generate-completeness-report.mjs"
+    "report": "node generate-completeness-report.mjs",
+    "emit-stubs": "node emit-missing-openapi-stubs.mjs",
+    "sync-ui-refs": "node sync-registry-ui-refs.mjs",
+    "sync-bff-downstreams": "node sync-registry-bff-downstreams.mjs",
+    "add-springdoc": "node add-springdoc-to-service-poms.mjs",
+    "add-spring-kafka": "node add-spring-kafka-to-service-poms.mjs",
+    "sync-platform-wave": "npm run sync-bff-downstreams && npm run sync-ui-refs && npm run add-springdoc && npm run add-spring-kafka && npm run report"
   },
   "dependencies": {
     "js-yaml": "^4.1.0"

@@ -86,7 +86,7 @@ The following services use non-v1.1 event type naming (uppercase enum-style) and
 | Service | Example Event Type | Target Pattern |
 |---------|-------------------|----------------|
 | pct | `JOURNEY_CREATED` | `impilo.pct.journey.created.v1` |
-| pharmacy | `DISPENSE_COMPLETED` | `impilo.pharmacy.dispense.completed.v1` |
+| pharmacy | `DISPENSE_COMPLETED` | `impilo.pharmacy.dispense.completed.v1` (today: Kafka topic `pharmacy.dispense.complete`) |
 | inventory | `LEDGER_EVENT_CREATED` | `impilo.inventory.ledger-event.created.v1` |
 | mushex | `CLAIM_SUBMITTED` | `impilo.mushex.claim.submitted.v1` |
 | tshepo-identity | `MAPPING_CREATED` | `impilo.tshepo-identity.mapping.created.v1` |

@@ -2,6 +2,8 @@
 
 This document captures the **execution-oriented** roadmap for closing gaps across **backend → contracts → BFF → Experience → integration hooks**, aligned with the Health OS experience doctrine ([`docs/doctrine/health-os-doctrine.md`](../doctrine/health-os-doctrine.md)). It is tuned for **implementation by AI agents (e.g. Cursor) with optional parallelization**, not for calendar-week estimates of a human-only team.
 
+**Citizen life–linked product waves** (wellness, intelligence, marketplace, IoT) — including Wave **0** contract gate and release definition of done — live in [`citizen-life-full-implementation.md`](./citizen-life-full-implementation.md).
+
 ---
 
 ## Context (why this exists)
@@ -36,7 +38,7 @@ Phases are ordered by **dependency**. **Agent cycles** = bounded agent run + hum
 | **B** | Contracts: policy + backfill **per domain** (TSHEPO, registry, clinical, finance, data, knowledge) | **Yes — one agent per domain** once naming convention locked | **~1 cycle per domain** for first pass; **+1** per domain if Spectral + sample contract tests added |
 | **C** | BFF: route map doc + client normalization **per domain** | Parallel **per domain** after B contracts for that domain exist | **Baseline complete** (2026-04-11 — 2026-04-12); per-domain polish as needed |
 | **D** | Experience: remove placeholders, wire search, public-health hardening | Parallel **per feature** (search vs public-health vs friction) | **Baseline complete** (2026-04-12 — search, public-health honesty, admin integration hub, guard/BFF alignment) |
-| **E** | Event catalog + AsyncAPI or schema table for Kafka surfaces | Parallel **per bounded context** (e.g. clinical vs finance outbox) | **1–2** cycles total if starting with inventory + highest-traffic topics, not exhaustive day-one |
+| **E** | Event catalog + AsyncAPI or schema table for Kafka surfaces | Parallel **per bounded context** (e.g. clinical vs finance outbox) | **Complete** (2026-04-12): [`kafka-event-catalog.md`](../architecture/kafka-event-catalog.md) + [`contracts/asyncapi/`](../../contracts/asyncapi/README.md) (all in-repo listeners, major outboxes, BUTANO/campaigns/doc/msika-flow/data-ingestion); consumer/topic fixes in §3 |
 | **F** | Per-service playbook to “green” in completeness report | **Highly parallel — one agent per service** once A–E patterns exist | **~0.5–1 cycle** per small service; **2–4 cycles** for TSHEPO, BUTANO stack, or BFF-heavy surfaces |
 
 **Baseline credible** (A0–A2 + one contract domain + matching BFF + one smoke): often **~3–6** agent cycles with review.
@@ -74,7 +76,7 @@ Cycle 3 (parallel):   Agent-1: B-registry (varapi/tuso/zibo/ubomi)
 
 Cycle 4 (parallel):   Agent-1: D-search vertical (BFF route + hook + page)
                       Agent-2: D-public-health (wire or feature-flag)
-                      Agent-3: E event inventory slice-1
+                      Agent-3: E Kafka catalog + AsyncAPI (complete)
 
 Cycle 5+ (parallel):  F: pick N services from report; N agents; strict file ownership per service
 ```
@@ -146,11 +148,13 @@ flowchart LR
 
 **Phase B (in progress):** OpenAPI baselines under [`contracts/openapi/`](../../contracts/openapi/) — registry slice (VARAPI, TUSO, UBOMI) landed; **+** INDAWO, Product Registry, Coverage, Guidance, Clinical Knowledge Platform; **+** Search, Forms, Notification, Rules; **+** registry mapping fixes (`costing-engine-service` → COSTA contract, `butano-fhir` module key); **+** workflow, integration-hub, FHIR gateway control plane, data governance, surveillance, campaigns. Remaining: trust/TSHEPO decomposition, more integration adapters, FHIR-only narrative for BUTANO stack.
 
-**Phase C (complete):** BFF — [`experience-bff-downstream-route-map.md`](../architecture/experience-bff-downstream-route-map.md); [`experience-bff-phase-c-domain-mapping.md`](../architecture/experience-bff-phase-c-domain-mapping.md) (clients ↔ config ↔ contracts); generated [`experience-bff-internal-routes.md`](../architecture/experience-bff-internal-routes.md) (`scripts/bff-routes/list-bff-internal-routes.mjs`); integration hub + search + pharmacy upstream proxies; shared `RestTemplate` for Keycloak / Orthanc / FHIR publish / admin Keycloak calls.
+**Phase C (complete):** BFF — [`experience-bff-downstream-route-map.md`](../architecture/experience-bff-downstream-route-map.md); [`experience-bff-phase-c-domain-mapping.md`](../architecture/experience-bff-phase-c-domain-mapping.md) (clients ↔ config ↔ contracts); generated [`experience-bff-internal-routes.md`](../architecture/experience-bff-internal-routes.md) (`scripts/bff-routes/list-bff-internal-routes.mjs`); integration hub + search + pharmacy upstream proxies; shared `RestTemplate` for Keycloak / Orthanc / FHIR publish / admin Keycloak calls. **Phase F (slice):** **`wellness-service`** (8161) — citizen wellness + Health Connect domain API; Experience BFF proxies those paths to the service (`wellness-base-url`).
 
 **Phase D (complete):** Experience UI — honest surfaces vs `/internal/v1/...`, TanStack Query hooks. **Delivered:** federated search → [`useKnowledgeSearch`](../../ui/experience/src/hooks/queries/useKnowledgeSearch.ts) + BFF `/internal/v1/search`; public-health tabs stripped of fabricated operational rows (weekly IDSR, field rosters) with explicit “no API” states where the BFF has no contract; [`/public-health`](../../ui/experience/src/lib/routes.ts) route guard aligned to **`PUBLIC_HEALTH`** (matches BFF `PUBLIC_HEALTH_ROLES`, including **`DEVELOPER`** for governed dev access); admin **Integration status** → [`useIntegrationHub`](../../ui/experience/src/hooks/queries/useIntegrationHub.ts) calling BFF `/internal/v1/integration-hub/routes` and `.../deadletters` (BFF restricts hub to **`ADMIN_ROLES`**). **Residual:** other Experience routes may still carry placeholders — track as **F** per-route waivers or small **D+** slices.
 
-**Next concrete wave:** **Phase E** — event catalog + AsyncAPI or schema table for Kafka surfaces (can overlap Phase B where topic naming is stable).
+**Phase E (complete):** Kafka inventory + AsyncAPI anchors for the **Java codebase in this repo** — [`kafka-event-catalog.md`](../architecture/kafka-event-catalog.md) (full `@KafkaListener` matrix §5, outbox publishers §6, finance/OROS/pharmacy §§7–8, BUTANO §9, campaigns §10, document store §11, Msika Flow §12, data-ingestion §13, reconciliation log §3). AsyncAPI: [`contracts/asyncapi/README.md`](../../contracts/asyncapi/README.md) (seven YAML files: PCT/surveillance, finance/OROS/pharmacy, trust/federation/audit, BUTANO, campaigns, document store, bronze ingest). **Not in Phase E scope:** exhaustive JSON Schemas per payload, notification-service (no Kafka listeners in-repo), CI topic-drift gates — track under **Phase F**.
+
+**Next concrete wave:** **Phase F** — per-service completeness (ports → contract → backend → BFF → Experience → smoke) using the seven-dimension playbook; enrich AsyncAPI payloads with `$ref` schemas as services harden.
 
 **Parallel:** finish Phase B tails (TSHEPO REST slices, integration adapters, BUTANO FHIR narrative) where still missing contracts.
 
@@ -173,3 +177,9 @@ flowchart LR
 | 2026-04-12 | Phase C: `scripts/bff-routes` + generated `experience-bff-internal-routes.md`; roadmap next step → D after C domain mapping. |
 | 2026-04-12 | Phase C **closed**: integration hub + search/pharmacy upstream BFF; shared `RestTemplate`; internal routes regenerated; Phase **D** opened (search UI wired to `/internal/v1/search`). |
 | 2026-04-12 | Phase D **closed** (roadmap slices): public-health UI honesty + counters; admin integration-status wired to hub APIs; `/public-health` guard + BFF `PUBLIC_HEALTH_ROLES` include `DEVELOPER`; integration hub BFF path restricted to admin-equivalent roles; Vitest coverage for `PUBLIC_HEALTH` guard matching. |
+| 2026-04-12 | Phase E **slice 1**: `docs/architecture/kafka-event-catalog.md` + `contracts/asyncapi/README.md`; documented BFF upstream topics and producer/consumer naming gaps (PCT encounter, surveillance). |
+| 2026-04-12 | Phase **F** slice: `wellness-service` (port 8161) for citizen wellness + Health Connect; BFF `WellnessServiceProxyController` + `wellness-base-url`; registry + port matrix + `wellness.openapi.yaml`. |
+| 2026-04-12 | Phase E **slice 2**: aligned PCT encounter Kafka topics + payloads (pct-service, costing-engine, experience-bff); BFF surveillance → `impilo.surv.case.opened.v1`; `pct-clinical-encounter.asyncapi.yaml`; catalog §3 reconciliation log; DR + bootstrap topic lists. |
+| 2026-04-12 | Phase E **slice 3**: finance/OROS/pharmacy catalog + `finance-oros-pharmacy.asyncapi.yaml`; `pharmacy.dispense.complete` + `mushex.payment.status.changed` consumer alignment; inventory ledger topic in DR docs. |
+| 2026-04-12 | Phase E **closed**: expanded `kafka-event-catalog.md` (BUTANO, campaigns, docstore, Msika Flow, bronze ingest, full listener table); added trust/butano/campaigns/document/data-ingestion AsyncAPI stubs; roadmap + registry mark **E complete**; **Phase F** is next primary execution wave. |
+| 2026-04-12 | Linked **citizen life–linked** roadmap (`citizen-life-full-implementation.md`); wellness v1 + monitoring v1 OpenAPI baselines for Wave 0. |

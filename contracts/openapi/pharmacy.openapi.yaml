@@ -269,7 +269,7 @@ paths:
       description: |
         Marks the order as COMPLETED — all items have been dispensed. Triggers
         stock deduction, OROS writeback (order status update), and MUSHEX
-        charge event. Publishes pharmacy.dispense.completed event.
+        charge event. Publishes Kafka topic `pharmacy.dispense.complete` (DISPENSE_COMPLETED outbox).
       tags: [Dispense Orders]
       parameters:
         - $ref: "#/components/parameters/OrderIdPath"

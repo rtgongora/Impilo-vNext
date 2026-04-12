@@ -34,6 +34,7 @@ Links **typed HTTP clients**, **`impilo.services` / other config**, **downstream
 | `IntegrationHubServiceClient` | `integration-hub-base-url` | 8110 | `integration-hub` | `integration-hub.openapi.yaml` |
 | `GuidanceServiceClient` | `guidance-base-url` | 8260 | `guidance-service` | `guidance.openapi.yaml` |
 | `ClinicalKnowledgePlatformClient` | `impilo.clinical-platform.base-url` | 8270 | `clinical-knowledge-platform-service` | `clinical-knowledge-platform.openapi.yaml` |
+| *(HTTP proxy, no named `*Client` bean)* | `impilo.services.wellness-base-url` | 8161 | `wellness-service` | `wellness.openapi.yaml` (wellness v1) + [`monitoring.openapi.yaml`](../../contracts/openapi/monitoring.openapi.yaml) (monitoring v1 device registry) |
 
 `RestTemplate` + `ServiceEndpoints` (no dedicated bean): **`PublicHealthController`** → `surveillance-base-url`, `campaigns-base-url`, `indawo-base-url`; **`AccessChannelsController`**, **`ClinicalToolsController`**, **`AiGovernanceController`**, **`MobileGovernanceController`** → `landela-base-url`, `data-governance-base-url`, etc. (see each controller).
 
@@ -72,6 +73,8 @@ These are **aggregates** (one prefix may fan out to several downstream calls). F
 
 Some controllers use **BFF PostgreSQL** (`JdbcTemplate`, JPA repositories) only — e.g. **`PatientController`**, **`InventoryController`** under `/internal/v1/patients`, `/inventory`. **`PharmacyController`** is hybrid: prescriptions and local dispense stay on the BFF DB; **`/internal/v1/pharmacy/upstream/**`** delegates to `PharmacyServiceClient`.
 
+**Citizen “My Life” mobile API** (`/internal/v1/mobile/citizen/**`, including health ID, wellness, wallet, SOS, clubs, crowdfunding, service discovery) and **Health Connect** (`/internal/v1/wellness/connect/**`) are **not BFF-local**: the BFF **`WellnessServiceProxyController`** forwards the same paths + trust headers to **`wellness-service`** (port **8161**, `impilo.services.wellness-base-url` / `WELLNESS_SERVICE_BASE_URL`). By default persistence stays on the Experience BFF PostgreSQL database (`DB_NAME=experience_bff`); profile **`wellness-own-db`** points the service at a separate database for ops splits.
+
 ---
 
 ## 4. Phase C follow-ups
@@ -82,5 +85,6 @@ No open items from the original Phase C gap list. **Phase D** (Experience shell)
 
 ## Related
 
+- Kafka topic inventory (**Phase E complete**): [`kafka-event-catalog.md`](./kafka-event-catalog.md) · AsyncAPI [`../../contracts/asyncapi/README.md`](../../contracts/asyncapi/README.md)
 - Registry: [`docs/registry/services-registry.yaml`](../registry/services-registry.yaml)
 - Completeness mapper: [`scripts/completeness/generate-completeness-report.mjs`](../../scripts/completeness/generate-completeness-report.mjs) (`OPENAPI_BY_MODULE`, `BFF_CLIENT_BY_MODULE`)

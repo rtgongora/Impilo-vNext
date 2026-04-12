@@ -28,7 +28,7 @@ import java.util.UUID;
  * <ul>
  *   <li>{@code oros.order.status_changed} — updates task status when orders complete or fail</li>
  *   <li>{@code oros.result.available} — creates a task for clinical result review</li>
- *   <li>{@code mushex.payment.status_changed} — auto-clears PAYMENT discharge blocker when payment is settled</li>
+ *   <li>{@code mushex.payment.status.changed} — auto-clears PAYMENT discharge blocker when payment is settled</li>
  *   <li>{@code tuso.workspace.updated} — logs workspace configuration changes for cache invalidation</li>
  * </ul>
  */
@@ -150,7 +150,7 @@ public class PctEventConsumer {
      *
      * @param message the Kafka message payload (JSON)
      */
-    @KafkaListener(topics = "mushex.payment.status_changed", groupId = "pct-service")
+    @KafkaListener(topics = "mushex.payment.status.changed", groupId = "pct-service")
     public void consumeMushexPaymentStatus(String message) {
         try {
             JsonNode event = objectMapper.readTree(message);

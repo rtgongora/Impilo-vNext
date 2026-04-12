@@ -158,6 +158,8 @@
         <!-- Developer & Governance Platform -->
         <module>developer-portal-service</module>
         <module>schema-registry-service</module>
+        <!-- Citizen wellness + Health Connect domain (Experience BFF proxies) -->
+        <module>wellness-service</module>
         <!-- Experience Platform BFF -->
         <module>experience-bff</module>
         <!-- Clinical Knowledge & EDLIZ-aligned guidance platform -->
