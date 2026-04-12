@@ -1,7 +1,9 @@
 package zw.gov.mohcc.impilo.assetregistry.core;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -214,6 +216,41 @@ public class AssetService {
     @Transactional(readOnly = true)
     public Page<AssetEntity> getSnapshot(OffsetDateTime asOf, int page, int size) {
         return assetRepository.findSnapshotAsOf(asOf, PageRequest.of(page, size));
+    }
+
+    /**
+     * Applies IoT / Tuso heartbeat telemetry to {@code last_seen_at} and {@code metadata_json.operational_status}.
+     */
+    @Transactional
+    public void applyDeviceHeartbeat(UUID assetId, UUID tenantId, OffsetDateTime observedAt, String operationalStatus) {
+        AssetEntity asset = assetRepository.findById(assetId)
+                .filter(a -> a.getTenantId().equals(tenantId))
+                .orElse(null);
+        if (asset == null) {
+            log.debug("Heartbeat skipped — asset {} not found for tenant {}", assetId, tenantId);
+            return;
+        }
+        if ("RETIRED".equalsIgnoreCase(asset.getStatus())) {
+            return;
+        }
+        asset.setLastSeenAt(observedAt != null ? observedAt : OffsetDateTime.now());
+        String op = operationalStatus != null && !operationalStatus.isBlank() ? operationalStatus : "ONLINE";
+        try {
+            ObjectNode meta;
+            if (asset.getMetadataJson() == null || asset.getMetadataJson().isBlank()) {
+                meta = objectMapper.createObjectNode();
+            } else {
+                JsonNode parsed = objectMapper.readTree(asset.getMetadataJson());
+                meta = parsed.isObject() ? (ObjectNode) parsed : objectMapper.createObjectNode();
+            }
+            meta.put("operational_status", op);
+            asset.setMetadataJson(objectMapper.writeValueAsString(meta));
+        } catch (Exception e) {
+            log.warn("Heartbeat metadata merge failed for asset {}: {}", assetId, e.getMessage());
+        }
+        asset.setVersion(asset.getVersion() + 1);
+        asset.setUpdatedAt(OffsetDateTime.now());
+        assetRepository.save(asset);
     }
 
     private void appendOutboxEvent(String eventType, String aggregateId,

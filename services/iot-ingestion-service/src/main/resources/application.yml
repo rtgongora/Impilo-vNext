@@ -28,8 +28,19 @@ spring:
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER:http://localhost:8080/realms/impilo}
 
 impilo:
+  security:
+    # Use `oauth2` in deployed environments; `permit-all` for local sandboxes without Keycloak.
+    mode: ${IMPILO_SECURITY_MODE:oauth2}
   companion:
     enabled: true
   telemetry:
@@ -37,3 +48,7 @@ impilo:
       enabled: ${TELEMETRY_KAFKA_ENABLED:false}
       topic: ${TELEMETRY_KAFKA_TOPIC:impilo.iot.telemetry.device.raw}
       group-id: ${TELEMETRY_KAFKA_GROUP:iot-ingestion-telemetry-cg}
+
+iot-ingestion:
+  outbox:
+    poll-interval-ms: ${IOT_OUTBOX_POLL_INTERVAL_MS:2000}

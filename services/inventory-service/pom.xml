@@ -108,6 +108,13 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- Shared Kernel — Companion outbox publisher -->
+        <dependency>
+            <groupId>zw.gov.mohcc.impilo</groupId>
+            <artifactId>shared-kernel-java</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- Tech Companion — v1.1 auto-configuration -->
         <dependency>
             <groupId>zw.gov.mohcc.impilo</groupId>

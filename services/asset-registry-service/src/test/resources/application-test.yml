@@ -1,4 +1,9 @@
 spring:
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
+  kafka:
+    bootstrap-servers: localhost:9092
   datasource:
     url: jdbc:h2:mem:asset_registry_test;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
     username: sa
@@ -16,3 +21,9 @@ spring:
 impilo:
   companion:
     enabled: true
+  security:
+    oauth2-enabled: false
+
+asset-registry:
+  supply:
+    kafka-listeners-enabled: false

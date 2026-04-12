@@ -38,7 +38,8 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${KEYCLOAK_ISSUER:http://localhost:8080/realms/impilo}
+          jwk-set-uri: ${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:impilo}/protocol/openid-connect/certs
+          issuer-uri: ${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:impilo}
 
 # --- Actuator & Metrics ---
 management:
@@ -59,6 +60,10 @@ springdoc:
 
 # --- Inventory-specific ---
 inventory:
+  v11:
+    emit-mode: ${INVENTORY_EMIT_MODE:}
+  supply:
+    kafka-listeners-enabled: true
   outbox:
     poll-interval-ms: 2000
   capability:
