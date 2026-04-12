@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
+import zw.gov.mohcc.impilo.fhirgateway.events.ConsentCacheService;
 
 import java.util.Set;
 import java.util.UUID;
@@ -54,12 +55,15 @@ public class ConsentEnforcementService {
 
     private final RestTemplate restTemplate;
     private final String consentServiceBaseUrl;
+    private final ConsentCacheService consentCacheService;
 
     public ConsentEnforcementService(
             RestTemplate consentRestTemplate,
-            @Value("${fhir-gateway.consent.base-url:http://localhost:8182}") String consentServiceBaseUrl) {
+            @Value("${fhir-gateway.consent.base-url:http://localhost:8182}") String consentServiceBaseUrl,
+            ConsentCacheService consentCacheService) {
         this.restTemplate = consentRestTemplate;
         this.consentServiceBaseUrl = consentServiceBaseUrl;
+        this.consentCacheService = consentCacheService;
     }
 
     /**
@@ -96,7 +100,14 @@ public class ConsentEnforcementService {
             return ConsentOutcome.NOT_APPLICABLE;
         }
 
-        // 4. Call tshepo-consent-service
+        // 4. Local revocation cache (Kafka-fed) — hot path avoids REST latency when revoked
+        if (consentCacheService.isConsentRevoked(tenantId.toString(), subjectCpid)) {
+            log.info("Consent DENY (cached revocation): actor={} subject={} resourceType={} tenant={}",
+                    actorId, subjectCpid, resourceType, tenantId);
+            return ConsentOutcome.DENY;
+        }
+
+        // 5. Call tshepo-consent-service
         try {
             String url = UriComponentsBuilder
                     .fromHttpUrl(consentServiceBaseUrl + "/v1/consent/evaluate")

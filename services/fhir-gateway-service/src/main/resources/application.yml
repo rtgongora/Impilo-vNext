@@ -36,6 +36,16 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      group-id: fhir-gateway
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      enable-auto-commit: false
+      properties:
+        isolation.level: read_committed
+    listener:
+      ack-mode: record
 
 fhir-gateway:
   outbox:
