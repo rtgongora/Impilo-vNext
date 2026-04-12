@@ -79,6 +79,11 @@ class CredentialVaultControllerTest {
                             null,
                             null,
                             null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
                             null));
         }
 

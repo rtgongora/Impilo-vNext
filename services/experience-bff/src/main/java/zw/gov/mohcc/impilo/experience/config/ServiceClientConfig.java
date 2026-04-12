@@ -61,7 +61,12 @@ public class ServiceClientConfig {
             // Health OS §13: Conversational & Guidance
             String guidanceBaseUrl,
             // Integration / cross-tenant routing (integration-hub-service)
-            String integrationHubBaseUrl
+            String integrationHubBaseUrl,
+            String tshepoIdentityBaseUrl,
+            String tshepoKeysBaseUrl,
+            String tshepoOfflineBaseUrl,
+            String ziboBaseUrl,
+            String ubomiBaseUrl
     ) {
         public ServiceEndpoints(
                 String pctBaseUrl,
@@ -112,6 +117,11 @@ public class ServiceClientConfig {
                     null,
                     null,
                     null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
                     null
             );
         }
@@ -145,6 +155,11 @@ public class ServiceClientConfig {
             if (workflowBaseUrl == null) workflowBaseUrl = "http://localhost:8250";
             if (guidanceBaseUrl == null) guidanceBaseUrl = "http://localhost:8260";
             if (integrationHubBaseUrl == null) integrationHubBaseUrl = "http://localhost:8110";
+            if (tshepoIdentityBaseUrl == null) tshepoIdentityBaseUrl = "http://localhost:8181";
+            if (tshepoKeysBaseUrl == null) tshepoKeysBaseUrl = "http://localhost:8184";
+            if (tshepoOfflineBaseUrl == null) tshepoOfflineBaseUrl = "http://localhost:8185";
+            if (ziboBaseUrl == null) ziboBaseUrl = "http://localhost:8085";
+            if (ubomiBaseUrl == null) ubomiBaseUrl = "http://localhost:8087";
         }
     }
 
