@@ -81,6 +81,7 @@ impilo:
     credential-verification-base-url: ${CREDENTIAL_VERIFICATION_BASE_URL:http://localhost:8094}
     credential-verification-enabled: ${CREDENTIAL_VERIFICATION_ENABLED:true}
     credential-payee-verification-enabled: ${CREDENTIAL_PAYEE_VERIFICATION_ENABLED:true}
+    mushe-wallet-base-url: ${MUSHE_WALLET_BASE_URL:http://localhost:8126}
 
 mushex:
   outbox:

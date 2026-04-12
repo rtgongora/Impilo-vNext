@@ -13,6 +13,7 @@ import zw.gov.mohcc.impilo.mushex.domain.enums.SourceType;
 import zw.gov.mohcc.impilo.mushex.domain.repository.EventOutboxRepository;
 import zw.gov.mohcc.impilo.mushex.domain.repository.PaymentIntentRepository;
 import zw.gov.mohcc.impilo.mushex.integration.CredentialVerificationClient;
+import zw.gov.mohcc.impilo.mushex.integration.MusheWalletAdapter;
 import zw.gov.mohcc.impilo.mushex.integration.ProviderContractClient;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
@@ -62,25 +63,31 @@ public class PaymentIntentService {
         VALID_TRANSITIONS.put(IntentStatus.REFUNDED, Set.of());
     }
 
+    /** Payment method metadata key; when set to this value the wallet adapter is used. */
+    public static final String PAYMENT_METHOD_WALLET = "MUSHE_WALLET";
+
     private final PaymentIntentRepository intentRepository;
     private final EventOutboxRepository outboxRepository;
     private final ReceiptService receiptService;
     private final ObjectMapper objectMapper;
     private final CredentialVerificationClient credentialVerificationClient;
     private final ProviderContractClient providerContractClient;
+    private final MusheWalletAdapter musheWalletAdapter;
 
     public PaymentIntentService(PaymentIntentRepository intentRepository,
                                 EventOutboxRepository outboxRepository,
                                 ReceiptService receiptService,
                                 ObjectMapper objectMapper,
                                 CredentialVerificationClient credentialVerificationClient,
-                                ProviderContractClient providerContractClient) {
+                                ProviderContractClient providerContractClient,
+                                MusheWalletAdapter musheWalletAdapter) {
         this.intentRepository = intentRepository;
         this.outboxRepository = outboxRepository;
         this.receiptService = receiptService;
         this.objectMapper = objectMapper;
         this.credentialVerificationClient = credentialVerificationClient;
         this.providerContractClient = providerContractClient;
+        this.musheWalletAdapter = musheWalletAdapter;
     }
 
     /**
@@ -344,6 +351,62 @@ public class PaymentIntentService {
             log.debug("Could not parse intent metadata: {}", e.getMessage());
         }
         return null;
+    }
+
+    /**
+     * Execute payment for an intent using the Mushe Wallet.
+     *
+     * <p>This is the wallet-specific payment path. It reads the patient CPID from
+     * the intent metadata and debits their wallet for the full outstanding amount.
+     * If the intent metadata contains a {@code payment_method} of {@code MUSHE_WALLET},
+     * callers should use this method instead of external payment processors.</p>
+     *
+     * @return the updated intent (will be PAID if the wallet debit succeeds)
+     */
+    @Transactional
+    public PaymentIntentEntity executeWalletPayment(String intentId) {
+        TrustContext ctx = TrustContextHolder.require();
+        PaymentIntentEntity intent = getIntent(intentId);
+
+        if (intent.getStatus() != IntentStatus.CREATED
+                && intent.getStatus() != IntentStatus.PENDING
+                && intent.getStatus() != IntentStatus.AUTHORIZED) {
+            throw new IllegalStateException(
+                    "Cannot execute wallet payment for intent in status: " + intent.getStatus());
+        }
+
+        BigDecimal outstanding = intent.getAmountTotal().subtract(intent.getAmountPaid());
+        if (outstanding.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalStateException("Intent already fully paid: " + intentId);
+        }
+
+        String patientCpid = readMetadataField(intent.getMetadata(),
+                "patient_cpid", "patientCpid", "payer_cpid");
+        if (patientCpid == null || patientCpid.isBlank()) {
+            throw new IllegalStateException(
+                    "Wallet payment requires patient_cpid in intent metadata: " + intentId);
+        }
+
+        MusheWalletAdapter.WalletPaymentResult result = musheWalletAdapter.payFromWallet(
+                ctx.tenantId(),
+                patientCpid,
+                outstanding,
+                intent.getIntentId(),
+                ctx.correlationId() != null ? ctx.correlationId().toString() : null);
+
+        log.info("Wallet payment executed: intentId={} txnId={} status={} amount={}",
+                intentId, result.transactionId(), result.status(), result.amount());
+
+        return recordPayment(intentId, outstanding);
+    }
+
+    /**
+     * Check whether an intent's metadata indicates MUSHE_WALLET as the payment method.
+     */
+    public boolean isWalletPayment(PaymentIntentEntity intent) {
+        String method = readMetadataField(intent.getMetadata(),
+                "payment_method", "paymentMethod");
+        return PAYMENT_METHOD_WALLET.equalsIgnoreCase(method);
     }
 
     /**
