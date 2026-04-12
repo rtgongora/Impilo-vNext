@@ -1,27 +1,380 @@
-openapi: 3.0.3
+# =============================================================================
+# SCHEMA REGISTRY — Event schema catalog & compatibility API (OpenAPI 3.0)
+#
+# Ring 0 primitive: subject/version registration, catalog, and compatibility
+# checks. No V11ProbeController in this service — no /internal/v1/health probe.
+# =============================================================================
+openapi: "3.0.3"
+
 info:
-  title: "Schema Registry"
+  title: Schema Registry — Event schema catalog API
+  version: "1.0.0"
   description: |
-    Phase F baseline contract for `schema-registry-service`. Extend with real paths and schemas as the HTTP surface is stabilised.
-  version: 0.1.0
+    Internal schema registry for Impilo event subjects: register Avro/JSON
+    schemas, list subjects and versions, check compatibility, and browse the
+    catalog.
+
+    Trust headers are enforced by Envoy + TSHEPO companion context.
+  contact:
+    name: Impilo Platform Team
+  license:
+    name: Proprietary
+
 servers:
   - url: http://localhost:8371
-    description: Local default (`default_http_port` in docs/registry/services-registry.yaml)
+    description: Local development
+  - url: https://{tenant}.impilo.health/api
+    description: Production (per-tenant)
+    variables:
+      tenant:
+        default: demo
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Schemas
+    description: Subject registration, versions, compatibility, catalog
 
 paths:
-  /internal/v1/health:
-    get:
-      operationId: internalHealth
-      summary: Internal health probe
-      tags: [Health]
+  /internal/v1/schemas:
+    post:
+      operationId: schemaRegistryRegisterSchema
+      tags: [Schemas]
+      summary: Register a new schema version for a subject
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterSchemaRequest"
       responses:
-        '200':
-          description: Service reachable
+        "201":
+          description: Schema registered
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Registration result map (subject, version, fingerprint, etc.)
+                additionalProperties: true
+        "409":
+          description: Incompatible schema
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
 
+  /internal/v1/schemas/subjects:
+    get:
+      operationId: schemaRegistryListSubjects
+      tags: [Schemas]
+      summary: List all subjects
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+      responses:
+        "200":
+          description: Subject list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubjectListResponse"
+
+  /internal/v1/schemas/subjects/{subject}:
+    get:
+      operationId: schemaRegistryGetSubject
+      tags: [Schemas]
+      summary: Get subject metadata and version index
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: subject
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Subject with versions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubjectDetailResponse"
+        "404":
+          description: Subject not found
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/schemas/subjects/{subject}/versions/{version}:
+    get:
+      operationId: schemaRegistryGetVersion
+      tags: [Schemas]
+      summary: Get a specific schema version document
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: subject
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: version
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Schema version payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SchemaVersionResponse"
+        "404":
+          description: Schema version not found
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/schemas/compatibility:
+    post:
+      operationId: schemaRegistryCheckCompatibility
+      tags: [Schemas]
+      summary: Check proposed schema compatibility for a subject
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompatibilityCheckRequest"
+      responses:
+        "200":
+          description: Compatibility result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CompatibilityCheckResponse"
+
+  /internal/v1/schemas/catalog:
+    get:
+      operationId: schemaRegistryCatalog
+      tags: [Schemas]
+      summary: Event schema catalog with latest version hints
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+      responses:
+        "200":
+          description: Catalog snapshot
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CatalogResponse"
+
 components:
-  schemas: {}
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    TenantId:
+      name: X-Tenant-ID
+      in: header
+      required: true
+      schema:
+        type: string
+    PodId:
+      name: X-Pod-ID
+      in: header
+      required: true
+      schema:
+        type: string
+    RequestId:
+      name: X-Request-ID
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+    CorrelationId:
+      name: X-Correlation-ID
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid authentication
+
+  schemas:
+    ProbeHealthBody:
+      type: object
+      properties:
+        service:
+          type: string
+          example: schema-registry-service
+        status:
+          type: string
+          example: UP
+        tenant_id:
+          type: string
+        pod_id:
+          type: string
+        request_id:
+          type: string
+        correlation_id:
+          type: string
+      additionalProperties: true
+
+    ProbeCommandBody:
+      type: object
+      properties:
+        service:
+          type: string
+        action:
+          type: string
+        request_id:
+          type: string
+        correlation_id:
+          type: string
+        echo:
+          type: object
+          additionalProperties: true
+      additionalProperties: true
+
+    ProbeFederationBody:
+      type: object
+      properties:
+        service:
+          type: string
+        action:
+          type: string
+        pod_id:
+          type: string
+        request_id:
+          type: string
+        correlation_id:
+          type: string
+      additionalProperties: true
+
+    RegisterSchemaRequest:
+      type: object
+      required: [subject, schema]
+      properties:
+        subject:
+          type: string
+        schema:
+          type: string
+          description: Schema definition (e.g. Avro JSON)
+        description:
+          type: string
+
+    SubjectListResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              subject:
+                type: string
+              compatibility:
+                type: string
+              description:
+                type: string
+        count:
+          type: integer
+
+    SubjectDetailResponse:
+      type: object
+      properties:
+        subject:
+          type: string
+        compatibility:
+          type: string
+        versions:
+          type: array
+          items:
+            type: object
+            properties:
+              version:
+                type: integer
+              fingerprint:
+                type: string
+              created_at:
+                type: string
+
+    SchemaVersionResponse:
+      type: object
+      properties:
+        subject:
+          type: string
+        version:
+          type: integer
+        schema:
+          type: string
+        fingerprint:
+          type: string
+
+    CompatibilityCheckRequest:
+      type: object
+      properties:
+        subject:
+          type: string
+        schema:
+          type: string
+
+    CompatibilityCheckResponse:
+      type: object
+      properties:
+        compatible:
+          type: boolean
+        violations:
+          type: array
+          items:
+            type: string
+
+    CatalogResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        count:
+          type: integer
+        catalog_type:
+          type: string
+          example: event_schema
+        generated_at:
+          type: string

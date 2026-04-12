@@ -1,27 +1,27 @@
 # =============================================================================
-# AUDIT LEDGER — Append-only audit chain API (OpenAPI 3.0)
+# BUTANO FHIR — Internal FHIR resource store API (OpenAPI 3.0)
 #
-# Ring 0 primitive: tamper-evident audit records and chain verification.
-# No V11ProbeController in this service.
+# Ring 0 primitive for versioned FHIR JSON payloads per tenant.
+# Includes ButanoFhirV11ProbeController (health + test-command only).
 # =============================================================================
 openapi: "3.0.3"
 
 info:
-  title: Audit Ledger — Append-only audit chain API
+  title: BUTANO FHIR — Internal FHIR resource API
   version: "1.0.0"
   description: |
-    Internal audit ledger: append structured audit records, fetch by id,
-    paginate by tenant, query by correlation id, and verify Merkle-style chain
-    integrity for a sequence range.
+    Internal FHIR resource persistence: list and fetch stored resources, and
+    create or update by logical id. Payloads are FHIR JSON strings stored in
+    the service database.
 
-    Trust headers are enforced by Envoy + TSHEPO companion context.
+    v1.1 companion probe routes exercise RequestContext enforcement.
   contact:
     name: Impilo Platform Team
   license:
     name: Proprietary
 
 servers:
-  - url: http://localhost:8350
+  - url: http://localhost:8289
     description: Local development
   - url: https://{tenant}.impilo.health/api
     description: Production (per-tenant)
@@ -33,43 +33,35 @@ security:
   - bearerAuth: []
 
 tags:
-  - name: Audit
-    description: Records, query, and chain verification
+  - name: Internal-Probe
+    description: Tech-companion v1.1 header and echo proofs
+  - name: FhirResources
+    description: CRUD-style internal FHIR document storage
 
 paths:
-  /internal/v1/audit/records:
+  /internal/v1/health:
     get:
-      operationId: auditLedgerListRecords
-      tags: [Audit]
-      summary: Paginated list of audit records for the tenant
+      operationId: butanoFhirInternalHealth
+      tags: [Internal-Probe]
+      summary: v1.1 probe — returns trust context echo
       parameters:
         - $ref: "#/components/parameters/TenantId"
         - $ref: "#/components/parameters/PodId"
         - $ref: "#/components/parameters/RequestId"
         - $ref: "#/components/parameters/CorrelationId"
-        - name: cursor
-          in: query
-          required: false
-          schema:
-            type: integer
-            default: 0
-        - name: limit
-          in: query
-          required: false
-          schema:
-            type: integer
-            default: 50
       responses:
         "200":
-          description: Page of audit records
+          description: Service UP with context echo
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AuditRecordPageResponse"
+                $ref: "#/components/schemas/ProbeHealthBody"
+
+  /internal/v1/test-command:
     post:
-      operationId: auditLedgerAppendRecord
-      tags: [Audit]
-      summary: Append a new audit record
+      operationId: butanoFhirInternalTestCommand
+      tags: [Internal-Probe]
+      summary: v1.1 probe — idempotency / echo
       parameters:
         - $ref: "#/components/parameters/TenantId"
         - $ref: "#/components/parameters/PodId"
@@ -80,57 +72,95 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/AppendAuditRecordRequest"
+              type: object
+              additionalProperties: true
       responses:
         "201":
-          description: Record created
+          description: Echo payload
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AuditRecordResponse"
+                $ref: "#/components/schemas/ProbeCommandBody"
 
-  /internal/v1/audit/records/{record_id}:
+  /internal/v1/fhir/resources:
     get:
-      operationId: auditLedgerGetRecord
-      tags: [Audit]
-      summary: Get audit record by id
+      operationId: butanoFhirListResources
+      tags: [FhirResources]
+      summary: List resources by tenant and FHIR resource type
       parameters:
         - $ref: "#/components/parameters/TenantId"
         - $ref: "#/components/parameters/PodId"
         - $ref: "#/components/parameters/RequestId"
         - $ref: "#/components/parameters/CorrelationId"
-        - name: record_id
+        - name: tenantId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: resourceType
+          in: query
+          required: true
+          schema:
+            type: string
+            example: Patient
+      responses:
+        "200":
+          description: Stored resource rows
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FhirResourceEntity"
+            application/fhir+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FhirResourceEntity"
+    post:
+      operationId: butanoFhirCreateOrUpdateResource
+      tags: [FhirResources]
+      summary: Create or update a resource from logical id and payload
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateFhirResourceRequest"
+      responses:
+        "201":
+          description: Persisted resource
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FhirResourceEntity"
+            application/fhir+json:
+              schema:
+                $ref: "#/components/schemas/FhirResourceEntity"
+
+  /internal/v1/fhir/resources/{id}:
+    get:
+      operationId: butanoFhirGetResource
+      tags: [FhirResources]
+      summary: Get a stored resource by surrogate id
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: id
           in: path
           required: true
           schema:
-            type: string
-            format: uuid
-      responses:
-        "200":
-          description: Audit record
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/AuditRecordResponse"
-        "404":
-          description: Not found
-          content:
-            application/json:
-              schema:
-                type: object
-                additionalProperties: true
-
-  /internal/v1/audit/query:
-    get:
-      operationId: auditLedgerQueryByCorrelation
-      tags: [Audit]
-      summary: List records matching a correlation id
-      parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - name: correlation_id
+            type: integer
+            format: int64
+        - name: tenantId
           in: query
           required: true
           schema:
@@ -138,57 +168,14 @@ paths:
             format: uuid
       responses:
         "200":
-          description: Matching records
+          description: Stored resource row
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  items:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/AuditRecordResponse"
-                  count:
-                    type: integer
-
-  /internal/v1/audit/chain/verify:
-    get:
-      operationId: auditLedgerVerifyChain
-      tags: [Audit]
-      summary: Verify chain integrity between sequence bounds
-      parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - name: from_seq
-          in: query
-          required: false
-          schema:
-            type: integer
-            default: 1
-        - name: to_seq
-          in: query
-          required: false
-          schema:
-            type: integer
-            default: 1000
-      responses:
-        "200":
-          description: Verification outcome
-          content:
-            application/json:
+                $ref: "#/components/schemas/FhirResourceEntity"
+            application/fhir+json:
               schema:
-                type: object
-                properties:
-                  valid:
-                    type: boolean
-                  from_seq:
-                    type: integer
-                  to_seq:
-                    type: integer
-                  tenant_id:
-                    type: string
+                $ref: "#/components/schemas/FhirResourceEntity"
 
 components:
   securitySchemes:
@@ -235,7 +222,7 @@ components:
       properties:
         service:
           type: string
-          example: audit-ledger-service
+          example: butano-fhir
         status:
           type: string
           example: UP
@@ -280,80 +267,51 @@ components:
           type: string
       additionalProperties: true
 
-    AppendAuditRecordRequest:
+    CreateFhirResourceRequest:
       type: object
-      required: [correlationId, actorId, actorType, action, resourceType]
+      required: [tenantId, resourceType, resourceId, fhirVersion, payload, correlationId]
       properties:
-        correlationId:
-          type: string
-          format: uuid
-        actorId:
-          type: string
-        actorType:
-          type: string
-        action:
-          type: string
-        resourceType:
-          type: string
-        resourceId:
-          type: string
-        outcome:
-          type: string
-        detail:
-          type: object
-          additionalProperties: true
-
-    AuditRecordResponse:
-      type: object
-      properties:
-        recordId:
-          type: string
-          format: uuid
         tenantId:
           type: string
           format: uuid
-        sequenceNum:
-          type: integer
-          format: int64
-        correlationId:
-          type: string
-          format: uuid
-        actorId:
-          type: string
-        actorType:
-          type: string
-        action:
-          type: string
         resourceType:
           type: string
         resourceId:
           type: string
-        outcome:
+          description: FHIR logical id
+        fhirVersion:
           type: string
-        detail:
-          description: Parsed JSON object when valid; otherwise raw string
-        occurredAt:
+          example: "4.0.1"
+        payload:
           type: string
-          format: date-time
-        prevHash:
-          type: string
-        entryHash:
+          description: FHIR resource JSON document
+        correlationId:
           type: string
 
-    AuditRecordPageResponse:
+    FhirResourceEntity:
       type: object
       properties:
-        items:
-          type: array
-          items:
-            $ref: "#/components/schemas/AuditRecordResponse"
-        cursor:
-          type: string
-          nullable: true
-        limit:
-          type: integer
-        total_elements:
+        id:
           type: integer
           format: int64
-        has_more:
-          type: boolean
+        tenantId:
+          type: string
+          format: uuid
+        resourceType:
+          type: string
+        resourceId:
+          type: string
+        fhirVersion:
+          type: string
+        payload:
+          type: string
+          description: FHIR JSON document
+        status:
+          type: string
+          example: ACTIVE
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
