@@ -120,6 +120,8 @@ const ZONES: SidebarZone[] = [
         { href: "/search", label: "Search", icon: Search },
         { href: "/guidance", label: "Guidance", icon: Lightbulb },
         { href: "/citizen", label: "Citizen services", icon: IdCard },
+        // Health OS Finance Plane: Mushe digital wallet
+        { href: "/wallet", label: "My Wallet", icon: Wallet },
         // Health OS §2: Wellness — prevention, self-care, fitness
         { href: "/wellness", label: "Wellness", icon: Sparkles },
         // Health OS §4: Caregiving — delegated care, family, dependants
@@ -164,6 +166,19 @@ function getSidebarSpotlight(pathname: string): SidebarSpotlight {
       actions: [
         { href: "/registry/providers", label: "Providers", icon: Users },
         { href: "/registry/facilities", label: "Facilities", icon: Building2 },
+      ],
+    };
+  }
+
+  if (pathname.startsWith("/wallet")) {
+    return {
+      title: "Mushe Wallet",
+      description: "Digital wallet for health payments — send, receive, deposit, and manage smart cards.",
+      tone: "border-emerald-400/20 bg-emerald-400/10 text-emerald-100",
+      actions: [
+        { href: "/wallet", label: "Dashboard", icon: Wallet },
+        { href: "/wallet/send", label: "Send Money", icon: ArrowUpRight },
+        { href: "/wallet/cards", label: "Cards", icon: CreditCard },
       ],
     };
   }
