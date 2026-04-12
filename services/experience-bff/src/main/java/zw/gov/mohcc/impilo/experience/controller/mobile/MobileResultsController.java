@@ -5,6 +5,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.OrosServiceClient;
 import zw.gov.mohcc.impilo.experience.controller.ResourceNotFoundException;
 import zw.gov.mohcc.impilo.experience.service.OutboxService;
 
@@ -15,17 +16,23 @@ import java.util.*;
  * Mobile provider lab results endpoints.
  * GET  /internal/v1/mobile/provider/labs/results              - list resulted lab orders for facility
  * POST /internal/v1/mobile/provider/labs/results/{id}/acknowledge - acknowledge a result
+ *
+ * <p>STRANGLER: JdbcTemplate retained for local reads during migration; writes delegated to OrosServiceClient.</p>
  */
 @RestController
 @RequestMapping("/internal/v1/mobile/provider/labs/results")
 public class MobileResultsController {
 
+    // STRANGLER: JdbcTemplate retained for local reads during migration; writes delegated to OrosServiceClient
     private final JdbcTemplate jdbcTemplate;
     private final OutboxService outboxService;
+    private final OrosServiceClient orosClient;
 
-    public MobileResultsController(JdbcTemplate jdbcTemplate, OutboxService outboxService) {
+    public MobileResultsController(JdbcTemplate jdbcTemplate, OutboxService outboxService,
+                                   OrosServiceClient orosClient) {
         this.jdbcTemplate = jdbcTemplate;
         this.outboxService = outboxService;
+        this.orosClient = orosClient;
     }
 
     @GetMapping

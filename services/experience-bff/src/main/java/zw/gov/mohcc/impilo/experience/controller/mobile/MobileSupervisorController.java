@@ -4,6 +4,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
+import zw.gov.mohcc.impilo.experience.client.TusoServiceClient;
 
 import java.util.*;
 
@@ -11,15 +13,25 @@ import java.util.*;
  * Mobile supervisor dashboard endpoints.
  * GET /internal/v1/mobile/provider/supervisor/metrics?facility_id= - facility metrics
  * GET /internal/v1/mobile/provider/supervisor/team?facility_id=    - team members
+ *
+ * <p>STRANGLER: JdbcTemplate retained for local reads during migration; writes delegated to
+ * PctServiceClient + TusoServiceClient.</p>
  */
 @RestController
 @RequestMapping("/internal/v1/mobile/provider/supervisor")
 public class MobileSupervisorController {
 
+    // STRANGLER: JdbcTemplate retained for local reads during migration; writes delegated to PctServiceClient + TusoServiceClient
     private final JdbcTemplate jdbcTemplate;
+    private final PctServiceClient pctClient;
+    private final TusoServiceClient tusoClient;
 
-    public MobileSupervisorController(JdbcTemplate jdbcTemplate) {
+    public MobileSupervisorController(JdbcTemplate jdbcTemplate,
+                                      PctServiceClient pctClient,
+                                      TusoServiceClient tusoClient) {
         this.jdbcTemplate = jdbcTemplate;
+        this.pctClient = pctClient;
+        this.tusoClient = tusoClient;
     }
 
     @GetMapping("/metrics")

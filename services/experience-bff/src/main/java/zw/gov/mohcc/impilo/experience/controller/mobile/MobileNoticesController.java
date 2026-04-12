@@ -10,11 +10,14 @@ import java.util.*;
 /**
  * Mobile provider notices/alerts endpoints.
  * GET /internal/v1/mobile/provider/notices - return professional notices for the provider
+ *
+ * <p>STRANGLER: JdbcTemplate retained for local reads during migration; target sovereign service is notification-service.</p>
  */
 @RestController
 @RequestMapping("/internal/v1/mobile/provider/notices")
 public class MobileNoticesController {
 
+    // STRANGLER: JdbcTemplate retained for local reads during migration; target sovereign service is notification-service
     private final JdbcTemplate jdbcTemplate;
 
     public MobileNoticesController(JdbcTemplate jdbcTemplate) {

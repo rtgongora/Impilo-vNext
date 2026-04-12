@@ -8,6 +8,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 import zw.gov.mohcc.impilo.experience.controller.ResourceNotFoundException;
 import zw.gov.mohcc.impilo.experience.service.OutboxService;
 
@@ -20,17 +21,23 @@ import java.util.*;
  * POST   /internal/v1/mobile/provider/diagnosis                 - record diagnosis
  * GET    /internal/v1/mobile/provider/diagnosis?encounter_id=   - list diagnoses
  * DELETE /internal/v1/mobile/provider/diagnosis/{id}            - delete diagnosis
+ *
+ * <p>STRANGLER: JdbcTemplate retained for local reads during migration; writes delegated to PctServiceClient.</p>
  */
 @RestController
 @RequestMapping("/internal/v1/mobile/provider/diagnosis")
 public class MobileDiagnosisController {
 
+    // STRANGLER: JdbcTemplate retained for local reads during migration; writes delegated to PctServiceClient
     private final JdbcTemplate jdbcTemplate;
     private final OutboxService outboxService;
+    private final PctServiceClient pctClient;
 
-    public MobileDiagnosisController(JdbcTemplate jdbcTemplate, OutboxService outboxService) {
+    public MobileDiagnosisController(JdbcTemplate jdbcTemplate, OutboxService outboxService,
+                                     PctServiceClient pctClient) {
         this.jdbcTemplate = jdbcTemplate;
         this.outboxService = outboxService;
+        this.pctClient = pctClient;
     }
 
     public record RecordDiagnosisRequest(

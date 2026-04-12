@@ -7,6 +7,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 import zw.gov.mohcc.impilo.experience.controller.ResourceNotFoundException;
 import zw.gov.mohcc.impilo.experience.service.OutboxService;
 
@@ -21,17 +22,23 @@ import java.util.*;
  * PATCH /internal/v1/mobile/provider/tasks/{id}               - update status
  * POST  /internal/v1/mobile/provider/tasks/{id}/escalate      - escalate
  * POST  /internal/v1/mobile/provider/tasks/{id}/complete      - complete
+ *
+ * <p>STRANGLER: JdbcTemplate retained for local reads during migration; writes delegated to PctServiceClient.</p>
  */
 @RestController
 @RequestMapping("/internal/v1/mobile/provider/tasks")
 public class MobileTaskController {
 
+    // STRANGLER: JdbcTemplate retained for local reads during migration; writes delegated to PctServiceClient
     private final JdbcTemplate jdbcTemplate;
     private final OutboxService outboxService;
+    private final PctServiceClient pctClient;
 
-    public MobileTaskController(JdbcTemplate jdbcTemplate, OutboxService outboxService) {
+    public MobileTaskController(JdbcTemplate jdbcTemplate, OutboxService outboxService,
+                                PctServiceClient pctClient) {
         this.jdbcTemplate = jdbcTemplate;
         this.outboxService = outboxService;
+        this.pctClient = pctClient;
     }
 
     public record UpdateTaskRequest(

@@ -1,26 +1,33 @@
 package zw.gov.mohcc.impilo.experience.controller.mobile;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.VitoServiceClient;
 
 import java.util.*;
 
 /**
  * Mobile provider search endpoints.
  * POST /internal/v1/mobile/provider/search/qr - decode QR payload and resolve patient.
+ *
+ * <p>STRANGLER: migrated from JdbcTemplate to VitoServiceClient.</p>
  */
 @RestController
 @RequestMapping("/internal/v1/mobile/provider/search")
 public class MobileProviderSearchController {
 
-    private final JdbcTemplate jdbcTemplate;
+    private static final Logger log = LoggerFactory.getLogger(MobileProviderSearchController.class);
 
-    public MobileProviderSearchController(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
+    private final VitoServiceClient vitoClient;
+
+    public MobileProviderSearchController(VitoServiceClient vitoClient) {
+        this.vitoClient = vitoClient;
     }
 
     public record QrSearchRequest(
@@ -34,35 +41,34 @@ public class MobileProviderSearchController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @Valid @RequestBody QrSearchRequest request) {
 
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList("""
-            SELECT p.id, p.cpid, p.given_name, p.family_name, p.date_of_birth, p.sex,
-                   p.national_id, p.phone, p.status, p.facility_id, p.created_at, p.updated_at
-            FROM patients p
-            WHERE p.tenant_id = ?
-              AND (p.cpid = ? OR p.national_id = ? OR p.id::text = ?)
-            LIMIT 10
-            """, tenantId, request.qr_data(), request.qr_data(), request.qr_data());
+        // STRANGLER: migrated to VitoServiceClient — patient search by QR/CPID/national_id
+        // Previously: jdbcTemplate.queryForList("SELECT ... FROM patients p WHERE p.tenant_id = ? AND (p.cpid = ? OR p.national_id = ? OR p.id::text = ?)")
+        List<Map<String, Object>> data = new ArrayList<>();
+        try {
+            JsonNode result = vitoClient.searchClients(request.qr_data());
+            if (result != null && result.isArray()) {
+                for (JsonNode node : result) {
+                    Map<String, Object> attributes = new LinkedHashMap<>();
+                    if (node.has("cpid")) attributes.put("cpid", node.get("cpid").asText());
+                    if (node.has("given_name")) attributes.put("given_name", node.get("given_name").asText());
+                    if (node.has("family_name")) attributes.put("family_name", node.get("family_name").asText());
+                    if (node.has("date_of_birth")) attributes.put("date_of_birth", node.get("date_of_birth").asText());
+                    if (node.has("sex")) attributes.put("sex", node.get("sex").asText());
+                    if (node.has("national_id")) attributes.put("national_id", node.get("national_id").asText());
+                    if (node.has("phone")) attributes.put("phone", node.get("phone").asText());
+                    if (node.has("status")) attributes.put("status", node.get("status").asText());
+                    if (node.has("facility_id")) attributes.put("facility_id", node.get("facility_id").asText());
 
-        List<Map<String, Object>> data = rows.stream().map(row -> {
-            Map<String, Object> attributes = new LinkedHashMap<>();
-            attributes.put("cpid", row.get("cpid"));
-            attributes.put("given_name", row.get("given_name"));
-            attributes.put("family_name", row.get("family_name"));
-            attributes.put("date_of_birth", row.get("date_of_birth"));
-            attributes.put("sex", row.get("sex"));
-            attributes.put("national_id", row.get("national_id"));
-            attributes.put("phone", row.get("phone"));
-            attributes.put("status", row.get("status"));
-            attributes.put("facility_id", row.get("facility_id"));
-            attributes.put("created_at", row.get("created_at"));
-            attributes.put("updated_at", row.get("updated_at"));
-
-            Map<String, Object> resource = new LinkedHashMap<>();
-            resource.put("id", row.get("id").toString());
-            resource.put("type", "Patient");
-            resource.put("attributes", attributes);
-            return resource;
-        }).toList();
+                    Map<String, Object> resource = new LinkedHashMap<>();
+                    resource.put("id", node.has("id") ? node.get("id").asText() : "");
+                    resource.put("type", "Patient");
+                    resource.put("attributes", attributes);
+                    data.add(resource);
+                }
+            }
+        } catch (Exception e) {
+            log.warn("VITO search from mobile QR failed (non-blocking): {}", e.getMessage());
+        }
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", data);

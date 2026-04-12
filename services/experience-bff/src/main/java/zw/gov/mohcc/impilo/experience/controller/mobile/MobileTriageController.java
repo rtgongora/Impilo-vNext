@@ -30,6 +30,7 @@ public class MobileTriageController {
 
     private static final Logger log = LoggerFactory.getLogger(MobileTriageController.class);
 
+    // STRANGLER: JdbcTemplate retained for local reads during migration; writes delegated to PctServiceClient
     private final JdbcTemplate jdbcTemplate;
     private final OutboxService outboxService;
     private final PctServiceClient pctClient;

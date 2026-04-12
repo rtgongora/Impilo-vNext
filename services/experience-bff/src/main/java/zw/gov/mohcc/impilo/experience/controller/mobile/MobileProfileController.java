@@ -5,6 +5,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.VitoServiceClient;
+import zw.gov.mohcc.impilo.experience.client.VarapiServiceClient;
 import zw.gov.mohcc.impilo.experience.controller.ResourceNotFoundException;
 import zw.gov.mohcc.impilo.experience.service.OutboxService;
 
@@ -15,17 +17,26 @@ import java.util.*;
  * Mobile provider profile endpoints.
  * GET   /internal/v1/mobile/provider/profile  - get provider profile
  * PATCH /internal/v1/mobile/provider/profile  - update provider contact/profile details
+ *
+ * <p>STRANGLER: JdbcTemplate retained for local reads during migration; writes delegated to
+ * VitoServiceClient + VarapiServiceClient.</p>
  */
 @RestController
 @RequestMapping("/internal/v1/mobile/provider/profile")
 public class MobileProfileController {
 
+    // STRANGLER: JdbcTemplate retained for local reads during migration; writes delegated to VitoServiceClient + VarapiServiceClient
     private final JdbcTemplate jdbcTemplate;
     private final OutboxService outboxService;
+    private final VitoServiceClient vitoClient;
+    private final VarapiServiceClient varapiClient;
 
-    public MobileProfileController(JdbcTemplate jdbcTemplate, OutboxService outboxService) {
+    public MobileProfileController(JdbcTemplate jdbcTemplate, OutboxService outboxService,
+                                   VitoServiceClient vitoClient, VarapiServiceClient varapiClient) {
         this.jdbcTemplate = jdbcTemplate;
         this.outboxService = outboxService;
+        this.vitoClient = vitoClient;
+        this.varapiClient = varapiClient;
     }
 
     @GetMapping

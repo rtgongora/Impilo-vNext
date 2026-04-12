@@ -21,6 +21,9 @@ import java.util.Map;
 /**
  * Mobile provider governance endpoints — summary, incidents, and notifications
  * for provider-facing mobile app governance visibility.
+ *
+ * <p>STRANGLER: Already delegates to DataGovernanceServiceClient + NotificationServiceClient
+ * via RestTemplate; AuditLogRepository reads retained during migration.</p>
  */
 @RestController
 @RequestMapping("/internal/v1/mobile/provider/governance")

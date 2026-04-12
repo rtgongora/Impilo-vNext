@@ -11,6 +11,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.CostaServiceClient;
+import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
+import zw.gov.mohcc.impilo.experience.client.InpatientServiceClient;
 import zw.gov.mohcc.impilo.experience.controller.ResourceNotFoundException;
 import zw.gov.mohcc.impilo.experience.domain.Encounter;
 import zw.gov.mohcc.impilo.experience.repository.EncounterRepository;
@@ -22,6 +24,9 @@ import java.util.*;
  * Mobile discharge workflow endpoints.
  * POST /internal/v1/mobile/provider/discharge — discharge an encounter from mobile.
  * GET  /internal/v1/mobile/provider/discharge/{encounterId} — get discharge status.
+ *
+ * <p>STRANGLER: JdbcTemplate retained for local reads during migration; writes delegated to
+ * PctServiceClient + InpatientServiceClient + CostaServiceClient.</p>
  */
 @RestController
 @RequestMapping("/internal/v1/mobile/provider/discharge")
@@ -32,15 +37,22 @@ public class MobileDischargeController {
     private final EncounterRepository encounterRepository;
     private final OutboxService outboxService;
     private final CostaServiceClient costaClient;
+    private final PctServiceClient pctClient;
+    private final InpatientServiceClient inpatientClient;
+    // STRANGLER: JdbcTemplate retained for local reads during migration
     private final JdbcTemplate jdbcTemplate;
 
     public MobileDischargeController(EncounterRepository encounterRepository,
                                       OutboxService outboxService,
                                       CostaServiceClient costaClient,
+                                      PctServiceClient pctClient,
+                                      InpatientServiceClient inpatientClient,
                                       JdbcTemplate jdbcTemplate) {
         this.encounterRepository = encounterRepository;
         this.outboxService = outboxService;
         this.costaClient = costaClient;
+        this.pctClient = pctClient;
+        this.inpatientClient = inpatientClient;
         this.jdbcTemplate = jdbcTemplate;
     }
 

@@ -21,11 +21,14 @@ import java.util.*;
  * POST /internal/v1/mobile/provider/messaging/conversations/{id}/messages         - send message
  * POST /internal/v1/mobile/provider/messaging/conversations                       - create conversation
  * POST /internal/v1/mobile/provider/messaging/conversations/{id}/read             - mark read
+ *
+ * <p>STRANGLER: JdbcTemplate retained for local reads during migration; target sovereign service is channels-service.</p>
  */
 @RestController
 @RequestMapping("/internal/v1/mobile/provider/messaging")
 public class MobileMessagingController {
 
+    // STRANGLER: JdbcTemplate retained for local reads during migration; target sovereign service is channels-service
     private final JdbcTemplate jdbcTemplate;
     private final OutboxService outboxService;
 

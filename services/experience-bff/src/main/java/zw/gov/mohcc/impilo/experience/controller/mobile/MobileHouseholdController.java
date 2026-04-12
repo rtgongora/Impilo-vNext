@@ -9,6 +9,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.CommunityServiceClient;
+import zw.gov.mohcc.impilo.experience.client.VitoServiceClient;
 import zw.gov.mohcc.impilo.experience.controller.ResourceNotFoundException;
 import zw.gov.mohcc.impilo.experience.service.OutboxService;
 
@@ -24,17 +26,26 @@ import java.util.*;
  * GET  /internal/v1/mobile/provider/households/{id}/visits         - visit history
  * POST /internal/v1/mobile/provider/screenings                     - record screening
  * POST /internal/v1/mobile/provider/immunizations                  - record immunization
+ *
+ * <p>STRANGLER: JdbcTemplate retained for local reads during migration; writes delegated to
+ * CommunityServiceClient + VitoServiceClient.</p>
  */
 @RestController
 @RequestMapping("/internal/v1/mobile/provider")
 public class MobileHouseholdController {
 
+    // STRANGLER: JdbcTemplate retained for local reads during migration; writes delegated to CommunityServiceClient + VitoServiceClient
     private final JdbcTemplate jdbcTemplate;
     private final OutboxService outboxService;
+    private final CommunityServiceClient communityClient;
+    private final VitoServiceClient vitoClient;
 
-    public MobileHouseholdController(JdbcTemplate jdbcTemplate, OutboxService outboxService) {
+    public MobileHouseholdController(JdbcTemplate jdbcTemplate, OutboxService outboxService,
+                                     CommunityServiceClient communityClient, VitoServiceClient vitoClient) {
         this.jdbcTemplate = jdbcTemplate;
         this.outboxService = outboxService;
+        this.communityClient = communityClient;
+        this.vitoClient = vitoClient;
     }
 
     public record RegisterHouseholdRequest(

@@ -8,6 +8,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.PharmacyServiceClient;
 import zw.gov.mohcc.impilo.experience.controller.ResourceNotFoundException;
 import zw.gov.mohcc.impilo.experience.service.OutboxService;
 
@@ -19,17 +20,23 @@ import java.util.*;
  * POST /internal/v1/mobile/provider/prescriptions              - create prescription
  * GET  /internal/v1/mobile/provider/prescriptions?encounter_id= or patient_id= - list
  * POST /internal/v1/mobile/provider/prescriptions/{id}/cancel  - cancel prescription
+ *
+ * <p>STRANGLER: JdbcTemplate retained for local reads during migration; writes delegated to PharmacyServiceClient.</p>
  */
 @RestController
 @RequestMapping("/internal/v1/mobile/provider/prescriptions")
 public class MobilePrescriptionController {
 
+    // STRANGLER: JdbcTemplate retained for local reads during migration; writes delegated to PharmacyServiceClient
     private final JdbcTemplate jdbcTemplate;
     private final OutboxService outboxService;
+    private final PharmacyServiceClient pharmacyClient;
 
-    public MobilePrescriptionController(JdbcTemplate jdbcTemplate, OutboxService outboxService) {
+    public MobilePrescriptionController(JdbcTemplate jdbcTemplate, OutboxService outboxService,
+                                        PharmacyServiceClient pharmacyClient) {
         this.jdbcTemplate = jdbcTemplate;
         this.outboxService = outboxService;
+        this.pharmacyClient = pharmacyClient;
     }
 
     /**

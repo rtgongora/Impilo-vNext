@@ -8,6 +8,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 import zw.gov.mohcc.impilo.experience.service.OutboxService;
 
 import java.time.OffsetDateTime;
@@ -17,17 +18,23 @@ import java.util.*;
  * Mobile referral endpoints.
  * POST /internal/v1/mobile/provider/referrals                          - create referral
  * GET  /internal/v1/mobile/provider/referrals?encounter_id= or patient_id= - list referrals
+ *
+ * <p>STRANGLER: JdbcTemplate retained for local reads during migration; writes delegated to PctServiceClient.</p>
  */
 @RestController
 @RequestMapping("/internal/v1/mobile/provider/referrals")
 public class MobileReferralController {
 
+    // STRANGLER: JdbcTemplate retained for local reads during migration; writes delegated to PctServiceClient
     private final JdbcTemplate jdbcTemplate;
     private final OutboxService outboxService;
+    private final PctServiceClient pctClient;
 
-    public MobileReferralController(JdbcTemplate jdbcTemplate, OutboxService outboxService) {
+    public MobileReferralController(JdbcTemplate jdbcTemplate, OutboxService outboxService,
+                                    PctServiceClient pctClient) {
         this.jdbcTemplate = jdbcTemplate;
         this.outboxService = outboxService;
+        this.pctClient = pctClient;
     }
 
     /**

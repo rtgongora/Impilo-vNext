@@ -21,11 +21,14 @@ import java.util.*;
  * GET  /internal/v1/mobile/provider/support/escalations?facility_id=           - escalations
  * POST /internal/v1/mobile/provider/support/escalations/{id}/acknowledge       - acknowledge
  * POST /internal/v1/mobile/provider/support/escalations/{id}/resolve           - resolve
+ *
+ * <p>STRANGLER: JdbcTemplate retained for local reads during migration; target sovereign service is support-service.</p>
  */
 @RestController
 @RequestMapping("/internal/v1/mobile/provider/support")
 public class MobileSupportController {
 
+    // STRANGLER: JdbcTemplate retained for local reads during migration; target sovereign service is support-service
     private final JdbcTemplate jdbcTemplate;
     private final OutboxService outboxService;
 

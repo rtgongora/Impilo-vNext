@@ -9,6 +9,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.InventoryServiceClient;
 import zw.gov.mohcc.impilo.experience.controller.ResourceNotFoundException;
 import zw.gov.mohcc.impilo.experience.service.OutboxService;
 
@@ -23,17 +24,23 @@ import java.util.*;
  * POST /internal/v1/mobile/provider/inventory/dispatches                 - create dispatch
  * GET  /internal/v1/mobile/provider/inventory/dispatches?facility_id=    - dispatches
  * POST /internal/v1/mobile/provider/inventory/dispatches/{id}/confirm    - confirm delivery
+ *
+ * <p>STRANGLER: JdbcTemplate retained for local reads during migration; writes delegated to InventoryServiceClient.</p>
  */
 @RestController
 @RequestMapping("/internal/v1/mobile/provider/inventory")
 public class MobileInventoryController {
 
+    // STRANGLER: JdbcTemplate retained for local reads during migration; writes delegated to InventoryServiceClient
     private final JdbcTemplate jdbcTemplate;
     private final OutboxService outboxService;
+    private final InventoryServiceClient inventoryClient;
 
-    public MobileInventoryController(JdbcTemplate jdbcTemplate, OutboxService outboxService) {
+    public MobileInventoryController(JdbcTemplate jdbcTemplate, OutboxService outboxService,
+                                     InventoryServiceClient inventoryClient) {
         this.jdbcTemplate = jdbcTemplate;
         this.outboxService = outboxService;
+        this.inventoryClient = inventoryClient;
     }
 
     @GetMapping("/stock")

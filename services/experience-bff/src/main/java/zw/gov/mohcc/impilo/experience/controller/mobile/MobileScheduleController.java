@@ -4,21 +4,28 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.TusoServiceClient;
 
 import java.util.*;
 
 /**
  * Mobile provider schedule endpoints.
  * GET /internal/v1/mobile/provider/schedule - return upcoming shifts for the provider
+ *
+ * <p>STRANGLER: JdbcTemplate retained for local reads during migration; writes delegated to TusoServiceClient.</p>
  */
 @RestController
 @RequestMapping("/internal/v1/mobile/provider/schedule")
 public class MobileScheduleController {
 
+    // STRANGLER: JdbcTemplate retained for local reads during migration; writes delegated to TusoServiceClient
     private final JdbcTemplate jdbcTemplate;
+    private final TusoServiceClient tusoClient;
 
-    public MobileScheduleController(JdbcTemplate jdbcTemplate) {
+    public MobileScheduleController(JdbcTemplate jdbcTemplate,
+                                    TusoServiceClient tusoClient) {
         this.jdbcTemplate = jdbcTemplate;
+        this.tusoClient = tusoClient;
     }
 
     @GetMapping

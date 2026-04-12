@@ -31,6 +31,7 @@ public class MobileLabController {
 
     private static final Logger log = LoggerFactory.getLogger(MobileLabController.class);
 
+    // STRANGLER: JdbcTemplate retained for local reads during migration; writes delegated to OrosServiceClient
     private final JdbcTemplate jdbcTemplate;
     private final OutboxService outboxService;
     private final OrosServiceClient orosClient;

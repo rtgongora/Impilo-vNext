@@ -9,6 +9,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.TshepoOfflineServiceClient;
 import zw.gov.mohcc.impilo.experience.service.OutboxService;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -24,20 +25,25 @@ import java.util.*;
  * POST /internal/v1/mobile/provider/offline/break-glass/deactivate  - deactivate break-glass
  * GET  /internal/v1/mobile/provider/offline/sync/snapshot           - get sync snapshot
  * POST /internal/v1/mobile/provider/offline/sync/reconcile          - reconcile sync data
+ *
+ * <p>STRANGLER: JdbcTemplate retained for local reads during migration; writes delegated to TshepoOfflineServiceClient.</p>
  */
 @RestController
 @RequestMapping("/internal/v1/mobile/provider/offline")
 public class MobileOfflineController {
 
+    // STRANGLER: JdbcTemplate retained for local reads during migration; writes delegated to TshepoOfflineServiceClient
     private final JdbcTemplate jdbcTemplate;
     private final OutboxService outboxService;
     private final ObjectMapper objectMapper;
+    private final TshepoOfflineServiceClient tshepoOfflineClient;
 
     public MobileOfflineController(JdbcTemplate jdbcTemplate, OutboxService outboxService,
-                                   ObjectMapper objectMapper) {
+                                   ObjectMapper objectMapper, TshepoOfflineServiceClient tshepoOfflineClient) {
         this.jdbcTemplate = jdbcTemplate;
         this.outboxService = outboxService;
         this.objectMapper = objectMapper;
+        this.tshepoOfflineClient = tshepoOfflineClient;
     }
 
     public record VerifyEntitlementRequest(
