@@ -92,6 +92,11 @@
             <version>${project.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>zw.gov.mohcc.impilo</groupId>
+            <artifactId>shared-kernel-java</artifactId>
+        </dependency>
+
         <!-- TSHEPO Contracts (shared DTOs and enums across TSHEPO sub-services) -->
         <dependency>
             <groupId>zw.gov.mohcc.impilo</groupId>
