@@ -1,0 +1,822 @@
+# =============================================================================
+# Impilo vNext — AsyncAPI Event Catalog (v3.0)
+#
+# Canonical event catalog for the Impilo Health Operating System. Documents
+# the core domain events across the 6-channel Kafka bus topology.
+#
+# Envelope: libs/shared-kernel-java EventEnvelope (v1.1)
+# Topology: infra/kafka/bus-topology.yaml
+# Convention: docs/plan/EVENTING_AND_TOPICS.md
+# =============================================================================
+asyncapi: "3.0.0"
+
+info:
+  title: Impilo Health OS — Domain Event Catalog
+  version: "1.1.0"
+  description: |
+    Canonical AsyncAPI specification for domain events emitted by Impilo vNext
+    services. All events use the v1.1 EventEnvelope wrapper defined in
+    `libs/shared-kernel-java`.
+
+    ## Bus Topology
+
+    Events flow through 6 logical Kafka channels:
+    - **trust** — Safety-critical (consent revocations, identity merges, break-glass)
+    - **kernel** — National truth (registry changes, financial lifecycle)
+    - **clinical** — Care execution (journeys, orders, results, dispensing)
+    - **telemetry** — Device/IoT, occupancy, queue metrics
+    - **analytics** — Reporting, surveillance, governance exports
+    - **integration** — Dispatch, sync, jobs, notifications
+
+    ## Envelope Contract
+
+    Every message uses the `EventEnvelope` wrapper with 15 mandatory fields.
+    The `payload` field contains the domain-specific event data.
+
+  contact:
+    name: Impilo Platform Team
+  license:
+    name: Proprietary
+
+defaultContentType: application/json
+
+servers:
+  localDev:
+    host: localhost:9092
+    protocol: kafka
+    description: Local KRaft development instance
+  production:
+    host: ${KAFKA_BOOTSTRAP_SERVERS}
+    protocol: kafka
+    description: Production Kafka cluster (per-environment)
+
+# ---------------------------------------------------------------------------
+# Channels — one per Kafka topic
+# ---------------------------------------------------------------------------
+channels:
+
+  # ── Trust Channel ────────────────────────────────────────────────────────
+
+  trustConsentRevoked:
+    address: trust.revocation.consent
+    description: Consent revocation — all data-accessing services MUST react
+    messages:
+      consentRevoked:
+        $ref: "#/components/messages/ConsentRevoked"
+
+  trustIdentityMerged:
+    address: trust.revocation.identity
+    description: Identity correction (merge, death) — all CRID/CPID referencing services
+    messages:
+      identityMerged:
+        $ref: "#/components/messages/IdentityMerged"
+
+  trustBreakGlassRequested:
+    address: trust.break_glass.requested
+    description: Break-glass emergency access invocation — audit + compliance
+    messages:
+      breakGlassRequested:
+        $ref: "#/components/messages/BreakGlassRequested"
+
+  trustDecisionEvidence:
+    address: trust.decision_evidence
+    description: Policy decision audit trail for compliance verification
+    messages:
+      decisionEvidence:
+        $ref: "#/components/messages/DecisionEvidence"
+
+  trustKeysRotated:
+    address: trust.keys.rotated
+    description: Cryptographic key rotation event — all pods refresh JWKS
+    messages:
+      keysRotated:
+        $ref: "#/components/messages/KeysRotated"
+
+  # ── Kernel Channel ──────────────────────────────────────────────────────
+
+  kernelClientRegistered:
+    address: kernel.vito.client.registered
+    description: New client registration in the national Client Registry
+    messages:
+      clientRegistered:
+        $ref: "#/components/messages/ClientRegistered"
+
+  kernelClientUpdated:
+    address: kernel.vito.client.updated
+    description: Client record delta update
+    messages:
+      clientUpdated:
+        $ref: "#/components/messages/ClientUpdated"
+
+  kernelProviderRegistered:
+    address: kernel.varapi.provider.registered
+    description: New provider registration in the national Provider Registry
+    messages:
+      providerRegistered:
+        $ref: "#/components/messages/ProviderRegistered"
+
+  kernelFacilityCreated:
+    address: kernel.tuso.facility.created
+    description: New facility registered in the national Facility Registry
+    messages:
+      facilityCreated:
+        $ref: "#/components/messages/FacilityCreated"
+
+  kernelProductPublished:
+    address: kernel.msika.catalog.published
+    description: Product/Service catalog version published
+    messages:
+      catalogPublished:
+        $ref: "#/components/messages/CatalogPublished"
+
+  kernelPaymentCompleted:
+    address: kernel.mushex.payment.completed
+    description: Payment completed — triggers downstream fulfillment
+    messages:
+      paymentCompleted:
+        $ref: "#/components/messages/PaymentCompleted"
+
+  # ── Clinical Channel ────────────────────────────────────────────────────
+
+  clinicalJourneyCreated:
+    address: clinical.pct.journey.created
+    description: Patient care journey started at a facility
+    messages:
+      journeyCreated:
+        $ref: "#/components/messages/JourneyCreated"
+
+  clinicalEncounterCompleted:
+    address: clinical.pct.encounter.completed
+    description: Clinical encounter completed — triggers costing and SHR write
+    messages:
+      encounterCompleted:
+        $ref: "#/components/messages/EncounterCompleted"
+
+  clinicalOrderPlaced:
+    address: clinical.oros.order.placed
+    description: Clinical order placed (lab, imaging, pharmacy)
+    messages:
+      orderPlaced:
+        $ref: "#/components/messages/OrderPlaced"
+
+  clinicalResultAvailable:
+    address: clinical.oros.result.available
+    description: Order result available for clinician review
+    messages:
+      resultAvailable:
+        $ref: "#/components/messages/ResultAvailable"
+
+  clinicalDispensed:
+    address: clinical.pharmacy.dispense.dispensed
+    description: Medication dispensed to patient
+    messages:
+      medicationDispensed:
+        $ref: "#/components/messages/MedicationDispensed"
+
+  clinicalAdmissionCreated:
+    address: clinical.pct.admission.created
+    description: Patient admitted to inpatient care
+    messages:
+      admissionCreated:
+        $ref: "#/components/messages/AdmissionCreated"
+
+  clinicalDeathRecorded:
+    address: clinical.pct.death.recorded
+    description: Death recorded — cross-references trust channel for identity
+    messages:
+      deathRecorded:
+        $ref: "#/components/messages/DeathRecorded"
+
+  # ── Analytics Channel ───────────────────────────────────────────────────
+
+  analyticsSurveillanceEvent:
+    address: analytics.surveillance.event
+    description: Disease surveillance case detected
+    messages:
+      surveillanceEvent:
+        $ref: "#/components/messages/SurveillanceEvent"
+
+  analyticsSurveillanceAlert:
+    address: analytics.surveillance.alert
+    description: Surveillance threshold breach alert
+    messages:
+      surveillanceAlert:
+        $ref: "#/components/messages/SurveillanceAlert"
+
+# ---------------------------------------------------------------------------
+# Operations — publish/subscribe bindings
+# ---------------------------------------------------------------------------
+operations:
+
+  # Trust producers
+  publishConsentRevoked:
+    action: send
+    channel:
+      $ref: "#/channels/trustConsentRevoked"
+    summary: tshepo-consent-service publishes consent revocation events
+
+  publishBreakGlassRequested:
+    action: send
+    channel:
+      $ref: "#/channels/trustBreakGlassRequested"
+    summary: tshepo-authz-service publishes break-glass events
+
+  publishDecisionEvidence:
+    action: send
+    channel:
+      $ref: "#/channels/trustDecisionEvidence"
+    summary: tshepo-authz-service publishes policy decision evidence
+
+  # Kernel producers
+  publishClientRegistered:
+    action: send
+    channel:
+      $ref: "#/channels/kernelClientRegistered"
+    summary: vito-service publishes new client registration
+
+  publishProviderRegistered:
+    action: send
+    channel:
+      $ref: "#/channels/kernelProviderRegistered"
+    summary: varapi-service publishes new provider registration
+
+  publishFacilityCreated:
+    action: send
+    channel:
+      $ref: "#/channels/kernelFacilityCreated"
+    summary: tuso-service publishes new facility registration
+
+  # Clinical producers
+  publishJourneyCreated:
+    action: send
+    channel:
+      $ref: "#/channels/clinicalJourneyCreated"
+    summary: pct-service publishes journey started
+
+  publishEncounterCompleted:
+    action: send
+    channel:
+      $ref: "#/channels/clinicalEncounterCompleted"
+    summary: pct-service publishes encounter completed
+
+  publishOrderPlaced:
+    action: send
+    channel:
+      $ref: "#/channels/clinicalOrderPlaced"
+    summary: oros-service publishes order placed
+
+  publishMedicationDispensed:
+    action: send
+    channel:
+      $ref: "#/channels/clinicalDispensed"
+    summary: pharmacy-service publishes medication dispensed
+
+  # Analytics producers
+  publishSurveillanceEvent:
+    action: send
+    channel:
+      $ref: "#/channels/analyticsSurveillanceEvent"
+    summary: surveillance-service publishes detected cases
+
+  # Key consumers
+  consumeConsentRevoked:
+    action: receive
+    channel:
+      $ref: "#/channels/trustConsentRevoked"
+    summary: All data-accessing services consume consent revocations
+
+  consumeClientRegistered:
+    action: receive
+    channel:
+      $ref: "#/channels/kernelClientRegistered"
+    summary: PCT, MUSHEX, and all pods consume client registrations
+
+  consumeJourneyCreated:
+    action: receive
+    channel:
+      $ref: "#/channels/clinicalJourneyCreated"
+    summary: BUTANO and analytics consume journey events for SHR
+
+  consumeOrderPlaced:
+    action: receive
+    channel:
+      $ref: "#/channels/clinicalOrderPlaced"
+    summary: Pharmacy, PACS, BUTANO consume order events
+
+# ---------------------------------------------------------------------------
+# Components
+# ---------------------------------------------------------------------------
+components:
+
+  messages:
+
+    # ── Trust Events ──────────────────────────────────────────────────────
+
+    ConsentRevoked:
+      name: ConsentRevoked
+      title: Consent Revoked
+      summary: A patient has revoked a consent directive
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/EventEnvelopeWithConsentPayload"
+
+    IdentityMerged:
+      name: IdentityMerged
+      title: Identity Merged
+      summary: Two client identities have been merged (old→new ID mapping)
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/EventEnvelopeWithMergePayload"
+
+    BreakGlassRequested:
+      name: BreakGlassRequested
+      title: Break-Glass Emergency Access
+      summary: A clinician has invoked break-glass emergency access
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/EventEnvelopeWithBreakGlassPayload"
+
+    DecisionEvidence:
+      name: DecisionEvidence
+      title: Policy Decision Evidence
+      summary: Record of a policy evaluation decision for audit
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/EventEnvelopeWithDecisionPayload"
+
+    KeysRotated:
+      name: KeysRotated
+      title: Cryptographic Key Rotated
+      summary: A signing key has been rotated — pods must refresh JWKS
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/EventEnvelopeBase"
+
+    # ── Kernel Events ─────────────────────────────────────────────────────
+
+    ClientRegistered:
+      name: ClientRegistered
+      title: Client Registered
+      summary: New client registered in the national Client Registry (VITO)
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/EventEnvelopeWithClientPayload"
+
+    ClientUpdated:
+      name: ClientUpdated
+      title: Client Updated
+      summary: Client record delta update (changed fields only)
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/EventEnvelopeWithDeltaPayload"
+
+    ProviderRegistered:
+      name: ProviderRegistered
+      title: Provider Registered
+      summary: New provider registered in the national Provider Registry (VARAPI)
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/EventEnvelopeWithProviderPayload"
+
+    FacilityCreated:
+      name: FacilityCreated
+      title: Facility Created
+      summary: New facility registered in the national Facility Registry (TUSO)
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/EventEnvelopeWithFacilityPayload"
+
+    CatalogPublished:
+      name: CatalogPublished
+      title: Catalog Published
+      summary: Product/Service catalog version published (MSIKA)
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/EventEnvelopeBase"
+
+    PaymentCompleted:
+      name: PaymentCompleted
+      title: Payment Completed
+      summary: Payment transaction completed (MUSHEX)
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/EventEnvelopeWithPaymentPayload"
+
+    # ── Clinical Events ───────────────────────────────────────────────────
+
+    JourneyCreated:
+      name: JourneyCreated
+      title: Patient Journey Created
+      summary: Patient care journey started at a facility (PCT)
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/EventEnvelopeWithJourneyPayload"
+
+    EncounterCompleted:
+      name: EncounterCompleted
+      title: Encounter Completed
+      summary: Clinical encounter completed (PCT)
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/EventEnvelopeWithEncounterPayload"
+
+    OrderPlaced:
+      name: OrderPlaced
+      title: Order Placed
+      summary: Clinical order placed — lab, imaging, or pharmacy (OROS)
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/EventEnvelopeWithOrderPayload"
+
+    ResultAvailable:
+      name: ResultAvailable
+      title: Result Available
+      summary: Order result available for clinician review (OROS)
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/EventEnvelopeBase"
+
+    MedicationDispensed:
+      name: MedicationDispensed
+      title: Medication Dispensed
+      summary: Medication dispensed to patient (Pharmacy)
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/EventEnvelopeBase"
+
+    AdmissionCreated:
+      name: AdmissionCreated
+      title: Admission Created
+      summary: Patient admitted to inpatient care (PCT)
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/EventEnvelopeBase"
+
+    DeathRecorded:
+      name: DeathRecorded
+      title: Death Recorded
+      summary: Patient death recorded — triggers identity revocation
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/EventEnvelopeBase"
+
+    # ── Analytics Events ──────────────────────────────────────────────────
+
+    SurveillanceEvent:
+      name: SurveillanceEvent
+      title: Surveillance Case Detected
+      summary: Disease surveillance signal detected (Surveillance)
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/EventEnvelopeBase"
+
+    SurveillanceAlert:
+      name: SurveillanceAlert
+      title: Surveillance Alert
+      summary: Surveillance threshold breach alert
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/EventEnvelopeBase"
+
+  # ── Schemas ─────────────────────────────────────────────────────────────
+
+  schemas:
+
+    EventEnvelopeBase:
+      type: object
+      description: |
+        Canonical v1.1 EventEnvelope. All domain events are wrapped in this
+        envelope before publishing to Kafka.
+      required:
+        - event_id
+        - event_type
+        - schema_version
+        - correlation_id
+        - causation_id
+        - idempotency_key
+        - producer
+        - tenant_id
+        - pod_id
+        - occurred_at
+        - emitted_at
+        - subject_type
+        - subject_id
+        - payload
+      properties:
+        event_id:
+          type: string
+          format: uuid
+          description: Globally unique event identifier
+        event_type:
+          type: string
+          description: "Dot-notation event type (e.g. impilo.vito.client.registered.v1)"
+          pattern: "^[a-z]+\\.[a-z_]+\\.[a-z_]+\\.[a-z_]+\\.v\\d+$"
+        schema_version:
+          type: integer
+          minimum: 1
+          description: Version of the payload schema
+        correlation_id:
+          type: string
+          format: uuid
+          description: End-to-end request correlation
+        causation_id:
+          type: string
+          format: uuid
+          description: ID of the event that caused this event
+        idempotency_key:
+          type: string
+          maxLength: 255
+          description: "Deduplication key: {producer}:{subject_id}:{event_type_short}:{version}"
+        producer:
+          type: string
+          description: Service that emitted this event
+        tenant_id:
+          type: string
+          format: uuid
+          description: Tenant (health authority) scope
+        pod_id:
+          type: string
+          description: Originating pod/facility identifier
+        occurred_at:
+          type: string
+          format: date-time
+          description: When the domain event actually happened (business time)
+        emitted_at:
+          type: string
+          format: date-time
+          description: When the envelope was created (system time)
+        subject_type:
+          type: string
+          description: "Type of the subject entity (e.g. Patient, Order, Journey)"
+        subject_id:
+          type: string
+          description: Identifier of the subject
+        payload:
+          type: object
+          description: Domain-specific event payload
+          additionalProperties: true
+        meta:
+          type: object
+          description: Optional metadata (tracing, partition hints)
+          properties:
+            partition_key:
+              type: string
+              description: Override partition key (defaults to subject_id)
+          additionalProperties: true
+
+    # ── Domain-specific envelope variants ─────────────────────────────────
+
+    EventEnvelopeWithConsentPayload:
+      allOf:
+        - $ref: "#/components/schemas/EventEnvelopeBase"
+        - type: object
+          properties:
+            payload:
+              type: object
+              properties:
+                consent_id:
+                  type: string
+                  format: uuid
+                subject_cpid:
+                  type: string
+                  description: Pseudonymous clinical identifier of the patient
+                scope:
+                  type: string
+                  description: Consent scope (e.g. TREATMENT, RESEARCH)
+                effective_from:
+                  type: string
+                  format: date-time
+                revoked_by:
+                  type: string
+
+    EventEnvelopeWithMergePayload:
+      allOf:
+        - $ref: "#/components/schemas/EventEnvelopeBase"
+        - type: object
+          properties:
+            payload:
+              type: object
+              properties:
+                old_crid:
+                  type: string
+                  description: CRID of the record being merged away
+                new_crid:
+                  type: string
+                  description: CRID of the surviving record
+                old_cpid:
+                  type: string
+                new_cpid:
+                  type: string
+                merge_reason:
+                  type: string
+
+    EventEnvelopeWithBreakGlassPayload:
+      allOf:
+        - $ref: "#/components/schemas/EventEnvelopeBase"
+        - type: object
+          properties:
+            payload:
+              type: object
+              properties:
+                actor_id:
+                  type: string
+                patient_cpid:
+                  type: string
+                reason:
+                  type: string
+                  description: Clinician justification for emergency access
+                facility_id:
+                  type: string
+                  format: uuid
+
+    EventEnvelopeWithDecisionPayload:
+      allOf:
+        - $ref: "#/components/schemas/EventEnvelopeBase"
+        - type: object
+          properties:
+            payload:
+              type: object
+              properties:
+                verdict:
+                  type: string
+                  enum: [ALLOW, DENY, STEP_UP_REQUIRED]
+                actor_id:
+                  type: string
+                resource_type:
+                  type: string
+                action:
+                  type: string
+                risk_score:
+                  type: integer
+                policy_rules_evaluated:
+                  type: integer
+
+    EventEnvelopeWithClientPayload:
+      allOf:
+        - $ref: "#/components/schemas/EventEnvelopeBase"
+        - type: object
+          properties:
+            payload:
+              type: object
+              description: "Full initial state for CREATE; no PII in SHR-facing events"
+              properties:
+                crid:
+                  type: string
+                cpid:
+                  type: string
+                health_id:
+                  type: string
+                registration_facility_id:
+                  type: string
+                  format: uuid
+
+    EventEnvelopeWithDeltaPayload:
+      allOf:
+        - $ref: "#/components/schemas/EventEnvelopeBase"
+        - type: object
+          properties:
+            payload:
+              type: object
+              properties:
+                op:
+                  type: string
+                  enum: [CREATE, UPDATE, DELETE, MERGE, REVOKE]
+                before:
+                  type: object
+                  description: Previous state (null for CREATE)
+                after:
+                  type: object
+                  description: New state (null for DELETE)
+                changed_fields:
+                  type: array
+                  items:
+                    type: string
+
+    EventEnvelopeWithProviderPayload:
+      allOf:
+        - $ref: "#/components/schemas/EventEnvelopeBase"
+        - type: object
+          properties:
+            payload:
+              type: object
+              properties:
+                provider_id:
+                  type: string
+                  format: uuid
+                profession:
+                  type: string
+                council_code:
+                  type: string
+                license_status:
+                  type: string
+
+    EventEnvelopeWithFacilityPayload:
+      allOf:
+        - $ref: "#/components/schemas/EventEnvelopeBase"
+        - type: object
+          properties:
+            payload:
+              type: object
+              properties:
+                facility_id:
+                  type: string
+                  format: uuid
+                name:
+                  type: string
+                classification:
+                  type: string
+                province:
+                  type: string
+                district:
+                  type: string
+
+    EventEnvelopeWithPaymentPayload:
+      allOf:
+        - $ref: "#/components/schemas/EventEnvelopeBase"
+        - type: object
+          properties:
+            payload:
+              type: object
+              properties:
+                payment_id:
+                  type: string
+                  format: uuid
+                amount:
+                  type: number
+                currency:
+                  type: string
+                  default: ZWL
+                payer_type:
+                  type: string
+
+    EventEnvelopeWithJourneyPayload:
+      allOf:
+        - $ref: "#/components/schemas/EventEnvelopeBase"
+        - type: object
+          properties:
+            payload:
+              type: object
+              properties:
+                journey_id:
+                  type: string
+                  format: uuid
+                patient_cpid:
+                  type: string
+                  description: Pseudonymous clinical identifier (no PII)
+                facility_id:
+                  type: string
+                  format: uuid
+                journey_type:
+                  type: string
+                  description: "e.g. OUTPATIENT, INPATIENT, EMERGENCY"
+
+    EventEnvelopeWithEncounterPayload:
+      allOf:
+        - $ref: "#/components/schemas/EventEnvelopeBase"
+        - type: object
+          properties:
+            payload:
+              type: object
+              properties:
+                encounter_id:
+                  type: string
+                  format: uuid
+                journey_id:
+                  type: string
+                  format: uuid
+                provider_id:
+                  type: string
+                  format: uuid
+                encounter_type:
+                  type: string
+                diagnoses:
+                  type: array
+                  items:
+                    type: string
+
+    EventEnvelopeWithOrderPayload:
+      allOf:
+        - $ref: "#/components/schemas/EventEnvelopeBase"
+        - type: object
+          properties:
+            payload:
+              type: object
+              properties:
+                order_id:
+                  type: string
+                  format: uuid
+                encounter_id:
+                  type: string
+                  format: uuid
+                order_type:
+                  type: string
+                  description: "e.g. LAB, IMAGING, PHARMACY"
+                items:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                      display:
+                        type: string

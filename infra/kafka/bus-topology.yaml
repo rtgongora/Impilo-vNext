@@ -1,0 +1,575 @@
+# =============================================================================
+# Impilo vNext — Kafka Bus Topology (5-Channel Model)
+#
+# Defines the six logical Kafka channels, their delivery guarantees, retention
+# policies, topic catalog, and consumer group assignments.
+#
+# Reference: docs/plan/EVENTING_AND_TOPICS.md
+# Envelope:  libs/shared-kernel-java EventEnvelope (v1.1)
+# Registry:  libs/shared-kernel-java EventTopicRegistry
+# =============================================================================
+
+apiVersion: impilo/v1
+kind: BusTopology
+metadata:
+  name: impilo-kafka-bus
+  version: "1.1.0"
+  description: >
+    Five-channel Kafka bus topology for the Impilo Health Operating System.
+    Channels separate safety-critical trust events from clinical execution,
+    national registry updates, telemetry, analytics, and integration flows.
+
+# ---------------------------------------------------------------------------
+# Global Kafka settings (local dev defaults; overridden per environment)
+# ---------------------------------------------------------------------------
+global:
+  bootstrapServers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+  defaultReplicationFactor: 3
+  minInsyncReplicas: 2
+  autoCreateTopics: false
+  logRetentionHours: 168  # 7 days fallback
+
+# ---------------------------------------------------------------------------
+# Channel definitions
+# ---------------------------------------------------------------------------
+channels:
+
+  # ── Trust Channel ────────────────────────────────────────────────────────
+  - name: trust
+    prefix: "trust."
+    purpose: >
+      Safety-critical state changes: consent revocations, identity merges,
+      privilege revocations, break-glass events, policy decision evidence.
+      Exactly-once delivery. All pods MUST consume.
+    delivery:
+      acks: all
+      minInsyncReplicas: 2
+      idempotence: true
+      transactional: true
+    retention:
+      days: 30
+      compacted: false
+    replicationFactor: 3
+    topics:
+      - name: trust.revocation.consent
+        producer: tshepo-consent-service
+        description: Consent revocation events — all data-accessing services must react
+        partitions: 6
+      - name: trust.revocation.privilege
+        producer: varapi-service
+        description: Practitioner privilege/license revocations
+        partitions: 3
+      - name: trust.revocation.identity
+        producer: vito-service
+        description: Identity corrections (merge, death, deactivation)
+        partitions: 6
+      - name: trust.federation.merge
+        producer: vito-service
+        description: Client merge events with old→new ID mapping
+        partitions: 3
+      - name: trust.federation.pod_registered
+        producer: federation-control
+        description: New pod registration notification
+        partitions: 1
+      - name: trust.decision_evidence
+        producer: tshepo-authz-service
+        description: Policy decision audit trail for compliance
+        partitions: 6
+      - name: trust.break_glass.requested
+        producer: tshepo-authz-service
+        description: Break-glass emergency access invocations
+        partitions: 3
+      - name: trust.keys.rotated
+        producer: tshepo-keys-service
+        description: Cryptographic key rotation events
+        partitions: 1
+    consumerGroups:
+      - name: trust-all-pods
+        description: All pod gateways consume trust events for local cache invalidation
+      - name: trust-audit-sink
+        description: tshepo-audit-service for immutable audit chain
+      - name: trust-compliance
+        description: Compliance dashboards and alerting
+
+  # ── Kernel Channel ──────────────────────────────────────────────────────
+  - name: kernel
+    prefix: "kernel."
+    purpose: >
+      National truth updates: registry changes (clients, providers, facilities,
+      products, terminology), financial lifecycle events. At-least-once with
+      idempotent consumers.
+    delivery:
+      acks: all
+      minInsyncReplicas: 2
+      idempotence: true
+      transactional: false
+    retention:
+      days: 14
+      compacted: false
+      archiveAfterDays: 14
+    replicationFactor: 3
+    topics:
+      # VITO — Client Registry
+      - name: kernel.vito.client.registered
+        producer: vito-service
+        description: New client registration (full state)
+        partitions: 12
+      - name: kernel.vito.client.updated
+        producer: vito-service
+        description: Client delta update
+        partitions: 12
+      - name: kernel.vito.client.merged
+        producer: vito-service
+        description: Client merge notification (cross-ref on trust channel)
+        partitions: 6
+
+      # VARAPI — Provider Registry
+      - name: kernel.varapi.provider.registered
+        producer: varapi-service
+        description: New provider registration
+        partitions: 6
+      - name: kernel.varapi.provider.updated
+        producer: varapi-service
+        description: Provider delta update
+        partitions: 6
+      - name: kernel.varapi.provider.revoked
+        producer: varapi-service
+        description: Provider privilege/license revocation (mirrors trust channel)
+        partitions: 3
+
+      # TUSO — Facility Registry
+      - name: kernel.tuso.facility.created
+        producer: tuso-service
+        description: New facility registered
+        partitions: 6
+      - name: kernel.tuso.facility.updated
+        producer: tuso-service
+        description: Facility delta update
+        partitions: 6
+      - name: kernel.tuso.facility.deactivated
+        producer: tuso-service
+        description: Facility deactivation
+        partitions: 3
+
+      # MSIKA — Product/Service Catalog
+      - name: kernel.msika.catalog.published
+        producer: msika-service
+        description: Catalog version published
+        partitions: 3
+      - name: kernel.msika.catalog.updated
+        producer: msika-service
+        description: Catalog item delta
+        partitions: 3
+      - name: kernel.msika.catalog.deprecated
+        producer: msika-service
+        description: Catalog item deprecated
+        partitions: 3
+
+      # ZIBO — Terminology
+      - name: kernel.zibo.artifact.published
+        producer: zibo-service
+        description: Terminology artifact published
+        partitions: 3
+      - name: kernel.zibo.artifact.deprecated
+        producer: zibo-service
+        description: Terminology artifact deprecated
+        partitions: 3
+      - name: kernel.zibo.artifact.retired
+        producer: zibo-service
+        description: Terminology artifact retired
+        partitions: 3
+
+      # MUSHEX — Finance
+      - name: kernel.mushex.payment.created
+        producer: mushex-service
+        description: Payment intent created
+        partitions: 6
+      - name: kernel.mushex.payment.authorized
+        producer: mushex-service
+        description: Payment authorized
+        partitions: 6
+      - name: kernel.mushex.payment.completed
+        producer: mushex-service
+        description: Payment completed
+        partitions: 6
+      - name: kernel.mushex.payment.failed
+        producer: mushex-service
+        description: Payment failed
+        partitions: 3
+      - name: kernel.mushex.claim.submitted
+        producer: mushex-service
+        description: Claim submitted
+        partitions: 6
+      - name: kernel.mushex.claim.adjudicated
+        producer: mushex-service
+        description: Claim adjudicated
+        partitions: 6
+
+      # UBOMI — CRVS
+      - name: kernel.ubomi.birth.registered
+        producer: ubomi-service
+        description: Birth registration
+        partitions: 3
+      - name: kernel.ubomi.death.registered
+        producer: ubomi-service
+        description: Death registration
+        partitions: 3
+
+      # COSTA — Costing Engine
+      - name: kernel.costa.bill.finalized
+        producer: costing-engine-service
+        description: Bill finalized
+        partitions: 6
+      - name: kernel.costa.invoice.issued
+        producer: costing-engine-service
+        description: Invoice issued
+        partitions: 6
+
+    consumerGroups:
+      - name: kernel-pod-sync
+        description: Pod gateways consume for local registry cache
+      - name: kernel-clinical
+        description: PCT, OROS, Pharmacy consume registration events
+      - name: kernel-finance
+        description: COSTA, MUSHEX consume cross-domain finance events
+      - name: kernel-analytics
+        description: Data pipeline consumes for national reporting
+
+  # ── Clinical Channel ────────────────────────────────────────────────────
+  - name: clinical
+    prefix: "clinical."
+    purpose: >
+      Care execution events: patient journeys, encounters, orders, results,
+      dispensing, admissions, referrals, appointments. At-least-once with
+      idempotent consumers.
+    delivery:
+      acks: all
+      minInsyncReplicas: 2
+      idempotence: true
+      transactional: false
+    retention:
+      days: 7
+      compacted: false
+      archiveAfterDays: 7
+    replicationFactor: 3
+    topics:
+      # PCT — Patient Care Tracker
+      - name: clinical.pct.journey.created
+        producer: pct-service
+        description: Journey started
+        partitions: 12
+      - name: clinical.pct.journey.updated
+        producer: pct-service
+        description: Journey state change
+        partitions: 12
+      - name: clinical.pct.journey.completed
+        producer: pct-service
+        description: Journey completed (discharged/transferred/etc.)
+        partitions: 12
+      - name: clinical.pct.encounter.started
+        producer: pct-service
+        description: Encounter started
+        partitions: 12
+      - name: clinical.pct.encounter.completed
+        producer: pct-service
+        description: Encounter completed
+        partitions: 12
+      - name: clinical.pct.triage.completed
+        producer: pct-service
+        description: Triage recorded
+        partitions: 6
+      - name: clinical.pct.admission.created
+        producer: pct-service
+        description: Patient admitted
+        partitions: 6
+      - name: clinical.pct.admission.discharged
+        producer: pct-service
+        description: Patient discharged
+        partitions: 6
+      - name: clinical.pct.death.recorded
+        producer: pct-service
+        description: Death recorded (cross-ref on trust channel)
+        partitions: 3
+
+      # OROS — Order Management
+      - name: clinical.oros.order.placed
+        producer: oros-service
+        description: Order placed
+        partitions: 12
+      - name: clinical.oros.order.accepted
+        producer: oros-service
+        description: Order accepted
+        partitions: 12
+      - name: clinical.oros.order.completed
+        producer: oros-service
+        description: Order completed
+        partitions: 12
+      - name: clinical.oros.order.cancelled
+        producer: oros-service
+        description: Order cancelled
+        partitions: 6
+      - name: clinical.oros.result.available
+        producer: oros-service
+        description: Result available
+        partitions: 12
+      - name: clinical.oros.result.reviewed
+        producer: oros-service
+        description: Result reviewed by clinician
+        partitions: 6
+      - name: clinical.oros.result.released
+        producer: oros-service
+        description: Result released to patient
+        partitions: 6
+
+      # Pharmacy
+      - name: clinical.pharmacy.dispense.accepted
+        producer: pharmacy-service
+        description: Dispense order accepted
+        partitions: 6
+      - name: clinical.pharmacy.dispense.dispensed
+        producer: pharmacy-service
+        description: Medication dispensed
+        partitions: 6
+      - name: clinical.pharmacy.dispense.reversed
+        producer: pharmacy-service
+        description: Dispense reversal
+        partitions: 3
+
+      # BUTANO — SHR
+      - name: clinical.butano.resource.created
+        producer: butano-service
+        description: FHIR resource created (reference-only, no PII)
+        partitions: 12
+      - name: clinical.butano.resource.updated
+        producer: butano-service
+        description: FHIR resource updated (reference-only)
+        partitions: 12
+
+      # Inpatient
+      - name: clinical.inpatient.admission.created
+        producer: inpatient-service
+        description: Inpatient admission
+        partitions: 6
+      - name: clinical.inpatient.transfer.completed
+        producer: inpatient-service
+        description: Ward transfer
+        partitions: 3
+      - name: clinical.inpatient.discharge.completed
+        producer: inpatient-service
+        description: Inpatient discharge
+        partitions: 6
+
+      # Marketplace Flow
+      - name: clinical.msika_flow.order.created
+        producer: msika-flow-service
+        description: Marketplace order created
+        partitions: 6
+      - name: clinical.msika_flow.order.completed
+        producer: msika-flow-service
+        description: Marketplace order fulfilled
+        partitions: 6
+
+      # FHIR Gateway
+      - name: clinical.fhir.bundle.processed
+        producer: fhir-gateway-service
+        description: FHIR Bundle processed
+        partitions: 6
+
+    consumerGroups:
+      - name: clinical-shr-sink
+        description: BUTANO consumes clinical events for SHR persistence
+      - name: clinical-order-coordination
+        description: PCT, OROS, Pharmacy consume for order lifecycle
+      - name: clinical-analytics
+        description: Data pipeline consumes for national clinical reporting
+
+  # ── Telemetry Channel ───────────────────────────────────────────────────
+  - name: telemetry
+    prefix: "telemetry."
+    purpose: >
+      Device/IoT data, facility occupancy snapshots, queue metrics,
+      bed availability, stock levels. At-least-once, compacted.
+    delivery:
+      acks: "1"
+      minInsyncReplicas: 1
+      idempotence: false
+      transactional: false
+    retention:
+      days: 30
+      compacted: true
+    replicationFactor: 2
+    topics:
+      - name: telemetry.tuso.occupancy.snapshot
+        producer: tuso-service
+        description: Facility occupancy snapshot
+        partitions: 6
+      - name: telemetry.tuso.device.heartbeat
+        producer: tuso-service
+        description: Device/equipment heartbeat
+        partitions: 6
+      - name: telemetry.pct.queue.metrics
+        producer: pct-service
+        description: Queue depth and wait times
+        partitions: 6
+      - name: telemetry.inpatient.bed.status
+        producer: inpatient-service
+        description: Bed availability status
+        partitions: 6
+      - name: telemetry.pharmacy.stock.level
+        producer: pharmacy-service
+        description: Stock level snapshot
+        partitions: 3
+      - name: telemetry.inventory.stock.level
+        producer: inventory-service
+        description: Aggregate stock levels
+        partitions: 3
+      - name: telemetry.iot.device.reading
+        producer: iot-ingestion-service
+        description: IoT device telemetry readings
+        partitions: 12
+    consumerGroups:
+      - name: telemetry-control-tower
+        description: Control tower dashboards consume occupancy and queue metrics
+      - name: telemetry-analytics
+        description: Data pipeline consumes for operational reporting
+
+  # ── Analytics Channel ───────────────────────────────────────────────────
+  - name: analytics
+    prefix: "analytics."
+    purpose: >
+      Downstream intelligence: reporting aggregates, surveillance events,
+      governance exports, fraud flags. At-least-once, compacted, long retention.
+    delivery:
+      acks: "1"
+      minInsyncReplicas: 1
+      idempotence: false
+      transactional: false
+    retention:
+      days: 90
+      compacted: true
+    replicationFactor: 2
+    topics:
+      - name: analytics.reporting.aggregate
+        producer: data-pipeline-service
+        description: Aggregated reporting data
+        partitions: 6
+      - name: analytics.reporting.crvs
+        producer: ubomi-service
+        description: Birth/death aggregate reports
+        partitions: 3
+      - name: analytics.surveillance.event
+        producer: surveillance-service
+        description: Detected surveillance case
+        partitions: 6
+      - name: analytics.surveillance.alert
+        producer: surveillance-service
+        description: Threshold breach alert
+        partitions: 3
+      - name: analytics.governance.export.requested
+        producer: data-governance-service
+        description: Data export request
+        partitions: 3
+      - name: analytics.governance.export.delivered
+        producer: data-governance-service
+        description: Data export delivered
+        partitions: 3
+      - name: analytics.fraud.flagged
+        producer: mushex-service
+        description: Fraud flag raised
+        partitions: 3
+    consumerGroups:
+      - name: analytics-dhis2-adapter
+        description: DHIS2 adapter consumes for national reporting
+      - name: analytics-dashboards
+        description: BI dashboards and compliance monitoring
+
+  # ── Integration Channel ─────────────────────────────────────────────────
+  - name: integration
+    prefix: "integration."
+    purpose: >
+      Cross-service orchestration: dispatch, notifications, rules decisions,
+      offline sync, job execution, developer portal, PACS correlation.
+    delivery:
+      acks: all
+      minInsyncReplicas: 1
+      idempotence: true
+      transactional: false
+    retention:
+      days: 14
+      compacted: false
+    replicationFactor: 2
+    topics:
+      - name: integration.hub.dispatch.requested
+        producer: integration-hub
+        description: Dispatch request to target adapter
+        partitions: 6
+      - name: integration.hub.route.upserted
+        producer: integration-hub
+        description: Route definition change
+        partitions: 3
+      - name: integration.notify.send.requested
+        producer: notification-service
+        description: Notification request (SMS/email/push)
+        partitions: 6
+      - name: integration.rules.decision.recorded
+        producer: rules-service
+        description: Rule evaluation result
+        partitions: 6
+      - name: integration.sync.pack.generated
+        producer: offline-sync-service
+        description: Offline data pack ready for download
+        partitions: 6
+      - name: integration.sync.upload.reconciled
+        producer: offline-sync-service
+        description: Offline upload reconciled with central
+        partitions: 6
+      - name: integration.jobs.executed
+        producer: jobs-service
+        description: Job executed successfully
+        partitions: 3
+      - name: integration.jobs.failed
+        producer: jobs-service
+        description: Job failed
+        partitions: 3
+      - name: integration.pacs.study.received
+        producer: pacs-adapter-service
+        description: DICOM study received
+        partitions: 3
+      - name: integration.pacs.study.correlated
+        producer: pacs-adapter-service
+        description: Study correlated to order
+        partitions: 3
+    consumerGroups:
+      - name: integration-adapters
+        description: Target adapters consume dispatch requests
+      - name: integration-ops
+        description: Ops alerting consumes job failures
+
+# ---------------------------------------------------------------------------
+# Dead-Letter Queue Configuration
+# ---------------------------------------------------------------------------
+deadLetterQueues:
+  - name: trust.dlq
+    channel: trust
+    retention: { days: 90 }
+    description: Poison events from trust channel — requires manual review
+  - name: kernel.dlq
+    channel: kernel
+    retention: { days: 30 }
+    description: Poison events from kernel channel
+  - name: clinical.dlq
+    channel: clinical
+    retention: { days: 30 }
+    description: Poison events from clinical channel
+  - name: telemetry.dlq
+    channel: telemetry
+    retention: { days: 14 }
+    description: Poison events from telemetry channel
+  - name: analytics.dlq
+    channel: analytics
+    retention: { days: 14 }
+    description: Poison events from analytics channel
+  - name: integration.dlq
+    channel: integration
+    retention: { days: 14 }
+    description: Poison events from integration channel
