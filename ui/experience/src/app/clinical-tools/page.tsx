@@ -8,6 +8,7 @@
  * Runtime extends with: CDS alerts config, vitals trends, document management.
  */
 
+import Link from "next/link";
 import { useState, useRef, useCallback } from "react";
 import {
   Mic, MicOff, Wifi, FileText, Activity,
@@ -35,6 +36,15 @@ export default function ClinicalToolsPage() {
   return (
     <AppLayout>
       <PageShell title="Clinical Tools" subtitle="Voice dictation, offline sync, documents, and clinical decision support">
+        <div className="mb-4 flex flex-wrap gap-3 text-sm">
+          <Link href="/clinical-tools/rules" className="text-pink-700 hover:underline font-medium">
+            Rules engine
+          </Link>
+          <span className="text-gray-300">·</span>
+          <Link href="/clinical-tools/forms" className="text-cyan-700 hover:underline font-medium">
+            Form schema builder
+          </Link>
+        </div>
         <div className="flex gap-1 mb-6 border-b border-gray-200 overflow-x-auto">
           {TABS.map((tab) => {
             const Icon = tab.icon;

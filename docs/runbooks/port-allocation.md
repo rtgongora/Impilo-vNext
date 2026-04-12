@@ -103,6 +103,7 @@ Service metadata (plane, sovereign, product names): [`docs/registry/services-reg
 | **8241** | `rules-service` |
 | **8250** | `workflow-service` |
 | 8260 | `guidance-service` |
+| **8280** | `ai-model-registry-service` | AI governance & model registry (Law 11 / v1.3 Ring-0) |
 | 8270 | `clinical-knowledge-platform-service` |
 
 ---

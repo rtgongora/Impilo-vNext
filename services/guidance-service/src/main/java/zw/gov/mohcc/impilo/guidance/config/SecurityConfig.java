@@ -1,4 +1,4 @@
-package zw.gov.mohcc.impilo.forms.config;
+package zw.gov.mohcc.impilo.guidance.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -8,17 +8,26 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import zw.gov.mohcc.impilo.shared.auth.TrustContextFilter;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain filterChain(
+    public TrustContextFilter trustContextFilter() {
+        return new TrustContextFilter();
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
-            @Value("${forms.security.oauth2-enabled:true}") boolean oauth2Enabled) throws Exception {
+            @Value("${guidance.security.oauth2-enabled:true}") boolean oauth2Enabled) throws Exception {
+
         http.csrf(csrf -> csrf.disable())
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .addFilterBefore(trustContextFilter(), UsernamePasswordAuthenticationFilter.class);
 
         if (oauth2Enabled) {
             http.authorizeHttpRequests(auth -> auth

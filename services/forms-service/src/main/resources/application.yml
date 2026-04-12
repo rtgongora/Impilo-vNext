@@ -4,6 +4,12 @@ server:
 spring:
   application:
     name: forms-service
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:impilo}/protocol/openid-connect/certs
+          issuer-uri: ${KEYCLOAK_ISSUER:${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:impilo}}
   datasource:
     url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/impilo_forms
     username: ${POSTGRES_USER:impilo}
@@ -29,6 +35,13 @@ management:
   endpoint:
     health:
       show-details: when-authorized
+  metrics:
+    tags:
+      application: forms-service
+
+forms:
+  security:
+    oauth2-enabled: true
 
 impilo:
   companion:

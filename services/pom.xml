@@ -165,6 +165,7 @@
         <!-- Clinical Knowledge & EDLIZ-aligned guidance platform -->
         <module>clinical-knowledge-platform-service</module>
         <module>guidance-service</module>
+        <module>ai-model-registry-service</module>
     </modules>
 
     <dependencyManagement>

@@ -1,7 +1,7 @@
 /**
  * Experience UI — Complete Route Registry
  *
- * 223 routes across 26 zones.
+ * 226 routes across 26 zones.
  * Each route specifies: path, zone, layout, sidebar context, guard, page title, and nav label.
  *
  * Zones: auth, home, facility, workspace, shift, queue, ehr, admin, registry,
@@ -55,6 +55,8 @@ export const ROUTES: RouteDefinition[] = [
 
   // ── Zone: Clinical Tools ────────────────────────────────────────
   { path: "/clinical-tools", zone: "queue", layout: "app", sidebar: "queue", guard: "shift", pageTitle: "Clinical Tools", navLabel: "Tools", navZone: "work" },
+  { path: "/clinical-tools/rules", zone: "queue", layout: "app", sidebar: "queue", guard: "shift", pageTitle: "Rules Engine", navLabel: "Rules Engine", navZone: "work" },
+  { path: "/clinical-tools/forms", zone: "queue", layout: "app", sidebar: "queue", guard: "shift", pageTitle: "Form Builder", navLabel: "Form Builder", navZone: "work" },
   { path: "/clinical/control-tower", zone: "queue", layout: "app", sidebar: "queue", guard: "shift", pageTitle: "Control Tower", navLabel: "Control Tower", navZone: "work" },
   { path: "/clinical/dictation", zone: "queue", layout: "app", sidebar: "queue", guard: "shift", pageTitle: "Voice Dictation", navLabel: "Dictation", navZone: "work" },
   { path: "/clinical/emergency", zone: "queue", layout: "app", sidebar: "queue", guard: "shift", pageTitle: "ED / Casualty", navLabel: "ED / Casualty", navZone: "work" },
@@ -71,6 +73,7 @@ export const ROUTES: RouteDefinition[] = [
   // ── Zone: Identity Services ──────────────────────────────────────
   { path: "/id-services", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN_OR_HIE", pageTitle: "Identity Services", navLabel: "ID Services", navZone: "professional" },
   { path: "/ai-governance", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "AI Governance", navLabel: "AI Governance", navZone: "professional" },
+  { path: "/ai-governance/models/[id]", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "AI Model", navLabel: "AI Model", navZone: "professional" },
   { path: "/access", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Access Channels", navLabel: "Access", navZone: "professional" },
 
   // ── Zone: Kiosk (public) ─────────────────────────────────────────
@@ -343,7 +346,7 @@ export const ROUTES: RouteDefinition[] = [
 ];
 
 // Total route count assertion
-export const EXPECTED_ROUTE_COUNT = 223;
+export const EXPECTED_ROUTE_COUNT = 226;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

@@ -494,6 +494,15 @@ services:
     product_names:
       - Search
     owner_team: TBD
+  - id: ai-model-registry-service
+    maven_module: ai-model-registry-service
+    plane: knowledge
+    sovereign: true
+    primary_protocol: rest
+    default_http_port: 8280
+    product_names:
+      - AI Model Registry
+    owner_team: TBD
   - id: data-pipeline-service
     maven_module: data-pipeline-service
     plane: data

@@ -16,3 +16,7 @@ spring:
 impilo:
   companion:
     enabled: true
+
+forms:
+  security:
+    oauth2-enabled: false

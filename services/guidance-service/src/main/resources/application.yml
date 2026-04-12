@@ -4,6 +4,12 @@ server:
 spring:
   application:
     name: guidance-service
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:impilo}/protocol/openid-connect/certs
+          issuer-uri: ${KEYCLOAK_ISSUER:${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:impilo}}
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:guidance}
     username: ${DB_USER:impilo}
@@ -32,7 +38,17 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+  metrics:
+    tags:
+      application: guidance-service
+
+guidance:
+  security:
+    oauth2-enabled: true
 
 impilo:
   guidance:

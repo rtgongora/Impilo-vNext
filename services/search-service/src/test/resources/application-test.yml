@@ -19,3 +19,7 @@ spring:
 impilo:
   companion:
     enabled: true
+
+search:
+  security:
+    oauth2-enabled: false
