@@ -75,6 +75,57 @@ public class VitoServiceClient {
         return extractData(response);
     }
 
+    /** Get citizen profile by CPID. */
+    public JsonNode getCitizenProfile(String cpid) {
+        String url = baseUrl + "/v1/identity/profile/" + cpid;
+        log.info("VITO: Getting citizen profile for cpid={}", cpid);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Update citizen profile. */
+    public JsonNode updateCitizenProfile(String cpid, Map<String, Object> updates) {
+        String url = baseUrl + "/v1/identity/profile/" + cpid;
+        log.info("VITO: Updating citizen profile for cpid={}", cpid);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, updates, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Delete/deactivate citizen account. */
+    public void deleteCitizenAccount(String cpid) {
+        String url = baseUrl + "/v1/identity/profile/" + cpid + "/deactivate";
+        log.info("VITO: Deactivating citizen account for cpid={}", cpid);
+        restTemplate.postForEntity(url, null, JsonNode.class);
+    }
+
+    /** List patients with search, status, pagination (internal). */
+    public JsonNode listPatients(String search, String status, int page, int size) {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/internal/clients")
+                .queryParam("page", page)
+                .queryParam("size", size);
+        if (search != null && !search.isBlank()) builder.queryParam("search", search);
+        if (status != null && !status.isBlank()) builder.queryParam("status", status);
+        log.info("VITO: Listing patients page={}, size={}", page, size);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(builder.toUriString(), JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Get a single patient by ID. */
+    public JsonNode getPatient(String id) {
+        String url = baseUrl + "/v1/internal/clients/" + id;
+        log.info("VITO: Getting patient id={}", id);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Register a new patient. */
+    public JsonNode registerPatient(Map<String, Object> patientData) {
+        String url = baseUrl + "/v1/internal/clients";
+        log.info("VITO: Registering new patient");
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, patientData, JsonNode.class);
+        return extractData(response);
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) {
             return response.getBody().get("data");

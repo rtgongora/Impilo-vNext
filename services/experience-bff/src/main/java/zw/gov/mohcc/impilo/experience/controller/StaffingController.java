@@ -1,5 +1,6 @@
 package zw.gov.mohcc.impilo.experience.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.HttpStatus;
@@ -9,31 +10,24 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.TusoServiceClient;
 
-import java.sql.Timestamp;
-import java.time.LocalDate;
-import java.time.ZoneOffset;
 import java.util.*;
 
 /**
  * Staffing surfaces: roster from recorded shifts, on-call assignments and swap workflow.
- *
- * <ul>
- *   <li>GET /internal/v1/staffing/roster-week?facility_id=&amp;week_start= — shifts overlapping ISO week (UTC day boundaries)</li>
- *   <li>GET /internal/v1/staffing/on-call?facility_id=&amp;week_start= — on-call rows for the week</li>
- *   <li>GET /internal/v1/staffing/on-call/swaps?facility_id= — swap requests</li>
- *   <li>POST /internal/v1/staffing/on-call/swaps — create swap request</li>
- *   <li>PATCH /internal/v1/staffing/on-call/swaps/{id} — approve or decline</li>
- * </ul>
+ * Delegates to TusoServiceClient.
  */
 @RestController
 @RequestMapping("/internal/v1/staffing")
 public class StaffingController {
 
     private final JdbcTemplate jdbcTemplate;
+    private final TusoServiceClient tusoClient;
 
-    public StaffingController(JdbcTemplate jdbcTemplate) {
+    public StaffingController(JdbcTemplate jdbcTemplate, TusoServiceClient tusoClient) {
         this.jdbcTemplate = jdbcTemplate;
+        this.tusoClient = tusoClient;
     }
 
     public record PatchSwapRequest(@NotBlank String status) {}
@@ -56,49 +50,16 @@ public class StaffingController {
             @RequestParam(name = "week_start") String weekStartParam,
             @RequestParam(name = "workspace_id", required = false) String workspaceId) {
 
-        LocalDate weekStart = LocalDate.parse(weekStartParam);
-        LocalDate weekEndExcl = weekStart.plusDays(7);
-        Timestamp rangeStart = Timestamp.from(weekStart.atStartOfDay(ZoneOffset.UTC).toInstant());
-        Timestamp rangeEnd = Timestamp.from(weekEndExcl.atStartOfDay(ZoneOffset.UTC).toInstant());
+        // STRANGLER: migrated — delegate to TusoServiceClient
+        JsonNode roster = tusoClient.getRosterWeek(facilityId, weekStartParam, workspaceId);
 
-        String sql = """
-                SELECT s.id, s.user_id, s.facility_id, s.workspace_id, s.status,
-                       s.started_at, s.ended_at,
-                       COALESCE(au.display_name, s.user_id) AS staff_display_name
-                FROM shifts s
-                LEFT JOIN admin_users au ON au.tenant_id = s.tenant_id
-                    AND (au.username = s.user_id OR au.id::text = s.user_id)
-                WHERE s.tenant_id = ?
-                  AND s.facility_id = ?::uuid
-                  AND s.started_at < ?
-                  AND (s.ended_at IS NULL OR s.ended_at > ?)
-                """;
-
-        List<Object> params = new ArrayList<>();
-        params.add(tenantId);
-        params.add(facilityId);
-        params.add(rangeEnd);
-        params.add(rangeStart);
-
-        if (workspaceId != null && !workspaceId.isBlank()) {
-            sql += " AND (s.workspace_id IS NULL OR s.workspace_id = ?::uuid)";
-            params.add(workspaceId);
-        }
-
-        sql += " ORDER BY s.started_at ASC";
-
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql, params.toArray());
-        List<Map<String, Object>> data = rows.stream().map(this::toShiftResource).toList();
-
-        Map<String, Object> meta = new LinkedHashMap<>();
-        meta.put("request_id", requestId);
-        meta.put("correlation_id", correlationId);
-        meta.put("week_start", weekStart.toString());
-        meta.put("week_end_exclusive", weekEndExcl.toString());
+        // STRANGLER: migrated — was direct JdbcTemplate query against shifts/admin_users tables
+        // List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql, params.toArray());
 
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", data);
-        response.put("meta", meta);
+        response.put("data", roster);
+        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId,
+                "week_start", weekStartParam));
         return ResponseEntity.ok(response);
     }
 
@@ -110,34 +71,16 @@ public class StaffingController {
             @RequestParam(name = "facility_id") String facilityId,
             @RequestParam(name = "week_start") String weekStartParam) {
 
-        LocalDate weekStart = LocalDate.parse(weekStartParam);
-        LocalDate weekEndExcl = weekStart.plusDays(7);
+        // STRANGLER: migrated — delegate to TusoServiceClient
+        JsonNode onCall = tusoClient.listOnCall(facilityId, weekStartParam);
 
-        String sql = """
-                SELECT id, assignment_date, specialty, shift_kind,
-                       primary_staff_name, primary_phone, backup_staff_name, backup_phone,
-                       created_at, updated_at
-                FROM on_call_assignments
-                WHERE tenant_id = ?
-                  AND facility_id = ?::uuid
-                  AND assignment_date >= ?::date
-                  AND assignment_date < ?::date
-                ORDER BY assignment_date, specialty
-                """;
-
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql,
-                tenantId, facilityId, weekStart.toString(), weekEndExcl.toString());
-
-        List<Map<String, Object>> data = rows.stream().map(this::toOnCallResource).toList();
+        // STRANGLER: migrated — was direct JdbcTemplate SELECT from on_call_assignments
+        // List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql, ...);
 
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", data);
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId,
-                "week_start", weekStart.toString(),
-                "week_end_exclusive", weekEndExcl.toString()
-        ));
+        response.put("data", onCall);
+        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId,
+                "week_start", weekStartParam));
         return ResponseEntity.ok(response);
     }
 
@@ -148,19 +91,14 @@ public class StaffingController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(name = "facility_id") String facilityId) {
 
-        String sql = """
-                SELECT id, requestor_name, requestee_name, original_date, swap_date,
-                       specialty, status, created_at, updated_at
-                FROM on_call_swap_requests
-                WHERE tenant_id = ? AND facility_id = ?::uuid
-                ORDER BY created_at DESC
-                """;
+        // STRANGLER: migrated — delegate to TusoServiceClient
+        JsonNode swaps = tusoClient.listSwapRequests(facilityId);
 
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql, tenantId, facilityId);
-        List<Map<String, Object>> data = rows.stream().map(this::toSwapResource).toList();
+        // STRANGLER: migrated — was direct JdbcTemplate SELECT from on_call_swap_requests
+        // List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql, tenantId, facilityId);
 
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", data);
+        response.put("data", swaps);
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return ResponseEntity.ok(response);
     }
@@ -173,26 +111,25 @@ public class StaffingController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @Valid @RequestBody CreateSwapRequest body) {
 
-        UUID id = UUID.randomUUID();
-        jdbcTemplate.update("""
-                INSERT INTO on_call_swap_requests
-                    (id, tenant_id, facility_id, requestor_name, requestee_name,
-                     original_date, swap_date, specialty, status, created_at, updated_at)
-                VALUES (?, ?, ?::uuid, ?, ?, ?::date, ?::date, ?, 'PENDING', NOW(), NOW())
-                """,
-                id, tenantId, body.facility_id(),
-                body.requestor_name(), body.requestee_name(),
-                body.original_date(), body.swap_date(),
-                body.specialty());
+        // STRANGLER: migrated — delegate to TusoServiceClient
+        Map<String, Object> swapData = new LinkedHashMap<>();
+        swapData.put("facility_id", body.facility_id());
+        swapData.put("requestor_name", body.requestor_name());
+        swapData.put("requestee_name", body.requestee_name());
+        swapData.put("original_date", body.original_date());
+        swapData.put("swap_date", body.swap_date());
+        swapData.put("specialty", body.specialty());
+        swapData.put("tenant_id", tenantId);
 
-        Map<String, Object> row = jdbcTemplate.queryForMap("""
-                SELECT id, requestor_name, requestee_name, original_date, swap_date,
-                       specialty, status, created_at, updated_at
-                FROM on_call_swap_requests WHERE id = ? AND tenant_id = ?
-                """, id, tenantId);
+        JsonNode result = tusoClient.createSwapRequest(swapData);
+
+        // STRANGLER: migrated — was direct JdbcTemplate INSERT into on_call_swap_requests
+        // jdbcTemplate.update("""
+        //     INSERT INTO on_call_swap_requests (...) VALUES (?)
+        //     """, ...);
 
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", toSwapResource(row));
+        response.put("data", result);
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return ResponseEntity.status(201).body(response);
     }
@@ -211,75 +148,19 @@ public class StaffingController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "status must be APPROVED or DECLINED");
         }
 
-        int updated = jdbcTemplate.update("""
-                UPDATE on_call_swap_requests
-                SET status = ?, updated_at = NOW()
-                WHERE id = ?::uuid AND tenant_id = ?
-                """, normalized, id, tenantId);
+        // STRANGLER: migrated — delegate to TusoServiceClient
+        Map<String, Object> updateData = Map.of("status", normalized);
+        JsonNode result = tusoClient.updateSwapRequest(id.toString(), updateData);
 
-        if (updated == 0) {
-            throw new ResourceNotFoundException("Swap request not found: " + id);
-        }
-
-        Map<String, Object> row = jdbcTemplate.queryForMap("""
-                SELECT id, requestor_name, requestee_name, original_date, swap_date,
-                       specialty, status, created_at, updated_at
-                FROM on_call_swap_requests WHERE id = ? AND tenant_id = ?
-                """, id, tenantId);
+        // STRANGLER: migrated — was direct JdbcTemplate UPDATE on on_call_swap_requests
+        // jdbcTemplate.update("""
+        //     UPDATE on_call_swap_requests SET status = ?, updated_at = NOW()
+        //     WHERE id = ?::uuid AND tenant_id = ?
+        //     """, ...);
 
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", toSwapResource(row));
+        response.put("data", result);
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return ResponseEntity.ok(response);
-    }
-
-    private Map<String, Object> toShiftResource(Map<String, Object> row) {
-        Map<String, Object> attributes = new LinkedHashMap<>();
-        attributes.put("user_id", Objects.toString(row.get("user_id"), ""));
-        attributes.put("staff_display_name", Objects.toString(row.get("staff_display_name"), ""));
-        attributes.put("facility_id", row.get("facility_id") != null ? row.get("facility_id").toString() : null);
-        attributes.put("workspace_id", row.get("workspace_id") != null ? row.get("workspace_id").toString() : null);
-        attributes.put("status", Objects.toString(row.get("status"), ""));
-        attributes.put("started_at", row.get("started_at"));
-        attributes.put("ended_at", row.get("ended_at"));
-
-        Map<String, Object> resource = new LinkedHashMap<>();
-        resource.put("id", row.get("id").toString());
-        resource.put("type", "StaffingShift");
-        resource.put("attributes", attributes);
-        return resource;
-    }
-
-    private Map<String, Object> toOnCallResource(Map<String, Object> row) {
-        Map<String, Object> attributes = new LinkedHashMap<>();
-        attributes.put("assignment_date", row.get("assignment_date").toString());
-        attributes.put("specialty", Objects.toString(row.get("specialty"), ""));
-        attributes.put("shift_kind", Objects.toString(row.get("shift_kind"), "24hr"));
-        attributes.put("primary_staff_name", Objects.toString(row.get("primary_staff_name"), ""));
-        attributes.put("primary_phone", row.get("primary_phone"));
-        attributes.put("backup_staff_name", Objects.toString(row.get("backup_staff_name"), ""));
-        attributes.put("backup_phone", row.get("backup_phone"));
-
-        Map<String, Object> resource = new LinkedHashMap<>();
-        resource.put("id", row.get("id").toString());
-        resource.put("type", "OnCallAssignment");
-        resource.put("attributes", attributes);
-        return resource;
-    }
-
-    private Map<String, Object> toSwapResource(Map<String, Object> row) {
-        Map<String, Object> attributes = new LinkedHashMap<>();
-        attributes.put("requestor_name", Objects.toString(row.get("requestor_name"), ""));
-        attributes.put("requestee_name", Objects.toString(row.get("requestee_name"), ""));
-        attributes.put("original_date", row.get("original_date").toString());
-        attributes.put("swap_date", row.get("swap_date").toString());
-        attributes.put("specialty", row.get("specialty"));
-        attributes.put("status", Objects.toString(row.get("status"), "PENDING"));
-
-        Map<String, Object> resource = new LinkedHashMap<>();
-        resource.put("id", row.get("id").toString());
-        resource.put("type", "OnCallSwapRequest");
-        resource.put("attributes", attributes);
-        return resource;
     }
 }

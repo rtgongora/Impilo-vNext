@@ -1,11 +1,14 @@
 package zw.gov.mohcc.impilo.experience.controller.mobile.citizen;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.VitoServiceClient;
+import zw.gov.mohcc.impilo.experience.client.TshepoConsentServiceClient;
 import zw.gov.mohcc.impilo.experience.controller.ResourceNotFoundException;
 import zw.gov.mohcc.impilo.experience.service.OutboxService;
 
@@ -26,10 +29,15 @@ public class CitizenProfileController {
 
     private final JdbcTemplate jdbcTemplate;
     private final OutboxService outboxService;
+    private final VitoServiceClient vitoClient;
+    private final TshepoConsentServiceClient consentClient;
 
-    public CitizenProfileController(JdbcTemplate jdbcTemplate, OutboxService outboxService) {
+    public CitizenProfileController(JdbcTemplate jdbcTemplate, OutboxService outboxService,
+                                    VitoServiceClient vitoClient, TshepoConsentServiceClient consentClient) {
         this.jdbcTemplate = jdbcTemplate;
         this.outboxService = outboxService;
+        this.vitoClient = vitoClient;
+        this.consentClient = consentClient;
     }
 
     @GetMapping
@@ -39,35 +47,18 @@ public class CitizenProfileController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader("X-Actor-ID") String actorId) {
 
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList("""
-            SELECT id, cpid, given_name, family_name, date_of_birth, sex,
-                   national_id, phone, status, facility_id, created_at, updated_at
-            FROM patients
-            WHERE tenant_id = ? AND cpid = ?
-            """, tenantId, actorId);
+        // STRANGLER: migrated — delegate to VITO for citizen profile
+        JsonNode profile = vitoClient.getCitizenProfile(actorId);
 
-        if (rows.isEmpty()) {
-            throw new ResourceNotFoundException("Citizen profile not found for: " + actorId);
-        }
-
-        Map<String, Object> row = rows.get(0);
-        Map<String, Object> attributes = new LinkedHashMap<>();
-        attributes.put("cpid", row.get("cpid"));
-        attributes.put("givenName", row.get("given_name"));
-        attributes.put("familyName", row.get("family_name"));
-        attributes.put("dateOfBirth", row.get("date_of_birth") != null ? row.get("date_of_birth").toString() : null);
-        attributes.put("sex", row.get("sex"));
-        attributes.put("nationalId", row.get("national_id"));
-        attributes.put("phone", row.get("phone"));
-        attributes.put("preferredLanguage", "en");
-        attributes.put("facilityId", row.get("facility_id") != null ? row.get("facility_id").toString() : null);
+        // STRANGLER: migrated — was direct JdbcTemplate SELECT from patients table
+        // List<Map<String, Object>> rows = jdbcTemplate.queryForList("""
+        //     SELECT id, cpid, given_name, family_name, date_of_birth, sex,
+        //            national_id, phone, status, facility_id, created_at, updated_at
+        //     FROM patients WHERE tenant_id = ? AND cpid = ?
+        //     """, tenantId, actorId);
 
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", Map.of(
-                "id", row.get("id").toString(),
-                "type", "CitizenProfile",
-                "attributes", attributes
-        ));
+        response.put("data", profile);
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return ResponseEntity.ok(response);
     }
@@ -82,11 +73,14 @@ public class CitizenProfileController {
             @RequestHeader("X-Actor-ID") String actorId,
             @RequestBody Map<String, Object> updates) {
 
-        OffsetDateTime now = OffsetDateTime.now();
-        if (updates.containsKey("phone")) {
-            jdbcTemplate.update("UPDATE patients SET phone = ?, updated_at = ? WHERE tenant_id = ? AND cpid = ?",
-                    updates.get("phone"), now, tenantId, actorId);
-        }
+        // STRANGLER: migrated — delegate to VITO
+        JsonNode updatedProfile = vitoClient.updateCitizenProfile(actorId, updates);
+
+        // STRANGLER: migrated — was direct JdbcTemplate UPDATE on patients table
+        // if (updates.containsKey("phone")) {
+        //     jdbcTemplate.update("UPDATE patients SET phone = ?, updated_at = ? WHERE tenant_id = ? AND cpid = ?",
+        //             updates.get("phone"), now, tenantId, actorId);
+        // }
 
         outboxService.writeOutboxEvent(
                 "impilo.experience.citizen.profile-updated.v1",
@@ -95,7 +89,10 @@ public class CitizenProfileController {
                 Map.of("cpid", actorId, "updated_fields", updates.keySet().toString()),
                 Map.of());
 
-        return getProfile(tenantId, requestId, correlationId, actorId);
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", updatedProfile);
+        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/consents")
@@ -105,33 +102,17 @@ public class CitizenProfileController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader("X-Actor-ID") String actorId) {
 
-        List<Map<String, Object>> patientRows = jdbcTemplate.queryForList(
-                "SELECT id FROM patients WHERE tenant_id = ? AND cpid = ?", tenantId, actorId);
-        if (patientRows.isEmpty()) {
-            throw new ResourceNotFoundException("Patient not found");
-        }
-        UUID patientId = (UUID) patientRows.get(0).get("id");
+        // STRANGLER: migrated — delegate to TSHEPO Consent service
+        JsonNode consents = consentClient.listConsents(actorId, "ACTIVE", 0, 100);
 
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList("""
-            SELECT id, category, description, granted, granted_at, revoked_at
-            FROM consent_preferences
-            WHERE tenant_id = ? AND patient_id = ?
-            ORDER BY category
-            """, tenantId, patientId);
-
-        List<Map<String, Object>> data = rows.stream().map(r -> {
-            Map<String, Object> item = new LinkedHashMap<>();
-            item.put("id", r.get("id").toString());
-            item.put("category", r.get("category"));
-            item.put("description", r.get("description"));
-            item.put("granted", r.get("granted"));
-            item.put("grantedAt", r.get("granted_at"));
-            item.put("revokedAt", r.get("revoked_at"));
-            return item;
-        }).toList();
+        // STRANGLER: migrated — was direct JdbcTemplate SELECT from consent_preferences table
+        // List<Map<String, Object>> rows = jdbcTemplate.queryForList("""
+        //     SELECT id, category, description, granted, granted_at, revoked_at
+        //     FROM consent_preferences WHERE tenant_id = ? AND patient_id = ? ORDER BY category
+        //     """, tenantId, patientId);
 
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", data);
+        response.put("data", consents);
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return ResponseEntity.ok(response);
     }
@@ -147,24 +128,19 @@ public class CitizenProfileController {
             @RequestBody Map<String, Object> body) {
 
         boolean granted = Boolean.TRUE.equals(body.get("granted"));
-        OffsetDateTime now = OffsetDateTime.now();
 
-        int updated;
-        if (granted) {
-            updated = jdbcTemplate.update("""
-                UPDATE consent_preferences SET granted = TRUE, granted_at = ?, revoked_at = NULL, updated_at = ?
-                WHERE id = ? AND tenant_id = ?
-                """, now, now, id, tenantId);
-        } else {
-            updated = jdbcTemplate.update("""
-                UPDATE consent_preferences SET granted = FALSE, revoked_at = ?, updated_at = ?
-                WHERE id = ? AND tenant_id = ?
-                """, now, now, id, tenantId);
-        }
+        // STRANGLER: migrated — delegate to TSHEPO Consent service
+        Map<String, Object> updateRequest = new LinkedHashMap<>();
+        updateRequest.put("consentId", id.toString());
+        updateRequest.put("granted", granted);
+        updateRequest.put("tenantId", tenantId);
+        JsonNode result = consentClient.updateConsentPreference(updateRequest);
 
-        if (updated == 0) {
-            throw new ResourceNotFoundException("Consent preference not found: " + id);
-        }
+        // STRANGLER: migrated — was direct JdbcTemplate UPDATE on consent_preferences table
+        // jdbcTemplate.update("""
+        //     UPDATE consent_preferences SET granted = ?, granted_at = ?, revoked_at = NULL, updated_at = ?
+        //     WHERE id = ? AND tenant_id = ?
+        //     """, ...);
 
         outboxService.writeOutboxEvent(
                 "impilo.experience.citizen.consent-updated.v1",
@@ -173,21 +149,8 @@ public class CitizenProfileController {
                 Map.of("consent_id", id.toString(), "granted", String.valueOf(granted)),
                 Map.of());
 
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList(
-                "SELECT id, category, description, granted, granted_at, revoked_at FROM consent_preferences WHERE id = ? AND tenant_id = ?",
-                id, tenantId);
-
-        Map<String, Object> r = rows.get(0);
-        Map<String, Object> data = new LinkedHashMap<>();
-        data.put("id", r.get("id").toString());
-        data.put("category", r.get("category"));
-        data.put("description", r.get("description"));
-        data.put("granted", r.get("granted"));
-        data.put("grantedAt", r.get("granted_at"));
-        data.put("revokedAt", r.get("revoked_at"));
-
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", data);
+        response.put("data", result);
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return ResponseEntity.ok(response);
     }
@@ -201,8 +164,12 @@ public class CitizenProfileController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader("X-Actor-ID") String actorId) {
 
-        jdbcTemplate.update("UPDATE patients SET status = 'DELETED', updated_at = NOW() WHERE tenant_id = ? AND cpid = ?",
-                tenantId, actorId);
+        // STRANGLER: migrated — delegate to VITO
+        vitoClient.deleteCitizenAccount(actorId);
+
+        // STRANGLER: migrated — was direct JdbcTemplate UPDATE setting status='DELETED'
+        // jdbcTemplate.update("UPDATE patients SET status = 'DELETED', updated_at = NOW() WHERE tenant_id = ? AND cpid = ?",
+        //         tenantId, actorId);
 
         outboxService.writeOutboxEvent(
                 "impilo.experience.citizen.account-deleted.v1",

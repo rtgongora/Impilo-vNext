@@ -101,6 +101,17 @@ public class TshepoConsentServiceClient {
         return extractData(response);
     }
 
+    /**
+     * Update a consent preference (upsert).
+     */
+    public JsonNode updateConsentPreference(Map<String, Object> request) {
+        String url = baseUrl + "/v1/consent/preference";
+        log.info("TSHEPO-CONSENT: Updating consent preference");
+        ResponseEntity<JsonNode> response =
+                restTemplate.postForEntity(url, new HttpEntity<>(request), JsonNode.class);
+        return extractData(response);
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) {
             return response.getBody().get("data");

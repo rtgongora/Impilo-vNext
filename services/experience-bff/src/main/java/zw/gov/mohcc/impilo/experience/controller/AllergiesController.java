@@ -1,13 +1,17 @@
 package zw.gov.mohcc.impilo.experience.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 import zw.gov.mohcc.impilo.experience.domain.Allergy;
 import zw.gov.mohcc.impilo.experience.repository.AllergyRepository;
 import zw.gov.mohcc.impilo.experience.service.OutboxService;
@@ -26,16 +30,21 @@ import java.util.*;
 @RequestMapping("/internal/v1/allergies")
 public class AllergiesController {
 
+    private static final Logger log = LoggerFactory.getLogger(AllergiesController.class);
+
     private final AllergyRepository allergyRepository;
     private final OutboxService outboxService;
-    private final JdbcTemplate jdbcTemplate;
+    private final JdbcTemplate jdbcTemplate; // TODO: remove after verification
+    private final PctServiceClient pctClient;
 
     public AllergiesController(AllergyRepository allergyRepository,
                                OutboxService outboxService,
-                               JdbcTemplate jdbcTemplate) {
+                               JdbcTemplate jdbcTemplate,
+                               PctServiceClient pctClient) {
         this.allergyRepository = allergyRepository;
         this.outboxService = outboxService;
         this.jdbcTemplate = jdbcTemplate;
+        this.pctClient = pctClient;
     }
 
     public record CreateAllergyRequest(
@@ -55,6 +64,25 @@ public class AllergiesController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(required = false, name = "patient_id") String patientId) {
 
+        // STRANGLER: delegate to PctServiceClient
+        if (patientId != null) {
+            try {
+                JsonNode pctData = pctClient.listAllergies(patientId);
+                if (pctData != null) {
+                    Map<String, Object> response = new LinkedHashMap<>();
+                    response.put("data", pctData);
+                    response.put("meta", Map.of(
+                            "request_id", requestId,
+                            "correlation_id", correlationId
+                    ));
+                    return ResponseEntity.ok(response);
+                }
+            } catch (Exception e) {
+                log.warn("PCT listAllergies failed, falling back to local: {}", e.getMessage());
+            }
+        }
+
+        // STRANGLER: migrated to PctServiceClient — fallback to local repository
         List<Allergy> records;
         if (patientId != null) {
             records = allergyRepository.findByTenantIdAndPatientId(tenantId, UUID.fromString(patientId));
@@ -86,6 +114,23 @@ public class AllergiesController {
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @Valid @RequestBody CreateAllergyRequest request) {
 
+        // STRANGLER: delegate to PctServiceClient first
+        try {
+            Map<String, Object> pctBody = new LinkedHashMap<>();
+            pctBody.put("patient_id", request.patient_id());
+            pctBody.put("allergen", request.allergen());
+            pctBody.put("allergen_type", request.allergen_type());
+            pctBody.put("reaction", request.reaction());
+            pctBody.put("severity", request.severity() != null ? request.severity() : "UNKNOWN");
+            pctBody.put("onset_date", request.onset_date());
+            pctBody.put("recorded_by", request.recorded_by());
+            JsonNode pctData = pctClient.createAllergy(pctBody);
+            log.info("PCT allergy created successfully for patient={}", request.patient_id());
+        } catch (Exception e) {
+            log.warn("PCT createAllergy failed (non-blocking): {}", e.getMessage());
+        }
+
+        // STRANGLER: migrated to PctServiceClient — dual-write to local BFF table as backup cache
         UUID allergyId = UUID.randomUUID();
         OffsetDateTime now = OffsetDateTime.now();
 
@@ -161,6 +206,15 @@ public class AllergiesController {
         Allergy allergy = allergyRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Allergy not found: " + id));
 
+        // STRANGLER: delegate to PctServiceClient first
+        try {
+            pctClient.deactivateAllergy(id.toString());
+            log.info("PCT allergy deactivated: {}", id);
+        } catch (Exception e) {
+            log.warn("PCT deactivateAllergy failed (non-blocking): {}", e.getMessage());
+        }
+
+        // STRANGLER: migrated to PctServiceClient — dual-write to local BFF table as backup cache
         jdbcTemplate.update("""
             UPDATE allergies SET status = 'INACTIVE', updated_at = ? WHERE id = ?
             """, OffsetDateTime.now(), id);

@@ -1,7 +1,10 @@
 package zw.gov.mohcc.impilo.experience.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -11,6 +14,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 import zw.gov.mohcc.impilo.experience.domain.VitalsRecord;
 import zw.gov.mohcc.impilo.experience.repository.VitalsRecordRepository;
 import zw.gov.mohcc.impilo.experience.service.OutboxService;
@@ -29,16 +33,21 @@ import java.util.*;
 @RequestMapping("/internal/v1/vitals")
 public class VitalsController {
 
+    private static final Logger log = LoggerFactory.getLogger(VitalsController.class);
+
     private final VitalsRecordRepository vitalsRecordRepository;
     private final OutboxService outboxService;
-    private final JdbcTemplate jdbcTemplate;
+    private final JdbcTemplate jdbcTemplate; // TODO: remove after verification
+    private final PctServiceClient pctClient;
 
     public VitalsController(VitalsRecordRepository vitalsRecordRepository,
                             OutboxService outboxService,
-                            JdbcTemplate jdbcTemplate) {
+                            JdbcTemplate jdbcTemplate,
+                            PctServiceClient pctClient) {
         this.vitalsRecordRepository = vitalsRecordRepository;
         this.outboxService = outboxService;
         this.jdbcTemplate = jdbcTemplate;
+        this.pctClient = pctClient;
     }
 
     public record CreateVitalsRequest(
@@ -67,6 +76,25 @@ public class VitalsController {
             @RequestParam(required = false, name = "patient_id") String patientId,
             @RequestParam(required = false, name = "encounter_id") String encounterId) {
 
+        // STRANGLER: delegate to PctServiceClient for patient-based queries
+        if (patientId != null) {
+            try {
+                JsonNode pctData = pctClient.listVitals(patientId, page, Math.min(size, 100));
+                if (pctData != null) {
+                    Map<String, Object> response = new LinkedHashMap<>();
+                    response.put("data", pctData);
+                    response.put("meta", Map.of(
+                            "request_id", requestId,
+                            "correlation_id", correlationId
+                    ));
+                    return ResponseEntity.ok(response);
+                }
+            } catch (Exception e) {
+                log.warn("PCT listVitals failed, falling back to local: {}", e.getMessage());
+            }
+        }
+
+        // STRANGLER: migrated to PctServiceClient — fallback to local repository
         if (encounterId != null) {
             List<VitalsRecord> records = vitalsRecordRepository.findByEncounterId(UUID.fromString(encounterId));
 
@@ -134,6 +162,29 @@ public class VitalsController {
             bmi = request.weight().divide(heightM.multiply(heightM), 2, java.math.RoundingMode.HALF_UP);
         }
 
+        // STRANGLER: delegate to PctServiceClient first
+        try {
+            Map<String, Object> pctBody = new LinkedHashMap<>();
+            pctBody.put("patient_id", request.patient_id());
+            pctBody.put("encounter_id", request.encounter_id());
+            pctBody.put("recorded_by", request.recorded_by());
+            pctBody.put("systolic", request.systolic());
+            pctBody.put("diastolic", request.diastolic());
+            pctBody.put("heart_rate", request.heart_rate());
+            pctBody.put("temperature", request.temperature());
+            pctBody.put("respiratory_rate", request.respiratory_rate());
+            pctBody.put("oxygen_saturation", request.oxygen_saturation());
+            pctBody.put("weight", request.weight());
+            pctBody.put("height", request.height());
+            pctBody.put("pain_score", request.pain_score());
+            pctBody.put("notes", request.notes());
+            pctClient.createVitals(pctBody);
+            log.info("PCT vitals created successfully for patient={}", request.patient_id());
+        } catch (Exception e) {
+            log.warn("PCT createVitals failed (non-blocking): {}", e.getMessage());
+        }
+
+        // STRANGLER: migrated to PctServiceClient — dual-write to local BFF table as backup cache
         jdbcTemplate.update("""
             INSERT INTO vitals_records
                 (id, tenant_id, patient_id, encounter_id, recorded_by,

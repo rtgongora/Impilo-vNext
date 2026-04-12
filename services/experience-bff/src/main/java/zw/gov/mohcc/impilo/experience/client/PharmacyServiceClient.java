@@ -66,6 +66,40 @@ public class PharmacyServiceClient {
         return extractData(response);
     }
 
+    /**
+     * Get prescriptions for a patient by CPID with optional status filter.
+     */
+    public JsonNode getPatientPrescriptions(String cpid, String status, int page, int size) {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/prescriptions/patient/" + cpid)
+                .queryParam("page", page)
+                .queryParam("size", size);
+        if (status != null) builder.queryParam("status", status);
+        log.debug("Pharmacy: Getting prescriptions for patient={}...",
+                cpid.substring(0, Math.min(8, cpid.length())));
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(builder.toUriString(), JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Get a single prescription by ID.
+     */
+    public JsonNode getPrescription(String prescriptionId) {
+        String url = baseUrl + "/v1/prescriptions/" + prescriptionId;
+        log.debug("Pharmacy: Getting prescription id={}", prescriptionId);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Request a prescription refill.
+     */
+    public JsonNode requestRefill(String prescriptionId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/prescriptions/" + prescriptionId + "/refill";
+        log.info("Pharmacy: Requesting refill for prescription={}", prescriptionId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) {
             return response.getBody().get("data");

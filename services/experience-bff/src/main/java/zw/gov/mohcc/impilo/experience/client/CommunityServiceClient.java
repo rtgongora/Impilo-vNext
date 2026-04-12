@@ -109,6 +109,50 @@ public class CommunityServiceClient {
         return extractData(response);
     }
 
+    // ── Groups & Discussions ─────────────────────────────────────────
+
+    public JsonNode listGroups(String category, int page, int size) {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/community/groups")
+                .queryParam("page", page)
+                .queryParam("size", size);
+        if (category != null) builder.queryParam("category", category);
+        log.info("COMMUNITY: listGroups operation");
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(builder.encode().toUriString(), JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode createGroup(Map<String, Object> request) {
+        String url = baseUrl + "/internal/v1/community/groups";
+        log.info("COMMUNITY: createGroup operation");
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, request, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode joinGroup(String groupId, Map<String, Object> request) {
+        String url = baseUrl + "/internal/v1/community/groups/" + groupId + "/join";
+        log.info("COMMUNITY: joinGroup operation [groupId={}]", groupId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, request, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode listPosts(String groupId, int page, int size) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/community/groups/" + groupId + "/posts")
+                .queryParam("page", page)
+                .queryParam("size", size)
+                .encode()
+                .toUriString();
+        log.info("COMMUNITY: listPosts operation [groupId={}]", groupId);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode createPost(String groupId, Map<String, Object> request) {
+        String url = baseUrl + "/internal/v1/community/groups/" + groupId + "/posts";
+        log.info("COMMUNITY: createPost operation [groupId={}]", groupId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, request, JsonNode.class);
+        return extractData(response);
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) {
             return response.getBody().get("data");

@@ -173,6 +173,29 @@ public class OrosServiceClient {
         return extractData(response);
     }
 
+    /**
+     * Get resulted orders for a patient (lab results).
+     */
+    public JsonNode getPatientResults(String cpid, int page, int size) {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/orders/patient/" + cpid + "/results")
+                .queryParam("page", page)
+                .queryParam("size", size);
+        log.debug("OROS: Getting results for patient={}...",
+                cpid.substring(0, Math.min(8, cpid.length())));
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(builder.toUriString(), JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Get a single result by order ID.
+     */
+    public JsonNode getResult(String orderId) {
+        String url = baseUrl + "/v1/orders/" + orderId;
+        log.debug("OROS: Getting result for order={}", orderId);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) {
             return response.getBody().get("data");

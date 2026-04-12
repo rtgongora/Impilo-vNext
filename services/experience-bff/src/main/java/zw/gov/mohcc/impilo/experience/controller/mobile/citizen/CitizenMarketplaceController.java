@@ -1,5 +1,6 @@
 package zw.gov.mohcc.impilo.experience.controller.mobile.citizen;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.HttpStatus;
@@ -8,6 +9,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.MsikaFlowServiceClient;
 import zw.gov.mohcc.impilo.experience.controller.ResourceNotFoundException;
 import zw.gov.mohcc.impilo.experience.service.OutboxService;
 
@@ -29,10 +31,13 @@ public class CitizenMarketplaceController {
 
     private final JdbcTemplate jdbcTemplate;
     private final OutboxService outboxService;
+    private final MsikaFlowServiceClient msikaFlowClient;
 
-    public CitizenMarketplaceController(JdbcTemplate jdbcTemplate, OutboxService outboxService) {
+    public CitizenMarketplaceController(JdbcTemplate jdbcTemplate, OutboxService outboxService,
+                                        MsikaFlowServiceClient msikaFlowClient) {
         this.jdbcTemplate = jdbcTemplate;
         this.outboxService = outboxService;
+        this.msikaFlowClient = msikaFlowClient;
     }
 
     public record ServiceRequestBody(
@@ -51,44 +56,21 @@ public class CitizenMarketplaceController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
 
-        int limit = Math.min(size, 100);
-        int offset = page * limit;
+        // STRANGLER: migrated — delegate to MsikaFlowServiceClient
+        org.springframework.util.LinkedMultiValueMap<String, String> params = new org.springframework.util.LinkedMultiValueMap<>();
+        if (category != null && !category.isBlank()) params.add("category", category);
+        if (search != null && !search.isBlank()) params.add("search", search);
+        params.add("page", String.valueOf(page));
+        params.add("size", String.valueOf(Math.min(size, 100)));
 
-        StringBuilder sql = new StringBuilder("""
-            SELECT id, name, description, category, facility_id, facility_name,
-                   price, currency, available, rating, image_url
-            FROM marketplace_services WHERE tenant_id = ? AND available = TRUE
-            """);
-        List<Object> params = new ArrayList<>(List.of(tenantId));
+        ResponseEntity<String> result = msikaFlowClient.listVendors(params);
 
-        if (category != null && !category.isBlank()) {
-            sql.append(" AND category = ?");
-            params.add(category);
-        }
-        if (search != null && !search.isBlank()) {
-            sql.append(" AND (LOWER(name) LIKE ? OR LOWER(description) LIKE ?)");
-            String searchTerm = "%" + search.toLowerCase() + "%";
-            params.add(searchTerm);
-            params.add(searchTerm);
-        }
-        sql.append(" ORDER BY name LIMIT ? OFFSET ?");
-        params.add(limit);
-        params.add(offset);
-
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql.toString(), params.toArray());
-
-        Long total = jdbcTemplate.queryForObject(
-                "SELECT count(*) FROM marketplace_services WHERE tenant_id = ? AND available = TRUE",
-                Long.class, tenantId);
-
-        List<Map<String, Object>> data = rows.stream().map(this::toServiceResource).toList();
+        // STRANGLER: migrated — was direct JdbcTemplate SELECT from marketplace_services table
+        // List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql.toString(), params.toArray());
 
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", data);
-        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId,
-                "page", Map.of("number", page, "size", limit,
-                        "total_elements", total != null ? total : 0L,
-                        "total_pages", total != null ? (int) Math.ceil((double) total / limit) : 0)));
+        response.put("data", result.getBody());
+        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return ResponseEntity.ok(response);
     }
 
@@ -99,16 +81,14 @@ public class CitizenMarketplaceController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
 
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList("""
-            SELECT id, name, description, category, facility_id, facility_name,
-                   price, currency, available, rating, image_url
-            FROM marketplace_services WHERE id = ? AND tenant_id = ?
-            """, id, tenantId);
+        // STRANGLER: migrated — delegate to MsikaFlowServiceClient
+        ResponseEntity<String> result = msikaFlowClient.getOrder(id.toString());
 
-        if (rows.isEmpty()) throw new ResourceNotFoundException("Service not found: " + id);
+        // STRANGLER: migrated — was direct JdbcTemplate SELECT from marketplace_services
+        // List<Map<String, Object>> rows = jdbcTemplate.queryForList(..., id, tenantId);
 
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", toServiceResource(rows.get(0)));
+        response.put("data", result.getBody());
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return ResponseEntity.ok(response);
     }
@@ -123,41 +103,27 @@ public class CitizenMarketplaceController {
             @RequestHeader("X-Actor-ID") String actorId,
             @Valid @RequestBody ServiceRequestBody body) {
 
-        UUID patientId = resolvePatientId(tenantId, actorId);
-        UUID reqId = UUID.randomUUID();
-        OffsetDateTime now = OffsetDateTime.now();
+        // STRANGLER: migrated — delegate to MsikaFlowServiceClient
+        String orderBody = String.format(
+                "{\"serviceId\":\"%s\",\"citizenCpid\":\"%s\",\"notes\":\"%s\"}",
+                body.serviceId(), actorId, body.notes() != null ? body.notes() : "");
 
-        List<Map<String, Object>> svcRows = jdbcTemplate.queryForList(
-                "SELECT name, facility_name FROM marketplace_services WHERE id = ?::uuid AND tenant_id = ?",
-                body.serviceId(), tenantId);
-        String svcName = svcRows.isEmpty() ? "" : (String) svcRows.get(0).get("name");
-        String facName = svcRows.isEmpty() ? "" : (String) svcRows.get(0).get("facility_name");
+        ResponseEntity<String> result = msikaFlowClient.createOrder(orderBody);
 
-        jdbcTemplate.update("""
-            INSERT INTO service_requests
-                (id, tenant_id, patient_id, service_id, service_name, facility_name,
-                 status, requested_at, notes, created_at, updated_at)
-            VALUES (?, ?, ?, ?::uuid, ?, ?, 'PENDING', ?, ?, ?, ?)
-            """, reqId, tenantId, patientId, body.serviceId(), svcName, facName,
-                now, body.notes(), now, now);
+        // STRANGLER: migrated — was direct JdbcTemplate INSERT into service_requests table
+        // jdbcTemplate.update("""
+        //     INSERT INTO service_requests (...) VALUES (...)
+        //     """, ...);
 
         outboxService.writeOutboxEvent(
                 "impilo.experience.citizen.service-requested.v1",
                 correlationId, requestId, requestId, tenantId, podId,
-                "ServiceRequest", reqId.toString(),
-                Map.of("request_id", reqId.toString(), "service_id", body.serviceId(), "status", "PENDING"),
+                "ServiceRequest", requestId,
+                Map.of("service_id", body.serviceId(), "status", "PENDING"),
                 Map.of());
 
-        Map<String, Object> data = new LinkedHashMap<>();
-        data.put("id", reqId.toString());
-        data.put("serviceId", body.serviceId());
-        data.put("serviceName", svcName);
-        data.put("facilityName", facName);
-        data.put("status", "PENDING");
-        data.put("requestedAt", now);
-
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", data);
+        response.put("data", result.getBody());
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -172,38 +138,21 @@ public class CitizenMarketplaceController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
 
-        UUID patientId = resolvePatientId(tenantId, actorId);
-        int limit = Math.min(size, 100);
-        int offset = page * limit;
+        // STRANGLER: migrated — delegate to MsikaFlowServiceClient
+        org.springframework.util.LinkedMultiValueMap<String, String> params = new org.springframework.util.LinkedMultiValueMap<>();
+        params.add("citizenCpid", actorId);
+        if (status != null) params.add("status", status);
+        params.add("page", String.valueOf(page));
+        params.add("size", String.valueOf(Math.min(size, 100)));
 
-        StringBuilder sql = new StringBuilder("""
-            SELECT id, service_id, service_name, facility_name, status,
-                   requested_at, scheduled_at, completed_at, notes, tracking_number
-            FROM service_requests WHERE tenant_id = ? AND patient_id = ?
-            """);
-        List<Object> params = new ArrayList<>(List.of(tenantId, patientId));
+        ResponseEntity<String> result = msikaFlowClient.listVendors(params);
 
-        if (status != null) {
-            sql.append(" AND status = ?");
-            params.add(status);
-        }
-        sql.append(" ORDER BY requested_at DESC LIMIT ? OFFSET ?");
-        params.add(limit);
-        params.add(offset);
-
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql.toString(), params.toArray());
-        Long total = jdbcTemplate.queryForObject(
-                "SELECT count(*) FROM service_requests WHERE tenant_id = ? AND patient_id = ?",
-                Long.class, tenantId, patientId);
-
-        List<Map<String, Object>> data = rows.stream().map(this::toRequestResource).toList();
+        // STRANGLER: migrated — was direct JdbcTemplate SELECT from service_requests
+        // List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql.toString(), params.toArray());
 
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", data);
-        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId,
-                "page", Map.of("number", page, "size", limit,
-                        "total_elements", total != null ? total : 0L,
-                        "total_pages", total != null ? (int) Math.ceil((double) total / limit) : 0)));
+        response.put("data", result.getBody());
+        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return ResponseEntity.ok(response);
     }
 
@@ -214,16 +163,14 @@ public class CitizenMarketplaceController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
 
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList("""
-            SELECT id, service_id, service_name, facility_name, status,
-                   requested_at, scheduled_at, completed_at, notes, tracking_number
-            FROM service_requests WHERE id = ? AND tenant_id = ?
-            """, id, tenantId);
+        // STRANGLER: migrated — delegate to MsikaFlowServiceClient
+        ResponseEntity<String> result = msikaFlowClient.getOrder(id.toString());
 
-        if (rows.isEmpty()) throw new ResourceNotFoundException("Service request not found: " + id);
+        // STRANGLER: migrated — was direct JdbcTemplate SELECT from service_requests
+        // List<Map<String, Object>> rows = jdbcTemplate.queryForList(..., id, tenantId);
 
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", toRequestResource(rows.get(0)));
+        response.put("data", result.getBody());
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return ResponseEntity.ok(response);
     }
@@ -238,13 +185,14 @@ public class CitizenMarketplaceController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestBody(required = false) Map<String, Object> body) {
 
-        OffsetDateTime now = OffsetDateTime.now();
-        int updated = jdbcTemplate.update("""
-            UPDATE service_requests SET status = 'CANCELLED', updated_at = ?
-            WHERE id = ? AND tenant_id = ? AND status IN ('PENDING', 'CONFIRMED')
-            """, now, id, tenantId);
+        // STRANGLER: migrated — delegate to MsikaFlowServiceClient
+        msikaFlowClient.cancelOrder(id.toString());
 
-        if (updated == 0) throw new ResourceNotFoundException("Cancellable service request not found: " + id);
+        // STRANGLER: migrated — was direct JdbcTemplate UPDATE on service_requests
+        // jdbcTemplate.update("""
+        //     UPDATE service_requests SET status = 'CANCELLED', updated_at = ?
+        //     WHERE id = ? AND tenant_id = ? AND status IN ('PENDING', 'CONFIRMED')
+        //     """, ...);
 
         outboxService.writeOutboxEvent(
                 "impilo.experience.citizen.service-cancelled.v1",
@@ -257,43 +205,5 @@ public class CitizenMarketplaceController {
         response.put("data", Map.of("id", id.toString(), "status", "CANCELLED"));
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return ResponseEntity.ok(response);
-    }
-
-    private UUID resolvePatientId(String tenantId, String actorId) {
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList(
-                "SELECT id FROM patients WHERE tenant_id = ? AND cpid = ?", tenantId, actorId);
-        if (rows.isEmpty()) throw new ResourceNotFoundException("Patient not found for: " + actorId);
-        return (UUID) rows.get(0).get("id");
-    }
-
-    private Map<String, Object> toServiceResource(Map<String, Object> row) {
-        Map<String, Object> r = new LinkedHashMap<>();
-        r.put("id", row.get("id").toString());
-        r.put("name", row.get("name"));
-        r.put("description", row.get("description"));
-        r.put("category", row.get("category"));
-        r.put("facilityId", row.get("facility_id") != null ? row.get("facility_id").toString() : null);
-        r.put("facilityName", row.get("facility_name"));
-        r.put("price", row.get("price"));
-        r.put("currency", row.get("currency"));
-        r.put("available", row.get("available"));
-        r.put("rating", row.get("rating"));
-        r.put("imageUrl", row.get("image_url"));
-        return r;
-    }
-
-    private Map<String, Object> toRequestResource(Map<String, Object> row) {
-        Map<String, Object> r = new LinkedHashMap<>();
-        r.put("id", row.get("id").toString());
-        r.put("serviceId", row.get("service_id") != null ? row.get("service_id").toString() : null);
-        r.put("serviceName", row.get("service_name"));
-        r.put("facilityName", row.get("facility_name"));
-        r.put("status", row.get("status"));
-        r.put("requestedAt", row.get("requested_at"));
-        r.put("scheduledAt", row.get("scheduled_at"));
-        r.put("completedAt", row.get("completed_at"));
-        r.put("notes", row.get("notes"));
-        r.put("trackingNumber", row.get("tracking_number"));
-        return r;
     }
 }

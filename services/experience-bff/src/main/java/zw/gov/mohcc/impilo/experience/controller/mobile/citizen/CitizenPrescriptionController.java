@@ -1,11 +1,13 @@
 package zw.gov.mohcc.impilo.experience.controller.mobile.citizen;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.PharmacyServiceClient;
 import zw.gov.mohcc.impilo.experience.controller.ResourceNotFoundException;
 import zw.gov.mohcc.impilo.experience.service.OutboxService;
 
@@ -24,10 +26,13 @@ public class CitizenPrescriptionController {
 
     private final JdbcTemplate jdbcTemplate;
     private final OutboxService outboxService;
+    private final PharmacyServiceClient pharmacyClient;
 
-    public CitizenPrescriptionController(JdbcTemplate jdbcTemplate, OutboxService outboxService) {
+    public CitizenPrescriptionController(JdbcTemplate jdbcTemplate, OutboxService outboxService,
+                                         PharmacyServiceClient pharmacyClient) {
         this.jdbcTemplate = jdbcTemplate;
         this.outboxService = outboxService;
+        this.pharmacyClient = pharmacyClient;
     }
 
     @GetMapping
@@ -40,43 +45,18 @@ public class CitizenPrescriptionController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
 
-        UUID patientId = resolvePatientId(tenantId, actorId);
         int limit = Math.min(size, 100);
-        int offset = page * limit;
 
-        StringBuilder sql = new StringBuilder("""
-            SELECT p.id, p.medication_name, p.generic_name, p.dosage, p.route,
-                   p.frequency, p.duration, p.quantity, p.instructions, p.indication,
-                   p.status, p.prescribed_by, p.dispensed_by, p.dispensed_at, p.created_at
-            FROM prescriptions p
-            WHERE p.tenant_id = ? AND p.patient_id = ?
-            """);
-        List<Object> params = new ArrayList<>(List.of(tenantId, patientId));
+        // STRANGLER: migrated — delegate to PharmacyServiceClient
+        JsonNode prescriptions = pharmacyClient.getPatientPrescriptions(actorId, status, page, limit);
 
-        if (status != null) {
-            sql.append(" AND p.status = ?");
-            params.add(status);
-        }
-        sql.append(" ORDER BY p.created_at DESC LIMIT ? OFFSET ?");
-        params.add(limit);
-        params.add(offset);
-
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql.toString(), params.toArray());
-        Long total = jdbcTemplate.queryForObject(
-                "SELECT count(*) FROM prescriptions WHERE tenant_id = ? AND patient_id = ?" +
-                        (status != null ? " AND status = '" + status + "'" : ""),
-                Long.class, tenantId, patientId);
-
-        List<Map<String, Object>> data = rows.stream().map(this::toResource).toList();
+        // STRANGLER: migrated — was direct JdbcTemplate SELECT from prescriptions table
+        // UUID patientId = resolvePatientId(tenantId, actorId);
+        // List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql.toString(), params.toArray());
 
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", data);
-        response.put("meta", Map.of(
-                "request_id", requestId, "correlation_id", correlationId,
-                "page", Map.of("number", page, "size", limit,
-                        "total_elements", total != null ? total : 0L,
-                        "total_pages", total != null ? (int) Math.ceil((double) total / limit) : 0)
-        ));
+        response.put("data", prescriptions);
+        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return ResponseEntity.ok(response);
     }
 
@@ -87,17 +67,14 @@ public class CitizenPrescriptionController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
 
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList("""
-            SELECT id, medication_name, generic_name, dosage, route, frequency, duration,
-                   quantity, instructions, indication, status, prescribed_by,
-                   dispensed_by, dispensed_at, created_at
-            FROM prescriptions WHERE id = ? AND tenant_id = ?
-            """, id, tenantId);
+        // STRANGLER: migrated — delegate to PharmacyServiceClient
+        JsonNode prescription = pharmacyClient.getPrescription(id.toString());
 
-        if (rows.isEmpty()) throw new ResourceNotFoundException("Prescription not found: " + id);
+        // STRANGLER: migrated — was direct JdbcTemplate SELECT from prescriptions
+        // List<Map<String, Object>> rows = jdbcTemplate.queryForList(..., id, tenantId);
 
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", toResource(rows.get(0)));
+        response.put("data", prescription);
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return ResponseEntity.ok(response);
     }
@@ -112,49 +89,19 @@ public class CitizenPrescriptionController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestBody(required = false) Map<String, Object> body) {
 
-        UUID refillId = UUID.randomUUID();
+        // STRANGLER: migrated — delegate to PharmacyServiceClient
+        JsonNode refillResult = pharmacyClient.requestRefill(id.toString(), body != null ? body : Map.of());
 
         outboxService.writeOutboxEvent(
                 "impilo.experience.citizen.refill-requested.v1",
                 correlationId, requestId, requestId, tenantId, podId,
                 "Prescription", id.toString(),
-                Map.of("prescription_id", id.toString(), "refill_id", refillId.toString(), "status", "PENDING"),
+                Map.of("prescription_id", id.toString(), "status", "PENDING"),
                 Map.of());
 
-        Map<String, Object> data = new LinkedHashMap<>();
-        data.put("refillId", refillId.toString());
-        data.put("status", "PENDING");
-
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", data);
+        response.put("data", refillResult);
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
-    }
-
-    private UUID resolvePatientId(String tenantId, String actorId) {
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList(
-                "SELECT id FROM patients WHERE tenant_id = ? AND cpid = ?", tenantId, actorId);
-        if (rows.isEmpty()) throw new ResourceNotFoundException("Patient not found for: " + actorId);
-        return (UUID) rows.get(0).get("id");
-    }
-
-    private Map<String, Object> toResource(Map<String, Object> row) {
-        Map<String, Object> r = new LinkedHashMap<>();
-        r.put("id", row.get("id").toString());
-        r.put("medicationName", row.get("medication_name"));
-        r.put("genericName", row.get("generic_name"));
-        r.put("dosage", row.get("dosage"));
-        r.put("route", row.get("route"));
-        r.put("frequency", row.get("frequency"));
-        r.put("duration", row.get("duration"));
-        r.put("quantity", row.get("quantity"));
-        r.put("instructions", row.get("instructions"));
-        r.put("indication", row.get("indication"));
-        r.put("status", row.get("status"));
-        r.put("prescribedBy", row.get("prescribed_by"));
-        r.put("dispensedBy", row.get("dispensed_by"));
-        r.put("dispensedAt", row.get("dispensed_at"));
-        r.put("createdAt", row.get("created_at"));
-        return r;
     }
 }

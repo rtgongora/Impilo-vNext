@@ -1,5 +1,6 @@
 package zw.gov.mohcc.impilo.experience.controller.mobile.citizen;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.HttpStatus;
@@ -8,6 +9,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 import zw.gov.mohcc.impilo.experience.controller.ResourceNotFoundException;
 import zw.gov.mohcc.impilo.experience.service.OutboxService;
 
@@ -28,10 +30,13 @@ public class CitizenTelehealthController {
 
     private final JdbcTemplate jdbcTemplate;
     private final OutboxService outboxService;
+    private final PctServiceClient pctClient;
 
-    public CitizenTelehealthController(JdbcTemplate jdbcTemplate, OutboxService outboxService) {
+    public CitizenTelehealthController(JdbcTemplate jdbcTemplate, OutboxService outboxService,
+                                       PctServiceClient pctClient) {
         this.jdbcTemplate = jdbcTemplate;
         this.outboxService = outboxService;
+        this.pctClient = pctClient;
     }
 
     public record RequestTeleconsultBody(
@@ -52,38 +57,18 @@ public class CitizenTelehealthController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
 
-        UUID patientId = resolvePatientId(tenantId, actorId);
         int limit = Math.min(size, 100);
-        int offset = page * limit;
 
-        StringBuilder sql = new StringBuilder("""
-            SELECT id, provider_id, provider_name, session_type, status,
-                   scheduled_at, started_at, ended_at, room_url, notes, reason, referral_id
-            FROM citizen_telehealth_sessions WHERE tenant_id = ? AND patient_id = ?
-            """);
-        List<Object> params = new ArrayList<>(List.of(tenantId, patientId));
+        // STRANGLER: migrated — delegate to PctServiceClient
+        JsonNode sessions = pctClient.getPatientTelehealthSessions(actorId, status, page, limit);
 
-        if (status != null) {
-            sql.append(" AND status = ?");
-            params.add(status);
-        }
-        sql.append(" ORDER BY scheduled_at DESC LIMIT ? OFFSET ?");
-        params.add(limit);
-        params.add(offset);
-
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql.toString(), params.toArray());
-        Long total = jdbcTemplate.queryForObject(
-                "SELECT count(*) FROM citizen_telehealth_sessions WHERE tenant_id = ? AND patient_id = ?",
-                Long.class, tenantId, patientId);
-
-        List<Map<String, Object>> data = rows.stream().map(this::toResource).toList();
+        // STRANGLER: migrated — was direct JdbcTemplate SELECT from citizen_telehealth_sessions table
+        // UUID patientId = resolvePatientId(tenantId, actorId);
+        // List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql.toString(), params.toArray());
 
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", data);
-        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId,
-                "page", Map.of("number", page, "size", limit,
-                        "total_elements", total != null ? total : 0L,
-                        "total_pages", total != null ? (int) Math.ceil((double) total / limit) : 0)));
+        response.put("data", sessions);
+        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return ResponseEntity.ok(response);
     }
 
@@ -94,16 +79,14 @@ public class CitizenTelehealthController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
 
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList("""
-            SELECT id, provider_id, provider_name, session_type, status,
-                   scheduled_at, started_at, ended_at, room_url, notes, reason, referral_id
-            FROM citizen_telehealth_sessions WHERE id = ? AND tenant_id = ?
-            """, id, tenantId);
+        // STRANGLER: migrated — delegate to PctServiceClient
+        JsonNode session = pctClient.getTelehealthSession(id.toString());
 
-        if (rows.isEmpty()) throw new ResourceNotFoundException("Telehealth session not found: " + id);
+        // STRANGLER: migrated — was direct JdbcTemplate SELECT from citizen_telehealth_sessions
+        // List<Map<String, Object>> rows = jdbcTemplate.queryForList(..., id, tenantId);
 
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", toResource(rows.get(0)));
+        response.put("data", session);
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return ResponseEntity.ok(response);
     }
@@ -118,41 +101,34 @@ public class CitizenTelehealthController {
             @RequestHeader("X-Actor-ID") String actorId,
             @Valid @RequestBody RequestTeleconsultBody body) {
 
-        UUID patientId = resolvePatientId(tenantId, actorId);
-        UUID sessionId = UUID.randomUUID();
-        OffsetDateTime now = OffsetDateTime.now();
         String sessionType = body.sessionType() != null ? body.sessionType() : "VIDEO";
-        OffsetDateTime scheduledAt = body.preferredDate() != null
-                ? OffsetDateTime.parse(body.preferredDate() + "T10:00:00Z")
-                : now.plusHours(1);
 
-        jdbcTemplate.update("""
-            INSERT INTO citizen_telehealth_sessions
-                (id, tenant_id, patient_id, provider_id, provider_name, session_type,
-                 status, scheduled_at, reason, room_url, referral_id, created_at, updated_at)
-            VALUES (?, ?, ?, ?::uuid, 'Assigned Provider', ?, 'REQUESTED', ?, ?, ?, ?::uuid, ?, ?)
-            """, sessionId, tenantId, patientId,
-                body.providerId(), sessionType, scheduledAt, body.reason(),
-                "session-" + sessionId, body.referralId(),
-                now, now);
+        // STRANGLER: migrated — delegate to PctServiceClient
+        Map<String, Object> sessionRequest = new LinkedHashMap<>();
+        sessionRequest.put("patientCpid", actorId);
+        sessionRequest.put("reason", body.reason());
+        sessionRequest.put("sessionType", sessionType);
+        sessionRequest.put("preferredDate", body.preferredDate());
+        if (body.providerId() != null) sessionRequest.put("providerId", body.providerId());
+        if (body.referralId() != null) sessionRequest.put("referralId", body.referralId());
+
+        JsonNode result = pctClient.requestTelehealthSession(sessionRequest);
+
+        // STRANGLER: migrated — was direct JdbcTemplate INSERT into citizen_telehealth_sessions table
+        // jdbcTemplate.update("""
+        //     INSERT INTO citizen_telehealth_sessions (...) VALUES (...)
+        //     """, ...);
 
         outboxService.writeOutboxEvent(
                 "impilo.experience.citizen.teleconsult-requested.v1",
                 correlationId, requestId, requestId, tenantId, podId,
-                "TelehealthSession", sessionId.toString(),
-                Map.of("session_id", sessionId.toString(), "type", sessionType, "status", "REQUESTED",
+                "TelehealthSession", requestId,
+                Map.of("type", sessionType, "status", "REQUESTED",
                         "referral_id", body.referralId() != null ? body.referralId() : ""),
                 Map.of());
 
-        Map<String, Object> data = new LinkedHashMap<>();
-        data.put("id", sessionId.toString());
-        data.put("sessionType", sessionType);
-        data.put("status", "REQUESTED");
-        data.put("scheduledAt", scheduledAt);
-        data.put("providerName", "Assigned Provider");
-
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", data);
+        response.put("data", result);
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -166,15 +142,15 @@ public class CitizenTelehealthController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
 
-        OffsetDateTime now = OffsetDateTime.now();
+        // STRANGLER: migrated — delegate to PctServiceClient
+        JsonNode result = pctClient.joinTelehealthSession(id.toString());
 
-        int updated = jdbcTemplate.update("""
-            UPDATE citizen_telehealth_sessions
-            SET status = 'IN_PROGRESS', started_at = COALESCE(started_at, ?), updated_at = ?
-            WHERE id = ? AND tenant_id = ? AND status IN ('SCHEDULED', 'REQUESTED', 'IN_PROGRESS')
-            """, now, now, id, tenantId);
-
-        if (updated == 0) throw new ResourceNotFoundException("Joinable session not found: " + id);
+        // STRANGLER: migrated — was direct JdbcTemplate UPDATE on citizen_telehealth_sessions
+        // jdbcTemplate.update("""
+        //     UPDATE citizen_telehealth_sessions
+        //     SET status = 'IN_PROGRESS', started_at = COALESCE(started_at, ?), updated_at = ?
+        //     WHERE id = ? AND tenant_id = ? AND status IN ('SCHEDULED', 'REQUESTED', 'IN_PROGRESS')
+        //     """, ...);
 
         outboxService.writeOutboxEvent(
                 "impilo.experience.citizen.teleconsult-joined.v1",
@@ -183,22 +159,8 @@ public class CitizenTelehealthController {
                 Map.of("session_id", id.toString(), "status", "IN_PROGRESS"),
                 Map.of());
 
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList("""
-            SELECT id, provider_id, provider_name, session_type, status,
-                   scheduled_at, started_at, ended_at, room_url, notes, reason, referral_id
-            FROM citizen_telehealth_sessions WHERE id = ? AND tenant_id = ?
-            """, id, tenantId);
-
-        Map<String, Object> session = toResource(rows.get(0));
-        String token = UUID.randomUUID().toString();
-        String channel = rows.get(0).get("room_url") != null ? rows.get(0).get("room_url").toString() : "session-" + id;
-
-        Map<String, Object> attrs = new LinkedHashMap<>(session);
-        attrs.put("token", token);
-        attrs.put("channel", channel);
-
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", Map.of("id", id.toString(), "type", "TelehealthSession", "attributes", attrs));
+        response.put("data", result);
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return ResponseEntity.ok(response);
     }
@@ -213,16 +175,15 @@ public class CitizenTelehealthController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestBody(required = false) Map<String, Object> body) {
 
-        OffsetDateTime now = OffsetDateTime.now();
-        String notes = body != null && body.containsKey("notes") ? body.get("notes").toString() : null;
+        // STRANGLER: migrated — delegate to PctServiceClient
+        JsonNode result = pctClient.endTelehealthSession(id.toString(), body != null ? body : Map.of());
 
-        int updated = jdbcTemplate.update("""
-            UPDATE citizen_telehealth_sessions
-            SET status = 'COMPLETED', ended_at = ?, notes = COALESCE(?, notes), updated_at = ?
-            WHERE id = ? AND tenant_id = ? AND status = 'IN_PROGRESS'
-            """, now, notes, now, id, tenantId);
-
-        if (updated == 0) throw new ResourceNotFoundException("Active session not found: " + id);
+        // STRANGLER: migrated — was direct JdbcTemplate UPDATE on citizen_telehealth_sessions
+        // jdbcTemplate.update("""
+        //     UPDATE citizen_telehealth_sessions
+        //     SET status = 'COMPLETED', ended_at = ?, notes = COALESCE(?, notes), updated_at = ?
+        //     WHERE id = ? AND tenant_id = ? AND status = 'IN_PROGRESS'
+        //     """, ...);
 
         outboxService.writeOutboxEvent(
                 "impilo.experience.citizen.teleconsult-ended.v1",
@@ -235,28 +196,5 @@ public class CitizenTelehealthController {
         response.put("data", Map.of("id", id.toString(), "status", "COMPLETED"));
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return ResponseEntity.ok(response);
-    }
-
-    private UUID resolvePatientId(String tenantId, String actorId) {
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList(
-                "SELECT id FROM patients WHERE tenant_id = ? AND cpid = ?", tenantId, actorId);
-        if (rows.isEmpty()) throw new ResourceNotFoundException("Patient not found for: " + actorId);
-        return (UUID) rows.get(0).get("id");
-    }
-
-    private Map<String, Object> toResource(Map<String, Object> row) {
-        Map<String, Object> r = new LinkedHashMap<>();
-        r.put("id", row.get("id").toString());
-        r.put("providerId", row.get("provider_id") != null ? row.get("provider_id").toString() : null);
-        r.put("providerName", row.get("provider_name"));
-        r.put("sessionType", row.get("session_type"));
-        r.put("status", row.get("status"));
-        r.put("scheduledAt", row.get("scheduled_at"));
-        r.put("startedAt", row.get("started_at"));
-        r.put("endedAt", row.get("ended_at"));
-        r.put("roomUrl", row.get("room_url"));
-        r.put("notes", row.get("notes"));
-        r.put("referralId", row.get("referral_id") != null ? row.get("referral_id").toString() : null);
-        return r;
     }
 }

@@ -216,6 +216,14 @@ public class CoverageServiceClient {
         restTemplate.delete(url);
     }
 
+    /** Get coverage plans for a citizen by CPID. */
+    public JsonNode getCitizenCoverage(String cpid) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/coverage/citizen/" + cpid)
+                .toUriString();
+        log.info("COVERAGE: Getting citizen coverage for cpid={}", cpid);
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) return response.getBody().get("data");
         return response.getBody();

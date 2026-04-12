@@ -17,6 +17,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.TshepoAuthzServiceClient;
 import zw.gov.mohcc.impilo.experience.domain.AdminUser;
 import zw.gov.mohcc.impilo.experience.repository.AdminUserRepository;
 import zw.gov.mohcc.impilo.experience.service.OutboxService;

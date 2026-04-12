@@ -1,7 +1,10 @@
 package zw.gov.mohcc.impilo.experience.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -11,6 +14,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 import zw.gov.mohcc.impilo.experience.domain.Condition;
 import zw.gov.mohcc.impilo.experience.repository.ConditionRepository;
 import zw.gov.mohcc.impilo.experience.service.OutboxService;
@@ -29,16 +33,21 @@ import java.util.*;
 @RequestMapping("/internal/v1/conditions")
 public class ConditionsController {
 
+    private static final Logger log = LoggerFactory.getLogger(ConditionsController.class);
+
     private final ConditionRepository conditionRepository;
     private final OutboxService outboxService;
-    private final JdbcTemplate jdbcTemplate;
+    private final JdbcTemplate jdbcTemplate; // TODO: remove after verification
+    private final PctServiceClient pctClient;
 
     public ConditionsController(ConditionRepository conditionRepository,
                                 OutboxService outboxService,
-                                JdbcTemplate jdbcTemplate) {
+                                JdbcTemplate jdbcTemplate,
+                                PctServiceClient pctClient) {
         this.conditionRepository = conditionRepository;
         this.outboxService = outboxService;
         this.jdbcTemplate = jdbcTemplate;
+        this.pctClient = pctClient;
     }
 
     public record CreateConditionRequest(
@@ -63,6 +72,25 @@ public class ConditionsController {
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false, name = "patient_id") String patientId) {
 
+        // STRANGLER: delegate to PctServiceClient
+        if (patientId != null) {
+            try {
+                JsonNode pctData = pctClient.listConditions(patientId, page, Math.min(size, 100));
+                if (pctData != null) {
+                    Map<String, Object> response = new LinkedHashMap<>();
+                    response.put("data", pctData);
+                    response.put("meta", Map.of(
+                            "request_id", requestId,
+                            "correlation_id", correlationId
+                    ));
+                    return ResponseEntity.ok(response);
+                }
+            } catch (Exception e) {
+                log.warn("PCT listConditions failed, falling back to local: {}", e.getMessage());
+            }
+        }
+
+        // STRANGLER: migrated to PctServiceClient — fallback to local repository
         PageRequest pageable = PageRequest.of(page, Math.min(size, 100), Sort.by("createdAt").descending());
 
         Page<Condition> result;
@@ -106,6 +134,26 @@ public class ConditionsController {
         OffsetDateTime now = OffsetDateTime.now();
         String clinicalStatus = request.clinical_status() != null ? request.clinical_status() : "ACTIVE";
 
+        // STRANGLER: delegate to PctServiceClient first
+        try {
+            Map<String, Object> pctBody = new LinkedHashMap<>();
+            pctBody.put("patient_id", request.patient_id());
+            pctBody.put("encounter_id", request.encounter_id());
+            pctBody.put("condition_name", request.condition_name());
+            pctBody.put("icd_code", request.icd_code());
+            pctBody.put("category", request.category());
+            pctBody.put("clinical_status", clinicalStatus);
+            pctBody.put("severity", request.severity());
+            pctBody.put("onset_date", request.onset_date());
+            pctBody.put("recorded_by", request.recorded_by());
+            pctBody.put("notes", request.notes());
+            pctClient.createCondition(pctBody);
+            log.info("PCT condition created successfully for patient={}", request.patient_id());
+        } catch (Exception e) {
+            log.warn("PCT createCondition failed (non-blocking): {}", e.getMessage());
+        }
+
+        // STRANGLER: migrated to PctServiceClient — dual-write to local BFF table as backup cache
         jdbcTemplate.update("""
             INSERT INTO conditions
                 (id, tenant_id, patient_id, encounter_id, condition_name,
@@ -179,6 +227,14 @@ public class ConditionsController {
 
         Condition condition = conditionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Condition not found: " + id));
+
+        // STRANGLER: delegate to PctServiceClient first
+        try {
+            pctClient.resolveCondition(id.toString());
+            log.info("PCT condition resolved: {}", id);
+        } catch (Exception e) {
+            log.warn("PCT resolveCondition failed (non-blocking): {}", e.getMessage());
+        }
 
         condition.resolve();
         conditionRepository.save(condition);

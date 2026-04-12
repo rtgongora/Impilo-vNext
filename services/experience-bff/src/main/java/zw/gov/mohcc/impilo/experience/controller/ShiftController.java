@@ -1,5 +1,6 @@
 package zw.gov.mohcc.impilo.experience.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.HttpStatus;
@@ -8,6 +9,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.TusoServiceClient;
 import zw.gov.mohcc.impilo.experience.domain.Shift;
 import zw.gov.mohcc.impilo.experience.repository.ShiftRepository;
 import zw.gov.mohcc.impilo.experience.service.OutboxService;
@@ -28,13 +30,16 @@ public class ShiftController {
     private final ShiftRepository shiftRepository;
     private final OutboxService outboxService;
     private final JdbcTemplate jdbcTemplate;
+    private final TusoServiceClient tusoClient;
 
     public ShiftController(ShiftRepository shiftRepository,
                            OutboxService outboxService,
-                           JdbcTemplate jdbcTemplate) {
+                           JdbcTemplate jdbcTemplate,
+                           TusoServiceClient tusoClient) {
         this.shiftRepository = shiftRepository;
         this.outboxService = outboxService;
         this.jdbcTemplate = jdbcTemplate;
+        this.tusoClient = tusoClient;
     }
 
     public record StartShiftRequest(
@@ -54,12 +59,15 @@ public class ShiftController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(name = "user_id") String userId) {
 
-        Shift shift = shiftRepository.findCurrentShift(tenantId, userId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "No active shift found for user: " + userId));
+        // STRANGLER: migrated — delegate to TusoServiceClient
+        JsonNode shift = tusoClient.getCurrentShift(userId);
+
+        // STRANGLER: migrated — was ShiftRepository.findCurrentShift
+        // Shift shift = shiftRepository.findCurrentShift(tenantId, userId)
+        //         .orElseThrow(() -> new ResourceNotFoundException("No active shift found for user: " + userId));
 
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", toResource(shift));
+        response.put("data", shift);
         response.put("meta", Map.of(
                 "request_id", requestId,
                 "correlation_id", correlationId
@@ -78,19 +86,19 @@ public class ShiftController {
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @Valid @RequestBody StartShiftRequest request) {
 
-        UUID shiftId = UUID.randomUUID();
-        OffsetDateTime now = OffsetDateTime.now();
+        // STRANGLER: migrated — delegate to TusoServiceClient
+        Map<String, Object> shiftData = new LinkedHashMap<>();
+        shiftData.put("facility_id", request.facility_id());
+        shiftData.put("workspace_id", request.workspace_id());
+        shiftData.put("user_id", request.user_id());
+        shiftData.put("tenant_id", tenantId);
 
-        jdbcTemplate.update("""
-            INSERT INTO shifts
-                (id, tenant_id, facility_id, workspace_id, user_id, status,
-                 started_at, created_at, updated_at)
-            VALUES (?, ?, ?::uuid, ?::uuid, ?, 'ACTIVE', ?, ?, ?)
-            """,
-                shiftId, tenantId, request.facility_id(),
-                request.workspace_id(),
-                request.user_id(),
-                now, now, now);
+        JsonNode result = tusoClient.startShift(shiftData);
+
+        // STRANGLER: migrated — was direct JdbcTemplate INSERT into shifts table
+        // jdbcTemplate.update("""
+        //     INSERT INTO shifts (...) VALUES (...)
+        //     """, ...);
 
         outboxService.writeOutboxEvent(
                 "impilo.experience.shift.started.v1",
@@ -100,9 +108,8 @@ public class ShiftController {
                 tenantId,
                 podId,
                 "Shift",
-                shiftId.toString(),
+                requestId,
                 Map.of(
-                        "shift_id", shiftId.toString(),
                         "facility_id", request.facility_id(),
                         "user_id", request.user_id(),
                         "status", "ACTIVE"
@@ -110,20 +117,8 @@ public class ShiftController {
                 Map.of()
         );
 
-        Map<String, Object> attributes = new LinkedHashMap<>();
-        attributes.put("facility_id", request.facility_id());
-        attributes.put("workspace_id", request.workspace_id());
-        attributes.put("user_id", request.user_id());
-        attributes.put("status", "ACTIVE");
-        attributes.put("started_at", now);
-        attributes.put("created_at", now);
-
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", Map.of(
-                "id", shiftId.toString(),
-                "type", "Shift",
-                "attributes", attributes
-        ));
+        response.put("data", result);
         response.put("meta", Map.of(
                 "request_id", requestId,
                 "correlation_id", correlationId
@@ -143,13 +138,20 @@ public class ShiftController {
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @RequestBody(required = false) EndShiftRequest request) {
 
-        Shift shift = shiftRepository.findById(id)
-                .filter(s -> s.getTenantId().equals(tenantId))
-                .orElseThrow(() -> new ResourceNotFoundException("Shift not found: " + id));
+        // STRANGLER: migrated — delegate to TusoServiceClient
+        Map<String, Object> endData = new LinkedHashMap<>();
+        if (request != null && request.handover_notes() != null) {
+            endData.put("handover_notes", request.handover_notes());
+        }
 
-        String handoverNotes = request != null ? request.handover_notes() : null;
-        shift.end(handoverNotes);
-        shiftRepository.save(shift);
+        JsonNode result = tusoClient.endShift(id.toString(), endData);
+
+        // STRANGLER: migrated — was ShiftRepository.findById + shift.end() + save
+        // Shift shift = shiftRepository.findById(id)
+        //         .filter(s -> s.getTenantId().equals(tenantId))
+        //         .orElseThrow(() -> new ResourceNotFoundException("Shift not found: " + id));
+        // shift.end(handoverNotes);
+        // shiftRepository.save(shift);
 
         outboxService.writeOutboxEvent(
                 "impilo.experience.shift.ended.v1",
@@ -168,31 +170,12 @@ public class ShiftController {
         );
 
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", toResource(shift));
+        response.put("data", result);
         response.put("meta", Map.of(
                 "request_id", requestId,
                 "correlation_id", correlationId
         ));
 
         return ResponseEntity.ok(response);
-    }
-
-    private Map<String, Object> toResource(Shift s) {
-        Map<String, Object> attributes = new LinkedHashMap<>();
-        attributes.put("facility_id", s.getFacilityId());
-        attributes.put("workspace_id", s.getWorkspaceId());
-        attributes.put("user_id", s.getUserId());
-        attributes.put("status", s.getStatus());
-        attributes.put("started_at", s.getStartedAt());
-        attributes.put("ended_at", s.getEndedAt());
-        attributes.put("handover_notes", s.getHandoverNotes());
-        attributes.put("created_at", s.getCreatedAt());
-        attributes.put("updated_at", s.getUpdatedAt());
-
-        Map<String, Object> resource = new LinkedHashMap<>();
-        resource.put("id", s.getId().toString());
-        resource.put("type", "Shift");
-        resource.put("attributes", attributes);
-        return resource;
     }
 }

@@ -1,7 +1,10 @@
 package zw.gov.mohcc.impilo.experience.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -14,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 import zw.gov.mohcc.impilo.experience.service.GrowthStandardsService;
 
 import java.math.BigDecimal;
@@ -29,13 +33,18 @@ import java.util.UUID;
 @RequestMapping("/internal/v1/growth")
 public class GrowthController {
 
-    private final JdbcTemplate jdbcTemplate;
+    private static final Logger log = LoggerFactory.getLogger(GrowthController.class);
+
+    private final JdbcTemplate jdbcTemplate; // TODO: remove after verification
     private final GrowthStandardsService growthStandardsService;
+    private final PctServiceClient pctClient;
 
     public GrowthController(JdbcTemplate jdbcTemplate,
-                            GrowthStandardsService growthStandardsService) {
+                            GrowthStandardsService growthStandardsService,
+                            PctServiceClient pctClient) {
         this.jdbcTemplate = jdbcTemplate;
         this.growthStandardsService = growthStandardsService;
+        this.pctClient = pctClient;
     }
 
     public record RecordGrowthRequest(
@@ -59,6 +68,20 @@ public class GrowthController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(name = "patient_id") String patientId) {
 
+        // STRANGLER: delegate to PctServiceClient
+        try {
+            JsonNode pctData = pctClient.listGrowthMeasurements(patientId);
+            if (pctData != null) {
+                Map<String, Object> response = new LinkedHashMap<>();
+                response.put("data", pctData);
+                response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
+                return ResponseEntity.ok(response);
+            }
+        } catch (Exception e) {
+            log.warn("PCT listGrowthMeasurements failed, falling back to local: {}", e.getMessage());
+        }
+
+        // STRANGLER: migrated to PctServiceClient — fallback to local JDBC
         GrowthStandardsService.PatientContext patient = loadPatientContext(tenantId, patientId);
         List<Map<String, Object>> rows = jdbcTemplate.queryForList("""
                 SELECT id, patient_id, encounter_id, measured_at, recorded_by,
@@ -90,6 +113,27 @@ public class GrowthController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @Valid @RequestBody RecordGrowthRequest request) {
 
+        // STRANGLER: delegate to PctServiceClient first
+        try {
+            Map<String, Object> pctBody = new LinkedHashMap<>();
+            pctBody.put("patient_id", request.patient_id());
+            pctBody.put("encounter_id", request.encounter_id());
+            pctBody.put("recorded_by", request.recorded_by());
+            pctBody.put("measured_at", request.measured_at());
+            pctBody.put("weight_kg", request.weight_kg());
+            pctBody.put("length_cm", request.length_cm());
+            pctBody.put("height_cm", request.height_cm());
+            pctBody.put("head_circumference_cm", request.head_circumference_cm());
+            pctBody.put("muac_cm", request.muac_cm());
+            pctBody.put("measurement_mode", request.measurement_mode());
+            pctBody.put("notes", request.notes());
+            pctClient.recordGrowthMeasurement(pctBody);
+            log.info("PCT growth measurement recorded for patient={}", request.patient_id());
+        } catch (Exception e) {
+            log.warn("PCT recordGrowthMeasurement failed (non-blocking): {}", e.getMessage());
+        }
+
+        // STRANGLER: migrated to PctServiceClient — dual-write to local BFF table as backup cache
         OffsetDateTime measuredAt = request.measured_at() != null && !request.measured_at().isBlank()
                 ? OffsetDateTime.parse(request.measured_at())
                 : OffsetDateTime.now();

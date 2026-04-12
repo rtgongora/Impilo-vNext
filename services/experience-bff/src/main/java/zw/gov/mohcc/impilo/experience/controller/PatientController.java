@@ -1,11 +1,13 @@
 package zw.gov.mohcc.impilo.experience.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.VitoServiceClient;
 import zw.gov.mohcc.impilo.experience.domain.Patient;
 import zw.gov.mohcc.impilo.experience.repository.PatientRepository;
 
@@ -26,10 +28,13 @@ public class PatientController {
 
     private final PatientRepository patientRepository;
     private final JdbcTemplate jdbcTemplate;
+    private final VitoServiceClient vitoClient;
 
-    public PatientController(PatientRepository patientRepository, JdbcTemplate jdbcTemplate) {
+    public PatientController(PatientRepository patientRepository, JdbcTemplate jdbcTemplate,
+                             VitoServiceClient vitoClient) {
         this.patientRepository = patientRepository;
         this.jdbcTemplate = jdbcTemplate;
+        this.vitoClient = vitoClient;
     }
 
     public record CreatePatientRequest(
@@ -49,22 +54,28 @@ public class PatientController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @Valid @RequestBody CreatePatientRequest req) {
 
-        UUID id = UUID.randomUUID();
-        String cpid = "CP-" + id.toString().substring(0, 8).toUpperCase();
+        // STRANGLER: migrated — delegate patient registration to VITO
+        Map<String, Object> patientData = new LinkedHashMap<>();
+        patientData.put("given_name", req.given_name());
+        patientData.put("family_name", req.family_name());
+        patientData.put("date_of_birth", req.date_of_birth());
+        patientData.put("sex", req.sex());
+        patientData.put("national_id", req.national_id());
+        patientData.put("phone", req.phone());
+        patientData.put("facility_id", req.facility_id());
+        patientData.put("tenant_id", tenantId);
 
-        jdbcTemplate.update("""
-                INSERT INTO patients (id, tenant_id, cpid, given_name, family_name, date_of_birth,
-                    sex, national_id, phone, facility_id, status, created_at, updated_at)
-                VALUES (?::uuid, ?, ?, ?, ?, ?::date, ?, ?, ?, ?, 'ACTIVE', NOW(), NOW())
-                """,
-                id.toString(), tenantId, cpid,
-                req.given_name(), req.family_name(), req.date_of_birth(),
-                req.sex(), req.national_id(), req.phone(), req.facility_id());
+        JsonNode result = vitoClient.registerPatient(patientData);
+
+        // STRANGLER: migrated — was direct JdbcTemplate INSERT
+        // jdbcTemplate.update("""
+        //         INSERT INTO patients (id, tenant_id, cpid, given_name, family_name, date_of_birth,
+        //             sex, national_id, phone, facility_id, status, created_at, updated_at)
+        //         VALUES (?::uuid, ?, ?, ?, ?, ?::date, ?, ?, ?, ?, 'ACTIVE', NOW(), NOW())
+        //         """, ...);
 
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", Map.of("id", id.toString(), "type", "Patient",
-                "attributes", Map.of("cpid", cpid, "given_name", req.given_name(),
-                        "family_name", req.family_name(), "status", "ACTIVE")));
+        response.put("data", result);
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
 
         return ResponseEntity.status(201).body(response);
@@ -80,25 +91,18 @@ public class PatientController {
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String status) {
 
-        PageRequest pageable = PageRequest.of(page, Math.min(size, 100), Sort.by("familyName").ascending());
+        // STRANGLER: migrated — delegate to VITO
+        JsonNode result = vitoClient.listPatients(search, status, page, Math.min(size, 100));
 
-        Page<Patient> result = patientRepository.findByFilters(tenantId, search, status, pageable);
-
-        List<Map<String, Object>> data = result.getContent().stream()
-                .map(this::toResource)
-                .toList();
+        // STRANGLER: migrated — was PatientRepository.findByFilters
+        // PageRequest pageable = PageRequest.of(page, Math.min(size, 100), Sort.by("familyName").ascending());
+        // Page<Patient> result = patientRepository.findByFilters(tenantId, search, status, pageable);
 
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", data);
+        response.put("data", result);
         response.put("meta", Map.of(
                 "request_id", requestId,
-                "correlation_id", correlationId,
-                "page", Map.of(
-                        "number", result.getNumber(),
-                        "size", result.getSize(),
-                        "total_elements", result.getTotalElements(),
-                        "total_pages", result.getTotalPages()
-                )
+                "correlation_id", correlationId
         ));
 
         return ResponseEntity.ok(response);
@@ -111,37 +115,20 @@ public class PatientController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
 
-        Patient patient = patientRepository.findByIdAndTenantId(id, tenantId)
-                .orElseThrow(() -> new ResourceNotFoundException("Patient not found: " + id));
+        // STRANGLER: migrated — delegate to VITO
+        JsonNode result = vitoClient.getPatient(id.toString());
+
+        // STRANGLER: migrated — was PatientRepository.findByIdAndTenantId
+        // Patient patient = patientRepository.findByIdAndTenantId(id, tenantId)
+        //         .orElseThrow(() -> new ResourceNotFoundException("Patient not found: " + id));
 
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", toResource(patient));
+        response.put("data", result);
         response.put("meta", Map.of(
                 "request_id", requestId,
                 "correlation_id", correlationId
         ));
 
         return ResponseEntity.ok(response);
-    }
-
-    private Map<String, Object> toResource(Patient p) {
-        Map<String, Object> attributes = new LinkedHashMap<>();
-        attributes.put("cpid", p.getCpid());
-        attributes.put("given_name", p.getGivenName());
-        attributes.put("family_name", p.getFamilyName());
-        attributes.put("date_of_birth", p.getDateOfBirth());
-        attributes.put("sex", p.getSex());
-        attributes.put("national_id", p.getNationalId());
-        attributes.put("phone", p.getPhone());
-        attributes.put("status", p.getStatus());
-        attributes.put("facility_id", p.getFacilityId());
-        attributes.put("created_at", p.getCreatedAt());
-        attributes.put("updated_at", p.getUpdatedAt());
-
-        Map<String, Object> resource = new LinkedHashMap<>();
-        resource.put("id", p.getId().toString());
-        resource.put("type", "Patient");
-        resource.put("attributes", attributes);
-        return resource;
     }
 }

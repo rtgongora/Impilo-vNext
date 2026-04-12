@@ -93,6 +93,45 @@ public class InpatientServiceClient {
         return extractData(response);
     }
 
+    // ── Bed/Ward Management (strangler migration) ─────────────
+
+    public JsonNode listWards(String facilityId) {
+        String url = baseUrl + "/internal/v1/beds/wards?facility_id=" + facilityId;
+        log.info("INPATIENT: listWards operation [facilityId={}]", facilityId);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode listBeds(String facilityId, String wardId, String status) {
+        StringBuilder url = new StringBuilder(baseUrl + "/internal/v1/beds?facility_id=" + facilityId);
+        if (wardId != null) url.append("&ward_id=").append(wardId);
+        if (status != null) url.append("&status=").append(status);
+        log.info("INPATIENT: listBeds operation [facilityId={}, wardId={}]", facilityId, wardId);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url.toString(), JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode updateBedStatus(String bedId, Map<String, Object> request) {
+        String url = baseUrl + "/internal/v1/beds/" + bedId + "/status";
+        log.info("INPATIENT: updateBedStatus operation [bedId={}]", bedId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, request, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode assignPatientToBed(String bedId, Map<String, Object> request) {
+        String url = baseUrl + "/internal/v1/beds/" + bedId + "/assign";
+        log.info("INPATIENT: assignPatientToBed operation [bedId={}]", bedId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, request, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode dischargeBed(String bedId) {
+        String url = baseUrl + "/internal/v1/beds/" + bedId + "/discharge";
+        log.info("INPATIENT: dischargeBed operation [bedId={}]", bedId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, null, JsonNode.class);
+        return extractData(response);
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) {
             return response.getBody().get("data");
