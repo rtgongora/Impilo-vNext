@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import zw.gov.mohcc.impilo.pacs.api.dto.CorrelateStudyRequest;
 import zw.gov.mohcc.impilo.pacs.api.dto.CreateImagingStudyRequest;
 import zw.gov.mohcc.impilo.pacs.api.dto.ForwardStudyRequest;
 import zw.gov.mohcc.impilo.pacs.core.ImagingStudyService;
@@ -65,6 +66,17 @@ public class ImagingStudyController {
             @PathVariable Long id,
             @Valid @RequestBody ForwardStudyRequest request) {
         ImagingStudyEntity study = imagingStudyService.forwardStudy(id, request);
+        return ResponseEntity.ok(study);
+    }
+
+    /**
+     * Correlate an imaging study with an OROS order (emits {@code pacs.study.correlated} + {@code pacs.study.available}).
+     */
+    @PatchMapping("/{id}/correlate")
+    public ResponseEntity<ImagingStudyEntity> correlateStudy(
+            @PathVariable Long id,
+            @Valid @RequestBody CorrelateStudyRequest request) {
+        ImagingStudyEntity study = imagingStudyService.correlateStudy(id, request);
         return ResponseEntity.ok(study);
     }
 }

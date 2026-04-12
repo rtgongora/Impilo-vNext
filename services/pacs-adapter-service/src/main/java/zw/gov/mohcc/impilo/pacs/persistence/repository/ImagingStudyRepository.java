@@ -18,4 +18,8 @@ public interface ImagingStudyRepository extends JpaRepository<ImagingStudyEntity
     List<ImagingStudyEntity> findByPatientCpid(String patientCpid);
 
     List<ImagingStudyEntity> findByStatus(String status);
+
+    Optional<ImagingStudyEntity> findByOrosOrderId(String orosOrderId);
+
+    boolean existsByStudyUid(String studyUid);
 }

@@ -30,6 +30,12 @@ public class CreateImagingStudyRequest {
 
     private String metadata;
 
+    /** Optional OROS order correlation at ingest time (when already known). */
+    private String orosOrderId;
+
+    /** Optional accession / local identifier for reconciliation. */
+    private String accessionNumber;
+
     public UUID getTenantId() { return tenantId; }
     public void setTenantId(UUID tenantId) { this.tenantId = tenantId; }
 
@@ -50,4 +56,10 @@ public class CreateImagingStudyRequest {
 
     public String getMetadata() { return metadata; }
     public void setMetadata(String metadata) { this.metadata = metadata; }
+
+    public String getOrosOrderId() { return orosOrderId; }
+    public void setOrosOrderId(String orosOrderId) { this.orosOrderId = orosOrderId; }
+
+    public String getAccessionNumber() { return accessionNumber; }
+    public void setAccessionNumber(String accessionNumber) { this.accessionNumber = accessionNumber; }
 }

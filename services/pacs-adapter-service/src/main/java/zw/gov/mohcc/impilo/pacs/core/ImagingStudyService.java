@@ -6,6 +6,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import zw.gov.mohcc.impilo.companion.context.RequestContext;
+import zw.gov.mohcc.impilo.companion.context.RequestContextHolder;
+import zw.gov.mohcc.impilo.pacs.api.dto.CorrelateStudyRequest;
 import zw.gov.mohcc.impilo.pacs.api.dto.CreateImagingStudyRequest;
 import zw.gov.mohcc.impilo.pacs.api.dto.ForwardStudyRequest;
 import zw.gov.mohcc.impilo.pacs.domain.StudyStatus;
@@ -22,12 +25,16 @@ import java.util.UUID;
 
 /**
  * Core service for imaging study registration, retrieval, and forwarding to Orthanc.
- * Each mutation appends an event to the outbox for reliable Kafka publishing.
+ * Each mutation appends companion outbox rows for Kafka publishing (legacy + v1.1).
  */
 @Service
 public class ImagingStudyService {
 
     private static final Logger log = LoggerFactory.getLogger(ImagingStudyService.class);
+
+    public static final String AGGREGATE_IMAGING_STUDY = "IMAGING_STUDY";
+    public static final String EVENT_STUDY_AVAILABLE = "pacs.study.available";
+    public static final String EVENT_STUDY_CORRELATED = "pacs.study.correlated";
 
     private final ImagingStudyRepository studyRepository;
     private final EventOutboxRepository outboxRepository;
@@ -41,25 +48,16 @@ public class ImagingStudyService {
         this.objectMapper = objectMapper;
     }
 
-    /**
-     * Lists all imaging studies.
-     */
     public List<ImagingStudyEntity> listStudies() {
         return studyRepository.findAll();
     }
 
-    /**
-     * Retrieves a single imaging study by its database ID.
-     */
     public ImagingStudyEntity getStudy(Long id) {
         return studyRepository.findById(id)
                 .orElseThrow(() -> new StudyNotFoundException(
                         "Imaging study not found: " + id));
     }
 
-    /**
-     * Registers a new imaging study and writes a STUDY_REGISTERED outbox event.
-     */
     @Transactional
     public ImagingStudyEntity registerStudy(CreateImagingStudyRequest request) {
         ImagingStudyEntity study = new ImagingStudyEntity();
@@ -71,12 +69,14 @@ public class ImagingStudyService {
         study.setStudyDate(request.getStudyDate());
         study.setStatus(StudyStatus.RECEIVED.name());
         study.setMetadata(request.getMetadata());
+        study.setOrosOrderId(request.getOrosOrderId());
+        study.setAccessionNumber(request.getAccessionNumber());
         study.setCreatedAt(OffsetDateTime.now());
         study.setUpdatedAt(OffsetDateTime.now());
 
         study = studyRepository.save(study);
 
-        appendOutboxEvent(study.getTenantId(), "STUDY_REGISTERED", buildStudyPayload(study));
+        appendStudyAvailableOutbox(study);
 
         log.info("Imaging study registered: studyUid={}, modality={}, patient={}",
                 study.getStudyUid(), study.getModality(), study.getPatientCpid());
@@ -85,13 +85,32 @@ public class ImagingStudyService {
     }
 
     /**
-     * Forwards an imaging study to Orthanc. Updates status to FORWARDING,
-     * then to FORWARDED upon success (or FAILED on error).
-     * Writes a STUDY_FORWARDED outbox event.
+     * Links a stored study to an OROS order and emits {@code pacs.study.correlated}
+     * plus a fresh {@code pacs.study.available} so OROS can attach imaging results.
      */
+    @Transactional
+    public ImagingStudyEntity correlateStudy(Long id, CorrelateStudyRequest request) {
+        ImagingStudyEntity study = getStudy(id);
+        study.setOrosOrderId(request.getOrosOrderId());
+        study.setUpdatedAt(OffsetDateTime.now());
+        study = studyRepository.save(study);
+
+        appendStudyCorrelatedOutbox(study);
+        appendStudyAvailableOutbox(study);
+
+        log.info("Imaging study correlated to OROS order: studyId={}, orderId={}",
+                study.getId(), study.getOrosOrderId());
+
+        return study;
+    }
+
     @Transactional
     public ImagingStudyEntity forwardStudy(Long id, ForwardStudyRequest request) {
         ImagingStudyEntity study = getStudy(id);
+
+        if (StudyStatus.PENDING_ORDER.name().equals(study.getStatus())) {
+            throw new IllegalStateException("Cannot forward placeholder study until DICOM study is registered: " + id);
+        }
 
         if (StudyStatus.FORWARDED.name().equals(study.getStatus())) {
             throw new IllegalStateException("Study already forwarded: " + id);
@@ -102,16 +121,11 @@ public class ImagingStudyService {
         study = studyRepository.save(study);
 
         try {
-            // Simulate Orthanc forwarding — in production this would be an HTTP call
             String orthancId = UUID.randomUUID().toString();
             study.setOrthancId(orthancId);
             study.setStatus(StudyStatus.FORWARDED.name());
             study.setUpdatedAt(OffsetDateTime.now());
             study = studyRepository.save(study);
-
-            Map<String, Object> payload = buildStudyPayload(study);
-            payload.put("orthancUrl", request.getOrthancUrl());
-            appendOutboxEvent(study.getTenantId(), "STUDY_FORWARDED", payload);
 
             log.info("Imaging study forwarded to Orthanc: studyUid={}, orthancId={}",
                     study.getStudyUid(), orthancId);
@@ -127,33 +141,80 @@ public class ImagingStudyService {
         return study;
     }
 
-    private Map<String, Object> buildStudyPayload(ImagingStudyEntity study) {
+    private void appendStudyAvailableOutbox(ImagingStudyEntity study) {
+        try {
+            Map<String, Object> legacy = buildOrosCompatiblePayload(study, UUID.randomUUID().toString());
+            Map<String, Object> extended = new LinkedHashMap<>(legacy);
+            extended.put("study_id", study.getId());
+            extended.put("patient_cpid", study.getPatientCpid());
+            extended.put("accession_number", study.getAccessionNumber());
+            extended.put("tenant_id", study.getTenantId().toString());
+
+            EventOutboxEntity row = new EventOutboxEntity();
+            row.setAggregateType(AGGREGATE_IMAGING_STUDY);
+            row.setAggregateId(String.valueOf(study.getId()));
+            row.setEventType(EVENT_STUDY_AVAILABLE);
+            row.setPayload(objectMapper.writeValueAsString(extended));
+            applyContext(row, study.getTenantId().toString());
+            row.setSubjectType(AGGREGATE_IMAGING_STUDY);
+            row.setSubjectId(String.valueOf(study.getId()));
+            row.setPartitionKey(study.getOrosOrderId() != null ? study.getOrosOrderId() : String.valueOf(study.getId()));
+            row.setOccurredAt(OffsetDateTime.now());
+            row.setSchemaVersion(1);
+            outboxRepository.save(row);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to serialize pacs.study.available payload", e);
+        }
+    }
+
+    private void appendStudyCorrelatedOutbox(ImagingStudyEntity study) {
+        try {
+            Map<String, Object> payload = new LinkedHashMap<>();
+            payload.put("study_id", study.getId());
+            payload.put("oros_order_id", study.getOrosOrderId());
+
+            EventOutboxEntity row = new EventOutboxEntity();
+            row.setAggregateType(AGGREGATE_IMAGING_STUDY);
+            row.setAggregateId(String.valueOf(study.getId()));
+            row.setEventType(EVENT_STUDY_CORRELATED);
+            row.setPayload(objectMapper.writeValueAsString(payload));
+            applyContext(row, study.getTenantId().toString());
+            row.setSubjectType(AGGREGATE_IMAGING_STUDY);
+            row.setSubjectId(String.valueOf(study.getId()));
+            row.setPartitionKey(study.getOrosOrderId() != null ? study.getOrosOrderId() : String.valueOf(study.getId()));
+            row.setOccurredAt(OffsetDateTime.now());
+            row.setSchemaVersion(1);
+            outboxRepository.save(row);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to serialize pacs.study.correlated payload", e);
+        }
+    }
+
+    /**
+     * Builds the legacy JSON shape expected by {@code OrosEventConsumer.consumePacsStudy},
+     * with additional fields for PACS-native consumers.
+     */
+    private Map<String, Object> buildOrosCompatiblePayload(ImagingStudyEntity study, String eventId) {
         Map<String, Object> payload = new LinkedHashMap<>();
-        payload.put("id", study.getId());
-        payload.put("tenantId", study.getTenantId().toString());
-        payload.put("patientCpid", study.getPatientCpid());
-        payload.put("studyUid", study.getStudyUid());
+        payload.put("eventId", eventId);
+        payload.put("orderId", study.getOrosOrderId());
+        payload.put("studyInstanceUid", study.getStudyUid());
         payload.put("modality", study.getModality());
-        payload.put("description", study.getDescription());
-        payload.put("studyDate", study.getStudyDate() != null ? study.getStudyDate().toString() : null);
-        payload.put("status", study.getStatus());
-        payload.put("orthancId", study.getOrthancId());
+        payload.put("reportSummary", study.getDescription() != null ? study.getDescription() : "Imaging study available");
+        payload.put("isCritical", false);
         return payload;
     }
 
-    private void appendOutboxEvent(UUID tenantId, String eventType, Map<String, Object> payload) {
-        EventOutboxEntity outbox = new EventOutboxEntity();
-        outbox.setTenantId(tenantId.toString());
-        outbox.setPodId(System.getenv("HOSTNAME") != null ? System.getenv("HOSTNAME") : "local");
-        outbox.setRequestId(UUID.randomUUID().toString());
-        outbox.setCorrelationId(UUID.randomUUID().toString());
-        outbox.setEventType(eventType);
-        outbox.setPublished(false);
-        try {
-            outbox.setPayload(objectMapper.writeValueAsString(payload));
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("Failed to serialize outbox payload", e);
+    private void applyContext(EventOutboxEntity row, String tenantFallback) {
+        RequestContext ctx = RequestContextHolder.get();
+        if (ctx != null) {
+            row.setTenantId(ctx.tenantId());
+            row.setPodId(ctx.podId());
+            row.setCorrelationId(ctx.correlationId());
+        } else {
+            row.setTenantId(tenantFallback);
+            row.setPodId(System.getenv("HOSTNAME") != null ? System.getenv("HOSTNAME") : "local");
+            row.setCorrelationId(UUID.randomUUID().toString());
         }
-        outboxRepository.save(outbox);
     }
 }

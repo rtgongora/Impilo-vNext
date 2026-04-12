@@ -40,6 +40,12 @@ public class ImagingStudyEntity {
     @Column(name = "orthanc_id", length = 255)
     private String orthancId;
 
+    @Column(name = "oros_order_id", length = 26)
+    private String orosOrderId;
+
+    @Column(name = "accession_number", length = 128)
+    private String accessionNumber;
+
     @Column(name = "metadata", columnDefinition = "TEXT")
     private String metadata;
 
@@ -92,6 +98,12 @@ public class ImagingStudyEntity {
 
     public String getOrthancId() { return orthancId; }
     public void setOrthancId(String orthancId) { this.orthancId = orthancId; }
+
+    public String getOrosOrderId() { return orosOrderId; }
+    public void setOrosOrderId(String orosOrderId) { this.orosOrderId = orosOrderId; }
+
+    public String getAccessionNumber() { return accessionNumber; }
+    public void setAccessionNumber(String accessionNumber) { this.accessionNumber = accessionNumber; }
 
     public String getMetadata() { return metadata; }
     public void setMetadata(String metadata) { this.metadata = metadata; }

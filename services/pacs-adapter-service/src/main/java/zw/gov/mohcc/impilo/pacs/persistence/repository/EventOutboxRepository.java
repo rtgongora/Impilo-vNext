@@ -9,5 +9,5 @@ import java.util.List;
 @Repository
 public interface EventOutboxRepository extends JpaRepository<EventOutboxEntity, Long> {
 
-    List<EventOutboxEntity> findTop100ByPublishedFalseOrderByCreatedAtAsc();
+    List<EventOutboxEntity> findTop100ByPublishedAtIsNullOrderByCreatedAtAsc();
 }
