@@ -23,62 +23,25 @@ import {
   Clock,
   XCircle,
 } from "lucide-react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
-import { apiClient, type ApiResponse } from "@/lib/api-client";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useConsentStore, CURRENT_CONSENT_VERSION } from "@/hooks/useConsentStore";
-
-interface ConsentStatusResource {
-  id: string;
-  type: "policy_consent";
-  attributes: {
-    policyType: string;
-    policyVersion: string;
-    accepted: boolean;
-    acceptedAt: string;
-    revokedAt: string;
-  };
-}
-
-interface DeletionStatusResource {
-  id: string;
-  type: "account_deletion_request";
-  attributes: {
-    status: string;
-    requestedAt: string;
-    processedAt: string;
-    completedAt: string;
-  };
-}
-
-function useConsentStatus() {
-  return useQuery<ApiResponse<ConsentStatusResource[]>>({
-    queryKey: ["consent-status", CURRENT_CONSENT_VERSION],
-    queryFn: () =>
-      apiClient.get<ApiResponse<ConsentStatusResource[]>>(
-        `/internal/v1/consent/status?version=${CURRENT_CONSENT_VERSION}`
-      ),
-  });
-}
-
-function useDeletionStatus() {
-  return useQuery<ApiResponse<DeletionStatusResource | null>>({
-    queryKey: ["deletion-status"],
-    queryFn: () =>
-      apiClient.get<ApiResponse<DeletionStatusResource | null>>(
-        "/internal/v1/account/delete/status"
-      ),
-  });
-}
+import {
+  usePolicyConsentStatus,
+  useRevokePolicyConsent,
+  useDeletionRequestStatus,
+  useRequestAccountDeletion,
+  useCancelAccountDeletion,
+  type PolicyConsentResource,
+  type DeletionRequestResource,
+} from "@/hooks/queries/usePolicyConsent";
 
 export default function PrivacySettingsPage() {
-  const queryClient = useQueryClient();
   const { user, clearAuth } = useAuthStore();
   const { revokeConsent: revokeClientConsent } = useConsentStore();
-  const { data: consentData, isLoading: consentLoading } = useConsentStatus();
-  const { data: deletionData, isLoading: deletionLoading } = useDeletionStatus();
+  const { data: consentData, isLoading: consentLoading } = usePolicyConsentStatus();
+  const { data: deletionData, isLoading: deletionLoading } = useDeletionRequestStatus();
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteReason, setDeleteReason] = useState("");
@@ -86,42 +49,30 @@ export default function PrivacySettingsPage() {
 
   const consentRecords = Array.isArray(consentData?.data) ? consentData.data : [];
   const privacyConsent = consentRecords.find(
-    (c) => c.attributes.policyType === "PRIVACY_POLICY"
+    (c: PolicyConsentResource) => c.attributes.policyType === "PRIVACY_POLICY"
   );
   const termsConsent = consentRecords.find(
-    (c) => c.attributes.policyType === "TERMS_OF_USE"
+    (c: PolicyConsentResource) => c.attributes.policyType === "TERMS_OF_USE"
   );
   const deletionRequest = deletionData?.data ?? null;
   const hasPendingDeletion =
     deletionRequest?.attributes?.status === "PENDING" ||
     deletionRequest?.attributes?.status === "PROCESSING";
 
-  const requestDeletion = useMutation({
-    mutationFn: (payload: { reason: string }) =>
-      apiClient.post("/internal/v1/account/delete", payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["deletion-status"] });
-      setShowDeleteConfirm(false);
-      setDeleteReason("");
-      setDeleteConfirmText("");
-    },
-  });
+  const requestDeletion = useRequestAccountDeletion();
+  const cancelDeletion = useCancelAccountDeletion();
 
-  const cancelDeletion = useMutation({
-    mutationFn: () => apiClient.post("/internal/v1/account/delete/cancel", {}),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["deletion-status"] });
-    },
-  });
+  const revokeConsentMutation = useRevokePolicyConsent();
 
-  const revokeConsent = useMutation({
-    mutationFn: (policyType: string) =>
-      apiClient.post("/internal/v1/consent/revoke", { policyType }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["consent-status"] });
-      revokeClientConsent();
+  // Wrap revoke to also clear client-side consent store
+  const revokeConsent = {
+    ...revokeConsentMutation,
+    mutate: (policyType: string) => {
+      revokeConsentMutation.mutate(policyType, {
+        onSuccess: () => revokeClientConsent(),
+      });
     },
-  });
+  };
 
   const isLoading = consentLoading || deletionLoading;
 
@@ -307,7 +258,13 @@ export default function PrivacySettingsPage() {
 
                   <div className="flex gap-3">
                     <button
-                      onClick={() => requestDeletion.mutate({ reason: deleteReason })}
+                      onClick={() => requestDeletion.mutate({ reason: deleteReason }, {
+                        onSuccess: () => {
+                          setShowDeleteConfirm(false);
+                          setDeleteReason("");
+                          setDeleteConfirmText("");
+                        },
+                      })}
                       disabled={
                         deleteConfirmText !== "DELETE" || requestDeletion.isPending
                       }
