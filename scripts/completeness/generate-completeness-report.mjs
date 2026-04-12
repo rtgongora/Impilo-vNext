@@ -31,7 +31,6 @@ const SERVICE_CLIENT_CONFIG_PATH = path.join(
   REPO_ROOT,
   'services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/config/ServiceClientConfig.java'
 );
-const REGISTRY_UI_REFS_PATH = path.join(UI_ROOT, 'lib/registry-service-module-refs.ts');
 const EXPERIENCE_BFF_APP_YML = path.join(
   REPO_ROOT,
   'services/experience-bff/src/main/resources/application.yml'
@@ -255,22 +254,26 @@ function levelFromContract(openapiFile) {
   return fs.existsSync(path.join(OPENAPI_DIR, openapiFile)) ? 'substantial' : 'none';
 }
 
-/** Published OpenAPI under contracts/openapi is treated as canonical API documentation for Phase F. */
 function levelFromApiDocs(hasSpringdoc, hasOpenapi) {
-  if (hasOpenapi) return 'substantial';
-  if (hasSpringdoc) return 'partial';
+  if (hasSpringdoc && hasOpenapi) return 'substantial';
+  if (hasSpringdoc || hasOpenapi) return 'partial';
   return 'stub';
 }
 
-/**
- * Kafka is scored from listeners + outbox/send signals, POM Kafka deps, and finally
- * any non-empty backend (governed services may emit only via shared infra / ops).
- */
-function levelFromKafka(n, pomKafka, backendLevel) {
+function levelFromKafka(n, pomKafka) {
   if (n >= 2) return 'substantial';
-  if (n === 1 || pomKafka) return 'substantial';
-  if (backendLevel !== 'none') return 'substantial';
+  if (n === 1) return 'partial';
+  if (pomKafka) return 'partial';
   return 'none';
+}
+
+function collectImplementationGaps(levels) {
+  const keys = ['backend', 'bff', 'contract', 'api_docs', 'integration_kafka', 'experience_hooks', 'experience_pages'];
+  const gaps = [];
+  for (const k of keys) {
+    if (levels[k] !== 'substantial') gaps.push(k);
+  }
+  return gaps;
 }
 
 function main() {
@@ -281,7 +284,6 @@ function main() {
   const controllerBlob = loadBffControllerText();
   const serviceClientConfigText = readText(SERVICE_CLIENT_CONFIG_PATH);
   const experienceBffAppYml = readText(EXPERIENCE_BFF_APP_YML);
-  const registryUiRefsText = readText(REGISTRY_UI_REFS_PATH);
 
   const rows = [];
   let sum = { backend: 0, bff: 0, contract: 0, api_docs: 0, kafka: 0, ui_hooks: 0, ui_pages: 0 };
@@ -315,8 +317,6 @@ function main() {
 
     const terms = uiSearchTerms(s);
     const ui = countUiHits(terms);
-    const listedInRegistryUiRefs =
-      registryUiRefsText.length > 0 && registryUiRefsText.includes(`'${module}'`);
 
     const backendLevel = levelFromBackend({
       applicationClass,
@@ -324,7 +324,7 @@ function main() {
       javaCount: javaFiles.length,
     });
     const contractLevel = levelFromContract(openapiFile);
-    let bffLevel = isBffShell
+    const bffLevel = isBffShell
       ? 'substantial'
       : levelFromBff({
           clientName: expectedClient,
@@ -333,20 +333,10 @@ function main() {
           proxy,
           serviceEndpointDeclared,
         });
-    /** Governed platform slice: OpenAPI + runnable backend implies Experience-shell alignment for Phase F scoring. */
-    let bffGovernedTrustShell = false;
-    if (!isBffShell && contractLevel === 'substantial' && backendLevel === 'substantial') {
-      bffLevel = 'substantial';
-      bffGovernedTrustShell = true;
-    }
     const apiDocsLevel = levelFromApiDocs(hasSpringdoc, hasOpenapiContract);
-    const kafkaLevel = levelFromKafka(kafkaN, pomKafka, backendLevel);
-    let uiHooksLevel = ui.hooks > 0 ? (ui.hooks >= 2 ? 'substantial' : 'partial') : 'none';
-    let uiPagesLevel = ui.pages > 0 ? (ui.pages >= 2 ? 'substantial' : 'partial') : 'none';
-    if (listedInRegistryUiRefs) {
-      uiHooksLevel = 'substantial';
-      uiPagesLevel = 'substantial';
-    }
+    const kafkaLevel = levelFromKafka(kafkaN, pomKafka);
+    const uiHooksLevel = ui.hooks > 0 ? (ui.hooks >= 2 ? 'substantial' : 'partial') : 'none';
+    const uiPagesLevel = ui.pages > 0 ? (ui.pages >= 2 ? 'substantial' : 'partial') : 'none';
 
     const scoreMap = { none: 0, stub: 1, partial: 2, substantial: 3 };
     const dims = [
@@ -360,11 +350,24 @@ function main() {
     ];
     const composite = dims.reduce((a, b) => a + b, 0) / (dims.length * 3);
 
+    const dimensionLevels = {
+      backend: backendLevel,
+      bff: bffLevel,
+      contract: contractLevel,
+      api_docs: apiDocsLevel,
+      integration_kafka: kafkaLevel,
+      experience_hooks: uiHooksLevel,
+      experience_pages: uiPagesLevel,
+    };
+    const implementationGaps = collectImplementationGaps(dimensionLevels);
+
     rows.push({
       maven_module: module,
       product_names: s.product_names || [],
       plane: s.plane,
       sovereign_group: s.sovereign_group,
+      implementation_gaps: implementationGaps,
+      implementation_gap_count: implementationGaps.length,
       dimensions: {
         backend: {
           level: backendLevel,
@@ -381,7 +384,6 @@ function main() {
           proxy: proxy,
           service_endpoint_accessor: bffAccessor || null,
           service_endpoint_declared: Boolean(serviceEndpointDeclared),
-          governed_trust_shell: bffGovernedTrustShell,
         },
         contract: {
           level: contractLevel,
@@ -403,12 +405,10 @@ function main() {
           level: uiHooksLevel,
           files_with_hits: ui.hooks,
           search_terms_sample: terms.slice(0, 5),
-          registry_ui_refs: listedInRegistryUiRefs,
         },
         experience_pages: {
           level: uiPagesLevel,
           files_with_hits: ui.pages,
-          registry_ui_refs: listedInRegistryUiRefs,
         },
       },
       composite_score: Number(composite.toFixed(3)),
@@ -437,8 +437,26 @@ function main() {
       experience_hooks_avg: Number((sum.ui_hooks / n).toFixed(2)),
       experience_pages_avg: Number((sum.ui_pages / n).toFixed(2)),
     },
-    services: rows.sort((a, b) => a.composite_score - b.composite_score),
+    services: [],
+    implementation_backlog: [],
   };
+
+  report.services = [...rows].sort((a, b) => a.composite_score - b.composite_score);
+  report.implementation_backlog = [...rows]
+    .filter((r) => r.implementation_gap_count > 0)
+    .sort((a, b) => {
+      const gc = b.implementation_gap_count - a.implementation_gap_count;
+      if (gc !== 0) return gc;
+      return a.composite_score - b.composite_score;
+    })
+    .slice(0, 40)
+    .map((r) => ({
+      maven_module: r.maven_module,
+      plane: r.plane,
+      implementation_gap_count: r.implementation_gap_count,
+      implementation_gaps: r.implementation_gaps,
+      composite_score: r.composite_score,
+    }));
 
   const outDir = path.join(REPO_ROOT, 'docs/reports');
   fs.mkdirSync(outDir, { recursive: true });
@@ -469,10 +487,20 @@ function main() {
   mdLines.push(`- experience_pages: ${report.aggregate.experience_pages_avg}`);
   mdLines.push(
     '',
-    'Regenerate: `cd scripts/completeness && npm install && npm run sync-ui-refs && npm run report`',
+    '## Phase F implementation backlog (literal gaps)',
     '',
-    'UI dimensions use `ui/experience/src/lib/registry-service-module-refs.ts` (run `sync-ui-refs` after registry edits).'
+    '| Module | gap_count | gaps |',
+    '|--------|-----------|------|'
   );
+  for (const r of report.implementation_backlog.slice(0, 25)) {
+    mdLines.push(
+      `| ${r.maven_module} | ${r.implementation_gap_count} | ${r.implementation_gaps.join(', ')} |`
+    );
+  }
+  if (report.implementation_backlog.length === 0) {
+    mdLines.push('| *(none)* | | |');
+  }
+  mdLines.push('', 'Regenerate: `cd scripts/completeness && npm install && npm run report`');
 
   fs.writeFileSync(path.join(outDir, 'completeness-report.md'), mdLines.join('\n'), 'utf8');
   console.log('Wrote', path.relative(REPO_ROOT, jsonPath));
