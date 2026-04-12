@@ -76,7 +76,8 @@ public class ServiceClientConfig {
             String inpatientBaseUrl,
             String pacsBaseUrl,
             String communityBaseUrl,
-            String simbaBaseUrl
+            String simbaBaseUrl,
+            String musheWalletBaseUrl
     ) {
         public ServiceEndpoints(
                 String pctBaseUrl,
@@ -119,6 +120,7 @@ public class ServiceClientConfig {
                     dataGovernanceBaseUrl,
                     landelaBaseUrl,
                     notificationBaseUrl,
+                    null,
                     null,
                     null,
                     null,
@@ -186,6 +188,7 @@ public class ServiceClientConfig {
             if (pacsBaseUrl == null) pacsBaseUrl = "http://localhost:8113";
             if (communityBaseUrl == null) communityBaseUrl = "http://localhost:8122";
             if (simbaBaseUrl == null) simbaBaseUrl = "http://localhost:8125";
+            if (musheWalletBaseUrl == null) musheWalletBaseUrl = "http://localhost:8126";
         }
     }
 

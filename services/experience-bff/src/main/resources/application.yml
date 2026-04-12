@@ -79,6 +79,7 @@ impilo:
     pacs-base-url: ${PACS_BASE_URL:http://localhost:8113}
     community-base-url: ${COMMUNITY_BASE_URL:http://localhost:8122}
     simba-base-url: ${SIMBA_BASE_URL:http://localhost:8125}
+    mushe-wallet-base-url: ${MUSHE_WALLET_BASE_URL:http://localhost:8126}
     orthanc-base-url: ${ORTHANC_BASE_URL:http://localhost:8042}
     orthanc-dicomweb-url: ${ORTHANC_DICOMWEB_URL:http://localhost:8042/dicom-web}
     data-governance-base-url: ${DATA_GOVERNANCE_BASE_URL:http://localhost:8220}
