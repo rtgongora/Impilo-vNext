@@ -1,5 +1,6 @@
 package zw.gov.mohcc.impilo.surv.core;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
@@ -40,7 +41,8 @@ public class SignalService {
         signal = signalRepository.save(signal);
 
         publishEvent("SIGNAL", signal.getId().toString(), "SIGNAL_CREATED",
-                buildSignalPayload(signal), tenantId.toString(), correlationId);
+                buildSignalPayload(signal), tenantId.toString(), correlationId,
+                correlationId != null ? correlationId.toString() : null);
 
         return signal;
     }
@@ -57,7 +59,7 @@ public class SignalService {
 
     private void publishEvent(String aggregateType, String aggregateId,
                               String eventType, String payload,
-                              String tenantId, UUID correlationId) {
+                              String tenantId, UUID correlationId, String idempotencyKey) {
         EventOutboxEntity event = new EventOutboxEntity();
         event.setAggregateType(aggregateType);
         event.setAggregateId(aggregateId);
@@ -65,6 +67,8 @@ public class SignalService {
         event.setPayload(payload);
         event.setTenantId(tenantId);
         event.setCorrelationId(correlationId != null ? correlationId.toString() : null);
+        event.setIdempotencyKey(idempotencyKey);
+        event.setOccurredAt(OffsetDateTime.now());
         outboxRepository.save(event);
     }
 

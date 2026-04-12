@@ -9,6 +9,8 @@ import org.springframework.web.client.RestTemplate;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 /**
@@ -40,8 +42,14 @@ public class PublicHealthController {
     }
 
     @GetMapping("/cases")
-    public ResponseEntity<Map<String, Object>> listCases(@RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
-        return proxy(surveillanceUrl + "/internal/v1/cases", requestId);
+    public ResponseEntity<Map<String, Object>> listCases(
+            @RequestParam(required = false) String status,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
+        String url = surveillanceUrl + "/internal/v1/cases";
+        if (status != null && !status.isBlank()) {
+            url += "?status=" + URLEncoder.encode(status, StandardCharsets.UTF_8);
+        }
+        return proxy(url, requestId);
     }
 
     @GetMapping("/alerts")
@@ -50,8 +58,58 @@ public class PublicHealthController {
     }
 
     @GetMapping("/counters")
-    public ResponseEntity<Map<String, Object>> getCounters(@RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
-        return proxy(surveillanceUrl + "/internal/v1/surveillance/counters", requestId);
+    public ResponseEntity<Map<String, Object>> getCounters(
+            @RequestParam(required = false) String from,
+            @RequestParam(required = false) String to,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
+        StringBuilder url = new StringBuilder(surveillanceUrl + "/internal/v1/surveillance/counters");
+        boolean first = true;
+        if (from != null && !from.isBlank()) {
+            url.append(first ? "?" : "&")
+                    .append("from=")
+                    .append(URLEncoder.encode(from, StandardCharsets.UTF_8));
+            first = false;
+        }
+        if (to != null && !to.isBlank()) {
+            url.append(first ? "?" : "&")
+                    .append("to=")
+                    .append(URLEncoder.encode(to, StandardCharsets.UTF_8));
+        }
+        return proxy(url.toString(), requestId);
+    }
+
+    @PostMapping("/signals")
+    public ResponseEntity<Map<String, Object>> createSignal(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestBody Map<String, Object> body) {
+        try {
+            JsonNode result = restTemplate.postForEntity(
+                            surveillanceUrl + "/internal/v1/signals", body, JsonNode.class)
+                    .getBody();
+            return ResponseEntity.status(201)
+                    .body(Map.of("data", result != null ? result : Map.of(), "meta", Map.of("request_id", requestId)));
+        } catch (Exception e) {
+            log.error("Signal creation failed: {}", e.getMessage());
+            return ResponseEntity.status(400)
+                    .body(Map.of("error", Map.of("code", "FAILED", "message", e.getMessage())));
+        }
+    }
+
+    @PostMapping("/ingest")
+    public ResponseEntity<Map<String, Object>> ingestEvent(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestBody Map<String, Object> body) {
+        try {
+            JsonNode result = restTemplate.postForEntity(
+                            surveillanceUrl + "/internal/v1/ingest", body, JsonNode.class)
+                    .getBody();
+            return ResponseEntity.status(202)
+                    .body(Map.of("data", result != null ? result : Map.of(), "meta", Map.of("request_id", requestId)));
+        } catch (Exception e) {
+            log.error("Ingest failed: {}", e.getMessage());
+            return ResponseEntity.status(400)
+                    .body(Map.of("error", Map.of("code", "INGEST_FAILED", "message", e.getMessage())));
+        }
     }
 
     // ── Campaigns ────────────────────────────────────────────────
@@ -74,6 +132,12 @@ public class PublicHealthController {
         }
     }
 
+    @GetMapping("/campaigns/{id}")
+    public ResponseEntity<Map<String, Object>> getCampaign(
+            @PathVariable String id, @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
+        return proxy(campaignsUrl + "/internal/v1/campaigns/" + id, requestId);
+    }
+
     @PostMapping("/campaigns/{id}/dispatch")
     public ResponseEntity<Map<String, Object>> dispatchCampaign(
             @PathVariable String id, @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
@@ -82,6 +146,21 @@ public class PublicHealthController {
             return ResponseEntity.ok(Map.of("data", result != null ? result : Map.of(), "meta", Map.of("request_id", requestId)));
         } catch (Exception e) {
             return ResponseEntity.status(400).body(Map.of("error", Map.of("code", "DISPATCH_FAILED", "message", e.getMessage())));
+        }
+    }
+
+    @PostMapping("/campaigns/{id}/close")
+    public ResponseEntity<Map<String, Object>> closeCampaign(
+            @PathVariable String id, @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
+        try {
+            JsonNode result = restTemplate.postForEntity(
+                            campaignsUrl + "/internal/v1/campaigns/" + id + "/close", Map.of(), JsonNode.class)
+                    .getBody();
+            return ResponseEntity.ok(Map.of("data", result != null ? result : Map.of(), "meta", Map.of("request_id", requestId)));
+        } catch (Exception e) {
+            log.error("Campaign close failed: {}", e.getMessage());
+            return ResponseEntity.status(400)
+                    .body(Map.of("error", Map.of("code", "CLOSE_FAILED", "message", e.getMessage())));
         }
     }
 

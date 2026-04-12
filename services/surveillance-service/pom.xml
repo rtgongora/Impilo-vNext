@@ -68,6 +68,12 @@
             <version>${project.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>zw.gov.mohcc.impilo</groupId>
+            <artifactId>shared-kernel-java</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- Tech Companion v1.1 -->
         <dependency>
             <groupId>zw.gov.mohcc.impilo</groupId>

@@ -115,7 +115,7 @@ export interface PublicHealthSite {
   operationalStatus: string;
 }
 
-function normalizeSignal(resource: unknown): PublicHealthSignal {
+export function normalizeSignal(resource: unknown): PublicHealthSignal {
   const record = getAttributes(resource);
   const outer = asRecord(resource);
   const idVal = outer.id ?? record.id;
@@ -135,7 +135,7 @@ function normalizeSignal(resource: unknown): PublicHealthSignal {
   };
 }
 
-function normalizeCase(resource: unknown): PublicHealthCase {
+export function normalizeCase(resource: unknown): PublicHealthCase {
   const record = getAttributes(resource);
   const outer = asRecord(resource);
   const idVal = outer.id ?? record.id;
@@ -157,7 +157,7 @@ function normalizeCase(resource: unknown): PublicHealthCase {
   };
 }
 
-function normalizeAlert(resource: unknown): PublicHealthAlert {
+export function normalizeAlert(resource: unknown): PublicHealthAlert {
   const record = getAttributes(resource);
   const outer = asRecord(resource);
   const idVal = outer.id ?? record.id;
@@ -175,7 +175,7 @@ function normalizeAlert(resource: unknown): PublicHealthAlert {
   };
 }
 
-function normalizeCounter(resource: unknown): PublicHealthCounter {
+export function normalizeCounter(resource: unknown): PublicHealthCounter {
   const record = getAttributes(resource);
   const outer = asRecord(resource);
   return {
@@ -192,7 +192,7 @@ function normalizeCounter(resource: unknown): PublicHealthCounter {
   };
 }
 
-function normalizeCampaign(resource: unknown): PublicHealthCampaign {
+export function normalizeCampaign(resource: unknown): PublicHealthCampaign {
   const record = getAttributes(resource);
   const outer = asRecord(resource);
   const idVal = outer.id ?? record.id;
@@ -254,35 +254,39 @@ export function usePublicHealthAlerts() {
   });
 }
 
+/** Normalizes surveillance counter payloads (BFF GET /public-health/counters). */
+export function parseCountersPayload(raw: unknown): PublicHealthCounter[] {
+  const rows = extractPublicHealthList(raw, ["counters"]);
+  if (rows.length > 0) {
+    return rows.map((row) => {
+      const r = asRecord(row);
+      const label = readString(r, "syndrome_code", "label") || "Counter";
+      const val = readNumber(r, "event_count", "count", "value");
+      return normalizeCounter({
+        id: readString(r, "facility_id", "id") + label + readString(r, "count_date"),
+        label,
+        value: String(val),
+        detail: `${readString(r, "facility_id", "facility")} · ${readString(r, "count_date")}`,
+      });
+    });
+  }
+  if (Array.isArray(raw)) return raw.map(normalizeCounter);
+  const record = asRecord(raw);
+  return Object.entries(record).map(([key, value]) =>
+    normalizeCounter({
+      id: key,
+      label: key.replace(/_/g, " "),
+      value,
+    }),
+  );
+}
+
 export function usePublicHealthCounters() {
   return useQuery({
     queryKey: ["public-health-counters"],
     queryFn: async () => {
       const response = await apiClient.get<{ data: unknown }>("/internal/v1/public-health/counters");
-      const raw = response.data;
-      const rows = extractPublicHealthList(raw, ["counters"]);
-      if (rows.length > 0) {
-        return rows.map((row) => {
-          const r = asRecord(row);
-          const label = readString(r, "syndrome_code", "label") || "Counter";
-          const val = readNumber(r, "event_count", "count", "value");
-          return normalizeCounter({
-            id: readString(r, "facility_id", "id") + label + readString(r, "count_date"),
-            label,
-            value: String(val),
-            detail: `${readString(r, "facility_id", "facility")} · ${readString(r, "count_date")}`,
-          });
-        });
-      }
-      if (Array.isArray(raw)) return raw.map(normalizeCounter);
-      const record = asRecord(raw);
-      return Object.entries(record).map(([key, value]) =>
-        normalizeCounter({
-          id: key,
-          label: key.replace(/_/g, " "),
-          value,
-        }),
-      );
+      return parseCountersPayload(response.data);
     },
   });
 }

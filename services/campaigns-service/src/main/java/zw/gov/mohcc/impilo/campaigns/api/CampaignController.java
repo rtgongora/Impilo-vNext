@@ -65,6 +65,21 @@ public class CampaignController {
                 ctx.correlationId().toString()));
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<CampaignEntity>> getCampaign(@PathVariable Long id) {
+        TrustContext ctx = TrustContextHolder.require();
+        CampaignEntity campaign = campaignService.findById(id, ctx.tenantId());
+        return ResponseEntity.ok(ApiResponse.ok(campaign, ctx.correlationId().toString()));
+    }
+
+    @PostMapping("/{id}/close")
+    public ResponseEntity<ApiResponse<CampaignEntity>> closeCampaign(@PathVariable Long id) {
+        TrustContext ctx = TrustContextHolder.require();
+        CampaignEntity campaign = campaignService.completeCampaign(
+                id, ctx.tenantId(), ctx.actorId(), ctx.correlationId());
+        return ResponseEntity.ok(ApiResponse.ok(campaign, ctx.correlationId().toString()));
+    }
+
     @PostMapping("/{id}/enroll")
     public ResponseEntity<ApiResponse<EnrollmentEntity>> enroll(
             @PathVariable Long id,

@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -31,7 +32,7 @@ class CampaignsOutboxPublisherTest {
 
     @BeforeEach
     void setUp() {
-        publisher = new CampaignsOutboxPublisher(outboxRepository, kafkaTemplate);
+        publisher = new CampaignsOutboxPublisher(outboxRepository, kafkaTemplate, "LEGACY_ONLY");
     }
 
     @Nested
@@ -72,7 +73,7 @@ class CampaignsOutboxPublisherTest {
             when(outboxRepository.findTop100ByPublishedAtIsNullOrderByCreatedAtAsc())
                     .thenReturn(Collections.emptyList());
 
-            publisher.publishPendingEvents();
+            publisher.poll();
 
             verify(kafkaTemplate, never()).send(any(), any(), any());
         }
@@ -85,16 +86,18 @@ class CampaignsOutboxPublisherTest {
             event.setAggregateId("camp-1");
             event.setEventType("CAMPAIGN_CREATED");
             event.setPayload("{\"id\":1}");
+            event.setOccurredAt(java.time.OffsetDateTime.now());
 
             when(outboxRepository.findTop100ByPublishedAtIsNullOrderByCreatedAtAsc())
                     .thenReturn(List.of(event));
+            when(outboxRepository.findById(1L)).thenReturn(Optional.of(event));
 
-            publisher.publishPendingEvents();
+            publisher.poll();
 
             verify(kafkaTemplate).send(eq("impilo.campaigns.created.v1"), eq("camp-1"), eq("{\"id\":1}"));
 
             ArgumentCaptor<EventOutboxEntity> captor = ArgumentCaptor.forClass(EventOutboxEntity.class);
-            verify(outboxRepository).save(captor.capture());
+            verify(outboxRepository, org.mockito.Mockito.atLeastOnce()).save(captor.capture());
             assertThat(captor.getValue().getPublishedAt()).isNotNull();
         }
     }

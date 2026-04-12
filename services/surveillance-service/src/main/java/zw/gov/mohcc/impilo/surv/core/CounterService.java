@@ -7,9 +7,11 @@ import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.surv.persistence.entity.AlertDefinitionEntity;
 import zw.gov.mohcc.impilo.surv.persistence.entity.AlertEventEntity;
 import zw.gov.mohcc.impilo.surv.persistence.entity.DailyCounterEntity;
+import zw.gov.mohcc.impilo.surv.persistence.entity.EventOutboxEntity;
 import zw.gov.mohcc.impilo.surv.persistence.repository.AlertDefinitionRepository;
 import zw.gov.mohcc.impilo.surv.persistence.repository.AlertEventRepository;
 import zw.gov.mohcc.impilo.surv.persistence.repository.DailyCounterRepository;
+import zw.gov.mohcc.impilo.surv.persistence.repository.EventOutboxRepository;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -25,13 +27,16 @@ public class CounterService {
     private final DailyCounterRepository counterRepository;
     private final AlertDefinitionRepository alertDefRepository;
     private final AlertEventRepository alertEventRepository;
+    private final EventOutboxRepository outboxRepository;
 
     public CounterService(DailyCounterRepository counterRepository,
                            AlertDefinitionRepository alertDefRepository,
-                           AlertEventRepository alertEventRepository) {
+                           AlertEventRepository alertEventRepository,
+                           EventOutboxRepository outboxRepository) {
         this.counterRepository = counterRepository;
         this.alertDefRepository = alertDefRepository;
         this.alertEventRepository = alertEventRepository;
+        this.outboxRepository = outboxRepository;
     }
 
     @Transactional
@@ -74,7 +79,9 @@ public class CounterService {
                 alertEvent.setSyndromeCode(syndromeCode);
                 alertEvent.setTriggerCount(currentCount);
                 alertEvent.setThreshold(alertDef.getThreshold());
-                alertEventRepository.save(alertEvent);
+                alertEvent = alertEventRepository.save(alertEvent);
+
+                publishAlertOutbox(alertEvent, alertDef.getName());
 
                 log.info("Alert triggered [syndrome={}, facility={}, count={}, threshold={}]",
                         syndromeCode, facilityId, currentCount, alertDef.getThreshold());
@@ -98,6 +105,24 @@ public class CounterService {
 
     public List<AlertDefinitionEntity> getAlertDefinitions(UUID tenantId) {
         return alertDefRepository.findByTenantIdAndActiveTrue(tenantId);
+    }
+
+    private void publishAlertOutbox(AlertEventEntity alert, String definitionName) {
+        EventOutboxEntity row = new EventOutboxEntity();
+        row.setAggregateType("ALERT");
+        row.setAggregateId(String.valueOf(alert.getId()));
+        row.setEventType("ALERT_TRIGGERED");
+        row.setTenantId(alert.getTenantId().toString());
+        row.setOccurredAt(OffsetDateTime.now());
+        row.setPayload("{\"alertEventId\":" + alert.getId()
+                + ",\"tenantId\":\"" + alert.getTenantId() + "\""
+                + ",\"facilityId\":\"" + alert.getFacilityId() + "\""
+                + ",\"syndromeCode\":\"" + alert.getSyndromeCode() + "\""
+                + ",\"definitionName\":\"" + (definitionName != null ? definitionName.replace("\"", "'") : "")
+                + "\",\"triggerCount\":" + alert.getTriggerCount()
+                + ",\"threshold\":" + alert.getThreshold()
+                + "}");
+        outboxRepository.save(row);
     }
 
     @Transactional

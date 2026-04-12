@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import java.time.OffsetDateTime;
+import zw.gov.mohcc.impilo.sharedkernel.events.CompanionOutboxPublisher;
 
 @Entity
 @Table(name = "event_outbox", schema = "surv")
@@ -47,9 +48,76 @@ public class EventOutboxEntity {
     @Column(name = "published_at")
     private OffsetDateTime publishedAt;
 
+    @Column(name = "occurred_at")
+    private OffsetDateTime occurredAt;
+
+    @Column(name = "publish_error", columnDefinition = "TEXT")
+    private String publishError;
+
     @PrePersist
     protected void onCreate() {
-        createdAt = OffsetDateTime.now();
+        OffsetDateTime now = OffsetDateTime.now();
+        if (createdAt == null) {
+            createdAt = now;
+        }
+        if (occurredAt == null) {
+            occurredAt = now;
+        }
+    }
+
+    public CompanionOutboxPublisher.OutboxRow toOutboxRow() {
+        final EventOutboxEntity self = this;
+        return new CompanionOutboxPublisher.OutboxRow() {
+            @Override
+            public Long id() {
+                return self.id;
+            }
+
+            @Override
+            public String aggregateType() {
+                return self.aggregateType;
+            }
+
+            @Override
+            public String aggregateId() {
+                return self.aggregateId;
+            }
+
+            @Override
+            public String eventType() {
+                return self.eventType;
+            }
+
+            @Override
+            public String payloadJson() {
+                return self.payload != null ? self.payload : "{}";
+            }
+
+            @Override
+            public OffsetDateTime occurredAt() {
+                return self.occurredAt != null ? self.occurredAt : self.createdAt;
+            }
+
+            @Override
+            public OffsetDateTime publishedAt() {
+                return self.publishedAt;
+            }
+
+            @Override
+            public String tenantId() {
+                return self.tenantId;
+            }
+
+            @Override
+            public String correlationId() {
+                return self.correlationId;
+            }
+
+            @Override
+            public String idempotencyKey() {
+                return self.idempotencyKey;
+            }
+        };
     }
 
     public Long getId() { return id; }
@@ -74,4 +142,8 @@ public class EventOutboxEntity {
     public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }
     public OffsetDateTime getPublishedAt() { return publishedAt; }
     public void setPublishedAt(OffsetDateTime publishedAt) { this.publishedAt = publishedAt; }
+    public OffsetDateTime getOccurredAt() { return occurredAt; }
+    public void setOccurredAt(OffsetDateTime occurredAt) { this.occurredAt = occurredAt; }
+    public String getPublishError() { return publishError; }
+    public void setPublishError(String publishError) { this.publishError = publishError; }
 }
