@@ -1,10 +1,15 @@
 package zw.gov.mohcc.impilo.experience.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import zw.gov.mohcc.impilo.experience.client.InpatientServiceClient;
+import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -21,16 +26,27 @@ import java.util.*;
 @RequestMapping("/internal/v1")
 public class CareEmergencyInpatientController {
 
-    private final JdbcTemplate jdbc;
+    private static final Logger log = LoggerFactory.getLogger(CareEmergencyInpatientController.class);
 
-    public CareEmergencyInpatientController(JdbcTemplate jdbc) {
+    private final JdbcTemplate jdbc; // TODO: remove after verification
+    private final InpatientServiceClient inpatientClient;
+    private final PctServiceClient pctClient;
+
+    public CareEmergencyInpatientController(JdbcTemplate jdbc,
+                                            InpatientServiceClient inpatientClient,
+                                            PctServiceClient pctClient) {
         this.jdbc = jdbc;
+        this.inpatientClient = inpatientClient;
+        this.pctClient = pctClient;
     }
 
     // ── Care Plans ──────────────────────────────────────────────────
 
     @GetMapping("/care-plans")
     public ResponseEntity<Map<String, Object>> listCarePlans(@RequestHeader("X-Tenant-ID") String tenantId, @RequestParam String patientId) {
+        // STRANGLER: delegate to PctServiceClient
+        try { JsonNode pctData = pctClient.listCarePlans(patientId); if (pctData != null) return ResponseEntity.ok(Map.of("data", pctData)); } catch (Exception e) { log.warn("PCT listCarePlans failed, falling back to local: {}", e.getMessage()); }
+        // STRANGLER: migrated to PctServiceClient — fallback to local JDBC
         List<Map<String, Object>> plans = jdbc.queryForList(
                 "SELECT * FROM care_plans WHERE tenant_id = ? AND patient_id = ?::uuid ORDER BY created_at DESC", tenantId, patientId);
         for (Map<String, Object> plan : plans) {
@@ -44,6 +60,9 @@ public class CareEmergencyInpatientController {
     @PostMapping("/care-plans")
     @Transactional
     public ResponseEntity<Map<String, Object>> createCarePlan(@RequestHeader("X-Tenant-ID") String tenantId, @RequestBody Map<String, Object> body) {
+        // STRANGLER: delegate to PctServiceClient first
+        try { pctClient.createCarePlan(body); } catch (Exception e) { log.warn("PCT createCarePlan failed (non-blocking): {}", e.getMessage()); }
+        // STRANGLER: migrated to PctServiceClient — dual-write to local BFF table as backup cache
         UUID id = UUID.randomUUID();
         jdbc.update("INSERT INTO care_plans (id, tenant_id, patient_id, encounter_id, title, plan_type, created_by) VALUES (?, ?, ?::uuid, ?::uuid, ?, ?, ?)",
                 id, tenantId, body.get("patientId"), body.getOrDefault("encounterId", null),
@@ -70,6 +89,9 @@ public class CareEmergencyInpatientController {
 
     @GetMapping("/fluid-balance")
     public ResponseEntity<Map<String, Object>> getFluidBalance(@RequestHeader("X-Tenant-ID") String tenantId, @RequestParam String patientId, @RequestParam(required = false) String date) {
+        // STRANGLER: delegate to PctServiceClient
+        try { JsonNode pctData = pctClient.getFluidBalance(patientId, date); if (pctData != null) return ResponseEntity.ok(Map.of("data", pctData)); } catch (Exception e) { log.warn("PCT getFluidBalance failed, falling back to local: {}", e.getMessage()); }
+        // STRANGLER: migrated to PctServiceClient — fallback to local JDBC
         String d = date != null ? date : java.time.LocalDate.now().toString();
         List<Map<String, Object>> records = jdbc.queryForList(
                 "SELECT * FROM fluid_balance_records WHERE tenant_id = ? AND patient_id = ?::uuid AND record_date = ?::date ORDER BY recorded_at", tenantId, patientId, d);
@@ -81,6 +103,9 @@ public class CareEmergencyInpatientController {
     @PostMapping("/fluid-balance")
     @Transactional
     public ResponseEntity<Map<String, Object>> recordFluid(@RequestHeader("X-Tenant-ID") String tenantId, @RequestBody Map<String, Object> body) {
+        // STRANGLER: delegate to PctServiceClient first
+        try { pctClient.recordFluidBalance(body); } catch (Exception e) { log.warn("PCT recordFluidBalance failed (non-blocking): {}", e.getMessage()); }
+        // STRANGLER: migrated to PctServiceClient — dual-write to local BFF table as backup cache
         UUID id = UUID.randomUUID();
         jdbc.update("INSERT INTO fluid_balance_records (id, tenant_id, patient_id, encounter_id, entry_type, category, volume_ml, description, recorded_by) VALUES (?, ?, ?::uuid, ?::uuid, ?, ?, ?, ?, ?)",
                 id, tenantId, body.get("patientId"), body.getOrDefault("encounterId", null),
@@ -93,6 +118,8 @@ public class CareEmergencyInpatientController {
 
     @GetMapping("/emergency/activations")
     public ResponseEntity<Map<String, Object>> listActivations(@RequestHeader("X-Tenant-ID") String tenantId) {
+        // STRANGLER: delegate to PctServiceClient
+        try { JsonNode pctData = pctClient.listEmergencyActivations(); if (pctData != null) return ResponseEntity.ok(Map.of("data", pctData)); } catch (Exception e) { log.warn("PCT listEmergencyActivations failed, falling back to local: {}", e.getMessage()); }
         List<Map<String, Object>> rows = jdbc.queryForList(
                 "SELECT * FROM emergency_activations WHERE tenant_id = ? ORDER BY activation_time DESC LIMIT 20", tenantId);
         return ResponseEntity.ok(Map.of("data", rows));
@@ -101,6 +128,8 @@ public class CareEmergencyInpatientController {
     @PostMapping("/emergency/activate")
     @Transactional
     public ResponseEntity<Map<String, Object>> activateEmergency(@RequestHeader("X-Tenant-ID") String tenantId, @RequestBody Map<String, Object> body) {
+        // STRANGLER: delegate to PctServiceClient first
+        try { pctClient.activateEmergency(body); } catch (Exception e) { log.warn("PCT activateEmergency failed (non-blocking): {}", e.getMessage()); }
         UUID id = UUID.randomUUID();
         jdbc.update("INSERT INTO emergency_activations (id, tenant_id, encounter_id, patient_id, protocol_type, team_leader, location) VALUES (?, ?, ?::uuid, ?::uuid, ?, ?, ?)",
                 id, tenantId, body.getOrDefault("encounterId", null), body.getOrDefault("patientId", null),
@@ -111,6 +140,8 @@ public class CareEmergencyInpatientController {
     @PostMapping("/emergency/{id}/action")
     @Transactional
     public ResponseEntity<Map<String, Object>> logAction(@PathVariable UUID id, @RequestBody Map<String, Object> body) {
+        // STRANGLER: delegate to PctServiceClient first
+        try { pctClient.logEmergencyAction(id.toString(), body); } catch (Exception e) { log.warn("PCT logEmergencyAction failed (non-blocking): {}", e.getMessage()); }
         jdbc.update("INSERT INTO emergency_actions (activation_id, action_type, description, performed_by) VALUES (?, ?, ?, ?)",
                 id, body.get("actionType"), body.get("description"), body.getOrDefault("performedBy", ""));
         return ResponseEntity.ok(Map.of("logged", true));
@@ -119,6 +150,8 @@ public class CareEmergencyInpatientController {
     @PostMapping("/emergency/{id}/end")
     @Transactional
     public ResponseEntity<Map<String, Object>> endEmergency(@PathVariable UUID id, @RequestBody Map<String, Object> body) {
+        // STRANGLER: delegate to PctServiceClient first
+        try { pctClient.endEmergency(id.toString(), body); } catch (Exception e) { log.warn("PCT endEmergency failed (non-blocking): {}", e.getMessage()); }
         jdbc.update("UPDATE emergency_activations SET status = 'ENDED', outcome = ?, ended_at = NOW(), notes = ? WHERE id = ?",
                 body.getOrDefault("outcome", "STABILISED"), body.getOrDefault("notes", ""), id);
         return ResponseEntity.ok(Map.of("status", "ENDED"));
@@ -129,6 +162,8 @@ public class CareEmergencyInpatientController {
     @PostMapping("/emergency/{activationId}/resuscitation")
     @Transactional
     public ResponseEntity<Map<String, Object>> recordResuscitation(@PathVariable UUID activationId, @RequestBody Map<String, Object> body) {
+        // STRANGLER: delegate to PctServiceClient first
+        try { pctClient.recordResuscitation(activationId.toString(), body); } catch (Exception e) { log.warn("PCT recordResuscitation failed (non-blocking): {}", e.getMessage()); }
         UUID id = UUID.randomUUID();
         jdbc.update("INSERT INTO resuscitation_records (id, activation_id, cpr_cycles, defibrillations, initial_rhythm, final_rhythm, rosc_achieved, medications) VALUES (?, ?, ?, ?, ?, ?, ?, ?::jsonb)",
                 id, activationId, Integer.parseInt(body.getOrDefault("cprCycles", "0").toString()),
@@ -144,6 +179,8 @@ public class CareEmergencyInpatientController {
     @PostMapping("/apgar")
     @Transactional
     public ResponseEntity<Map<String, Object>> recordApgar(@RequestHeader("X-Tenant-ID") String tenantId, @RequestBody Map<String, Object> body) {
+        // STRANGLER: delegate to PctServiceClient first
+        try { pctClient.recordApgar(body); } catch (Exception e) { log.warn("PCT recordApgar failed (non-blocking): {}", e.getMessage()); }
         UUID id = UUID.randomUUID();
         jdbc.update("INSERT INTO apgar_scores (id, tenant_id, patient_id, encounter_id, minute, appearance, pulse, grimace, activity, respiration) VALUES (?, ?, ?::uuid, ?::uuid, ?, ?, ?, ?, ?, ?)",
                 id, tenantId, body.get("patientId"), body.getOrDefault("encounterId", null),
@@ -156,6 +193,8 @@ public class CareEmergencyInpatientController {
 
     @GetMapping("/apgar")
     public ResponseEntity<Map<String, Object>> getApgar(@RequestHeader("X-Tenant-ID") String tenantId, @RequestParam String patientId) {
+        // STRANGLER: delegate to PctServiceClient
+        try { JsonNode pctData = pctClient.getApgar(patientId); if (pctData != null) return ResponseEntity.ok(Map.of("data", pctData)); } catch (Exception e) { log.warn("PCT getApgar failed, falling back to local: {}", e.getMessage()); }
         List<Map<String, Object>> rows = jdbc.queryForList("SELECT * FROM apgar_scores WHERE tenant_id = ? AND patient_id = ?::uuid ORDER BY minute", tenantId, patientId);
         return ResponseEntity.ok(Map.of("data", rows));
     }
@@ -165,6 +204,8 @@ public class CareEmergencyInpatientController {
     @PostMapping("/ews")
     @Transactional
     public ResponseEntity<Map<String, Object>> recordEWS(@RequestHeader("X-Tenant-ID") String tenantId, @RequestBody Map<String, Object> body) {
+        // STRANGLER: delegate to PctServiceClient first
+        try { pctClient.recordEWS(body); } catch (Exception e) { log.warn("PCT recordEWS failed (non-blocking): {}", e.getMessage()); }
         UUID id = UUID.randomUUID();
         int totalScore = Integer.parseInt(body.get("totalScore").toString());
         String riskLevel = totalScore >= 7 ? "HIGH" : totalScore >= 5 ? "MEDIUM" : totalScore >= 1 ? "LOW" : "NONE";
@@ -177,6 +218,8 @@ public class CareEmergencyInpatientController {
 
     @GetMapping("/ews")
     public ResponseEntity<Map<String, Object>> getEWS(@RequestHeader("X-Tenant-ID") String tenantId, @RequestParam String patientId) {
+        // STRANGLER: delegate to PctServiceClient
+        try { JsonNode pctData = pctClient.getEWS(patientId); if (pctData != null) return ResponseEntity.ok(Map.of("data", pctData)); } catch (Exception e) { log.warn("PCT getEWS failed, falling back to local: {}", e.getMessage()); }
         List<Map<String, Object>> rows = jdbc.queryForList("SELECT * FROM early_warning_scores WHERE tenant_id = ? AND patient_id = ?::uuid ORDER BY recorded_at DESC LIMIT 20", tenantId, patientId);
         return ResponseEntity.ok(Map.of("data", rows));
     }
@@ -186,6 +229,8 @@ public class CareEmergencyInpatientController {
     @PostMapping("/admissions")
     @Transactional
     public ResponseEntity<Map<String, Object>> createAdmission(@RequestHeader("X-Tenant-ID") String tenantId, @RequestBody Map<String, Object> body) {
+        // STRANGLER: delegate to InpatientServiceClient first
+        try { inpatientClient.createAdmission(body); } catch (Exception e) { log.warn("Inpatient createAdmission failed (non-blocking): {}", e.getMessage()); }
         UUID id = UUID.randomUUID();
         jdbc.update("INSERT INTO admissions (id, tenant_id, patient_id, encounter_id, bed_id, ward_id, admission_type, admitting_doctor, admitting_diagnosis, diet_orders, activity_level, isolation_type, allergies_noted, dvt_prophylaxis) VALUES (?, ?, ?::uuid, ?::uuid, ?::uuid, ?::uuid, ?, ?, ?, ?, ?, ?, ?, ?)",
                 id, tenantId, body.get("patientId"), body.getOrDefault("encounterId", null),
@@ -201,6 +246,8 @@ public class CareEmergencyInpatientController {
 
     @GetMapping("/admissions")
     public ResponseEntity<Map<String, Object>> listAdmissions(@RequestHeader("X-Tenant-ID") String tenantId, @RequestParam(required = false) String patientId) {
+        // STRANGLER: delegate to InpatientServiceClient
+        try { JsonNode data = inpatientClient.listAdmissions(patientId); if (data != null) return ResponseEntity.ok(Map.of("data", data)); } catch (Exception e) { log.warn("Inpatient listAdmissions failed, falling back to local: {}", e.getMessage()); }
         String sql = patientId != null
                 ? "SELECT * FROM admissions WHERE tenant_id = ? AND patient_id = ?::uuid AND status = 'ACTIVE' ORDER BY admission_date DESC"
                 : "SELECT * FROM admissions WHERE tenant_id = ? AND status = 'ACTIVE' ORDER BY admission_date DESC LIMIT 50";
@@ -242,6 +289,8 @@ public class CareEmergencyInpatientController {
     @PostMapping("/observations")
     @Transactional
     public ResponseEntity<Map<String, Object>> recordObservation(@RequestHeader("X-Tenant-ID") String tenantId, @RequestBody Map<String, Object> body) {
+        // STRANGLER: delegate to PctServiceClient first
+        try { pctClient.recordObservation(body); } catch (Exception e) { log.warn("PCT recordObservation failed (non-blocking): {}", e.getMessage()); }
         UUID id = UUID.randomUUID();
         jdbc.update("INSERT INTO observation_entries (id, tenant_id, patient_id, encounter_id, chart_type, parameters, recorded_by) VALUES (?, ?, ?::uuid, ?::uuid, ?, ?::jsonb, ?)",
                 id, tenantId, body.get("patientId"), body.getOrDefault("encounterId", null),
@@ -251,6 +300,8 @@ public class CareEmergencyInpatientController {
 
     @GetMapping("/observations")
     public ResponseEntity<Map<String, Object>> getObservations(@RequestHeader("X-Tenant-ID") String tenantId, @RequestParam String patientId) {
+        // STRANGLER: delegate to PctServiceClient
+        try { JsonNode pctData = pctClient.getObservations(patientId); if (pctData != null) return ResponseEntity.ok(Map.of("data", pctData)); } catch (Exception e) { log.warn("PCT getObservations failed, falling back to local: {}", e.getMessage()); }
         List<Map<String, Object>> rows = jdbc.queryForList("SELECT * FROM observation_entries WHERE tenant_id = ? AND patient_id = ?::uuid ORDER BY recorded_at DESC LIMIT 50", tenantId, patientId);
         return ResponseEntity.ok(Map.of("data", rows));
     }
@@ -260,6 +311,8 @@ public class CareEmergencyInpatientController {
     @PostMapping("/transfers")
     @Transactional
     public ResponseEntity<Map<String, Object>> requestTransfer(@RequestHeader("X-Tenant-ID") String tenantId, @RequestBody Map<String, Object> body) {
+        // STRANGLER: delegate to InpatientServiceClient first
+        try { inpatientClient.transferPatient(null, body); } catch (Exception e) { log.warn("Inpatient requestTransfer failed (non-blocking): {}", e.getMessage()); }
         UUID id = UUID.randomUUID();
         jdbc.update("INSERT INTO patient_transfers (id, tenant_id, patient_id, from_ward_id, from_bed_id, to_ward_id, to_bed_id, reason, clinical_notes, transfer_type, requested_by) VALUES (?, ?, ?::uuid, ?::uuid, ?::uuid, ?::uuid, ?::uuid, ?, ?, ?, ?)",
                 id, tenantId, body.get("patientId"),

@@ -41,7 +41,7 @@ public class TriageController {
 
     private static final Logger log = LoggerFactory.getLogger(TriageController.class);
 
-    private final JdbcTemplate jdbcTemplate;
+    private final JdbcTemplate jdbcTemplate; // TODO: remove after verification
     private final OutboxService outboxService;
     private final PctServiceClient pctClient;
 

@@ -30,7 +30,7 @@ public class PharmacyController {
 
     private final PrescriptionRepository prescriptionRepository;
     private final OutboxService outboxService;
-    private final org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
+    private final org.springframework.jdbc.core.JdbcTemplate jdbcTemplate; // TODO: remove after verification
     private final PharmacyServiceClient pharmacyClient;
 
     public PharmacyController(PrescriptionRepository prescriptionRepository,

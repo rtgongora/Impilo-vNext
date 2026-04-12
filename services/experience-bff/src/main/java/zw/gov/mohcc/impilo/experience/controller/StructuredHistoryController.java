@@ -321,6 +321,19 @@ public class StructuredHistoryController {
             @RequestParam(name = "patient_id") String patientIdParam) {
 
         UUID patientId = parsePatientId(patientIdParam);
+        // STRANGLER: delegate to PctServiceClient
+        try {
+            JsonNode pctData = pctClient.getAdvanceDirectives(patientIdParam);
+            if (pctData != null) {
+                Map<String, Object> body = new LinkedHashMap<>();
+                body.put("data", pctData);
+                body.put("meta", meta(requestId, correlationId));
+                return ResponseEntity.ok(body);
+            }
+        } catch (Exception e) {
+            log.warn("PCT getAdvanceDirectives failed, falling back to local: {}", e.getMessage());
+        }
+        // STRANGLER: migrated to PctServiceClient — fallback to local JDBC
         List<Map<String, Object>> rows = jdbcTemplate.query("""
                         SELECT id, directive_type, status, effective_date, review_date, document_ref, summary,
                                contact, contact_relation, contact_phone

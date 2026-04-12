@@ -1,11 +1,15 @@
 package zw.gov.mohcc.impilo.experience.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.InpatientServiceClient;
 
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -23,10 +27,14 @@ import java.util.*;
 @RequestMapping("/internal/v1/beds")
 public class BedController {
 
-    private final JdbcTemplate jdbcTemplate;
+    private static final Logger log = LoggerFactory.getLogger(BedController.class);
 
-    public BedController(JdbcTemplate jdbcTemplate) {
+    private final JdbcTemplate jdbcTemplate; // TODO: remove after verification
+    private final InpatientServiceClient inpatientClient;
+
+    public BedController(JdbcTemplate jdbcTemplate, InpatientServiceClient inpatientClient) {
         this.jdbcTemplate = jdbcTemplate;
+        this.inpatientClient = inpatientClient;
     }
 
     @GetMapping("/wards")
@@ -36,6 +44,14 @@ public class BedController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(name = "facility_id") UUID facilityId) {
 
+        // STRANGLER: delegate to InpatientServiceClient
+        try {
+            JsonNode data = inpatientClient.listWards(facilityId.toString());
+            if (data != null) return ResponseEntity.ok(Map.of("data", data, "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            log.warn("Inpatient listWards failed, falling back to local: {}", e.getMessage());
+        }
+        // STRANGLER: migrated to InpatientServiceClient — fallback to local JDBC
         List<Map<String, Object>> rows = jdbcTemplate.queryForList("""
             SELECT w.*,
                    COUNT(b.id) FILTER (WHERE b.status = 'AVAILABLE') as available_beds,
@@ -73,6 +89,14 @@ public class BedController {
             @RequestParam(required = false, name = "ward_id") UUID wardId,
             @RequestParam(required = false) String status) {
 
+        // STRANGLER: delegate to InpatientServiceClient
+        try {
+            JsonNode data = inpatientClient.listBeds(facilityId.toString(), wardId != null ? wardId.toString() : null, status);
+            if (data != null) return ResponseEntity.ok(Map.of("data", data, "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            log.warn("Inpatient listBeds failed, falling back to local: {}", e.getMessage());
+        }
+        // STRANGLER: migrated to InpatientServiceClient — fallback to local JDBC
         StringBuilder sql = new StringBuilder(
                 "SELECT b.*, w.name as ward_name FROM beds b JOIN wards w ON b.ward_id = w.id WHERE b.facility_id = ? AND b.tenant_id = ?");
         List<Object> params = new ArrayList<>(List.of(facilityId, tenantId));
@@ -120,6 +144,9 @@ public class BedController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestBody Map<String, String> body) {
 
+        // STRANGLER: delegate to InpatientServiceClient first
+        try { inpatientClient.updateBedStatus(id.toString(), body); } catch (Exception e) { log.warn("Inpatient updateBedStatus failed (non-blocking): {}", e.getMessage()); }
+        // STRANGLER: migrated to InpatientServiceClient — dual-write to local BFF table as backup cache
         String newStatus = body.get("status");
         jdbcTemplate.update(
                 "UPDATE beds SET status = ?, updated_at = ? WHERE id = ? AND tenant_id = ?",
@@ -139,6 +166,9 @@ public class BedController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestBody Map<String, String> body) {
 
+        // STRANGLER: delegate to InpatientServiceClient first
+        try { inpatientClient.assignPatientToBed(id.toString(), body); } catch (Exception e) { log.warn("Inpatient assignPatientToBed failed (non-blocking): {}", e.getMessage()); }
+        // STRANGLER: migrated to InpatientServiceClient — dual-write to local BFF table as backup cache
         String patientId = body.get("patientId");
         String patientName = body.get("patientName");
         String acuity = body.getOrDefault("acuity", "MEDIUM");
@@ -164,6 +194,9 @@ public class BedController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
 
+        // STRANGLER: delegate to InpatientServiceClient first
+        try { inpatientClient.dischargeBed(id.toString()); } catch (Exception e) { log.warn("Inpatient dischargeBed failed (non-blocking): {}", e.getMessage()); }
+        // STRANGLER: migrated to InpatientServiceClient — dual-write to local BFF table as backup cache
         OffsetDateTime now = OffsetDateTime.now();
         jdbcTemplate.update("""
             UPDATE beds SET status = 'CLEANING', patient_id = NULL, patient_name = NULL,

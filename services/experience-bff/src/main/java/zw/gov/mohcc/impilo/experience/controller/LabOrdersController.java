@@ -39,7 +39,7 @@ public class LabOrdersController {
 
     private final LabOrderRepository labOrderRepository;
     private final OutboxService outboxService;
-    private final JdbcTemplate jdbcTemplate;
+    private final JdbcTemplate jdbcTemplate; // TODO: remove after verification
     private final OrosServiceClient orosClient;
 
     public LabOrdersController(LabOrderRepository labOrderRepository,

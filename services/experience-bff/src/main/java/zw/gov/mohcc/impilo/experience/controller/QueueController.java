@@ -38,7 +38,7 @@ public class QueueController {
 
     private final QueueEntryRepository queueEntryRepository;
     private final OutboxService outboxService;
-    private final JdbcTemplate jdbcTemplate;
+    private final JdbcTemplate jdbcTemplate; // TODO: remove after verification
     private final PctServiceClient pctClient;
 
     public QueueController(QueueEntryRepository queueEntryRepository,

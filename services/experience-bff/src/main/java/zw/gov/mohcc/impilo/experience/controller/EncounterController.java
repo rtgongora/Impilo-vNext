@@ -38,7 +38,7 @@ public class EncounterController {
 
     private final EncounterRepository encounterRepository;
     private final OutboxService outboxService;
-    private final JdbcTemplate jdbcTemplate;
+    private final JdbcTemplate jdbcTemplate; // TODO: remove after verification
     private final PctServiceClient pctClient;
     private final CostaServiceClient costaClient;
 
