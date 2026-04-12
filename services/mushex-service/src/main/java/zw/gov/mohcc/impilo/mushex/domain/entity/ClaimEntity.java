@@ -49,6 +49,21 @@ public class ClaimEntity {
     @Column(name = "external_ref")
     private String externalRef;
 
+    @Column(name = "patient_cpid")
+    private String patientCpid;
+
+    @Column(name = "plan_code", length = 64)
+    private String planCode;
+
+    @Column(name = "service_code", length = 64)
+    private String serviceCode;
+
+    @Column(name = "preauth_required", nullable = false)
+    private boolean preauthRequired = true;
+
+    @Column(name = "denial_reason", length = 500)
+    private String denialReason;
+
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;
 
@@ -145,6 +160,46 @@ public class ClaimEntity {
 
     public void setExternalRef(String externalRef) {
         this.externalRef = externalRef;
+    }
+
+    public String getPatientCpid() {
+        return patientCpid;
+    }
+
+    public void setPatientCpid(String patientCpid) {
+        this.patientCpid = patientCpid;
+    }
+
+    public String getPlanCode() {
+        return planCode;
+    }
+
+    public void setPlanCode(String planCode) {
+        this.planCode = planCode;
+    }
+
+    public String getServiceCode() {
+        return serviceCode;
+    }
+
+    public void setServiceCode(String serviceCode) {
+        this.serviceCode = serviceCode;
+    }
+
+    public boolean isPreauthRequired() {
+        return preauthRequired;
+    }
+
+    public void setPreauthRequired(boolean preauthRequired) {
+        this.preauthRequired = preauthRequired;
+    }
+
+    public String getDenialReason() {
+        return denialReason;
+    }
+
+    public void setDenialReason(String denialReason) {
+        this.denialReason = denialReason;
     }
 
     public OffsetDateTime getCreatedAt() {

@@ -11,6 +11,7 @@ import zw.gov.mohcc.impilo.mushex.domain.enums.IntentStatus;
 import zw.gov.mohcc.impilo.mushex.domain.enums.SourceType;
 import zw.gov.mohcc.impilo.mushex.domain.repository.EventOutboxRepository;
 import zw.gov.mohcc.impilo.mushex.domain.repository.PaymentIntentRepository;
+import zw.gov.mohcc.impilo.mushex.integration.FacilityCredentialVerifier;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
@@ -62,15 +63,18 @@ public class PaymentIntentService {
     private final EventOutboxRepository outboxRepository;
     private final ReceiptService receiptService;
     private final ObjectMapper objectMapper;
+    private final FacilityCredentialVerifier facilityCredentialVerifier;
 
     public PaymentIntentService(PaymentIntentRepository intentRepository,
                                 EventOutboxRepository outboxRepository,
                                 ReceiptService receiptService,
-                                ObjectMapper objectMapper) {
+                                ObjectMapper objectMapper,
+                                FacilityCredentialVerifier facilityCredentialVerifier) {
         this.intentRepository = intentRepository;
         this.outboxRepository = outboxRepository;
         this.receiptService = receiptService;
         this.objectMapper = objectMapper;
+        this.facilityCredentialVerifier = facilityCredentialVerifier;
     }
 
     /**
@@ -87,6 +91,9 @@ public class PaymentIntentService {
                                             String metadata) {
         TrustContext ctx = TrustContextHolder.require();
 
+        UUID facility = facilityId != null ? facilityId : ctx.facilityId();
+        facilityCredentialVerifier.assertFacilityPaymentAllowed(ctx.tenantId(), facility);
+
         // Idempotency check: return existing intent if key already used
         Optional<PaymentIntentEntity> existing = intentRepository.findByIdempotencyKey(idempotencyKey);
         if (existing.isPresent()) {
@@ -97,7 +104,7 @@ public class PaymentIntentService {
         PaymentIntentEntity intent = new PaymentIntentEntity();
         intent.setIntentId(UlidGenerator.generate());
         intent.setTenantId(ctx.tenantId());
-        intent.setFacilityId(facilityId != null ? facilityId : ctx.facilityId());
+        intent.setFacilityId(facility);
         intent.setSourceType(sourceType);
         intent.setSourceId(sourceId);
         intent.setAmountTotal(amount);
@@ -200,6 +207,7 @@ public class PaymentIntentService {
                 amount, intentId, newAmountPaid);
 
         if (newAmountPaid.compareTo(intent.getAmountTotal()) >= 0) {
+            facilityCredentialVerifier.assertFacilityPaymentAllowed(ctx.tenantId(), intent.getFacilityId());
             IntentStatus oldStatus = intent.getStatus();
             intent.setStatus(IntentStatus.PAID);
             intent = intentRepository.save(intent);

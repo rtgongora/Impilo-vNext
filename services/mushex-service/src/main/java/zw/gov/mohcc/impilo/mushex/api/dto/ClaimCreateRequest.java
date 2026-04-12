@@ -6,5 +6,9 @@ public record ClaimCreateRequest(
         @NotBlank String billId,
         @NotBlank String insurerId,
         String facilityId,
-        String totals
+        String totals,
+        String patientCpid,
+        String planCode,
+        String serviceCode,
+        Boolean preauthRequired
 ) {}

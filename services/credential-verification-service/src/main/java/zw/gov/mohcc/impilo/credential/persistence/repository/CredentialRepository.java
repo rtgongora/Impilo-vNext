@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import zw.gov.mohcc.impilo.credential.persistence.entity.CredentialEntity;
 
+import java.time.LocalDate;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -34,4 +35,18 @@ public interface CredentialRepository extends JpaRepository<CredentialEntity, Lo
             @Param("credentialType") String credentialType,
             @Param("status") String status,
             Pageable pageable);
+
+    @Query("""
+            SELECT COUNT(c) FROM CredentialEntity c
+            WHERE c.tenantId = :tenantId
+              AND c.subjectType = 'FACILITY'
+              AND c.subjectId = :facilityId
+              AND c.status = 'ACTIVE'
+              AND c.validFrom <= :today
+              AND (c.validTo IS NULL OR c.validTo >= :today)
+            """)
+    long countActiveFacilityCredentials(
+            @Param("tenantId") UUID tenantId,
+            @Param("facilityId") String facilityId,
+            @Param("today") LocalDate today);
 }

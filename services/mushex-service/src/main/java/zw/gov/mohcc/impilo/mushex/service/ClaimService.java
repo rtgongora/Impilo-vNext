@@ -1,5 +1,6 @@
 package zw.gov.mohcc.impilo.mushex.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +18,7 @@ import zw.gov.mohcc.impilo.mushex.domain.repository.ClaimAttachmentRepository;
 import zw.gov.mohcc.impilo.mushex.domain.repository.ClaimEventRepository;
 import zw.gov.mohcc.impilo.mushex.domain.repository.ClaimRepository;
 import zw.gov.mohcc.impilo.mushex.domain.repository.EventOutboxRepository;
+import zw.gov.mohcc.impilo.mushex.integration.CoverageEligibilityClient;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
@@ -31,11 +33,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 /**
- * Claims switching state machine.
- *
- * Manages insurance claims from draft through submission, adjudication, and payment.
- * Every state transition is recorded as a ClaimEventEntity for full audit trail.
- * When adjudication yields a patient residual, a new payment intent is created.
+ * Claims switching state machine (v1.3 settlement journey + legacy statuses).
  */
 @Service
 public class ClaimService {
@@ -45,22 +43,33 @@ public class ClaimService {
     private static final Map<ClaimStatus, Set<ClaimStatus>> VALID_TRANSITIONS;
 
     static {
-        VALID_TRANSITIONS = new EnumMap<>(ClaimStatus.class);
-        VALID_TRANSITIONS.put(ClaimStatus.DRAFT, Set.of(
-                ClaimStatus.SUBMITTED));
-        VALID_TRANSITIONS.put(ClaimStatus.SUBMITTED, Set.of(
-                ClaimStatus.RECEIVED, ClaimStatus.REJECTED));
-        VALID_TRANSITIONS.put(ClaimStatus.RECEIVED, Set.of(
-                ClaimStatus.ADJUDICATED, ClaimStatus.REJECTED));
-        VALID_TRANSITIONS.put(ClaimStatus.ADJUDICATED, Set.of(
-                ClaimStatus.PAID, ClaimStatus.PARTIAL, ClaimStatus.RESUBMIT_PENDING));
-        VALID_TRANSITIONS.put(ClaimStatus.PARTIAL, Set.of(
-                ClaimStatus.PAID, ClaimStatus.RESUBMIT_PENDING));
-        VALID_TRANSITIONS.put(ClaimStatus.RESUBMIT_PENDING, Set.of(
-                ClaimStatus.SUBMITTED));
-        VALID_TRANSITIONS.put(ClaimStatus.PAID, Set.of());
-        VALID_TRANSITIONS.put(ClaimStatus.REJECTED, Set.of(
-                ClaimStatus.RESUBMIT_PENDING));
+        Map<ClaimStatus, Set<ClaimStatus>> m = new EnumMap<>(ClaimStatus.class);
+        m.put(ClaimStatus.DRAFT, Set.of(ClaimStatus.SUBMITTED));
+        m.put(ClaimStatus.RESUBMIT_PENDING, Set.of(ClaimStatus.SUBMITTED));
+        m.put(ClaimStatus.SUBMITTED, Set.of(ClaimStatus.ELIGIBILITY_PENDING));
+        m.put(ClaimStatus.ELIGIBILITY_PENDING, Set.of(ClaimStatus.ELIGIBILITY_VERIFIED, ClaimStatus.DENIED));
+        m.put(ClaimStatus.ELIGIBILITY_VERIFIED, Set.of(ClaimStatus.PREAUTHORIZED, ClaimStatus.ADJUDICATED));
+        m.put(ClaimStatus.PREAUTHORIZED, Set.of(ClaimStatus.ADJUDICATED));
+        m.put(ClaimStatus.ADJUDICATED, Set.of(
+                ClaimStatus.APPROVED,
+                ClaimStatus.DENIED,
+                ClaimStatus.PARTIAL,
+                ClaimStatus.RESUBMIT_PENDING,
+                ClaimStatus.REJECTED));
+        m.put(ClaimStatus.PARTIAL, Set.of(ClaimStatus.APPROVED, ClaimStatus.RESUBMIT_PENDING));
+        m.put(ClaimStatus.APPROVED, Set.of(ClaimStatus.REMITTED));
+        m.put(ClaimStatus.REMITTED, Set.of(ClaimStatus.PAID));
+        m.put(ClaimStatus.PAID, Set.of(ClaimStatus.SETTLED, ClaimStatus.REVERSED));
+        m.put(ClaimStatus.SETTLED, Set.of(ClaimStatus.RECONCILED, ClaimStatus.DISPUTED));
+        m.put(ClaimStatus.DISPUTED, Set.of(ClaimStatus.RECOVERED, ClaimStatus.SETTLED));
+        m.put(ClaimStatus.RECEIVED, Set.of(ClaimStatus.ADJUDICATED, ClaimStatus.ELIGIBILITY_VERIFIED));
+        m.put(ClaimStatus.REJECTED, Set.of(ClaimStatus.RESUBMIT_PENDING));
+        m.put(ClaimStatus.DENIED, Set.of(ClaimStatus.APPEALED, ClaimStatus.RESUBMIT_PENDING));
+        m.put(ClaimStatus.APPEALED, Set.of(ClaimStatus.ELIGIBILITY_PENDING));
+        m.put(ClaimStatus.RECONCILED, Set.of());
+        m.put(ClaimStatus.REVERSED, Set.of());
+        m.put(ClaimStatus.RECOVERED, Set.of());
+        VALID_TRANSITIONS = Map.copyOf(m);
     }
 
     private final ClaimRepository claimRepository;
@@ -70,6 +79,7 @@ public class ClaimService {
     private final PaymentIntentService intentService;
     private final EventOutboxRepository outboxRepository;
     private final ObjectMapper objectMapper;
+    private final CoverageEligibilityClient coverageEligibilityClient;
 
     public ClaimService(ClaimRepository claimRepository,
                         ClaimEventRepository claimEventRepository,
@@ -77,7 +87,8 @@ public class ClaimService {
                         AdjudicationRepository adjudicationRepository,
                         PaymentIntentService intentService,
                         EventOutboxRepository outboxRepository,
-                        ObjectMapper objectMapper) {
+                        ObjectMapper objectMapper,
+                        CoverageEligibilityClient coverageEligibilityClient) {
         this.claimRepository = claimRepository;
         this.claimEventRepository = claimEventRepository;
         this.attachmentRepository = attachmentRepository;
@@ -85,19 +96,26 @@ public class ClaimService {
         this.intentService = intentService;
         this.outboxRepository = outboxRepository;
         this.objectMapper = objectMapper;
+        this.coverageEligibilityClient = coverageEligibilityClient;
+    }
+
+    @Transactional
+    public ClaimEntity createClaim(String billId, String insurerId, UUID facilityId, String totals) {
+        return createClaim(billId, insurerId, facilityId, totals, null, null, null, null);
     }
 
     /**
-     * Create a new insurance claim in DRAFT status.
-     *
-     * @param billId     the COSTA bill ID this claim is for
-     * @param insurerId  the insurer profile ID
-     * @param facilityId the facility submitting the claim
-     * @param totals     JSON string of claim totals breakdown
-     * @return the created claim entity
+     * Creates a claim with optional coverage profile fields used by the eligibility gate.
      */
     @Transactional
-    public ClaimEntity createClaim(String billId, String insurerId, UUID facilityId, String totals) {
+    public ClaimEntity createClaim(String billId,
+                                   String insurerId,
+                                   UUID facilityId,
+                                   String totals,
+                                   String patientCpid,
+                                   String planCode,
+                                   String serviceCode,
+                                   Boolean preauthRequired) {
         TrustContext ctx = TrustContextHolder.require();
 
         ClaimEntity claim = new ClaimEntity();
@@ -108,6 +126,12 @@ public class ClaimService {
         claim.setInsurerId(insurerId);
         claim.setStatus(ClaimStatus.DRAFT);
         claim.setTotals(totals);
+        claim.setPatientCpid(patientCpid);
+        claim.setPlanCode(planCode);
+        claim.setServiceCode(serviceCode);
+        if (preauthRequired != null) {
+            claim.setPreauthRequired(preauthRequired);
+        }
 
         claim = claimRepository.save(claim);
 
@@ -118,12 +142,6 @@ public class ClaimService {
         return claim;
     }
 
-    /**
-     * Submit a claim for processing. Transitions DRAFT -> SUBMITTED.
-     *
-     * @param claimId the claim to submit
-     * @return the submitted claim entity
-     */
     @Transactional
     public ClaimEntity submitClaim(String claimId) {
         TrustContext ctx = TrustContextHolder.require();
@@ -153,53 +171,106 @@ public class ClaimService {
     }
 
     /**
-     * Record acknowledgment of receipt from the insurer.
-     * Transitions SUBMITTED -> RECEIVED.
-     *
-     * @param claimId     the claim acknowledged
-     * @param externalRef the insurer's external reference number
-     * @return the updated claim entity
+     * Insurer / switch acknowledgment: moves the claim into the coverage eligibility queue.
+     * SUBMITTED → ELIGIBILITY_PENDING.
      */
     @Transactional
     public ClaimEntity receiveAck(String claimId, String externalRef) {
         TrustContext ctx = TrustContextHolder.require();
         ClaimEntity claim = getClaim(claimId);
 
-        validateTransition(claim.getStatus(), ClaimStatus.RECEIVED);
+        validateTransition(claim.getStatus(), ClaimStatus.ELIGIBILITY_PENDING);
 
         ClaimStatus oldStatus = claim.getStatus();
-        claim.setStatus(ClaimStatus.RECEIVED);
+        claim.setStatus(ClaimStatus.ELIGIBILITY_PENDING);
         claim.setExternalRef(externalRef);
         claim = claimRepository.save(claim);
 
-        recordClaimEvent(claimId, oldStatus, ClaimStatus.RECEIVED, ctx.actorId(),
-                "Insurer acknowledgment received, ref: " + externalRef);
+        recordClaimEvent(claimId, oldStatus, ClaimStatus.ELIGIBILITY_PENDING, ctx.actorId(),
+                "Queued for eligibility verification, ref: " + externalRef);
 
-        log.info("Claim acknowledged: claimId={}, externalRef={}", claimId, externalRef);
+        log.info("Claim queued for eligibility: claimId={}, externalRef={}", claimId, externalRef);
 
         return claim;
     }
 
     /**
-     * Record the adjudication decision from the insurer.
-     * Creates an AdjudicationEntity and transitions claim to ADJUDICATED.
-     * If patientResidual > 0, creates a new payment intent for the patient portion.
-     *
-     * @param claimId          the claim being adjudicated
-     * @param decision         JSON decision details from the insurer
-     * @param patientResidual  amount the patient must pay
-     * @param insurerPayable   amount the insurer will pay
-     * @return the updated claim entity
+     * Calls coverage-service and advances ELIGIBILITY_PENDING → ELIGIBILITY_VERIFIED or DENIED.
      */
+    @Transactional
+    public ClaimEntity checkEligibilityGate(String claimId) {
+        TrustContext ctx = TrustContextHolder.require();
+        ClaimEntity claim = getClaim(claimId);
+
+        if (claim.getStatus() != ClaimStatus.ELIGIBILITY_PENDING) {
+            throw new IllegalStateException("Eligibility gate requires status ELIGIBILITY_PENDING, was " + claim.getStatus());
+        }
+
+        String patientCpid = firstNonBlank(
+                claim.getPatientCpid(), claim.getTotals(), "patient_cpid", "patientCpid");
+        String planCode = firstNonBlank(claim.getPlanCode(), claim.getTotals(), "plan_code", "planCode");
+        String serviceCode = firstNonBlank(claim.getServiceCode(), claim.getTotals(), "service_code", "serviceCode");
+
+        if (patientCpid == null || planCode == null) {
+            throw new IllegalStateException("patient CPID and plan code are required for eligibility check");
+        }
+
+        boolean eligible = coverageEligibilityClient.checkEligibility(
+                claim.getTenantId(), patientCpid, planCode, serviceCode != null ? serviceCode : "");
+
+        ClaimStatus oldStatus = claim.getStatus();
+        if (eligible) {
+            validateTransition(oldStatus, ClaimStatus.ELIGIBILITY_VERIFIED);
+            claim.setStatus(ClaimStatus.ELIGIBILITY_VERIFIED);
+            claim.setDenialReason(null);
+            claim = claimRepository.save(claim);
+            recordClaimEvent(claimId, oldStatus, ClaimStatus.ELIGIBILITY_VERIFIED, ctx.actorId(),
+                    "Coverage eligibility verified");
+            log.info("Eligibility verified for claimId={}", claimId);
+        } else {
+            validateTransition(oldStatus, ClaimStatus.DENIED);
+            claim.setStatus(ClaimStatus.DENIED);
+            claim.setDenialReason("COVERAGE_INELIGIBLE");
+            claim = claimRepository.save(claim);
+            recordClaimEvent(claimId, oldStatus, ClaimStatus.DENIED, ctx.actorId(),
+                    "Coverage ineligible (COVERAGE_INELIGIBLE)");
+            log.info("Eligibility denied for claimId={} reason=COVERAGE_INELIGIBLE", claimId);
+        }
+
+        return claim;
+    }
+
+    @Transactional
+    public ClaimEntity advanceToPreauthorized(String claimId) {
+        TrustContext ctx = TrustContextHolder.require();
+        ClaimEntity claim = getClaim(claimId);
+        validateTransition(claim.getStatus(), ClaimStatus.PREAUTHORIZED);
+        ClaimStatus old = claim.getStatus();
+        claim.setStatus(ClaimStatus.PREAUTHORIZED);
+        claim = claimRepository.save(claim);
+        recordClaimEvent(claimId, old, ClaimStatus.PREAUTHORIZED, ctx.actorId(), "Preauthorization recorded");
+        log.info("Claim preauthorized: claimId={}", claimId);
+        return claim;
+    }
+
     @Transactional
     public ClaimEntity recordAdjudication(String claimId, String decision,
                                           BigDecimal patientResidual, BigDecimal insurerPayable) {
         TrustContext ctx = TrustContextHolder.require();
         ClaimEntity claim = getClaim(claimId);
 
-        validateTransition(claim.getStatus(), ClaimStatus.ADJUDICATED);
+        ClaimStatus from = claim.getStatus();
+        if (claim.isPreauthRequired()) {
+            if (from != ClaimStatus.PREAUTHORIZED) {
+                throw new IllegalStateException("Adjudication requires PREAUTHORIZED when preauthRequired=true");
+            }
+        } else if (from != ClaimStatus.PREAUTHORIZED && from != ClaimStatus.ELIGIBILITY_VERIFIED) {
+            throw new IllegalStateException(
+                    "Adjudication requires ELIGIBILITY_VERIFIED (no preauth) or PREAUTHORIZED");
+        }
 
-        // Create adjudication record
+        validateTransition(from, ClaimStatus.ADJUDICATED);
+
         AdjudicationEntity adjudication = new AdjudicationEntity();
         adjudication.setId(UlidGenerator.generate());
         adjudication.setClaimId(claimId);
@@ -208,7 +279,6 @@ public class ClaimService {
         adjudication.setInsurerPayable(insurerPayable);
         adjudicationRepository.save(adjudication);
 
-        // Transition claim
         ClaimStatus oldStatus = claim.getStatus();
         claim.setStatus(ClaimStatus.ADJUDICATED);
         claim.setAdjudicatedAt(OffsetDateTime.now());
@@ -221,7 +291,6 @@ public class ClaimService {
         log.info("Claim adjudicated: claimId={}, patientResidual={}, insurerPayable={}",
                 claimId, patientResidual.toPlainString(), insurerPayable.toPlainString());
 
-        // If patient residual > 0, create a new payment intent for the patient
         if (patientResidual.compareTo(BigDecimal.ZERO) > 0) {
             String idempotencyKey = "CLAIM_RESIDUAL_" + claimId;
             intentService.createIntent(
@@ -248,13 +317,32 @@ public class ClaimService {
         return claim;
     }
 
-    /**
-     * Mark a claim as paid by the insurer.
-     * Transitions ADJUDICATED -> PAID.
-     *
-     * @param claimId the claim that has been paid
-     * @return the updated claim entity
-     */
+    @Transactional
+    public ClaimEntity approveClaim(String claimId) {
+        TrustContext ctx = TrustContextHolder.require();
+        ClaimEntity claim = getClaim(claimId);
+        validateTransition(claim.getStatus(), ClaimStatus.APPROVED);
+        ClaimStatus old = claim.getStatus();
+        claim.setStatus(ClaimStatus.APPROVED);
+        claim = claimRepository.save(claim);
+        recordClaimEvent(claimId, old, ClaimStatus.APPROVED, ctx.actorId(), "Claim approved for remittance");
+        log.info("Claim approved: claimId={}", claimId);
+        return claim;
+    }
+
+    @Transactional
+    public ClaimEntity markRemitted(String claimId) {
+        TrustContext ctx = TrustContextHolder.require();
+        ClaimEntity claim = getClaim(claimId);
+        validateTransition(claim.getStatus(), ClaimStatus.REMITTED);
+        ClaimStatus old = claim.getStatus();
+        claim.setStatus(ClaimStatus.REMITTED);
+        claim = claimRepository.save(claim);
+        recordClaimEvent(claimId, old, ClaimStatus.REMITTED, ctx.actorId(), "Insurer remittance issued");
+        log.info("Claim remitted: claimId={}", claimId);
+        return claim;
+    }
+
     @Transactional
     public ClaimEntity markPaid(String claimId) {
         TrustContext ctx = TrustContextHolder.require();
@@ -277,14 +365,75 @@ public class ClaimService {
         return claim;
     }
 
-    /**
-     * Dispute a claim, moving it to RESUBMIT_PENDING for correction and resubmission.
-     *
-     * @param claimId the claim to dispute
-     * @param reason  the dispute reason
-     * @param actorId the actor raising the dispute
-     * @return the updated claim entity
-     */
+    @Transactional
+    public ClaimEntity markSettled(String claimId) {
+        TrustContext ctx = TrustContextHolder.require();
+        ClaimEntity claim = getClaim(claimId);
+        validateTransition(claim.getStatus(), ClaimStatus.SETTLED);
+        ClaimStatus old = claim.getStatus();
+        claim.setStatus(ClaimStatus.SETTLED);
+        claim = claimRepository.save(claim);
+        recordClaimEvent(claimId, old, ClaimStatus.SETTLED, ctx.actorId(), "Claim settled");
+        log.info("Claim settled: claimId={}", claimId);
+        return claim;
+    }
+
+    @Transactional
+    public ClaimEntity markReconciled(String claimId) {
+        TrustContext ctx = TrustContextHolder.require();
+        ClaimEntity claim = getClaim(claimId);
+        validateTransition(claim.getStatus(), ClaimStatus.RECONCILED);
+        ClaimStatus old = claim.getStatus();
+        claim.setStatus(ClaimStatus.RECONCILED);
+        claim = claimRepository.save(claim);
+        recordClaimEvent(claimId, old, ClaimStatus.RECONCILED, ctx.actorId(), "Claim reconciled");
+        log.info("Claim reconciled: claimId={}", claimId);
+        return claim;
+    }
+
+    @Transactional
+    public ClaimEntity raiseSettlementDispute(String claimId, String reason, String actorId) {
+        TrustContext ctx = TrustContextHolder.require();
+        ClaimEntity claim = getClaim(claimId);
+        validateTransition(claim.getStatus(), ClaimStatus.DISPUTED);
+        ClaimStatus old = claim.getStatus();
+        claim.setStatus(ClaimStatus.DISPUTED);
+        claim = claimRepository.save(claim);
+        recordClaimEvent(claimId, old, ClaimStatus.DISPUTED,
+                actorId != null ? actorId : ctx.actorId(),
+                "Settlement dispute: " + (reason != null ? reason : ""));
+        log.info("Settlement dispute raised: claimId={}", claimId);
+        return claim;
+    }
+
+    @Transactional
+    public ClaimEntity resolveSettlementDisputeToRecovered(String claimId, String actorId) {
+        TrustContext ctx = TrustContextHolder.require();
+        ClaimEntity claim = getClaim(claimId);
+        validateTransition(claim.getStatus(), ClaimStatus.RECOVERED);
+        ClaimStatus old = claim.getStatus();
+        claim.setStatus(ClaimStatus.RECOVERED);
+        claim = claimRepository.save(claim);
+        recordClaimEvent(claimId, old, ClaimStatus.RECOVERED,
+                actorId != null ? actorId : ctx.actorId(), "Settlement dispute resolved (recovered)");
+        log.info("Settlement dispute resolved to RECOVERED: claimId={}", claimId);
+        return claim;
+    }
+
+    @Transactional
+    public ClaimEntity resolveSettlementDisputeToSettled(String claimId, String actorId) {
+        TrustContext ctx = TrustContextHolder.require();
+        ClaimEntity claim = getClaim(claimId);
+        validateTransition(claim.getStatus(), ClaimStatus.SETTLED);
+        ClaimStatus old = claim.getStatus();
+        claim.setStatus(ClaimStatus.SETTLED);
+        claim = claimRepository.save(claim);
+        recordClaimEvent(claimId, old, ClaimStatus.SETTLED,
+                actorId != null ? actorId : ctx.actorId(), "Settlement dispute resolved (back to settled)");
+        log.info("Settlement dispute resolved to SETTLED: claimId={}", claimId);
+        return claim;
+    }
+
     @Transactional
     public ClaimEntity disputeClaim(String claimId, String reason, String actorId) {
         TrustContext ctx = TrustContextHolder.require();
@@ -340,17 +489,8 @@ public class ClaimService {
         return attachmentRepository.findByClaimId(claimId);
     }
 
-    /**
-     * Add an attachment to a claim.
-     *
-     * @param claimId      the claim to attach to
-     * @param landelaDocId the Landela document service document ID
-     * @param docType      the document type (e.g. "INVOICE", "CLINICAL_NOTE", "AUTHORIZATION")
-     * @return the created attachment entity
-     */
     @Transactional
     public ClaimAttachmentEntity addAttachment(String claimId, String landelaDocId, String docType) {
-        // Verify claim exists
         getClaim(claimId);
 
         ClaimAttachmentEntity attachment = new ClaimAttachmentEntity();
@@ -366,17 +506,11 @@ public class ClaimService {
         return attachment;
     }
 
-    /**
-     * Fetch a claim by ID, throwing if not found.
-     */
     public ClaimEntity getClaim(String claimId) {
         return claimRepository.findById(claimId)
                 .orElseThrow(() -> new IllegalArgumentException("Claim not found: " + claimId));
     }
 
-    /**
-     * Validate that a claim status transition is allowed.
-     */
     private void validateTransition(ClaimStatus from, ClaimStatus to) {
         Set<ClaimStatus> allowed = VALID_TRANSITIONS.get(from);
         if (allowed == null || !allowed.contains(to)) {
@@ -385,9 +519,27 @@ public class ClaimService {
         }
     }
 
-    /**
-     * Record a claim event for audit trail.
-     */
+    private String firstNonBlank(String columnValue, String totalsJson, String snakeKey, String camelKey) {
+        if (columnValue != null && !columnValue.isBlank()) {
+            return columnValue;
+        }
+        if (totalsJson == null || totalsJson.isBlank()) {
+            return null;
+        }
+        try {
+            JsonNode n = objectMapper.readTree(totalsJson);
+            if (n.has(snakeKey) && !n.get(snakeKey).asText().isBlank()) {
+                return n.get(snakeKey).asText();
+            }
+            if (n.has(camelKey) && !n.get(camelKey).asText().isBlank()) {
+                return n.get(camelKey).asText();
+            }
+        } catch (Exception e) {
+            log.warn("Could not parse totals JSON for coverage fields: {}", e.getMessage());
+        }
+        return null;
+    }
+
     private void recordClaimEvent(String claimId, ClaimStatus fromState, ClaimStatus toState,
                                   String actorId, String reason) {
         ClaimEventEntity event = new ClaimEventEntity();

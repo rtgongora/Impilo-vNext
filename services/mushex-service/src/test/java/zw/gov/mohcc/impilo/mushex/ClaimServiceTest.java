@@ -20,6 +20,7 @@ import zw.gov.mohcc.impilo.mushex.domain.repository.ClaimRepository;
 import zw.gov.mohcc.impilo.mushex.domain.repository.EventOutboxRepository;
 import zw.gov.mohcc.impilo.mushex.domain.repository.PaymentIntentRepository;
 import zw.gov.mohcc.impilo.mushex.domain.repository.ReceiptRepository;
+import zw.gov.mohcc.impilo.mushex.integration.CoverageEligibilityClient;
 import zw.gov.mohcc.impilo.mushex.service.ClaimService;
 import zw.gov.mohcc.impilo.mushex.service.PaymentIntentService;
 import zw.gov.mohcc.impilo.mushex.service.ReceiptService;
@@ -56,6 +57,7 @@ class ClaimServiceTest {
     @Mock private EventOutboxRepository outboxRepository;
     @Mock private PaymentIntentRepository paymentIntentRepository;
     @Mock private ReceiptRepository receiptRepository;
+    @Mock private CoverageEligibilityClient coverageEligibilityClient;
 
     private ClaimService service;
     private RecordingPaymentIntentService intentService;
@@ -70,7 +72,7 @@ class ClaimServiceTest {
         intentService = new RecordingPaymentIntentService(paymentIntentRepository, outboxRepository, receiptRepository, objectMapper);
         service = new ClaimService(
             claimRepository, claimEventRepository, attachmentRepository,
-            adjudicationRepository, intentService, outboxRepository, objectMapper
+            adjudicationRepository, intentService, outboxRepository, objectMapper, coverageEligibilityClient
         );
         TrustContextHolder.set(new TrustContext(
             tenantId, "actor-1", "FACILITY_FINANCE", "BILLING",
@@ -196,7 +198,7 @@ class ClaimServiceTest {
 
     @Test
     void recordAdjudication_createsAdjudicationEntity() throws Exception {
-        ClaimEntity claim = buildClaim("CLM-200", ClaimStatus.RECEIVED);
+        ClaimEntity claim = buildClaim("CLM-200", ClaimStatus.PREAUTHORIZED);
         when(claimRepository.findById("CLM-200")).thenReturn(Optional.of(claim));
         when(claimRepository.save(any(ClaimEntity.class))).thenAnswer(inv -> inv.getArgument(0));
         when(adjudicationRepository.save(any(AdjudicationEntity.class))).thenAnswer(inv -> inv.getArgument(0));
@@ -216,7 +218,7 @@ class ClaimServiceTest {
 
     @Test
     void recordAdjudication_transitionsClaimToAdjudicated() throws Exception {
-        ClaimEntity claim = buildClaim("CLM-201", ClaimStatus.RECEIVED);
+        ClaimEntity claim = buildClaim("CLM-201", ClaimStatus.PREAUTHORIZED);
         when(claimRepository.findById("CLM-201")).thenReturn(Optional.of(claim));
         when(claimRepository.save(any(ClaimEntity.class))).thenAnswer(inv -> inv.getArgument(0));
         when(adjudicationRepository.save(any(AdjudicationEntity.class))).thenAnswer(inv -> inv.getArgument(0));
@@ -231,7 +233,7 @@ class ClaimServiceTest {
 
     @Test
     void recordAdjudication_withPatientResidual_createsPaymentIntent() throws Exception {
-        ClaimEntity claim = buildClaim("CLM-202", ClaimStatus.RECEIVED);
+        ClaimEntity claim = buildClaim("CLM-202", ClaimStatus.PREAUTHORIZED);
         when(claimRepository.findById("CLM-202")).thenReturn(Optional.of(claim));
         when(claimRepository.save(any(ClaimEntity.class))).thenAnswer(inv -> inv.getArgument(0));
         when(adjudicationRepository.save(any(AdjudicationEntity.class))).thenAnswer(inv -> inv.getArgument(0));
@@ -251,7 +253,7 @@ class ClaimServiceTest {
 
     @Test
     void recordAdjudication_zeroResidual_doesNotCreateIntent() throws Exception {
-        ClaimEntity claim = buildClaim("CLM-203", ClaimStatus.RECEIVED);
+        ClaimEntity claim = buildClaim("CLM-203", ClaimStatus.PREAUTHORIZED);
         when(claimRepository.findById("CLM-203")).thenReturn(Optional.of(claim));
         when(claimRepository.save(any(ClaimEntity.class))).thenAnswer(inv -> inv.getArgument(0));
         when(adjudicationRepository.save(any(AdjudicationEntity.class))).thenAnswer(inv -> inv.getArgument(0));
@@ -419,7 +421,8 @@ class ClaimServiceTest {
                 ReceiptRepository receiptRepository,
                 ObjectMapper objectMapper
         ) {
-            super(paymentIntentRepository, outboxRepository, new ReceiptService(receiptRepository, paymentIntentRepository, objectMapper), objectMapper);
+            super(paymentIntentRepository, outboxRepository, new ReceiptService(receiptRepository, paymentIntentRepository, objectMapper), objectMapper,
+                    (tenantId, facilityId) -> { });
         }
 
         @Override

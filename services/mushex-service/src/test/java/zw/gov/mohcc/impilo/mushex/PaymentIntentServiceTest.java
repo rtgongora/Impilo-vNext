@@ -14,6 +14,7 @@ import zw.gov.mohcc.impilo.mushex.domain.enums.IntentStatus;
 import zw.gov.mohcc.impilo.mushex.domain.enums.SourceType;
 import zw.gov.mohcc.impilo.mushex.domain.repository.EventOutboxRepository;
 import zw.gov.mohcc.impilo.mushex.domain.repository.PaymentIntentRepository;
+import zw.gov.mohcc.impilo.mushex.integration.FacilityCredentialVerifier;
 import zw.gov.mohcc.impilo.mushex.service.PaymentIntentService;
 import zw.gov.mohcc.impilo.mushex.service.ReceiptService;
 import zw.gov.mohcc.impilo.shared.auth.AccessMode;
@@ -45,13 +46,15 @@ class PaymentIntentServiceTest {
 
     private PaymentIntentService service;
 
+    private static final FacilityCredentialVerifier NOOP_CREDENTIALS = (tenantId, facilityId) -> { };
+
     private final UUID tenantId = UUID.randomUUID();
     private final UUID facilityId = UUID.randomUUID();
     private final UUID correlationId = UUID.randomUUID();
 
     @BeforeEach
     void setUp() {
-        service = new PaymentIntentService(intentRepository, outboxRepository, receiptService, objectMapper);
+        service = new PaymentIntentService(intentRepository, outboxRepository, receiptService, objectMapper, NOOP_CREDENTIALS);
         TrustContextHolder.set(new TrustContext(
             tenantId, "actor-1", "FACILITY_FINANCE", "BILLING",
             "device-1", correlationId, facilityId, null, null, AccessMode.INTERNAL

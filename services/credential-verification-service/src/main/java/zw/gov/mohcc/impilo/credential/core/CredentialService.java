@@ -111,6 +111,16 @@ public class CredentialService {
     }
 
     /**
+     * Returns true when the facility has at least one ACTIVE credential that is within its validity window.
+     * Used by MUSHEX and other payment rails before funds are released to a provider site.
+     */
+    @Transactional(readOnly = true)
+    public boolean facilityHasActiveCredential(UUID tenantId, UUID facilityId) {
+        LocalDate today = LocalDate.now();
+        return credentialRepository.countActiveFacilityCredentials(tenantId, facilityId.toString(), today) > 0;
+    }
+
+    /**
      * Retrieves a credential by its UUID.
      */
     @Transactional(readOnly = true)

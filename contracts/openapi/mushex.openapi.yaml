@@ -485,6 +485,21 @@ components:
           format: uuid
         totals:
           type: string
+        patientCpid:
+          type: string
+        planCode:
+          type: string
+        serviceCode:
+          type: string
+        preauthRequired:
+          type: boolean
+
+    ClaimAckRequest:
+      type: object
+      required: [externalRef]
+      properties:
+        externalRef:
+          type: string
 
     ClaimAdjudicationRequest:
       type: object

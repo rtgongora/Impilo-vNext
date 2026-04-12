@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestParam;
+import zw.gov.mohcc.impilo.mushex.api.dto.ClaimAckRequest;
 import zw.gov.mohcc.impilo.mushex.api.dto.ClaimAdjudicationRequest;
 import zw.gov.mohcc.impilo.mushex.api.dto.ClaimAttachmentRequest;
 import zw.gov.mohcc.impilo.mushex.api.dto.ClaimCreateRequest;
@@ -73,11 +74,81 @@ public class ClaimController {
                 request.billId(),
                 request.insurerId(),
                 facilityId,
-                request.totals()
+                request.totals(),
+                request.patientCpid(),
+                request.planCode(),
+                request.serviceCode(),
+                request.preauthRequired()
         );
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok(claim, correlationId));
+    }
+
+    @PostMapping("/{id}/ack")
+    public ResponseEntity<ApiResponse<ClaimEntity>> receiveAck(
+            @PathVariable String id,
+            @Valid @RequestBody ClaimAckRequest request) {
+        var ctx = TrustContextHolder.require();
+        String correlationId = ctx.correlationId().toString();
+        ClaimEntity claim = claimService.receiveAck(id, request.externalRef());
+        return ResponseEntity.ok(ApiResponse.ok(claim, correlationId));
+    }
+
+    @PostMapping("/{id}/eligibility-check")
+    public ResponseEntity<ApiResponse<ClaimEntity>> checkEligibility(@PathVariable String id) {
+        var ctx = TrustContextHolder.require();
+        String correlationId = ctx.correlationId().toString();
+        ClaimEntity claim = claimService.checkEligibilityGate(id);
+        return ResponseEntity.ok(ApiResponse.ok(claim, correlationId));
+    }
+
+    @PostMapping("/{id}/preauthorize")
+    public ResponseEntity<ApiResponse<ClaimEntity>> preauthorize(@PathVariable String id) {
+        var ctx = TrustContextHolder.require();
+        String correlationId = ctx.correlationId().toString();
+        ClaimEntity claim = claimService.advanceToPreauthorized(id);
+        return ResponseEntity.ok(ApiResponse.ok(claim, correlationId));
+    }
+
+    @PostMapping("/{id}/approve")
+    public ResponseEntity<ApiResponse<ClaimEntity>> approve(@PathVariable String id) {
+        var ctx = TrustContextHolder.require();
+        String correlationId = ctx.correlationId().toString();
+        ClaimEntity claim = claimService.approveClaim(id);
+        return ResponseEntity.ok(ApiResponse.ok(claim, correlationId));
+    }
+
+    @PostMapping("/{id}/remit")
+    public ResponseEntity<ApiResponse<ClaimEntity>> remit(@PathVariable String id) {
+        var ctx = TrustContextHolder.require();
+        String correlationId = ctx.correlationId().toString();
+        ClaimEntity claim = claimService.markRemitted(id);
+        return ResponseEntity.ok(ApiResponse.ok(claim, correlationId));
+    }
+
+    @PostMapping("/{id}/mark-paid")
+    public ResponseEntity<ApiResponse<ClaimEntity>> markPaid(@PathVariable String id) {
+        var ctx = TrustContextHolder.require();
+        String correlationId = ctx.correlationId().toString();
+        ClaimEntity claim = claimService.markPaid(id);
+        return ResponseEntity.ok(ApiResponse.ok(claim, correlationId));
+    }
+
+    @PostMapping("/{id}/settle")
+    public ResponseEntity<ApiResponse<ClaimEntity>> settle(@PathVariable String id) {
+        var ctx = TrustContextHolder.require();
+        String correlationId = ctx.correlationId().toString();
+        ClaimEntity claim = claimService.markSettled(id);
+        return ResponseEntity.ok(ApiResponse.ok(claim, correlationId));
+    }
+
+    @PostMapping("/{id}/reconcile")
+    public ResponseEntity<ApiResponse<ClaimEntity>> reconcile(@PathVariable String id) {
+        var ctx = TrustContextHolder.require();
+        String correlationId = ctx.correlationId().toString();
+        ClaimEntity claim = claimService.markReconciled(id);
+        return ResponseEntity.ok(ApiResponse.ok(claim, correlationId));
     }
 
     @GetMapping("/{id}")
