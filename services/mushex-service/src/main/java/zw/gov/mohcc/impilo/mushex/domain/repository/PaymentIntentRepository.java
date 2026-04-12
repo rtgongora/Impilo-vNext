@@ -9,6 +9,7 @@ import zw.gov.mohcc.impilo.mushex.domain.enums.IntentStatus;
 import zw.gov.mohcc.impilo.mushex.domain.enums.SourceType;
 
 import java.time.OffsetDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -32,4 +33,6 @@ public interface PaymentIntentRepository extends JpaRepository<PaymentIntentEnti
     long countBySourceTypeAndSourceIdAndStatus(SourceType sourceType, String sourceId, IntentStatus status);
 
     long countByTenantIdAndFacilityIdAndCreatedAtAfter(UUID tenantId, UUID facilityId, OffsetDateTime after);
+
+    List<PaymentIntentEntity> findByTenantIdAndStatusIn(UUID tenantId, Collection<IntentStatus> statuses);
 }

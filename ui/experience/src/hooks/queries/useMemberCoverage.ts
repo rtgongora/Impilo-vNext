@@ -94,6 +94,19 @@ export function useMyPreauths(cpid?: string | null) {
   });
 }
 
+export function useMyUtilization(cpid?: string | null) {
+  return useQuery({
+    queryKey: ["coverage", "utilization", cpid ?? null],
+    queryFn: async () => {
+      const res = await apiClient.get<ApiResponse<unknown> | unknown[]>(
+        withQuery("/internal/v1/coverage/utilization", { member_cpid: cpid ?? undefined }),
+      );
+      return unwrapArray(res);
+    },
+    enabled: Boolean(cpid),
+  });
+}
+
 export function useMyAppeals(cpid?: string | null) {
   return useQuery({
     queryKey: ["member-coverage-appeals", cpid ?? null],

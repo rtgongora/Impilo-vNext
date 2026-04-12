@@ -25,6 +25,7 @@ import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.EnumMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -379,7 +380,7 @@ public class ClaimService {
                 .map(AdjudicationEntity::getInsurerPayable)
                 .orElse(BigDecimal.ZERO);
         String svc = firstNonBlank(claim.getServiceCode(), claim.getTotals(), "service_code", "serviceCode");
-        Map<String, Object> paidPayload = new java.util.LinkedHashMap<>();
+        Map<String, Object> paidPayload = new LinkedHashMap<>();
         paidPayload.put("claimId", claimId);
         paidPayload.put("claim_id", claimId);
         paidPayload.put("status", "PAID");

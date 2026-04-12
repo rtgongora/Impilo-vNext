@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import zw.gov.mohcc.impilo.coverage.api.dto.AddNetworkMemberRequest;
 import zw.gov.mohcc.impilo.coverage.api.dto.CreateProviderContractRequest;
 import zw.gov.mohcc.impilo.coverage.api.dto.CreateProviderNetworkRequest;
+import zw.gov.mohcc.impilo.coverage.api.dto.ProviderNetworkSummaryResponse;
 import zw.gov.mohcc.impilo.coverage.api.dto.SuspendContractRequest;
 import zw.gov.mohcc.impilo.coverage.core.CoverageEventService;
 import zw.gov.mohcc.impilo.coverage.domain.NetworkMemberEntity;
@@ -179,12 +180,29 @@ public class ProviderContractController {
 
     @GetMapping("/provider-networks")
     @Transactional(readOnly = true)
-    public ResponseEntity<List<ProviderNetworkEntity>> listNetworks(
+    public ResponseEntity<List<ProviderNetworkSummaryResponse>> listNetworks(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestParam(required = false) String payer_id,
             @RequestParam(required = false) String status) {
         UUID tid = UUID.fromString(tenantId);
-        return ResponseEntity.ok(networkRepository.search(tid, blankToNull(payer_id), blankToNull(status)));
+        List<ProviderNetworkEntity> rows = networkRepository.search(tid, blankToNull(payer_id), blankToNull(status));
+        List<ProviderNetworkSummaryResponse> out = rows.stream()
+                .map(n -> ProviderNetworkSummaryResponse.of(
+                        n, memberRepository.countByNetworkIdAndRemovedAtIsNull(n.getNetworkId())))
+                .toList();
+        return ResponseEntity.ok(out);
+    }
+
+    @GetMapping("/provider-networks/{networkId}/members")
+    @Transactional(readOnly = true)
+    public ResponseEntity<List<NetworkMemberEntity>> listNetworkMembers(
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @PathVariable UUID networkId) {
+        UUID tid = UUID.fromString(tenantId);
+        networkRepository.findByNetworkId(networkId)
+                .filter(n -> n.getTenantId().equals(tid))
+                .orElseThrow(() -> new IllegalArgumentException("Network not found"));
+        return ResponseEntity.ok(memberRepository.findByNetworkIdAndRemovedAtIsNullOrderByJoinedAtDesc(networkId));
     }
 
     @PostMapping("/provider-networks/{networkId}/members")

@@ -78,6 +78,28 @@ public class PreauthUtilizationService {
         utilizationSummaryRepository.save(row);
     }
 
+    /**
+     * Increments paid-claim consumption against the annual utilization row (creates row if absent).
+     */
+    @Transactional
+    public void recordUtilization(String tenantId, String memberCpid, String planCode, String benefitCode,
+                                  BigDecimal amount) {
+        if (benefitCode == null || benefitCode.isBlank()) {
+            return;
+        }
+        UUID tenantUuid = UUID.fromString(tenantId.trim());
+        LocalDate[] period = annualWindow();
+        String benefit = benefitCode.trim();
+        BigDecimal delta = amount != null ? amount : BigDecimal.ZERO;
+        UtilizationSummaryEntity row = utilizationSummaryRepository
+                .findByTenantIdAndMemberCpidAndPlanCodeAndBenefitCodeAndPeriodStart(
+                        tenantUuid, memberCpid, planCode, benefit, period[0])
+                .orElseGet(() -> new UtilizationSummaryEntity(
+                        tenantUuid, memberCpid, planCode, benefit, period[0], period[1], null));
+        row.addUsedAmount(delta);
+        utilizationSummaryRepository.save(row);
+    }
+
     private static LocalDate[] annualWindow() {
         int y = LocalDate.now().getYear();
         return new LocalDate[] {LocalDate.of(y, 1, 1), LocalDate.of(y, 12, 31)};

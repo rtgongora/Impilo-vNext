@@ -191,6 +191,20 @@ public class CoverageController {
         }
     }
 
+    @GetMapping("/utilization")
+    public ResponseEntity<Map<String, Object>> listUtilization(
+            @RequestParam(name = "member_cpid") String memberCpid,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode data = coverageClient.listUtilizationForMember(memberCpid);
+            return ResponseEntity.ok(Map.of("data", data != null ? data : new Object[0],
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            return ResponseEntity.ok(Map.of("data", new Object[0], "meta", Map.of("request_id", requestId)));
+        }
+    }
+
     @GetMapping("/appeals")
     public ResponseEntity<Map<String, Object>> listAppeals(
             @RequestParam(name = "appellant_id") String appellantId,

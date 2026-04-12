@@ -149,6 +149,73 @@ public class CoverageServiceClient {
         return extractData(restTemplate.getForEntity(url, JsonNode.class));
     }
 
+    public JsonNode listUtilizationForMember(String memberCpid) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/coverage/utilization")
+                .queryParam("member_cpid", memberCpid)
+                .toUriString();
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
+    public JsonNode listProviderContracts(String providerId, String payerId, String status) {
+        UriComponentsBuilder b = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/provider-contracts");
+        if (providerId != null && !providerId.isBlank()) {
+            b.queryParam("provider_id", providerId);
+        }
+        if (payerId != null && !payerId.isBlank()) {
+            b.queryParam("payer_id", payerId);
+        }
+        if (status != null && !status.isBlank()) {
+            b.queryParam("status", status);
+        }
+        return extractData(restTemplate.getForEntity(b.toUriString(), JsonNode.class));
+    }
+
+    public JsonNode createProviderContract(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/provider-contracts";
+        return extractData(restTemplate.postForEntity(url, body, JsonNode.class));
+    }
+
+    public JsonNode suspendProviderContract(String contractId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/provider-contracts/" + contractId + "/suspend";
+        return extractData(restTemplate.postForEntity(url, body, JsonNode.class));
+    }
+
+    public JsonNode reinstateProviderContract(String contractId) {
+        String url = baseUrl + "/internal/v1/provider-contracts/" + contractId + "/reinstate";
+        return extractData(restTemplate.postForEntity(url, Map.of(), JsonNode.class));
+    }
+
+    public JsonNode listProviderNetworks(String payerId, String status) {
+        UriComponentsBuilder b = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/provider-networks");
+        if (payerId != null && !payerId.isBlank()) {
+            b.queryParam("payer_id", payerId);
+        }
+        if (status != null && !status.isBlank()) {
+            b.queryParam("status", status);
+        }
+        return extractData(restTemplate.getForEntity(b.toUriString(), JsonNode.class));
+    }
+
+    public JsonNode createProviderNetwork(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/provider-networks";
+        return extractData(restTemplate.postForEntity(url, body, JsonNode.class));
+    }
+
+    public JsonNode listNetworkMembers(String networkId) {
+        String url = baseUrl + "/internal/v1/provider-networks/" + networkId + "/members";
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
+    public JsonNode addNetworkMember(String networkId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/provider-networks/" + networkId + "/members";
+        return extractData(restTemplate.postForEntity(url, body, JsonNode.class));
+    }
+
+    public void removeNetworkMember(String networkId, String providerId) {
+        String url = baseUrl + "/internal/v1/provider-networks/" + networkId + "/members/" + providerId;
+        restTemplate.delete(url);
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) return response.getBody().get("data");
         return response.getBody();

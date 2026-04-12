@@ -11,7 +11,7 @@ import { useState, type FormEvent } from "react";
 import {
   Shield, UserCheck, FileText, DollarSign, Briefcase,
   Loader2, CheckCircle2, AlertCircle, Plus,
-  Users, CreditCard, Scale, ShieldCheck, UserCircle2,
+  Users, CreditCard, Scale, ShieldCheck, UserCircle2, Network,
 } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
@@ -89,25 +89,46 @@ export default function CoveragePage() {
   return (
     <AppLayout>
       <PageShell title="Coverage Operations" subtitle="Schemes, membership, eligibility, claims & settlement">
-        <Link
-          href="/coverage/member"
-          className="mb-6 block rounded-xl border-2 border-violet-200 bg-gradient-to-r from-violet-50 to-indigo-50 p-5 shadow-sm hover:border-violet-400 hover:shadow-md transition-all group"
-        >
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="rounded-lg bg-violet-600 p-3 text-white shadow">
-              <UserCircle2 className="h-7 w-7" />
+        <div className="mb-6 grid gap-4 md:grid-cols-2">
+          <Link
+            href="/coverage/member"
+            className="block rounded-xl border-2 border-violet-200 bg-gradient-to-r from-violet-50 to-indigo-50 p-5 shadow-sm hover:border-violet-400 hover:shadow-md transition-all group"
+          >
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="rounded-lg bg-violet-600 p-3 text-white shadow">
+                <UserCircle2 className="h-7 w-7" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h2 className="text-lg font-semibold text-gray-900 group-hover:text-violet-700 transition-colors">
+                  My Coverage (member view)
+                </h2>
+                <p className="text-sm text-gray-600 mt-0.5">
+                  See your plans, eligibility checks, claims, contributions, preauths, and appeals in one dashboard.
+                </p>
+              </div>
+              <span className="text-sm font-medium text-violet-700 whitespace-nowrap">Open →</span>
             </div>
-            <div className="min-w-0 flex-1">
-              <h2 className="text-lg font-semibold text-gray-900 group-hover:text-violet-700 transition-colors">
-                My Coverage (member view)
-              </h2>
-              <p className="text-sm text-gray-600 mt-0.5">
-                See your plans, eligibility checks, claims, contributions, preauths, and appeals in one dashboard.
-              </p>
+          </Link>
+          <Link
+            href="/coverage/contracts"
+            className="block rounded-xl border-2 border-slate-200 bg-gradient-to-r from-slate-50 to-zinc-50 p-5 shadow-sm hover:border-violet-400 hover:shadow-md transition-all group"
+          >
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="rounded-lg bg-slate-700 p-3 text-white shadow">
+                <Network className="h-7 w-7" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h2 className="text-lg font-semibold text-gray-900 group-hover:text-violet-700 transition-colors">
+                  Provider contracts
+                </h2>
+                <p className="text-sm text-gray-600 mt-0.5">
+                  Payer admin: contracts, suspend/reinstate, and provider networks with membership.
+                </p>
+              </div>
+              <span className="text-sm font-medium text-violet-700 whitespace-nowrap">Open →</span>
             </div>
-            <span className="text-sm font-medium text-violet-700 whitespace-nowrap">Open →</span>
-          </div>
-        </Link>
+          </Link>
+        </div>
         <div className="flex gap-1 mb-6 border-b border-gray-200">
           {TABS.map((tab) => {
             const Icon = tab.icon;

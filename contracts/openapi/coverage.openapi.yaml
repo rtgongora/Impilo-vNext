@@ -1,6 +1,9 @@
 # =============================================================================
-# Coverage — Payer eligibility, claims, preauth (OpenAPI 3.0)
-# Phase B baseline: internal eligibility check (expand to claims/preauth/remit).
+# Coverage Service — OpenAPI 3.0
+#
+# Contract aligned with Spring controllers under
+# services/coverage-service/.../coverage/api (internal rails).
+# Trust headers mirror VARAPI / CompanionHeaders conventions.
 # =============================================================================
 openapi: "3.0.3"
 
@@ -8,8 +11,13 @@ info:
   title: Coverage Service API
   version: "1.0.0"
   description: |
-    Internal coverage and payer rails (eligibility, pre-authorisation, claims,
-    remittances). Trust headers align with `CompanionHeaders`.
+    Internal coverage plane: eligibility (member + mesh-internal), plans,
+    claims, pre-authorisation, remittances, appeals, utilization, member
+    contributions, provider contracts, and provider networks.
+
+    Header requirements follow controller method signatures: many write paths
+    require `X-Tenant-ID`, `X-Pod-ID`, and `X-Correlation-ID`; some reads only
+    require `X-Tenant-ID`.
   contact:
     name: Impilo Platform Team
   license:
@@ -28,15 +36,78 @@ security:
   - bearerAuth: []
 
 tags:
-  - name: Internal-Eligibility
-    description: Member eligibility checks
+  - name: Internal-Eligibility-Mesh
+    description: CPID-based mesh eligibility (MUSHEX and other rails)
+  - name: Eligibility
+    description: Member eligibility checks and history
+  - name: Coverage-Plans
+    description: Plan catalog and member coverage rows
+  - name: Utilization
+    description: Utilization summaries per member
+  - name: Contributions
+    description: Member premium / contribution ledger
+  - name: Member-Preauths
+    description: Preauths listed by member CPID
+  - name: Claims
+    description: Claim submission and listing
+  - name: Preauth
+    description: Pre-authorisation workflow
+  - name: Remittances
+    description: Provider payout records
+  - name: Appeals
+    description: Claim appeals lifecycle
+  - name: Provider-Contracts
+    description: Payer–provider contracts and networks
 
 paths:
-  /internal/v1/coverage/eligibility:
+  # ── Mesh-internal eligibility ───────────────────────────────────────────
+  /internal/v1/eligibility/check:
     post:
-      operationId: coverageCheckEligibility
-      tags: [Internal-Eligibility]
-      summary: Check coverage eligibility for a service date
+      operationId: coverageMeshEligibilityCheck
+      tags: [Internal-Eligibility-Mesh]
+      summary: Mesh-internal eligibility (no PII beyond CPID)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JsonObject"
+      responses:
+        "200":
+          description: Eligibility outcome
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JsonObject"
+
+  # ── Eligibility (member) ─────────────────────────────────────────────────
+  /internal/v1/coverage/eligibility:
+    get:
+      operationId: coverageEligibilityListForMember
+      tags: [Eligibility]
+      summary: List eligibility checks for a member (by CPID)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: member_cpid
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Historical checks newest-first
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/JsonObject"
+    post:
+      operationId: coverageEligibilityCheck
+      tags: [Eligibility]
+      summary: Run eligibility check (stores decision + emits event)
       parameters:
         - $ref: "#/components/parameters/TenantId"
         - $ref: "#/components/parameters/PodId"
@@ -46,19 +117,841 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              description: CheckEligibilityRequest — align fields with service DTO in a later revision
-              additionalProperties: true
+              $ref: "#/components/schemas/JsonObject"
       responses:
-        "200":
-          description: Eligibility decision
+        "201":
+          description: Check persisted
           content:
             application/json:
               schema:
-                type: object
-                additionalProperties: true
+                $ref: "#/components/schemas/JsonObject"
+
+  /internal/v1/coverage/eligibility/check:
+    post:
+      operationId: coverageEligibilityCheckAlias
+      tags: [Eligibility]
+      summary: Same as POST /internal/v1/coverage/eligibility (Spring alias)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/CorrelationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JsonObject"
+      responses:
+        "201":
+          description: Check persisted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JsonObject"
+
+  # ── Coverage plans & member coverage ─────────────────────────────────────
+  /internal/v1/coverage:
+    get:
+      operationId: coverageListActivePlans
+      tags: [Coverage-Plans]
+      summary: List active coverage plans for tenant
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: Active plans
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/JsonObject"
+    post:
+      operationId: coverageCreatePlan
+      tags: [Coverage-Plans]
+      summary: Create a coverage plan
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/CorrelationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JsonObject"
+      responses:
+        "201":
+          description: Plan created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JsonObject"
+
+  /internal/v1/coverage/plans:
+    get:
+      operationId: coverageListPlansForMember
+      tags: [Coverage-Plans]
+      summary: Member plan rows (same payload shape as /member/{clientId})
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: member_cpid
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Active member coverages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/JsonObject"
+
+  /internal/v1/coverage/member/{clientId}:
+    get:
+      operationId: coverageGetMemberCoverage
+      tags: [Coverage-Plans]
+      summary: Active coverages for client ID
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: clientId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Member coverage rows
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/JsonObject"
+
+  /internal/v1/coverage/{id}:
+    get:
+      operationId: coverageGetPlanById
+      tags: [Coverage-Plans]
+      summary: Get coverage plan by UUID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Plan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JsonObject"
+        "404":
+          description: Not found
+
+  /internal/v1/coverage/utilization:
+    get:
+      operationId: coverageUtilizationForMember
+      tags: [Utilization]
+      summary: Utilization summaries for member CPID
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: member_cpid
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Utilization rows
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/JsonObject"
+
+  /internal/v1/coverage/contributions:
+    get:
+      operationId: coverageMemberContributions
+      tags: [Contributions]
+      summary: Contribution ledger for member CPID
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: member_cpid
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Contributions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/JsonObject"
+
+  /internal/v1/coverage/preauths:
+    get:
+      operationId: coverageMemberPreauths
+      tags: [Member-Preauths]
+      summary: Preauths for all coverages of member CPID
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: member_cpid
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Preauth list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/JsonObject"
+
+  # ── Claims ───────────────────────────────────────────────────────────────
+  /internal/v1/coverage/claims:
+    get:
+      operationId: coverageClaimsList
+      tags: [Claims]
+      summary: List claims by coverage or member CPID
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: coverageId
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: member_cpid
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Claims
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/JsonObject"
         "400":
-          description: Invalid request
+          description: Missing coverageId and member_cpid
+    post:
+      operationId: coverageClaimSubmit
+      tags: [Claims]
+      summary: Submit a claim
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/CorrelationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JsonObject"
+      responses:
+        "201":
+          description: Claim created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JsonObject"
+
+  /internal/v1/coverage/claims/{id}:
+    get:
+      operationId: coverageClaimGet
+      tags: [Claims]
+      summary: Get claim by ID
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Claim
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JsonObject"
+        "404":
+          description: Not found
+
+  # ── Preauth workflow ─────────────────────────────────────────────────────
+  /internal/v1/coverage/preauth:
+    post:
+      operationId: coveragePreauthCreate
+      tags: [Preauth]
+      summary: Create pre-authorisation request
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/CorrelationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JsonObject"
+      responses:
+        "201":
+          description: Preauth created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JsonObject"
+
+  /internal/v1/coverage/preauth/{id}:
+    get:
+      operationId: coveragePreauthGet
+      tags: [Preauth]
+      summary: Get preauth by ID
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Preauth
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JsonObject"
+        "404":
+          description: Not found
+
+  /internal/v1/coverage/preauth/{id}/decision:
+    put:
+      operationId: coveragePreauthDecide
+      tags: [Preauth]
+      summary: Approve or deny preauth (utilization enforced when applicable)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JsonObject"
+      responses:
+        "200":
+          description: Updated preauth
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JsonObject"
+        "404":
+          description: Not found
+        "409":
+          description: Not in PENDING state
+
+  # ── Remittances ──────────────────────────────────────────────────────────
+  /internal/v1/coverage/remittances:
+    get:
+      operationId: coverageRemittancesList
+      tags: [Remittances]
+      summary: List remittances for tenant
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: Remittances
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/JsonObject"
+    post:
+      operationId: coverageRemittanceCreate
+      tags: [Remittances]
+      summary: Create remittance record
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/CorrelationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JsonObject"
+      responses:
+        "201":
+          description: Remittance created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JsonObject"
+
+  /internal/v1/coverage/remittances/{id}:
+    get:
+      operationId: coverageRemittanceGet
+      tags: [Remittances]
+      summary: Get remittance by ID
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Remittance
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JsonObject"
+        "404":
+          description: Not found
+
+  # ── Appeals ─────────────────────────────────────────────────────────────
+  /internal/v1/appeals:
+    get:
+      operationId: coverageAppealsList
+      tags: [Appeals]
+      summary: Page appeals with optional filters
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: tenantId
+          in: query
+          required: false
+          description: Overrides X-Tenant-ID when supplied
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: claimId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: appellantId
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Paged appeals wrapped in ApiResponse
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JsonObject"
+    post:
+      operationId: coverageAppealSubmit
+      tags: [Appeals]
+      summary: Submit appeal against a claim
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - name: X-Correlation-ID
+          in: header
+          required: false
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JsonObject"
+      responses:
+        "201":
+          description: Appeal created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JsonObject"
+
+  /internal/v1/appeals/{id}:
+    get:
+      operationId: coverageAppealGet
+      tags: [Appeals]
+      summary: Get appeal by ID
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Appeal wrapped in ApiResponse
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JsonObject"
+        "404":
+          description: Not found
+
+  /internal/v1/appeals/{id}/review:
+    put:
+      operationId: coverageAppealReview
+      tags: [Appeals]
+      summary: Move appeal to under review
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - name: X-Correlation-ID
+          in: header
+          required: false
+          schema:
+            type: string
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JsonObject"
+      responses:
+        "200":
+          description: Updated appeal
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JsonObject"
+        "404":
+          description: Not found
+        "409":
+          description: Invalid state
+
+  /internal/v1/appeals/{id}/decide:
+    put:
+      operationId: coverageAppealDecide
+      tags: [Appeals]
+      summary: Final decision (UPHELD, OVERTURNED, PARTIAL)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - name: X-Correlation-ID
+          in: header
+          required: false
+          schema:
+            type: string
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JsonObject"
+      responses:
+        "200":
+          description: Decided appeal
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JsonObject"
+        "400":
+          description: Invalid decision value
+        "404":
+          description: Not found
+        "409":
+          description: Not UNDER_REVIEW
+
+  # ── Provider contracts & networks ───────────────────────────────────────
+  /internal/v1/provider-contracts:
+    get:
+      operationId: coverageProviderContractsList
+      tags: [Provider-Contracts]
+      summary: Search contracts (e.g. for MUSHEX payer–provider gate)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: provider_id
+          in: query
+          schema:
+            type: string
+        - name: payer_id
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Matching contracts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/JsonObject"
+    post:
+      operationId: coverageProviderContractCreate
+      tags: [Provider-Contracts]
+      summary: Create provider contract
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/CorrelationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JsonObject"
+      responses:
+        "201":
+          description: Contract created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JsonObject"
+
+  /internal/v1/provider-contracts/{contractId}:
+    get:
+      operationId: coverageProviderContractGet
+      tags: [Provider-Contracts]
+      summary: Get contract by ID
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: contractId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Contract
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JsonObject"
+        "404":
+          description: Not found
+
+  /internal/v1/provider-contracts/{contractId}/suspend:
+    post:
+      operationId: coverageProviderContractSuspend
+      tags: [Provider-Contracts]
+      summary: Suspend contract
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: contractId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JsonObject"
+      responses:
+        "200":
+          description: Suspended contract
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JsonObject"
+
+  /internal/v1/provider-contracts/{contractId}/reinstate:
+    post:
+      operationId: coverageProviderContractReinstate
+      tags: [Provider-Contracts]
+      summary: Reinstate suspended contract
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: contractId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Active contract
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JsonObject"
+
+  /internal/v1/provider-networks:
+    get:
+      operationId: coverageProviderNetworksList
+      tags: [Provider-Contracts]
+      summary: List provider networks
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: payer_id
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Network summaries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/JsonObject"
+    post:
+      operationId: coverageProviderNetworkCreate
+      tags: [Provider-Contracts]
+      summary: Create provider network
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/CorrelationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JsonObject"
+      responses:
+        "201":
+          description: Network created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JsonObject"
+
+  /internal/v1/provider-networks/{networkId}/members:
+    get:
+      operationId: coverageNetworkMembersList
+      tags: [Provider-Contracts]
+      summary: List active network members
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: networkId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Members
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/JsonObject"
+    post:
+      operationId: coverageNetworkMemberAdd
+      tags: [Provider-Contracts]
+      summary: Add provider to network
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: networkId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JsonObject"
+      responses:
+        "201":
+          description: Member added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JsonObject"
+
+  /internal/v1/provider-networks/{networkId}/members/{providerId}:
+    delete:
+      operationId: coverageNetworkMemberRemove
+      tags: [Provider-Contracts]
+      summary: Soft-remove provider from network
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: networkId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: providerId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Removed
 
 components:
   securitySchemes:
@@ -87,3 +980,9 @@ components:
       required: true
       schema:
         type: string
+
+  schemas:
+    JsonObject:
+      type: object
+      description: Align JSON fields with Java DTOs in coverage-service (iterative tightening).
+      additionalProperties: true

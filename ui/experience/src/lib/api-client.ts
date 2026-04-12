@@ -300,14 +300,14 @@ async function request<T>(
 ): Promise<T> {
   const headers = { ...getV11Headers(), ...opts?.extraHeaders };
 
-  if (["POST", "PUT", "PATCH"].includes(method)) {
+  if (["POST", "PUT", "PATCH"].includes(method) || (method === "DELETE" && body !== undefined)) {
     headers["Idempotency-Key"] = crypto.randomUUID();
   }
 
   const response = await fetch(`${BFF_BASE_URL}${path}`, {
     method,
     headers,
-    body: body ? JSON.stringify(body) : undefined,
+    body: body !== undefined && body !== null ? JSON.stringify(body) : undefined,
   });
 
   if (response.status === 401 && !path.includes("/auth/")) {
@@ -316,13 +316,13 @@ async function request<T>(
     if (refreshed) {
       // Retry the original request with the new token
       const retryHeaders = { ...getV11Headers(), ...opts?.extraHeaders };
-      if (["POST", "PUT", "PATCH"].includes(method)) {
+      if (["POST", "PUT", "PATCH"].includes(method) || (method === "DELETE" && body !== undefined)) {
         retryHeaders["Idempotency-Key"] = crypto.randomUUID();
       }
       const retryResponse = await fetch(`${BFF_BASE_URL}${path}`, {
         method,
         headers: retryHeaders,
-        body: body ? JSON.stringify(body) : undefined,
+        body: body !== undefined && body !== null ? JSON.stringify(body) : undefined,
       });
 
       if (retryResponse.ok) {
@@ -427,6 +427,6 @@ export const apiClient = {
   post: <T>(path: string, body?: unknown, opts?: ApiRequestOptions) => request<T>("POST", path, body, "json", opts),
   put: <T>(path: string, body?: unknown) => request<T>("PUT", path, body),
   patch: <T>(path: string, body?: unknown) => request<T>("PATCH", path, body),
-  delete: <T>(path: string) => request<T>("DELETE", path),
+  delete: <T>(path: string, body?: unknown) => request<T>("DELETE", path, body),
   postForm: <T>(path: string, body: FormData, opts?: ApiRequestOptions) => requestForm<T>("POST", path, body, opts),
 };

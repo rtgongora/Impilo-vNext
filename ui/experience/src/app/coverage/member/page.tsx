@@ -10,6 +10,7 @@ import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
 import {
   ArrowLeft,
+  BarChart3,
   ClipboardList,
   Gavel,
   HeartPulse,
@@ -31,6 +32,7 @@ import {
   useMyCoveragePlans,
   useMyEligibility,
   useMyPreauths,
+  useMyUtilization,
   useSubmitAppeal,
 } from "@/hooks/queries/useMemberCoverage";
 
@@ -56,6 +58,24 @@ function readNum(r: Record<string, unknown>, ...keys: string[]) {
     }
   }
   return 0;
+}
+
+function formatMonthYear(iso: string) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString(undefined, { month: "short", year: "numeric" });
+}
+
+function utilizationPct(used: number, limit: number): number | null {
+  if (limit <= 0 || Number.isNaN(limit) || Number.isNaN(used)) return null;
+  return Math.min(100, (used / limit) * 100);
+}
+
+function utilizationBarTone(pct: number) {
+  if (pct < 50) return "bg-green-500";
+  if (pct <= 80) return "bg-amber-500";
+  return "bg-red-500";
 }
 
 const CLAIM_STATUS: Record<string, string> = {
@@ -133,6 +153,7 @@ export default function MemberCoveragePage() {
   const claimsQ = useMyClaimHistory(cpid || null, claimPage, pageSize);
   const contribQ = useMyContributions(cpid || null);
   const preauthQ = useMyPreauths(cpid || null);
+  const utilizationQ = useMyUtilization(cpid || null);
   const appealsQ = useMyAppeals(cpid || null);
 
   const checkEligibility = useCheckEligibility();
@@ -155,6 +176,7 @@ export default function MemberCoveragePage() {
 
   const contributions = useMemo(() => (contribQ.data ?? []).map(asRecord), [contribQ.data]);
   const preauths = useMemo(() => (preauthQ.data ?? []).map(asRecord), [preauthQ.data]);
+  const utilizationRows = useMemo(() => (utilizationQ.data ?? []).map(asRecord), [utilizationQ.data]);
   const appeals = useMemo(() => (appealsQ.data ?? []).map(asRecord), [appealsQ.data]);
   const eligibilityRows = useMemo(() => (eligQ.data ?? []).map(asRecord), [eligQ.data]);
   const latestEligibility = eligibilityRows[0];
@@ -192,7 +214,7 @@ export default function MemberCoveragePage() {
     <AppLayout>
       <PageShell
         title="My Coverage"
-        subtitle="Plans, eligibility, claims, contributions, pre-authorizations, and appeals"
+        subtitle="Plans, eligibility, claims, contributions, pre-authorizations, benefit utilization, and appeals"
         icon={<Shield className="h-6 w-6" />}
       >
         <div className="mb-4">
@@ -488,6 +510,76 @@ export default function MemberCoveragePage() {
                 </tbody>
               </table>
             )}
+          </Section>
+
+          <Section
+            title="Benefit Utilization"
+            icon={<BarChart3 className="h-4 w-4 text-indigo-600" />}
+            isLoading={utilizationQ.isLoading}
+            isError={utilizationQ.isError}
+          >
+            {!utilizationQ.isLoading && !utilizationQ.isError && utilizationRows.length === 0 ? (
+              <p className="text-sm text-gray-500">No benefit utilization tracked yet</p>
+            ) : null}
+            {!utilizationQ.isLoading && !utilizationQ.isError && utilizationRows.length > 0 ? (
+              <div className="grid gap-4 md:grid-cols-2">
+                {utilizationRows.map((row, i) => {
+                  const benefit = readStr(row, "benefitCode", "benefit_code");
+                  const plan = readStr(row, "planCode", "plan_code");
+                  const limit = readNum(row, "limitAmount", "limit_amount");
+                  const used = readNum(row, "usedAmount", "used_amount");
+                  const ps = readStr(row, "periodStart", "period_start");
+                  const pe = readStr(row, "periodEnd", "period_end");
+                  const period =
+                    ps && pe ? `${formatMonthYear(ps)} - ${formatMonthYear(pe)}` : ps || pe || "—";
+                  const remaining = limit > 0 ? Math.max(0, limit - used) : null;
+                  const pct = utilizationPct(used, limit);
+                  const barClass = pct === null ? "bg-gray-300" : utilizationBarTone(pct);
+                  const width = pct === null ? 0 : pct;
+                  return (
+                    <div
+                      key={readStr(row, "id") || `${benefit}-${i}`}
+                      className="rounded-lg border border-gray-100 bg-gray-50/80 p-4 space-y-3"
+                    >
+                      <div>
+                        <p className="text-sm font-semibold text-gray-900">{benefit || "Benefit"}</p>
+                        {plan ? <p className="text-xs text-gray-500 font-mono mt-0.5">{plan}</p> : null}
+                        <p className="text-xs text-gray-600 mt-1">{period}</p>
+                      </div>
+                      <dl className="grid grid-cols-3 gap-2 text-xs">
+                        <div>
+                          <dt className="text-gray-500">Annual limit</dt>
+                          <dd className="font-medium text-gray-900">{limit > 0 ? limit.toLocaleString() : "—"}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-gray-500">Used</dt>
+                          <dd className="font-medium text-gray-900">{used.toLocaleString()}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-gray-500">Remaining</dt>
+                          <dd className="font-medium text-gray-900">
+                            {remaining === null ? "—" : remaining.toLocaleString()}
+                          </dd>
+                        </div>
+                      </dl>
+                      <div>
+                        <div className="h-2 w-full rounded-full bg-gray-200 overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all ${barClass}`}
+                            style={{ width: `${width}%` }}
+                          />
+                        </div>
+                        {pct !== null ? (
+                          <p className="text-[10px] text-gray-500 mt-1">{pct.toFixed(0)}% of annual limit used</p>
+                        ) : (
+                          <p className="text-[10px] text-gray-500 mt-1">No annual limit set for this benefit</p>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : null}
           </Section>
 
           <Section
