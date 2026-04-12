@@ -28,7 +28,9 @@ import {
 import { AuthLayout } from "@/components/AuthLayout";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useConsentStore } from "@/hooks/useConsentStore";
+import { useAcceptPolicyConsent } from "@/hooks/queries/usePolicyConsent";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
+import { CURRENT_CONSENT_VERSION } from "@/hooks/useConsentStore";
 
 const ROLES = [
   { value: "CITIZEN", label: "Citizen / Patient", icon: Heart, description: "Access your health records" },
@@ -41,6 +43,7 @@ export default function RegisterPage() {
   const router = useRouter();
   const { setAuth } = useAuthStore();
   const { acceptConsent } = useConsentStore();
+  const acceptPolicyConsent = useAcceptPolicyConsent();
 
   const [step, setStep] = useState<"role" | "details">("role");
   const [selectedRole, setSelectedRole] = useState("");
@@ -122,8 +125,14 @@ export default function RegisterPage() {
           attrs.refreshToken,
           attrs.expiresAt
         );
-        // Record consent accepted during registration
+        // Record consent accepted during registration — both client and server
         acceptConsent(attrs.user.id);
+        acceptPolicyConsent.mutate({
+          version: CURRENT_CONSENT_VERSION,
+          privacyPolicyAccepted: true,
+          termsOfUseAccepted: true,
+          channel: "WEB",
+        });
         router.push("/home");
       } else {
         // Registration succeeded but auto-login failed
