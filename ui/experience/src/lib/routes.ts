@@ -60,7 +60,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/clinical/emergency", zone: "queue", layout: "app", sidebar: "queue", guard: "shift", pageTitle: "ED / Casualty", navLabel: "ED / Casualty", navZone: "work" },
 
   // ── Zone: Public Health ─────────────────────────────────────────
-  { path: "/public-health", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Public Health", navLabel: "Public Health", navZone: "professional" },
+  { path: "/public-health", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "PUBLIC_HEALTH", pageTitle: "Public Health", navLabel: "Public Health", navZone: "professional" },
 
   // ── Zone: Omnichannel ───────────────────────────────────────────
   { path: "/omnichannel", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Omnichannel Hub", navLabel: "Omnichannel", navZone: "professional" },

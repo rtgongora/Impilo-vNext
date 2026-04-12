@@ -47,4 +47,10 @@ describe("matchesRequiredRole", () => {
   it("COMMERCE still allows cross-functional operators like SUPPORT_AGENT", () => {
     expect(matchesRequiredRole((r) => r === "SUPPORT_AGENT", "COMMERCE")).toBe(true);
   });
+
+  it("PUBLIC_HEALTH allows PUBLIC_HEALTH_OFFICER and governed DEVELOPER", () => {
+    expect(matchesRequiredRole((r) => r === "PUBLIC_HEALTH_OFFICER", "PUBLIC_HEALTH")).toBe(true);
+    expect(matchesRequiredRole((r) => r === "DEVELOPER", "PUBLIC_HEALTH")).toBe(true);
+    expect(matchesRequiredRole((r) => r === "FINANCE", "PUBLIC_HEALTH")).toBe(false);
+  });
 });

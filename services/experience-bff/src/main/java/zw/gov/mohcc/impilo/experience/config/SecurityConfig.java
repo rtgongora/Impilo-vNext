@@ -88,9 +88,9 @@ public class SecurityConfig {
     private static final String[] CAREGIVER_ROLES = {
             "CAREGIVER", "CARE_PARTNER", "CITIZEN", "SYSTEM_ADMIN"};
 
-    // Health OS §7: Public health and community health roles
+    // Health OS §7: Public health and community health roles (+ DEVELOPER for governed dev access)
     private static final String[] PUBLIC_HEALTH_ROLES = {
-            "PUBLIC_HEALTH_OFFICER", "ENV_HEALTH", "CHW", "FACILITY_ADMIN", "SYSTEM_ADMIN"};
+            "PUBLIC_HEALTH_OFFICER", "ENV_HEALTH", "CHW", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"};
 
     @Autowired(required = false)
     private JwtDecoder jwtDecoder;
@@ -238,7 +238,7 @@ public class SecurityConfig {
                             .authenticated()
                     // ── Integration hub (national routing / dispatch) ───────
                     .requestMatchers("/internal/v1/integration-hub/**")
-                            .authenticated()
+                            .hasAnyRole(ADMIN_ROLES)
                     // ── Clinical knowledge curation (admin-equivalent) ─────────
                     .requestMatchers("/internal/v1/clinical/curation/**")
                             .hasAnyRole(ADMIN_ROLES)

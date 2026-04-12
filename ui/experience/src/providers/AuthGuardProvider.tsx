@@ -46,8 +46,8 @@ export const ROLE_GROUPS: Record<string, string[]> = {
   CITIZEN: ["CITIZEN", "SYSTEM_ADMIN", "DEVELOPER"],
   /** Health OS §4: Caregiving roles — delegated care partners and family caregivers. */
   CAREGIVER: ["CAREGIVER", "CARE_PARTNER", "CITIZEN", "SYSTEM_ADMIN"],
-  /** Health OS §7: Broad operational and public health roles. */
-  PUBLIC_HEALTH: ["PUBLIC_HEALTH_OFFICER", "ENV_HEALTH", "CHW", "FACILITY_ADMIN", "SYSTEM_ADMIN"],
+  /** Health OS §7: Broad operational and public health roles (+ DEVELOPER, aligned with SecurityConfig). */
+  PUBLIC_HEALTH: ["PUBLIC_HEALTH_OFFICER", "ENV_HEALTH", "CHW", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"],
   /** Health OS §10: App/module extensibility — roles for governed extensions. */
   COMMERCE: ["FINANCE", "CLINICIAN", "NURSE", "PHARMACIST", "SUPPORT_AGENT", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"],
 };

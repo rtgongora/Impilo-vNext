@@ -1,6 +1,6 @@
 # Experience BFF — Phase C domain mapping
 
-**Status:** Phase **C** (BFF contracts: route map, clients, config, proxies, shared `RestTemplate`) is **complete**. Experience **Phase D** continues in the UI (hooks, pages, journey hardening); see [`agent-led-fullstack-completeness-roadmap.md`](../roadmaps/agent-led-fullstack-completeness-roadmap.md).
+**Status:** Phase **C** is **complete**. Phase **D** (Experience UI) is **complete** for the slices in the agent-led roadmap (search, public-health honesty, admin integration hub, guard alignment); see [`agent-led-fullstack-completeness-roadmap.md`](../roadmaps/agent-led-fullstack-completeness-roadmap.md).
 
 Links **typed HTTP clients**, **`impilo.services` / other config**, **downstream Maven modules**, and **OpenAPI contracts** under [`contracts/openapi/`](../../contracts/openapi/). Use with:
 
@@ -64,7 +64,7 @@ These are **aggregates** (one prefix may fan out to several downstream calls). F
 | `/internal/v1/credentials` | `CredentialServiceClient` | Credential verification |
 | `/internal/v1/search` | `SearchServiceClient` | search-service (`q`, optional `entityType`, paging) — UI: `useKnowledgeSearch` |
 | `/internal/v1/pharmacy/upstream/**` | `PharmacyServiceClient` | Sovereign dispense orders / worklists |
-| `/internal/v1/integration-hub/**` | `IntegrationHubServiceClient` | Routes, dispatch, dead letters, mapping templates |
+| `/internal/v1/integration-hub/**` | `IntegrationHubServiceClient` | Routes, dispatch, dead letters, mapping templates — **BFF:** `hasAnyRole(ADMIN_ROLES)` only (not general authenticated) |
 
 ---
 
@@ -76,7 +76,7 @@ Some controllers use **BFF PostgreSQL** (`JdbcTemplate`, JPA repositories) only 
 
 ## 4. Phase C follow-ups
 
-No open items from the original Phase C gap list. **Phase D** (Experience shell) continues in the roadmap; first vertical slice is federated search (`useKnowledgeSearch` + `/internal/v1/search`).
+No open items from the original Phase C gap list. **Phase D** (Experience shell) is **closed for the agent-led roadmap slices** (search, public-health honesty, admin integration hub UI, guard alignment); see [`agent-led-fullstack-completeness-roadmap.md`](../roadmaps/agent-led-fullstack-completeness-roadmap.md). Further Experience polish is tracked under **Phase E/F** or ad-hoc slices.
 
 ---
 

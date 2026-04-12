@@ -2,21 +2,18 @@
 
 import { useState } from "react";
 import {
-  AlertTriangle, Plus, Eye, Clock, CheckCircle, Send, Loader2,
+  AlertTriangle, Plus, Eye, Loader2,
 } from "lucide-react";
-import { usePublicHealthCases, usePublicHealthSignals } from "@/hooks/queries/usePublicHealth";
-
-const WEEKLY_REPORTS = [
-  { facility: "Parirenyatwa Hospital", week: "W14-2026", submitted: true, onTime: true, diseases: 12, zero: 8, positive: 4 },
-  { facility: "Harare Central Hospital", week: "W14-2026", submitted: true, onTime: false, diseases: 12, zero: 10, positive: 2 },
-  { facility: "Chitungwiza Central", week: "W14-2026", submitted: false, onTime: false, diseases: 12, zero: 0, positive: 0 },
-  { facility: "Mpilo Hospital", week: "W14-2026", submitted: true, onTime: true, diseases: 12, zero: 11, positive: 1 },
-  { facility: "Sally Mugabe Hospital", week: "W14-2026", submitted: true, onTime: true, diseases: 12, zero: 9, positive: 3 },
-];
+import {
+  usePublicHealthCases,
+  usePublicHealthCounters,
+  usePublicHealthSignals,
+} from "@/hooks/queries/usePublicHealth";
 
 export function SurveillanceTab() {
   const { data: apiSignals = [], isLoading: sigLoading, isError: sigError } = usePublicHealthSignals();
   const { data: apiCases = [], isLoading: caseLoading, isError: caseError } = usePublicHealthCases();
+  const { data: counters = [], isLoading: ctrLoading, isError: ctrError } = usePublicHealthCounters();
 
   const [filter, setFilter] = useState("all");
   const [showNewEvent, setShowNewEvent] = useState(false);
@@ -33,9 +30,9 @@ export function SurveillanceTab() {
   return (
     <div className="space-y-4">
       <div className="rounded-lg border border-blue-200 bg-blue-50/80 p-3 text-xs text-blue-900">
-        <strong>Live data:</strong> Threshold signal definitions and surveillance cases are loaded from Experience BFF →
-        surveillance-service (empty if the service is down or unseeded). Weekly IDSR aggregates below are not backed by a
-        repository endpoint yet.
+        <strong>Live data:</strong> Threshold signal definitions, surveillance cases, and counter snapshots load from the
+        Experience BFF → surveillance-service (empty if the service is down or unseeded). Weekly IDSR facility grids are
+        deferred until a reporting API exists — no fabricated rows.
       </div>
 
       {/* KPI Strip */}
@@ -53,9 +50,14 @@ export function SurveillanceTab() {
             color: "text-sky-700",
             sub: caseError ? "Could not reach surveillance" : "From /public-health/cases",
           },
-          { label: "Reporting Completeness", value: "—", color: "text-blue-700", sub: "Not wired to backend" },
-          { label: "Timeliness", value: "—", color: "text-amber-700", sub: "Not wired to backend" },
-          { label: "Legacy demo KPIs", value: "—", color: "text-gray-500", sub: "Removed in Wave 1" },
+          {
+            label: "Counter snapshots",
+            value: ctrLoading ? "…" : String(counters.length),
+            color: "text-blue-700",
+            sub: ctrError ? "Could not reach counters" : "From /public-health/counters",
+          },
+          { label: "Weekly IDSR grid", value: "—", color: "text-amber-700", sub: "No BFF endpoint yet" },
+          { label: "Reporting completeness", value: "—", color: "text-gray-500", sub: "Derived metrics backlog" },
         ].map((kpi, i) => (
           <div key={i} className="bg-white rounded-lg border border-gray-200 p-3 text-center">
             <p className={`text-2xl font-bold ${kpi.color}`}>{kpi.value}</p>
@@ -315,10 +317,8 @@ export function SurveillanceTab() {
                           <label className="text-xs font-medium text-gray-600">Assign To Team</label>
                           <select className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1">
                             <option value="">Select team</option>
-                            <option value="ft01">FT-01 Harare South Response</option>
-                            <option value="ft02">FT-02 Chitungwiza Investigation</option>
-                            <option value="ft03">FT-03 Manicaland Vector Control</option>
-                            <option value="new">Create New Team</option>
+                            <option value="">Assign when workforce / field-ops API is connected</option>
+                            <option value="new">Create New Team (backlog)</option>
                           </select>
                         </div>
                         <div>
@@ -549,69 +549,19 @@ export function SurveillanceTab() {
         </div>
       )}
 
-      {/* Weekly IDSR Tab */}
+      {/* Weekly IDSR Tab — no fabricated facility rows */}
       {activeSubTab === "weekly" && (
         <div className="bg-white rounded-lg border border-gray-200">
-          <div className="border-b border-amber-200 bg-amber-50 px-4 py-2 text-xs text-amber-900">
-            <strong>Not connected:</strong> Weekly IDSR facility completeness is still illustrative. There is no matching
-            Experience BFF or surveillance-service list endpoint wired for this grid in Wave 1.
+          <div className="border-b border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+            <p className="font-medium">Weekly IDSR aggregate reporting</p>
+            <p className="mt-2 text-xs leading-relaxed text-amber-900/90">
+              There is no <code className="text-[11px]">GET /internal/v1/public-health/weekly-idsr</code> (or equivalent)
+              on the Experience BFF yet. The UI does not show sample facilities — use Surveillance signals and cases for
+              operational data until reporting services publish a governed list endpoint.
+            </p>
           </div>
-          <div className="px-4 py-3 border-b flex items-center justify-between">
-            <div>
-              <h4 className="text-sm font-semibold text-gray-900">Weekly IDSR Aggregate Reporting</h4>
-              <p className="text-xs text-gray-500">Facility reporting completeness and timeliness for current epidemiological week</p>
-            </div>
-            <div className="flex gap-2 items-center">
-              <span className="px-2 py-0.5 border border-gray-300 rounded text-[10px]">Week 14, 2026</span>
-              <button className="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-lg hover:bg-gray-200">
-                <Send className="h-3.5 w-3.5" /> Bulk Reminder
-              </button>
-            </div>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="border-b bg-gray-50">
-                  <th className="text-left px-3 py-2 font-medium text-gray-600">Facility</th>
-                  <th className="text-left px-3 py-2 font-medium text-gray-600">Week</th>
-                  <th className="text-left px-3 py-2 font-medium text-gray-600">Submitted</th>
-                  <th className="text-left px-3 py-2 font-medium text-gray-600">On Time</th>
-                  <th className="text-left px-3 py-2 font-medium text-gray-600">Diseases Reported</th>
-                  <th className="text-left px-3 py-2 font-medium text-gray-600">Zero Reports</th>
-                  <th className="text-left px-3 py-2 font-medium text-gray-600">Positive</th>
-                  <th className="text-left px-3 py-2 font-medium text-gray-600"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {WEEKLY_REPORTS.map((r, i) => (
-                  <tr key={i} className="border-b hover:bg-gray-50">
-                    <td className="px-3 py-2 font-medium text-gray-900">{r.facility}</td>
-                    <td className="px-3 py-2">{r.week}</td>
-                    <td className="px-3 py-2">
-                      {r.submitted ? <CheckCircle className="h-4 w-4 text-green-600" /> : <Clock className="h-4 w-4 text-amber-500" />}
-                    </td>
-                    <td className="px-3 py-2">
-                      {r.submitted ? (
-                        r.onTime
-                          ? <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-[10px]">On time</span>
-                          : <span className="px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full text-[10px]">Late</span>
-                      ) : "-"}
-                    </td>
-                    <td className="px-3 py-2">{r.submitted ? r.diseases : "-"}</td>
-                    <td className="px-3 py-2">{r.submitted ? r.zero : "-"}</td>
-                    <td className="px-3 py-2">{r.submitted ? r.positive : "-"}</td>
-                    <td className="px-3 py-2">
-                      {!r.submitted && (
-                        <button className="px-2 py-1 border border-gray-300 rounded text-[10px] font-medium hover:bg-gray-50">Send Reminder</button>
-                      )}
-                      {r.submitted && (
-                        <button className="px-2 py-1 text-gray-500 text-[10px] font-medium hover:text-gray-700">View Report</button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="px-4 py-16 text-center text-sm text-gray-500">
+            No weekly aggregate rows to display.
           </div>
         </div>
       )}
