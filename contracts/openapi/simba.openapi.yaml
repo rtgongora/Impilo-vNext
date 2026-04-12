@@ -1,0 +1,200 @@
+# =============================================================================
+# SIMBA — Wellness Tracker & Lifestyle Orchestration API (OpenAPI 3.0)
+# =============================================================================
+openapi: "3.0.3"
+
+info:
+  title: SIMBA — Wellness Tracker Service
+  version: "1.1.0"
+  description: |
+    SIMBA is the wellness orchestrator: fitness, diet, sleep, mood, clubs,
+    challenges, goals, and Health-Connect-style ingest deduplication.
+
+    Trust headers are enforced by Envoy + TSHEPO; internal probes additionally
+    require Health OS Manifest v1.2 mandatory headers (see `CompanionHeaders`).
+  contact:
+    name: Impilo Platform Team
+  license:
+    name: Proprietary
+
+servers:
+  - url: http://localhost:8125
+    description: Local development
+  - url: https://{tenant}.impilo.health/api/simba
+    description: Production (per-tenant)
+    variables:
+      tenant:
+        default: demo
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Internal-Probe
+    description: Tech-companion v1.1 header and context echo
+  - name: Wellness
+    description: Internal wellness APIs (BFF / spine integration)
+
+paths:
+  /internal/v1/health:
+    get:
+      operationId: simbaInternalHealth
+      tags: [Internal-Probe]
+      summary: v1.1 probe — returns trust context echo
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+      responses:
+        "200":
+          description: Service UP with context echo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProbeHealthBody"
+
+  /internal/v1/test-command:
+    post:
+      operationId: simbaInternalTestCommand
+      tags: [Internal-Probe]
+      summary: v1.1 probe — idempotency / echo
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "201":
+          description: Echo payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProbeCommandBody"
+
+  /internal/v1/wellness/profiles/{cpid}:
+    get:
+      operationId: simbaGetWellnessProfile
+      tags: [Wellness]
+      summary: Get wellness profile by person CPID
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: cpid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Profile found
+        "404":
+          description: Not found
+
+  /internal/v1/wellness/connect/ingest:
+    post:
+      operationId: simbaConnectIngest
+      tags: [Wellness]
+      summary: Health Connect–style deduplicated ingest
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [person_cpid, data_type, source_id]
+              properties:
+                person_cpid:
+                  type: string
+                data_type:
+                  type: string
+                source_id:
+                  type: string
+                payload:
+                  type: object
+                  additionalProperties: true
+      responses:
+        "201":
+          description: New ingest recorded
+        "200":
+          description: Duplicate source_id (no-op)
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    TenantId:
+      name: X-Tenant-ID
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+    PodId:
+      name: X-Pod-ID
+      in: header
+      required: true
+      schema:
+        type: string
+    RequestId:
+      name: X-Request-ID
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+    CorrelationId:
+      name: X-Correlation-ID
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    ProbeHealthBody:
+      type: object
+      properties:
+        service:
+          type: string
+          example: simba
+        status:
+          type: string
+          example: UP
+        tenant_id:
+          type: string
+        pod_id:
+          type: string
+        request_id:
+          type: string
+        correlation_id:
+          type: string
+      additionalProperties: true
+
+    ProbeCommandBody:
+      type: object
+      properties:
+        service:
+          type: string
+        action:
+          type: string
+        request_id:
+          type: string
+        correlation_id:
+          type: string
+        echo:
+          type: object
+          additionalProperties: true
+      additionalProperties: true
