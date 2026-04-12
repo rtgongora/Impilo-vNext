@@ -22,6 +22,9 @@ class WellnessHealthConnectControllerTest {
     @Mock
     private WellnessHealthConnectIngestService ingestService;
 
+    @Mock
+    private WellnessHealthConnectQueryService queryService;
+
     @InjectMocks
     private WellnessHealthConnectController controller;
 

@@ -11,10 +11,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Health Connect–equivalent ingest surface for Impilo citizen wellness.
- * <p>Android Health Connect: <a href="https://developer.android.com/health-and-fitness/guides/health-connect">Health Connect</a>.
- * This API accepts a changeset of typed records, dedupes by {@code records[].id}, and maps into
- * {@code wellness_activities} / {@code wellness_vitals_log}.</p>
+ * Health Connect parity surface — typed changesets, idempotent ingest, read-back for sleep stages
+ * and exercise sessions.
  */
 @RestController
 @RequestMapping("/internal/v1/wellness/connect/v1")
@@ -23,37 +21,91 @@ public class WellnessHealthConnectController {
     private static final Logger log = LoggerFactory.getLogger(WellnessHealthConnectController.class);
 
     private final WellnessHealthConnectIngestService ingestService;
+    private final WellnessHealthConnectQueryService queryService;
 
-    public WellnessHealthConnectController(WellnessHealthConnectIngestService ingestService) {
+    public WellnessHealthConnectController(
+            WellnessHealthConnectIngestService ingestService,
+            WellnessHealthConnectQueryService queryService) {
         this.ingestService = ingestService;
+        this.queryService = queryService;
     }
 
-    /** Supported record types and scope hints (for client capability negotiation). */
+    /** Capability matrix for Android Health Connect–style clients. */
     @GetMapping("/manifest")
     public ResponseEntity<Map<String, Object>> manifest() {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("api", "impilo.wellness.connect.v1");
-        body.put("alignment", "Inspired by Android Health Connect record types; not a licensed Google API.");
-        body.put("supportedRecordTypes", List.of("Steps", "Hydration", "SleepSession", "HeartRate"));
+        body.put("alignment", "Parity with Android Health Connect datatype semantics; not a licensed Google API.");
+        body.put("supportedRecordTypes", List.of(
+                "Steps", "Distance", "FloorsClimbed",
+                "ActiveCaloriesBurned", "TotalCaloriesBurned",
+                "Hydration", "Nutrition",
+                "SleepSession", "HeartRate", "RestingHeartRate", "HeartRateVariabilityRmssd",
+                "Weight", "Height", "BodyFat",
+                "BloodPressure", "BloodGlucose", "OxygenSaturation",
+                "ExerciseSession"));
+        body.put("typeAliases", Map.of(
+                "description", "Incoming type may include Record suffix (e.g. StepsRecord) or omit it.",
+                "canonicalization", "See WellnessHealthConnectIngestService.canonicalRecordType"));
+        body.put("storageMapping", List.of(
+                Map.of("types", List.of("Steps"), "store", "wellness_activities.steps", "aggregate", "sum by activity_date"),
+                Map.of("types", List.of("Distance"), "store", "wellness_activities.distance_km", "aggregate", "sum km from distanceMeters"),
+                Map.of("types", List.of("Hydration"), "store", "wellness_activities.water_ml", "aggregate", "sum ml from volume (liters)"),
+                Map.of("types", List.of("ActiveCaloriesBurned", "TotalCaloriesBurned", "Nutrition"), "store", "wellness_activities.calories_burned", "aggregate", "sum kcal"),
+                Map.of("types", List.of("SleepSession"), "store", "wellness_activities.sleep_hours + sleep_quality", "extra", "wellness_sleep_segments from sleepStages[]"),
+                Map.of("types", List.of("HeartRate", "RestingHeartRate", "BloodPressure", "BloodGlucose", "OxygenSaturation", "FloorsClimbed", "HeartRateVariabilityRmssd", "Weight", "Height", "BodyFat"),
+                        "store", "wellness_vitals_log", "aggregate", "append row per sample or per scalar reading"),
+                Map.of("types", List.of("ExerciseSession"), "store", "wellness_exercise_sessions", "aggregate", "upsert by external_record_id")));
         body.put("suggestedScopes", List.of(
                 "read.steps", "write.steps",
+                "read.distance", "write.distance",
+                "read.floors_climbed", "write.floors_climbed",
+                "read.active_calories_burned", "write.active_calories_burned",
+                "read.total_calories_burned", "write.total_calories_burned",
                 "read.hydration", "write.hydration",
+                "read.nutrition", "write.nutrition",
                 "read.sleep", "write.sleep",
-                "read.heart_rate", "write.heart_rate"));
-        body.put("dedupeKey", "records[].id scoped per patientId + tenant");
-        body.put("aggregationModel", Map.of(
-                "steps", "sum per local calendar day (UTC boundary); JSON field count",
-                "hydration", "sum ml per startTime local day; JSON field volumeLiters (liters)",
-                "sleep", "last session wins per wake-day (endTime or startTime); hoursSlept optional if endTime set",
-                "heartRate", "append samples to wellness_vitals_log; beatsPerMinute or samples[{time,beatsPerMinute}]"));
+                "read.heart_rate", "write.heart_rate",
+                "read.resting_heart_rate", "write.resting_heart_rate",
+                "read.oxygen_saturation", "write.oxygen_saturation",
+                "read.blood_pressure", "write.blood_pressure",
+                "read.blood_glucose", "write.blood_glucose",
+                "read.weight", "write.weight",
+                "read.height", "write.height",
+                "read.body_fat", "write.body_fat",
+                "read.exercise", "write.exercise"));
+        body.put("dedupeKey", "records[].id scoped per patientId + tenant (wellness_connect_ingest_log)");
+        body.put("payloadEcho", "Full JSON record stored in wellness_connect_ingest_log.payload for audit/replay.");
+        body.put("readEndpoints", List.of(
+                "GET /sleep-segments?patientId=&limit=",
+                "GET /exercise-sessions?patientId=&days="));
         return ResponseEntity.ok(Map.of("data", body));
+    }
+
+    @GetMapping("/sleep-segments")
+    public ResponseEntity<Map<String, Object>> sleepSegments(
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @RequestParam String patientId,
+            @RequestParam(defaultValue = "100") int limit) {
+        List<Map<String, Object>> rows = queryService.sleepSegments(tenantId, patientId, limit);
+        return ResponseEntity.ok(Map.of("data", rows));
+    }
+
+    @GetMapping("/exercise-sessions")
+    public ResponseEntity<Map<String, Object>> exerciseSessions(
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @RequestParam String patientId,
+            @RequestParam(defaultValue = "30") int days) {
+        List<Map<String, Object>> rows = queryService.exerciseSessions(tenantId, patientId, days);
+        return ResponseEntity.ok(Map.of("data", rows));
     }
 
     @PostMapping("/changesets")
     public ResponseEntity<Map<String, Object>> ingest(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @Valid @RequestBody HealthConnectChangeSetRequest body) {
-        log.debug("HC ingest patientId={} records={} platform={}", body.patientId(), body.records().size(), body.dataOrigin().platform());
+        int n = body.records() == null ? 0 : body.records().size();
+        log.debug("HC ingest patientId={} records={} platform={}", body.patientId(), n, body.dataOrigin().platform());
         WellnessHealthConnectIngestService.IngestResult r = ingestService.ingest(tenantId, body);
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("applied", r.applied());
