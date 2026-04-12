@@ -39,6 +39,8 @@ spring:
       - org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
 
 inventory:
+  supply:
+    kafka-listeners-enabled: false
   outbox:
     poll-interval-ms: 60000
   capability:

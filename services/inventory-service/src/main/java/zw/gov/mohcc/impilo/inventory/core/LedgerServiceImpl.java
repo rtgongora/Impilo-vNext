@@ -18,6 +18,8 @@ import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
 import java.time.OffsetDateTime;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -217,5 +219,36 @@ public class LedgerServiceImpl implements LedgerService {
         } catch (Exception e) {
             log.error("Failed to write outbox event: type={}, aggregateId={}", eventType, aggregateId, e);
         }
+    }
+
+    private void publishStockLevelTelemetrySnapshot(UUID tenantId, LedgerEventEntity event) {
+        try {
+            Optional<OnHandEntity> onHandOpt = onHandRepository
+                    .findByFacilityIdAndStoreIdAndItemCodeAndBatchAndExpiry(
+                            event.getFacilityId(), event.getStoreId(), event.getItemCode(),
+                            event.getBatch(), event.getExpiry());
+            int qtyOnHand = onHandOpt.map(OnHandEntity::getQtyOnHand).orElse(0);
+            UUID binId = onHandOpt.map(OnHandEntity::getBinId).orElse(event.getBinId());
+
+            Map<String, Object> payload = new LinkedHashMap<>();
+            payload.put("tenant_id", tenantId.toString());
+            payload.put("facility_id", event.getFacilityId().toString());
+            payload.put("store_id", event.getStoreId().toString());
+            payload.put("bin_id", binId != null ? binId.toString() : null);
+            payload.put("item_code", event.getItemCode());
+            payload.put("batch", event.getBatch());
+            payload.put("expiry", event.getExpiry() != null ? event.getExpiry().toString() : null);
+            payload.put("qty_on_hand", qtyOnHand);
+            payload.put("ledger_event_id", event.getEventId().toString());
+            payload.put("as_of", OffsetDateTime.now().toString());
+
+            publishOutboxEvent("ON_HAND", onHandKey(event), "INVENTORY_STOCK_LEVEL_TELEMETRY", payload, tenantId);
+        } catch (Exception e) {
+            log.warn("Failed to write stock level telemetry outbox for event {}: {}", event.getEventId(), e.getMessage());
+        }
+    }
+
+    private static String onHandKey(LedgerEventEntity event) {
+        return event.getFacilityId() + ":" + event.getStoreId() + ":" + event.getItemCode();
     }
 }

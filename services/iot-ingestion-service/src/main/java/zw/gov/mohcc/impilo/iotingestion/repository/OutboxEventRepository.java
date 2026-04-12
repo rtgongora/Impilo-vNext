@@ -7,6 +7,8 @@ import java.util.List;
 
 public interface OutboxEventRepository extends JpaRepository<OutboxEventEntity, Long> {
 
+    List<OutboxEventEntity> findTop100ByPublishedAtIsNullOrderByCreatedAtAsc();
+
     List<OutboxEventEntity> findByAggregateIdAndEventType(String aggregateId, String eventType);
 
     long countByAggregateId(String aggregateId);

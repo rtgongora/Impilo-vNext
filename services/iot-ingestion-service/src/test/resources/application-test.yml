@@ -22,6 +22,8 @@ spring:
       - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
 
 impilo:
+  security:
+    mode: permit-all
   companion:
     enabled: true
   telemetry:

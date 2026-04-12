@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.inventory.persistence.entity;
 
 import jakarta.persistence.*;
+import zw.gov.mohcc.impilo.sharedkernel.events.CompanionOutboxPublisher;
+
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -36,6 +38,12 @@ public class EventOutboxEntity {
     @Column(name = "published_at")
     private OffsetDateTime publishedAt;
 
+    @Column(name = "publish_error", columnDefinition = "TEXT")
+    private String publishError;
+
+    @Column(name = "retry_count", nullable = false)
+    private Integer retryCount = 0;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
@@ -67,5 +75,69 @@ public class EventOutboxEntity {
     public OffsetDateTime getPublishedAt() { return publishedAt; }
     public void setPublishedAt(OffsetDateTime publishedAt) { this.publishedAt = publishedAt; }
 
+    public String getPublishError() { return publishError; }
+    public void setPublishError(String publishError) { this.publishError = publishError; }
+
+    public Integer getRetryCount() { return retryCount; }
+    public void setRetryCount(Integer retryCount) { this.retryCount = retryCount != null ? retryCount : 0; }
+
     public OffsetDateTime getCreatedAt() { return createdAt; }
+
+    /**
+     * Adapts this row for {@link zw.gov.mohcc.impilo.sharedkernel.events.CompanionOutboxPublisher}.
+     */
+    public CompanionOutboxPublisher.OutboxRow toOutboxRow() {
+        final EventOutboxEntity self = this;
+        return new CompanionOutboxPublisher.OutboxRow() {
+            @Override
+            public Long id() {
+                return self.id;
+            }
+
+            @Override
+            public String aggregateType() {
+                return self.aggregateType;
+            }
+
+            @Override
+            public String aggregateId() {
+                return self.aggregateId;
+            }
+
+            @Override
+            public String eventType() {
+                return self.eventType;
+            }
+
+            @Override
+            public String payloadJson() {
+                return self.payload != null ? self.payload : "{}";
+            }
+
+            @Override
+            public OffsetDateTime occurredAt() {
+                return self.createdAt != null ? self.createdAt : OffsetDateTime.now();
+            }
+
+            @Override
+            public OffsetDateTime publishedAt() {
+                return self.publishedAt;
+            }
+
+            @Override
+            public String tenantId() {
+                return self.tenantId != null ? self.tenantId.toString() : null;
+            }
+
+            @Override
+            public String podId() {
+                return "inventory-service";
+            }
+
+            @Override
+            public int retryCount() {
+                return self.retryCount != null ? self.retryCount : 0;
+            }
+        };
+    }
 }
