@@ -1,5 +1,6 @@
 package zw.gov.mohcc.impilo.mushex.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,7 +12,8 @@ import zw.gov.mohcc.impilo.mushex.domain.enums.IntentStatus;
 import zw.gov.mohcc.impilo.mushex.domain.enums.SourceType;
 import zw.gov.mohcc.impilo.mushex.domain.repository.EventOutboxRepository;
 import zw.gov.mohcc.impilo.mushex.domain.repository.PaymentIntentRepository;
-import zw.gov.mohcc.impilo.mushex.integration.FacilityCredentialVerifier;
+import zw.gov.mohcc.impilo.mushex.integration.CredentialVerificationClient;
+import zw.gov.mohcc.impilo.mushex.integration.ProviderContractClient;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
@@ -19,6 +21,7 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.EnumMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -63,18 +66,21 @@ public class PaymentIntentService {
     private final EventOutboxRepository outboxRepository;
     private final ReceiptService receiptService;
     private final ObjectMapper objectMapper;
-    private final FacilityCredentialVerifier facilityCredentialVerifier;
+    private final CredentialVerificationClient credentialVerificationClient;
+    private final ProviderContractClient providerContractClient;
 
     public PaymentIntentService(PaymentIntentRepository intentRepository,
                                 EventOutboxRepository outboxRepository,
                                 ReceiptService receiptService,
                                 ObjectMapper objectMapper,
-                                FacilityCredentialVerifier facilityCredentialVerifier) {
+                                CredentialVerificationClient credentialVerificationClient,
+                                ProviderContractClient providerContractClient) {
         this.intentRepository = intentRepository;
         this.outboxRepository = outboxRepository;
         this.receiptService = receiptService;
         this.objectMapper = objectMapper;
-        this.facilityCredentialVerifier = facilityCredentialVerifier;
+        this.credentialVerificationClient = credentialVerificationClient;
+        this.providerContractClient = providerContractClient;
     }
 
     /**
@@ -92,7 +98,17 @@ public class PaymentIntentService {
         TrustContext ctx = TrustContextHolder.require();
 
         UUID facility = facilityId != null ? facilityId : ctx.facilityId();
-        facilityCredentialVerifier.assertFacilityPaymentAllowed(ctx.tenantId(), facility);
+        String providerId = extractProviderId(metadata, facility);
+        CredentialVerificationClient.CredentialVerificationResult cred =
+                credentialVerificationClient.verifyPayee(ctx.tenantId(), providerId);
+        if (!cred.allowed()) {
+            log.warn("Provider credential verification failed before intent create: providerId={} status={}",
+                    providerId, cred.status());
+            throw new IllegalStateException("PROVIDER_CREDENTIAL_INVALID");
+        }
+        log.info("Provider credential verification passed before intent create: providerId={} status={} ref={}",
+                providerId, cred.status(), cred.verificationRef());
+        assertActiveProviderContractIfApplicable(ctx.tenantId(), metadata, facility);
 
         // Idempotency check: return existing intent if key already used
         Optional<PaymentIntentEntity> existing = intentRepository.findByIdempotencyKey(idempotencyKey);
@@ -114,6 +130,9 @@ public class PaymentIntentService {
         intent.setIdempotencyKey(idempotencyKey);
         intent.setMetadata(metadata);
         intent.setExpiresAt(OffsetDateTime.now().plusHours(24));
+        if (cred.verificationRef() != null && !cred.verificationRef().isBlank()) {
+            intent.setCredentialVerificationRef(cred.verificationRef());
+        }
 
         intent = intentRepository.save(intent);
 
@@ -207,7 +226,19 @@ public class PaymentIntentService {
                 amount, intentId, newAmountPaid);
 
         if (newAmountPaid.compareTo(intent.getAmountTotal()) >= 0) {
-            facilityCredentialVerifier.assertFacilityPaymentAllowed(ctx.tenantId(), intent.getFacilityId());
+            String providerId = extractProviderId(intent.getMetadata(), intent.getFacilityId());
+            CredentialVerificationClient.CredentialVerificationResult cred =
+                    credentialVerificationClient.verifyPayee(ctx.tenantId(), providerId);
+            if (!cred.allowed()) {
+                log.warn("Provider credential verification failed before PAID: intentId={} providerId={} status={}",
+                        intentId, providerId, cred.status());
+                throw new IllegalStateException("PROVIDER_CREDENTIAL_INVALID");
+            }
+            log.info("Provider credential verification passed before PAID: intentId={} providerId={} status={} ref={}",
+                    intentId, providerId, cred.status(), cred.verificationRef());
+            if (cred.verificationRef() != null && !cred.verificationRef().isBlank()) {
+                intent.setCredentialVerificationRef(cred.verificationRef());
+            }
             IntentStatus oldStatus = intent.getStatus();
             intent.setStatus(IntentStatus.PAID);
             intent = intentRepository.save(intent);
@@ -230,6 +261,98 @@ public class PaymentIntentService {
         }
 
         return intent;
+    }
+
+    /**
+     * Cancels CREATED/PENDING intents when a credential is revoked (Kafka path — no {@link TrustContext}).
+     */
+    @Transactional
+    public void cancelPendingIntentsForCredentialRevocation(UUID tenantId,
+                                                            String subjectType,
+                                                            String subjectId,
+                                                            String reason) {
+        List<PaymentIntentEntity> candidates = intentRepository.findByTenantIdAndStatusIn(
+                tenantId, List.of(IntentStatus.CREATED, IntentStatus.PENDING));
+        for (PaymentIntentEntity intent : candidates) {
+            if (matchesCredentialSubject(intent, subjectType, subjectId)) {
+                systemCancelIntent(intent, reason);
+            }
+        }
+    }
+
+    private void systemCancelIntent(PaymentIntentEntity intent, String reason) {
+        if (intent.getStatus() != IntentStatus.CREATED && intent.getStatus() != IntentStatus.PENDING) {
+            return;
+        }
+        IntentStatus oldStatus = intent.getStatus();
+        intent.setStatus(IntentStatus.CANCELLED);
+        intentRepository.save(intent);
+        log.info("Intent {} cancelled by system ({}): {} -> CANCELLED",
+                intent.getIntentId(), reason, oldStatus);
+        publishEvent("PAYMENT_INTENT", intent.getIntentId(), "STATUS_CHANGED",
+                Map.of(
+                        "intentId", intent.getIntentId(),
+                        "fromStatus", oldStatus.name(),
+                        "toStatus", IntentStatus.CANCELLED.name(),
+                        "reason", reason
+                ),
+                intent.getTenantId());
+    }
+
+    private boolean matchesCredentialSubject(PaymentIntentEntity intent,
+                                             String subjectType,
+                                             String subjectId) {
+        if (subjectId == null || subjectId.isBlank()) {
+            return false;
+        }
+        String st = subjectType != null ? subjectType.toUpperCase(Locale.ROOT) : "";
+        if (st.contains("FACILITY")) {
+            try {
+                UUID sid = UUID.fromString(subjectId.trim());
+                return sid.equals(intent.getFacilityId());
+            } catch (IllegalArgumentException ex) {
+                return false;
+            }
+        }
+        String metaPid = readMetadataField(intent.getMetadata(), "provider_id", "providerId");
+        return subjectId.equals(metaPid);
+    }
+
+    private void assertActiveProviderContractIfApplicable(UUID tenantId, String metadataJson, UUID facilityId) {
+        String payer = readMetadataField(metadataJson, "payer_id", "payerId", "insurer_id", "insurerId");
+        String provider = readMetadataField(metadataJson, "provider_id", "providerId");
+        if (provider == null || provider.isBlank()) {
+            provider = facilityId != null ? facilityId.toString() : null;
+        }
+        if (payer == null || payer.isBlank() || provider == null || provider.isBlank()) {
+            log.debug("Skipping payer–provider contract gate (missing payer/provider in metadata) tenant={} facility={}",
+                    tenantId, facilityId);
+            return;
+        }
+        if (!providerContractClient.hasActiveContract(tenantId.toString(), provider, payer)) {
+            throw new IllegalStateException(
+                    "No active provider contract for payer=" + payer + " provider=" + provider);
+        }
+    }
+
+    private String readMetadataField(String metadataJson, String... keys) {
+        if (metadataJson == null || metadataJson.isBlank()) {
+            return null;
+        }
+        try {
+            JsonNode n = objectMapper.readTree(metadataJson);
+            for (String k : keys) {
+                if (n.hasNonNull(k)) {
+                    String v = n.get(k).asText();
+                    if (v != null && !v.isBlank()) {
+                        return v;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.debug("Could not parse intent metadata: {}", e.getMessage());
+        }
+        return null;
     }
 
     /**
@@ -265,6 +388,32 @@ public class PaymentIntentService {
     /**
      * Validate that a state transition is allowed by the state machine.
      */
+    private String extractProviderId(String metadata, UUID facilityId) {
+        if (metadata != null && !metadata.isBlank()) {
+            try {
+                JsonNode n = objectMapper.readTree(metadata);
+                if (n.hasNonNull("provider_id")) {
+                    String v = n.get("provider_id").asText();
+                    if (!v.isBlank()) {
+                        return v;
+                    }
+                }
+                if (n.hasNonNull("providerId")) {
+                    String v = n.get("providerId").asText();
+                    if (!v.isBlank()) {
+                        return v;
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("Could not parse payment intent metadata for provider_id: {}", e.getMessage());
+            }
+        }
+        if (facilityId != null) {
+            return facilityId.toString();
+        }
+        throw new IllegalStateException("Payee provider_id is required (set provider_id in metadata or pass facilityId)");
+    }
+
     private void validateTransition(IntentStatus from, IntentStatus to) {
         Set<IntentStatus> allowed = VALID_TRANSITIONS.get(from);
         if (allowed == null || !allowed.contains(to)) {

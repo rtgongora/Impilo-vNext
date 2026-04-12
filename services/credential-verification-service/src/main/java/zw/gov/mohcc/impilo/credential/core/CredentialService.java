@@ -121,6 +121,55 @@ public class CredentialService {
     }
 
     /**
+     * Mesh-internal payee (provider) credential check for MUSHEX payment rails.
+     * Does not require JWT; caller must be restricted at the network layer in production.
+     */
+    @Transactional(readOnly = true)
+    public MeshPayeeVerifyResponse verifyPayeeForMesh(MeshPayeeVerifyRequest request) {
+        UUID ref = UUID.randomUUID();
+        UUID tenantId = request.tenantId();
+        String providerId = request.providerId();
+
+        List<CredentialEntity> rows = credentialRepository.findByTenantIdAndSubjectIdOrderByIssuedAtDesc(tenantId, providerId);
+        if (rows.isEmpty()) {
+            log.info("Mesh payee verify ref={} tenantId={} providerId={} status=NOT_FOUND", ref, tenantId, providerId);
+            return new MeshPayeeVerifyResponse(ref, false, "NOT_FOUND", null);
+        }
+
+        Optional<CredentialEntity> validRow = rows.stream()
+                .filter(CredentialEntity::isActive)
+                .filter(c -> !c.isExpired())
+                .findFirst();
+        if (validRow.isPresent()) {
+            log.info("Mesh payee verify ref={} tenantId={} providerId={} status=VALID credentialId={}",
+                    ref, tenantId, providerId, validRow.get().getCredentialId());
+            return new MeshPayeeVerifyResponse(ref, true, "VALID", validRow.get().getCredentialId());
+        }
+
+        if (rows.stream().anyMatch(c -> c.isActive() && c.isExpired())) {
+            UUID credId = rows.stream().filter(c -> c.isActive() && c.isExpired()).findFirst()
+                    .map(CredentialEntity::getCredentialId).orElse(null);
+            log.info("Mesh payee verify ref={} tenantId={} providerId={} status=EXPIRED", ref, tenantId, providerId);
+            return new MeshPayeeVerifyResponse(ref, false, "EXPIRED", credId);
+        }
+
+        if (rows.stream().anyMatch(CredentialEntity::isRevoked)) {
+            UUID credId = rows.stream().filter(CredentialEntity::isRevoked).findFirst()
+                    .map(CredentialEntity::getCredentialId).orElse(null);
+            log.info("Mesh payee verify ref={} tenantId={} providerId={} status=REVOKED", ref, tenantId, providerId);
+            return new MeshPayeeVerifyResponse(ref, false, "REVOKED", credId);
+        }
+
+        if (rows.stream().anyMatch(CredentialEntity::isSuperseded)) {
+            log.info("Mesh payee verify ref={} tenantId={} providerId={} status=SUPERSEDED", ref, tenantId, providerId);
+            return new MeshPayeeVerifyResponse(ref, false, "SUPERSEDED", null);
+        }
+
+        log.info("Mesh payee verify ref={} tenantId={} providerId={} status=UNKNOWN", ref, tenantId, providerId);
+        return new MeshPayeeVerifyResponse(ref, false, "UNKNOWN", null);
+    }
+
+    /**
      * Retrieves a credential by its UUID.
      */
     @Transactional(readOnly = true)

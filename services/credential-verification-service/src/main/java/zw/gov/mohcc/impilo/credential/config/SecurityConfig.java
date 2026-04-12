@@ -28,6 +28,7 @@ public class SecurityConfig {
                 .requestMatchers("/actuator/health", "/actuator/info", "/actuator/prometheus").permitAll()
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
                 .requestMatchers("/v1/public/verify/**").permitAll()
+                .requestMatchers("/v1/credentials/verify").permitAll()
                 .requestMatchers("/v1/internal/mushex/**").permitAll()
                 .anyRequest().authenticated()
             )

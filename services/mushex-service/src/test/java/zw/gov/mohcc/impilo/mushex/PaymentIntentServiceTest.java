@@ -14,7 +14,8 @@ import zw.gov.mohcc.impilo.mushex.domain.enums.IntentStatus;
 import zw.gov.mohcc.impilo.mushex.domain.enums.SourceType;
 import zw.gov.mohcc.impilo.mushex.domain.repository.EventOutboxRepository;
 import zw.gov.mohcc.impilo.mushex.domain.repository.PaymentIntentRepository;
-import zw.gov.mohcc.impilo.mushex.integration.FacilityCredentialVerifier;
+import zw.gov.mohcc.impilo.mushex.integration.CredentialVerificationClient;
+import zw.gov.mohcc.impilo.mushex.integration.ProviderContractClient;
 import zw.gov.mohcc.impilo.mushex.service.PaymentIntentService;
 import zw.gov.mohcc.impilo.mushex.service.ReceiptService;
 import zw.gov.mohcc.impilo.shared.auth.AccessMode;
@@ -43,10 +44,13 @@ class PaymentIntentServiceTest {
     @Mock private EventOutboxRepository outboxRepository;
     @Mock private ReceiptService receiptService;
     @Mock private ObjectMapper objectMapper;
+    @Mock private ProviderContractClient providerContractClient;
 
     private PaymentIntentService service;
 
-    private static final FacilityCredentialVerifier NOOP_CREDENTIALS = (tenantId, facilityId) -> { };
+    private static final CredentialVerificationClient NOOP_CREDENTIALS =
+            (tenantId, providerId) -> new CredentialVerificationClient.CredentialVerificationResult(
+                    true, "VALID", "test-verification-ref", null);
 
     private final UUID tenantId = UUID.randomUUID();
     private final UUID facilityId = UUID.randomUUID();
@@ -54,7 +58,9 @@ class PaymentIntentServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new PaymentIntentService(intentRepository, outboxRepository, receiptService, objectMapper, NOOP_CREDENTIALS);
+        lenient().when(providerContractClient.hasActiveContract(any(), any(), any())).thenReturn(true);
+        service = new PaymentIntentService(intentRepository, outboxRepository, receiptService, objectMapper,
+                NOOP_CREDENTIALS, providerContractClient);
         TrustContextHolder.set(new TrustContext(
             tenantId, "actor-1", "FACILITY_FINANCE", "BILLING",
             "device-1", correlationId, facilityId, null, null, AccessMode.INTERNAL

@@ -64,6 +64,9 @@ public class ClaimEntity {
     @Column(name = "denial_reason", length = 500)
     private String denialReason;
 
+    @Column(name = "coverage_eligibility_ref", length = 255)
+    private String coverageEligibilityRef;
+
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;
 
@@ -200,6 +203,14 @@ public class ClaimEntity {
 
     public void setDenialReason(String denialReason) {
         this.denialReason = denialReason;
+    }
+
+    public String getCoverageEligibilityRef() {
+        return coverageEligibilityRef;
+    }
+
+    public void setCoverageEligibilityRef(String coverageEligibilityRef) {
+        this.coverageEligibilityRef = coverageEligibilityRef;
     }
 
     public OffsetDateTime getCreatedAt() {

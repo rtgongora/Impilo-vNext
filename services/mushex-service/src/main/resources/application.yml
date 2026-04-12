@@ -77,8 +77,10 @@ springdoc:
 impilo:
   services:
     coverage-base-url: ${COVERAGE_BASE_URL:http://localhost:8140}
+    credential-base-url: ${CREDENTIAL_BASE_URL:http://localhost:8094}
     credential-verification-base-url: ${CREDENTIAL_VERIFICATION_BASE_URL:http://localhost:8094}
     credential-verification-enabled: ${CREDENTIAL_VERIFICATION_ENABLED:true}
+    credential-payee-verification-enabled: ${CREDENTIAL_PAYEE_VERIFICATION_ENABLED:true}
 
 mushex:
   outbox:

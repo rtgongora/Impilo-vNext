@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 import zw.gov.mohcc.impilo.credential.persistence.entity.CredentialEntity;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -18,6 +19,8 @@ public interface CredentialRepository extends JpaRepository<CredentialEntity, Lo
     Optional<CredentialEntity> findByCredentialId(UUID credentialId);
 
     Optional<CredentialEntity> findByVerificationToken(String verificationToken);
+
+    List<CredentialEntity> findByTenantIdAndSubjectIdOrderByIssuedAtDesc(UUID tenantId, String subjectId);
 
     @Query("""
         SELECT c FROM CredentialEntity c

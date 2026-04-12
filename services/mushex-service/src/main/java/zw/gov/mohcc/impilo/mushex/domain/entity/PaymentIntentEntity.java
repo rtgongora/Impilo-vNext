@@ -59,6 +59,9 @@ public class PaymentIntentEntity {
     @Column(name = "metadata", columnDefinition = "jsonb")
     private String metadata;
 
+    @Column(name = "credential_verification_ref", length = 255)
+    private String credentialVerificationRef;
+
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;
 
@@ -175,6 +178,14 @@ public class PaymentIntentEntity {
 
     public void setMetadata(String metadata) {
         this.metadata = metadata;
+    }
+
+    public String getCredentialVerificationRef() {
+        return credentialVerificationRef;
+    }
+
+    public void setCredentialVerificationRef(String credentialVerificationRef) {
+        this.credentialVerificationRef = credentialVerificationRef;
     }
 
     public OffsetDateTime getCreatedAt() {

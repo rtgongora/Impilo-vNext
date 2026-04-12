@@ -43,9 +43,9 @@ public class ReconciliationController {
         List<Map<String, String>> statementLines = lines.stream()
                 .map(line -> {
                     Map<String, String> mapped = new LinkedHashMap<>();
-                    mapped.put("ref", line.ref());
-                    mapped.put("date", line.date());
-                    mapped.put("amount", line.amount());
+                    mapped.put("ref", line.statementRef());
+                    mapped.put("date", line.statementDate().toString());
+                    mapped.put("amount", line.amount().toPlainString());
                     mapped.put("currency", line.currency());
                     mapped.put("counterparty", line.counterparty());
                     return mapped;

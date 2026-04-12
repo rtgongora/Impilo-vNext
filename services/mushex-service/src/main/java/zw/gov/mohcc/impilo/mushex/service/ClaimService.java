@@ -65,7 +65,7 @@ public class ClaimService {
         m.put(ClaimStatus.RECEIVED, Set.of(ClaimStatus.ADJUDICATED, ClaimStatus.ELIGIBILITY_VERIFIED));
         m.put(ClaimStatus.REJECTED, Set.of(ClaimStatus.RESUBMIT_PENDING));
         m.put(ClaimStatus.DENIED, Set.of(ClaimStatus.APPEALED, ClaimStatus.RESUBMIT_PENDING));
-        m.put(ClaimStatus.APPEALED, Set.of(ClaimStatus.ELIGIBILITY_PENDING));
+        m.put(ClaimStatus.APPEALED, Set.of(ClaimStatus.ELIGIBILITY_PENDING, ClaimStatus.RESUBMIT_PENDING));
         m.put(ClaimStatus.RECONCILED, Set.of());
         m.put(ClaimStatus.REVERSED, Set.of());
         m.put(ClaimStatus.RECOVERED, Set.of());
@@ -215,14 +215,17 @@ public class ClaimService {
             throw new IllegalStateException("patient CPID and plan code are required for eligibility check");
         }
 
-        boolean eligible = coverageEligibilityClient.checkEligibility(
+        CoverageEligibilityClient.EligibilityResult eligibility = coverageEligibilityClient.evaluateEligibility(
                 claim.getTenantId(), patientCpid, planCode, serviceCode != null ? serviceCode : "");
 
         ClaimStatus oldStatus = claim.getStatus();
-        if (eligible) {
+        if (eligibility.eligible()) {
             validateTransition(oldStatus, ClaimStatus.ELIGIBILITY_VERIFIED);
             claim.setStatus(ClaimStatus.ELIGIBILITY_VERIFIED);
             claim.setDenialReason(null);
+            if (eligibility.coverageReference() != null) {
+                claim.setCoverageEligibilityRef(eligibility.coverageReference());
+            }
             claim = claimRepository.save(claim);
             recordClaimEvent(claimId, oldStatus, ClaimStatus.ELIGIBILITY_VERIFIED, ctx.actorId(),
                     "Coverage eligibility verified");
@@ -230,11 +233,14 @@ public class ClaimService {
         } else {
             validateTransition(oldStatus, ClaimStatus.DENIED);
             claim.setStatus(ClaimStatus.DENIED);
-            claim.setDenialReason("COVERAGE_INELIGIBLE");
+            String denial = eligibility.reasonCode() != null && !eligibility.reasonCode().isBlank()
+                    ? eligibility.reasonCode()
+                    : "COVERAGE_INELIGIBLE";
+            claim.setDenialReason(denial);
             claim = claimRepository.save(claim);
             recordClaimEvent(claimId, oldStatus, ClaimStatus.DENIED, ctx.actorId(),
-                    "Coverage ineligible (COVERAGE_INELIGIBLE)");
-            log.info("Eligibility denied for claimId={} reason=COVERAGE_INELIGIBLE", claimId);
+                    "Coverage ineligible (" + denial + ")");
+            log.info("Eligibility denied for claimId={} reason={}", claimId, denial);
         }
 
         return claim;
@@ -293,6 +299,17 @@ public class ClaimService {
 
         if (patientResidual.compareTo(BigDecimal.ZERO) > 0) {
             String idempotencyKey = "CLAIM_RESIDUAL_" + claimId;
+            String residualMetadata;
+            try {
+                java.util.LinkedHashMap<String, Object> meta = new java.util.LinkedHashMap<>();
+                meta.put("source", "claim_adjudication");
+                meta.put("claimId", claimId);
+                meta.put("payer_id", claim.getInsurerId());
+                meta.put("provider_id", claim.getFacilityId().toString());
+                residualMetadata = objectMapper.writeValueAsString(meta);
+            } catch (Exception e) {
+                throw new IllegalStateException("Failed to serialize residual payment metadata", e);
+            }
             intentService.createIntent(
                     SourceType.COSTA_BILL,
                     claim.getBillId(),
@@ -300,7 +317,7 @@ public class ClaimService {
                     "USD",
                     claim.getFacilityId(),
                     idempotencyKey,
-                    "{\"source\":\"claim_adjudication\",\"claimId\":\"" + claimId + "\"}"
+                    residualMetadata
             );
             log.info("Created patient residual intent for claim {}: amount={}",
                     claimId, patientResidual.toPlainString());
@@ -358,10 +375,49 @@ public class ClaimService {
 
         log.info("Claim marked paid: claimId={}", claimId);
 
-        publishEvent("CLAIM", claimId, "CLAIM_PAID",
-                Map.of("claimId", claimId),
-                ctx.tenantId());
+        BigDecimal insurerPayable = adjudicationRepository.findByClaimId(claimId)
+                .map(AdjudicationEntity::getInsurerPayable)
+                .orElse(BigDecimal.ZERO);
+        String svc = firstNonBlank(claim.getServiceCode(), claim.getTotals(), "service_code", "serviceCode");
+        Map<String, Object> paidPayload = new java.util.LinkedHashMap<>();
+        paidPayload.put("claimId", claimId);
+        paidPayload.put("claim_id", claimId);
+        paidPayload.put("status", "PAID");
+        paidPayload.put("tenant_id", claim.getTenantId().toString());
+        paidPayload.put("tenantId", claim.getTenantId().toString());
+        paidPayload.put("patient_cpid", claim.getPatientCpid());
+        paidPayload.put("patientCpid", claim.getPatientCpid());
+        paidPayload.put("plan_code", claim.getPlanCode());
+        paidPayload.put("planCode", claim.getPlanCode());
+        paidPayload.put("service_code", svc != null ? svc : "");
+        paidPayload.put("serviceCode", svc != null ? svc : "");
+        paidPayload.put("insurer_payable", insurerPayable.toPlainString());
+        paidPayload.put("insurerPayable", insurerPayable.toPlainString());
+        paidPayload.put("amount", insurerPayable.toPlainString());
+        publishEvent("CLAIM", claimId, "CLAIM_PAID", paidPayload, ctx.tenantId());
 
+        return claim;
+    }
+
+    /**
+     * Coverage appeal outcome: moves a denied or appealed claim back to the adjudication queue.
+     */
+    @Transactional
+    public ClaimEntity markResubmitPendingAfterAppeal(String claimId) {
+        TrustContext ctx = TrustContextHolder.require();
+        ClaimEntity claim = getClaim(claimId);
+        ClaimStatus from = claim.getStatus();
+        if (from != ClaimStatus.DENIED && from != ClaimStatus.APPEALED) {
+            throw new IllegalStateException("Appeal resubmit requires DENIED or APPEALED, was " + from);
+        }
+        validateTransition(from, ClaimStatus.RESUBMIT_PENDING);
+        ClaimStatus old = claim.getStatus();
+        claim.setStatus(ClaimStatus.RESUBMIT_PENDING);
+        claim.setDenialReason(null);
+        claim = claimRepository.save(claim);
+        recordClaimEvent(claimId, old, ClaimStatus.RESUBMIT_PENDING, ctx.actorId(),
+                "Appeal overturned — queued for resubmission");
+        log.info("Claim marked RESUBMIT_PENDING after appeal: claimId={}", claimId);
         return claim;
     }
 
