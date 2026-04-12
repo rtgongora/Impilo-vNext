@@ -7,7 +7,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Receipt, FileText, CreditCard, BookOpen, ClipboardList, User, Layers, DatabaseZap } from "lucide-react";
+import { Receipt, FileText, CreditCard, BookOpen, ClipboardList, User, Layers, DatabaseZap, BarChart3, Wallet } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { OrganizationPlaneContextBar } from "@/components/experience/OrganizationPlaneContextBar";
 import { PageShell } from "@/components/PageShell";
@@ -49,6 +49,20 @@ const FINANCE_SECTIONS = [
     href: "/finance/msika-governance",
     icon: DatabaseZap,
     color: "bg-indigo-100 text-indigo-700",
+  },
+  {
+    title: "Financial reports",
+    description: "Institutional revenue, receivables, budgets, and payer claims expenditure",
+    href: "/finance/reports",
+    icon: BarChart3,
+    color: "bg-teal-100 text-teal-700",
+  },
+  {
+    title: "My healthcare account",
+    description: "Your balances, payment history, plans, and tax or invoice documents",
+    href: "/finance/my-account",
+    icon: Wallet,
+    color: "bg-emerald-100 text-emerald-700",
   },
 ] as const;
 

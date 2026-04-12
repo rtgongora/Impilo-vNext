@@ -3,10 +3,15 @@ package zw.gov.mohcc.impilo.experience.client;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
+import org.springframework.web.util.UriUtils;
+
+import java.nio.charset.StandardCharsets;
 import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
 
 import java.util.LinkedHashMap;
@@ -244,6 +249,121 @@ public class CostaServiceClient {
         log.info("COSTA: Getting audit trail for bill={}", billId);
         ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
         return extractData(response);
+    }
+
+    // ── Patient financials (COSTA) ────────────────────────────────────
+
+    public JsonNode getFinancePatientAccount(String cpid) {
+        String enc = UriUtils.encodePathSegment(cpid, StandardCharsets.UTF_8);
+        String url = baseUrl + "/costa/v1/finance/patient-accounts/" + enc;
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode getFinancePatientTransactions(String cpid, int page, int size,
+                                                   String dateFrom, String dateTo) {
+        String enc = UriUtils.encodePathSegment(cpid, StandardCharsets.UTF_8);
+        UriComponentsBuilder b = UriComponentsBuilder
+                .fromHttpUrl(baseUrl + "/costa/v1/finance/patient-accounts/" + enc + "/transactions")
+                .queryParam("page", page)
+                .queryParam("size", size);
+        if (dateFrom != null && !dateFrom.isBlank()) {
+            b.queryParam("dateFrom", dateFrom);
+        }
+        if (dateTo != null && !dateTo.isBlank()) {
+            b.queryParam("dateTo", dateTo);
+        }
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(b.toUriString(), JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode getFinancePatientOutstanding(String cpid) {
+        String enc = UriUtils.encodePathSegment(cpid, StandardCharsets.UTF_8);
+        String url = baseUrl + "/costa/v1/finance/patient-accounts/" + enc + "/outstanding";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode postFinancePatientPayment(String cpid, Map<String, Object> body) {
+        String enc = UriUtils.encodePathSegment(cpid, StandardCharsets.UTF_8);
+        String url = baseUrl + "/costa/v1/finance/patient-accounts/" + enc + "/payments";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode postFinancePaymentPlan(Map<String, Object> body) {
+        String url = baseUrl + "/costa/v1/finance/payment-plans";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode getFinancePaymentPlans(String patientCpid) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/costa/v1/finance/payment-plans")
+                .queryParam("patient_cpid", patientCpid)
+                .toUriString();
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode putFinancePaymentPlanInstallment(String planId, Map<String, Object> body) {
+        String url = baseUrl + "/costa/v1/finance/payment-plans/" + planId + "/pay";
+        Object payload = body == null ? Map.of() : body;
+        ResponseEntity<JsonNode> response = restTemplate.exchange(
+                url, HttpMethod.PUT, new HttpEntity<>(payload), JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode getFinancePaymentPlan(String planId) {
+        String url = baseUrl + "/costa/v1/finance/payment-plans/" + planId;
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode postFinanceDocumentGenerate(Map<String, Object> body) {
+        String url = baseUrl + "/costa/v1/finance/documents/generate";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode getFinanceDocuments(String subjectRef, String subjectType, String docType, int page, int size) {
+        UriComponentsBuilder b = UriComponentsBuilder.fromHttpUrl(baseUrl + "/costa/v1/finance/documents")
+                .queryParam("subject_ref", subjectRef)
+                .queryParam("page", page)
+                .queryParam("size", size);
+        if (subjectType != null && !subjectType.isBlank()) {
+            b.queryParam("subject_type", subjectType);
+        }
+        if (docType != null && !docType.isBlank()) {
+            b.queryParam("doc_type", docType);
+        }
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(b.toUriString(), JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode getFinanceDocument(String docId) {
+        String url = baseUrl + "/costa/v1/finance/documents/" + docId;
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    // ── Institutional financial reporting (COSTA internal) ────────────
+
+    public ResponseEntity<String> costaInternalGet(String pathAndQuery) {
+        String url = baseUrl + (pathAndQuery.startsWith("/") ? pathAndQuery : "/" + pathAndQuery);
+        log.info("COSTA internal GET {}", url);
+        return restTemplate.exchange(url, HttpMethod.GET, null, String.class);
+    }
+
+    public ResponseEntity<String> costaInternalPost(String path, Object body) {
+        String url = baseUrl + (path.startsWith("/") ? path : "/" + path);
+        log.info("COSTA internal POST {}", url);
+        return restTemplate.exchange(url, HttpMethod.POST, new HttpEntity<>(body), String.class);
+    }
+
+    public ResponseEntity<String> costaInternalPut(String path, Object body) {
+        String url = baseUrl + (path.startsWith("/") ? path : "/" + path);
+        log.info("COSTA internal PUT {}", url);
+        return restTemplate.exchange(url, HttpMethod.PUT, new HttpEntity<>(body), String.class);
     }
 
     private JsonNode extractData(ResponseEntity<JsonNode> response) {

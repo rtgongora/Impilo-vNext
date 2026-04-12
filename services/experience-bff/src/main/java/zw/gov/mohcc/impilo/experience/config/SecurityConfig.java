@@ -116,6 +116,10 @@ public class SecurityConfig {
                     .requestMatchers("/internal/v1/admin/**").hasAnyRole(ADMIN_ROLES)
 
                     // ── Finance zone ──────────────────────────────────────
+                    // Patient self-service financials (COSTA-backed); any authenticated user — ABAC should bind cpid to actor.
+                    .requestMatchers("/internal/v1/finance/patient-accounts/**").authenticated()
+                    .requestMatchers("/internal/v1/finance/payment-plans/**").authenticated()
+                    .requestMatchers("/internal/v1/finance/documents/**").authenticated()
                     .requestMatchers("/internal/v1/finance/payer-claims/**").hasAnyRole(PAYER_OPS_ROLES)
                     .requestMatchers("/internal/v1/finance/payer-ops/**").hasAnyRole(PAYER_OPS_ROLES)
                     .requestMatchers("/internal/v1/finance/reconciliation/**").hasAnyRole(PAYER_OPS_ROLES)
