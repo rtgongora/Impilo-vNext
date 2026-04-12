@@ -1,0 +1,266 @@
+package zw.gov.mohcc.impilo.wallet.persistence.entity;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
+
+import java.time.OffsetDateTime;
+import java.util.UUID;
+
+@Entity
+@Table(name = "cards", schema = "mushe")
+public class CardEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", updatable = false, nullable = false)
+    private Long id;
+
+    @Column(name = "card_id", nullable = false, updatable = false, unique = true)
+    private UUID cardId;
+
+    @Column(name = "tenant_id", nullable = false)
+    private UUID tenantId;
+
+    @Column(name = "wallet_id", nullable = false)
+    private UUID walletId;
+
+    @Column(name = "card_number", nullable = false, unique = true, length = 19)
+    private String cardNumber;
+
+    @Column(name = "card_type", nullable = false, length = 16)
+    private String cardType = "DUAL";
+
+    @Column(name = "card_network", length = 16)
+    private String cardNetwork = "ZIMSWITCH";
+
+    @Column(name = "expiry_month", nullable = false)
+    private Integer expiryMonth;
+
+    @Column(name = "expiry_year", nullable = false)
+    private Integer expiryYear;
+
+    @Column(name = "status", nullable = false, length = 16)
+    private String status = "ISSUED";
+
+    @Column(name = "pin_tries_remaining")
+    private Integer pinTriesRemaining = 3;
+
+    @Column(name = "health_applet_version", length = 16)
+    private String healthAppletVersion;
+
+    @Column(name = "health_data_updated_at")
+    private OffsetDateTime healthDataUpdatedAt;
+
+    @Column(name = "ips_version", length = 16)
+    private String ipsVersion;
+
+    @Column(name = "ips_updated_at")
+    private OffsetDateTime ipsUpdatedAt;
+
+    @Column(name = "activated_at")
+    private OffsetDateTime activatedAt;
+
+    @Column(name = "blocked_at")
+    private OffsetDateTime blockedAt;
+
+    @Column(name = "blocked_reason", length = 255)
+    private String blockedReason;
+
+    @Column(name = "replaced_by")
+    private UUID replacedBy;
+
+    @Column(name = "issued_at", nullable = false)
+    private OffsetDateTime issuedAt;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private OffsetDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        OffsetDateTime now = OffsetDateTime.now();
+        if (cardId == null) {
+            cardId = UUID.randomUUID();
+        }
+        if (issuedAt == null) {
+            issuedAt = now;
+        }
+        if (createdAt == null) {
+            createdAt = now;
+        }
+    }
+
+    // --- Getters and Setters ---
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public UUID getCardId() {
+        return cardId;
+    }
+
+    public void setCardId(UUID cardId) {
+        this.cardId = cardId;
+    }
+
+    public UUID getTenantId() {
+        return tenantId;
+    }
+
+    public void setTenantId(UUID tenantId) {
+        this.tenantId = tenantId;
+    }
+
+    public UUID getWalletId() {
+        return walletId;
+    }
+
+    public void setWalletId(UUID walletId) {
+        this.walletId = walletId;
+    }
+
+    public String getCardNumber() {
+        return cardNumber;
+    }
+
+    public void setCardNumber(String cardNumber) {
+        this.cardNumber = cardNumber;
+    }
+
+    public String getCardType() {
+        return cardType;
+    }
+
+    public void setCardType(String cardType) {
+        this.cardType = cardType;
+    }
+
+    public String getCardNetwork() {
+        return cardNetwork;
+    }
+
+    public void setCardNetwork(String cardNetwork) {
+        this.cardNetwork = cardNetwork;
+    }
+
+    public Integer getExpiryMonth() {
+        return expiryMonth;
+    }
+
+    public void setExpiryMonth(Integer expiryMonth) {
+        this.expiryMonth = expiryMonth;
+    }
+
+    public Integer getExpiryYear() {
+        return expiryYear;
+    }
+
+    public void setExpiryYear(Integer expiryYear) {
+        this.expiryYear = expiryYear;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public Integer getPinTriesRemaining() {
+        return pinTriesRemaining;
+    }
+
+    public void setPinTriesRemaining(Integer pinTriesRemaining) {
+        this.pinTriesRemaining = pinTriesRemaining;
+    }
+
+    public String getHealthAppletVersion() {
+        return healthAppletVersion;
+    }
+
+    public void setHealthAppletVersion(String healthAppletVersion) {
+        this.healthAppletVersion = healthAppletVersion;
+    }
+
+    public OffsetDateTime getHealthDataUpdatedAt() {
+        return healthDataUpdatedAt;
+    }
+
+    public void setHealthDataUpdatedAt(OffsetDateTime healthDataUpdatedAt) {
+        this.healthDataUpdatedAt = healthDataUpdatedAt;
+    }
+
+    public String getIpsVersion() {
+        return ipsVersion;
+    }
+
+    public void setIpsVersion(String ipsVersion) {
+        this.ipsVersion = ipsVersion;
+    }
+
+    public OffsetDateTime getIpsUpdatedAt() {
+        return ipsUpdatedAt;
+    }
+
+    public void setIpsUpdatedAt(OffsetDateTime ipsUpdatedAt) {
+        this.ipsUpdatedAt = ipsUpdatedAt;
+    }
+
+    public OffsetDateTime getActivatedAt() {
+        return activatedAt;
+    }
+
+    public void setActivatedAt(OffsetDateTime activatedAt) {
+        this.activatedAt = activatedAt;
+    }
+
+    public OffsetDateTime getBlockedAt() {
+        return blockedAt;
+    }
+
+    public void setBlockedAt(OffsetDateTime blockedAt) {
+        this.blockedAt = blockedAt;
+    }
+
+    public String getBlockedReason() {
+        return blockedReason;
+    }
+
+    public void setBlockedReason(String blockedReason) {
+        this.blockedReason = blockedReason;
+    }
+
+    public UUID getReplacedBy() {
+        return replacedBy;
+    }
+
+    public void setReplacedBy(UUID replacedBy) {
+        this.replacedBy = replacedBy;
+    }
+
+    public OffsetDateTime getIssuedAt() {
+        return issuedAt;
+    }
+
+    public void setIssuedAt(OffsetDateTime issuedAt) {
+        this.issuedAt = issuedAt;
+    }
+
+    public OffsetDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(OffsetDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+}
