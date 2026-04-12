@@ -1,0 +1,687 @@
+# =============================================================================
+# DEVELOPER PORTAL — Partner clients, API keys, certification API (OpenAPI 3.0)
+#
+# Ring 0 primitive for integrator lifecycle. No V11ProbeController in service.
+# =============================================================================
+openapi: "3.0.3"
+
+info:
+  title: Developer Portal — Partner & API key management API
+  version: "1.0.0"
+  description: |
+    Internal developer portal: register clients, issue and rotate API keys,
+    sandbox configuration, certification runs, federation readiness, and
+    discovery metadata.
+
+    Trust headers are enforced by Envoy + TSHEPO companion context.
+  contact:
+    name: Impilo Platform Team
+  license:
+    name: Proprietary
+
+servers:
+  - url: http://localhost:8370
+    description: Local development
+  - url: https://{tenant}.impilo.health/api
+    description: Production (per-tenant)
+    variables:
+      tenant:
+        default: demo
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Developer
+    description: Clients, keys, sandbox, certification, discovery
+
+paths:
+  /internal/v1/developer/clients:
+    post:
+      operationId: developerPortalRegisterClient
+      tags: [Developer]
+      summary: Register a partner client
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterClientRequest"
+      responses:
+        "201":
+          description: Client registered
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    get:
+      operationId: developerPortalListClients
+      tags: [Developer]
+      summary: List clients for the tenant
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+      responses:
+        "200":
+          description: Client list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientListResponse"
+
+  /internal/v1/developer/clients/{client_id}:
+    get:
+      operationId: developerPortalGetClient
+      tags: [Developer]
+      summary: Get client by id
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: client_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Client detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientSummary"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/developer/clients/{client_id}/keys:
+    post:
+      operationId: developerPortalIssueKey
+      tags: [Developer]
+      summary: Issue a new API key for a client
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: client_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IssueKeyRequest"
+      responses:
+        "201":
+          description: Key issued
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    get:
+      operationId: developerPortalListKeys
+      tags: [Developer]
+      summary: List API keys for a client (metadata only)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: client_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Key list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiKeyListResponse"
+
+  /internal/v1/developer/keys/{key_id}/rotate:
+    post:
+      operationId: developerPortalRotateKey
+      tags: [Developer]
+      summary: Rotate an API key
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: key_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RotateKeyRequest"
+      responses:
+        "201":
+          description: New key material envelope
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/developer/clients/{client_id}/sandbox:
+    put:
+      operationId: developerPortalConfigureSandbox
+      tags: [Developer]
+      summary: Configure sandbox JSON for a client
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: client_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                config:
+                  description: Arbitrary JSON object stored as sandbox config
+                  type: object
+                  additionalProperties: true
+      responses:
+        "200":
+          description: Updated configuration summary
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/developer/clients/{client_id}/deprecation-posture:
+    put:
+      operationId: developerPortalUpdateDeprecationPosture
+      tags: [Developer]
+      summary: Update deprecation posture label
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: client_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [posture]
+              properties:
+                posture:
+                  type: string
+      responses:
+        "200":
+          description: Posture updated
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        "400":
+          description: Invalid posture
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/developer/keys/{key_id}:
+    delete:
+      operationId: developerPortalRevokeKey
+      tags: [Developer]
+      summary: Revoke an API key
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: key_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Key revoked
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        "404":
+          description: Unknown key
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/developer/clients/{client_id}/certify:
+    post:
+      operationId: developerPortalRunCertification
+      tags: [Developer]
+      summary: Run certification checks for a client
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: client_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RunCertificationRequest"
+      responses:
+        "201":
+          description: Certification run started or completed summary
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/developer/clients/{client_id}/certifications:
+    get:
+      operationId: developerPortalListCertifications
+      tags: [Developer]
+      summary: List certification history for a client
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: client_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Certification list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CertificationListResponse"
+
+  /internal/v1/developer/certifications/{cert_id}:
+    get:
+      operationId: developerPortalGetCertification
+      tags: [Developer]
+      summary: Get certification detail including report JSON
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: cert_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Certification with embedded report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CertificationDetail"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/developer/clients/{client_id}/federation-readiness:
+    get:
+      operationId: developerPortalFederationReadiness
+      tags: [Developer]
+      summary: Evaluate federation readiness for a client
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: client_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Readiness matrix
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        "404":
+          description: Client not found
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/developer/dashboard/stats:
+    get:
+      operationId: developerPortalDashboardStats
+      tags: [Developer]
+      summary: Aggregate dashboard statistics for the tenant
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+      responses:
+        "200":
+          description: Stats map
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/developer/discovery:
+    get:
+      operationId: developerPortalDiscovery
+      tags: [Developer]
+      summary: Static discovery document for portal routes
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+      responses:
+        "200":
+          description: Service metadata and endpoint catalog
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    TenantId:
+      name: X-Tenant-ID
+      in: header
+      required: true
+      schema:
+        type: string
+    PodId:
+      name: X-Pod-ID
+      in: header
+      required: true
+      schema:
+        type: string
+    RequestId:
+      name: X-Request-ID
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+    CorrelationId:
+      name: X-Correlation-ID
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid authentication
+
+  schemas:
+    ProbeHealthBody:
+      type: object
+      properties:
+        service:
+          type: string
+          example: developer-portal-service
+        status:
+          type: string
+          example: UP
+        tenant_id:
+          type: string
+        pod_id:
+          type: string
+        request_id:
+          type: string
+        correlation_id:
+          type: string
+      additionalProperties: true
+
+    ProbeCommandBody:
+      type: object
+      properties:
+        service:
+          type: string
+        action:
+          type: string
+        request_id:
+          type: string
+        correlation_id:
+          type: string
+        echo:
+          type: object
+          additionalProperties: true
+      additionalProperties: true
+
+    ProbeFederationBody:
+      type: object
+      properties:
+        service:
+          type: string
+        action:
+          type: string
+        pod_id:
+          type: string
+        request_id:
+          type: string
+        correlation_id:
+          type: string
+      additionalProperties: true
+
+    RegisterClientRequest:
+      type: object
+      properties:
+        clientName:
+          type: string
+        description:
+          type: string
+        contactEmail:
+          type: string
+        sandboxEnabled:
+          type: boolean
+
+    IssueKeyRequest:
+      type: object
+      properties:
+        label:
+          type: string
+        scopes:
+          type: array
+          items:
+            type: string
+        expiresInDays:
+          type: integer
+
+    RotateKeyRequest:
+      type: object
+      properties:
+        label:
+          type: string
+        expiresInDays:
+          type: integer
+
+    RunCertificationRequest:
+      type: object
+      properties:
+        triggeredBy:
+          type: string
+
+    ClientSummary:
+      type: object
+      properties:
+        client_id:
+          type: string
+          format: uuid
+        client_name:
+          type: string
+        description:
+          type: string
+        contact_email:
+          type: string
+        status:
+          type: string
+        sandbox_enabled:
+          type: boolean
+        deprecation_posture:
+          type: string
+        created_at:
+          type: string
+
+    ClientListResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ClientSummary"
+        count:
+          type: integer
+
+    ApiKeyListResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              key_id:
+                type: string
+                format: uuid
+              key_prefix:
+                type: string
+              label:
+                type: string
+              status:
+                type: string
+              created_at:
+                type: string
+        count:
+          type: integer
+
+    CertificationSummary:
+      type: object
+      properties:
+        certification_id:
+          type: string
+          format: uuid
+        client_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+        result:
+          type: string
+        checks_total:
+          type: integer
+        checks_passed:
+          type: integer
+        checks_failed:
+          type: integer
+        triggered_by:
+          type: string
+        started_at:
+          type: string
+          nullable: true
+        completed_at:
+          type: string
+          nullable: true
+
+    CertificationDetail:
+      allOf:
+        - $ref: "#/components/schemas/CertificationSummary"
+        - type: object
+          properties:
+            report:
+              description: Raw certification report JSON string
+              type: string
+
+    CertificationListResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/CertificationSummary"
+        count:
+          type: integer

@@ -1,0 +1,369 @@
+# =============================================================================
+# IDENTITY ASSURANCE — Attestations & risk assessment API (OpenAPI 3.0)
+#
+# Ring 0 primitive for device/identity signals and risk scoring.
+# No V11ProbeController in this service.
+# =============================================================================
+openapi: "3.0.3"
+
+info:
+  title: Identity Assurance — Attestations & risk API
+  version: "1.0.0"
+  description: |
+    Internal identity assurance: record attestations (device binding, biometric,
+    OTP, etc.) and persist quantitative risk assessments with recommendations.
+
+    Uses shared-kernel `TrustContext` / `ApiResponse` envelopes.
+  contact:
+    name: Impilo Platform Team
+  license:
+    name: Proprietary
+
+servers:
+  - url: http://localhost:8201
+    description: Local development
+  - url: https://{tenant}.impilo.health/api
+    description: Production (per-tenant)
+    variables:
+      tenant:
+        default: demo
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Attestations
+    description: Record and list attestations
+  - name: Risk
+    description: Risk assessments
+
+paths:
+  /internal/v1/attestations:
+    post:
+      operationId: identityAssuranceRecordAttestation
+      tags: [Attestations]
+      summary: Record a new attestation
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecordAttestationRequest"
+      responses:
+        "201":
+          description: Attestation stored
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseAttestation"
+    get:
+      operationId: identityAssuranceListAttestations
+      tags: [Attestations]
+      summary: List attestations for the current tenant
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+      responses:
+        "200":
+          description: Attestation collection
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseAttestationList"
+
+  /internal/v1/risk/assess:
+    post:
+      operationId: identityAssuranceAssessRisk
+      tags: [Risk]
+      summary: Create a persisted risk assessment
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssessRiskRequest"
+      responses:
+        "201":
+          description: Assessment stored
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseRiskAssessment"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    TenantId:
+      name: X-Tenant-ID
+      in: header
+      required: true
+      schema:
+        type: string
+    PodId:
+      name: X-Pod-ID
+      in: header
+      required: true
+      schema:
+        type: string
+    RequestId:
+      name: X-Request-ID
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+    CorrelationId:
+      name: X-Correlation-ID
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid authentication
+
+  schemas:
+    ProbeHealthBody:
+      type: object
+      properties:
+        service:
+          type: string
+          example: identity-assurance-service
+        status:
+          type: string
+          example: UP
+        tenant_id:
+          type: string
+        pod_id:
+          type: string
+        request_id:
+          type: string
+        correlation_id:
+          type: string
+      additionalProperties: true
+
+    ProbeCommandBody:
+      type: object
+      properties:
+        service:
+          type: string
+        action:
+          type: string
+        request_id:
+          type: string
+        correlation_id:
+          type: string
+        echo:
+          type: object
+          additionalProperties: true
+      additionalProperties: true
+
+    ProbeFederationBody:
+      type: object
+      properties:
+        service:
+          type: string
+        action:
+          type: string
+        pod_id:
+          type: string
+        request_id:
+          type: string
+        correlation_id:
+          type: string
+      additionalProperties: true
+
+    RecordAttestationRequest:
+      type: object
+      required: [attestationType]
+      properties:
+        attestationType:
+          $ref: "#/components/schemas/AttestationType"
+        deviceFingerprint:
+          type: string
+        evidence:
+          type: string
+        outcome:
+          $ref: "#/components/schemas/AttestationOutcome"
+        confidence:
+          type: number
+
+    AssessRiskRequest:
+      type: object
+      required: [contextType, riskScore, riskLevel, factors, recommendation]
+      properties:
+        contextType:
+          type: string
+        contextId:
+          type: string
+        riskScore:
+          type: number
+        riskLevel:
+          $ref: "#/components/schemas/RiskLevel"
+        factors:
+          type: string
+          description: JSON-encoded factor list stored as jsonb
+        recommendation:
+          $ref: "#/components/schemas/Recommendation"
+
+    AttestationType:
+      type: string
+      enum:
+        - DEVICE_BINDING
+        - BIOMETRIC
+        - OTP
+        - SMARTCARD
+        - PIN
+
+    AttestationOutcome:
+      type: string
+      enum:
+        - PENDING
+        - VERIFIED
+        - FAILED
+        - EXPIRED
+
+    RiskLevel:
+      type: string
+      enum:
+        - LOW
+        - MEDIUM
+        - HIGH
+        - CRITICAL
+
+    Recommendation:
+      type: string
+      enum:
+        - ALLOW
+        - STEP_UP
+        - DENY
+        - REVIEW
+
+    AttestationEntity:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        tenantId:
+          type: string
+          format: uuid
+        actorId:
+          type: string
+        attestationType:
+          $ref: "#/components/schemas/AttestationType"
+        deviceFingerprint:
+          type: string
+        evidence:
+          type: string
+        outcome:
+          $ref: "#/components/schemas/AttestationOutcome"
+        confidence:
+          type: number
+        expiresAt:
+          type: string
+          format: date-time
+          nullable: true
+        recordedBy:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    RiskAssessmentEntity:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        tenantId:
+          type: string
+          format: uuid
+        actorId:
+          type: string
+        contextType:
+          type: string
+        contextId:
+          type: string
+        riskScore:
+          type: number
+        riskLevel:
+          $ref: "#/components/schemas/RiskLevel"
+        factors:
+          type: string
+        recommendation:
+          $ref: "#/components/schemas/Recommendation"
+        assessedBy:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    ApiResponseAttestation:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: "#/components/schemas/AttestationEntity"
+        error:
+          nullable: true
+        correlationId:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    ApiResponseAttestationList:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/AttestationEntity"
+        error:
+          nullable: true
+        correlationId:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    ApiResponseRiskAssessment:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: "#/components/schemas/RiskAssessmentEntity"
+        error:
+          nullable: true
+        correlationId:
+          type: string
+        timestamp:
+          type: string
+          format: date-time

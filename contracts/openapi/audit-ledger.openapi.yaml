@@ -1,0 +1,359 @@
+# =============================================================================
+# AUDIT LEDGER — Append-only audit chain API (OpenAPI 3.0)
+#
+# Ring 0 primitive: tamper-evident audit records and chain verification.
+# No V11ProbeController in this service.
+# =============================================================================
+openapi: "3.0.3"
+
+info:
+  title: Audit Ledger — Append-only audit chain API
+  version: "1.0.0"
+  description: |
+    Internal audit ledger: append structured audit records, fetch by id,
+    paginate by tenant, query by correlation id, and verify Merkle-style chain
+    integrity for a sequence range.
+
+    Trust headers are enforced by Envoy + TSHEPO companion context.
+  contact:
+    name: Impilo Platform Team
+  license:
+    name: Proprietary
+
+servers:
+  - url: http://localhost:8350
+    description: Local development
+  - url: https://{tenant}.impilo.health/api
+    description: Production (per-tenant)
+    variables:
+      tenant:
+        default: demo
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Audit
+    description: Records, query, and chain verification
+
+paths:
+  /internal/v1/audit/records:
+    get:
+      operationId: auditLedgerListRecords
+      tags: [Audit]
+      summary: Paginated list of audit records for the tenant
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 50
+      responses:
+        "200":
+          description: Page of audit records
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuditRecordPageResponse"
+    post:
+      operationId: auditLedgerAppendRecord
+      tags: [Audit]
+      summary: Append a new audit record
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AppendAuditRecordRequest"
+      responses:
+        "201":
+          description: Record created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuditRecordResponse"
+
+  /internal/v1/audit/records/{record_id}:
+    get:
+      operationId: auditLedgerGetRecord
+      tags: [Audit]
+      summary: Get audit record by id
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: record_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Audit record
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuditRecordResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/audit/query:
+    get:
+      operationId: auditLedgerQueryByCorrelation
+      tags: [Audit]
+      summary: List records matching a correlation id
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: correlation_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Matching records
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/AuditRecordResponse"
+                  count:
+                    type: integer
+
+  /internal/v1/audit/chain/verify:
+    get:
+      operationId: auditLedgerVerifyChain
+      tags: [Audit]
+      summary: Verify chain integrity between sequence bounds
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: from_seq
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: to_seq
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1000
+      responses:
+        "200":
+          description: Verification outcome
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  valid:
+                    type: boolean
+                  from_seq:
+                    type: integer
+                  to_seq:
+                    type: integer
+                  tenant_id:
+                    type: string
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    TenantId:
+      name: X-Tenant-ID
+      in: header
+      required: true
+      schema:
+        type: string
+    PodId:
+      name: X-Pod-ID
+      in: header
+      required: true
+      schema:
+        type: string
+    RequestId:
+      name: X-Request-ID
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+    CorrelationId:
+      name: X-Correlation-ID
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid authentication
+
+  schemas:
+    ProbeHealthBody:
+      type: object
+      properties:
+        service:
+          type: string
+          example: audit-ledger-service
+        status:
+          type: string
+          example: UP
+        tenant_id:
+          type: string
+        pod_id:
+          type: string
+        request_id:
+          type: string
+        correlation_id:
+          type: string
+      additionalProperties: true
+
+    ProbeCommandBody:
+      type: object
+      properties:
+        service:
+          type: string
+        action:
+          type: string
+        request_id:
+          type: string
+        correlation_id:
+          type: string
+        echo:
+          type: object
+          additionalProperties: true
+      additionalProperties: true
+
+    ProbeFederationBody:
+      type: object
+      properties:
+        service:
+          type: string
+        action:
+          type: string
+        pod_id:
+          type: string
+        request_id:
+          type: string
+        correlation_id:
+          type: string
+      additionalProperties: true
+
+    AppendAuditRecordRequest:
+      type: object
+      required: [correlationId, actorId, actorType, action, resourceType]
+      properties:
+        correlationId:
+          type: string
+          format: uuid
+        actorId:
+          type: string
+        actorType:
+          type: string
+        action:
+          type: string
+        resourceType:
+          type: string
+        resourceId:
+          type: string
+        outcome:
+          type: string
+        detail:
+          type: object
+          additionalProperties: true
+
+    AuditRecordResponse:
+      type: object
+      properties:
+        recordId:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        sequenceNum:
+          type: integer
+          format: int64
+        correlationId:
+          type: string
+          format: uuid
+        actorId:
+          type: string
+        actorType:
+          type: string
+        action:
+          type: string
+        resourceType:
+          type: string
+        resourceId:
+          type: string
+        outcome:
+          type: string
+        detail:
+          description: Parsed JSON object when valid; otherwise raw string
+        occurredAt:
+          type: string
+          format: date-time
+        prevHash:
+          type: string
+        entryHash:
+          type: string
+
+    AuditRecordPageResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/AuditRecordResponse"
+        cursor:
+          type: string
+          nullable: true
+        limit:
+          type: integer
+        total_elements:
+          type: integer
+          format: int64
+        has_more:
+          type: boolean
