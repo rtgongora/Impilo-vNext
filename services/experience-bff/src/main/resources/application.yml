@@ -70,6 +70,11 @@ impilo:
     surveillance-base-url: ${SURVEILLANCE_BASE_URL:http://localhost:8180}
     campaigns-base-url: ${CAMPAIGNS_BASE_URL:http://localhost:8190}
     indawo-base-url: ${INDAWO_BASE_URL:http://localhost:8150}
+    tshepo-identity-base-url: ${TSHEPO_IDENTITY_BASE_URL:http://localhost:8181}
+    tshepo-keys-base-url: ${TSHEPO_KEYS_BASE_URL:http://localhost:8184}
+    tshepo-offline-base-url: ${TSHEPO_OFFLINE_BASE_URL:http://localhost:8185}
+    zibo-base-url: ${ZIBO_BASE_URL:http://localhost:8085}
+    ubomi-base-url: ${UBOMI_BASE_URL:http://localhost:8087}
     orthanc-base-url: ${ORTHANC_BASE_URL:http://localhost:8042}
     orthanc-dicomweb-url: ${ORTHANC_DICOMWEB_URL:http://localhost:8042/dicom-web}
     data-governance-base-url: ${DATA_GOVERNANCE_BASE_URL:http://localhost:8220}

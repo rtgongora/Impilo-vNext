@@ -67,7 +67,12 @@ public class ServiceClientConfig {
             // Health OS §7: Trust Layer (TSHEPO cluster)
             String tshepoAuthzBaseUrl,
             String tshepoConsentBaseUrl,
-            String tshepoAuditBaseUrl
+            String tshepoAuditBaseUrl,
+            String tshepoIdentityBaseUrl,
+            String tshepoKeysBaseUrl,
+            String tshepoOfflineBaseUrl,
+            String ziboBaseUrl,
+            String ubomiBaseUrl
     ) {
         public ServiceEndpoints(
                 String pctBaseUrl,
@@ -122,6 +127,11 @@ public class ServiceClientConfig {
                     null,
                     null,
                     null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
                     null
             );
         }
@@ -159,6 +169,11 @@ public class ServiceClientConfig {
             if (tshepoAuthzBaseUrl == null) tshepoAuthzBaseUrl = "http://localhost:8081";
             if (tshepoConsentBaseUrl == null) tshepoConsentBaseUrl = "http://localhost:8182";
             if (tshepoAuditBaseUrl == null) tshepoAuditBaseUrl = "http://localhost:8183";
+            if (tshepoIdentityBaseUrl == null) tshepoIdentityBaseUrl = "http://localhost:8181";
+            if (tshepoKeysBaseUrl == null) tshepoKeysBaseUrl = "http://localhost:8184";
+            if (tshepoOfflineBaseUrl == null) tshepoOfflineBaseUrl = "http://localhost:8185";
+            if (ziboBaseUrl == null) ziboBaseUrl = "http://localhost:8085";
+            if (ubomiBaseUrl == null) ubomiBaseUrl = "http://localhost:8087";
         }
     }
 
