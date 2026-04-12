@@ -78,6 +78,7 @@ HC parity ingest and read-backs live on **`wellness-service`** (`WellnessHealthC
 |-------|---------|
 | Wellness HTTP + Postgres (Flyway, real JDBC) | From `services/`: `mvn -pl wellness-service test` — `WellnessCitizenApiDockerIntegrationTest` runs when **Docker** is available; otherwise it is **skipped** (no mocks). |
 | Full stack (BFF + wellness + UI) | `docker compose -f compose/experience/docker-compose.yml up` then open Experience UI on port **3020** (see compose file). |
+| Playwright against **real** compose (no `page.route`) | From `ui/experience/`: `PLAYWRIGHT_COMPOSE_E2E=1 npm run e2e -- citizen-life-compose.spec.ts --project=chromium` — requires compose **up** first; uses `e2e/citizen-life-compose.spec.ts`. |
 
 ---
 
@@ -88,3 +89,4 @@ HC parity ingest and read-backs live on **`wellness-service`** (`WellnessHealthC
 | 2026-04-12 | Initial roadmap + Wave 0 contract pointers + HC wrap-up checklist. |
 | 2026-04-12 | Wave 1: BFF `WellnessServiceProxyControllerTest` + Playwright `citizen-life-smoke.spec.ts`; quality command table. |
 | 2026-04-12 | Removed mock-based BFF/E2E tests; monitoring path aligned BFF↔wellness; Experience devices page calls real APIs; `WellnessCitizenApiDockerIntegrationTest` (Testcontainers Postgres, `@EnabledIfDockerAvailable`). |
+| 2026-04-12 | Compose dev: `WELLNESS_ALLOW_ANONYMOUS` + `IMPILO_SECURITY_ALLOW_ANONYMOUS`; Playwright `citizen-life-compose.spec.ts` + `PLAYWRIGHT_COMPOSE_E2E` webServer skip. |

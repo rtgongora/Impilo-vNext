@@ -17,10 +17,13 @@ export default defineConfig({
     { name: "firefox", use: { ...devices["Desktop Firefox"] } },
     { name: "mobile-chrome", use: { ...devices["Pixel 5"] } },
   ],
-  webServer: {
-    command: "npm run dev",
-    url: "http://localhost:3020",
-    reuseExistingServer: !process.env.CI,
-    timeout: 120000,
-  },
+  // When PLAYWRIGHT_COMPOSE_E2E=1, assume Experience UI is already up (e.g. compose/experience/docker-compose.yml).
+  webServer: process.env.PLAYWRIGHT_COMPOSE_E2E
+    ? undefined
+    : {
+        command: "npm run dev",
+        url: "http://localhost:3020",
+        reuseExistingServer: !process.env.CI,
+        timeout: 120000,
+      },
 });

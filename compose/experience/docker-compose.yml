@@ -37,6 +37,8 @@ services:
       DB_PASSWORD: impilo
       SERVER_PORT: "8161"
       SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
+      # Dev compose: no Keycloak JWT — aligns with OAuth2 autoconfig exclusion (local / Playwright only).
+      WELLNESS_ALLOW_ANONYMOUS: "true"
     ports:
       - "8161:8161"
     depends_on:
@@ -79,6 +81,8 @@ services:
       ORTHANC_DICOMWEB_URL: http://host.docker.internal:8042/dicom-web
       FHIR_BASE_URL: http://host.docker.internal:8090/fhir
       WELLNESS_SERVICE_BASE_URL: http://wellness-service:8161
+      # Dev compose: no Keycloak JWT — required when OAuth2 RS autoconfig is excluded.
+      IMPILO_SECURITY_ALLOW_ANONYMOUS: "true"
     ports:
       - "8160:8160"
     depends_on:
