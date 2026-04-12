@@ -26,6 +26,8 @@ const UI_ROOT = path.join(REPO_ROOT, 'ui/experience/src');
 /** Explicit OpenAPI contract filename (under contracts/openapi) per maven module. */
 const OPENAPI_BY_MODULE = {
   'butano-fhir': 'butano.custom.openapi.yaml',
+  /** HAPI FHIR façade module shares the same contract file as butano-fhir. */
+  'butano-service': 'butano.custom.openapi.yaml',
   'card-print-agent': 'card-print.openapi.yaml',
   'campaigns-service': 'campaigns.openapi.yaml',
   'clinical-knowledge-platform-service': 'clinical-knowledge-platform.openapi.yaml',
@@ -85,6 +87,8 @@ const BFF_CLIENT_BY_MODULE = {
   'tuso-service': 'TusoServiceClient',
   'varapi-service': 'VarapiServiceClient',
   'vito-service': 'VitoServiceClient',
+  'integration-hub': 'IntegrationHubServiceClient',
+  'credential-verification-service': 'CredentialServiceClient',
 };
 
 /** BFF proxy path (no dedicated Feign client) — dimension partial credit. */
@@ -93,6 +97,11 @@ const BFF_PROXY_BY_MODULE = {
   'campaigns-service': 'PublicHealthController',
   'indawo-service': 'PublicHealthController',
   'wellness-service': 'WellnessServiceProxyController',
+  /** RestTemplate / shared Feign — substring must appear in Experience BFF Java sources. */
+  'notification-service': 'notificationBaseUrl',
+  'data-governance-service': 'dataGovernanceBaseUrl',
+  'landela-adapter-service': 'landelaBaseUrl',
+  'product-registry-service': 'ProductRegistryController',
 };
 
 function walkFiles(dir, filter = () => true, acc = []) {
@@ -132,6 +141,23 @@ function countKafkaListeners(javaFiles) {
     if (t.includes('@KafkaListener')) n += (t.match(/@KafkaListener/g) || []).length;
   }
   return n;
+}
+
+/** Producer-side signals: dedicated outbox publisher classes and direct KafkaTemplate sends. */
+function countKafkaPublishSignals(javaFiles) {
+  let n = 0;
+  for (const f of javaFiles) {
+    const t = readText(f);
+    if (/public\s+class\s+\w*OutboxPublisher\b/.test(t)) n += 2;
+    if (/\bkafkaTemplate\.send\s*\(/i.test(t)) n += 1;
+  }
+  return n;
+}
+
+function resolveBffProxy(module, controllerBlob) {
+  const hint = BFF_PROXY_BY_MODULE[module];
+  if (!hint) return null;
+  return controllerBlob.includes(hint) ? hint : null;
 }
 
 function pomHasSpringdoc(pomPath) {
@@ -277,7 +303,9 @@ function main() {
     const javaFiles = walkFiles(javaMain, (p) => p.endsWith('.java'));
     const applicationClass = findApplicationClass(javaMain);
     const flyway = countFlywayMigrations(serviceRoot);
-    const kafkaN = countKafkaListeners(javaFiles);
+    const kafkaListeners = countKafkaListeners(javaFiles);
+    const kafkaPublish = countKafkaPublishSignals(javaFiles);
+    const kafkaN = kafkaListeners + kafkaPublish;
     const openapiFile = guessOpenApiFile(module);
     const hasOpenapiContract = openapiFile && fs.existsSync(path.join(OPENAPI_DIR, openapiFile));
     const hasSpringdoc = fs.existsSync(pomPath) && pomHasSpringdoc(pomPath);
@@ -286,7 +314,7 @@ function main() {
     const expectedClient = BFF_CLIENT_BY_MODULE[module];
     const clientExists = expectedClient ? clientNames.has(expectedClient) : false;
     const usedInController = expectedClient ? controllerBlob.includes(expectedClient) : false;
-    const proxy = BFF_PROXY_BY_MODULE[module] || null;
+    const proxy = resolveBffProxy(module, controllerBlob);
 
     const terms = uiSearchTerms(s);
     const ui = countUiHits(terms);
@@ -353,7 +381,9 @@ function main() {
         },
         integration_kafka: {
           level: kafkaLevel,
-          kafka_listener_count: kafkaN,
+          kafka_listener_count: kafkaListeners,
+          kafka_publish_signals: kafkaPublish,
+          kafka_combined_score: kafkaN,
         },
         experience_hooks: {
           level: uiHooksLevel,
