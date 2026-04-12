@@ -480,6 +480,15 @@ public class PolicyEngine {
         if (request.correlationId() != null) {
             headers.put(TrustHeaders.CORRELATION_ID, request.correlationId().toString());
         }
+        if (request.providerId() != null) {
+            headers.put(TrustHeaders.PROVIDER_ID, request.providerId());
+        }
+        if (request.subjectId() != null) {
+            headers.put(TrustHeaders.SUBJECT_ID, request.subjectId());
+        }
+        if (request.assuranceLevel() != null) {
+            headers.put(TrustHeaders.ASSURANCE_LEVEL, request.assuranceLevel());
+        }
 
         if (obligations != null) {
             if (obligations.maxScope() != null) {
@@ -520,9 +529,12 @@ public class PolicyEngine {
         persistDecision(request, "DENY", riskScore, errorCode, null, null, startTime);
         auditPublisher.queueAuditEvent(request, "DENY", riskScore, errorCode);
 
-        log.warn("DENY: actor={}, action={}, resource={}, reason={}, correlation={}",
+        log.warn("DENY: actor={}, action={}, resource={}, reason={}, correlation={}, " +
+                "provider={}, department={}, ward={}, programme={}, subject={}, assurance={}",
                 request.actorId(), request.action(), request.resourceType(),
-                errorCode, request.correlationId());
+                errorCode, request.correlationId(),
+                request.providerId(), request.departmentId(), request.wardId(),
+                request.programmeId(), request.subjectId(), request.assuranceLevel());
 
         return AuthzResponse.deny(errorCode, errorMessage, riskScore);
     }
@@ -559,6 +571,12 @@ public class PolicyEngine {
         entry.setDeviceFingerprint(request.deviceFingerprint());
         entry.setFacilityId(request.facilityId());
         entry.setWorkspaceId(request.workspaceId());
+        entry.setProviderId(request.providerId());
+        entry.setDepartmentId(request.departmentId());
+        entry.setWardId(request.wardId());
+        entry.setProgrammeId(request.programmeId());
+        entry.setSubjectId(request.subjectId());
+        entry.setAssuranceLevel(request.assuranceLevel());
 
         if (obligations != null) {
             try {

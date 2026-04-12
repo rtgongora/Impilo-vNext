@@ -76,6 +76,12 @@ public class ExtAuthzGrpcService extends AuthorizationGrpc.AuthorizationImplBase
             String facilityIdStr = headers.getOrDefault(TrustHeaders.FACILITY_ID, "");
             String workspaceIdStr = headers.getOrDefault(TrustHeaders.WORKSPACE_ID, "");
             String shiftId = headers.getOrDefault(TrustHeaders.SHIFT_ID, "");
+            String providerId = headers.getOrDefault(TrustHeaders.PROVIDER_ID, "");
+            String departmentId = headers.getOrDefault(TrustHeaders.DEPARTMENT_ID, "");
+            String wardId = headers.getOrDefault(TrustHeaders.WARD_ID, "");
+            String programmeId = headers.getOrDefault(TrustHeaders.PROGRAMME_ID, "");
+            String subjectId = headers.getOrDefault(TrustHeaders.SUBJECT_ID, "");
+            String assuranceLevel = headers.getOrDefault(TrustHeaders.ASSURANCE_LEVEL, "");
             String authorization = headers.getOrDefault("authorization", "");
 
             // Parse UUIDs
@@ -125,7 +131,10 @@ public class ExtAuthzGrpcService extends AuthorizationGrpc.AuthorizationImplBase
                     tenantId, actorId, actorType, roles, purposeOfUse,
                     deviceFingerprint, correlationId, facilityId, workspaceId,
                     shiftId, method, path, action, resourceType, resourceId,
-                    loaLevel, sessionId, authorization
+                    loaLevel, sessionId, authorization,
+                    emptyToNull(providerId), emptyToNull(departmentId),
+                    emptyToNull(wardId), emptyToNull(programmeId),
+                    emptyToNull(subjectId), emptyToNull(assuranceLevel)
             );
 
             // Validate mandatory headers
@@ -229,6 +238,10 @@ public class ExtAuthzGrpcService extends AuthorizationGrpc.AuthorizationImplBase
         } catch (IllegalArgumentException e) {
             return null;
         }
+    }
+
+    private String emptyToNull(String value) {
+        return (value == null || value.isBlank()) ? null : value;
     }
 
     private String sanitize(String input) {

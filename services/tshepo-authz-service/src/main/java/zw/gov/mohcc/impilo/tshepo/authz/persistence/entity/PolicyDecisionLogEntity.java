@@ -67,6 +67,25 @@ public class PolicyDecisionLogEntity {
     @Column(name = "workspace_id")
     private UUID workspaceId;
 
+    // ── 10-dimension access control fields (doctrine alignment) ──────
+    @Column(name = "provider_id")
+    private String providerId;
+
+    @Column(name = "department_id")
+    private String departmentId;
+
+    @Column(name = "ward_id")
+    private String wardId;
+
+    @Column(name = "programme_id")
+    private String programmeId;
+
+    @Column(name = "subject_id")
+    private String subjectId;
+
+    @Column(name = "assurance_level", length = 16)
+    private String assuranceLevel;
+
     @Column(name = "evaluated_at", nullable = false, updatable = false)
     private Instant evaluatedAt;
 
@@ -127,6 +146,24 @@ public class PolicyDecisionLogEntity {
 
     public UUID getWorkspaceId() { return workspaceId; }
     public void setWorkspaceId(UUID workspaceId) { this.workspaceId = workspaceId; }
+
+    public String getProviderId() { return providerId; }
+    public void setProviderId(String providerId) { this.providerId = providerId; }
+
+    public String getDepartmentId() { return departmentId; }
+    public void setDepartmentId(String departmentId) { this.departmentId = departmentId; }
+
+    public String getWardId() { return wardId; }
+    public void setWardId(String wardId) { this.wardId = wardId; }
+
+    public String getProgrammeId() { return programmeId; }
+    public void setProgrammeId(String programmeId) { this.programmeId = programmeId; }
+
+    public String getSubjectId() { return subjectId; }
+    public void setSubjectId(String subjectId) { this.subjectId = subjectId; }
+
+    public String getAssuranceLevel() { return assuranceLevel; }
+    public void setAssuranceLevel(String assuranceLevel) { this.assuranceLevel = assuranceLevel; }
 
     public Instant getEvaluatedAt() { return evaluatedAt; }
     public void setEvaluatedAt(Instant evaluatedAt) { this.evaluatedAt = evaluatedAt; }

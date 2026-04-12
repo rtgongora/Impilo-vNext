@@ -80,6 +80,12 @@ public class AuthorizeController {
         String facilityIdStr = request.getHeader(TrustHeaders.FACILITY_ID);
         String workspaceIdStr = request.getHeader(TrustHeaders.WORKSPACE_ID);
         String shiftId = request.getHeader(TrustHeaders.SHIFT_ID);
+        String providerId = request.getHeader(TrustHeaders.PROVIDER_ID);
+        String departmentId = request.getHeader(TrustHeaders.DEPARTMENT_ID);
+        String wardId = request.getHeader(TrustHeaders.WARD_ID);
+        String programmeId = request.getHeader(TrustHeaders.PROGRAMME_ID);
+        String subjectId = request.getHeader(TrustHeaders.SUBJECT_ID);
+        String assuranceLevel = request.getHeader(TrustHeaders.ASSURANCE_LEVEL);
         String authorization = request.getHeader("authorization");
 
         // Parse UUIDs
@@ -140,11 +146,15 @@ public class AuthorizeController {
                 deviceFingerprint, correlationId, facilityId, workspaceId,
                 shiftId, originalMethod, originalPath, action, resourceType,
                 resourceId, loaLevel, sessionId,
-                authorization != null ? authorization : ""
+                authorization != null ? authorization : "",
+                providerId, departmentId, wardId, programmeId,
+                subjectId, assuranceLevel
         );
 
-        log.debug("ext_authz check: actor={}, action={}, resource={}, purpose={}, correlation={}",
-                actorId, action, resourceType, purposeOfUse, correlationId);
+        log.debug("ext_authz check: actor={}, action={}, resource={}, purpose={}, correlation={}, " +
+                "provider={}, department={}, ward={}, programme={}, subject={}, assurance={}",
+                actorId, action, resourceType, purposeOfUse, correlationId,
+                providerId, departmentId, wardId, programmeId, subjectId, assuranceLevel);
 
         // Evaluate policy
         AuthzResponse authzResponse = policyEngine.evaluate(authzRequest);

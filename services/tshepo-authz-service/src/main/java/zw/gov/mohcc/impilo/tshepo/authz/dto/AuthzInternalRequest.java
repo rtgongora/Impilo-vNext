@@ -25,7 +25,14 @@ public record AuthzInternalRequest(
         String resourceId,
         int loaLevel,
         String sessionId,
-        String bearerToken
+        String bearerToken,
+        // ── 10-dimension access control fields (doctrine alignment) ──────
+        String providerId,
+        String departmentId,
+        String wardId,
+        String programmeId,
+        String subjectId,
+        String assuranceLevel
 ) {
     /**
      * Derive a human-readable action from method + path.

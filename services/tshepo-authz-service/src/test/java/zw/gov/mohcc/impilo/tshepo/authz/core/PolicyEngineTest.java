@@ -80,7 +80,8 @@ class PolicyEngineTest {
                 tenantId, ACTOR_ID, actorType, roles, purposeOfUse,
                 deviceFingerprint, CORRELATION_ID, facilityId, workspaceId,
                 null, "GET", "/v1/patients", action, resourceType, resourceId,
-                loaLevel, "session-abc", null
+                loaLevel, "session-abc", null,
+                null, null, null, null, null, null
         );
     }
 
