@@ -37,18 +37,18 @@ public class HoldService {
 
     private final HoldRepository holdRepository;
     private final WalletRepository walletRepository;
-    private final WalletService walletService;
+    private final TransactionRepository transactionRepository;
     private final EventOutboxRepository eventOutboxRepository;
     private final ObjectMapper objectMapper;
 
     public HoldService(HoldRepository holdRepository,
                        WalletRepository walletRepository,
-                       WalletService walletService,
+                       TransactionRepository transactionRepository,
                        EventOutboxRepository eventOutboxRepository,
                        ObjectMapper objectMapper) {
         this.holdRepository = holdRepository;
         this.walletRepository = walletRepository;
-        this.walletService = walletService;
+        this.transactionRepository = transactionRepository;
         this.eventOutboxRepository = eventOutboxRepository;
         this.objectMapper = objectMapper;
     }
@@ -127,18 +127,22 @@ public class HoldService {
         hold.setCapturedAt(OffsetDateTime.now());
         hold = holdRepository.save(hold);
 
-        // Create the debit transaction for the capture
-        walletService.debit(
-                hold.getWalletId(),
-                BigDecimal.ZERO, // Balance already adjusted above; record the txn only
-                "HOLD_CAPTURE",
-                null,
-                hold.getReference(),
-                "Hold captured: " + hold.getReason(),
-                null,
-                null,
-                null,
-                "hold-capture:" + holdId);
+        // Create the debit transaction record for the capture
+        TransactionEntity txn = new TransactionEntity();
+        txn.setTenantId(wallet.getTenantId());
+        txn.setWalletId(hold.getWalletId());
+        txn.setTxnType("HOLD_CAPTURE");
+        txn.setDirection("DEBIT");
+        txn.setAmount(hold.getAmount());
+        txn.setFee(BigDecimal.ZERO);
+        txn.setNetAmount(hold.getAmount());
+        txn.setCurrency(wallet.getCurrency());
+        txn.setBalanceAfter(wallet.getBalance());
+        txn.setReference(hold.getReference());
+        txn.setDescription("Hold captured: " + hold.getReason());
+        txn.setStatus("COMPLETED");
+        txn.setIdempotencyKey("hold-capture:" + holdId);
+        transactionRepository.save(txn);
 
         log.info("Captured hold: holdId={} walletId={} amount={}",
                 holdId, hold.getWalletId(), hold.getAmount());

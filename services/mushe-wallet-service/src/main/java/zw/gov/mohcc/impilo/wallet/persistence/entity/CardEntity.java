@@ -47,6 +47,9 @@ public class CardEntity {
     @Column(name = "status", nullable = false, length = 16)
     private String status = "ISSUED";
 
+    @Column(name = "pin_hash", length = 255)
+    private String pinHash;
+
     @Column(name = "pin_tries_remaining")
     private Integer pinTriesRemaining = 3;
 
@@ -174,6 +177,14 @@ public class CardEntity {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getPinHash() {
+        return pinHash;
+    }
+
+    public void setPinHash(String pinHash) {
+        this.pinHash = pinHash;
     }
 
     public Integer getPinTriesRemaining() {
