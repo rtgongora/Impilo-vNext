@@ -2,6 +2,8 @@ server:
   port: 8160
 
 spring:
+  config:
+    import: optional:classpath:registry-downstream-services.yml
   application:
     name: experience-bff
   datasource:

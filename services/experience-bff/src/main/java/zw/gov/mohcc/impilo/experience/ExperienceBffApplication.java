@@ -5,10 +5,11 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import zw.gov.mohcc.impilo.experience.config.ClinicalPlatformProperties;
+import zw.gov.mohcc.impilo.experience.config.RegistryDownstreamProperties;
 
 @SpringBootApplication
 @EnableScheduling
-@EnableConfigurationProperties(ClinicalPlatformProperties.class)
+@EnableConfigurationProperties({ClinicalPlatformProperties.class, RegistryDownstreamProperties.class})
 public class ExperienceBffApplication {
 
     public static void main(String[] args) {

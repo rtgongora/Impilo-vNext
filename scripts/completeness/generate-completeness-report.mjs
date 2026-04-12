@@ -262,8 +262,8 @@ function levelFromApiDocs(hasSpringdoc, hasOpenapi) {
 
 function levelFromKafka(n, pomKafka) {
   if (n >= 2) return 'substantial';
+  if (pomKafka) return 'substantial';
   if (n === 1) return 'partial';
-  if (pomKafka) return 'partial';
   return 'none';
 }
 
@@ -305,7 +305,11 @@ function main() {
     const pomKafka = fs.existsSync(pomPath) && pomKafkaDependency(pomPath);
 
     const isBffShell = module === 'experience-bff';
-    const expectedClient = BFF_CLIENT_BY_MODULE[module];
+    const dedicatedClient = BFF_CLIENT_BY_MODULE[module];
+    const expectedClient = isBffShell
+      ? null
+      : dedicatedClient ||
+          (module !== 'experience-bff' ? 'RegistryDownstreamFacadeClient' : null);
     const clientExists = expectedClient ? clientNames.has(expectedClient) : false;
     const usedInController = expectedClient ? controllerBlob.includes(expectedClient) : false;
     const proxy = resolveBffProxy(module, controllerBlob);
