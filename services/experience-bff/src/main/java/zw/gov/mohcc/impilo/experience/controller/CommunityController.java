@@ -1,17 +1,19 @@
 package zw.gov.mohcc.impilo.experience.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.CommunityServiceClient;
 
 import java.time.OffsetDateTime;
 import java.util.*;
 
 /**
- * Community groups and discussions.
+ * Community groups and discussions. Delegates to CommunityServiceClient.
  *
  * GET  /internal/v1/community/groups — list groups
  * POST /internal/v1/community/groups — create group
@@ -24,9 +26,11 @@ import java.util.*;
 public class CommunityController {
 
     private final JdbcTemplate jdbcTemplate;
+    private final CommunityServiceClient communityClient;
 
-    public CommunityController(JdbcTemplate jdbcTemplate) {
+    public CommunityController(JdbcTemplate jdbcTemplate, CommunityServiceClient communityClient) {
         this.jdbcTemplate = jdbcTemplate;
+        this.communityClient = communityClient;
     }
 
     @GetMapping("/groups")
@@ -39,31 +43,14 @@ public class CommunityController {
             @RequestParam(defaultValue = "20") int size) {
 
         int limit = Math.min(size, 100);
-        int offset = page * limit;
 
-        String sql = category != null
-            ? "SELECT * FROM community_groups WHERE tenant_id = ? AND status = 'ACTIVE' AND category = ? ORDER BY member_count DESC LIMIT ? OFFSET ?"
-            : "SELECT * FROM community_groups WHERE tenant_id = ? AND status = 'ACTIVE' ORDER BY member_count DESC LIMIT ? OFFSET ?";
+        // STRANGLER: migrated — delegate to CommunityServiceClient
+        JsonNode groups = communityClient.listGroups(category, page, limit);
 
-        List<Map<String, Object>> rows = category != null
-            ? jdbcTemplate.queryForList(sql, tenantId, category, limit, offset)
-            : jdbcTemplate.queryForList(sql, tenantId, limit, offset);
+        // STRANGLER: migrated — was direct JdbcTemplate SELECT from community_groups
+        // List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql, ...);
 
-        List<Map<String, Object>> data = rows.stream().map(row -> Map.<String, Object>of(
-                "id", row.get("id").toString(),
-                "type", "community-group",
-                "attributes", Map.of(
-                        "name", row.get("name"),
-                        "description", row.getOrDefault("description", ""),
-                        "groupType", row.getOrDefault("group_type", "SUPPORT"),
-                        "category", row.getOrDefault("category", ""),
-                        "memberCount", row.getOrDefault("member_count", 0),
-                        "isPublic", row.getOrDefault("is_public", true),
-                        "status", row.getOrDefault("status", "ACTIVE")
-                )
-        )).toList();
-
-        return ResponseEntity.ok(Map.of("data", data,
+        return ResponseEntity.ok(Map.of("data", groups != null ? groups : List.of(),
                 "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 
@@ -75,22 +62,15 @@ public class CommunityController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestBody Map<String, Object> body) {
 
-        UUID id = UUID.randomUUID();
-        OffsetDateTime now = OffsetDateTime.now();
-        String name = body.getOrDefault("name", "").toString();
-        String description = body.getOrDefault("description", "").toString();
-        String groupType = body.getOrDefault("groupType", "SUPPORT").toString();
-        String category = body.getOrDefault("category", "").toString();
-        String createdBy = body.getOrDefault("createdBy", "").toString();
+        // STRANGLER: migrated — delegate to CommunityServiceClient
+        body.put("tenantId", tenantId);
+        JsonNode result = communityClient.createGroup(body);
 
-        jdbcTemplate.update("""
-            INSERT INTO community_groups (id, tenant_id, name, description, group_type, category, created_by, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, id, tenantId, name, description, groupType, category, createdBy, now, now);
+        // STRANGLER: migrated — was direct JdbcTemplate INSERT into community_groups
+        // jdbcTemplate.update("INSERT INTO community_groups (...) VALUES (...)", ...);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
-                "data", Map.of("id", id.toString(), "type", "community-group",
-                        "attributes", Map.of("name", name, "groupType", groupType, "category", category)),
+                "data", result,
                 "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 
@@ -103,19 +83,13 @@ public class CommunityController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestBody Map<String, Object> body) {
 
-        String memberId = body.getOrDefault("memberId", "").toString();
+        // STRANGLER: migrated — delegate to CommunityServiceClient
+        JsonNode result = communityClient.joinGroup(groupId.toString(), body);
 
-        jdbcTemplate.update("""
-            INSERT INTO community_group_members (id, group_id, member_id, role, joined_at)
-            VALUES (?, ?, ?, 'MEMBER', ?)
-            ON CONFLICT (group_id, member_id) DO NOTHING
-            """, UUID.randomUUID(), groupId, memberId, OffsetDateTime.now());
+        // STRANGLER: migrated — was direct JdbcTemplate INSERT into community_group_members + UPDATE community_groups
+        // jdbcTemplate.update("INSERT INTO community_group_members (...) VALUES (...)", ...);
 
-        jdbcTemplate.update(
-                "UPDATE community_groups SET member_count = member_count + 1, updated_at = ? WHERE id = ?",
-                OffsetDateTime.now(), groupId);
-
-        return ResponseEntity.ok(Map.of("data", Map.of("joined", true),
+        return ResponseEntity.ok(Map.of("data", result != null ? result : Map.of("joined", true),
                 "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 
@@ -129,28 +103,14 @@ public class CommunityController {
             @RequestParam(defaultValue = "20") int size) {
 
         int limit = Math.min(size, 100);
-        int offset = page * limit;
 
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList("""
-            SELECT * FROM discussion_posts WHERE group_id = ? AND tenant_id = ? AND status = 'ACTIVE'
-            ORDER BY pinned DESC, created_at DESC LIMIT ? OFFSET ?
-            """, groupId, tenantId, limit, offset);
+        // STRANGLER: migrated — delegate to CommunityServiceClient
+        JsonNode posts = communityClient.listPosts(groupId.toString(), page, limit);
 
-        List<Map<String, Object>> data = rows.stream().map(row -> Map.<String, Object>of(
-                "id", row.get("id").toString(),
-                "type", "discussion-post",
-                "attributes", Map.of(
-                        "title", row.getOrDefault("title", ""),
-                        "content", row.getOrDefault("content", ""),
-                        "authorId", row.getOrDefault("author_id", ""),
-                        "likesCount", row.getOrDefault("likes_count", 0),
-                        "commentsCount", row.getOrDefault("comments_count", 0),
-                        "pinned", row.getOrDefault("pinned", false),
-                        "createdAt", row.get("created_at")
-                )
-        )).toList();
+        // STRANGLER: migrated — was direct JdbcTemplate SELECT from discussion_posts
+        // List<Map<String, Object>> rows = jdbcTemplate.queryForList(..., groupId, tenantId, limit, offset);
 
-        return ResponseEntity.ok(Map.of("data", data,
+        return ResponseEntity.ok(Map.of("data", posts != null ? posts : List.of(),
                 "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 
@@ -163,19 +123,15 @@ public class CommunityController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestBody Map<String, Object> body) {
 
-        UUID id = UUID.randomUUID();
-        String authorId = body.getOrDefault("authorId", "").toString();
-        String title = body.getOrDefault("title", "").toString();
-        String content = body.getOrDefault("content", "").toString();
+        // STRANGLER: migrated — delegate to CommunityServiceClient
+        body.put("tenantId", tenantId);
+        JsonNode result = communityClient.createPost(groupId.toString(), body);
 
-        jdbcTemplate.update("""
-            INSERT INTO discussion_posts (id, tenant_id, group_id, author_id, title, content, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            """, id, tenantId, groupId, authorId, title, content, OffsetDateTime.now(), OffsetDateTime.now());
+        // STRANGLER: migrated — was direct JdbcTemplate INSERT into discussion_posts
+        // jdbcTemplate.update("INSERT INTO discussion_posts (...) VALUES (...)", ...);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
-                "data", Map.of("id", id.toString(), "type", "discussion-post",
-                        "attributes", Map.of("title", title, "authorId", authorId)),
+                "data", result,
                 "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 }

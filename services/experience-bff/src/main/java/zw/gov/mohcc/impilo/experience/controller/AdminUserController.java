@@ -49,15 +49,19 @@ public class AdminUserController {
     private final JdbcTemplate jdbcTemplate;
     private final OutboxService outboxService;
     private final RestTemplate restTemplate;
+    // STRANGLER: TshepoAuthzServiceClient available for future delegation of admin user CRUD
+    private final TshepoAuthzServiceClient tshepoAuthzClient;
 
     public AdminUserController(AdminUserRepository adminUserRepository,
                                JdbcTemplate jdbcTemplate,
                                OutboxService outboxService,
-                               RestTemplate serviceRestTemplate) {
+                               RestTemplate serviceRestTemplate,
+                               TshepoAuthzServiceClient tshepoAuthzClient) {
         this.adminUserRepository = adminUserRepository;
         this.jdbcTemplate = jdbcTemplate;
         this.outboxService = outboxService;
         this.restTemplate = serviceRestTemplate;
+        this.tshepoAuthzClient = tshepoAuthzClient;
     }
 
     public record CreateUserRequest(

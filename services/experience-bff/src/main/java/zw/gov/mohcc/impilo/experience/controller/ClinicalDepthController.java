@@ -270,6 +270,14 @@ public class ClinicalDepthController {
     public ResponseEntity<Map<String, Object>> recordNEWS2Components(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestBody Map<String, Object> body) {
+        // STRANGLER: delegate to PctServiceClient first
+        try {
+            JsonNode pctData = pctClient.recordNEWS2Components(body);
+            if (pctData != null) return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", pctData));
+        } catch (Exception e) {
+            log.warn("PCT recordNEWS2Components failed, falling back to local: {}", e.getMessage());
+        }
+        // STRANGLER: migrated to PctServiceClient — fallback to local JDBC
         // NEWS2 component scoring: each parameter 0-3 points
         int rrScore = toInt(body.getOrDefault("respiratoryRateScore", 0));
         int spo2Score = toInt(body.getOrDefault("spo2Score", 0));

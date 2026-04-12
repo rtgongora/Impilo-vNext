@@ -1,13 +1,17 @@
 package zw.gov.mohcc.impilo.experience.controller;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 
 import java.sql.Date;
 import java.sql.ResultSet;
@@ -28,12 +32,17 @@ import java.util.*;
 @RequestMapping("/internal/v1/ehr")
 public class StructuredHistoryController {
 
-    private final JdbcTemplate jdbcTemplate;
-    private final ObjectMapper objectMapper;
+    private static final Logger log = LoggerFactory.getLogger(StructuredHistoryController.class);
 
-    public StructuredHistoryController(JdbcTemplate jdbcTemplate, ObjectMapper objectMapper) {
+    private final JdbcTemplate jdbcTemplate; // TODO: remove after verification
+    private final ObjectMapper objectMapper;
+    private final PctServiceClient pctClient;
+
+    public StructuredHistoryController(JdbcTemplate jdbcTemplate, ObjectMapper objectMapper,
+                                       PctServiceClient pctClient) {
         this.jdbcTemplate = jdbcTemplate;
         this.objectMapper = objectMapper;
+        this.pctClient = pctClient;
     }
 
     private static UUID parsePatientId(String patientId) {
@@ -63,6 +72,19 @@ public class StructuredHistoryController {
             @RequestParam(name = "patient_id") String patientIdParam) {
 
         UUID patientId = parsePatientId(patientIdParam);
+        // STRANGLER: delegate to PctServiceClient
+        try {
+            JsonNode pctData = pctClient.getSocialHistory(patientIdParam);
+            if (pctData != null) {
+                Map<String, Object> body = new LinkedHashMap<>();
+                body.put("data", pctData);
+                body.put("meta", meta(requestId, correlationId));
+                return ResponseEntity.ok(body);
+            }
+        } catch (Exception e) {
+            log.warn("PCT getSocialHistory failed, falling back to local: {}", e.getMessage());
+        }
+        // STRANGLER: migrated to PctServiceClient — fallback to local JDBC
         List<Map<String, Object>> rows = jdbcTemplate.query("""
                         SELECT id, category, icon, status, detail, last_updated, risk_level
                         FROM social_history_entries
@@ -98,6 +120,19 @@ public class StructuredHistoryController {
             @RequestParam(name = "patient_id") String patientIdParam) {
 
         UUID patientId = parsePatientId(patientIdParam);
+        // STRANGLER: delegate to PctServiceClient
+        try {
+            JsonNode pctData = pctClient.getFamilyHistory(patientIdParam);
+            if (pctData != null) {
+                Map<String, Object> body = new LinkedHashMap<>();
+                body.put("data", pctData);
+                body.put("meta", meta(requestId, correlationId));
+                return ResponseEntity.ok(body);
+            }
+        } catch (Exception e) {
+            log.warn("PCT getFamilyHistory failed, falling back to local: {}", e.getMessage());
+        }
+        // STRANGLER: migrated to PctServiceClient — fallback to local JDBC
         List<Map<String, Object>> members = jdbcTemplate.query("""
                         SELECT id, name, relationship, age, deceased, deceased_age, cause_of_death
                         FROM family_history_members
@@ -178,6 +213,19 @@ public class StructuredHistoryController {
             @RequestParam(name = "patient_id") String patientIdParam) {
 
         UUID patientId = parsePatientId(patientIdParam);
+        // STRANGLER: delegate to PctServiceClient
+        try {
+            JsonNode pctData = pctClient.getFunctionalAssessments(patientIdParam);
+            if (pctData != null) {
+                Map<String, Object> body = new LinkedHashMap<>();
+                body.put("data", pctData);
+                body.put("meta", meta(requestId, correlationId));
+                return ResponseEntity.ok(body);
+            }
+        } catch (Exception e) {
+            log.warn("PCT getFunctionalAssessments failed, falling back to local: {}", e.getMessage());
+        }
+        // STRANGLER: migrated to PctServiceClient — fallback to local JDBC
         List<Map<String, Object>> rows = jdbcTemplate.query("""
                         SELECT id, assessment_type, assessment_date, assessor, total_score, max_score, interpretation, activities_json
                         FROM functional_assessments
@@ -224,6 +272,19 @@ public class StructuredHistoryController {
             @RequestParam(name = "patient_id") String patientIdParam) {
 
         UUID patientId = parsePatientId(patientIdParam);
+        // STRANGLER: delegate to PctServiceClient
+        try {
+            JsonNode pctData = pctClient.getProcedures(patientIdParam);
+            if (pctData != null) {
+                Map<String, Object> body = new LinkedHashMap<>();
+                body.put("data", pctData);
+                body.put("meta", meta(requestId, correlationId));
+                return ResponseEntity.ok(body);
+            }
+        } catch (Exception e) {
+            log.warn("PCT getProcedures failed, falling back to local: {}", e.getMessage());
+        }
+        // STRANGLER: migrated to PctServiceClient — fallback to local JDBC
         List<Map<String, Object>> rows = jdbcTemplate.query("""
                         SELECT id, name, procedure_type, procedure_date, surgeon, facility, status, notes
                         FROM patient_procedures

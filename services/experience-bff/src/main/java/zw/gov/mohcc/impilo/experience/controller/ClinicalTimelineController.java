@@ -1,5 +1,8 @@
 package zw.gov.mohcc.impilo.experience.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -7,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 import zw.gov.mohcc.impilo.experience.domain.ClinicalTimelineEntry;
 import zw.gov.mohcc.impilo.experience.repository.ClinicalTimelineRepository;
 import zw.gov.mohcc.impilo.experience.service.OutboxService;
@@ -22,16 +26,21 @@ import java.util.*;
 @RequestMapping("/internal/v1/timeline")
 public class ClinicalTimelineController {
 
+    private static final Logger log = LoggerFactory.getLogger(ClinicalTimelineController.class);
+
     private final ClinicalTimelineRepository clinicalTimelineRepository;
     private final OutboxService outboxService;
-    private final JdbcTemplate jdbcTemplate;
+    private final JdbcTemplate jdbcTemplate; // TODO: remove after verification
+    private final PctServiceClient pctClient;
 
     public ClinicalTimelineController(ClinicalTimelineRepository clinicalTimelineRepository,
                                       OutboxService outboxService,
-                                      JdbcTemplate jdbcTemplate) {
+                                      JdbcTemplate jdbcTemplate,
+                                      PctServiceClient pctClient) {
         this.clinicalTimelineRepository = clinicalTimelineRepository;
         this.outboxService = outboxService;
         this.jdbcTemplate = jdbcTemplate;
+        this.pctClient = pctClient;
     }
 
     @GetMapping
@@ -44,6 +53,22 @@ public class ClinicalTimelineController {
             @RequestParam(required = false, name = "patient_id") String patientId,
             @RequestParam(required = false, name = "encounter_id") String encounterId) {
 
+        // STRANGLER: delegate to PctServiceClient
+        if (patientId != null) {
+            try {
+                JsonNode pctData = pctClient.getPatientTimeline(patientId);
+                if (pctData != null) {
+                    Map<String, Object> response = new LinkedHashMap<>();
+                    response.put("data", pctData);
+                    response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
+                    return ResponseEntity.ok(response);
+                }
+            } catch (Exception e) {
+                log.warn("PCT getPatientTimeline failed, falling back to local: {}", e.getMessage());
+            }
+        }
+
+        // STRANGLER: migrated to PctServiceClient — fallback to local repository
         if (encounterId != null) {
             List<ClinicalTimelineEntry> entries = clinicalTimelineRepository
                     .findByTenantIdAndEncounterIdOrderByOccurredAtDesc(tenantId, UUID.fromString(encounterId));
