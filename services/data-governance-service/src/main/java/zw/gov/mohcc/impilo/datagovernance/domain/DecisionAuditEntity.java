@@ -46,7 +46,7 @@ public class DecisionAuditEntity {
     @Column(name = "decided_at", nullable = false)
     private OffsetDateTime decidedAt = OffsetDateTime.now();
 
-    protected DecisionAuditEntity() {}
+    public DecisionAuditEntity() {}
 
     public UUID getDecisionId() { return decisionId; }
     public UUID getTenantId() { return tenantId; }

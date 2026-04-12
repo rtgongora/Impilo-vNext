@@ -12,16 +12,20 @@ import zw.gov.mohcc.impilo.datagovernance.api.dto.DecideRequest;
 import zw.gov.mohcc.impilo.datagovernance.api.dto.DecideResponse;
 import zw.gov.mohcc.impilo.datagovernance.api.dto.ExportRequest;
 import zw.gov.mohcc.impilo.datagovernance.api.dto.ExportResponse;
+import zw.gov.mohcc.impilo.datagovernance.api.dto.PublishPolicyRequest;
+import zw.gov.mohcc.impilo.datagovernance.api.dto.RevokeGrantRequest;
 import zw.gov.mohcc.impilo.datagovernance.domain.DatasetEntity;
 import zw.gov.mohcc.impilo.datagovernance.domain.DecisionAuditEntity;
 import zw.gov.mohcc.impilo.datagovernance.domain.GovernanceRuleEntity;
 import zw.gov.mohcc.impilo.datagovernance.domain.GrantEntity;
 import zw.gov.mohcc.impilo.datagovernance.domain.OutboxEventEntity;
+import zw.gov.mohcc.impilo.datagovernance.domain.PolicyEntity;
 import zw.gov.mohcc.impilo.datagovernance.repository.DatasetRepository;
 import zw.gov.mohcc.impilo.datagovernance.repository.DecisionAuditRepository;
 import zw.gov.mohcc.impilo.datagovernance.repository.GovernanceRuleRepository;
 import zw.gov.mohcc.impilo.datagovernance.repository.GrantRepository;
 import zw.gov.mohcc.impilo.datagovernance.repository.OutboxEventRepository;
+import zw.gov.mohcc.impilo.datagovernance.repository.PolicyRepository;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -47,6 +51,7 @@ public class GovernanceService {
     private final DecisionAuditRepository decisionAuditRepository;
     private final OutboxEventRepository outboxRepository;
     private final GovernanceRuleRepository ruleRepository;
+    private final PolicyRepository policyRepository;
     private final ObjectMapper objectMapper;
 
     public GovernanceService(DatasetRepository datasetRepository,
@@ -54,12 +59,14 @@ public class GovernanceService {
                              DecisionAuditRepository decisionAuditRepository,
                              OutboxEventRepository outboxRepository,
                              GovernanceRuleRepository ruleRepository,
+                             PolicyRepository policyRepository,
                              ObjectMapper objectMapper) {
         this.datasetRepository = datasetRepository;
         this.grantRepository = grantRepository;
         this.decisionAuditRepository = decisionAuditRepository;
         this.outboxRepository = outboxRepository;
         this.ruleRepository = ruleRepository;
+        this.policyRepository = policyRepository;
         this.objectMapper = objectMapper;
     }
 
@@ -131,6 +138,71 @@ public class GovernanceService {
                 grant.getGrantId(), grant.getPrincipalId(),
                 grant.getDatasetId(), grant.getPurposeOfUse());
         return grant;
+    }
+
+    @Transactional
+    public GrantEntity revokeGrant(RevokeGrantRequest request, UUID tenantId,
+                                    String podId, String correlationId,
+                                    String idempotencyKey) {
+        GrantEntity grant = grantRepository.findById(request.grantId())
+                .filter(g -> g.getTenantId().equals(tenantId))
+                .orElseThrow(() -> new IllegalArgumentException("Grant not found for tenant"));
+
+        if (!grant.isRevoked()) {
+            grant.setRevoked(true);
+            grant.setRevokedAt(OffsetDateTime.now());
+            grant.setRevokedBy(request.revokedBy());
+            grantRepository.save(grant);
+
+            Map<String, Object> afterState = new LinkedHashMap<>();
+            afterState.put("grant_id", grant.getGrantId().toString());
+            afterState.put("revoked", true);
+            afterState.put("revoked_at", grant.getRevokedAt().toString());
+            afterState.put("revoked_by", grant.getRevokedBy());
+
+            Map<String, Object> payload = buildDeltaPayload("UPDATE", null, afterState,
+                    List.of("revoked", "revoked_at", "revoked_by"));
+
+            appendOutboxEvent("impilo.data.governance.grant.revoked.v1",
+                    "Grant", grant.getGrantId().toString(),
+                    tenantId, podId, correlationId, idempotencyKey,
+                    payload, grant.getPrincipalId(),
+                    grant.getGrantId().toString(), "Grant");
+        }
+
+        log.info("Revoked grant [grantId={}]", grant.getGrantId());
+        return grant;
+    }
+
+    @Transactional
+    public PolicyEntity publishPolicy(PublishPolicyRequest request, UUID tenantId,
+                                       String podId, String correlationId,
+                                       String idempotencyKey) {
+        int nextVersion = policyRepository.findMaxVersion(tenantId, request.name()).orElse(0) + 1;
+        PolicyEntity policy = new PolicyEntity(
+                tenantId, request.name(), nextVersion, request.description(), request.rulesJson());
+        policy.setStatus("PUBLISHED");
+        policy.setPublishedAt(OffsetDateTime.now());
+        policyRepository.save(policy);
+
+        Map<String, Object> afterState = new LinkedHashMap<>();
+        afterState.put("policy_id", policy.getPolicyId().toString());
+        afterState.put("name", policy.getName());
+        afterState.put("version", policy.getVersion());
+        afterState.put("status", policy.getStatus());
+
+        Map<String, Object> payload = buildDeltaPayload("CREATE", null, afterState,
+                List.of("policy_id", "name", "version", "rules_json", "status"));
+
+        appendOutboxEvent("impilo.data.governance.policy.published.v1",
+                "Policy", policy.getPolicyId().toString(),
+                tenantId, podId, correlationId, idempotencyKey,
+                payload, policy.getPolicyId().toString(),
+                policy.getPolicyId().toString(), "Policy");
+
+        log.info("Published policy [policyId={}, name={}, version={}]",
+                policy.getPolicyId(), policy.getName(), policy.getVersion());
+        return policy;
     }
 
     // ── Access decision ──
