@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -131,6 +132,44 @@ public class CardController {
         response.put("cardId", cardId.toString());
         response.put("pinValid", valid);
         return ResponseEntity.ok(response);
+    }
+
+    // ── Change PIN ──────────────────────────────────────────────────────
+
+    @PutMapping("/{cardId}/change-pin")
+    public ResponseEntity<Map<String, Object>> changePin(
+            @PathVariable UUID cardId,
+            @RequestBody Map<String, String> body,
+            @RequestHeader("X-Tenant-ID") String tenantId) {
+
+        String currentPin = body.get("currentPin");
+        String newPin = body.get("newPin");
+        if (currentPin == null || currentPin.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "currentPin is required"));
+        }
+        if (newPin == null || newPin.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "newPin is required"));
+        }
+
+        CardEntity card = cardService.changePin(cardId, currentPin, newPin, UUID.fromString(tenantId));
+        return ResponseEntity.ok(toCardResponse(card));
+    }
+
+    // ── Reset PIN (Admin/Supervisor) ───────────────────────────────────
+
+    @PostMapping("/{cardId}/reset-pin")
+    public ResponseEntity<Map<String, Object>> resetPin(
+            @PathVariable UUID cardId,
+            @RequestBody Map<String, String> body,
+            @RequestHeader("X-Tenant-ID") String tenantId) {
+
+        String newPin = body.get("newPin");
+        if (newPin == null || newPin.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "newPin is required"));
+        }
+
+        CardEntity card = cardService.resetPin(cardId, newPin, UUID.fromString(tenantId));
+        return ResponseEntity.ok(toCardResponse(card));
     }
 
     // ── Get Card Details ────────────────────────────────────────────────

@@ -262,6 +262,86 @@ public class CardService {
         return false;
     }
 
+    // ── Change PIN ───────────────────────────────────────────────────────
+
+    /**
+     * Change the PIN on an ACTIVE card. Requires the current PIN to be verified first.
+     *
+     * @param cardId     the card to change the PIN for
+     * @param currentPin the current PIN for verification
+     * @param newPin     the new PIN to set
+     * @param tenantId   the tenant context
+     * @return the updated card entity
+     */
+    @Transactional
+    public CardEntity changePin(UUID cardId, String currentPin, String newPin, UUID tenantId) {
+        CardEntity card = findCardOrThrow(cardId);
+
+        if (!"ACTIVE".equals(card.getStatus())) {
+            throw new IllegalStateException("Card must be ACTIVE to change PIN; current=" + card.getStatus());
+        }
+
+        if (card.getPinHash() == null) {
+            throw new IllegalStateException("Card has no PIN set; activate the card first");
+        }
+
+        if (!passwordEncoder.matches(currentPin, card.getPinHash())) {
+            throw new IllegalArgumentException("Current PIN is incorrect");
+        }
+
+        card.setPinHash(passwordEncoder.encode(newPin));
+        card.setPinTriesRemaining(DEFAULT_PIN_TRIES);
+        card = cardRepository.save(card);
+
+        writeOutboxEvent(card, "CARD_PIN_CHANGED", tenantId, Map.of(
+                "cardId", cardId.toString(),
+                "walletId", card.getWalletId().toString()
+        ));
+
+        log.info("PIN changed for cardId={}", cardId);
+        return card;
+    }
+
+    // ── Reset PIN (Admin/Supervisor) ────────────────────────────────────
+
+    /**
+     * Reset the PIN on a card without requiring the current PIN.
+     * This is an elevated-privilege operation intended for admin/supervisor use.
+     *
+     * @param cardId   the card to reset the PIN for
+     * @param newPin   the new PIN to set
+     * @param tenantId the tenant context
+     * @return the updated card entity
+     */
+    @Transactional
+    public CardEntity resetPin(UUID cardId, String newPin, UUID tenantId) {
+        CardEntity card = findCardOrThrow(cardId);
+
+        if ("REPLACED".equals(card.getStatus()) || "EXPIRED".equals(card.getStatus())) {
+            throw new IllegalStateException("Cannot reset PIN on a " + card.getStatus() + " card");
+        }
+
+        card.setPinHash(passwordEncoder.encode(newPin));
+        card.setPinTriesRemaining(DEFAULT_PIN_TRIES);
+
+        // If the card was blocked due to PIN tries, restore it to ACTIVE
+        if ("BLOCKED".equals(card.getStatus()) && "PIN_TRIES_EXCEEDED".equals(card.getBlockedReason())) {
+            card.setStatus("ACTIVE");
+            card.setBlockedAt(null);
+            card.setBlockedReason(null);
+        }
+
+        card = cardRepository.save(card);
+
+        writeOutboxEvent(card, "CARD_PIN_RESET", tenantId, Map.of(
+                "cardId", cardId.toString(),
+                "walletId", card.getWalletId().toString()
+        ));
+
+        log.info("PIN reset for cardId={}", cardId);
+        return card;
+    }
+
     // ── Helpers ──────────────────────────────────────────────────────────
 
     /**
@@ -273,19 +353,28 @@ public class CardService {
     }
 
     /**
-     * Generate a 16-digit Luhn-valid card number.
-     * Uses a 6-digit Impilo BIN prefix (999800 — reserved range for internal use)
-     * followed by 9 random digits and a Luhn check digit.
+     * Generate a unique 16-digit Luhn-valid card number.
+     * Uses a 4-digit Impilo BIN prefix (6366) followed by 11 random digits
+     * and a Luhn check digit. Retries until a unique number is produced.
      */
     String generateLuhnValidCardNumber() {
-        StringBuilder sb = new StringBuilder("999800"); // 6-digit BIN
-        // Generate 9 random digits (positions 7-15)
-        for (int i = 0; i < 9; i++) {
-            sb.append(secureRandom.nextInt(10));
+        for (int attempt = 0; attempt < 100; attempt++) {
+            StringBuilder sb = new StringBuilder("6366"); // 4-digit BIN prefix
+            // Generate 11 random digits (positions 5-15)
+            for (int i = 0; i < 11; i++) {
+                sb.append(secureRandom.nextInt(10));
+            }
+            // Compute Luhn check digit (position 16)
+            sb.append(luhnCheckDigit(sb.toString()));
+            String cardNumber = sb.toString();
+
+            // Ensure uniqueness
+            if (cardRepository.findByCardNumber(cardNumber).isEmpty()) {
+                return cardNumber;
+            }
+            log.warn("Card number collision on attempt {}, retrying", attempt + 1);
         }
-        // Compute Luhn check digit (position 16)
-        sb.append(luhnCheckDigit(sb.toString()));
-        return sb.toString();
+        throw new IllegalStateException("Failed to generate a unique card number after 100 attempts");
     }
 
     /**

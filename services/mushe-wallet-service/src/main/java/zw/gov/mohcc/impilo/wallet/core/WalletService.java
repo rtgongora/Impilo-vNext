@@ -15,6 +15,7 @@ import zw.gov.mohcc.impilo.wallet.persistence.repository.TransactionRepository;
 import zw.gov.mohcc.impilo.wallet.persistence.repository.WalletRepository;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -164,7 +165,7 @@ public class WalletService {
 
         publishOutboxEvent("TRANSACTION", txn.getTxnId().toString(),
                 "wallet.credited", wallet.getTenantId(), wallet.getOwnerRef(), wallet.getOwnerType(),
-                correlationId, buildTransactionPayload(txn));
+                correlationId, buildTransactionPayload(txn, wallet));
 
         return txn;
     }
@@ -199,6 +200,8 @@ public class WalletService {
                 .orElseThrow(() -> new NoSuchElementException("Wallet not found: " + walletId));
         requireActiveWallet(wallet);
         requireSufficientBalance(wallet, amount);
+        requireWithinDailyLimit(wallet, amount);
+        requireWithinMonthlyLimit(wallet, amount);
 
         wallet.setBalance(wallet.getBalance().subtract(amount));
         wallet.setAvailableBalance(wallet.getAvailableBalance().subtract(amount));
@@ -229,7 +232,7 @@ public class WalletService {
 
         publishOutboxEvent("TRANSACTION", txn.getTxnId().toString(),
                 "wallet.debited", wallet.getTenantId(), wallet.getOwnerRef(), wallet.getOwnerType(),
-                correlationId, buildTransactionPayload(txn));
+                correlationId, buildTransactionPayload(txn, wallet));
 
         return txn;
     }
@@ -309,6 +312,45 @@ public class WalletService {
         }
     }
 
+    private void requireWithinDailyLimit(WalletEntity wallet, BigDecimal amount) {
+        if (wallet.getDailyLimit() == null) {
+            return; // No daily limit configured
+        }
+        BigDecimal dailyTotal = getDailyTotal(wallet.getWalletId(), LocalDate.now());
+        if (dailyTotal.add(amount).compareTo(wallet.getDailyLimit()) > 0) {
+            throw new IllegalStateException("Daily transaction limit exceeded: dailyTotal="
+                    + dailyTotal + " requested=" + amount + " dailyLimit=" + wallet.getDailyLimit()
+                    + " walletId=" + wallet.getWalletId());
+        }
+    }
+
+    private void requireWithinMonthlyLimit(WalletEntity wallet, BigDecimal amount) {
+        if (wallet.getMonthlyLimit() == null) {
+            return; // No monthly limit configured
+        }
+        LocalDate now = LocalDate.now();
+        BigDecimal monthlyTotal = getMonthlyTotal(wallet.getWalletId(), now.getYear(), now.getMonthValue());
+        if (monthlyTotal.add(amount).compareTo(wallet.getMonthlyLimit()) > 0) {
+            throw new IllegalStateException("Monthly transaction limit exceeded: monthlyTotal="
+                    + monthlyTotal + " requested=" + amount + " monthlyLimit=" + wallet.getMonthlyLimit()
+                    + " walletId=" + wallet.getWalletId());
+        }
+    }
+
+    /**
+     * Returns the sum of all debit transaction amounts for the given wallet on a specific date.
+     */
+    BigDecimal getDailyTotal(UUID walletId, LocalDate date) {
+        return transactionRepository.sumDebitsByDate(walletId, date);
+    }
+
+    /**
+     * Returns the sum of all debit transaction amounts for the given wallet in a specific month.
+     */
+    BigDecimal getMonthlyTotal(UUID walletId, int year, int month) {
+        return transactionRepository.sumDebitsByMonth(walletId, year, month);
+    }
+
     // ── Outbox event publishing ────────────────────────────────────────────
 
     private void publishOutboxEvent(String aggregateType,
@@ -349,18 +391,27 @@ public class WalletService {
         return toJson(payload);
     }
 
-    private String buildTransactionPayload(TransactionEntity txn) {
+    private String buildTransactionPayload(TransactionEntity txn, WalletEntity wallet) {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("txnId", txn.getTxnId().toString());
         payload.put("walletId", txn.getWalletId().toString());
         payload.put("txnType", txn.getTxnType());
         payload.put("direction", txn.getDirection());
         payload.put("amount", txn.getAmount().toPlainString());
+        payload.put("fee", txn.getFee() != null ? txn.getFee().toPlainString() : "0");
         payload.put("netAmount", txn.getNetAmount().toPlainString());
+        payload.put("currency", txn.getCurrency());
         payload.put("balanceAfter", txn.getBalanceAfter().toPlainString());
+        payload.put("counterpartyRef", txn.getCounterpartyRef());
+        payload.put("counterpartyName", txn.getCounterpartyName());
         payload.put("reference", txn.getReference());
         payload.put("channel", txn.getChannel());
         payload.put("status", txn.getStatus());
+        // MUSHEX ledger reconciliation fields — allows MUSHeX event consumer to
+        // pick up wallet transactions and record them in the double-entry ledger
+        payload.put("mushex_ledger_sync", true);
+        payload.put("wallet_owner_ref", wallet.getOwnerRef());
+        payload.put("wallet_owner_type", wallet.getOwnerType());
         return toJson(payload);
     }
 
