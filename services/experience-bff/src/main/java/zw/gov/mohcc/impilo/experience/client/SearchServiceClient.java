@@ -11,8 +11,8 @@ import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
 
 /**
  * HTTP client for the search-service (Health OS §12: Governed Knowledge).
- * Provides federated full-text search across health, wellness, diet, sleep,
- * service, and marketplace knowledge domains.
+ * Proxies search-service {@code GET /internal/v1/search} (query {@code q},
+ * optional {@code entityType}, paging).
  */
 @Component
 public class SearchServiceClient {
@@ -28,14 +28,16 @@ public class SearchServiceClient {
         this.baseUrl = endpoints.searchBaseUrl();
     }
 
-    public JsonNode search(String query, String domain, int page, int size) {
-        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/search")
+    public JsonNode search(String query, String entityType, int page, int size) {
+        UriComponentsBuilder b = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/search")
                 .queryParam("q", query)
-                .queryParam("domain", domain)
                 .queryParam("page", page)
-                .queryParam("size", size)
-                .toUriString();
-        log.debug("Search: query={} domain={}", query, domain);
+                .queryParam("size", size);
+        if (entityType != null && !entityType.isBlank()) {
+            b.queryParam("entityType", entityType);
+        }
+        String url = b.toUriString();
+        log.debug("Search: query={} entityType={}", query, entityType);
         ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
         return response.getBody();
     }

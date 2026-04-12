@@ -12,7 +12,7 @@ import java.util.Map;
 
 /**
  * BFF proxy to search-service federated index ({@link SearchServiceClient}).
- * UI entry: {@code GET /internal/v1/search?q=&domain=&page=&size=}.
+ * UI entry: {@code GET /internal/v1/search?q=&entityType=&page=&size=} (entityType optional; matches search-service).
  */
 @RestController
 @RequestMapping("/internal/v1/search")
@@ -30,11 +30,11 @@ public class SearchController {
     public ResponseEntity<Map<String, Object>> search(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestParam String q,
-            @RequestParam(defaultValue = "ALL") String domain,
+            @RequestParam(required = false) String entityType,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         try {
-            JsonNode data = searchClient.search(q, domain, page, size);
+            JsonNode data = searchClient.search(q, entityType, page, size);
             return ResponseEntity.ok(Map.of("data", data != null ? data : Map.of()));
         } catch (Exception e) {
             log.error("Search proxy failed: {}", e.getMessage());
