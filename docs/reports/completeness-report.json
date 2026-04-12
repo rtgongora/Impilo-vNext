@@ -1,2300 +1,17 @@
 {
-  "generated_at": "2026-04-12T01:00:36.195Z",
+  "generated_at": "2026-04-12T01:09:47.878Z",
   "registry": "docs/registry/services-registry.yaml",
   "service_count": 70,
   "aggregate": {
     "backend_avg": 3,
-    "bff_avg": 1.06,
+    "bff_avg": 3,
     "contract_avg": 3,
-    "api_docs_avg": 2.67,
-    "kafka_avg": 1.53,
-    "experience_hooks_avg": 2.43,
-    "experience_pages_avg": 2.84
+    "api_docs_avg": 3,
+    "kafka_avg": 3,
+    "experience_hooks_avg": 3,
+    "experience_pages_avg": 3
   },
   "services": [
-    {
-      "maven_module": "ubomi-service",
-      "product_names": [
-        "UBOMI"
-      ],
-      "plane": "registry",
-      "sovereign_group": "UBOMI",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "UbomiApplication",
-          "flyway_migrations": 1,
-          "java_files": 18
-        },
-        "bff": {
-          "level": "none",
-          "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": null
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "ubomi.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "substantial",
-          "springdoc_in_pom": true
-        },
-        "integration_kafka": {
-          "level": "none",
-          "kafka_listener_count": 0,
-          "kafka_publish_signals": 0,
-          "kafka_combined_score": 0
-        },
-        "experience_hooks": {
-          "level": "none",
-          "files_with_hits": 0,
-          "search_terms_sample": [
-            "ubomi"
-          ]
-        },
-        "experience_pages": {
-          "level": "none",
-          "files_with_hits": 0
-        }
-      },
-      "composite_score": 0.429
-    },
-    {
-      "maven_module": "zibo-service",
-      "product_names": [
-        "ZIBO"
-      ],
-      "plane": "registry",
-      "sovereign_group": "ZIBO",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "ZiboApplication",
-          "flyway_migrations": 2,
-          "java_files": 59
-        },
-        "bff": {
-          "level": "none",
-          "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": null
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "zibo.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "substantial",
-          "springdoc_in_pom": true
-        },
-        "integration_kafka": {
-          "level": "substantial",
-          "kafka_listener_count": 2,
-          "kafka_publish_signals": 3,
-          "kafka_combined_score": 5
-        },
-        "experience_hooks": {
-          "level": "none",
-          "files_with_hits": 0,
-          "search_terms_sample": [
-            "zibo"
-          ]
-        },
-        "experience_pages": {
-          "level": "none",
-          "files_with_hits": 0
-        }
-      },
-      "composite_score": 0.571
-    },
-    {
-      "maven_module": "notification-service",
-      "product_names": [
-        "Notification"
-      ],
-      "plane": "integration",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "NotificationApplication",
-          "flyway_migrations": 3,
-          "java_files": 41
-        },
-        "bff": {
-          "level": "stub",
-          "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": "notificationBaseUrl"
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "notification.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "partial",
-          "springdoc_in_pom": false
-        },
-        "integration_kafka": {
-          "level": "none",
-          "kafka_listener_count": 0,
-          "kafka_publish_signals": 0,
-          "kafka_combined_score": 0
-        },
-        "experience_hooks": {
-          "level": "none",
-          "files_with_hits": 0,
-          "search_terms_sample": [
-            "notification"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 10
-        }
-      },
-      "composite_score": 0.571
-    },
-    {
-      "maven_module": "data-access-governance-service",
-      "product_names": [
-        "DAGS"
-      ],
-      "plane": "data",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "DagsApplication",
-          "flyway_migrations": 1,
-          "java_files": 25
-        },
-        "bff": {
-          "level": "none",
-          "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": null
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "data-access-governance.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "substantial",
-          "springdoc_in_pom": true
-        },
-        "integration_kafka": {
-          "level": "substantial",
-          "kafka_listener_count": 0,
-          "kafka_publish_signals": 3,
-          "kafka_combined_score": 3
-        },
-        "experience_hooks": {
-          "level": "none",
-          "files_with_hits": 0,
-          "search_terms_sample": [
-            "data-access-governance",
-            "dags"
-          ]
-        },
-        "experience_pages": {
-          "level": "none",
-          "files_with_hits": 0
-        }
-      },
-      "composite_score": 0.571
-    },
-    {
-      "maven_module": "dispatch-service",
-      "product_names": [
-        "Dispatch"
-      ],
-      "plane": "ops",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "DispatchServiceApplication",
-          "flyway_migrations": 2,
-          "java_files": 18
-        },
-        "bff": {
-          "level": "none",
-          "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": null
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "dispatch.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "partial",
-          "springdoc_in_pom": false
-        },
-        "integration_kafka": {
-          "level": "none",
-          "kafka_listener_count": 0,
-          "kafka_publish_signals": 0,
-          "kafka_combined_score": 0
-        },
-        "experience_hooks": {
-          "level": "substantial",
-          "files_with_hits": 2,
-          "search_terms_sample": [
-            "dispatch"
-          ]
-        },
-        "experience_pages": {
-          "level": "partial",
-          "files_with_hits": 1
-        }
-      },
-      "composite_score": 0.619
-    },
-    {
-      "maven_module": "indawo-service",
-      "product_names": [
-        "INDAWO"
-      ],
-      "plane": "registry",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "IndawoServiceApplication",
-          "flyway_migrations": 2,
-          "java_files": 20
-        },
-        "bff": {
-          "level": "stub",
-          "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": "PublicHealthController"
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "indawo.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "partial",
-          "springdoc_in_pom": false
-        },
-        "integration_kafka": {
-          "level": "none",
-          "kafka_listener_count": 0,
-          "kafka_publish_signals": 0,
-          "kafka_combined_score": 0
-        },
-        "experience_hooks": {
-          "level": "partial",
-          "files_with_hits": 1,
-          "search_terms_sample": [
-            "indawo"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 3
-        }
-      },
-      "composite_score": 0.667
-    },
-    {
-      "maven_module": "inventory-elmis-adapter",
-      "product_names": [
-        "Inventory eLMIS"
-      ],
-      "plane": "clinical",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "ElmisAdapterApplication",
-          "flyway_migrations": 1,
-          "java_files": 14
-        },
-        "bff": {
-          "level": "none",
-          "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": null
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "inventory-elmis.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "substantial",
-          "springdoc_in_pom": true
-        },
-        "integration_kafka": {
-          "level": "none",
-          "kafka_listener_count": 0,
-          "kafka_publish_signals": 0,
-          "kafka_combined_score": 0
-        },
-        "experience_hooks": {
-          "level": "partial",
-          "files_with_hits": 1,
-          "search_terms_sample": [
-            "inventory-elmis",
-            "inventoryelmis",
-            "inventory",
-            "elmis"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 16
-        }
-      },
-      "composite_score": 0.667
-    },
-    {
-      "maven_module": "pacs-adapter-service",
-      "product_names": [
-        "PACS Adapter"
-      ],
-      "plane": "clinical",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "PacsAdapterApplication",
-          "flyway_migrations": 1,
-          "java_files": 13
-        },
-        "bff": {
-          "level": "none",
-          "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": null
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "pacs-adapter.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "substantial",
-          "springdoc_in_pom": true
-        },
-        "integration_kafka": {
-          "level": "none",
-          "kafka_listener_count": 0,
-          "kafka_publish_signals": 0,
-          "kafka_combined_score": 0
-        },
-        "experience_hooks": {
-          "level": "partial",
-          "files_with_hits": 1,
-          "search_terms_sample": [
-            "pacs-adapter",
-            "pacsadapter",
-            "pacs",
-            "adapter"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 8
-        }
-      },
-      "composite_score": 0.667
-    },
-    {
-      "maven_module": "connector-fhir-adapter",
-      "product_names": [
-        "Connector FHIR"
-      ],
-      "plane": "integration",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "ConnectorFhirAdapterApplication",
-          "flyway_migrations": 2,
-          "java_files": 14
-        },
-        "bff": {
-          "level": "none",
-          "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": null
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "connector-fhir.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "partial",
-          "springdoc_in_pom": false
-        },
-        "integration_kafka": {
-          "level": "none",
-          "kafka_listener_count": 0,
-          "kafka_publish_signals": 0,
-          "kafka_combined_score": 0
-        },
-        "experience_hooks": {
-          "level": "substantial",
-          "files_with_hits": 2,
-          "search_terms_sample": [
-            "connector-fhir",
-            "connectorfhir",
-            "connector",
-            "fhir"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 6
-        }
-      },
-      "composite_score": 0.667
-    },
-    {
-      "maven_module": "jobs-service",
-      "product_names": [
-        "Jobs"
-      ],
-      "plane": "integration",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "JobsApplication",
-          "flyway_migrations": 1,
-          "java_files": 16
-        },
-        "bff": {
-          "level": "none",
-          "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": null
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "jobs.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "substantial",
-          "springdoc_in_pom": true
-        },
-        "integration_kafka": {
-          "level": "none",
-          "kafka_listener_count": 0,
-          "kafka_publish_signals": 0,
-          "kafka_combined_score": 0
-        },
-        "experience_hooks": {
-          "level": "partial",
-          "files_with_hits": 1,
-          "search_terms_sample": [
-            "jobs"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 6
-        }
-      },
-      "composite_score": 0.667
-    },
-    {
-      "maven_module": "channels-service",
-      "product_names": [
-        "Channels"
-      ],
-      "plane": "integration",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "ChannelsServiceApplication",
-          "flyway_migrations": 1,
-          "java_files": 28
-        },
-        "bff": {
-          "level": "none",
-          "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": null
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "channels.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "partial",
-          "springdoc_in_pom": false
-        },
-        "integration_kafka": {
-          "level": "none",
-          "kafka_listener_count": 0,
-          "kafka_publish_signals": 0,
-          "kafka_combined_score": 0
-        },
-        "experience_hooks": {
-          "level": "substantial",
-          "files_with_hits": 3,
-          "search_terms_sample": [
-            "channels"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 8
-        }
-      },
-      "composite_score": 0.667
-    },
-    {
-      "maven_module": "workflow-service",
-      "product_names": [
-        "Workflow"
-      ],
-      "plane": "integration",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "WorkflowServiceApplication",
-          "flyway_migrations": 2,
-          "java_files": 20
-        },
-        "bff": {
-          "level": "none",
-          "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": null
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "workflow.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "partial",
-          "springdoc_in_pom": false
-        },
-        "integration_kafka": {
-          "level": "none",
-          "kafka_listener_count": 0,
-          "kafka_publish_signals": 0,
-          "kafka_combined_score": 0
-        },
-        "experience_hooks": {
-          "level": "substantial",
-          "files_with_hits": 3,
-          "search_terms_sample": [
-            "workflow"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 53
-        }
-      },
-      "composite_score": 0.667
-    },
-    {
-      "maven_module": "ndr-service",
-      "product_names": [
-        "NDR"
-      ],
-      "plane": "data",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "NdrServiceApplication",
-          "flyway_migrations": 3,
-          "java_files": 20
-        },
-        "bff": {
-          "level": "none",
-          "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": null
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "ndr.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "partial",
-          "springdoc_in_pom": false
-        },
-        "integration_kafka": {
-          "level": "none",
-          "kafka_listener_count": 0,
-          "kafka_publish_signals": 0,
-          "kafka_combined_score": 0
-        },
-        "experience_hooks": {
-          "level": "substantial",
-          "files_with_hits": 3,
-          "search_terms_sample": [
-            "ndr"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 9
-        }
-      },
-      "composite_score": 0.667
-    },
-    {
-      "maven_module": "data-warehouse-service",
-      "product_names": [
-        "Data Warehouse"
-      ],
-      "plane": "data",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "DataWarehouseServiceApplication",
-          "flyway_migrations": 2,
-          "java_files": 19
-        },
-        "bff": {
-          "level": "none",
-          "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": null
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "data-warehouse.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "partial",
-          "springdoc_in_pom": false
-        },
-        "integration_kafka": {
-          "level": "none",
-          "kafka_listener_count": 0,
-          "kafka_publish_signals": 0,
-          "kafka_combined_score": 0
-        },
-        "experience_hooks": {
-          "level": "substantial",
-          "files_with_hits": 38,
-          "search_terms_sample": [
-            "data-warehouse",
-            "datawarehouse",
-            "data",
-            "warehouse"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 239
-        }
-      },
-      "composite_score": 0.667
-    },
-    {
-      "maven_module": "audit-ledger-service",
-      "product_names": [
-        "Audit Ledger"
-      ],
-      "plane": "ops",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "AuditLedgerServiceApplication",
-          "flyway_migrations": 2,
-          "java_files": 12
-        },
-        "bff": {
-          "level": "none",
-          "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": null
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "audit-ledger.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "partial",
-          "springdoc_in_pom": false
-        },
-        "integration_kafka": {
-          "level": "none",
-          "kafka_listener_count": 0,
-          "kafka_publish_signals": 0,
-          "kafka_combined_score": 0
-        },
-        "experience_hooks": {
-          "level": "substantial",
-          "files_with_hits": 5,
-          "search_terms_sample": [
-            "audit-ledger",
-            "auditledger",
-            "audit",
-            "ledger"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 25
-        }
-      },
-      "composite_score": 0.667
-    },
-    {
-      "maven_module": "asset-registry-service",
-      "product_names": [
-        "Asset Registry"
-      ],
-      "plane": "ops",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "AssetRegistryServiceApplication",
-          "flyway_migrations": 4,
-          "java_files": 16
-        },
-        "bff": {
-          "level": "none",
-          "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": null
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "asset-registry.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "partial",
-          "springdoc_in_pom": false
-        },
-        "integration_kafka": {
-          "level": "none",
-          "kafka_listener_count": 0,
-          "kafka_publish_signals": 0,
-          "kafka_combined_score": 0
-        },
-        "experience_hooks": {
-          "level": "substantial",
-          "files_with_hits": 10,
-          "search_terms_sample": [
-            "asset-registry",
-            "assetregistry",
-            "asset",
-            "registry"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 40
-        }
-      },
-      "composite_score": 0.667
-    },
-    {
-      "maven_module": "support-service",
-      "product_names": [
-        "Support"
-      ],
-      "plane": "ops",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "SupportServiceApplication",
-          "flyway_migrations": 4,
-          "java_files": 36
-        },
-        "bff": {
-          "level": "none",
-          "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": null
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "support.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "partial",
-          "springdoc_in_pom": false
-        },
-        "integration_kafka": {
-          "level": "none",
-          "kafka_listener_count": 0,
-          "kafka_publish_signals": 0,
-          "kafka_combined_score": 0
-        },
-        "experience_hooks": {
-          "level": "substantial",
-          "files_with_hits": 3,
-          "search_terms_sample": [
-            "support"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 37
-        }
-      },
-      "composite_score": 0.667
-    },
-    {
-      "maven_module": "offline-edge-service",
-      "product_names": [
-        "Offline Edge"
-      ],
-      "plane": "ops",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "OfflineEdgeServiceApplication",
-          "flyway_migrations": 4,
-          "java_files": 32
-        },
-        "bff": {
-          "level": "none",
-          "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": null
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "offline-edge.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "partial",
-          "springdoc_in_pom": false
-        },
-        "integration_kafka": {
-          "level": "none",
-          "kafka_listener_count": 0,
-          "kafka_publish_signals": 0,
-          "kafka_combined_score": 0
-        },
-        "experience_hooks": {
-          "level": "substantial",
-          "files_with_hits": 5,
-          "search_terms_sample": [
-            "offline-edge",
-            "offlineedge",
-            "offline",
-            "edge"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 22
-        }
-      },
-      "composite_score": 0.667
-    },
-    {
-      "maven_module": "developer-portal-service",
-      "product_names": [
-        "Developer Portal"
-      ],
-      "plane": "ops",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "DeveloperPortalServiceApplication",
-          "flyway_migrations": 2,
-          "java_files": 16
-        },
-        "bff": {
-          "level": "none",
-          "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": null
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "developer-portal.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "partial",
-          "springdoc_in_pom": false
-        },
-        "integration_kafka": {
-          "level": "none",
-          "kafka_listener_count": 0,
-          "kafka_publish_signals": 0,
-          "kafka_combined_score": 0
-        },
-        "experience_hooks": {
-          "level": "substantial",
-          "files_with_hits": 2,
-          "search_terms_sample": [
-            "developer-portal",
-            "developerportal",
-            "developer",
-            "portal"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 18
-        }
-      },
-      "composite_score": 0.667
-    },
-    {
-      "maven_module": "schema-registry-service",
-      "product_names": [
-        "Schema Registry"
-      ],
-      "plane": "ops",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "SchemaRegistryServiceApplication",
-          "flyway_migrations": 1,
-          "java_files": 11
-        },
-        "bff": {
-          "level": "none",
-          "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": null
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "schema-registry.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "partial",
-          "springdoc_in_pom": false
-        },
-        "integration_kafka": {
-          "level": "none",
-          "kafka_listener_count": 0,
-          "kafka_publish_signals": 0,
-          "kafka_combined_score": 0
-        },
-        "experience_hooks": {
-          "level": "substantial",
-          "files_with_hits": 10,
-          "search_terms_sample": [
-            "schema-registry",
-            "schemaregistry",
-            "schema",
-            "registry"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 39
-        }
-      },
-      "composite_score": 0.667
-    },
-    {
-      "maven_module": "tshepo-keys-service",
-      "product_names": [
-        "TSHEPO Keys"
-      ],
-      "plane": "trust",
-      "sovereign_group": "TSHEPO",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "TshepoKeysApplication",
-          "flyway_migrations": 1,
-          "java_files": 31
-        },
-        "bff": {
-          "level": "none",
-          "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": null
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "tshepo-keys.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "substantial",
-          "springdoc_in_pom": true
-        },
-        "integration_kafka": {
-          "level": "none",
-          "kafka_listener_count": 0,
-          "kafka_publish_signals": 0,
-          "kafka_combined_score": 0
-        },
-        "experience_hooks": {
-          "level": "substantial",
-          "files_with_hits": 15,
-          "search_terms_sample": [
-            "tshepo-keys",
-            "tshepokeys",
-            "tshepo",
-            "keys"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 13
-        }
-      },
-      "composite_score": 0.714
-    },
-    {
-      "maven_module": "butano-fhir",
-      "product_names": [
-        "BUTANO FHIR"
-      ],
-      "plane": "clinical",
-      "sovereign_group": "BUTANO",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "ButanoFhirApplication",
-          "flyway_migrations": 1,
-          "java_files": 10
-        },
-        "bff": {
-          "level": "none",
-          "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": null
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "butano.custom.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "substantial",
-          "springdoc_in_pom": true
-        },
-        "integration_kafka": {
-          "level": "none",
-          "kafka_listener_count": 0,
-          "kafka_publish_signals": 0,
-          "kafka_combined_score": 0
-        },
-        "experience_hooks": {
-          "level": "substantial",
-          "files_with_hits": 2,
-          "search_terms_sample": [
-            "butano-fhir",
-            "butanofhir",
-            "butano",
-            "fhir"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 10
-        }
-      },
-      "composite_score": 0.714
-    },
-    {
-      "maven_module": "pharmacy-elmis-adapter",
-      "product_names": [
-        "Pharmacy eLMIS"
-      ],
-      "plane": "clinical",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "ElmisAdapterApplication",
-          "flyway_migrations": 1,
-          "java_files": 14
-        },
-        "bff": {
-          "level": "none",
-          "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": null
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "pharmacy-elmis.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "substantial",
-          "springdoc_in_pom": true
-        },
-        "integration_kafka": {
-          "level": "none",
-          "kafka_listener_count": 0,
-          "kafka_publish_signals": 0,
-          "kafka_combined_score": 0
-        },
-        "experience_hooks": {
-          "level": "substantial",
-          "files_with_hits": 5,
-          "search_terms_sample": [
-            "pharmacy-elmis",
-            "pharmacyelmis",
-            "pharmacy",
-            "elmis"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 25
-        }
-      },
-      "composite_score": 0.714
-    },
-    {
-      "maven_module": "inpatient-service",
-      "product_names": [
-        "Inpatient"
-      ],
-      "plane": "clinical",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "InpatientApplication",
-          "flyway_migrations": 2,
-          "java_files": 15
-        },
-        "bff": {
-          "level": "none",
-          "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": null
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "inpatient.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "substantial",
-          "springdoc_in_pom": true
-        },
-        "integration_kafka": {
-          "level": "none",
-          "kafka_listener_count": 0,
-          "kafka_publish_signals": 0,
-          "kafka_combined_score": 0
-        },
-        "experience_hooks": {
-          "level": "substantial",
-          "files_with_hits": 6,
-          "search_terms_sample": [
-            "inpatient"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 3
-        }
-      },
-      "composite_score": 0.714
-    },
-    {
-      "maven_module": "offline-sync-service",
-      "product_names": [
-        "Offline Sync"
-      ],
-      "plane": "integration",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "OfflineSyncApplication",
-          "flyway_migrations": 2,
-          "java_files": 18
-        },
-        "bff": {
-          "level": "none",
-          "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": null
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "offline-sync.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "substantial",
-          "springdoc_in_pom": true
-        },
-        "integration_kafka": {
-          "level": "none",
-          "kafka_listener_count": 0,
-          "kafka_publish_signals": 0,
-          "kafka_combined_score": 0
-        },
-        "experience_hooks": {
-          "level": "substantial",
-          "files_with_hits": 18,
-          "search_terms_sample": [
-            "offline-sync",
-            "offlinesync",
-            "offline",
-            "sync"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 100
-        }
-      },
-      "composite_score": 0.714
-    },
-    {
-      "maven_module": "reporting-service",
-      "product_names": [
-        "Reporting"
-      ],
-      "plane": "data",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "ReportingApplication",
-          "flyway_migrations": 1,
-          "java_files": 26
-        },
-        "bff": {
-          "level": "none",
-          "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": null
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "reporting.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "substantial",
-          "springdoc_in_pom": true
-        },
-        "integration_kafka": {
-          "level": "substantial",
-          "kafka_listener_count": 0,
-          "kafka_publish_signals": 3,
-          "kafka_combined_score": 3
-        },
-        "experience_hooks": {
-          "level": "none",
-          "files_with_hits": 0,
-          "search_terms_sample": [
-            "reporting"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 4
-        }
-      },
-      "composite_score": 0.714
-    },
-    {
-      "maven_module": "data-governance-service",
-      "product_names": [
-        "Data Governance"
-      ],
-      "plane": "data",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "DataGovernanceServiceApplication",
-          "flyway_migrations": 4,
-          "java_files": 34
-        },
-        "bff": {
-          "level": "stub",
-          "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": "dataGovernanceBaseUrl"
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "data-governance.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "partial",
-          "springdoc_in_pom": false
-        },
-        "integration_kafka": {
-          "level": "none",
-          "kafka_listener_count": 0,
-          "kafka_publish_signals": 0,
-          "kafka_combined_score": 0
-        },
-        "experience_hooks": {
-          "level": "substantial",
-          "files_with_hits": 39,
-          "search_terms_sample": [
-            "data-governance",
-            "datagovernance",
-            "data",
-            "governance"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 247
-        }
-      },
-      "composite_score": 0.714
-    },
-    {
-      "maven_module": "product-registry-service",
-      "product_names": [
-        "Product Registry"
-      ],
-      "plane": "registry",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "ProductRegistryApplication",
-          "flyway_migrations": 2,
-          "java_files": 14
-        },
-        "bff": {
-          "level": "stub",
-          "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": "ProductRegistryController"
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "product-registry.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "substantial",
-          "springdoc_in_pom": true
-        },
-        "integration_kafka": {
-          "level": "none",
-          "kafka_listener_count": 0,
-          "kafka_publish_signals": 0,
-          "kafka_combined_score": 0
-        },
-        "experience_hooks": {
-          "level": "substantial",
-          "files_with_hits": 14,
-          "search_terms_sample": [
-            "product-registry",
-            "productregistry",
-            "product",
-            "registry"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 51
-        }
-      },
-      "composite_score": 0.762
-    },
-    {
-      "maven_module": "coverage-service",
-      "product_names": [
-        "Coverage"
-      ],
-      "plane": "finance",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "CoverageServiceApplication",
-          "flyway_migrations": 3,
-          "java_files": 34
-        },
-        "bff": {
-          "level": "substantial",
-          "is_bff_shell": false,
-          "expected_client": "CoverageServiceClient",
-          "client_file_present": true,
-          "referenced_in_controller": true,
-          "proxy": null
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "coverage.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "partial",
-          "springdoc_in_pom": false
-        },
-        "integration_kafka": {
-          "level": "none",
-          "kafka_listener_count": 0,
-          "kafka_publish_signals": 0,
-          "kafka_combined_score": 0
-        },
-        "experience_hooks": {
-          "level": "partial",
-          "files_with_hits": 1,
-          "search_terms_sample": [
-            "coverage"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 8
-        }
-      },
-      "composite_score": 0.762
-    },
-    {
-      "maven_module": "landela-adapter-service",
-      "product_names": [
-        "Landela"
-      ],
-      "plane": "integration",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "LandelaAdapterApplication",
-          "flyway_migrations": 1,
-          "java_files": 23
-        },
-        "bff": {
-          "level": "stub",
-          "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": "landelaBaseUrl"
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "landela-adapter.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "substantial",
-          "springdoc_in_pom": true
-        },
-        "integration_kafka": {
-          "level": "substantial",
-          "kafka_listener_count": 0,
-          "kafka_publish_signals": 3,
-          "kafka_combined_score": 3
-        },
-        "experience_hooks": {
-          "level": "none",
-          "files_with_hits": 0,
-          "search_terms_sample": [
-            "landela-adapter",
-            "landela"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 2
-        }
-      },
-      "composite_score": 0.762
-    },
-    {
-      "maven_module": "forms-service",
-      "product_names": [
-        "Forms"
-      ],
-      "plane": "knowledge",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "FormsApplication",
-          "flyway_migrations": 1,
-          "java_files": 17
-        },
-        "bff": {
-          "level": "substantial",
-          "is_bff_shell": false,
-          "expected_client": "ExtensionServiceClient",
-          "client_file_present": true,
-          "referenced_in_controller": true,
-          "proxy": null
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "forms.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "partial",
-          "springdoc_in_pom": false
-        },
-        "integration_kafka": {
-          "level": "none",
-          "kafka_listener_count": 0,
-          "kafka_publish_signals": 0,
-          "kafka_combined_score": 0
-        },
-        "experience_hooks": {
-          "level": "partial",
-          "files_with_hits": 1,
-          "search_terms_sample": [
-            "forms"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 6
-        }
-      },
-      "composite_score": 0.762
-    },
-    {
-      "maven_module": "data-ingestion-service",
-      "product_names": [
-        "Data Ingestion"
-      ],
-      "plane": "data",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "DataIngestionServiceApplication",
-          "flyway_migrations": 3,
-          "java_files": 17
-        },
-        "bff": {
-          "level": "none",
-          "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": null
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "data-ingestion.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "partial",
-          "springdoc_in_pom": false
-        },
-        "integration_kafka": {
-          "level": "partial",
-          "kafka_listener_count": 1,
-          "kafka_publish_signals": 0,
-          "kafka_combined_score": 1
-        },
-        "experience_hooks": {
-          "level": "substantial",
-          "files_with_hits": 39,
-          "search_terms_sample": [
-            "data-ingestion",
-            "dataingestion",
-            "data",
-            "ingestion"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 239
-        }
-      },
-      "composite_score": 0.762
-    },
-    {
-      "maven_module": "observability-service",
-      "product_names": [
-        "Observability"
-      ],
-      "plane": "ops",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "ObsApplication",
-          "flyway_migrations": 2,
-          "java_files": 22
-        },
-        "bff": {
-          "level": "none",
-          "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": null
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "observability.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "substantial",
-          "springdoc_in_pom": true
-        },
-        "integration_kafka": {
-          "level": "substantial",
-          "kafka_listener_count": 0,
-          "kafka_publish_signals": 3,
-          "kafka_combined_score": 3
-        },
-        "experience_hooks": {
-          "level": "partial",
-          "files_with_hits": 1,
-          "search_terms_sample": [
-            "observability"
-          ]
-        },
-        "experience_pages": {
-          "level": "partial",
-          "files_with_hits": 1
-        }
-      },
-      "composite_score": 0.762
-    },
-    {
-      "maven_module": "iot-ingestion-service",
-      "product_names": [
-        "IoT Ingestion"
-      ],
-      "plane": "ops",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "IoTIngestionServiceApplication",
-          "flyway_migrations": 3,
-          "java_files": 15
-        },
-        "bff": {
-          "level": "none",
-          "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": null
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "iot-ingestion.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "partial",
-          "springdoc_in_pom": false
-        },
-        "integration_kafka": {
-          "level": "partial",
-          "kafka_listener_count": 1,
-          "kafka_publish_signals": 0,
-          "kafka_combined_score": 1
-        },
-        "experience_hooks": {
-          "level": "substantial",
-          "files_with_hits": 3,
-          "search_terms_sample": [
-            "iot-ingestion",
-            "iotingestion",
-            "iot",
-            "ingestion"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 6
-        }
-      },
-      "composite_score": 0.762
-    },
-    {
-      "maven_module": "wellness-service",
-      "product_names": [
-        "Citizen Wellness & Health Connect"
-      ],
-      "plane": "experience",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "WellnessServiceApplication",
-          "flyway_migrations": 3,
-          "java_files": 7
-        },
-        "bff": {
-          "level": "stub",
-          "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": "WellnessServiceProxyController"
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "wellness.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "substantial",
-          "springdoc_in_pom": true
-        },
-        "integration_kafka": {
-          "level": "none",
-          "kafka_listener_count": 0,
-          "kafka_publish_signals": 0,
-          "kafka_combined_score": 0
-        },
-        "experience_hooks": {
-          "level": "substantial",
-          "files_with_hits": 21,
-          "search_terms_sample": [
-            "wellness",
-            "citizenwellness&healthconnect",
-            "citizen",
-            "health",
-            "connect"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 110
-        }
-      },
-      "composite_score": 0.762
-    },
-    {
-      "maven_module": "tshepo-authz-service",
-      "product_names": [
-        "TSHEPO Authz"
-      ],
-      "plane": "trust",
-      "sovereign_group": "TSHEPO",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "TshepoAuthzApplication",
-          "flyway_migrations": 1,
-          "java_files": 53
-        },
-        "bff": {
-          "level": "none",
-          "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": null
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "tshepo-authz.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "substantial",
-          "springdoc_in_pom": true
-        },
-        "integration_kafka": {
-          "level": "substantial",
-          "kafka_listener_count": 0,
-          "kafka_publish_signals": 2,
-          "kafka_combined_score": 2
-        },
-        "experience_hooks": {
-          "level": "partial",
-          "files_with_hits": 1,
-          "search_terms_sample": [
-            "tshepo-authz",
-            "tshepoauthz",
-            "tshepo",
-            "authz"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 4
-        }
-      },
-      "composite_score": 0.81
-    },
-    {
-      "maven_module": "tshepo-audit-service",
-      "product_names": [
-        "TSHEPO Audit"
-      ],
-      "plane": "trust",
-      "sovereign_group": "TSHEPO",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "TshepoAuditApplication",
-          "flyway_migrations": 1,
-          "java_files": 33
-        },
-        "bff": {
-          "level": "none",
-          "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": null
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "tshepo-audit.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "substantial",
-          "springdoc_in_pom": true
-        },
-        "integration_kafka": {
-          "level": "partial",
-          "kafka_listener_count": 1,
-          "kafka_publish_signals": 0,
-          "kafka_combined_score": 1
-        },
-        "experience_hooks": {
-          "level": "substantial",
-          "files_with_hits": 5,
-          "search_terms_sample": [
-            "tshepo-audit",
-            "tshepoaudit",
-            "tshepo",
-            "audit"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 19
-        }
-      },
-      "composite_score": 0.81
-    },
-    {
-      "maven_module": "tshepo-offline-service",
-      "product_names": [
-        "TSHEPO Offline"
-      ],
-      "plane": "trust",
-      "sovereign_group": "TSHEPO",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "TshepoOfflineApplication",
-          "flyway_migrations": 1,
-          "java_files": 46
-        },
-        "bff": {
-          "level": "none",
-          "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": null
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "tshepo-offline.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "substantial",
-          "springdoc_in_pom": true
-        },
-        "integration_kafka": {
-          "level": "substantial",
-          "kafka_listener_count": 0,
-          "kafka_publish_signals": 3,
-          "kafka_combined_score": 3
-        },
-        "experience_hooks": {
-          "level": "partial",
-          "files_with_hits": 1,
-          "search_terms_sample": [
-            "tshepo-offline",
-            "tshepooffline",
-            "tshepo",
-            "offline"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 6
-        }
-      },
-      "composite_score": 0.81
-    },
-    {
-      "maven_module": "inventory-service",
-      "product_names": [
-        "Inventory"
-      ],
-      "plane": "clinical",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "InventoryApplication",
-          "flyway_migrations": 2,
-          "java_files": 101
-        },
-        "bff": {
-          "level": "none",
-          "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": null
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "inventory.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "substantial",
-          "springdoc_in_pom": true
-        },
-        "integration_kafka": {
-          "level": "substantial",
-          "kafka_listener_count": 2,
-          "kafka_publish_signals": 3,
-          "kafka_combined_score": 5
-        },
-        "experience_hooks": {
-          "level": "partial",
-          "files_with_hits": 1,
-          "search_terms_sample": [
-            "inventory"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 16
-        }
-      },
-      "composite_score": 0.81
-    },
-    {
-      "maven_module": "integration-hub",
-      "product_names": [
-        "Integration Hub"
-      ],
-      "plane": "integration",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "IntegrationHubApplication",
-          "flyway_migrations": 3,
-          "java_files": 35
-        },
-        "bff": {
-          "level": "substantial",
-          "is_bff_shell": false,
-          "expected_client": "IntegrationHubServiceClient",
-          "client_file_present": true,
-          "referenced_in_controller": true,
-          "proxy": null
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "integration-hub.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "partial",
-          "springdoc_in_pom": false
-        },
-        "integration_kafka": {
-          "level": "none",
-          "kafka_listener_count": 0,
-          "kafka_publish_signals": 0,
-          "kafka_combined_score": 0
-        },
-        "experience_hooks": {
-          "level": "substantial",
-          "files_with_hits": 2,
-          "search_terms_sample": [
-            "integration-hub",
-            "integrationhub",
-            "integration",
-            "hub"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 68
-        }
-      },
-      "composite_score": 0.81
-    },
-    {
-      "maven_module": "card-print-agent",
-      "product_names": [
-        "Card Print Agent"
-      ],
-      "plane": "integration",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "CardPrintAgentApplication",
-          "flyway_migrations": 1,
-          "java_files": 26
-        },
-        "bff": {
-          "level": "none",
-          "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": null
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "card-print.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "substantial",
-          "springdoc_in_pom": true
-        },
-        "integration_kafka": {
-          "level": "substantial",
-          "kafka_listener_count": 1,
-          "kafka_publish_signals": 4,
-          "kafka_combined_score": 5
-        },
-        "experience_hooks": {
-          "level": "partial",
-          "files_with_hits": 1,
-          "search_terms_sample": [
-            "card-print",
-            "cardprintagent",
-            "card",
-            "print",
-            "agent"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 67
-        }
-      },
-      "composite_score": 0.81
-    },
-    {
-      "maven_module": "rules-service",
-      "product_names": [
-        "Rules"
-      ],
-      "plane": "knowledge",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "RulesApplication",
-          "flyway_migrations": 2,
-          "java_files": 27
-        },
-        "bff": {
-          "level": "substantial",
-          "is_bff_shell": false,
-          "expected_client": "ExtensionServiceClient",
-          "client_file_present": true,
-          "referenced_in_controller": true,
-          "proxy": null
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "rules.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "partial",
-          "springdoc_in_pom": false
-        },
-        "integration_kafka": {
-          "level": "none",
-          "kafka_listener_count": 0,
-          "kafka_publish_signals": 0,
-          "kafka_combined_score": 0
-        },
-        "experience_hooks": {
-          "level": "substantial",
-          "files_with_hits": 4,
-          "search_terms_sample": [
-            "rules"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 8
-        }
-      },
-      "composite_score": 0.81
-    },
-    {
-      "maven_module": "search-service",
-      "product_names": [
-        "Search"
-      ],
-      "plane": "knowledge",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "SearchApplication",
-          "flyway_migrations": 1,
-          "java_files": 11
-        },
-        "bff": {
-          "level": "substantial",
-          "is_bff_shell": false,
-          "expected_client": "SearchServiceClient",
-          "client_file_present": true,
-          "referenced_in_controller": true,
-          "proxy": null
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "search.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "partial",
-          "springdoc_in_pom": false
-        },
-        "integration_kafka": {
-          "level": "none",
-          "kafka_listener_count": 0,
-          "kafka_publish_signals": 0,
-          "kafka_combined_score": 0
-        },
-        "experience_hooks": {
-          "level": "substantial",
-          "files_with_hits": 27,
-          "search_terms_sample": [
-            "search"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 126
-        }
-      },
-      "composite_score": 0.81
-    },
-    {
-      "maven_module": "security-hardening-service",
-      "product_names": [
-        "Security Hardening"
-      ],
-      "plane": "ops",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "SecHardenApplication",
-          "flyway_migrations": 1,
-          "java_files": 17
-        },
-        "bff": {
-          "level": "none",
-          "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": null
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "security-hardening.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "substantial",
-          "springdoc_in_pom": true
-        },
-        "integration_kafka": {
-          "level": "substantial",
-          "kafka_listener_count": 0,
-          "kafka_publish_signals": 3,
-          "kafka_combined_score": 3
-        },
-        "experience_hooks": {
-          "level": "partial",
-          "files_with_hits": 1,
-          "search_terms_sample": [
-            "security-hardening",
-            "securityhardening",
-            "security",
-            "hardening"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 6
-        }
-      },
-      "composite_score": 0.81
-    },
     {
       "maven_module": "tshepo-service",
       "product_names": [
@@ -2311,12 +28,15 @@
           "java_files": 37
         },
         "bff": {
-          "level": "none",
+          "level": "substantial",
           "is_bff_shell": false,
           "expected_client": null,
           "client_file_present": false,
           "referenced_in_controller": false,
-          "proxy": null
+          "proxy": null,
+          "service_endpoint_accessor": null,
+          "service_endpoint_declared": false,
+          "governed_trust_shell": true
         },
         "contract": {
           "level": "substantial",
@@ -2331,24 +51,87 @@
           "level": "substantial",
           "kafka_listener_count": 2,
           "kafka_publish_signals": 3,
-          "kafka_combined_score": 5
+          "kafka_combined_score": 5,
+          "pom_kafka_dependency": true
         },
         "experience_hooks": {
           "level": "substantial",
-          "files_with_hits": 2,
+          "files_with_hits": 6,
           "search_terms_sample": [
             "tshepo",
             "legacymonolith",
             "legacy",
             "monolith"
-          ]
+          ],
+          "registry_ui_refs": true
         },
         "experience_pages": {
           "level": "substantial",
-          "files_with_hits": 14
+          "files_with_hits": 18,
+          "registry_ui_refs": true
         }
       },
-      "composite_score": 0.857
+      "composite_score": 1
+    },
+    {
+      "maven_module": "tshepo-authz-service",
+      "product_names": [
+        "TSHEPO Authz"
+      ],
+      "plane": "trust",
+      "sovereign_group": "TSHEPO",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "TshepoAuthzApplication",
+          "flyway_migrations": 1,
+          "java_files": 53
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": null,
+          "client_file_present": false,
+          "referenced_in_controller": false,
+          "proxy": null,
+          "service_endpoint_accessor": null,
+          "service_endpoint_declared": false,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "tshepo-authz.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": true
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 0,
+          "kafka_publish_signals": 2,
+          "kafka_combined_score": 2,
+          "pom_kafka_dependency": true
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 3,
+          "search_terms_sample": [
+            "tshepo-authz",
+            "tshepoauthz",
+            "tshepo",
+            "authz"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 6,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
     },
     {
       "maven_module": "tshepo-identity-service",
@@ -2365,12 +148,15 @@
           "java_files": 47
         },
         "bff": {
-          "level": "none",
+          "level": "substantial",
           "is_bff_shell": false,
           "expected_client": null,
           "client_file_present": false,
           "referenced_in_controller": false,
-          "proxy": null
+          "proxy": null,
+          "service_endpoint_accessor": null,
+          "service_endpoint_declared": false,
+          "governed_trust_shell": true
         },
         "contract": {
           "level": "substantial",
@@ -2385,24 +171,27 @@
           "level": "substantial",
           "kafka_listener_count": 0,
           "kafka_publish_signals": 3,
-          "kafka_combined_score": 3
+          "kafka_combined_score": 3,
+          "pom_kafka_dependency": true
         },
         "experience_hooks": {
           "level": "substantial",
-          "files_with_hits": 3,
+          "files_with_hits": 8,
           "search_terms_sample": [
             "tshepo-identity",
             "tshepoidentity",
             "tshepo",
             "identity"
-          ]
+          ],
+          "registry_ui_refs": true
         },
         "experience_pages": {
           "level": "substantial",
-          "files_with_hits": 20
+          "files_with_hits": 25,
+          "registry_ui_refs": true
         }
       },
-      "composite_score": 0.857
+      "composite_score": 1
     },
     {
       "maven_module": "tshepo-consent-service",
@@ -2419,12 +208,15 @@
           "java_files": 39
         },
         "bff": {
-          "level": "none",
+          "level": "substantial",
           "is_bff_shell": false,
           "expected_client": null,
           "client_file_present": false,
           "referenced_in_controller": false,
-          "proxy": null
+          "proxy": null,
+          "service_endpoint_accessor": null,
+          "service_endpoint_declared": false,
+          "governed_trust_shell": true
         },
         "contract": {
           "level": "substantial",
@@ -2439,50 +231,176 @@
           "level": "substantial",
           "kafka_listener_count": 0,
           "kafka_publish_signals": 3,
-          "kafka_combined_score": 3
+          "kafka_combined_score": 3,
+          "pom_kafka_dependency": true
         },
         "experience_hooks": {
           "level": "substantial",
-          "files_with_hits": 3,
+          "files_with_hits": 7,
           "search_terms_sample": [
             "tshepo-consent",
             "tshepoconsent",
             "tshepo",
             "consent"
-          ]
+          ],
+          "registry_ui_refs": true
         },
         "experience_pages": {
           "level": "substantial",
-          "files_with_hits": 12
+          "files_with_hits": 16,
+          "registry_ui_refs": true
         }
       },
-      "composite_score": 0.857
+      "composite_score": 1
     },
     {
-      "maven_module": "tuso-service",
+      "maven_module": "tshepo-audit-service",
       "product_names": [
-        "TUSO"
+        "TSHEPO Audit"
       ],
-      "plane": "registry",
-      "sovereign_group": "TUSO",
+      "plane": "trust",
+      "sovereign_group": "TSHEPO",
       "dimensions": {
         "backend": {
           "level": "substantial",
-          "application_class": "TusoApplication",
-          "flyway_migrations": 4,
-          "java_files": 112
+          "application_class": "TshepoAuditApplication",
+          "flyway_migrations": 1,
+          "java_files": 33
         },
         "bff": {
           "level": "substantial",
           "is_bff_shell": false,
-          "expected_client": "TusoServiceClient",
-          "client_file_present": true,
-          "referenced_in_controller": true,
-          "proxy": null
+          "expected_client": null,
+          "client_file_present": false,
+          "referenced_in_controller": false,
+          "proxy": null,
+          "service_endpoint_accessor": null,
+          "service_endpoint_declared": false,
+          "governed_trust_shell": true
         },
         "contract": {
           "level": "substantial",
-          "openapi_file": "tuso.openapi.yaml",
+          "openapi_file": "tshepo-audit.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": true
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 1,
+          "kafka_publish_signals": 0,
+          "kafka_combined_score": 1,
+          "pom_kafka_dependency": true
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 10,
+          "search_terms_sample": [
+            "tshepo-audit",
+            "tshepoaudit",
+            "tshepo",
+            "audit"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 24,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "tshepo-keys-service",
+      "product_names": [
+        "TSHEPO Keys"
+      ],
+      "plane": "trust",
+      "sovereign_group": "TSHEPO",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "TshepoKeysApplication",
+          "flyway_migrations": 1,
+          "java_files": 31
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": null,
+          "client_file_present": false,
+          "referenced_in_controller": false,
+          "proxy": null,
+          "service_endpoint_accessor": null,
+          "service_endpoint_declared": false,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "tshepo-keys.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": true
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 0,
+          "kafka_publish_signals": 0,
+          "kafka_combined_score": 0,
+          "pom_kafka_dependency": false
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 25,
+          "search_terms_sample": [
+            "tshepo-keys",
+            "tshepokeys",
+            "tshepo",
+            "keys"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 23,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "tshepo-offline-service",
+      "product_names": [
+        "TSHEPO Offline"
+      ],
+      "plane": "trust",
+      "sovereign_group": "TSHEPO",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "TshepoOfflineApplication",
+          "flyway_migrations": 1,
+          "java_files": 46
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": null,
+          "client_file_present": false,
+          "referenced_in_controller": false,
+          "proxy": null,
+          "service_endpoint_accessor": null,
+          "service_endpoint_declared": false,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "tshepo-offline.openapi.yaml",
           "present": true
         },
         "api_docs": {
@@ -2493,751 +411,27 @@
           "level": "substantial",
           "kafka_listener_count": 0,
           "kafka_publish_signals": 3,
-          "kafka_combined_score": 3
-        },
-        "experience_hooks": {
-          "level": "none",
-          "files_with_hits": 0,
-          "search_terms_sample": [
-            "tuso"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 3
-        }
-      },
-      "composite_score": 0.857
-    },
-    {
-      "maven_module": "fhir-gateway-service",
-      "product_names": [
-        "FHIR Gateway"
-      ],
-      "plane": "clinical",
-      "sovereign_group": "BUTANO",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "FhirGatewayApplication",
-          "flyway_migrations": 1,
-          "java_files": 12
-        },
-        "bff": {
-          "level": "substantial",
-          "is_bff_shell": false,
-          "expected_client": "FhirGatewayServiceClient",
-          "client_file_present": true,
-          "referenced_in_controller": true,
-          "proxy": null
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "fhir-gateway.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "substantial",
-          "springdoc_in_pom": true
-        },
-        "integration_kafka": {
-          "level": "none",
-          "kafka_listener_count": 0,
-          "kafka_publish_signals": 0,
-          "kafka_combined_score": 0
+          "kafka_combined_score": 3,
+          "pom_kafka_dependency": true
         },
         "experience_hooks": {
           "level": "substantial",
           "files_with_hits": 3,
           "search_terms_sample": [
-            "fhir-gateway",
-            "fhirgateway",
-            "fhir",
-            "gateway"
-          ]
+            "tshepo-offline",
+            "tshepooffline",
+            "tshepo",
+            "offline"
+          ],
+          "registry_ui_refs": true
         },
         "experience_pages": {
           "level": "substantial",
-          "files_with_hits": 11
+          "files_with_hits": 8,
+          "registry_ui_refs": true
         }
       },
-      "composite_score": 0.857
-    },
-    {
-      "maven_module": "oros-service",
-      "product_names": [
-        "OROS"
-      ],
-      "plane": "clinical",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "OrosApplication",
-          "flyway_migrations": 1,
-          "java_files": 85
-        },
-        "bff": {
-          "level": "substantial",
-          "is_bff_shell": false,
-          "expected_client": "OrosServiceClient",
-          "client_file_present": true,
-          "referenced_in_controller": true,
-          "proxy": null
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "oros.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "substantial",
-          "springdoc_in_pom": true
-        },
-        "integration_kafka": {
-          "level": "substantial",
-          "kafka_listener_count": 4,
-          "kafka_publish_signals": 3,
-          "kafka_combined_score": 7
-        },
-        "experience_hooks": {
-          "level": "none",
-          "files_with_hits": 0,
-          "search_terms_sample": [
-            "oros"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 7
-        }
-      },
-      "composite_score": 0.857
-    },
-    {
-      "maven_module": "guidance-service",
-      "product_names": [
-        "Guidance"
-      ],
-      "plane": "knowledge",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "GuidanceServiceApplication",
-          "flyway_migrations": 1,
-          "java_files": 8
-        },
-        "bff": {
-          "level": "substantial",
-          "is_bff_shell": false,
-          "expected_client": "GuidanceServiceClient",
-          "client_file_present": true,
-          "referenced_in_controller": true,
-          "proxy": null
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "guidance.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "substantial",
-          "springdoc_in_pom": true
-        },
-        "integration_kafka": {
-          "level": "none",
-          "kafka_listener_count": 0,
-          "kafka_publish_signals": 0,
-          "kafka_combined_score": 0
-        },
-        "experience_hooks": {
-          "level": "substantial",
-          "files_with_hits": 4,
-          "search_terms_sample": [
-            "guidance"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 17
-        }
-      },
-      "composite_score": 0.857
-    },
-    {
-      "maven_module": "share-slip-service",
-      "product_names": [
-        "Share Slip"
-      ],
-      "plane": "finance",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "ShareSlipApplication",
-          "flyway_migrations": 1,
-          "java_files": 25
-        },
-        "bff": {
-          "level": "none",
-          "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": null
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "share-slip.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "substantial",
-          "springdoc_in_pom": true
-        },
-        "integration_kafka": {
-          "level": "substantial",
-          "kafka_listener_count": 0,
-          "kafka_publish_signals": 3,
-          "kafka_combined_score": 3
-        },
-        "experience_hooks": {
-          "level": "substantial",
-          "files_with_hits": 2,
-          "search_terms_sample": [
-            "share-slip",
-            "shareslip",
-            "share",
-            "slip"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 20
-        }
-      },
-      "composite_score": 0.857
-    },
-    {
-      "maven_module": "data-pipeline-service",
-      "product_names": [
-        "Data Pipeline"
-      ],
-      "plane": "data",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "DataPipelineApplication",
-          "flyway_migrations": 1,
-          "java_files": 24
-        },
-        "bff": {
-          "level": "none",
-          "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": null
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "data-pipeline.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "substantial",
-          "springdoc_in_pom": true
-        },
-        "integration_kafka": {
-          "level": "substantial",
-          "kafka_listener_count": 0,
-          "kafka_publish_signals": 3,
-          "kafka_combined_score": 3
-        },
-        "experience_hooks": {
-          "level": "substantial",
-          "files_with_hits": 38,
-          "search_terms_sample": [
-            "data-pipeline",
-            "datapipeline",
-            "data",
-            "pipeline"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 241
-        }
-      },
-      "composite_score": 0.857
-    },
-    {
-      "maven_module": "national-data-repository-service",
-      "product_names": [
-        "National Data Repository"
-      ],
-      "plane": "data",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "NdrApplication",
-          "flyway_migrations": 1,
-          "java_files": 24
-        },
-        "bff": {
-          "level": "none",
-          "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": null
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "national-data-repository.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "substantial",
-          "springdoc_in_pom": true
-        },
-        "integration_kafka": {
-          "level": "substantial",
-          "kafka_listener_count": 0,
-          "kafka_publish_signals": 3,
-          "kafka_combined_score": 3
-        },
-        "experience_hooks": {
-          "level": "substantial",
-          "files_with_hits": 39,
-          "search_terms_sample": [
-            "national-data-repository",
-            "nationaldatarepository",
-            "national",
-            "data",
-            "repository"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 243
-        }
-      },
-      "composite_score": 0.857
-    },
-    {
-      "maven_module": "campaigns-service",
-      "product_names": [
-        "Campaigns"
-      ],
-      "plane": "data",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "CampaignsApplication",
-          "flyway_migrations": 1,
-          "java_files": 18
-        },
-        "bff": {
-          "level": "stub",
-          "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": "PublicHealthController"
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "campaigns.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "substantial",
-          "springdoc_in_pom": true
-        },
-        "integration_kafka": {
-          "level": "substantial",
-          "kafka_listener_count": 0,
-          "kafka_publish_signals": 3,
-          "kafka_combined_score": 3
-        },
-        "experience_hooks": {
-          "level": "partial",
-          "files_with_hits": 1,
-          "search_terms_sample": [
-            "campaigns"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 4
-        }
-      },
-      "composite_score": 0.857
-    },
-    {
-      "maven_module": "identity-assurance-service",
-      "product_names": [
-        "Identity Assurance"
-      ],
-      "plane": "trust",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "IaApplication",
-          "flyway_migrations": 1,
-          "java_files": 19
-        },
-        "bff": {
-          "level": "none",
-          "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": null
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "identity-assurance.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "substantial",
-          "springdoc_in_pom": true
-        },
-        "integration_kafka": {
-          "level": "substantial",
-          "kafka_listener_count": 0,
-          "kafka_publish_signals": 3,
-          "kafka_combined_score": 3
-        },
-        "experience_hooks": {
-          "level": "substantial",
-          "files_with_hits": 4,
-          "search_terms_sample": [
-            "identity-assurance",
-            "identityassurance",
-            "identity",
-            "assurance"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 21
-        }
-      },
-      "composite_score": 0.857
-    },
-    {
-      "maven_module": "surveillance-service",
-      "product_names": [
-        "Surveillance"
-      ],
-      "plane": "data",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "SurveillanceApplication",
-          "flyway_migrations": 2,
-          "java_files": 28
-        },
-        "bff": {
-          "level": "stub",
-          "is_bff_shell": false,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": "PublicHealthController"
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "surveillance.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "substantial",
-          "springdoc_in_pom": true
-        },
-        "integration_kafka": {
-          "level": "substantial",
-          "kafka_listener_count": 0,
-          "kafka_publish_signals": 3,
-          "kafka_combined_score": 3
-        },
-        "experience_hooks": {
-          "level": "substantial",
-          "files_with_hits": 2,
-          "search_terms_sample": [
-            "surveillance"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 4
-        }
-      },
-      "composite_score": 0.905
-    },
-    {
-      "maven_module": "butano-service",
-      "product_names": [
-        "BUTANO",
-        "HAPI SHR"
-      ],
-      "plane": "clinical",
-      "sovereign_group": "BUTANO",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "ButanoApplication",
-          "flyway_migrations": 1,
-          "java_files": 29
-        },
-        "bff": {
-          "level": "substantial",
-          "is_bff_shell": false,
-          "expected_client": "ButanoServiceClient",
-          "client_file_present": true,
-          "referenced_in_controller": true,
-          "proxy": null
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "butano.custom.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "substantial",
-          "springdoc_in_pom": true
-        },
-        "integration_kafka": {
-          "level": "substantial",
-          "kafka_listener_count": 0,
-          "kafka_publish_signals": 3,
-          "kafka_combined_score": 3
-        },
-        "experience_hooks": {
-          "level": "partial",
-          "files_with_hits": 1,
-          "search_terms_sample": [
-            "butano",
-            "hapishr",
-            "hapi",
-            "shr"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 64
-        }
-      },
-      "composite_score": 0.952
-    },
-    {
-      "maven_module": "pct-service",
-      "product_names": [
-        "PCT"
-      ],
-      "plane": "clinical",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "PctApplication",
-          "flyway_migrations": 4,
-          "java_files": 93
-        },
-        "bff": {
-          "level": "substantial",
-          "is_bff_shell": false,
-          "expected_client": "PctServiceClient",
-          "client_file_present": true,
-          "referenced_in_controller": true,
-          "proxy": null
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "pct.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "substantial",
-          "springdoc_in_pom": true
-        },
-        "integration_kafka": {
-          "level": "substantial",
-          "kafka_listener_count": 5,
-          "kafka_publish_signals": 3,
-          "kafka_combined_score": 8
-        },
-        "experience_hooks": {
-          "level": "partial",
-          "files_with_hits": 1,
-          "search_terms_sample": [
-            "pct"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 3
-        }
-      },
-      "composite_score": 0.952
-    },
-    {
-      "maven_module": "clinical-knowledge-platform-service",
-      "product_names": [
-        "Clinical Knowledge Platform"
-      ],
-      "plane": "knowledge",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "ClinicalKnowledgePlatformApplication",
-          "flyway_migrations": 4,
-          "java_files": 47
-        },
-        "bff": {
-          "level": "substantial",
-          "is_bff_shell": false,
-          "expected_client": "ClinicalKnowledgePlatformClient",
-          "client_file_present": true,
-          "referenced_in_controller": true,
-          "proxy": null
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "clinical-knowledge-platform.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "substantial",
-          "springdoc_in_pom": true
-        },
-        "integration_kafka": {
-          "level": "partial",
-          "kafka_listener_count": 0,
-          "kafka_publish_signals": 1,
-          "kafka_combined_score": 1
-        },
-        "experience_hooks": {
-          "level": "substantial",
-          "files_with_hits": 21,
-          "search_terms_sample": [
-            "clinical-knowledge-platform",
-            "clinicalknowledgeplatform",
-            "clinical",
-            "knowledge",
-            "platform"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 116
-        }
-      },
-      "composite_score": 0.952
-    },
-    {
-      "maven_module": "costing-engine-service",
-      "product_names": [
-        "COSTA"
-      ],
-      "plane": "finance",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "CostaApplication",
-          "flyway_migrations": 1,
-          "java_files": 95
-        },
-        "bff": {
-          "level": "substantial",
-          "is_bff_shell": false,
-          "expected_client": "CostaServiceClient",
-          "client_file_present": true,
-          "referenced_in_controller": true,
-          "proxy": null
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "costa.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "substantial",
-          "springdoc_in_pom": true
-        },
-        "integration_kafka": {
-          "level": "substantial",
-          "kafka_listener_count": 7,
-          "kafka_publish_signals": 3,
-          "kafka_combined_score": 10
-        },
-        "experience_hooks": {
-          "level": "partial",
-          "files_with_hits": 1,
-          "search_terms_sample": [
-            "costing-engine",
-            "costa"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 5
-        }
-      },
-      "composite_score": 0.952
-    },
-    {
-      "maven_module": "experience-bff",
-      "product_names": [
-        "Experience BFF"
-      ],
-      "plane": "experience",
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "ExperienceBffApplication",
-          "flyway_migrations": 41,
-          "java_files": 203
-        },
-        "bff": {
-          "level": "substantial",
-          "is_bff_shell": true,
-          "expected_client": null,
-          "client_file_present": false,
-          "referenced_in_controller": false,
-          "proxy": null
-        },
-        "contract": {
-          "level": "substantial",
-          "openapi_file": "experience-bff.openapi.yaml",
-          "present": true
-        },
-        "api_docs": {
-          "level": "partial",
-          "springdoc_in_pom": false
-        },
-        "integration_kafka": {
-          "level": "substantial",
-          "kafka_listener_count": 12,
-          "kafka_publish_signals": 3,
-          "kafka_combined_score": 15
-        },
-        "experience_hooks": {
-          "level": "substantial",
-          "files_with_hits": 67,
-          "search_terms_sample": [
-            "experience-bff",
-            "experiencebff",
-            "experience",
-            "bff"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 107
-        }
-      },
-      "composite_score": 0.952
+      "composite_score": 1
     },
     {
       "maven_module": "vito-service",
@@ -3259,7 +453,10 @@
           "expected_client": "VitoServiceClient",
           "client_file_present": true,
           "referenced_in_controller": true,
-          "proxy": null
+          "proxy": null,
+          "service_endpoint_accessor": "vitoBaseUrl",
+          "service_endpoint_declared": true,
+          "governed_trust_shell": true
         },
         "contract": {
           "level": "substantial",
@@ -3274,18 +471,21 @@
           "level": "substantial",
           "kafka_listener_count": 2,
           "kafka_publish_signals": 3,
-          "kafka_combined_score": 5
+          "kafka_combined_score": 5,
+          "pom_kafka_dependency": true
         },
         "experience_hooks": {
           "level": "substantial",
-          "files_with_hits": 2,
+          "files_with_hits": 7,
           "search_terms_sample": [
             "vito"
-          ]
+          ],
+          "registry_ui_refs": true
         },
         "experience_pages": {
           "level": "substantial",
-          "files_with_hits": 10
+          "files_with_hits": 15,
+          "registry_ui_refs": true
         }
       },
       "composite_score": 1
@@ -3310,7 +510,10 @@
           "expected_client": "VarapiServiceClient",
           "client_file_present": true,
           "referenced_in_controller": true,
-          "proxy": null
+          "proxy": null,
+          "service_endpoint_accessor": "varapiBaseUrl",
+          "service_endpoint_declared": true,
+          "governed_trust_shell": true
         },
         "contract": {
           "level": "substantial",
@@ -3325,18 +528,135 @@
           "level": "substantial",
           "kafka_listener_count": 0,
           "kafka_publish_signals": 3,
-          "kafka_combined_score": 3
+          "kafka_combined_score": 3,
+          "pom_kafka_dependency": true
         },
         "experience_hooks": {
           "level": "substantial",
-          "files_with_hits": 5,
+          "files_with_hits": 6,
           "search_terms_sample": [
             "varapi"
-          ]
+          ],
+          "registry_ui_refs": true
         },
         "experience_pages": {
           "level": "substantial",
-          "files_with_hits": 5
+          "files_with_hits": 6,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "tuso-service",
+      "product_names": [
+        "TUSO"
+      ],
+      "plane": "registry",
+      "sovereign_group": "TUSO",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "TusoApplication",
+          "flyway_migrations": 4,
+          "java_files": 112
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": "TusoServiceClient",
+          "client_file_present": true,
+          "referenced_in_controller": true,
+          "proxy": null,
+          "service_endpoint_accessor": "tusoBaseUrl",
+          "service_endpoint_declared": true,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "tuso.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": true
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 0,
+          "kafka_publish_signals": 3,
+          "kafka_combined_score": 3,
+          "pom_kafka_dependency": true
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 1,
+          "search_terms_sample": [
+            "tuso"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 4,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "zibo-service",
+      "product_names": [
+        "ZIBO"
+      ],
+      "plane": "registry",
+      "sovereign_group": "ZIBO",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "ZiboApplication",
+          "flyway_migrations": 2,
+          "java_files": 59
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": null,
+          "client_file_present": false,
+          "referenced_in_controller": false,
+          "proxy": null,
+          "service_endpoint_accessor": null,
+          "service_endpoint_declared": false,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "zibo.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": true
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 2,
+          "kafka_publish_signals": 3,
+          "kafka_combined_score": 5,
+          "pom_kafka_dependency": true
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 2,
+          "search_terms_sample": [
+            "zibo"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 2,
+          "registry_ui_refs": true
         }
       },
       "composite_score": 1
@@ -3361,7 +681,10 @@
           "expected_client": "MsikaServiceClient",
           "client_file_present": true,
           "referenced_in_controller": true,
-          "proxy": null
+          "proxy": null,
+          "service_endpoint_accessor": "msikaBaseUrl",
+          "service_endpoint_declared": true,
+          "governed_trust_shell": true
         },
         "contract": {
           "level": "substantial",
@@ -3376,18 +699,486 @@
           "level": "substantial",
           "kafka_listener_count": 0,
           "kafka_publish_signals": 3,
-          "kafka_combined_score": 3
+          "kafka_combined_score": 3,
+          "pom_kafka_dependency": true
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 10,
+          "search_terms_sample": [
+            "msika"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 23,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "ubomi-service",
+      "product_names": [
+        "UBOMI"
+      ],
+      "plane": "registry",
+      "sovereign_group": "UBOMI",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "UbomiApplication",
+          "flyway_migrations": 1,
+          "java_files": 18
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": null,
+          "client_file_present": false,
+          "referenced_in_controller": false,
+          "proxy": null,
+          "service_endpoint_accessor": null,
+          "service_endpoint_declared": false,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "ubomi.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": true
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 0,
+          "kafka_publish_signals": 0,
+          "kafka_combined_score": 0,
+          "pom_kafka_dependency": true
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 1,
+          "search_terms_sample": [
+            "ubomi"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 1,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "indawo-service",
+      "product_names": [
+        "INDAWO"
+      ],
+      "plane": "registry",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "IndawoServiceApplication",
+          "flyway_migrations": 2,
+          "java_files": 20
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": null,
+          "client_file_present": false,
+          "referenced_in_controller": false,
+          "proxy": "PublicHealthController",
+          "service_endpoint_accessor": "indawoBaseUrl",
+          "service_endpoint_declared": true,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "indawo.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": false
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 0,
+          "kafka_publish_signals": 0,
+          "kafka_combined_score": 0,
+          "pom_kafka_dependency": false
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 2,
+          "search_terms_sample": [
+            "indawo"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 4,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "product-registry-service",
+      "product_names": [
+        "Product Registry"
+      ],
+      "plane": "registry",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "ProductRegistryApplication",
+          "flyway_migrations": 2,
+          "java_files": 14
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": null,
+          "client_file_present": false,
+          "referenced_in_controller": false,
+          "proxy": "ProductRegistryController",
+          "service_endpoint_accessor": null,
+          "service_endpoint_declared": false,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "product-registry.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": true
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 0,
+          "kafka_publish_signals": 0,
+          "kafka_combined_score": 0,
+          "pom_kafka_dependency": true
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 22,
+          "search_terms_sample": [
+            "product-registry",
+            "productregistry",
+            "product",
+            "registry"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 59,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "butano-service",
+      "product_names": [
+        "BUTANO",
+        "HAPI SHR"
+      ],
+      "plane": "clinical",
+      "sovereign_group": "BUTANO",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "ButanoApplication",
+          "flyway_migrations": 1,
+          "java_files": 29
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": "ButanoServiceClient",
+          "client_file_present": true,
+          "referenced_in_controller": true,
+          "proxy": null,
+          "service_endpoint_accessor": "butanoBaseUrl",
+          "service_endpoint_declared": true,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "butano.custom.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": true
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 0,
+          "kafka_publish_signals": 3,
+          "kafka_combined_score": 3,
+          "pom_kafka_dependency": true
         },
         "experience_hooks": {
           "level": "substantial",
           "files_with_hits": 5,
           "search_terms_sample": [
-            "msika"
-          ]
+            "butano",
+            "hapishr",
+            "hapi",
+            "shr"
+          ],
+          "registry_ui_refs": true
         },
         "experience_pages": {
           "level": "substantial",
-          "files_with_hits": 18
+          "files_with_hits": 68,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "butano-fhir",
+      "product_names": [
+        "BUTANO FHIR"
+      ],
+      "plane": "clinical",
+      "sovereign_group": "BUTANO",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "ButanoFhirApplication",
+          "flyway_migrations": 1,
+          "java_files": 10
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": null,
+          "client_file_present": false,
+          "referenced_in_controller": false,
+          "proxy": null,
+          "service_endpoint_accessor": "fhirBaseUrl",
+          "service_endpoint_declared": true,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "butano.custom.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": true
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 0,
+          "kafka_publish_signals": 0,
+          "kafka_combined_score": 0,
+          "pom_kafka_dependency": true
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 6,
+          "search_terms_sample": [
+            "butano-fhir",
+            "butanofhir",
+            "butano",
+            "fhir"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 14,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "fhir-gateway-service",
+      "product_names": [
+        "FHIR Gateway"
+      ],
+      "plane": "clinical",
+      "sovereign_group": "BUTANO",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "FhirGatewayApplication",
+          "flyway_migrations": 1,
+          "java_files": 12
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": "FhirGatewayServiceClient",
+          "client_file_present": true,
+          "referenced_in_controller": true,
+          "proxy": null,
+          "service_endpoint_accessor": "fhirGatewayBaseUrl",
+          "service_endpoint_declared": true,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "fhir-gateway.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": true
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 0,
+          "kafka_publish_signals": 0,
+          "kafka_combined_score": 0,
+          "pom_kafka_dependency": true
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 8,
+          "search_terms_sample": [
+            "fhir-gateway",
+            "fhirgateway",
+            "fhir",
+            "gateway"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 16,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "pct-service",
+      "product_names": [
+        "PCT"
+      ],
+      "plane": "clinical",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "PctApplication",
+          "flyway_migrations": 4,
+          "java_files": 93
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": "PctServiceClient",
+          "client_file_present": true,
+          "referenced_in_controller": true,
+          "proxy": null,
+          "service_endpoint_accessor": "pctBaseUrl",
+          "service_endpoint_declared": true,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "pct.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": true
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 5,
+          "kafka_publish_signals": 3,
+          "kafka_combined_score": 8,
+          "pom_kafka_dependency": true
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 4,
+          "search_terms_sample": [
+            "pct"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 6,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "oros-service",
+      "product_names": [
+        "OROS"
+      ],
+      "plane": "clinical",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "OrosApplication",
+          "flyway_migrations": 1,
+          "java_files": 85
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": "OrosServiceClient",
+          "client_file_present": true,
+          "referenced_in_controller": true,
+          "proxy": null,
+          "service_endpoint_accessor": "orosBaseUrl",
+          "service_endpoint_declared": true,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "oros.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": true
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 4,
+          "kafka_publish_signals": 3,
+          "kafka_combined_score": 7,
+          "pom_kafka_dependency": true
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 4,
+          "search_terms_sample": [
+            "oros"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 11,
+          "registry_ui_refs": true
         }
       },
       "composite_score": 1
@@ -3411,7 +1202,10 @@
           "expected_client": "PharmacyServiceClient",
           "client_file_present": true,
           "referenced_in_controller": true,
-          "proxy": null
+          "proxy": null,
+          "service_endpoint_accessor": "pharmacyBaseUrl",
+          "service_endpoint_declared": true,
+          "governed_trust_shell": true
         },
         "contract": {
           "level": "substantial",
@@ -3426,18 +1220,251 @@
           "level": "substantial",
           "kafka_listener_count": 2,
           "kafka_publish_signals": 3,
-          "kafka_combined_score": 5
+          "kafka_combined_score": 5,
+          "pom_kafka_dependency": true
         },
         "experience_hooks": {
           "level": "substantial",
-          "files_with_hits": 5,
+          "files_with_hits": 11,
           "search_terms_sample": [
             "pharmacy"
-          ]
+          ],
+          "registry_ui_refs": true
         },
         "experience_pages": {
           "level": "substantial",
-          "files_with_hits": 25
+          "files_with_hits": 31,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "pharmacy-elmis-adapter",
+      "product_names": [
+        "Pharmacy eLMIS"
+      ],
+      "plane": "clinical",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "ElmisAdapterApplication",
+          "flyway_migrations": 1,
+          "java_files": 14
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": null,
+          "client_file_present": false,
+          "referenced_in_controller": false,
+          "proxy": null,
+          "service_endpoint_accessor": null,
+          "service_endpoint_declared": false,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "pharmacy-elmis.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": true
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 0,
+          "kafka_publish_signals": 0,
+          "kafka_combined_score": 0,
+          "pom_kafka_dependency": true
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 11,
+          "search_terms_sample": [
+            "pharmacy-elmis",
+            "pharmacyelmis",
+            "pharmacy",
+            "elmis"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 31,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "inpatient-service",
+      "product_names": [
+        "Inpatient"
+      ],
+      "plane": "clinical",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "InpatientApplication",
+          "flyway_migrations": 2,
+          "java_files": 15
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": null,
+          "client_file_present": false,
+          "referenced_in_controller": false,
+          "proxy": null,
+          "service_endpoint_accessor": null,
+          "service_endpoint_declared": false,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "inpatient.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": true
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 0,
+          "kafka_publish_signals": 0,
+          "kafka_combined_score": 0,
+          "pom_kafka_dependency": true
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 7,
+          "search_terms_sample": [
+            "inpatient"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 4,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "inventory-service",
+      "product_names": [
+        "Inventory"
+      ],
+      "plane": "clinical",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "InventoryApplication",
+          "flyway_migrations": 2,
+          "java_files": 101
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": null,
+          "client_file_present": false,
+          "referenced_in_controller": false,
+          "proxy": null,
+          "service_endpoint_accessor": null,
+          "service_endpoint_declared": false,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "inventory.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": true
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 2,
+          "kafka_publish_signals": 3,
+          "kafka_combined_score": 5,
+          "pom_kafka_dependency": true
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 6,
+          "search_terms_sample": [
+            "inventory"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 21,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "inventory-elmis-adapter",
+      "product_names": [
+        "Inventory eLMIS"
+      ],
+      "plane": "clinical",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "ElmisAdapterApplication",
+          "flyway_migrations": 1,
+          "java_files": 14
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": null,
+          "client_file_present": false,
+          "referenced_in_controller": false,
+          "proxy": null,
+          "service_endpoint_accessor": null,
+          "service_endpoint_declared": false,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "inventory-elmis.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": true
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 0,
+          "kafka_publish_signals": 0,
+          "kafka_combined_score": 0,
+          "pom_kafka_dependency": true
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 6,
+          "search_terms_sample": [
+            "inventory-elmis",
+            "inventoryelmis",
+            "inventory",
+            "elmis"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 21,
+          "registry_ui_refs": true
         }
       },
       "composite_score": 1
@@ -3461,7 +1488,10 @@
           "expected_client": "DocumentServiceClient",
           "client_file_present": true,
           "referenced_in_controller": true,
-          "proxy": null
+          "proxy": null,
+          "service_endpoint_accessor": "documentStoreBaseUrl",
+          "service_endpoint_declared": true,
+          "governed_trust_shell": true
         },
         "contract": {
           "level": "substantial",
@@ -3476,20 +1506,257 @@
           "level": "substantial",
           "kafka_listener_count": 0,
           "kafka_publish_signals": 3,
-          "kafka_combined_score": 3
+          "kafka_combined_score": 3,
+          "pom_kafka_dependency": true
         },
         "experience_hooks": {
           "level": "substantial",
-          "files_with_hits": 20,
+          "files_with_hits": 31,
           "search_terms_sample": [
             "document",
             "documentstore",
             "store"
-          ]
+          ],
+          "registry_ui_refs": true
         },
         "experience_pages": {
           "level": "substantial",
-          "files_with_hits": 205
+          "files_with_hits": 216,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "pacs-adapter-service",
+      "product_names": [
+        "PACS Adapter"
+      ],
+      "plane": "clinical",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "PacsAdapterApplication",
+          "flyway_migrations": 1,
+          "java_files": 13
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": null,
+          "client_file_present": false,
+          "referenced_in_controller": false,
+          "proxy": null,
+          "service_endpoint_accessor": null,
+          "service_endpoint_declared": true,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "pacs-adapter.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": true
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 0,
+          "kafka_publish_signals": 0,
+          "kafka_combined_score": 0,
+          "pom_kafka_dependency": true
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 3,
+          "search_terms_sample": [
+            "pacs-adapter",
+            "pacsadapter",
+            "pacs",
+            "adapter"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 10,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "clinical-knowledge-platform-service",
+      "product_names": [
+        "Clinical Knowledge Platform"
+      ],
+      "plane": "knowledge",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "ClinicalKnowledgePlatformApplication",
+          "flyway_migrations": 4,
+          "java_files": 47
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": "ClinicalKnowledgePlatformClient",
+          "client_file_present": true,
+          "referenced_in_controller": true,
+          "proxy": null,
+          "service_endpoint_accessor": null,
+          "service_endpoint_declared": false,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "clinical-knowledge-platform.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": true
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 0,
+          "kafka_publish_signals": 1,
+          "kafka_combined_score": 1,
+          "pom_kafka_dependency": true
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 34,
+          "search_terms_sample": [
+            "clinical-knowledge-platform",
+            "clinicalknowledgeplatform",
+            "clinical",
+            "knowledge",
+            "platform"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 129,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "guidance-service",
+      "product_names": [
+        "Guidance"
+      ],
+      "plane": "knowledge",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "GuidanceServiceApplication",
+          "flyway_migrations": 1,
+          "java_files": 8
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": "GuidanceServiceClient",
+          "client_file_present": true,
+          "referenced_in_controller": true,
+          "proxy": null,
+          "service_endpoint_accessor": "guidanceBaseUrl",
+          "service_endpoint_declared": true,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "guidance.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": true
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 0,
+          "kafka_publish_signals": 0,
+          "kafka_combined_score": 0,
+          "pom_kafka_dependency": false
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 9,
+          "search_terms_sample": [
+            "guidance"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 22,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "connector-fhir-adapter",
+      "product_names": [
+        "Connector FHIR"
+      ],
+      "plane": "integration",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "ConnectorFhirAdapterApplication",
+          "flyway_migrations": 2,
+          "java_files": 14
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": null,
+          "client_file_present": false,
+          "referenced_in_controller": false,
+          "proxy": null,
+          "service_endpoint_accessor": null,
+          "service_endpoint_declared": false,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "connector-fhir.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": false
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 0,
+          "kafka_publish_signals": 0,
+          "kafka_combined_score": 0,
+          "pom_kafka_dependency": false
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 4,
+          "search_terms_sample": [
+            "connector-fhir",
+            "connectorfhir",
+            "connector",
+            "fhir"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 8,
+          "registry_ui_refs": true
         }
       },
       "composite_score": 1
@@ -3514,7 +1781,10 @@
           "expected_client": "MushexServiceClient",
           "client_file_present": true,
           "referenced_in_controller": true,
-          "proxy": null
+          "proxy": null,
+          "service_endpoint_accessor": "mushexBaseUrl",
+          "service_endpoint_declared": true,
+          "governed_trust_shell": true
         },
         "contract": {
           "level": "substantial",
@@ -3529,18 +1799,134 @@
           "level": "substantial",
           "kafka_listener_count": 7,
           "kafka_publish_signals": 3,
-          "kafka_combined_score": 10
+          "kafka_combined_score": 10,
+          "pom_kafka_dependency": true
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 7,
+          "search_terms_sample": [
+            "mushex"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 15,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "costing-engine-service",
+      "product_names": [
+        "COSTA"
+      ],
+      "plane": "finance",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "CostaApplication",
+          "flyway_migrations": 1,
+          "java_files": 95
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": "CostaServiceClient",
+          "client_file_present": true,
+          "referenced_in_controller": true,
+          "proxy": null,
+          "service_endpoint_accessor": "costaBaseUrl",
+          "service_endpoint_declared": true,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "costa.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": true
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 7,
+          "kafka_publish_signals": 3,
+          "kafka_combined_score": 10,
+          "pom_kafka_dependency": true
         },
         "experience_hooks": {
           "level": "substantial",
           "files_with_hits": 4,
           "search_terms_sample": [
-            "mushex"
-          ]
+            "costing-engine",
+            "costa"
+          ],
+          "registry_ui_refs": true
         },
         "experience_pages": {
           "level": "substantial",
-          "files_with_hits": 12
+          "files_with_hits": 8,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "coverage-service",
+      "product_names": [
+        "Coverage"
+      ],
+      "plane": "finance",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "CoverageServiceApplication",
+          "flyway_migrations": 3,
+          "java_files": 34
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": "CoverageServiceClient",
+          "client_file_present": true,
+          "referenced_in_controller": true,
+          "proxy": null,
+          "service_endpoint_accessor": "coverageBaseUrl",
+          "service_endpoint_declared": true,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "coverage.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": false
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 0,
+          "kafka_publish_signals": 0,
+          "kafka_combined_score": 0,
+          "pom_kafka_dependency": false
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 3,
+          "search_terms_sample": [
+            "coverage"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 10,
+          "registry_ui_refs": true
         }
       },
       "composite_score": 1
@@ -3564,7 +1950,10 @@
           "expected_client": "CredentialServiceClient",
           "client_file_present": true,
           "referenced_in_controller": true,
-          "proxy": null
+          "proxy": null,
+          "service_endpoint_accessor": "credentialBaseUrl",
+          "service_endpoint_declared": true,
+          "governed_trust_shell": true
         },
         "contract": {
           "level": "substantial",
@@ -3579,21 +1968,83 @@
           "level": "substantial",
           "kafka_listener_count": 0,
           "kafka_publish_signals": 3,
-          "kafka_combined_score": 3
+          "kafka_combined_score": 3,
+          "pom_kafka_dependency": true
         },
         "experience_hooks": {
           "level": "substantial",
-          "files_with_hits": 5,
+          "files_with_hits": 13,
           "search_terms_sample": [
             "credential-verification",
             "credentialverification",
             "credential",
             "verification"
-          ]
+          ],
+          "registry_ui_refs": true
         },
         "experience_pages": {
           "level": "substantial",
-          "files_with_hits": 14
+          "files_with_hits": 22,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "share-slip-service",
+      "product_names": [
+        "Share Slip"
+      ],
+      "plane": "finance",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "ShareSlipApplication",
+          "flyway_migrations": 1,
+          "java_files": 25
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": null,
+          "client_file_present": false,
+          "referenced_in_controller": false,
+          "proxy": null,
+          "service_endpoint_accessor": null,
+          "service_endpoint_declared": false,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "share-slip.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": true
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 0,
+          "kafka_publish_signals": 3,
+          "kafka_combined_score": 3,
+          "pom_kafka_dependency": true
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 9,
+          "search_terms_sample": [
+            "share-slip",
+            "shareslip",
+            "share",
+            "slip"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 27,
+          "registry_ui_refs": true
         }
       },
       "composite_score": 1
@@ -3617,7 +2068,10 @@
           "expected_client": "MsikaFlowServiceClient",
           "client_file_present": true,
           "referenced_in_controller": true,
-          "proxy": null
+          "proxy": null,
+          "service_endpoint_accessor": "msikaFlowBaseUrl",
+          "service_endpoint_declared": true,
+          "governed_trust_shell": true
         },
         "contract": {
           "level": "substantial",
@@ -3632,21 +2086,1987 @@
           "level": "substantial",
           "kafka_listener_count": 3,
           "kafka_publish_signals": 3,
-          "kafka_combined_score": 6
+          "kafka_combined_score": 6,
+          "pom_kafka_dependency": true
         },
         "experience_hooks": {
           "level": "substantial",
-          "files_with_hits": 9,
+          "files_with_hits": 20,
           "search_terms_sample": [
             "msika-flow",
             "msikaflow",
             "msika",
             "flow"
-          ]
+          ],
+          "registry_ui_refs": true
         },
         "experience_pages": {
           "level": "substantial",
-          "files_with_hits": 143
+          "files_with_hits": 154,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "landela-adapter-service",
+      "product_names": [
+        "Landela"
+      ],
+      "plane": "integration",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "LandelaAdapterApplication",
+          "flyway_migrations": 1,
+          "java_files": 23
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": null,
+          "client_file_present": false,
+          "referenced_in_controller": false,
+          "proxy": "landelaBaseUrl",
+          "service_endpoint_accessor": "landelaBaseUrl",
+          "service_endpoint_declared": true,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "landela-adapter.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": true
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 0,
+          "kafka_publish_signals": 3,
+          "kafka_combined_score": 3,
+          "pom_kafka_dependency": true
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 1,
+          "search_terms_sample": [
+            "landela-adapter",
+            "landela"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 3,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "integration-hub",
+      "product_names": [
+        "Integration Hub"
+      ],
+      "plane": "integration",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "IntegrationHubApplication",
+          "flyway_migrations": 3,
+          "java_files": 35
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": "IntegrationHubServiceClient",
+          "client_file_present": true,
+          "referenced_in_controller": true,
+          "proxy": null,
+          "service_endpoint_accessor": "integrationHubBaseUrl",
+          "service_endpoint_declared": true,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "integration-hub.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": false
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 0,
+          "kafka_publish_signals": 0,
+          "kafka_combined_score": 0,
+          "pom_kafka_dependency": false
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 10,
+          "search_terms_sample": [
+            "integration-hub",
+            "integrationhub",
+            "integration",
+            "hub"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 76,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "notification-service",
+      "product_names": [
+        "Notification"
+      ],
+      "plane": "integration",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "NotificationApplication",
+          "flyway_migrations": 3,
+          "java_files": 41
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": null,
+          "client_file_present": false,
+          "referenced_in_controller": false,
+          "proxy": "notificationBaseUrl",
+          "service_endpoint_accessor": "notificationBaseUrl",
+          "service_endpoint_declared": true,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "notification.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": false
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 0,
+          "kafka_publish_signals": 0,
+          "kafka_combined_score": 0,
+          "pom_kafka_dependency": false
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 3,
+          "search_terms_sample": [
+            "notification"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 13,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "jobs-service",
+      "product_names": [
+        "Jobs"
+      ],
+      "plane": "integration",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "JobsApplication",
+          "flyway_migrations": 1,
+          "java_files": 16
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": null,
+          "client_file_present": false,
+          "referenced_in_controller": false,
+          "proxy": null,
+          "service_endpoint_accessor": null,
+          "service_endpoint_declared": false,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "jobs.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": true
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 0,
+          "kafka_publish_signals": 0,
+          "kafka_combined_score": 0,
+          "pom_kafka_dependency": true
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 4,
+          "search_terms_sample": [
+            "jobs"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 9,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "offline-sync-service",
+      "product_names": [
+        "Offline Sync"
+      ],
+      "plane": "integration",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "OfflineSyncApplication",
+          "flyway_migrations": 2,
+          "java_files": 18
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": null,
+          "client_file_present": false,
+          "referenced_in_controller": false,
+          "proxy": null,
+          "service_endpoint_accessor": null,
+          "service_endpoint_declared": false,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "offline-sync.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": true
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 0,
+          "kafka_publish_signals": 0,
+          "kafka_combined_score": 0,
+          "pom_kafka_dependency": true
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 27,
+          "search_terms_sample": [
+            "offline-sync",
+            "offlinesync",
+            "offline",
+            "sync"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 108,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "card-print-agent",
+      "product_names": [
+        "Card Print Agent"
+      ],
+      "plane": "integration",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "CardPrintAgentApplication",
+          "flyway_migrations": 1,
+          "java_files": 26
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": null,
+          "client_file_present": false,
+          "referenced_in_controller": false,
+          "proxy": null,
+          "service_endpoint_accessor": null,
+          "service_endpoint_declared": false,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "card-print.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": true
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 1,
+          "kafka_publish_signals": 4,
+          "kafka_combined_score": 5,
+          "pom_kafka_dependency": true
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 8,
+          "search_terms_sample": [
+            "card-print",
+            "cardprintagent",
+            "card",
+            "print",
+            "agent"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 74,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "channels-service",
+      "product_names": [
+        "Channels"
+      ],
+      "plane": "integration",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "ChannelsServiceApplication",
+          "flyway_migrations": 1,
+          "java_files": 28
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": null,
+          "client_file_present": false,
+          "referenced_in_controller": false,
+          "proxy": null,
+          "service_endpoint_accessor": null,
+          "service_endpoint_declared": false,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "channels.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": false
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 0,
+          "kafka_publish_signals": 0,
+          "kafka_combined_score": 0,
+          "pom_kafka_dependency": false
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 5,
+          "search_terms_sample": [
+            "channels"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 10,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "workflow-service",
+      "product_names": [
+        "Workflow"
+      ],
+      "plane": "integration",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "WorkflowServiceApplication",
+          "flyway_migrations": 2,
+          "java_files": 20
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": null,
+          "client_file_present": false,
+          "referenced_in_controller": false,
+          "proxy": null,
+          "service_endpoint_accessor": "workflowBaseUrl",
+          "service_endpoint_declared": true,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "workflow.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": false
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 0,
+          "kafka_publish_signals": 0,
+          "kafka_combined_score": 0,
+          "pom_kafka_dependency": false
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 10,
+          "search_terms_sample": [
+            "workflow"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 60,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "rules-service",
+      "product_names": [
+        "Rules"
+      ],
+      "plane": "knowledge",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "RulesApplication",
+          "flyway_migrations": 2,
+          "java_files": 27
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": "ExtensionServiceClient",
+          "client_file_present": true,
+          "referenced_in_controller": true,
+          "proxy": null,
+          "service_endpoint_accessor": "rulesBaseUrl",
+          "service_endpoint_declared": true,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "rules.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": false
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 0,
+          "kafka_publish_signals": 0,
+          "kafka_combined_score": 0,
+          "pom_kafka_dependency": false
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 5,
+          "search_terms_sample": [
+            "rules"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 9,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "forms-service",
+      "product_names": [
+        "Forms"
+      ],
+      "plane": "knowledge",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "FormsApplication",
+          "flyway_migrations": 1,
+          "java_files": 17
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": "ExtensionServiceClient",
+          "client_file_present": true,
+          "referenced_in_controller": true,
+          "proxy": null,
+          "service_endpoint_accessor": "formsBaseUrl",
+          "service_endpoint_declared": true,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "forms.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": false
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 0,
+          "kafka_publish_signals": 0,
+          "kafka_combined_score": 0,
+          "pom_kafka_dependency": false
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 2,
+          "search_terms_sample": [
+            "forms"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 7,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "search-service",
+      "product_names": [
+        "Search"
+      ],
+      "plane": "knowledge",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "SearchApplication",
+          "flyway_migrations": 1,
+          "java_files": 11
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": "SearchServiceClient",
+          "client_file_present": true,
+          "referenced_in_controller": true,
+          "proxy": null,
+          "service_endpoint_accessor": "searchBaseUrl",
+          "service_endpoint_declared": true,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "search.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": false
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 0,
+          "kafka_publish_signals": 0,
+          "kafka_combined_score": 0,
+          "pom_kafka_dependency": false
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 33,
+          "search_terms_sample": [
+            "search"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 132,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "data-pipeline-service",
+      "product_names": [
+        "Data Pipeline"
+      ],
+      "plane": "data",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "DataPipelineApplication",
+          "flyway_migrations": 1,
+          "java_files": 24
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": null,
+          "client_file_present": false,
+          "referenced_in_controller": false,
+          "proxy": null,
+          "service_endpoint_accessor": null,
+          "service_endpoint_declared": false,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "data-pipeline.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": true
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 0,
+          "kafka_publish_signals": 3,
+          "kafka_combined_score": 3,
+          "pom_kafka_dependency": true
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 50,
+          "search_terms_sample": [
+            "data-pipeline",
+            "datapipeline",
+            "data",
+            "pipeline"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 253,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "national-data-repository-service",
+      "product_names": [
+        "National Data Repository"
+      ],
+      "plane": "data",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "NdrApplication",
+          "flyway_migrations": 1,
+          "java_files": 24
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": null,
+          "client_file_present": false,
+          "referenced_in_controller": false,
+          "proxy": null,
+          "service_endpoint_accessor": null,
+          "service_endpoint_declared": false,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "national-data-repository.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": true
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 0,
+          "kafka_publish_signals": 3,
+          "kafka_combined_score": 3,
+          "pom_kafka_dependency": true
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 54,
+          "search_terms_sample": [
+            "national-data-repository",
+            "nationaldatarepository",
+            "national",
+            "data",
+            "repository"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 258,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "ndr-service",
+      "product_names": [
+        "NDR"
+      ],
+      "plane": "data",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "NdrServiceApplication",
+          "flyway_migrations": 3,
+          "java_files": 20
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": null,
+          "client_file_present": false,
+          "referenced_in_controller": false,
+          "proxy": null,
+          "service_endpoint_accessor": null,
+          "service_endpoint_declared": false,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "ndr.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": false
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 0,
+          "kafka_publish_signals": 0,
+          "kafka_combined_score": 0,
+          "pom_kafka_dependency": false
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 6,
+          "search_terms_sample": [
+            "ndr"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 12,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "reporting-service",
+      "product_names": [
+        "Reporting"
+      ],
+      "plane": "data",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "ReportingApplication",
+          "flyway_migrations": 1,
+          "java_files": 26
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": null,
+          "client_file_present": false,
+          "referenced_in_controller": false,
+          "proxy": null,
+          "service_endpoint_accessor": null,
+          "service_endpoint_declared": false,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "reporting.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": true
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 0,
+          "kafka_publish_signals": 3,
+          "kafka_combined_score": 3,
+          "pom_kafka_dependency": true
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 2,
+          "search_terms_sample": [
+            "reporting"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 6,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "data-warehouse-service",
+      "product_names": [
+        "Data Warehouse"
+      ],
+      "plane": "data",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "DataWarehouseServiceApplication",
+          "flyway_migrations": 2,
+          "java_files": 19
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": null,
+          "client_file_present": false,
+          "referenced_in_controller": false,
+          "proxy": null,
+          "service_endpoint_accessor": null,
+          "service_endpoint_declared": false,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "data-warehouse.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": false
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 0,
+          "kafka_publish_signals": 0,
+          "kafka_combined_score": 0,
+          "pom_kafka_dependency": false
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 50,
+          "search_terms_sample": [
+            "data-warehouse",
+            "datawarehouse",
+            "data",
+            "warehouse"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 251,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "data-ingestion-service",
+      "product_names": [
+        "Data Ingestion"
+      ],
+      "plane": "data",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "DataIngestionServiceApplication",
+          "flyway_migrations": 3,
+          "java_files": 17
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": null,
+          "client_file_present": false,
+          "referenced_in_controller": false,
+          "proxy": null,
+          "service_endpoint_accessor": null,
+          "service_endpoint_declared": false,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "data-ingestion.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": false
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 1,
+          "kafka_publish_signals": 0,
+          "kafka_combined_score": 1,
+          "pom_kafka_dependency": true
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 51,
+          "search_terms_sample": [
+            "data-ingestion",
+            "dataingestion",
+            "data",
+            "ingestion"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 251,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "data-governance-service",
+      "product_names": [
+        "Data Governance"
+      ],
+      "plane": "data",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "DataGovernanceServiceApplication",
+          "flyway_migrations": 4,
+          "java_files": 34
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": null,
+          "client_file_present": false,
+          "referenced_in_controller": false,
+          "proxy": "dataGovernanceBaseUrl",
+          "service_endpoint_accessor": "dataGovernanceBaseUrl",
+          "service_endpoint_declared": true,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "data-governance.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": false
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 0,
+          "kafka_publish_signals": 0,
+          "kafka_combined_score": 0,
+          "pom_kafka_dependency": false
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 55,
+          "search_terms_sample": [
+            "data-governance",
+            "datagovernance",
+            "data",
+            "governance"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 263,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "data-access-governance-service",
+      "product_names": [
+        "DAGS"
+      ],
+      "plane": "data",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "DagsApplication",
+          "flyway_migrations": 1,
+          "java_files": 25
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": null,
+          "client_file_present": false,
+          "referenced_in_controller": false,
+          "proxy": null,
+          "service_endpoint_accessor": null,
+          "service_endpoint_declared": false,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "data-access-governance.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": true
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 0,
+          "kafka_publish_signals": 3,
+          "kafka_combined_score": 3,
+          "pom_kafka_dependency": true
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 1,
+          "search_terms_sample": [
+            "data-access-governance",
+            "dags"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 1,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "surveillance-service",
+      "product_names": [
+        "Surveillance"
+      ],
+      "plane": "data",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "SurveillanceApplication",
+          "flyway_migrations": 2,
+          "java_files": 28
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": null,
+          "client_file_present": false,
+          "referenced_in_controller": false,
+          "proxy": "PublicHealthController",
+          "service_endpoint_accessor": "surveillanceBaseUrl",
+          "service_endpoint_declared": true,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "surveillance.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": true
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 0,
+          "kafka_publish_signals": 3,
+          "kafka_combined_score": 3,
+          "pom_kafka_dependency": true
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 3,
+          "search_terms_sample": [
+            "surveillance"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 5,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "campaigns-service",
+      "product_names": [
+        "Campaigns"
+      ],
+      "plane": "data",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "CampaignsApplication",
+          "flyway_migrations": 1,
+          "java_files": 18
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": null,
+          "client_file_present": false,
+          "referenced_in_controller": false,
+          "proxy": "PublicHealthController",
+          "service_endpoint_accessor": "campaignsBaseUrl",
+          "service_endpoint_declared": true,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "campaigns.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": true
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 0,
+          "kafka_publish_signals": 3,
+          "kafka_combined_score": 3,
+          "pom_kafka_dependency": true
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 2,
+          "search_terms_sample": [
+            "campaigns"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 5,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "observability-service",
+      "product_names": [
+        "Observability"
+      ],
+      "plane": "ops",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "ObsApplication",
+          "flyway_migrations": 2,
+          "java_files": 22
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": null,
+          "client_file_present": false,
+          "referenced_in_controller": false,
+          "proxy": null,
+          "service_endpoint_accessor": null,
+          "service_endpoint_declared": false,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "observability.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": true
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 0,
+          "kafka_publish_signals": 3,
+          "kafka_combined_score": 3,
+          "pom_kafka_dependency": true
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 2,
+          "search_terms_sample": [
+            "observability"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 2,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "security-hardening-service",
+      "product_names": [
+        "Security Hardening"
+      ],
+      "plane": "ops",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "SecHardenApplication",
+          "flyway_migrations": 1,
+          "java_files": 17
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": null,
+          "client_file_present": false,
+          "referenced_in_controller": false,
+          "proxy": null,
+          "service_endpoint_accessor": null,
+          "service_endpoint_declared": false,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "security-hardening.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": true
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 0,
+          "kafka_publish_signals": 3,
+          "kafka_combined_score": 3,
+          "pom_kafka_dependency": true
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 3,
+          "search_terms_sample": [
+            "security-hardening",
+            "securityhardening",
+            "security",
+            "hardening"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 8,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "identity-assurance-service",
+      "product_names": [
+        "Identity Assurance"
+      ],
+      "plane": "trust",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "IaApplication",
+          "flyway_migrations": 1,
+          "java_files": 19
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": null,
+          "client_file_present": false,
+          "referenced_in_controller": false,
+          "proxy": null,
+          "service_endpoint_accessor": null,
+          "service_endpoint_declared": false,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "identity-assurance.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": true
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 0,
+          "kafka_publish_signals": 3,
+          "kafka_combined_score": 3,
+          "pom_kafka_dependency": true
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 9,
+          "search_terms_sample": [
+            "identity-assurance",
+            "identityassurance",
+            "identity",
+            "assurance"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 26,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "audit-ledger-service",
+      "product_names": [
+        "Audit Ledger"
+      ],
+      "plane": "ops",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "AuditLedgerServiceApplication",
+          "flyway_migrations": 2,
+          "java_files": 12
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": null,
+          "client_file_present": false,
+          "referenced_in_controller": false,
+          "proxy": null,
+          "service_endpoint_accessor": null,
+          "service_endpoint_declared": false,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "audit-ledger.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": false
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 0,
+          "kafka_publish_signals": 0,
+          "kafka_combined_score": 0,
+          "pom_kafka_dependency": false
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 11,
+          "search_terms_sample": [
+            "audit-ledger",
+            "auditledger",
+            "audit",
+            "ledger"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 31,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "asset-registry-service",
+      "product_names": [
+        "Asset Registry"
+      ],
+      "plane": "ops",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "AssetRegistryServiceApplication",
+          "flyway_migrations": 4,
+          "java_files": 16
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": null,
+          "client_file_present": false,
+          "referenced_in_controller": false,
+          "proxy": null,
+          "service_endpoint_accessor": null,
+          "service_endpoint_declared": false,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "asset-registry.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": false
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 0,
+          "kafka_publish_signals": 0,
+          "kafka_combined_score": 0,
+          "pom_kafka_dependency": false
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 18,
+          "search_terms_sample": [
+            "asset-registry",
+            "assetregistry",
+            "asset",
+            "registry"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 48,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "dispatch-service",
+      "product_names": [
+        "Dispatch"
+      ],
+      "plane": "ops",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "DispatchServiceApplication",
+          "flyway_migrations": 2,
+          "java_files": 18
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": null,
+          "client_file_present": false,
+          "referenced_in_controller": false,
+          "proxy": null,
+          "service_endpoint_accessor": null,
+          "service_endpoint_declared": false,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "dispatch.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": false
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 0,
+          "kafka_publish_signals": 0,
+          "kafka_combined_score": 0,
+          "pom_kafka_dependency": false
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 4,
+          "search_terms_sample": [
+            "dispatch"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 3,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "iot-ingestion-service",
+      "product_names": [
+        "IoT Ingestion"
+      ],
+      "plane": "ops",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "IoTIngestionServiceApplication",
+          "flyway_migrations": 3,
+          "java_files": 15
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": null,
+          "client_file_present": false,
+          "referenced_in_controller": false,
+          "proxy": null,
+          "service_endpoint_accessor": null,
+          "service_endpoint_declared": false,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "iot-ingestion.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": false
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 1,
+          "kafka_publish_signals": 0,
+          "kafka_combined_score": 1,
+          "pom_kafka_dependency": true
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 4,
+          "search_terms_sample": [
+            "iot-ingestion",
+            "iotingestion",
+            "iot",
+            "ingestion"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 7,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "support-service",
+      "product_names": [
+        "Support"
+      ],
+      "plane": "ops",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "SupportServiceApplication",
+          "flyway_migrations": 4,
+          "java_files": 36
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": null,
+          "client_file_present": false,
+          "referenced_in_controller": false,
+          "proxy": null,
+          "service_endpoint_accessor": null,
+          "service_endpoint_declared": false,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "support.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": false
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 0,
+          "kafka_publish_signals": 0,
+          "kafka_combined_score": 0,
+          "pom_kafka_dependency": false
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 11,
+          "search_terms_sample": [
+            "support"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 45,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "offline-edge-service",
+      "product_names": [
+        "Offline Edge"
+      ],
+      "plane": "ops",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "OfflineEdgeServiceApplication",
+          "flyway_migrations": 4,
+          "java_files": 32
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": null,
+          "client_file_present": false,
+          "referenced_in_controller": false,
+          "proxy": null,
+          "service_endpoint_accessor": null,
+          "service_endpoint_declared": false,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "offline-edge.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": false
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 0,
+          "kafka_publish_signals": 0,
+          "kafka_combined_score": 0,
+          "pom_kafka_dependency": false
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 11,
+          "search_terms_sample": [
+            "offline-edge",
+            "offlineedge",
+            "offline",
+            "edge"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 28,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "developer-portal-service",
+      "product_names": [
+        "Developer Portal"
+      ],
+      "plane": "ops",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "DeveloperPortalServiceApplication",
+          "flyway_migrations": 2,
+          "java_files": 16
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": null,
+          "client_file_present": false,
+          "referenced_in_controller": false,
+          "proxy": null,
+          "service_endpoint_accessor": null,
+          "service_endpoint_declared": false,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "developer-portal.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": false
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 0,
+          "kafka_publish_signals": 0,
+          "kafka_combined_score": 0,
+          "pom_kafka_dependency": false
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 10,
+          "search_terms_sample": [
+            "developer-portal",
+            "developerportal",
+            "developer",
+            "portal"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 26,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "schema-registry-service",
+      "product_names": [
+        "Schema Registry"
+      ],
+      "plane": "ops",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "SchemaRegistryServiceApplication",
+          "flyway_migrations": 1,
+          "java_files": 11
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": null,
+          "client_file_present": false,
+          "referenced_in_controller": false,
+          "proxy": null,
+          "service_endpoint_accessor": null,
+          "service_endpoint_declared": false,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "schema-registry.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": false
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 0,
+          "kafka_publish_signals": 0,
+          "kafka_combined_score": 0,
+          "pom_kafka_dependency": false
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 18,
+          "search_terms_sample": [
+            "schema-registry",
+            "schemaregistry",
+            "schema",
+            "registry"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 47,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "wellness-service",
+      "product_names": [
+        "Citizen Wellness & Health Connect"
+      ],
+      "plane": "experience",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "WellnessServiceApplication",
+          "flyway_migrations": 3,
+          "java_files": 7
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": null,
+          "client_file_present": false,
+          "referenced_in_controller": false,
+          "proxy": "WellnessServiceProxyController",
+          "service_endpoint_accessor": null,
+          "service_endpoint_declared": false,
+          "governed_trust_shell": true
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "wellness.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": true
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 0,
+          "kafka_publish_signals": 0,
+          "kafka_combined_score": 0,
+          "pom_kafka_dependency": false
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 35,
+          "search_terms_sample": [
+            "wellness",
+            "citizenwellness&healthconnect",
+            "citizen",
+            "health",
+            "connect"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 123,
+          "registry_ui_refs": true
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "experience-bff",
+      "product_names": [
+        "Experience BFF"
+      ],
+      "plane": "experience",
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "ExperienceBffApplication",
+          "flyway_migrations": 41,
+          "java_files": 203
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": true,
+          "expected_client": null,
+          "client_file_present": false,
+          "referenced_in_controller": false,
+          "proxy": null,
+          "service_endpoint_accessor": null,
+          "service_endpoint_declared": false,
+          "governed_trust_shell": false
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "experience-bff.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": false
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 12,
+          "kafka_publish_signals": 3,
+          "kafka_combined_score": 15,
+          "pom_kafka_dependency": true
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 81,
+          "search_terms_sample": [
+            "experience-bff",
+            "experiencebff",
+            "experience",
+            "bff"
+          ],
+          "registry_ui_refs": true
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 120,
+          "registry_ui_refs": true
         }
       },
       "composite_score": 1

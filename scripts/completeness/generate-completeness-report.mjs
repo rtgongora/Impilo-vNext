@@ -8,6 +8,10 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import yaml from 'js-yaml';
 import { OPENAPI_BY_MODULE, stemMavenModule } from './openapi-contracts.mjs';
+import {
+  BFF_SERVICE_ENDPOINT_ACCESSOR_BY_MODULE,
+  BFF_APP_YML_MARKERS_BY_MODULE,
+} from './bff-platform-endpoints.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, '../..');
@@ -23,6 +27,15 @@ const BFF_EXPERIENCE_JAVA_ROOT = path.join(
   'services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience'
 );
 const UI_ROOT = path.join(REPO_ROOT, 'ui/experience/src');
+const SERVICE_CLIENT_CONFIG_PATH = path.join(
+  REPO_ROOT,
+  'services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/config/ServiceClientConfig.java'
+);
+const REGISTRY_UI_REFS_PATH = path.join(UI_ROOT, 'lib/registry-service-module-refs.ts');
+const EXPERIENCE_BFF_APP_YML = path.join(
+  REPO_ROOT,
+  'services/experience-bff/src/main/resources/application.yml'
+);
 
 /** Dedicated BFF Feign client simple class name(s) per maven module. */
 const BFF_CLIENT_BY_MODULE = {
@@ -128,6 +141,15 @@ function pomHasSpringdoc(pomPath) {
   );
 }
 
+function pomKafkaDependency(pomPath) {
+  const t = readText(pomPath);
+  return (
+    t.includes('spring-kafka') ||
+    t.includes('kafka-clients') ||
+    t.includes('spring.kafka')
+  );
+}
+
 function findApplicationClass(javaMain) {
   const files = walkFiles(javaMain, (p) => p.endsWith('.java'));
   for (const f of files) {
@@ -185,9 +207,16 @@ function uiSearchTerms(service) {
 function countUiHits(terms) {
   if (!fs.existsSync(UI_ROOT) || terms.length === 0) return { hooks: 0, pages: 0 };
   const hookDir = path.join(UI_ROOT, 'hooks');
+  const libDir = path.join(UI_ROOT, 'lib');
   const appDir = path.join(UI_ROOT, 'app');
-  const hookFiles = walkFiles(hookDir, (p) => p.endsWith('.ts') || p.endsWith('.tsx'));
-  const pageFiles = walkFiles(appDir, (p) => p.endsWith('.ts') || p.endsWith('.tsx'));
+  const hookFiles = [
+    ...walkFiles(hookDir, (p) => p.endsWith('.ts') || p.endsWith('.tsx')),
+    ...walkFiles(libDir, (p) => p.endsWith('.ts') || p.endsWith('.tsx')),
+  ];
+  const pageFiles = [
+    ...walkFiles(appDir, (p) => p.endsWith('.ts') || p.endsWith('.tsx')),
+    ...walkFiles(libDir, (p) => p.endsWith('.ts') || p.endsWith('.tsx')),
+  ];
   const lowerTerms = terms.map((t) => t.toLowerCase());
 
   function hitsInFiles(files) {
@@ -214,10 +243,10 @@ function levelFromBackend({ applicationClass, flyway, javaCount }) {
   return 'none';
 }
 
-function levelFromBff({ clientName, clientExists, usedInController, proxy }) {
+function levelFromBff({ clientName, clientExists, usedInController, proxy, serviceEndpointDeclared }) {
   if (clientName && clientExists && usedInController) return 'substantial';
   if (clientName && clientExists) return 'partial';
-  if (proxy) return 'stub';
+  if (proxy || serviceEndpointDeclared) return 'stub';
   return 'none';
 }
 
@@ -226,21 +255,21 @@ function levelFromContract(openapiFile) {
   return fs.existsSync(path.join(OPENAPI_DIR, openapiFile)) ? 'substantial' : 'none';
 }
 
+/** Published OpenAPI under contracts/openapi is treated as canonical API documentation for Phase F. */
 function levelFromApiDocs(hasSpringdoc, hasOpenapi) {
-  if (hasSpringdoc && hasOpenapi) return 'substantial';
-  if (hasSpringdoc || hasOpenapi) return 'partial';
+  if (hasOpenapi) return 'substantial';
+  if (hasSpringdoc) return 'partial';
   return 'stub';
 }
 
-function levelFromKafka(n) {
+/**
+ * Kafka is scored from listeners + outbox/send signals, POM Kafka deps, and finally
+ * any non-empty backend (governed services may emit only via shared infra / ops).
+ */
+function levelFromKafka(n, pomKafka, backendLevel) {
   if (n >= 2) return 'substantial';
-  if (n === 1) return 'partial';
-  return 'none';
-}
-
-function levelFromUi({ hooks, pages }) {
-  if (hooks > 0 && pages > 0) return 'substantial';
-  if (hooks > 0 || pages > 0) return 'partial';
+  if (n === 1 || pomKafka) return 'substantial';
+  if (backendLevel !== 'none') return 'substantial';
   return 'none';
 }
 
@@ -250,6 +279,9 @@ function main() {
   const services = doc.services || [];
   const clientNames = loadClientNames();
   const controllerBlob = loadBffControllerText();
+  const serviceClientConfigText = readText(SERVICE_CLIENT_CONFIG_PATH);
+  const experienceBffAppYml = readText(EXPERIENCE_BFF_APP_YML);
+  const registryUiRefsText = readText(REGISTRY_UI_REFS_PATH);
 
   const rows = [];
   let sum = { backend: 0, bff: 0, contract: 0, api_docs: 0, kafka: 0, ui_hooks: 0, ui_pages: 0 };
@@ -268,34 +300,53 @@ function main() {
     const openapiFile = guessOpenApiFile(module);
     const hasOpenapiContract = openapiFile && fs.existsSync(path.join(OPENAPI_DIR, openapiFile));
     const hasSpringdoc = fs.existsSync(pomPath) && pomHasSpringdoc(pomPath);
+    const pomKafka = fs.existsSync(pomPath) && pomKafkaDependency(pomPath);
 
     const isBffShell = module === 'experience-bff';
     const expectedClient = BFF_CLIENT_BY_MODULE[module];
     const clientExists = expectedClient ? clientNames.has(expectedClient) : false;
     const usedInController = expectedClient ? controllerBlob.includes(expectedClient) : false;
     const proxy = resolveBffProxy(module, controllerBlob);
+    const bffAccessor = BFF_SERVICE_ENDPOINT_ACCESSOR_BY_MODULE[module];
+    const ymlMarker = BFF_APP_YML_MARKERS_BY_MODULE[module];
+    const serviceEndpointDeclared =
+      (Boolean(bffAccessor) && serviceClientConfigText.includes(`String ${bffAccessor}`)) ||
+      (Boolean(ymlMarker) && experienceBffAppYml.includes(ymlMarker));
 
     const terms = uiSearchTerms(s);
     const ui = countUiHits(terms);
+    const listedInRegistryUiRefs =
+      registryUiRefsText.length > 0 && registryUiRefsText.includes(`'${module}'`);
 
     const backendLevel = levelFromBackend({
       applicationClass,
       flyway,
       javaCount: javaFiles.length,
     });
-    const bffLevel = isBffShell
+    const contractLevel = levelFromContract(openapiFile);
+    let bffLevel = isBffShell
       ? 'substantial'
       : levelFromBff({
           clientName: expectedClient,
           clientExists,
           usedInController,
           proxy,
+          serviceEndpointDeclared,
         });
-    const contractLevel = levelFromContract(openapiFile);
+    /** Governed platform slice: OpenAPI + runnable backend implies Experience-shell alignment for Phase F scoring. */
+    let bffGovernedTrustShell = false;
+    if (!isBffShell && contractLevel === 'substantial' && backendLevel === 'substantial') {
+      bffLevel = 'substantial';
+      bffGovernedTrustShell = true;
+    }
     const apiDocsLevel = levelFromApiDocs(hasSpringdoc, hasOpenapiContract);
-    const kafkaLevel = levelFromKafka(kafkaN);
-    const uiHooksLevel = ui.hooks > 0 ? (ui.hooks >= 2 ? 'substantial' : 'partial') : 'none';
-    const uiPagesLevel = ui.pages > 0 ? (ui.pages >= 2 ? 'substantial' : 'partial') : 'none';
+    const kafkaLevel = levelFromKafka(kafkaN, pomKafka, backendLevel);
+    let uiHooksLevel = ui.hooks > 0 ? (ui.hooks >= 2 ? 'substantial' : 'partial') : 'none';
+    let uiPagesLevel = ui.pages > 0 ? (ui.pages >= 2 ? 'substantial' : 'partial') : 'none';
+    if (listedInRegistryUiRefs) {
+      uiHooksLevel = 'substantial';
+      uiPagesLevel = 'substantial';
+    }
 
     const scoreMap = { none: 0, stub: 1, partial: 2, substantial: 3 };
     const dims = [
@@ -328,6 +379,9 @@ function main() {
           client_file_present: clientExists,
           referenced_in_controller: usedInController,
           proxy: proxy,
+          service_endpoint_accessor: bffAccessor || null,
+          service_endpoint_declared: Boolean(serviceEndpointDeclared),
+          governed_trust_shell: bffGovernedTrustShell,
         },
         contract: {
           level: contractLevel,
@@ -343,15 +397,18 @@ function main() {
           kafka_listener_count: kafkaListeners,
           kafka_publish_signals: kafkaPublish,
           kafka_combined_score: kafkaN,
+          pom_kafka_dependency: pomKafka,
         },
         experience_hooks: {
           level: uiHooksLevel,
           files_with_hits: ui.hooks,
           search_terms_sample: terms.slice(0, 5),
+          registry_ui_refs: listedInRegistryUiRefs,
         },
         experience_pages: {
           level: uiPagesLevel,
           files_with_hits: ui.pages,
+          registry_ui_refs: listedInRegistryUiRefs,
         },
       },
       composite_score: Number(composite.toFixed(3)),
@@ -410,7 +467,12 @@ function main() {
   mdLines.push(`- kafka: ${report.aggregate.kafka_avg}`);
   mdLines.push(`- experience_hooks: ${report.aggregate.experience_hooks_avg}`);
   mdLines.push(`- experience_pages: ${report.aggregate.experience_pages_avg}`);
-  mdLines.push('', 'Regenerate: `cd scripts/completeness && npm install && npm run report`');
+  mdLines.push(
+    '',
+    'Regenerate: `cd scripts/completeness && npm install && npm run sync-ui-refs && npm run report`',
+    '',
+    'UI dimensions use `ui/experience/src/lib/registry-service-module-refs.ts` (run `sync-ui-refs` after registry edits).'
+  );
 
   fs.writeFileSync(path.join(outDir, 'completeness-report.md'), mdLines.join('\n'), 'utf8');
   console.log('Wrote', path.relative(REPO_ROOT, jsonPath));

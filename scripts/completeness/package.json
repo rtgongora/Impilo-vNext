@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "report": "node generate-completeness-report.mjs",
-    "emit-stubs": "node emit-missing-openapi-stubs.mjs"
+    "emit-stubs": "node emit-missing-openapi-stubs.mjs",
+    "sync-ui-refs": "node sync-registry-ui-refs.mjs"
   },
   "dependencies": {
     "js-yaml": "^4.1.0"
