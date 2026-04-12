@@ -95,6 +95,7 @@ public class InventoryOutboxPublisher extends CompanionOutboxPublisher {
             case "REQUISITION_FULFILLED" -> "inventory.requisition.fulfilled";
             case "MUSHEX_CHARGE_REQUESTED" -> "inventory.mushex.charge";
             case "RECONCILE_RESOLVED" -> "inventory.reconcile.resolved";
+            case "INVENTORY_STOCK_LEVEL_TELEMETRY" -> "telemetry.inventory.stock.level";
             default -> "inventory.events";
         };
     }
