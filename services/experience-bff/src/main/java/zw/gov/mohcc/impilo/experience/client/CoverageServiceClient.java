@@ -33,6 +33,14 @@ public class CoverageServiceClient {
         return extractData(restTemplate.getForEntity(url, JsonNode.class));
     }
 
+    public JsonNode listPlansForMember(String memberCpid) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/coverage/plans")
+                .queryParam("member_cpid", memberCpid)
+                .toUriString();
+        log.info("COVERAGE: Listing plans for member");
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
     public JsonNode getPlan(String id) {
         String url = baseUrl + "/internal/v1/coverage/" + id;
         return extractData(restTemplate.getForEntity(url, JsonNode.class));
@@ -47,6 +55,18 @@ public class CoverageServiceClient {
         String url = baseUrl + "/internal/v1/coverage/eligibility";
         log.info("COVERAGE: Checking eligibility");
         return extractData(restTemplate.postForEntity(url, body, JsonNode.class));
+    }
+
+    public JsonNode checkEligibilityCheckPath(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/coverage/eligibility/check";
+        return extractData(restTemplate.postForEntity(url, body, JsonNode.class));
+    }
+
+    public JsonNode listEligibilityForMember(String memberCpid) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/coverage/eligibility")
+                .queryParam("member_cpid", memberCpid)
+                .toUriString();
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
     }
 
     public JsonNode submitClaim(Map<String, Object> body) {
@@ -65,6 +85,39 @@ public class CoverageServiceClient {
                 .queryParam("coverageId", coverageId)
                 .toUriString();
         return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
+    public JsonNode listClaimsForMember(String memberCpid) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/coverage/claims")
+                .queryParam("member_cpid", memberCpid)
+                .toUriString();
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
+    public JsonNode listContributionsForMember(String memberCpid) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/coverage/contributions")
+                .queryParam("member_cpid", memberCpid)
+                .toUriString();
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
+    public JsonNode listPreauthsForMember(String memberCpid) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/coverage/preauths")
+                .queryParam("member_cpid", memberCpid)
+                .toUriString();
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
+    public JsonNode listAppealsForAppellant(String appellantId) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/coverage/appeals")
+                .queryParam("appellant_id", appellantId)
+                .toUriString();
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
+    public JsonNode createAppeal(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/coverage/appeals";
+        return extractData(restTemplate.postForEntity(url, body, JsonNode.class));
     }
 
     public JsonNode createPreauth(Map<String, Object> body) {

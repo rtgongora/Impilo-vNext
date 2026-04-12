@@ -29,10 +29,13 @@ public class CoverageController {
 
     @GetMapping("/plans")
     public ResponseEntity<Map<String, Object>> listPlans(
+            @RequestParam(required = false, name = "member_cpid") String memberCpid,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
         try {
-            JsonNode data = coverageClient.listPlans();
+            JsonNode data = memberCpid != null && !memberCpid.isBlank()
+                    ? coverageClient.listPlansForMember(memberCpid)
+                    : coverageClient.listPlans();
             return ResponseEntity.ok(Map.of("data", data != null ? data : new Object[0],
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
@@ -66,6 +69,20 @@ public class CoverageController {
         }
     }
 
+    @GetMapping("/eligibility")
+    public ResponseEntity<Map<String, Object>> listEligibilityForMember(
+            @RequestParam(name = "member_cpid") String memberCpid,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode data = coverageClient.listEligibilityForMember(memberCpid);
+            return ResponseEntity.ok(Map.of("data", data != null ? data : new Object[0],
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            return ResponseEntity.ok(Map.of("data", new Object[0], "meta", Map.of("request_id", requestId)));
+        }
+    }
+
     @PostMapping("/eligibility")
     public ResponseEntity<Map<String, Object>> checkEligibility(
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
@@ -74,6 +91,21 @@ public class CoverageController {
         try {
             JsonNode data = coverageClient.checkEligibility(body);
             return ResponseEntity.ok(Map.of("data", data != null ? data : Map.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            log.error("Eligibility check failed: {}", e.getMessage());
+            return ResponseEntity.status(400).body(Map.of("error", Map.of("code", "CHECK_FAILED", "message", e.getMessage())));
+        }
+    }
+
+    @PostMapping("/eligibility/check")
+    public ResponseEntity<Map<String, Object>> checkEligibilityAlias(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody Map<String, Object> body) {
+        try {
+            JsonNode data = coverageClient.checkEligibilityCheckPath(body);
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", data != null ? data : Map.of(),
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
             log.error("Eligibility check failed: {}", e.getMessage());
@@ -112,10 +144,60 @@ public class CoverageController {
     @GetMapping("/claims")
     public ResponseEntity<Map<String, Object>> listClaims(
             @RequestParam(required = false) String coverageId,
+            @RequestParam(required = false, name = "member_cpid") String memberCpid,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
         try {
-            JsonNode data = coverageId != null ? coverageClient.listClaims(coverageId) : coverageClient.listPlans();
+            JsonNode data;
+            if (memberCpid != null && !memberCpid.isBlank()) {
+                data = coverageClient.listClaimsForMember(memberCpid);
+            } else if (coverageId != null) {
+                data = coverageClient.listClaims(coverageId);
+            } else {
+                data = coverageClient.listPlans();
+            }
+            return ResponseEntity.ok(Map.of("data", data != null ? data : new Object[0],
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            return ResponseEntity.ok(Map.of("data", new Object[0], "meta", Map.of("request_id", requestId)));
+        }
+    }
+
+    @GetMapping("/contributions")
+    public ResponseEntity<Map<String, Object>> listContributions(
+            @RequestParam(name = "member_cpid") String memberCpid,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode data = coverageClient.listContributionsForMember(memberCpid);
+            return ResponseEntity.ok(Map.of("data", data != null ? data : new Object[0],
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            return ResponseEntity.ok(Map.of("data", new Object[0], "meta", Map.of("request_id", requestId)));
+        }
+    }
+
+    @GetMapping("/preauths")
+    public ResponseEntity<Map<String, Object>> listPreauths(
+            @RequestParam(name = "member_cpid") String memberCpid,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode data = coverageClient.listPreauthsForMember(memberCpid);
+            return ResponseEntity.ok(Map.of("data", data != null ? data : new Object[0],
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            return ResponseEntity.ok(Map.of("data", new Object[0], "meta", Map.of("request_id", requestId)));
+        }
+    }
+
+    @GetMapping("/appeals")
+    public ResponseEntity<Map<String, Object>> listAppeals(
+            @RequestParam(name = "appellant_id") String appellantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode data = coverageClient.listAppealsForAppellant(appellantId);
             return ResponseEntity.ok(Map.of("data", data != null ? data : new Object[0],
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
