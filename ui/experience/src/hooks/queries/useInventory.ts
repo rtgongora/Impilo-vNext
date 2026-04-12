@@ -331,3 +331,246 @@ export function useInventoryFulfillRequisition() {
     },
   });
 }
+
+// ── Legacy dashboard shapes (maps sovereign ApiResponse + PagedResponse) ──
+
+function asRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" ? (value as Record<string, unknown>) : {};
+}
+
+function extractPagedItems(raw: unknown): unknown[] {
+  const data = asRecord(asRecord(raw).data);
+  const items = data.items;
+  return Array.isArray(items) ? items : [];
+}
+
+export interface InventoryItem {
+  id: string;
+  facilityId: string;
+  productCode: string;
+  productName: string;
+  category: string;
+  quantityOnHand: number;
+  reorderLevel: number;
+  unit: string;
+  status: string;
+  lastCountedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface InventoryMovement {
+  id: string;
+  movedAt: string;
+  itemName: string;
+  fromLocation: string;
+  toLocation: string;
+  quantity: number;
+  reason: string;
+  performedBy: string;
+}
+
+export interface InventoryRequisition {
+  id: string;
+  requisitionNumber: string;
+  requestedBy: string;
+  itemCount: number;
+  status: string;
+  neededBy: string | null;
+  notes: string;
+  createdAt: string;
+}
+
+export interface InventoryCount {
+  id: string;
+  countDate: string;
+  countedBy: string;
+  itemCount: number;
+  discrepancies: number;
+  status: string;
+  notes: string;
+}
+
+function str(v: unknown): string {
+  if (v === null || v === undefined) return "";
+  return String(v);
+}
+
+function mapOnHandToInventoryItem(row: unknown, facilityId: string): InventoryItem {
+  const o = asRecord(row);
+  const qty = Number(o.qtyOnHand ?? 0);
+  const updated = str(o.updatedAt);
+  return {
+    id: str(o.id),
+    facilityId: str(o.facilityId) || facilityId,
+    productCode: str(o.itemCode),
+    productName: str(o.itemCode),
+    category: "",
+    quantityOnHand: Number.isFinite(qty) ? qty : 0,
+    reorderLevel: 0,
+    unit: "EA",
+    status: qty <= 0 ? "LOW_STOCK" : "ACTIVE",
+    lastCountedAt: updated || null,
+    createdAt: updated,
+    updatedAt: updated,
+  };
+}
+
+function mapLedgerToMovement(row: unknown): InventoryMovement {
+  const o = asRecord(row);
+  const qty = Number(o.qtyDelta ?? 0);
+  const store = str(o.storeId);
+  const bin = str(o.binId);
+  const loc = [store, bin].filter(Boolean).join(" / ");
+  const et = str(o.eventType);
+  const rs = str(o.reason);
+  return {
+    id: str(o.eventId),
+    movedAt: str(o.createdAt),
+    itemName: str(o.itemCode),
+    fromLocation: loc || "—",
+    toLocation: "",
+    quantity: Number.isFinite(qty) ? Math.abs(qty) : 0,
+    reason: [et, rs].filter(Boolean).join(" — ") || "—",
+    performedBy: str(o.actorId) || "—",
+  };
+}
+
+/** On-hand rows for facility (catalog + quantity projection). */
+export function useInventoryItems(facilityId: string) {
+  return useQuery({
+    queryKey: ["inventory-items", facilityId],
+    queryFn: async () => {
+      const raw = await apiClient.get<unknown>(
+        `/internal/v1/inventory/on-hand${q({ facilityId, page: 0, size: 500 })}`,
+      );
+      return extractPagedItems(raw).map((row) => mapOnHandToInventoryItem(row, facilityId));
+    },
+    enabled: !!facilityId,
+  });
+}
+
+/** Ledger events as movement rows. */
+export function useInventoryMovements(facilityId: string) {
+  return useQuery({
+    queryKey: ["inventory-movements", facilityId],
+    queryFn: async () => {
+      const raw = await apiClient.get<unknown>(
+        `/internal/v1/inventory/ledger${q({ facilityId, page: 0, size: 200 })}`,
+      );
+      return extractPagedItems(raw).map(mapLedgerToMovement);
+    },
+    enabled: !!facilityId,
+  });
+}
+
+/** No list endpoint on inventory-service yet — keeps dashboards stable. */
+export function useInventoryRequisitions(facilityId: string) {
+  return useQuery({
+    queryKey: ["inventory-requisitions", facilityId],
+    queryFn: async (): Promise<InventoryRequisition[]> => [],
+    enabled: !!facilityId,
+  });
+}
+
+/** No facility-scoped count listing yet — physical count UI uses local draft rows. */
+export function useInventoryCounts(_facilityId: string) {
+  return useQuery({
+    queryKey: ["inventory-counts", _facilityId],
+    queryFn: async (): Promise<InventoryCount[]> => [],
+    enabled: !!_facilityId,
+  });
+}
+
+export interface CreateInventoryItemPayload {
+  facilityId: string;
+  productCode: string;
+  productName: string;
+  category: string;
+  unit: string;
+  reorderLevel: number;
+  quantityOnHand?: number;
+}
+
+function extractItemDto(raw: unknown): Record<string, unknown> {
+  return asRecord(asRecord(raw).data);
+}
+
+function mapItemDtoToInventoryItem(o: Record<string, unknown>, facilityId: string): InventoryItem {
+  const created = str(o.createdAt);
+  return {
+    id: str(o.itemId),
+    facilityId,
+    productCode: str(o.itemCode),
+    productName: str(o.name),
+    category: str(o.category) || "",
+    quantityOnHand: 0,
+    reorderLevel: 0,
+    unit: str(o.uom) || "EA",
+    status: o.active === false ? "INACTIVE" : "ACTIVE",
+    lastCountedAt: null,
+    createdAt: created,
+    updatedAt: str(o.updatedAt) || created,
+  };
+}
+
+export function useCreateInventoryItem() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: CreateInventoryItemPayload) => {
+      const body = {
+        itemCode: payload.productCode,
+        name: payload.productName,
+        uom: payload.unit || "EA",
+        barcode: null as string | null,
+        category: payload.category || null,
+        controlled: false,
+        ziboRefsJson: null as string | null,
+      };
+      const raw = await apiClient.post<unknown>("/internal/v1/inventory/items", body);
+      return mapItemDtoToInventoryItem(extractItemDto(raw), payload.facilityId);
+    },
+    onSuccess: (_data, payload) => {
+      qc.invalidateQueries({ queryKey: ["inventory-items", payload.facilityId] });
+      qc.invalidateQueries({ queryKey: ["inventory-on-hand", payload.facilityId] });
+    },
+  });
+}
+
+export interface CreateInventoryRequisitionPayload {
+  facilityId: string;
+  requestedBy: string;
+  itemCount: number;
+  neededBy?: string;
+  notes?: string;
+  requisitionNumber?: string;
+}
+
+export function useCreateInventoryRequisition() {
+  return useMutation({
+    mutationFn: async (_payload: CreateInventoryRequisitionPayload) => {
+      throw new Error(
+        "Inter-store requisitions need fromStoreId, toStoreId, and line items (itemCode, qtyRequested). Extend the form or call POST /internal/v1/inventory/requisitions with that JSON.",
+      );
+    },
+  });
+}
+
+export interface PatchRequisitionPayload {
+  facilityId: string;
+  requisitionId: string;
+  status: string;
+}
+
+/** Status transitions require approve/fulfill APIs with structured bodies — stub until UI is aligned. */
+export function usePatchRequisitionStatus() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (_payload: PatchRequisitionPayload) => {
+      /* no-op */
+    },
+    onSuccess: (_d, payload) => {
+      qc.invalidateQueries({ queryKey: ["inventory-requisitions", payload.facilityId] });
+    },
+  });
+}
