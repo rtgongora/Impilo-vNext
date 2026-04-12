@@ -29,14 +29,18 @@ import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 @RequestMapping("/internal/v1/maternity")
 public class MaternitySummaryController {
 
+    private static final Logger log = LoggerFactory.getLogger(MaternitySummaryController.class);
     private static final TypeReference<List<BigDecimal>> SAMPLE_LIST_TYPE = new TypeReference<>() {};
 
-    private final JdbcTemplate jdbc;
+    private final JdbcTemplate jdbc; // TODO: remove after verification
     private final ObjectMapper objectMapper;
+    private final PctServiceClient pctClient;
 
-    public MaternitySummaryController(JdbcTemplate jdbc, ObjectMapper objectMapper) {
+    public MaternitySummaryController(JdbcTemplate jdbc, ObjectMapper objectMapper,
+                                      PctServiceClient pctClient) {
         this.jdbc = jdbc;
         this.objectMapper = objectMapper;
+        this.pctClient = pctClient;
     }
 
     @GetMapping("/summary")
@@ -45,6 +49,14 @@ public class MaternitySummaryController {
             @RequestParam String patientId,
             @RequestParam(required = false) String encounterId
     ) {
+        // STRANGLER: delegate to PctServiceClient
+        try {
+            JsonNode pctData = pctClient.getMaternitySummary(patientId, encounterId);
+            if (pctData != null) return ResponseEntity.ok(Map.of("data", pctData));
+        } catch (Exception e) {
+            log.warn("PCT getMaternitySummary failed, falling back to local: {}", e.getMessage());
+        }
+        // STRANGLER: migrated to PctServiceClient — fallback to local JDBC
         Map<String, Object> activePartograph = loadActivePartograph(tenantId, patientId, encounterId);
         Map<String, Object> latestPartographPoint = activePartograph == null
                 ? null
