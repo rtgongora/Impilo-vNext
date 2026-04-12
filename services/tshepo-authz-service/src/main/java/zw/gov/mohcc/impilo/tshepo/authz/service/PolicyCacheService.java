@@ -104,4 +104,28 @@ public class PolicyCacheService {
                     tenantId, e.getMessage());
         }
     }
+
+    /**
+     * Evict cached policy rules for a tenant after a provider privilege change.
+     *
+     * <p>Rules are cached per tenant only; provider-specific invalidation is
+     * expressed as a full tenant eviction (rare VARAPI revocation events).</p>
+     *
+     * @param tenantId string tenant UUID from the event envelope or payload; ignored if blank
+     * @param providerId VARAPI provider public id (for logging only)
+     */
+    public void evictForProvider(String tenantId, String providerId) {
+        if (tenantId == null || tenantId.isBlank()) {
+            log.debug("Skipping policy rules eviction — no tenant id (provider_id={})", providerId);
+            return;
+        }
+        try {
+            invalidate(UUID.fromString(tenantId.trim()));
+            log.debug("Policy rules cache evicted for tenant {} after provider {} change",
+                    tenantId, providerId);
+        } catch (IllegalArgumentException e) {
+            log.warn("Invalid tenant_id '{}' on provider privilege event (provider_id={})",
+                    tenantId, providerId);
+        }
+    }
 }

@@ -39,6 +39,7 @@ class PolicyEngineTest {
 
     @Mock private RiskScoring riskScoring;
     @Mock private PolicyCacheService policyCacheService;
+    @Mock private ProviderPrivilegeRevocationStore privilegeRevocationStore;
     @Mock private ConsentClient consentClient;
     @Mock private StepUpService stepUpService;
     @Mock private BreakGlassService breakGlassService;
@@ -61,8 +62,9 @@ class PolicyEngineTest {
     void setUp() {
         properties = buildDefaultProperties();
         objectMapper = new ObjectMapper();
+        lenient().when(privilegeRevocationStore.isRevoked(anyString())).thenReturn(false);
         policyEngine = new PolicyEngine(
-                riskScoring, policyCacheService, consentClient,
+                riskScoring, policyCacheService, privilegeRevocationStore, consentClient,
                 stepUpService, breakGlassService, decisionLogRepository,
                 auditPublisher, properties, objectMapper
         );
@@ -193,6 +195,29 @@ class PolicyEngineTest {
                 "Error code must be MISSING_TENANT");
         verify(decisionLogRepository).save(any(PolicyDecisionLogEntity.class));
         verify(auditPublisher).queueAuditEvent(eq(request), eq("DENY"), eq(0), eq("MISSING_TENANT"));
+    }
+
+    @Test
+    @DisplayName("evaluate: VARAPI-revoked provider id -> DENY before risk scoring")
+    void evaluate_withRevokedProviderPrivilege_denies() {
+        AuthzInternalRequest request = defaultRequestWithProviderId("PUB123ABC");
+        when(privilegeRevocationStore.isRevoked("PUB123ABC")).thenReturn(true);
+
+        AuthzResponse response = policyEngine.evaluate(request);
+
+        assertEquals(Verdict.DENY, response.verdict());
+        assertEquals("PROVIDER_PRIVILEGE_REVOKED", response.errorCode());
+        verifyNoInteractions(riskScoring);
+    }
+
+    private static AuthzInternalRequest defaultRequestWithProviderId(String providerPublicId) {
+        return new AuthzInternalRequest(
+                TENANT_ID, ACTOR_ID, "PROVIDER", List.of("DOCTOR"), "TREATMENT",
+                DEVICE_FP, CORRELATION_ID, FACILITY_ID, WORKSPACE_ID,
+                null, "GET", "/v1/patients", "GET:/v1/patients", "patients", null,
+                3, "session-abc", null,
+                providerPublicId, null, null, null, null, null
+        );
     }
 
     // ════════════════════════════════════════════════════════════════════

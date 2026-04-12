@@ -66,6 +66,7 @@ public class PolicyEngine {
 
     private final RiskScoring riskScoring;
     private final PolicyCacheService policyCacheService;
+    private final ProviderPrivilegeRevocationStore privilegeRevocationStore;
     private final ConsentClient consentClient;
     private final StepUpService stepUpService;
     private final BreakGlassService breakGlassService;
@@ -76,6 +77,7 @@ public class PolicyEngine {
 
     public PolicyEngine(RiskScoring riskScoring,
                         PolicyCacheService policyCacheService,
+                        ProviderPrivilegeRevocationStore privilegeRevocationStore,
                         ConsentClient consentClient,
                         StepUpService stepUpService,
                         BreakGlassService breakGlassService,
@@ -85,6 +87,7 @@ public class PolicyEngine {
                         ObjectMapper objectMapper) {
         this.riskScoring = riskScoring;
         this.policyCacheService = policyCacheService;
+        this.privilegeRevocationStore = privilegeRevocationStore;
         this.consentClient = consentClient;
         this.stepUpService = stepUpService;
         this.breakGlassService = breakGlassService;
@@ -108,6 +111,12 @@ public class PolicyEngine {
         UUID tenantId = request.tenantId();
         if (tenantId == null) {
             return denyAndLog(request, "MISSING_TENANT", "Tenant ID is required", 0, startTime);
+        }
+
+        if (request.providerId() != null && !request.providerId().isBlank()
+                && privilegeRevocationStore.isRevoked(request.providerId())) {
+            return denyAndLog(request, "PROVIDER_PRIVILEGE_REVOKED",
+                    "Provider privilege suspended or revoked (VARAPI)", 0, startTime);
         }
 
         // ────────────────────────────────────────────────────────────────
