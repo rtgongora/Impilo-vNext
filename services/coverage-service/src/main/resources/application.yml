@@ -4,6 +4,26 @@ server:
 spring:
   application:
     name: coverage-service
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+      retries: 3
+      properties:
+        enable.idempotence: true
+        max.in.flight.requests.per.connection: 5
+    consumer:
+      group-id: coverage-service
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      enable-auto-commit: false
+      properties:
+        isolation.level: read_committed
+    listener:
+      ack-mode: manual
   datasource:
     url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/impilo_coverage
     username: ${POSTGRES_USER:impilo}
@@ -20,7 +40,31 @@ spring:
     enabled: true
     baseline-on-migrate: true
     locations: classpath:db/migration
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:impilo}/protocol/openid-connect/certs
+          issuer-uri: ${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:impilo}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+  metrics:
+    tags:
+      application: coverage-service
 
 impilo:
   companion:
     enabled: true
+
+coverage:
+  outbox:
+    poll-interval-ms: ${COVERAGE_OUTBOX_POLL_INTERVAL_MS:2000}
+  v11:
+    emit-mode: ${COVERAGE_EMIT_MODE:}

@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import zw.gov.mohcc.impilo.coverage.api.dto.CoveragePlanResponse;
 import zw.gov.mohcc.impilo.coverage.api.dto.CoverageResponse;
@@ -49,6 +50,16 @@ public class CoveragePlanController {
         this.eventService = eventService;
     }
 
+    /**
+     * Member-facing plan rows: active member coverage joined to plan (same payload as /member/{id}).
+     */
+    @GetMapping("/plans")
+    public ResponseEntity<List<CoverageResponse>> listPlansForMember(
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @RequestParam(name = "member_cpid") String memberCpid) {
+        return getMemberCoverage(tenantId, memberCpid);
+    }
+
     @GetMapping
     public ResponseEntity<List<CoveragePlanResponse>> listPlans(
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -83,12 +94,14 @@ public class CoveragePlanController {
                 request.effectiveFrom());
         planRepository.save(plan);
 
-        eventService.emitCreated("coverage_plan", plan.getId().toString(),
-                parseUuid(correlationId), tid, podId,
-                Map.of("plan_code", plan.getPlanCode(),
-                        "plan_name", plan.getPlanName(),
-                        "payer_id", plan.getPayerId(),
-                        "status", plan.getStatus()));
+        java.util.LinkedHashMap<String, Object> payload = new java.util.LinkedHashMap<>();
+        payload.put("plan_code", plan.getPlanCode());
+        payload.put("plan_name", plan.getPlanName());
+        payload.put("payer_id", plan.getPayerId());
+        payload.put("status", plan.getStatus());
+        UUID corr = CorrelationIds.fromHeader(correlationId);
+        payload.put("meta", CoverageEventService.meta(corr));
+        eventService.emitPlanCreated(plan.getId(), corr, tid, podId, payload);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(plan));
     }
@@ -136,11 +149,4 @@ public class CoveragePlanController {
                 entity.getEffectiveTo());
     }
 
-    private UUID parseUuid(String s) {
-        try {
-            return s != null ? UUID.fromString(s) : null;
-        } catch (IllegalArgumentException e) {
-            return null;
-        }
-    }
 }

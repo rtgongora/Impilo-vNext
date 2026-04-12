@@ -6,6 +6,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import zw.gov.mohcc.impilo.sharedkernel.events.CompanionOutboxPublisher;
+
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -59,7 +61,7 @@ public class OutboxEventEntity {
     @Column(name = "occurred_at", nullable = false)
     private OffsetDateTime occurredAt;
 
-    @Column(name = "payload_json", nullable = false, columnDefinition = "TEXT")
+    @Column(name = "payload_json", nullable = false, columnDefinition = "JSONB")
     private String payloadJson;
 
     @Column(name = "created_at", nullable = false)
@@ -68,8 +70,18 @@ public class OutboxEventEntity {
     @Column(name = "published_at")
     private OffsetDateTime publishedAt;
 
+    @Column(name = "publish_error", columnDefinition = "TEXT")
+    private String publishError;
+
+    @Column(name = "retry_count", nullable = false)
+    private int retryCount = 0;
+
     protected OutboxEventEntity() {}
 
+    /**
+     * Creates an outbox row for {@link CompanionOutboxPublisher}. {@code payloadJson} must be the
+     * canonical JSON object for the event payload (not a nested EventEnvelope).
+     */
     public static OutboxEventEntity create(
             String aggregateType, String aggregateId,
             String eventType, UUID correlationId,
@@ -88,8 +100,103 @@ public class OutboxEventEntity {
         e.subjectType = subjectType;
         e.occurredAt = OffsetDateTime.now();
         e.payloadJson = payloadJson;
-        e.idempotencyKey = "coverage-service:" + subjectType + ":" + subjectId + ":" + eventType;
+        e.idempotencyKey = "coverage-service:"
+                + aggregateType + ":"
+                + aggregateId + ":"
+                + eventType + ":"
+                + (correlationId != null ? correlationId : UUID.randomUUID());
         return e;
+    }
+
+    public CompanionOutboxPublisher.OutboxRow toOutboxRow() {
+        final OutboxEventEntity self = this;
+        return new CompanionOutboxPublisher.OutboxRow() {
+            @Override
+            public Long id() {
+                return self.id;
+            }
+
+            @Override
+            public String aggregateType() {
+                return self.aggregateType;
+            }
+
+            @Override
+            public String aggregateId() {
+                return self.aggregateId;
+            }
+
+            @Override
+            public String eventType() {
+                return self.eventType;
+            }
+
+            @Override
+            public String payloadJson() {
+                return self.payloadJson;
+            }
+
+            @Override
+            public OffsetDateTime occurredAt() {
+                return self.occurredAt;
+            }
+
+            @Override
+            public OffsetDateTime publishedAt() {
+                return self.publishedAt;
+            }
+
+            @Override
+            public String tenantId() {
+                return self.tenantId != null ? self.tenantId.toString() : null;
+            }
+
+            @Override
+            public String podId() {
+                return self.podId;
+            }
+
+            @Override
+            public String correlationId() {
+                return self.correlationId != null ? self.correlationId.toString() : null;
+            }
+
+            @Override
+            public String idempotencyKey() {
+                return self.idempotencyKey;
+            }
+
+            @Override
+            public int schemaVersion() {
+                if (self.schemaVersion == null) {
+                    return 1;
+                }
+                try {
+                    int dot = self.schemaVersion.indexOf('.');
+                    if (dot > 0) {
+                        return Integer.parseInt(self.schemaVersion.substring(0, dot));
+                    }
+                    return Integer.parseInt(self.schemaVersion);
+                } catch (Exception ex) {
+                    return 1;
+                }
+            }
+
+            @Override
+            public String subjectType() {
+                return self.subjectType;
+            }
+
+            @Override
+            public String subjectId() {
+                return self.subjectId;
+            }
+
+            @Override
+            public int retryCount() {
+                return self.retryCount;
+            }
+        };
     }
 
     public Long getId() { return id; }
@@ -111,4 +218,8 @@ public class OutboxEventEntity {
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public OffsetDateTime getPublishedAt() { return publishedAt; }
     public void setPublishedAt(OffsetDateTime publishedAt) { this.publishedAt = publishedAt; }
+    public String getPublishError() { return publishError; }
+    public void setPublishError(String publishError) { this.publishError = publishError; }
+    public int getRetryCount() { return retryCount; }
+    public void setRetryCount(int retryCount) { this.retryCount = retryCount; }
 }

@@ -117,4 +117,23 @@ public class ClaimEntity {
         this.status = status;
         this.updatedAt = OffsetDateTime.now();
     }
+
+    /** Marks claim adjudicated (e.g. from MUSHEX feedback). */
+    public void markAdjudicated(BigDecimal approvedAmount, String adjudicationJson) {
+        this.status = "ADJUDICATED";
+        this.approvedAmount = approvedAmount;
+        this.adjudication = adjudicationJson;
+        this.adjudicatedAt = OffsetDateTime.now();
+        this.updatedAt = OffsetDateTime.now();
+    }
+
+    /** Marks claim paid after insurer settlement. */
+    public void markPaid(BigDecimal amountPaid) {
+        this.status = "PAID";
+        if (amountPaid != null) {
+            this.approvedAmount = amountPaid;
+        }
+        this.paidAt = OffsetDateTime.now();
+        this.updatedAt = OffsetDateTime.now();
+    }
 }

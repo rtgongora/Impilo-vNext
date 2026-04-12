@@ -1,5 +1,6 @@
 package zw.gov.mohcc.impilo.coverage.api.dto;
 
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -14,5 +15,8 @@ public record PreauthResponse(
         String decisionJson,
         OffsetDateTime requestedAt,
         OffsetDateTime decidedAt,
-        OffsetDateTime expiresAt
-) {}
+        OffsetDateTime expiresAt,
+        BigDecimal quantityRequested,
+        BigDecimal quantityApproved,
+        BigDecimal quantityConsumed,
+        BigDecimal annualLimit) {}

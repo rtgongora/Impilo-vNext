@@ -4,6 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -48,6 +49,24 @@ public class PreauthRequestEntity {
     @Column(name = "decision_evidence_json", columnDefinition = "TEXT")
     private String decisionEvidenceJson;
 
+    @Column(name = "quantity_requested", precision = 10, scale = 2)
+    private BigDecimal quantityRequested;
+
+    @Column(name = "quantity_approved", precision = 10, scale = 2)
+    private BigDecimal quantityApproved;
+
+    @Column(name = "quantity_consumed", precision = 10, scale = 2)
+    private BigDecimal quantityConsumed = BigDecimal.ZERO;
+
+    @Column(name = "annual_limit", precision = 10, scale = 2)
+    private BigDecimal annualLimit;
+
+    @Column(name = "approval_conditions", columnDefinition = "jsonb")
+    private String approvalConditions = "{}";
+
+    @Column(name = "utilization_period", length = 16)
+    private String utilizationPeriod = "ANNUAL";
+
     @Column(name = "requested_at", nullable = false)
     private OffsetDateTime requestedAt;
 
@@ -84,23 +103,121 @@ public class PreauthRequestEntity {
         this.updatedAt = now;
     }
 
-    public UUID getId() { return id; }
-    public UUID getTenantId() { return tenantId; }
-    public String getPodId() { return podId; }
-    public UUID getCoverageId() { return coverageId; }
-    public String getFacilityId() { return facilityId; }
-    public String getProviderId() { return providerId; }
-    public String getRequestType() { return requestType; }
-    public String getStatus() { return status; }
-    public String getClinicalInfo() { return clinicalInfo; }
-    public String getRequestedItems() { return requestedItems; }
-    public String getDecisionJson() { return decisionJson; }
-    public String getDecisionEvidenceJson() { return decisionEvidenceJson; }
-    public OffsetDateTime getRequestedAt() { return requestedAt; }
-    public OffsetDateTime getDecidedAt() { return decidedAt; }
-    public OffsetDateTime getExpiresAt() { return expiresAt; }
-    public OffsetDateTime getCreatedAt() { return createdAt; }
-    public OffsetDateTime getUpdatedAt() { return updatedAt; }
+    public UUID getId() {
+        return id;
+    }
+
+    public UUID getTenantId() {
+        return tenantId;
+    }
+
+    public String getPodId() {
+        return podId;
+    }
+
+    public UUID getCoverageId() {
+        return coverageId;
+    }
+
+    public String getFacilityId() {
+        return facilityId;
+    }
+
+    public String getProviderId() {
+        return providerId;
+    }
+
+    public String getRequestType() {
+        return requestType;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public String getClinicalInfo() {
+        return clinicalInfo;
+    }
+
+    public String getRequestedItems() {
+        return requestedItems;
+    }
+
+    public String getDecisionJson() {
+        return decisionJson;
+    }
+
+    public String getDecisionEvidenceJson() {
+        return decisionEvidenceJson;
+    }
+
+    public BigDecimal getQuantityRequested() {
+        return quantityRequested;
+    }
+
+    public void setQuantityRequested(BigDecimal quantityRequested) {
+        this.quantityRequested = quantityRequested;
+    }
+
+    public BigDecimal getQuantityApproved() {
+        return quantityApproved;
+    }
+
+    public void setQuantityApproved(BigDecimal quantityApproved) {
+        this.quantityApproved = quantityApproved;
+    }
+
+    public BigDecimal getQuantityConsumed() {
+        return quantityConsumed;
+    }
+
+    public void setQuantityConsumed(BigDecimal quantityConsumed) {
+        this.quantityConsumed = quantityConsumed;
+    }
+
+    public BigDecimal getAnnualLimit() {
+        return annualLimit;
+    }
+
+    public void setAnnualLimit(BigDecimal annualLimit) {
+        this.annualLimit = annualLimit;
+    }
+
+    public String getApprovalConditions() {
+        return approvalConditions;
+    }
+
+    public void setApprovalConditions(String approvalConditions) {
+        this.approvalConditions = approvalConditions;
+    }
+
+    public String getUtilizationPeriod() {
+        return utilizationPeriod;
+    }
+
+    public void setUtilizationPeriod(String utilizationPeriod) {
+        this.utilizationPeriod = utilizationPeriod;
+    }
+
+    public OffsetDateTime getRequestedAt() {
+        return requestedAt;
+    }
+
+    public OffsetDateTime getDecidedAt() {
+        return decidedAt;
+    }
+
+    public OffsetDateTime getExpiresAt() {
+        return expiresAt;
+    }
+
+    public OffsetDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public OffsetDateTime getUpdatedAt() {
+        return updatedAt;
+    }
 
     public void decide(String status, String decisionJson, String decisionEvidenceJson) {
         this.status = status;

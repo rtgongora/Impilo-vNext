@@ -5,19 +5,26 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.coverage.domain.OutboxEventEntity;
 import zw.gov.mohcc.impilo.coverage.repository.OutboxEventRepository;
+import zw.gov.mohcc.impilo.sharedkernel.events.EventTopicRegistry;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
 /**
- * Emits v1.1 domain events via the transactional outbox.
- * Event types follow: impilo.coverage.{entity}.{action}.v1
+ * Writes domain events to the transactional outbox for Kafka publication via
+ * {@link zw.gov.mohcc.impilo.coverage.events.CoverageOutboxPublisher}.
+ *
+ * <p>Aggregate types follow canonical uppercase names (e.g. {@code COVERAGE_PLAN}).
+ * {@code payloadJson} stores only the business payload object — v1.1 envelopes are built at publish time.</p>
  */
 @Service
 public class CoverageEventService {
+
+    private static final EventTopicRegistry TOPICS = new EventTopicRegistry("coverage");
 
     private static final ObjectMapper MAPPER = new ObjectMapper()
             .registerModule(new JavaTimeModule())
@@ -29,83 +36,149 @@ public class CoverageEventService {
         this.outboxRepository = outboxRepository;
     }
 
-    /**
-     * Emit a CREATE event with full entity state.
-     */
-    public void emitCreated(String entityName, String entityId,
-                            UUID correlationId, UUID tenantId, String podId,
-                            Object entityState) {
-        String eventType = "impilo.coverage." + entityName + ".created.v1";
-        Map<String, Object> data = new LinkedHashMap<>();
-        data.put("change_type", "CREATE");
-        data.put("entity_version", 1);
-        data.put("state", entityState);
-        data.put("meta", buildMeta(correlationId));
+    @Transactional
+    public void emitPlanCreated(UUID planId, UUID correlationId, UUID tenantId, String podId,
+                                Map<String, Object> payload) {
+        emit("COVERAGE_PLAN", planId.toString(), TOPICS.eventType("plan", "created"),
+                correlationId, tenantId, podId, planId.toString(), "COVERAGE_PLAN", payload);
+    }
 
-        emit(entityName, entityId, eventType, correlationId, tenantId, podId, data);
+    @Transactional
+    public void emitEligibilityChecked(UUID eligibilityCheckId, UUID correlationId, UUID tenantId, String podId,
+                                       UUID coverageId, Map<String, Object> payload) {
+        emit("ELIGIBILITY", eligibilityCheckId.toString(), TOPICS.eventType("eligibility", "checked"),
+                correlationId, tenantId, podId, coverageId.toString(), "MEMBER_COVERAGE", payload);
+    }
+
+    @Transactional
+    public void emitPreauthRequested(UUID preauthId, UUID correlationId, UUID tenantId, String podId,
+                                     UUID coverageId, Map<String, Object> payload) {
+        emit("PREAUTH", preauthId.toString(), TOPICS.eventType("preauth", "requested"),
+                correlationId, tenantId, podId, coverageId.toString(), "MEMBER_COVERAGE", payload);
+    }
+
+    @Transactional
+    public void emitPreauthApproved(UUID preauthId, UUID correlationId, UUID tenantId, String podId,
+                                    UUID coverageId, Map<String, Object> payload) {
+        emit("PREAUTH", preauthId.toString(), TOPICS.eventType("preauth", "approved"),
+                correlationId, tenantId, podId, coverageId.toString(), "MEMBER_COVERAGE", payload);
+    }
+
+    @Transactional
+    public void emitPreauthDenied(UUID preauthId, UUID correlationId, UUID tenantId, String podId,
+                                  UUID coverageId, Map<String, Object> payload) {
+        emit("PREAUTH", preauthId.toString(), TOPICS.eventType("preauth", "denied"),
+                correlationId, tenantId, podId, coverageId.toString(), "MEMBER_COVERAGE", payload);
+    }
+
+    @Transactional
+    public void emitClaimSubmitted(UUID claimId, UUID correlationId, UUID tenantId, String podId,
+                                  UUID coverageId, Map<String, Object> payload) {
+        emit("CLAIM", claimId.toString(), TOPICS.eventType("claim", "submitted"),
+                correlationId, tenantId, podId, coverageId.toString(), "MEMBER_COVERAGE", payload);
+    }
+
+    @Transactional
+    public void emitRemittanceCreated(UUID remittanceId, UUID correlationId, UUID tenantId, String podId,
+                                      String subjectId, Map<String, Object> payload) {
+        emit("REMITTANCE", remittanceId.toString(), TOPICS.eventType("remittance", "created"),
+                correlationId, tenantId, podId, subjectId, "REMITTANCE", payload);
+    }
+
+    @Transactional
+    public void emitAppealSubmitted(UUID appealId, UUID correlationId, UUID tenantId, String podId,
+                                    String claimKey, Map<String, Object> payload) {
+        emit("APPEAL", appealId.toString(), TOPICS.eventType("appeal", "submitted"),
+                correlationId, tenantId, podId, claimKey, "APPEAL", payload);
+    }
+
+    @Transactional
+    public void emitAppealUnderReview(UUID appealId, UUID correlationId, UUID tenantId, String podId,
+                                      String claimKey, Map<String, Object> payload) {
+        emit("APPEAL", appealId.toString(), TOPICS.eventType("appeal", "under_review"),
+                correlationId, tenantId, podId, claimKey, "APPEAL", payload);
+    }
+
+    @Transactional
+    public void emitAppealDecided(UUID appealId, UUID correlationId, UUID tenantId, String podId,
+                                  String claimKey, Map<String, Object> payload) {
+        emit("APPEAL", appealId.toString(), TOPICS.eventType("appeal", "decided"),
+                correlationId, tenantId, podId, claimKey, "APPEAL", payload);
     }
 
     /**
-     * Emit a status transition event (submitted, approved, denied, etc.)
+     * Legacy-style create hook used by provider contracting controllers.
      */
-    public void emitStatusChange(String entityName, String entityId, String action,
-                                  UUID correlationId, UUID tenantId, String podId,
-                                  Map<String, Object> changedFields) {
-        String eventType = "impilo.coverage." + entityName + "." + action + ".v1";
-        Map<String, Object> data = new LinkedHashMap<>();
-        data.put("change_type", "UPDATE");
-        data.put("changed_fields", changedFields);
-        data.put("meta", buildMeta(correlationId));
+    @Transactional
+    public void emitCreated(String entityName, String entityId, UUID correlationId, UUID tenantId, String podId,
+                            Map<String, Object> state) {
+        LinkedHashMap<String, Object> payload = new LinkedHashMap<>(state != null ? state : Map.of());
+        if (!payload.containsKey("meta")) {
+            payload.put("meta", meta(correlationId));
+        }
+        switch (entityName) {
+            case "preauth" -> {
+                UUID preauthId = UUID.fromString(entityId);
+                UUID coverageId = UUID.fromString(state.get("coverage_id").toString());
+                emitPreauthRequested(preauthId, correlationId, tenantId, podId, coverageId, payload);
+            }
+            case "contract" -> emit("PROVIDER_CONTRACT", entityId, TOPICS.eventType("provider_contract", "created"),
+                    correlationId, tenantId, podId, entityId, "PROVIDER_CONTRACT", payload);
+            case "network" -> emit("PROVIDER_NETWORK", entityId, TOPICS.eventType("provider_network", "created"),
+                    correlationId, tenantId, podId, entityId, "PROVIDER_NETWORK", payload);
+            case "network_member" -> emit("NETWORK_MEMBER", entityId, TOPICS.eventType("network_member", "created"),
+                    correlationId, tenantId, podId,
+                    String.valueOf(state.getOrDefault("network_id", entityId)), "NETWORK_MEMBER", payload);
+            default -> throw new IllegalArgumentException("Unsupported emitCreated entity: " + entityName);
+        }
+    }
 
-        emit(entityName, entityId, eventType, correlationId, tenantId, podId, data);
+    /**
+     * Legacy-style status hook used by provider contracting controllers.
+     */
+    @Transactional
+    public void emitStatusChange(String entityName, String entityId, String action, UUID correlationId,
+                                 UUID tenantId, String podId, Map<String, Object> changed) {
+        LinkedHashMap<String, Object> payload = new LinkedHashMap<>(changed != null ? changed : Map.of());
+        if (!payload.containsKey("meta")) {
+            payload.put("meta", meta(correlationId));
+        }
+        String act = action == null ? "updated" : action.toLowerCase();
+        switch (entityName) {
+            case "contract" -> emit("PROVIDER_CONTRACT", entityId,
+                    TOPICS.eventType("provider_contract", act.replace(' ', '_')),
+                    correlationId, tenantId, podId, entityId, "PROVIDER_CONTRACT", payload);
+            case "network_member" -> emit("NETWORK_MEMBER", entityId,
+                    TOPICS.eventType("network_member", act.replace(' ', '_')),
+                    correlationId, tenantId, podId,
+                    changed != null && changed.get("network_id") != null
+                            ? changed.get("network_id").toString()
+                            : entityId,
+                    "NETWORK_MEMBER", payload);
+            default -> throw new IllegalArgumentException("Unsupported emitStatusChange entity: " + entityName);
+        }
     }
 
     private void emit(String aggregateType, String aggregateId, String eventType,
                       UUID correlationId, UUID tenantId, String podId,
-                      Map<String, Object> data) {
+                      String subjectId, String subjectType, Map<String, Object> payload) {
         String payloadJson;
         try {
-            // Build full EventEnvelope in payload_json
-            Map<String, Object> envelope = new LinkedHashMap<>();
-            envelope.put("event_id", UUID.randomUUID().toString());
-            envelope.put("event_type", eventType);
-            envelope.put("schema_version", "1.0");
-            envelope.put("correlation_id", correlationId != null ? correlationId.toString() : null);
-            envelope.put("causation_id", null);
-            envelope.put("producer", "coverage-service");
-            envelope.put("tenant_id", tenantId != null ? tenantId.toString() : null);
-            envelope.put("pod_id", podId);
-            envelope.put("subject_id", aggregateId);
-            envelope.put("subject_type", capitalize(aggregateType));
-            envelope.put("data", data);
-            envelope.put("meta", Map.of("partition_key", (tenantId != null ? tenantId : "") + ":" + aggregateId));
-
-            payloadJson = MAPPER.writeValueAsString(envelope);
+            payloadJson = MAPPER.writeValueAsString(payload != null ? payload : Map.of());
         } catch (JsonProcessingException e) {
-            throw new RuntimeException("Failed to serialize event payload", e);
+            throw new RuntimeException("Failed to serialize outbox payload", e);
         }
 
-        OutboxEventEntity outbox = OutboxEventEntity.create(
-                capitalize(aggregateType), aggregateId,
-                eventType, correlationId,
-                tenantId, podId,
-                aggregateId, capitalize(aggregateType),
-                payloadJson);
-
-        outboxRepository.save(outbox);
+        OutboxEventEntity row = OutboxEventEntity.create(
+                aggregateType, aggregateId, eventType, correlationId,
+                tenantId, podId, subjectId, subjectType, payloadJson);
+        outboxRepository.save(row);
     }
 
-    private Map<String, Object> buildMeta(UUID correlationId) {
+    public static Map<String, Object> meta(UUID correlationId) {
         Map<String, Object> meta = new LinkedHashMap<>();
         meta.put("partition_key", correlationId != null ? correlationId.toString() : UUID.randomUUID().toString());
-        Map<String, Object> decision = new LinkedHashMap<>();
-        decision.put("evidence", "bounded-stale-class-b");
-        meta.put("decision", decision);
+        meta.put("decision", Map.of("evidence", "bounded-stale-class-b"));
         return meta;
-    }
-
-    private String capitalize(String s) {
-        if (s == null || s.isEmpty()) return s;
-        return Character.toUpperCase(s.charAt(0)) + s.substring(1);
     }
 }

@@ -4,10 +4,12 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import zw.gov.mohcc.impilo.coverage.api.dto.CheckEligibilityRequest;
 import zw.gov.mohcc.impilo.coverage.api.dto.EligibilityCheckResponse;
@@ -19,6 +21,7 @@ import zw.gov.mohcc.impilo.coverage.repository.MemberCoverageRepository;
 
 import java.time.LocalDate;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -44,7 +47,25 @@ public class EligibilityController {
         this.eventService = eventService;
     }
 
-    @PostMapping
+    @GetMapping
+    public ResponseEntity<List<EligibilityCheckResponse>> listForMember(
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @RequestParam(name = "member_cpid") String memberCpid) {
+        UUID tid = UUID.fromString(tenantId);
+        List<UUID> coverageIds = memberCoverageRepository.findByTenantIdAndClientId(tid, memberCpid).stream()
+                .map(MemberCoverageEntity::getId)
+                .toList();
+        if (coverageIds.isEmpty()) {
+            return ResponseEntity.ok(List.of());
+        }
+        return ResponseEntity.ok(eligibilityRepository
+                .findByTenantIdAndCoverageIdInOrderByCheckedAtDesc(tid, coverageIds)
+                .stream()
+                .map(this::toResponse)
+                .toList());
+    }
+
+    @PostMapping({"", "/check"})
     @Transactional
     public ResponseEntity<EligibilityCheckResponse> checkEligibility(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -99,13 +120,16 @@ public class EligibilityController {
 
         eligibilityRepository.save(check);
 
-        // Emit event
-        eventService.emitCreated("eligibility", check.getId().toString(),
-                parseUuid(correlationId), tid, podId,
-                Map.of("coverage_id", request.coverageId().toString(),
-                        "patient_ref", request.patientRef(),
-                        "result_code", resultCode,
-                        "meta", Map.of("decision", Map.of("evidence", "bounded-stale-class-b"))));
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("coverage_id", request.coverageId().toString());
+        payload.put("patient_ref", request.patientRef());
+        payload.put("service_code", request.serviceCode());
+        payload.put("result_code", resultCode);
+        payload.put("result_message", resultMessage);
+        UUID corr = CorrelationIds.fromHeader(correlationId);
+        payload.put("meta", CoverageEventService.meta(corr));
+        eventService.emitEligibilityChecked(check.getId(), corr, tid, podId,
+                request.coverageId(), payload);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(check));
     }
@@ -117,8 +141,4 @@ public class EligibilityController {
                 e.getCheckedAt());
     }
 
-    private UUID parseUuid(String s) {
-        try { return s != null ? UUID.fromString(s) : null; }
-        catch (IllegalArgumentException e) { return null; }
-    }
 }

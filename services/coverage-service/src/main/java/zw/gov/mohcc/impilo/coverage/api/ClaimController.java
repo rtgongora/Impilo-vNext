@@ -16,8 +16,11 @@ import zw.gov.mohcc.impilo.coverage.api.dto.ClaimResponse;
 import zw.gov.mohcc.impilo.coverage.api.dto.SubmitClaimRequest;
 import zw.gov.mohcc.impilo.coverage.core.CoverageEventService;
 import zw.gov.mohcc.impilo.coverage.domain.ClaimEntity;
+import zw.gov.mohcc.impilo.coverage.domain.MemberCoverageEntity;
 import zw.gov.mohcc.impilo.coverage.repository.ClaimRepository;
+import zw.gov.mohcc.impilo.coverage.repository.MemberCoverageRepository;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -30,11 +33,14 @@ import java.util.UUID;
 public class ClaimController {
 
     private final ClaimRepository claimRepository;
+    private final MemberCoverageRepository memberCoverageRepository;
     private final CoverageEventService eventService;
 
     public ClaimController(ClaimRepository claimRepository,
+                           MemberCoverageRepository memberCoverageRepository,
                            CoverageEventService eventService) {
         this.claimRepository = claimRepository;
+        this.memberCoverageRepository = memberCoverageRepository;
         this.eventService = eventService;
     }
 
@@ -58,12 +64,15 @@ public class ClaimController {
 
         claimRepository.save(claim);
 
-        eventService.emitCreated("claim", claim.getId().toString(),
-                parseUuid(correlationId), tid, podId,
-                Map.of("coverage_id", request.coverageId().toString(),
-                        "claim_type", request.claimType(),
-                        "total_amount", request.totalAmount().toString(),
-                        "status", "SUBMITTED"));
+        java.util.LinkedHashMap<String, Object> payload = new java.util.LinkedHashMap<>();
+        payload.put("coverage_id", request.coverageId().toString());
+        payload.put("claim_type", request.claimType());
+        payload.put("total_amount", request.totalAmount().toPlainString());
+        payload.put("status", "SUBMITTED");
+        UUID corr = CorrelationIds.fromHeader(correlationId);
+        payload.put("meta", CoverageEventService.meta(corr));
+        eventService.emitClaimSubmitted(claim.getId(), corr, tid, podId,
+                request.coverageId(), payload);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(claim));
     }
@@ -87,8 +96,26 @@ public class ClaimController {
     @GetMapping
     public ResponseEntity<List<ClaimResponse>> listClaims(
             @RequestHeader("X-Tenant-ID") String tenantId,
-            @RequestParam UUID coverageId) {
+            @RequestParam(required = false) UUID coverageId,
+            @RequestParam(required = false, name = "member_cpid") String memberCpid) {
         UUID tid = UUID.fromString(tenantId);
+        if (memberCpid != null && !memberCpid.isBlank()) {
+            List<UUID> coverageIds = memberCoverageRepository.findByTenantIdAndClientId(tid, memberCpid).stream()
+                    .map(MemberCoverageEntity::getId)
+                    .toList();
+            if (coverageIds.isEmpty()) {
+                return ResponseEntity.ok(List.of());
+            }
+            List<ClaimResponse> claims = claimRepository.findByTenantIdAndCoverageIdIn(tid, coverageIds).stream()
+                    .sorted(Comparator.comparing(ClaimEntity::getSubmittedAt, Comparator.nullsLast(Comparator.naturalOrder()))
+                            .reversed())
+                    .map(this::toResponse)
+                    .toList();
+            return ResponseEntity.ok(claims);
+        }
+        if (coverageId == null) {
+            return ResponseEntity.badRequest().build();
+        }
         List<ClaimResponse> claims = claimRepository.findByTenantIdAndCoverageId(tid, coverageId)
                 .stream()
                 .map(this::toResponse)
@@ -104,8 +131,4 @@ public class ClaimController {
                 e.getApprovedAmount(), e.getSubmittedAt(), e.getAdjudicatedAt());
     }
 
-    private UUID parseUuid(String s) {
-        try { return s != null ? UUID.fromString(s) : null; }
-        catch (IllegalArgumentException e) { return null; }
-    }
 }

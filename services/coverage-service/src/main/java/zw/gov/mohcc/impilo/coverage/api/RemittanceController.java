@@ -57,12 +57,15 @@ public class RemittanceController {
 
         remittanceRepository.save(remittance);
 
-        eventService.emitCreated("remittance", remittance.getId().toString(),
-                parseUuid(correlationId), tid, podId,
-                Map.of("payer_id", request.payerId(),
-                        "provider_ref", request.providerRef(),
-                        "amount", request.amount().toString(),
-                        "status", "PENDING"));
+        java.util.LinkedHashMap<String, Object> payload = new java.util.LinkedHashMap<>();
+        payload.put("payer_id", request.payerId());
+        payload.put("provider_ref", request.providerRef());
+        payload.put("amount", request.amount().toPlainString());
+        payload.put("status", "PENDING");
+        UUID corr = CorrelationIds.fromHeader(correlationId);
+        payload.put("meta", CoverageEventService.meta(corr));
+        eventService.emitRemittanceCreated(remittance.getId(), corr, tid, podId,
+                remittance.getId().toString(), payload);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(remittance));
     }
@@ -96,8 +99,4 @@ public class RemittanceController {
                 e.getReferenceNumber(), e.getCreatedAt());
     }
 
-    private UUID parseUuid(String s) {
-        try { return s != null ? UUID.fromString(s) : null; }
-        catch (IllegalArgumentException e) { return null; }
-    }
 }
