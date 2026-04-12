@@ -29,7 +29,15 @@ spring:
     locations: classpath:db/migration
     baseline-on-migrate: true
   kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:${KAFKA_BOOTSTRAP:localhost:9092}}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+      retries: 3
+      properties:
+        enable.idempotence: true
+        max.in.flight.requests.per.connection: 5
     consumer:
       group-id: guidance-service
       auto-offset-reset: earliest
@@ -49,6 +57,10 @@ management:
 guidance:
   security:
     oauth2-enabled: true
+  outbox:
+    poll-interval-ms: 2000
+  v11:
+    emit-mode: ${GUIDANCE_EMIT_MODE:DUAL}
 
 impilo:
   guidance:
