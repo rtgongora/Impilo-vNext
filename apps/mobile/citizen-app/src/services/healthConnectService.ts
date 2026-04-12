@@ -1,7 +1,6 @@
 /**
- * Health Connect–equivalent batch ingest (Experience BFF).
- * Wire this from a future @react-native-health-connect (or HealthKit) bridge:
- * map native records → this payload; stable `records[].id` enables idempotent sync.
+ * Health Connect parity — batch ingest + read-back (Experience BFF).
+ * Map @react-native-health-connect / HealthKit records into this payload; keep stable `records[].id`.
  */
 import { apiClient } from "@impilo/mobile-api-client";
 
@@ -11,23 +10,26 @@ export type HealthConnectChangeSet = {
   patientId: string;
   dataOrigin: { platform: string; appPackage?: string; appVersion?: string };
   grantedScopes?: string[];
-  records: Array<{
-    id: string;
-    type: string;
-    startTime: string;
-    endTime?: string;
-    count?: number;
-    volumeLiters?: number;
-    hoursSlept?: number;
-    sleepQuality?: number;
-    beatsPerMinute?: number;
-    samples?: Array<{ time: string; beatsPerMinute: number }>;
-  }>;
+  records: Array<Record<string, unknown>>;
 };
 
 export async function fetchHealthConnectManifest(): Promise<Record<string, unknown>> {
   const response = await apiClient.get<{ data: Record<string, unknown> }>(`${BASE}/manifest`);
   return response.data.data ?? {};
+}
+
+export async function fetchHealthConnectSleepSegments(patientId: string, limit = 100): Promise<unknown[]> {
+  const response = await apiClient.get<{ data: unknown[] }>(
+    `${BASE}/sleep-segments?patientId=${encodeURIComponent(patientId)}&limit=${limit}`,
+  );
+  return response.data.data ?? [];
+}
+
+export async function fetchHealthConnectExerciseSessions(patientId: string, days = 30): Promise<unknown[]> {
+  const response = await apiClient.get<{ data: unknown[] }>(
+    `${BASE}/exercise-sessions?patientId=${encodeURIComponent(patientId)}&days=${days}`,
+  );
+  return response.data.data ?? [];
 }
 
 export async function ingestHealthConnectChangeSet(body: HealthConnectChangeSet): Promise<{
