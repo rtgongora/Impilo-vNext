@@ -44,9 +44,6 @@ describe("InventoryPage", () => {
       if (url === "/internal/v1/inventory/items?facility_id=facility-1") {
         return Promise.resolve({ data: [{ id: "item-1", type: "InventoryItem", attributes: { facility_id: "facility-1", product_code: "PARA-500", product_name: "Paracetamol 500mg", category: "Essential Medicines", quantity_on_hand: 20, reorder_level: 100, unit: "TABLET", status: "LOW_STOCK", last_counted_at: "2026-04-08T08:00:00.000Z", created_at: "2026-04-08T08:00:00.000Z", updated_at: "2026-04-08T08:00:00.000Z" } }] });
       }
-      if (url === "/internal/v1/inventory/counts?facility_id=facility-1") {
-        return Promise.resolve({ data: [{ id: "count-1", type: "InventoryStockCount", attributes: { count_date: "2026-04-08T08:00:00.000Z", counted_by: "Sr. Chari", item_count: 50, discrepancies: 2, status: "COMPLETED", notes: "Monthly count" } }] });
-      }
       if (url === "/internal/v1/inventory/movements?facility_id=facility-1") {
         return Promise.resolve({ data: [{ id: "move-1", type: "InventoryMovement", attributes: { moved_at: "2026-04-09T08:00:00.000Z", item_name: "Paracetamol 500mg", from_location: "Central pharmacy store", to_location: "Outpatient dispensary", quantity: 20, reason: "Top-up", performed_by: "T. Moyo" } }] });
       }
@@ -60,11 +57,11 @@ describe("InventoryPage", () => {
 
     await waitFor(() => {
       expect(get).toHaveBeenCalledWith("/internal/v1/inventory/items?facility_id=facility-1");
-      expect(get).toHaveBeenCalledWith("/internal/v1/inventory/counts?facility_id=facility-1");
       expect(get).toHaveBeenCalledWith("/internal/v1/inventory/movements?facility_id=facility-1");
       expect(get).toHaveBeenCalledWith("/internal/v1/inventory/requisitions?facility_id=facility-1");
     });
-    expect(await screen.findAllByText("Paracetamol 500mg")).toHaveLength(2);
+    expect((await screen.findAllByText("Paracetamol 500mg")).length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByRole("heading", { name: "Inventory Dashboard" })).toBeInTheDocument();
     expect(screen.getByText("Harare Central Hospital")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Order through marketplace/i })).toHaveAttribute("href", "/marketplace/orders?source=inventory");
   });

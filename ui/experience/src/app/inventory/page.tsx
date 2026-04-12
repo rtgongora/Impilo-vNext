@@ -1,11 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { AlertTriangle, ArrowRight, ClipboardList, FileText, Package, Pill, Warehouse } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowRight,
+  ClipboardList,
+  Layers,
+  Loader2,
+  Package,
+  PackageSearch,
+  Pill,
+  Truck,
+  Warehouse,
+} from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
+import { SupplyPlaneContextBar } from "@/components/experience/SupplyPlaneContextBar";
 import {
-  useInventoryCounts,
   useInventoryItems,
   useInventoryMovements,
   useInventoryRequisitions,
@@ -13,33 +24,51 @@ import {
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 
 function formatDate(value: string | null) {
-  if (!value) return "Not recorded";
+  if (!value) return "—";
   return new Date(value).toLocaleString();
+}
+
+const PENDING_REQ_STATUSES = new Set([
+  "PENDING",
+  "DRAFT",
+  "SUBMITTED",
+  "APPROVED",
+  "OPEN",
+  "IN_REVIEW",
+]);
+
+function isPendingRequisition(status: string) {
+  const u = status.toUpperCase();
+  if (PENDING_REQ_STATUSES.has(u)) return true;
+  if (u === "FULFILLED" || u === "RECEIVED" || u === "REJECTED" || u === "CANCELLED" || u === "CLOSED") {
+    return false;
+  }
+  return u !== "DISPATCHED";
 }
 
 export default function InventoryPage() {
   const facility = useFacilityStore((state) => state.facility);
   const facilityId = facility?.id ?? "";
   const itemsQuery = useInventoryItems(facilityId);
-  const countsQuery = useInventoryCounts(facilityId);
   const movementsQuery = useInventoryMovements(facilityId);
   const requisitionsQuery = useInventoryRequisitions(facilityId);
 
   const items = itemsQuery.data ?? [];
-  const counts = countsQuery.data ?? [];
   const movements = movementsQuery.data ?? [];
   const requisitions = requisitionsQuery.data ?? [];
 
   const lowStockItems = items.filter((item) => item.quantityOnHand <= item.reorderLevel || item.status === "LOW_STOCK");
-  const lastCount = counts[0] ?? null;
-  const openRequisitions = requisitions.filter((req) => req.status !== "FULFILLED").length;
-  const recentMovement = movements[0] ?? null;
+  const pendingRequisitions = requisitions.filter((r) => isPendingRequisition(r.status));
+  const recentMovements = movements.slice(0, 12);
+
+  const loading = !!facilityId && (itemsQuery.isLoading || movementsQuery.isLoading || requisitionsQuery.isLoading);
+  const error = itemsQuery.error || movementsQuery.error || requisitionsQuery.error;
 
   return (
     <AppLayout>
       <PageShell
-        title="Inventory Operations"
-        subtitle="Track stock position, count closure, movements, and replenishment in the same facility workspace."
+        title="Inventory Dashboard"
+        subtitle="Supply Plane — stock summary, recent movements, and shortcuts to catalog, stock levels, requisitions, reconciliation, and assets."
       >
         {!facility ? (
           <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
@@ -52,113 +81,247 @@ export default function InventoryPage() {
           </div>
         ) : (
           <div className="space-y-6">
+            <SupplyPlaneContextBar />
+
+            {error ? (
+              <div className="flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900">
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+                <div>
+                  <p className="font-medium">Could not load inventory data</p>
+                  <p className="mt-1 text-rose-800/90">Check your connection and try again. Partial views may be stale.</p>
+                </div>
+              </div>
+            ) : null}
+
             <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div>
                   <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Facility in scope</div>
                   <h2 className="mt-1 text-xl font-semibold text-slate-900">{facility.name}</h2>
                   <p className="mt-2 max-w-3xl text-sm text-slate-600">
-                    Inventory now stays connected to the active facility so low-stock signals, count closure, and requisition follow-through do not break away from pharmacy, wards, or marketplace ordering.
+                    Dashboard metrics refresh from the facility-scoped inventory API. Use the links below for catalog maintenance,
+                    bin-level stock, replenishment, physical counts, and fixed assets.
                   </p>
                 </div>
-                <div className="grid gap-2 text-sm text-slate-600 sm:grid-cols-2">
-                  <Link href="/pharmacy/stock?source=inventory" className="rounded-lg border border-slate-200 px-3 py-2 font-medium hover:bg-slate-50">
-                    Open pharmacy stock
-                  </Link>
-                  <Link href="/marketplace/orders?source=inventory" className="rounded-lg border border-slate-200 px-3 py-2 font-medium hover:bg-slate-50">
-                    Order through marketplace
-                  </Link>
-                  <Link href="/inventory/requisitions" className="rounded-lg border border-slate-200 px-3 py-2 font-medium hover:bg-slate-50">
-                    Manage requisitions
-                  </Link>
-                  <Link href="/inventory/movements" className="rounded-lg border border-slate-200 px-3 py-2 font-medium hover:bg-slate-50">
-                    Review transfers
-                  </Link>
+              </div>
+            </section>
+
+            <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  <Warehouse className="h-4 w-4" aria-hidden />
+                  Total items
                 </div>
+                <div className="mt-3 flex items-baseline gap-2">
+                  {loading ? <Loader2 className="h-6 w-6 animate-spin text-slate-400" aria-label="Loading" /> : null}
+                  <span className="text-3xl font-semibold text-slate-900">{items.length}</span>
+                </div>
+                <p className="mt-1 text-sm text-slate-600">Active catalog lines for this facility.</p>
+              </div>
+              <div className="rounded-2xl border border-amber-200/80 bg-amber-50/80 p-4 shadow-sm">
+                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-amber-800">
+                  <AlertTriangle className="h-4 w-4" aria-hidden />
+                  Low stock alerts
+                </div>
+                <div className="mt-3 flex items-baseline gap-2">
+                  {loading ? <Loader2 className="h-6 w-6 animate-spin text-amber-600/70" aria-label="Loading" /> : null}
+                  <span className="text-3xl font-semibold text-amber-950">{lowStockItems.length}</span>
+                </div>
+                <p className="mt-1 text-sm text-amber-900/85">At or below reorder level, or flagged LOW_STOCK.</p>
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  <ClipboardList className="h-4 w-4" aria-hidden />
+                  Pending requisitions
+                </div>
+                <div className="mt-3 flex items-baseline gap-2">
+                  {loading ? <Loader2 className="h-6 w-6 animate-spin text-slate-400" aria-label="Loading" /> : null}
+                  <span className="text-3xl font-semibold text-slate-900">{pendingRequisitions.length}</span>
+                </div>
+                <p className="mt-1 text-sm text-slate-600">Not yet received or closed in the replenishment pipeline.</p>
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  <Layers className="h-4 w-4" aria-hidden />
+                  Recent movements
+                </div>
+                <div className="mt-3 text-lg font-semibold text-slate-900">{movements.length}</div>
+                <p className="mt-1 text-sm text-slate-600">Total transfer events loaded for this facility.</p>
               </div>
             </section>
 
-            <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500"><Warehouse className="h-4 w-4" /> Active stock lines</div>
-                <div className="mt-3 text-3xl font-semibold text-slate-900">{items.length}</div>
-                <p className="mt-1 text-sm text-slate-600">{lowStockItems.length} need reorder attention now.</p>
-              </div>
-              <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500"><ClipboardList className="h-4 w-4" /> Latest count</div>
-                <div className="mt-3 text-lg font-semibold text-slate-900">{lastCount ? lastCount.status.replace(/_/g, " ") : "No count yet"}</div>
-                <p className="mt-1 text-sm text-slate-600">{lastCount ? `${lastCount.itemCount} lines reviewed on ${formatDate(lastCount.countDate)}` : "Record the first count from the counts workspace."}</p>
-              </div>
-              <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500"><FileText className="h-4 w-4" /> Open requisitions</div>
-                <div className="mt-3 text-3xl font-semibold text-slate-900">{openRequisitions}</div>
-                <p className="mt-1 text-sm text-slate-600">Current requests still waiting for issue, approval, or fulfilment.</p>
-              </div>
-              <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500"><Package className="h-4 w-4" /> Latest movement</div>
-                <div className="mt-3 text-lg font-semibold text-slate-900">{recentMovement ? recentMovement.itemName : "No movement yet"}</div>
-                <p className="mt-1 text-sm text-slate-600">{recentMovement ? `${recentMovement.fromLocation} -> ${recentMovement.toLocation}` : "Transfers will appear here once recorded."}</p>
+            <section className="rounded-2xl border border-slate-200 bg-slate-50/60 p-5 shadow-sm">
+              <h3 className="text-sm font-semibold uppercase tracking-[0.12em] text-slate-600">Quick links</h3>
+              <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                <Link
+                  href="/inventory/items"
+                  className="inline-flex items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50"
+                >
+                  <span className="inline-flex items-center gap-2">
+                    <PackageSearch className="h-4 w-4 text-teal-700" aria-hidden />
+                    Item catalog
+                  </span>
+                  <ArrowRight className="h-4 w-4 text-slate-400" aria-hidden />
+                </Link>
+                <Link
+                  href="/inventory/stock"
+                  className="inline-flex items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50"
+                >
+                  <span className="inline-flex items-center gap-2">
+                    <Warehouse className="h-4 w-4 text-teal-700" aria-hidden />
+                    Stock & movements
+                  </span>
+                  <ArrowRight className="h-4 w-4 text-slate-400" aria-hidden />
+                </Link>
+                <Link
+                  href="/inventory/requisitions"
+                  className="inline-flex items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50"
+                >
+                  <span className="inline-flex items-center gap-2">
+                    <Truck className="h-4 w-4 text-teal-700" aria-hidden />
+                    Requisitions
+                  </span>
+                  <ArrowRight className="h-4 w-4 text-slate-400" aria-hidden />
+                </Link>
+                <Link
+                  href="/inventory/reconciliation"
+                  className="inline-flex items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50"
+                >
+                  <span className="inline-flex items-center gap-2">
+                    <ClipboardList className="h-4 w-4 text-teal-700" aria-hidden />
+                    Reconciliation
+                  </span>
+                  <ArrowRight className="h-4 w-4 text-slate-400" aria-hidden />
+                </Link>
+                <Link
+                  href="/operations/assets"
+                  className="inline-flex items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50"
+                >
+                  <span className="inline-flex items-center gap-2">
+                    <Package className="h-4 w-4 text-teal-700" aria-hidden />
+                    Asset registry
+                  </span>
+                  <ArrowRight className="h-4 w-4 text-slate-400" aria-hidden />
+                </Link>
+                <Link
+                  href="/inventory/counts"
+                  className="inline-flex items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50"
+                >
+                  <span className="inline-flex items-center gap-2">
+                    <Pill className="h-4 w-4 text-sky-700" aria-hidden />
+                    Legacy counts
+                  </span>
+                  <ArrowRight className="h-4 w-4 text-slate-400" aria-hidden />
+                </Link>
               </div>
             </section>
 
-            <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+            <section className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
               <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <div className="flex items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <h3 className="text-lg font-semibold text-slate-900">Low-stock watchlist</h3>
-                    <p className="text-sm text-slate-600">Surface the next action before stock issues reach the dispensary or ward.</p>
+                    <h3 className="text-lg font-semibold text-slate-900">Recent stock movements</h3>
+                    <p className="text-sm text-slate-600">Receipts, issues, and transfers (newest first). FEFO picks align with movement history.</p>
                   </div>
-                  <Link href="/inventory/counts" className="inline-flex items-center gap-1 text-sm font-medium text-slate-700 hover:text-slate-900">
-                    Open counts
-                    <ArrowRight className="h-4 w-4" />
+                  <Link href="/inventory/stock" className="text-sm font-medium text-teal-800 hover:text-teal-950">
+                    Open stock workspace
                   </Link>
                 </div>
+                {loading ? (
+                  <div className="mt-8 flex items-center justify-center gap-2 py-12 text-sm text-slate-500">
+                    <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
+                    Loading movements…
+                  </div>
+                ) : recentMovements.length === 0 ? (
+                  <div className="mt-6 rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-10 text-center text-sm text-slate-500">
+                    No movements recorded for this facility yet.
+                  </div>
+                ) : (
+                  <div className="mt-4 overflow-x-auto">
+                    <table className="w-full min-w-[640px] text-sm">
+                      <thead className="border-b border-slate-200 bg-slate-50 text-left text-slate-600">
+                        <tr>
+                          <th className="px-3 py-2 font-medium">When</th>
+                          <th className="px-3 py-2 font-medium">Item</th>
+                          <th className="px-3 py-2 font-medium">Qty</th>
+                          <th className="px-3 py-2 font-medium">From</th>
+                          <th className="px-3 py-2 font-medium">To</th>
+                          <th className="px-3 py-2 font-medium">By</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {recentMovements.map((m) => (
+                          <tr key={m.id} className="border-b border-slate-100 last:border-0">
+                            <td className="whitespace-nowrap px-3 py-2 text-slate-600">{formatDate(m.movedAt)}</td>
+                            <td className="px-3 py-2 font-medium text-slate-900">{m.itemName}</td>
+                            <td className="px-3 py-2 text-slate-800">{m.quantity}</td>
+                            <td className="px-3 py-2 text-slate-600">{m.fromLocation}</td>
+                            <td className="px-3 py-2 text-slate-600">{m.toLocation}</td>
+                            <td className="px-3 py-2 text-slate-600">{m.performedBy}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <h3 className="text-lg font-semibold text-slate-900">Low-stock watchlist</h3>
+                <p className="mt-1 text-sm text-slate-600">Next actions before wards or pharmacy run short.</p>
                 <div className="mt-4 space-y-3">
-                  {lowStockItems.length === 0 ? (
+                  {loading ? (
+                    <div className="flex items-center gap-2 py-8 text-sm text-slate-500">
+                      <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                      Loading items…
+                    </div>
+                  ) : lowStockItems.length === 0 ? (
                     <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
-                      No immediate stock pressure is showing for the selected facility.
+                      No immediate stock pressure for this facility.
                     </div>
                   ) : (
-                    lowStockItems.map((item) => (
-                      <div key={item.id} className="flex flex-col gap-3 rounded-xl border border-slate-200 px-4 py-3 md:flex-row md:items-center md:justify-between">
+                    lowStockItems.slice(0, 6).map((item) => (
+                      <div
+                        key={item.id}
+                        className="flex flex-col gap-2 rounded-xl border border-slate-200 px-3 py-3 sm:flex-row sm:items-center sm:justify-between"
+                      >
                         <div>
-                          <div className="flex items-center gap-2 text-sm font-medium text-slate-900">
-                            {item.productName}
-                            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">{item.status.replace(/_/g, " ")}</span>
+                          <div className="text-sm font-medium text-slate-900">{item.productName}</div>
+                          <div className="text-xs text-slate-500">
+                            {item.productCode} • {item.category}
                           </div>
-                          <p className="mt-1 text-sm text-slate-600">{item.productCode} • {item.category} • last counted {formatDate(item.lastCountedAt)}</p>
                         </div>
-                        <div className="flex items-center gap-6 text-sm">
+                        <div className="flex gap-6 text-xs sm:text-sm">
                           <div>
                             <div className="text-slate-500">On hand</div>
-                            <div className="font-semibold text-slate-900">{item.quantityOnHand} {item.unit}</div>
+                            <div className="font-semibold text-slate-900">
+                              {item.quantityOnHand} {item.unit}
+                            </div>
                           </div>
                           <div>
-                            <div className="text-slate-500">Reorder level</div>
-                            <div className="font-semibold text-slate-900">{item.reorderLevel} {item.unit}</div>
+                            <div className="text-slate-500">Reorder</div>
+                            <div className="font-semibold text-slate-900">
+                              {item.reorderLevel} {item.unit}
+                            </div>
                           </div>
                         </div>
                       </div>
                     ))
                   )}
                 </div>
-              </div>
-
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <h3 className="text-lg font-semibold text-slate-900">Coordination loop</h3>
-                <div className="mt-4 space-y-4 text-sm text-slate-600">
-                  <div className="rounded-xl border border-slate-200 p-4">
-                    <div className="flex items-center gap-2 font-medium text-slate-900"><AlertTriangle className="h-4 w-4 text-amber-600" /> Entry</div>
-                    <p className="mt-1">The facility context comes from the same experience layer, so every stock view stays bound to the selected site.</p>
-                  </div>
-                  <div className="rounded-xl border border-slate-200 p-4">
-                    <div className="flex items-center gap-2 font-medium text-slate-900"><Pill className="h-4 w-4 text-sky-600" /> Cross-surface continuity</div>
-                    <p className="mt-1">Use inventory to decide the next supply action, then hand off to pharmacy stock, marketplace orders, or ward operations without losing context.</p>
-                  </div>
-                  <div className="rounded-xl border border-slate-200 p-4">
-                    <div className="font-medium text-slate-900">Next best action</div>
-                    <p className="mt-1">{openRequisitions > 0 ? "Review open requisitions before opening a new purchase order." : "If stock pressure is rising, create a requisition and then place a marketplace order from the same facility context."}</p>
-                  </div>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <Link
+                    href="/pharmacy/stock?source=inventory"
+                    className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-800 hover:bg-slate-50"
+                  >
+                    Pharmacy stock
+                  </Link>
+                  <Link
+                    href="/marketplace/orders?source=inventory"
+                    className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-800 hover:bg-slate-50"
+                  >
+                    Order through marketplace
+                  </Link>
                 </div>
               </div>
             </section>

@@ -5,9 +5,10 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import RequisitionsPage from "./page";
 
-const { get, post } = vi.hoisted(() => ({
+const { get, post, patch } = vi.hoisted(() => ({
   get: vi.fn(),
   post: vi.fn(),
+  patch: vi.fn(),
 }));
 
 vi.mock("next/link", () => ({
@@ -28,7 +29,7 @@ vi.mock("@/hooks/useFacilityStore", () => ({
 }));
 
 vi.mock("@/lib/api-client", () => ({
-  apiClient: { get, post },
+  apiClient: { get, post, patch },
 }));
 
 function renderPage() {
@@ -40,6 +41,7 @@ describe("RequisitionsPage", () => {
   beforeEach(() => {
     get.mockReset();
     post.mockReset();
+    patch.mockReset();
   });
 
   it("submits a real requisition to the inventory endpoint", async () => {

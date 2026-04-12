@@ -125,6 +125,7 @@ type InventoryCountsResponse = ApiResponse<InventoryCountApiResource[]>;
 type InventoryMovementsResponse = ApiResponse<InventoryMovementApiResource[]>;
 type InventoryRequisitionsResponse = ApiResponse<InventoryRequisitionApiResource[]>;
 type InventoryRequisitionResponse = ApiResponse<InventoryRequisitionApiResource>;
+type InventoryItemCreateResponse = ApiResponse<InventoryItemApiResource>;
 
 function normalizeItem(resource: InventoryItemApiResource): InventoryItem {
   return {
@@ -247,6 +248,60 @@ export function useCreateInventoryRequisition() {
         requisition_number: payload.requisitionNumber,
       });
       return normalizeRequisition(response.data);
+    },
+    onSuccess: (_data, payload) => {
+      queryClient.invalidateQueries({ queryKey: ["inventory-requisitions", { facilityId: payload.facilityId }] });
+    },
+  });
+}
+
+export interface CreateInventoryItemPayload {
+  facilityId: string;
+  productCode: string;
+  productName: string;
+  category: string;
+  unit: string;
+  reorderLevel: number;
+  quantityOnHand?: number;
+}
+
+export function useCreateInventoryItem() {
+  const queryClient = useQueryClient();
+
+  return useMutation<InventoryItem, unknown, CreateInventoryItemPayload>({
+    mutationFn: async (payload) => {
+      const response = await apiClient.post<InventoryItemCreateResponse>("/internal/v1/inventory/items", {
+        facility_id: payload.facilityId,
+        product_code: payload.productCode,
+        product_name: payload.productName,
+        category: payload.category || null,
+        unit: payload.unit,
+        reorder_level: payload.reorderLevel,
+        quantity_on_hand: payload.quantityOnHand ?? 0,
+        status: "ACTIVE",
+      });
+      return normalizeItem(response.data);
+    },
+    onSuccess: (_data, payload) => {
+      queryClient.invalidateQueries({ queryKey: ["inventory-items", { facilityId: payload.facilityId }] });
+    },
+  });
+}
+
+export interface PatchRequisitionPayload {
+  facilityId: string;
+  requisitionId: string;
+  status: string;
+}
+
+export function usePatchRequisitionStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation<unknown, unknown, PatchRequisitionPayload>({
+    mutationFn: async (payload) => {
+      await apiClient.patch(`/internal/v1/inventory/requisitions/${encodeURIComponent(payload.requisitionId)}`, {
+        status: payload.status,
+      });
     },
     onSuccess: (_data, payload) => {
       queryClient.invalidateQueries({ queryKey: ["inventory-requisitions", { facilityId: payload.facilityId }] });
