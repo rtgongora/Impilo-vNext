@@ -1,6 +1,10 @@
 server:
   port: 0
 
+inpatient:
+  security:
+    oauth2-enabled: false
+
 spring:
   application:
     name: inpatient-service-test

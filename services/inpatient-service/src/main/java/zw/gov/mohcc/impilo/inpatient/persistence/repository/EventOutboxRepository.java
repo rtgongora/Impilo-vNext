@@ -7,7 +7,7 @@ import zw.gov.mohcc.impilo.inpatient.persistence.entity.EventOutboxEntity;
 import java.util.List;
 
 @Repository
-public interface EventOutboxRepository extends JpaRepository<EventOutboxEntity, String> {
+public interface EventOutboxRepository extends JpaRepository<EventOutboxEntity, Long> {
 
     List<EventOutboxEntity> findTop100ByPublishedAtIsNullOrderByCreatedAtAsc();
 }

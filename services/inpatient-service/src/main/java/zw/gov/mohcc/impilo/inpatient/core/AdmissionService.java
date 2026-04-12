@@ -69,7 +69,14 @@ public class AdmissionService {
     }
 
     /**
-     * Creates a new admission and writes an ADMISSION_CREATED outbox event.
+     * Active admissions for a patient at a facility (typically at most one ADMITTED row).
+     */
+    public List<AdmissionEntity> findActiveAdmissionsForPatientAtFacility(String subjectCpid, UUID facilityId) {
+        return admissionRepository.findBySubjectCpidAndFacilityIdAndStatus(subjectCpid, facilityId, "ADMITTED");
+    }
+
+    /**
+     * Creates a new admission and writes an outbox event for Kafka publication.
      */
     @Transactional
     public AdmissionEntity createAdmission(CreateAdmissionRequest request) {
@@ -87,8 +94,12 @@ public class AdmissionService {
 
         admission = admissionRepository.save(admission);
 
-        appendOutboxEvent(admission.getTenantId(), "ADMISSION_CREATED",
-                admission.getAdmissionRef().toString(), buildAdmissionPayload(admission));
+        appendOutboxEvent(
+                "ADMISSION",
+                admission.getAdmissionRef().toString(),
+                "inpatient.admission.created",
+                admission.getTenantId(),
+                buildStandardPayload(admission));
 
         log.info("Admission created: admissionRef={}, facility={}, subject={}",
                 admission.getAdmissionRef(), admission.getFacilityId(), admission.getSubjectCpid());
@@ -119,21 +130,24 @@ public class AdmissionService {
 
         transfer = transferRepository.save(transfer);
 
-        // Update admission with new ward/bed
         admission.setWardId(request.getToWardId());
         admission.setBedId(request.getToBedId());
         admission.setStatus("ADMITTED");
         admissionRepository.save(admission);
 
-        Map<String, Object> payload = new LinkedHashMap<>();
-        payload.put("admissionRef", admissionRef.toString());
-        payload.put("fromWardId", transfer.getFromWardId() != null ? transfer.getFromWardId().toString() : null);
-        payload.put("toWardId", transfer.getToWardId().toString());
-        payload.put("toBedId", transfer.getToBedId() != null ? transfer.getToBedId().toString() : null);
-        payload.put("transferredAt", transfer.getTransferredAt().toString());
+        Map<String, Object> payload = buildStandardPayload(admission);
+        payload.put("admission_ref", admissionRef.toString());
+        payload.put("from_ward_id", transfer.getFromWardId() != null ? transfer.getFromWardId().toString() : null);
+        payload.put("to_ward_id", transfer.getToWardId().toString());
+        payload.put("to_bed_id", transfer.getToBedId() != null ? transfer.getToBedId().toString() : null);
+        payload.put("transferred_at", transfer.getTransferredAt().toString());
 
-        appendOutboxEvent(admission.getTenantId(), "PATIENT_TRANSFERRED",
-                admissionRef.toString(), payload);
+        appendOutboxEvent(
+                "TRANSFER",
+                String.valueOf(transfer.getId()),
+                "inpatient.transfer.completed",
+                admission.getTenantId(),
+                payload);
 
         log.info("Patient transferred: admissionRef={}, fromWard={}, toWard={}",
                 admissionRef, transfer.getFromWardId(), transfer.getToWardId());
@@ -156,8 +170,12 @@ public class AdmissionService {
         admission.setDischargedAt(OffsetDateTime.now());
         admission = admissionRepository.save(admission);
 
-        appendOutboxEvent(admission.getTenantId(), "PATIENT_DISCHARGED",
-                admissionRef.toString(), buildAdmissionPayload(admission));
+        appendOutboxEvent(
+                "ADMISSION",
+                admissionRef.toString(),
+                "inpatient.discharge.completed",
+                admission.getTenantId(),
+                buildStandardPayload(admission));
 
         log.info("Patient discharged: admissionRef={}, facility={}",
                 admissionRef, admission.getFacilityId());
@@ -165,25 +183,26 @@ public class AdmissionService {
         return admission;
     }
 
-    private Map<String, Object> buildAdmissionPayload(AdmissionEntity admission) {
+    private Map<String, Object> buildStandardPayload(AdmissionEntity admission) {
         Map<String, Object> payload = new LinkedHashMap<>();
-        payload.put("admissionRef", admission.getAdmissionRef().toString());
-        payload.put("tenantId", admission.getTenantId().toString());
-        payload.put("encounterId", admission.getEncounterId().toString());
-        payload.put("subjectCpid", admission.getSubjectCpid());
-        payload.put("facilityId", admission.getFacilityId().toString());
-        payload.put("wardId", admission.getWardId() != null ? admission.getWardId().toString() : null);
-        payload.put("bedId", admission.getBedId() != null ? admission.getBedId().toString() : null);
+        payload.put("patient_cpid", admission.getSubjectCpid());
+        payload.put("facility_id", admission.getFacilityId().toString());
+        payload.put("ward_id", admission.getWardId() != null ? admission.getWardId().toString() : null);
+        payload.put("bed_id", admission.getBedId() != null ? admission.getBedId().toString() : null);
+        payload.put("admission_ref", admission.getAdmissionRef().toString());
+        payload.put("tenant_id", admission.getTenantId().toString());
+        payload.put("encounter_id", admission.getEncounterId().toString());
         payload.put("status", admission.getStatus());
-        payload.put("admittedAt", admission.getAdmittedAt() != null ? admission.getAdmittedAt().toString() : null);
-        payload.put("dischargedAt", admission.getDischargedAt() != null ? admission.getDischargedAt().toString() : null);
+        payload.put("admitted_at", admission.getAdmittedAt() != null ? admission.getAdmittedAt().toString() : null);
+        payload.put("discharged_at", admission.getDischargedAt() != null ? admission.getDischargedAt().toString() : null);
         return payload;
     }
 
-    private void appendOutboxEvent(UUID tenantId, String eventType,
-                                   String aggregateId, Map<String, Object> payload) {
+    private void appendOutboxEvent(String aggregateType, String aggregateId, String eventType,
+                                   UUID tenantId, Map<String, Object> payload) {
         EventOutboxEntity outbox = new EventOutboxEntity();
-        outbox.setId(UUID.randomUUID().toString());
+        outbox.setAggregateType(aggregateType);
+        outbox.setAggregateId(aggregateId);
         outbox.setTenantId(tenantId.toString());
         outbox.setPodId(System.getenv("HOSTNAME") != null ? System.getenv("HOSTNAME") : "local");
         outbox.setCorrelationId(UUID.randomUUID().toString());

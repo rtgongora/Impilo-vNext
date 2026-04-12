@@ -1,19 +1,28 @@
 package zw.gov.mohcc.impilo.inpatient.persistence.entity;
 
 import jakarta.persistence.*;
+import zw.gov.mohcc.impilo.sharedkernel.events.CompanionOutboxPublisher;
+
 import java.time.OffsetDateTime;
 
 /**
- * Transactional outbox entity for reliable Kafka event publishing.
- * Maps to the {@code inpatient.event_outbox} table with all v1.1 columns.
+ * Transactional outbox entity for reliable Kafka event publishing via
+ * {@link CompanionOutboxPublisher}.
  */
 @Entity
 @Table(name = "event_outbox", schema = "inpatient")
 public class EventOutboxEntity {
 
     @Id
-    @Column(name = "id", length = 36)
-    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+    private Long id;
+
+    @Column(name = "aggregate_type", nullable = false, length = 64)
+    private String aggregateType;
+
+    @Column(name = "aggregate_id", nullable = false, length = 256)
+    private String aggregateId;
 
     @Column(name = "tenant_id", nullable = false, length = 64)
     private String tenantId;
@@ -42,6 +51,9 @@ public class EventOutboxEntity {
     @Column(name = "published_at")
     private OffsetDateTime publishedAt;
 
+    @Column(name = "publish_error", columnDefinition = "TEXT")
+    private String publishError;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
@@ -50,42 +62,178 @@ public class EventOutboxEntity {
         if (createdAt == null) {
             createdAt = OffsetDateTime.now();
         }
-        if (id == null) {
-            id = java.util.UUID.randomUUID().toString();
-        }
     }
 
-    // Getters and setters
+    public CompanionOutboxPublisher.OutboxRow toOutboxRow() {
+        final EventOutboxEntity self = this;
+        return new CompanionOutboxPublisher.OutboxRow() {
+            @Override
+            public Long id() {
+                return self.id;
+            }
 
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
+            @Override
+            public String aggregateType() {
+                return self.aggregateType;
+            }
 
-    public String getTenantId() { return tenantId; }
-    public void setTenantId(String tenantId) { this.tenantId = tenantId; }
+            @Override
+            public String aggregateId() {
+                return self.aggregateId;
+            }
 
-    public String getPodId() { return podId; }
-    public void setPodId(String podId) { this.podId = podId; }
+            @Override
+            public String eventType() {
+                return self.eventType;
+            }
 
-    public String getCorrelationId() { return correlationId; }
-    public void setCorrelationId(String correlationId) { this.correlationId = correlationId; }
+            @Override
+            public String payloadJson() {
+                return self.payloadJson;
+            }
 
-    public String getIdempotencyKey() { return idempotencyKey; }
-    public void setIdempotencyKey(String idempotencyKey) { this.idempotencyKey = idempotencyKey; }
+            @Override
+            public OffsetDateTime occurredAt() {
+                return self.occurredAt;
+            }
 
-    public String getEventType() { return eventType; }
-    public void setEventType(String eventType) { this.eventType = eventType; }
+            @Override
+            public OffsetDateTime publishedAt() {
+                return self.publishedAt;
+            }
 
-    public int getSchemaVersion() { return schemaVersion; }
-    public void setSchemaVersion(int schemaVersion) { this.schemaVersion = schemaVersion; }
+            @Override
+            public String tenantId() {
+                return self.tenantId;
+            }
 
-    public OffsetDateTime getOccurredAt() { return occurredAt; }
-    public void setOccurredAt(OffsetDateTime occurredAt) { this.occurredAt = occurredAt; }
+            @Override
+            public String podId() {
+                return self.podId;
+            }
 
-    public String getPayloadJson() { return payloadJson; }
-    public void setPayloadJson(String payloadJson) { this.payloadJson = payloadJson; }
+            @Override
+            public String correlationId() {
+                return self.correlationId;
+            }
 
-    public OffsetDateTime getPublishedAt() { return publishedAt; }
-    public void setPublishedAt(OffsetDateTime publishedAt) { this.publishedAt = publishedAt; }
+            @Override
+            public String idempotencyKey() {
+                return self.idempotencyKey;
+            }
 
-    public OffsetDateTime getCreatedAt() { return createdAt; }
+            @Override
+            public int schemaVersion() {
+                return self.schemaVersion;
+            }
+        };
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getAggregateType() {
+        return aggregateType;
+    }
+
+    public void setAggregateType(String aggregateType) {
+        this.aggregateType = aggregateType;
+    }
+
+    public String getAggregateId() {
+        return aggregateId;
+    }
+
+    public void setAggregateId(String aggregateId) {
+        this.aggregateId = aggregateId;
+    }
+
+    public String getTenantId() {
+        return tenantId;
+    }
+
+    public void setTenantId(String tenantId) {
+        this.tenantId = tenantId;
+    }
+
+    public String getPodId() {
+        return podId;
+    }
+
+    public void setPodId(String podId) {
+        this.podId = podId;
+    }
+
+    public String getCorrelationId() {
+        return correlationId;
+    }
+
+    public void setCorrelationId(String correlationId) {
+        this.correlationId = correlationId;
+    }
+
+    public String getIdempotencyKey() {
+        return idempotencyKey;
+    }
+
+    public void setIdempotencyKey(String idempotencyKey) {
+        this.idempotencyKey = idempotencyKey;
+    }
+
+    public String getEventType() {
+        return eventType;
+    }
+
+    public void setEventType(String eventType) {
+        this.eventType = eventType;
+    }
+
+    public int getSchemaVersion() {
+        return schemaVersion;
+    }
+
+    public void setSchemaVersion(int schemaVersion) {
+        this.schemaVersion = schemaVersion;
+    }
+
+    public OffsetDateTime getOccurredAt() {
+        return occurredAt;
+    }
+
+    public void setOccurredAt(OffsetDateTime occurredAt) {
+        this.occurredAt = occurredAt;
+    }
+
+    public String getPayloadJson() {
+        return payloadJson;
+    }
+
+    public void setPayloadJson(String payloadJson) {
+        this.payloadJson = payloadJson;
+    }
+
+    public OffsetDateTime getPublishedAt() {
+        return publishedAt;
+    }
+
+    public void setPublishedAt(OffsetDateTime publishedAt) {
+        this.publishedAt = publishedAt;
+    }
+
+    public String getPublishError() {
+        return publishError;
+    }
+
+    public void setPublishError(String publishError) {
+        this.publishError = publishError;
+    }
+
+    public OffsetDateTime getCreatedAt() {
+        return createdAt;
+    }
 }
