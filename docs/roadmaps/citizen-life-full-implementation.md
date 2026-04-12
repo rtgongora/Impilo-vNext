@@ -72,8 +72,18 @@ HC parity ingest and read-backs live on **`wellness-service`** (`WellnessHealthC
 
 ---
 
+## Quality commands (Wave 1)
+
+| Check | Command |
+|-------|---------|
+| BFF → wellness forwarding (contract-style) | From `services/`: `mvn -pl experience-bff -Dtest=WellnessServiceProxyControllerTest test` |
+| Citizen smoke — wellness + monitoring + cart (BFF mocked) | From `ui/experience/`: `npm run e2e -- citizen-life-smoke.spec.ts --project=chromium` — set `PLAYWRIGHT_BFF_URL` if the UI does not use the default `http://localhost:8160` |
+
+---
+
 ## Document history
 
 | Date | Change |
 |------|--------|
 | 2026-04-12 | Initial roadmap + Wave 0 contract pointers + HC wrap-up checklist. |
+| 2026-04-12 | Wave 1: BFF `WellnessServiceProxyControllerTest` + Playwright `citizen-life-smoke.spec.ts`; quality command table. |
