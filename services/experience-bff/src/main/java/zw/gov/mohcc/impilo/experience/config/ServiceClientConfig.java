@@ -72,7 +72,11 @@ public class ServiceClientConfig {
             String tshepoKeysBaseUrl,
             String tshepoOfflineBaseUrl,
             String ziboBaseUrl,
-            String ubomiBaseUrl
+            String ubomiBaseUrl,
+            String inpatientBaseUrl,
+            String pacsBaseUrl,
+            String communityBaseUrl,
+            String simbaBaseUrl
     ) {
         public ServiceEndpoints(
                 String pctBaseUrl,
@@ -132,6 +136,10 @@ public class ServiceClientConfig {
                     null,
                     null,
                     null,
+                    null,
+                    null,
+                    null,
+                    null,
                     null
             );
         }
@@ -174,6 +182,10 @@ public class ServiceClientConfig {
             if (tshepoOfflineBaseUrl == null) tshepoOfflineBaseUrl = "http://localhost:8185";
             if (ziboBaseUrl == null) ziboBaseUrl = "http://localhost:8085";
             if (ubomiBaseUrl == null) ubomiBaseUrl = "http://localhost:8087";
+            if (inpatientBaseUrl == null) inpatientBaseUrl = "http://localhost:8121";
+            if (pacsBaseUrl == null) pacsBaseUrl = "http://localhost:8113";
+            if (communityBaseUrl == null) communityBaseUrl = "http://localhost:8122";
+            if (simbaBaseUrl == null) simbaBaseUrl = "http://localhost:8125";
         }
     }
 
