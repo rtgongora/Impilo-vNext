@@ -112,6 +112,9 @@ impilo:
     tshepo-consent-base-url: ${TSHEPO_CONSENT_BASE_URL:http://localhost:8182}
     tshepo-audit-base-url: ${TSHEPO_AUDIT_BASE_URL:http://localhost:8183}
 
+    # Health Intelligence Plane — AI Model Registry
+    ai-model-registry-base-url: ${AI_MODEL_REGISTRY_BASE_URL:http://localhost:8280}
+
   clinical-platform:
     base-url: ${CLINICAL_KNOWLEDGE_PLATFORM_BASE_URL:http://localhost:8270}
 
