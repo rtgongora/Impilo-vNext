@@ -1,0 +1,589 @@
+# =============================================================================
+# TSHEPO Identity — Clinical Pseudonymous Identity Service (OpenAPI 3.0)
+#
+# Phase B baseline: CPID generation, MOSIP indirect linking, identity
+# resolution (Impilo ID -> Health ID -> CPID), provisional O-CPID
+# reconciliation, scoped token issuance, and v1.1 companion probe routes.
+# Expand paths incrementally to match controllers.
+# =============================================================================
+openapi: "3.0.3"
+
+info:
+  title: TSHEPO Identity — Clinical Pseudonymous Identity Service
+  version: "1.0.0"
+  description: |
+    TSHEPO Identity manages the deterministic CPID (Clinical Pseudonymous Identifier)
+    layer for Impilo Health OS. No PII transits or is stored in this service. It provides:
+
+    - Deterministic CPID generation (UUID v5 from tenantId + healthId)
+    - Provisional O-CPID issuance for offline facilities
+    - Full resolution chain: Impilo ID hash -> Health ID -> CPID (via VITO)
+    - Encrypted MOSIP indirect link storage and verification
+    - Scoped Ed25519-signed service token issuance and introspection
+    - O-CPID reconciliation when facilities come back online
+
+    Trust headers are enforced by Envoy + TSHEPO; internal probes additionally
+    require Health OS Manifest v1.2 mandatory headers (see `CompanionHeaders`).
+  contact:
+    name: Impilo Platform Team
+  license:
+    name: Proprietary
+
+servers:
+  - url: http://localhost:8181
+    description: Local development
+  - url: https://{tenant}.impilo.health/api
+    description: Production (per-tenant)
+    variables:
+      tenant:
+        default: demo
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Internal-Probe
+    description: Tech-companion v1.1 header and federation proofs
+  - name: CPID
+    description: Deterministic and provisional CPID generation
+  - name: Resolution
+    description: Identity resolution chain and mapping management
+  - name: MOSIP
+    description: MOSIP indirect link storage and verification
+  - name: Token
+    description: Scoped service token issuance and introspection
+  - name: Reconciliation
+    description: Provisional O-CPID reconciliation
+
+paths:
+  # ── Internal probes ───────────────────────────────────────────────────────
+  /internal/v1/health:
+    get:
+      operationId: tshepoIdentityInternalHealth
+      tags: [Internal-Probe]
+      summary: v1.1 probe — returns trust context echo
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+      responses:
+        "200":
+          description: Service UP with context echo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProbeHealthBody"
+
+  /internal/v1/test-command:
+    post:
+      operationId: tshepoIdentityInternalTestCommand
+      tags: [Internal-Probe]
+      summary: v1.1 probe — idempotency / echo
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "201":
+          description: Echo payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProbeCommandBody"
+
+  # ── CPID Generation ───────────────────────────────────────────────────────
+  /v1/identity/cpid/generate:
+    post:
+      operationId: generateCpid
+      tags: [CPID]
+      summary: Generate a deterministic CPID (UUID v5) from tenantId + healthId
+      description: |
+        Pure computation — does NOT persist a mapping. Use POST /v1/identity/mapping
+        to persist. Useful for pre-flight checks or client-side verification.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenerateCpidRequest"
+      responses:
+        "200":
+          description: Generated CPID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseCpid"
+
+  /v1/identity/cpid/provisional:
+    post:
+      operationId: generateProvisionalCpid
+      tags: [CPID]
+      summary: Generate a provisional O-CPID for offline use
+      description: |
+        Issues a random UUID O-CPID tracked in the provisional_cpid table.
+        Must be reconciled to a canonical CPID once the facility is back online.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProvisionalCpidRequest"
+      responses:
+        "200":
+          description: Provisional O-CPID issued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseProvisionalCpid"
+
+  # ── Identity Resolution ───────────────────────────────────────────────────
+  /v1/identity/resolve:
+    post:
+      operationId: resolveIdentity
+      tags: [Resolution]
+      summary: Resolve Impilo ID hash through the full chain to CPID
+      description: |
+        Full resolution: Impilo ID verifier hash -> Health ID (via VITO) -> CPID.
+        The Impilo ID is never transmitted in plaintext.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResolveRequest"
+      responses:
+        "200":
+          description: Resolution result with CPID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseResolve"
+
+  /v1/identity/mapping/{healthId}:
+    get:
+      operationId: getMappingByHealthId
+      tags: [Resolution]
+      summary: Get the CPID mapping for a Health ID within a tenant
+      parameters:
+        - name: healthId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: Mapping record
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseMapping"
+
+  /v1/identity/mapping:
+    post:
+      operationId: createMapping
+      tags: [Resolution]
+      summary: Create a Health ID -> CPID mapping (idempotent)
+      description: |
+        CPID is deterministically generated (UUID v5). If the mapping already
+        exists, the existing record is returned.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateMappingRequest"
+      responses:
+        "200":
+          description: Mapping created or existing returned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseMapping"
+
+  # ── MOSIP Indirect Links ──────────────────────────────────────────────────
+  /v1/identity/mosip/link:
+    post:
+      operationId: storeMosipLink
+      tags: [MOSIP]
+      summary: Store an encrypted MOSIP link reference
+      description: |
+        The linkRef (MOSIP opaque token) is encrypted with AES-256-GCM and its
+        SHA-256 hash is stored for lookup. One link per (tenant, healthId).
+        National ID is NEVER accepted, transmitted, or stored.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MosipLinkRequest"
+      responses:
+        "200":
+          description: MOSIP link stored
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseMosipLink"
+
+  /v1/identity/mosip/verify:
+    post:
+      operationId: verifyMosipLink
+      tags: [MOSIP]
+      summary: Verify a MOSIP link by hash comparison
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MosipVerifyRequest"
+      responses:
+        "200":
+          description: Verification result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseMosipVerify"
+
+  # ── Reconciliation ────────────────────────────────────────────────────────
+  /v1/identity/reconcile:
+    post:
+      operationId: reconcileProvisionalCpid
+      tags: [Reconciliation]
+      summary: Reconcile a provisional O-CPID to a canonical CPID
+      description: |
+        Resolves healthId to a deterministic CPID and updates the provisional
+        record with status=RECONCILED.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReconcileRequest"
+      responses:
+        "200":
+          description: Reconciliation result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseReconcile"
+
+  /v1/identity/provisional:
+    get:
+      operationId: listUnreconciledCpids
+      tags: [Reconciliation]
+      summary: List unreconciled provisional O-CPIDs for a tenant
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: List of unreconciled provisional CPIDs
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseProvisionalList"
+
+  # ── Scoped Tokens ─────────────────────────────────────────────────────────
+  /v1/identity/tokens:
+    post:
+      operationId: issueScopedToken
+      tags: [Token]
+      summary: Issue a scoped Ed25519-signed service token
+      description: |
+        Short-lived JWS tokens for internal service-to-service authorization.
+        These are NOT OIDC tokens.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IssueScopedTokenRequest"
+      responses:
+        "200":
+          description: Scoped token issued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseScopedToken"
+
+  /v1/identity/tokens/introspect:
+    post:
+      operationId: introspectToken
+      tags: [Token]
+      summary: Introspect a scoped token — verify active, not expired, not revoked
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IntrospectRequest"
+      responses:
+        "200":
+          description: Token introspection result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseIntrospect"
+
+  /v1/identity/tokens/{jti}:
+    delete:
+      operationId: revokeScopedToken
+      tags: [Token]
+      summary: Revoke a scoped token by its JTI (JWT ID)
+      parameters:
+        - name: jti
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Token revoked
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    TenantId:
+      name: X-Tenant-ID
+      in: header
+      required: true
+      schema:
+        type: string
+    PodId:
+      name: X-Pod-ID
+      in: header
+      required: true
+      schema:
+        type: string
+    RequestId:
+      name: X-Request-ID
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+    CorrelationId:
+      name: X-Correlation-ID
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid authentication
+
+  schemas:
+    ProbeHealthBody:
+      type: object
+      properties:
+        service:
+          type: string
+          example: tshepo-identity
+        status:
+          type: string
+          example: UP
+        tenant_id:
+          type: string
+        pod_id:
+          type: string
+        request_id:
+          type: string
+        correlation_id:
+          type: string
+      additionalProperties: true
+
+    ProbeCommandBody:
+      type: object
+      properties:
+        service:
+          type: string
+        action:
+          type: string
+        request_id:
+          type: string
+        correlation_id:
+          type: string
+        echo:
+          type: object
+          additionalProperties: true
+      additionalProperties: true
+
+    GenerateCpidRequest:
+      type: object
+      required: [tenantId, healthId]
+      properties:
+        tenantId:
+          type: string
+          format: uuid
+        healthId:
+          type: string
+          format: uuid
+
+    ProvisionalCpidRequest:
+      type: object
+      required: [tenantId, facilityId, deviceFingerprint]
+      properties:
+        tenantId:
+          type: string
+          format: uuid
+        facilityId:
+          type: string
+          format: uuid
+        deviceFingerprint:
+          type: string
+
+    ResolveRequest:
+      type: object
+      required: [tenantId, impiloIdHash]
+      properties:
+        tenantId:
+          type: string
+          format: uuid
+        impiloIdHash:
+          type: string
+          description: SHA-256 verifier hash of the Impilo ID — never plaintext
+
+    CreateMappingRequest:
+      type: object
+      required: [tenantId, healthId]
+      properties:
+        tenantId:
+          type: string
+          format: uuid
+        healthId:
+          type: string
+          format: uuid
+
+    MosipLinkRequest:
+      type: object
+      required: [tenantId, healthId, linkRef]
+      properties:
+        tenantId:
+          type: string
+          format: uuid
+        healthId:
+          type: string
+          format: uuid
+        linkRef:
+          type: string
+          description: MOSIP opaque reference token
+
+    MosipVerifyRequest:
+      type: object
+      required: [tenantId, healthId, linkRef]
+      properties:
+        tenantId:
+          type: string
+          format: uuid
+        healthId:
+          type: string
+          format: uuid
+        linkRef:
+          type: string
+
+    ReconcileRequest:
+      type: object
+      required: [tenantId, provisionalCpid, healthId]
+      properties:
+        tenantId:
+          type: string
+          format: uuid
+        provisionalCpid:
+          type: string
+          format: uuid
+        healthId:
+          type: string
+          format: uuid
+
+    IssueScopedTokenRequest:
+      type: object
+      required: [tenantId, actorId, scope]
+      properties:
+        tenantId:
+          type: string
+          format: uuid
+        actorId:
+          type: string
+        scope:
+          type: string
+        ttlSeconds:
+          type: integer
+
+    IntrospectRequest:
+      type: object
+      required: [token]
+      properties:
+        token:
+          type: string
+
+    # ── ApiResponse wrappers ────────────────────────────────────────────────
+    ApiResponseCpid:
+      type: object
+      description: ApiResponse wrapper — see shared-kernel `ApiResponse`
+      additionalProperties: true
+
+    ApiResponseProvisionalCpid:
+      type: object
+      description: ApiResponse wrapper — see shared-kernel `ApiResponse`
+      additionalProperties: true
+
+    ApiResponseResolve:
+      type: object
+      description: ApiResponse wrapper — see shared-kernel `ApiResponse`
+      additionalProperties: true
+
+    ApiResponseMapping:
+      type: object
+      description: ApiResponse wrapper — see shared-kernel `ApiResponse`
+      additionalProperties: true
+
+    ApiResponseMosipLink:
+      type: object
+      description: ApiResponse wrapper — see shared-kernel `ApiResponse`
+      additionalProperties: true
+
+    ApiResponseMosipVerify:
+      type: object
+      description: ApiResponse wrapper — see shared-kernel `ApiResponse`
+      additionalProperties: true
+
+    ApiResponseReconcile:
+      type: object
+      description: ApiResponse wrapper — see shared-kernel `ApiResponse`
+      additionalProperties: true
+
+    ApiResponseProvisionalList:
+      type: object
+      description: ApiResponse wrapper — see shared-kernel `ApiResponse`
+      additionalProperties: true
+
+    ApiResponseScopedToken:
+      type: object
+      description: ApiResponse wrapper — see shared-kernel `ApiResponse`
+      additionalProperties: true
+
+    ApiResponseIntrospect:
+      type: object
+      description: ApiResponse wrapper — see shared-kernel `ApiResponse`
+      additionalProperties: true

@@ -1,0 +1,683 @@
+# =============================================================================
+# TSHEPO Offline — Offline Capability & Reconciliation Service (OpenAPI 3.0)
+#
+# Phase B baseline: capability token issuance/verification, offline action
+# logging, offline pack generation, reconciliation batch submission, and v1.1
+# companion probe routes. Expand paths incrementally to match controllers.
+# =============================================================================
+openapi: "3.0.3"
+
+info:
+  title: TSHEPO Offline — Offline Capability & Reconciliation Service
+  version: "1.0.0"
+  description: |
+    TSHEPO Offline governs disconnected facility operations for Impilo Health OS.
+    When facilities lose connectivity, this service provides:
+
+    - Ed25519-signed capability tokens (scoped offline permissions with TTL)
+    - Offline action logging and validation against capability rules
+    - Offline pack generation (policy snapshots, consent directives, terminology)
+    - Reconciliation batch submission when facilities come back online
+
+    Capability tokens are JWS-signed, time-bounded, and enforce a maximum
+    offline encounter limit per token. O-CPIDs issued offline are reconciled
+    through the identity service when connectivity is restored.
+
+    Trust headers are enforced by Envoy + TSHEPO; internal probes additionally
+    require Health OS Manifest v1.2 mandatory headers (see `CompanionHeaders`).
+  contact:
+    name: Impilo Platform Team
+  license:
+    name: Proprietary
+
+servers:
+  - url: http://localhost:8185
+    description: Local development
+  - url: https://{tenant}.impilo.health/api
+    description: Production (per-tenant)
+    variables:
+      tenant:
+        default: demo
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Internal-Probe
+    description: Tech-companion v1.1 header and federation proofs
+  - name: Capability
+    description: Offline capability token lifecycle
+  - name: Action
+    description: Offline action logging and query
+  - name: Pack
+    description: Offline pack generation and download
+  - name: Reconciliation
+    description: Offline action batch reconciliation
+
+paths:
+  # ── Internal probes ───────────────────────────────────────────────────────
+  /internal/v1/health:
+    get:
+      operationId: tshepoOfflineInternalHealth
+      tags: [Internal-Probe]
+      summary: v1.1 probe — returns trust context echo
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+      responses:
+        "200":
+          description: Service UP with context echo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProbeHealthBody"
+
+  /internal/v1/test-command:
+    post:
+      operationId: tshepoOfflineInternalTestCommand
+      tags: [Internal-Probe]
+      summary: v1.1 probe — idempotency / echo
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "201":
+          description: Echo payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProbeCommandBody"
+
+  # ── Capability Tokens ─────────────────────────────────────────────────────
+  /v1/offline/capabilities:
+    post:
+      operationId: issueCapabilityToken
+      tags: [Capability]
+      summary: Issue a new offline capability token
+      description: |
+        Validates actor facility access, determines capabilities based on
+        configured allowed-offline-actions, and signs with Ed25519.
+        Token is time-bounded (default 8h, max 72h) with a max encounter limit.
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/CorrelationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CapabilityTokenRequest"
+      responses:
+        "201":
+          description: Capability token issued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CapabilityTokenResponse"
+
+  /v1/offline/capabilities/{id}:
+    get:
+      operationId: getCapabilityToken
+      tags: [Capability]
+      summary: Retrieve a capability token by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: Capability token details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CapabilityTokenResponse"
+    delete:
+      operationId: revokeCapabilityToken
+      tags: [Capability]
+      summary: Revoke an active capability token
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/CorrelationId"
+      responses:
+        "204":
+          description: Capability token revoked
+
+  /v1/offline/capabilities/verify:
+    post:
+      operationId: verifyCapabilityToken
+      tags: [Capability]
+      summary: Verify a signed capability token
+      description: |
+        Checks JWS signature (Ed25519), expiry, and revocation status.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CapabilityVerifyRequest"
+      responses:
+        "200":
+          description: Verification result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CapabilityVerifyResponse"
+
+  # ── Offline Actions ───────────────────────────────────────────────────────
+  /v1/offline/actions:
+    post:
+      operationId: logOfflineAction
+      tags: [Action]
+      summary: Log an offline action
+      description: |
+        Validates the action against the capability token and rules engine,
+        issues O-CPID if required, and persists the action log.
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/CorrelationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OfflineActionRequest"
+      responses:
+        "201":
+          description: Offline action logged
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OfflineActionResponse"
+    get:
+      operationId: queryOfflineActions
+      tags: [Action]
+      summary: Query offline actions by tenant and actor (paginated)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ActorId"
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 50
+        - name: sort
+          in: query
+          required: false
+          schema:
+            type: string
+            default: performedAt
+      responses:
+        "200":
+          description: Paginated offline actions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PagedOfflineActions"
+
+  # ── Offline Packs ─────────────────────────────────────────────────────────
+  /v1/offline/packs:
+    post:
+      operationId: generateOfflinePack
+      tags: [Pack]
+      summary: Generate a new offline pack for a facility
+      description: |
+        Snapshots policy rules, consent directives, and terminology codes
+        for offline use. Packs have a configurable TTL (default 24h).
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/CorrelationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OfflinePackRequest"
+      responses:
+        "201":
+          description: Offline pack generated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OfflinePackResponse"
+
+  /v1/offline/packs/{id}:
+    get:
+      operationId: getOfflinePack
+      tags: [Pack]
+      summary: Download a specific offline pack by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: Offline pack
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OfflinePackResponse"
+
+  /v1/offline/packs/facility/{facilityId}:
+    get:
+      operationId: getLatestPackForFacility
+      tags: [Pack]
+      summary: Get the latest offline pack for a facility
+      parameters:
+        - name: facilityId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: Latest offline pack for the facility
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OfflinePackResponse"
+
+  # ── Reconciliation ────────────────────────────────────────────────────────
+  /v1/offline/reconcile:
+    post:
+      operationId: submitReconciliationBatch
+      tags: [Reconciliation]
+      summary: Submit a batch of offline actions for reconciliation
+      description: |
+        Actions are validated, O-CPIDs reconciled to canonical CPIDs,
+        and records created in the reconciliation batch table.
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/CorrelationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReconciliationRequest"
+      responses:
+        "201":
+          description: Reconciliation batch submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReconciliationResponse"
+
+  /v1/offline/reconcile/{batchId}:
+    get:
+      operationId: getReconciliationBatchStatus
+      tags: [Reconciliation]
+      summary: Get the status of a reconciliation batch
+      parameters:
+        - name: batchId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: Batch reconciliation status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReconciliationResponse"
+
+  /v1/offline/reconcile/pending:
+    get:
+      operationId: listPendingReconciliationBatches
+      tags: [Reconciliation]
+      summary: List pending reconciliation batches for the tenant
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: List of pending reconciliation batches
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ReconciliationResponse"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    TenantId:
+      name: X-Tenant-ID
+      in: header
+      required: true
+      schema:
+        type: string
+    PodId:
+      name: X-Pod-ID
+      in: header
+      required: true
+      schema:
+        type: string
+    RequestId:
+      name: X-Request-ID
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+    CorrelationId:
+      name: X-Correlation-ID
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+    ActorId:
+      name: X-Actor-ID
+      in: header
+      required: true
+      schema:
+        type: string
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid authentication
+
+  schemas:
+    ProbeHealthBody:
+      type: object
+      properties:
+        service:
+          type: string
+          example: tshepo-offline
+        status:
+          type: string
+          example: UP
+        tenant_id:
+          type: string
+        pod_id:
+          type: string
+        request_id:
+          type: string
+        correlation_id:
+          type: string
+      additionalProperties: true
+
+    ProbeCommandBody:
+      type: object
+      properties:
+        service:
+          type: string
+        action:
+          type: string
+        request_id:
+          type: string
+        correlation_id:
+          type: string
+        echo:
+          type: object
+          additionalProperties: true
+      additionalProperties: true
+
+    CapabilityTokenRequest:
+      type: object
+      required: [tenantId, actorId, facilityId]
+      properties:
+        tenantId:
+          type: string
+          format: uuid
+        actorId:
+          type: string
+        facilityId:
+          type: string
+          format: uuid
+        deviceFingerprint:
+          type: string
+        ttlHours:
+          type: integer
+          description: Requested TTL in hours (default 8, max 72)
+
+    CapabilityTokenResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        actorId:
+          type: string
+        facilityId:
+          type: string
+          format: uuid
+        token:
+          type: string
+          description: JWS compact serialization (Ed25519-signed)
+        capabilities:
+          type: array
+          items:
+            type: string
+          description: Allowed offline actions
+        maxEncounters:
+          type: integer
+        status:
+          type: string
+          enum: [ACTIVE, EXPIRED, REVOKED]
+        issuedAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+      additionalProperties: true
+
+    CapabilityVerifyRequest:
+      type: object
+      required: [token]
+      properties:
+        token:
+          type: string
+          description: JWS compact serialization to verify
+
+    CapabilityVerifyResponse:
+      type: object
+      properties:
+        valid:
+          type: boolean
+        tokenId:
+          type: string
+          format: uuid
+        reason:
+          type: string
+          description: Reason for rejection if invalid
+        capabilities:
+          type: array
+          items:
+            type: string
+        expiresAt:
+          type: string
+          format: date-time
+      additionalProperties: true
+
+    OfflineActionRequest:
+      type: object
+      required: [tenantId, capabilityTokenId, actionType, facilityId]
+      properties:
+        tenantId:
+          type: string
+          format: uuid
+        capabilityTokenId:
+          type: string
+          format: uuid
+        actionType:
+          type: string
+          enum: [READ_PATIENT, CREATE_PROVISIONAL_ENCOUNTER, CREATE_PROVISIONAL_REGISTRATION, READ_MEDICATION, DISPENSE_MEDICATION]
+        facilityId:
+          type: string
+          format: uuid
+        actorId:
+          type: string
+        subjectRef:
+          type: string
+        payload:
+          type: object
+          additionalProperties: true
+
+    OfflineActionResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        actionType:
+          type: string
+        status:
+          type: string
+          enum: [LOGGED, RECONCILED, REJECTED]
+        provisionalCpid:
+          type: string
+          format: uuid
+        performedAt:
+          type: string
+          format: date-time
+      additionalProperties: true
+
+    PagedOfflineActions:
+      type: object
+      description: Spring Page wrapper of OfflineActionResponse
+      additionalProperties: true
+
+    OfflinePackRequest:
+      type: object
+      required: [tenantId, facilityId]
+      properties:
+        tenantId:
+          type: string
+          format: uuid
+        facilityId:
+          type: string
+          format: uuid
+
+    OfflinePackResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        facilityId:
+          type: string
+          format: uuid
+        version:
+          type: integer
+        policySnapshot:
+          type: object
+          additionalProperties: true
+        consentSnapshot:
+          type: object
+          additionalProperties: true
+        terminologyCodes:
+          type: object
+          additionalProperties: true
+        generatedAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+      additionalProperties: true
+
+    ReconciliationRequest:
+      type: object
+      required: [tenantId, facilityId, capabilityTokenId, actions]
+      properties:
+        tenantId:
+          type: string
+          format: uuid
+        facilityId:
+          type: string
+          format: uuid
+        capabilityTokenId:
+          type: string
+          format: uuid
+        actions:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+
+    ReconciliationResponse:
+      type: object
+      properties:
+        batchId:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        facilityId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [PENDING, PROCESSING, COMPLETED, FAILED]
+        totalActions:
+          type: integer
+        reconciledCount:
+          type: integer
+        failedCount:
+          type: integer
+        submittedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+      additionalProperties: true

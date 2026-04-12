@@ -1,0 +1,551 @@
+# =============================================================================
+# TSHEPO Consent — Consent Directive & Share Link Governance (OpenAPI 3.0)
+#
+# Phase B baseline: consent CRUD, consent evaluation (authz hook), patient
+# portal self-service, share link governance, and v1.1 companion probe routes.
+# Expand paths incrementally to match controllers.
+# =============================================================================
+openapi: "3.0.3"
+
+info:
+  title: TSHEPO Consent — Consent Directive & Share Link Governance
+  version: "1.0.0"
+  description: |
+    TSHEPO Consent manages FHIR R4-based consent directives for Impilo Health OS.
+    Consent without enforcement is rejected by design — the consent evaluation
+    endpoint is called by tshepo-authz on every clinical access decision.
+
+    Includes:
+    - CRUD operations on consent directives (FHIR R4 Consent JSON)
+    - Real-time consent evaluation (PERMIT/DENY with obligations)
+    - Patient portal self-service (view and revoke own consents)
+    - Share link governance (short-lived delegated access tokens)
+
+    Trust headers are enforced by Envoy + TSHEPO; internal probes additionally
+    require Health OS Manifest v1.2 mandatory headers (see `CompanionHeaders`).
+  contact:
+    name: Impilo Platform Team
+  license:
+    name: Proprietary
+
+servers:
+  - url: http://localhost:8182
+    description: Local development
+  - url: https://{tenant}.impilo.health/api
+    description: Production (per-tenant)
+    variables:
+      tenant:
+        default: demo
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Internal-Probe
+    description: Tech-companion v1.1 header and federation proofs
+  - name: Consent
+    description: Consent directive CRUD
+  - name: Evaluation
+    description: Real-time consent evaluation for authz decisions
+  - name: Portal
+    description: Patient self-service consent management
+  - name: Share-Link
+    description: Share link governance — short-lived delegated access
+
+paths:
+  # ── Internal probes ───────────────────────────────────────────────────────
+  /internal/v1/health:
+    get:
+      operationId: tshepoConsentInternalHealth
+      tags: [Internal-Probe]
+      summary: v1.1 probe — returns trust context echo
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+      responses:
+        "200":
+          description: Service UP with context echo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProbeHealthBody"
+
+  /internal/v1/test-command:
+    post:
+      operationId: tshepoConsentInternalTestCommand
+      tags: [Internal-Probe]
+      summary: v1.1 probe — idempotency / echo
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "201":
+          description: Echo payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProbeCommandBody"
+
+  # ── Consent CRUD ──────────────────────────────────────────────────────────
+  /v1/consent:
+    post:
+      operationId: createConsent
+      tags: [Consent]
+      summary: Create a new consent directive from FHIR R4 Consent JSON
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateConsentRequest"
+      responses:
+        "201":
+          description: Consent directive created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseConsentDirective"
+
+  /v1/consent/{id}:
+    get:
+      operationId: getConsentById
+      tags: [Consent]
+      summary: Retrieve a consent directive by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Consent directive
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseConsentDirective"
+    put:
+      operationId: updateConsent
+      tags: [Consent]
+      summary: Update an existing consent directive
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateConsentRequest"
+      responses:
+        "200":
+          description: Consent directive updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseConsentDirective"
+    delete:
+      operationId: revokeConsent
+      tags: [Consent]
+      summary: Revoke a consent directive (soft delete)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RevokeConsentRequest"
+      responses:
+        "200":
+          description: Consent directive revoked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseConsentDirective"
+
+  /v1/consent/patient/{patientRef}:
+    get:
+      operationId: findConsentsByPatient
+      tags: [Consent]
+      summary: List consent directives for a patient (paginated)
+      parameters:
+        - name: patientRef
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: tenantId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            default: ACTIVE
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Paginated list of consent directives
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponsePagedConsent"
+
+  # ── Consent Evaluation ────────────────────────────────────────────────────
+  /v1/consent/evaluate:
+    get:
+      operationId: evaluateConsent
+      tags: [Evaluation]
+      summary: Evaluate consent for an access request (called by tshepo-authz)
+      description: |
+        Internal enforcement hook — returns PERMIT or DENY with obligations.
+        Called by tshepo-authz on every clinical data access decision.
+        Open (no JWT) — protected by network-level isolation (Envoy mesh).
+      security: []
+      parameters:
+        - name: tenantId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: actorId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: subjectRef
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: purpose
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: scope
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Consent decision (PERMIT or DENY with obligations)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseConsentDecision"
+
+  # ── Portal Self-Service ───────────────────────────────────────────────────
+  /v1/consent/portal/my-consents:
+    get:
+      operationId: myConsents
+      tags: [Portal]
+      summary: List the authenticated patient's active consent directives
+      description: |
+        Patient identity is derived from trust context headers (x-actor-id).
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Paginated list of active consents
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponsePagedConsent"
+
+  /v1/consent/portal/revoke/{id}:
+    post:
+      operationId: portalRevokeConsent
+      tags: [Portal]
+      summary: Patient self-service consent revocation
+      description: |
+        Patient can only revoke their own consents (verified via trust context).
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Consent revoked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseConsentDirective"
+        "403":
+          description: Cannot revoke consent belonging to another patient
+
+  # ── Share Links ───────────────────────────────────────────────────────────
+  /v1/consent/share-links:
+    post:
+      operationId: createShareLink
+      tags: [Share-Link]
+      summary: Create a new share link — plaintext token returned exactly once
+      description: |
+        Share links are short-lived access tokens allowing patients to delegate
+        temporary data access to third parties. Tokens are SHA-256 hashed before storage.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateShareLinkRequest"
+      responses:
+        "201":
+          description: Share link created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseShareLinkCreated"
+
+  /v1/consent/share-links/{token}:
+    get:
+      operationId: validateShareLink
+      tags: [Share-Link]
+      summary: Validate and consume a share link token
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Share link validation result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseShareLinkValidation"
+
+  /v1/consent/share-links/{id}:
+    delete:
+      operationId: revokeShareLink
+      tags: [Share-Link]
+      summary: Revoke a share link by its ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Share link revoked
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    TenantId:
+      name: X-Tenant-ID
+      in: header
+      required: true
+      schema:
+        type: string
+    PodId:
+      name: X-Pod-ID
+      in: header
+      required: true
+      schema:
+        type: string
+    RequestId:
+      name: X-Request-ID
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+    CorrelationId:
+      name: X-Correlation-ID
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid authentication
+
+  schemas:
+    ProbeHealthBody:
+      type: object
+      properties:
+        service:
+          type: string
+          example: tshepo-consent
+        status:
+          type: string
+          example: UP
+        tenant_id:
+          type: string
+        pod_id:
+          type: string
+        request_id:
+          type: string
+        correlation_id:
+          type: string
+      additionalProperties: true
+
+    ProbeCommandBody:
+      type: object
+      properties:
+        service:
+          type: string
+        action:
+          type: string
+        request_id:
+          type: string
+        correlation_id:
+          type: string
+        echo:
+          type: object
+          additionalProperties: true
+      additionalProperties: true
+
+    CreateConsentRequest:
+      type: object
+      required: [tenantId, patientRef, consentJson]
+      properties:
+        tenantId:
+          type: string
+          format: uuid
+        patientRef:
+          type: string
+        scope:
+          type: string
+        purpose:
+          type: string
+        granteeRef:
+          type: string
+        consentJson:
+          type: object
+          description: FHIR R4 Consent resource JSON
+          additionalProperties: true
+        ttlDays:
+          type: integer
+
+    UpdateConsentRequest:
+      type: object
+      required: [consentJson]
+      properties:
+        consentJson:
+          type: object
+          additionalProperties: true
+        scope:
+          type: string
+        purpose:
+          type: string
+
+    RevokeConsentRequest:
+      type: object
+      required: [reason]
+      properties:
+        reason:
+          type: string
+
+    CreateShareLinkRequest:
+      type: object
+      required: [tenantId, patientRef, scope]
+      properties:
+        tenantId:
+          type: string
+          format: uuid
+        patientRef:
+          type: string
+        scope:
+          type: string
+        purpose:
+          type: string
+        ttlHours:
+          type: integer
+        maxUses:
+          type: integer
+
+    # ── ApiResponse wrappers ────────────────────────────────────────────────
+    ApiResponseConsentDirective:
+      type: object
+      description: ApiResponse wrapper — see shared-kernel `ApiResponse`
+      additionalProperties: true
+
+    ApiResponsePagedConsent:
+      type: object
+      description: ApiResponse wrapper with PagedResponse — see shared-kernel
+      additionalProperties: true
+
+    ApiResponseConsentDecision:
+      type: object
+      description: ApiResponse wrapper containing ConsentDecision (PERMIT/DENY)
+      additionalProperties: true
+
+    ApiResponseShareLinkCreated:
+      type: object
+      description: ApiResponse wrapper — plaintext token returned exactly once
+      additionalProperties: true
+
+    ApiResponseShareLinkValidation:
+      type: object
+      description: ApiResponse wrapper — share link validation result
+      additionalProperties: true

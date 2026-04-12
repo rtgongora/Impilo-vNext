@@ -1,0 +1,518 @@
+# =============================================================================
+# TSHEPO Audit — Immutable Audit Chain & Access History Service (OpenAPI 3.0)
+#
+# Phase B baseline: audit event ingest (hash chain), paginated query,
+# access history (patient portal), signed export bundles, chain integrity
+# verification, and v1.1 companion probe routes. Expand paths incrementally
+# to match controllers.
+# =============================================================================
+openapi: "3.0.3"
+
+info:
+  title: TSHEPO Audit — Immutable Audit Chain & Access History Service
+  version: "1.0.0"
+  description: |
+    TSHEPO Audit provides an immutable, SHA-256 hash-chained audit trail for
+    Impilo Health OS. Every access decision, consent mutation, identity event,
+    and clinical action is recorded with cryptographic integrity.
+
+    Includes:
+    - Hash-chain append (internal ingest from other TSHEPO services)
+    - Paginated filtered query of audit events
+    - Patient-facing "My Access History" (redacted view for portal)
+    - Ed25519-signed export bundles for legal defensibility
+    - Full chain integrity verification (tamper detection)
+
+    Trust headers are enforced by Envoy + TSHEPO; internal probes additionally
+    require Health OS Manifest v1.2 mandatory headers (see `CompanionHeaders`).
+  contact:
+    name: Impilo Platform Team
+  license:
+    name: Proprietary
+
+servers:
+  - url: http://localhost:8183
+    description: Local development
+  - url: https://{tenant}.impilo.health/api
+    description: Production (per-tenant)
+    variables:
+      tenant:
+        default: demo
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Internal-Probe
+    description: Tech-companion v1.1 header and federation proofs
+  - name: Ingest
+    description: Internal audit event ingest (service-to-service)
+  - name: Query
+    description: Audit event search and retrieval
+  - name: Access-History
+    description: Patient-facing redacted access history
+  - name: Export
+    description: Signed audit export bundles
+  - name: Chain-Integrity
+    description: Hash chain tamper verification
+
+paths:
+  # ── Internal probes ───────────────────────────────────────────────────────
+  /internal/v1/health:
+    get:
+      operationId: tshepoAuditInternalHealth
+      tags: [Internal-Probe]
+      summary: v1.1 probe — returns trust context echo
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+      responses:
+        "200":
+          description: Service UP with context echo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProbeHealthBody"
+
+  /internal/v1/test-command:
+    post:
+      operationId: tshepoAuditInternalTestCommand
+      tags: [Internal-Probe]
+      summary: v1.1 probe — idempotency / echo
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "201":
+          description: Echo payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProbeCommandBody"
+
+  # ── Audit Event Ingest ────────────────────────────────────────────────────
+  /v1/audit/events:
+    post:
+      operationId: ingestAuditEvent
+      tags: [Ingest]
+      summary: Append an audit event to the hash chain
+      description: |
+        Internal ingest endpoint called service-to-service behind Envoy.
+        Each event is SHA-256 hash-chained to the previous entry.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuditEventRequest"
+      responses:
+        "201":
+          description: Audit event appended to chain
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseAuditEvent"
+    get:
+      operationId: queryAuditEvents
+      tags: [Query]
+      summary: Paginated, filtered query of audit events
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: actorId
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: subjectRef
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: eventType
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: fromTime
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: toTime
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Paginated audit events
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponsePagedAuditEvents"
+
+  /v1/audit/events/{id}:
+    get:
+      operationId: getAuditEvent
+      tags: [Query]
+      summary: Retrieve a single audit event by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+      responses:
+        "200":
+          description: Audit event
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseAuditEvent"
+        "404":
+          description: Audit event not found
+
+  # ── Access History (Patient Portal) ───────────────────────────────────────
+  /v1/audit/access-history/{subjectRef}:
+    get:
+      operationId: getAccessHistory
+      tags: [Access-History]
+      summary: Patient's redacted access history (portal-facing)
+      description: |
+        Returns a redacted view of audit events — no internal IDs, resource
+        references, or detail payloads. Only exposes: event type, actor type,
+        action, outcome, purpose of use, and timestamp.
+      parameters:
+        - name: subjectRef
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Patient's subject reference (CPID)
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+      responses:
+        "200":
+          description: Paginated redacted access history
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponsePagedAccessHistory"
+
+  # ── Export ────────────────────────────────────────────────────────────────
+  /v1/audit/export:
+    post:
+      operationId: createAuditExport
+      tags: [Export]
+      summary: Create a signed export bundle for a range of audit events
+      description: |
+        Ed25519-signed hash bundle for legal defensibility. The export
+        captures a snapshot of events within a time range.
+      parameters:
+        - $ref: "#/components/parameters/CorrelationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuditExportRequest"
+      responses:
+        "201":
+          description: Export bundle created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseAuditExport"
+
+  /v1/audit/export/{id}:
+    get:
+      operationId: getAuditExport
+      tags: [Export]
+      summary: Retrieve export bundle metadata
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+      responses:
+        "200":
+          description: Export bundle metadata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseAuditExport"
+        "404":
+          description: Export bundle not found
+
+  /v1/audit/verify/{id}:
+    get:
+      operationId: verifyExport
+      tags: [Export]
+      summary: Verify the integrity of a signed export bundle
+      description: |
+        Re-fetches events, recomputes the bundle hash, and compares against
+        the stored signature. Returns 200 if intact, 409 if tampered.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+      responses:
+        "200":
+          description: Export bundle intact
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseExportVerification"
+        "409":
+          description: Export bundle tampered — integrity check failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseExportVerification"
+
+  # ── Chain Integrity ───────────────────────────────────────────────────────
+  /v1/audit/verify-chain:
+    post:
+      operationId: verifyChain
+      tags: [Chain-Integrity]
+      summary: Verify SHA-256 hash chain integrity for a tenant
+      description: |
+        Internal operations endpoint. Walks the full chain from sequence 1
+        to head, recomputing each hash to detect any tampering.
+        Returns 200 if intact, 409 if broken.
+      parameters:
+        - $ref: "#/components/parameters/CorrelationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChainVerificationRequest"
+      responses:
+        "200":
+          description: Chain intact
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseChainVerification"
+        "409":
+          description: Chain broken — tamper detected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseChainVerification"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    TenantId:
+      name: X-Tenant-ID
+      in: header
+      required: true
+      schema:
+        type: string
+    PodId:
+      name: X-Pod-ID
+      in: header
+      required: true
+      schema:
+        type: string
+    RequestId:
+      name: X-Request-ID
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+    CorrelationId:
+      name: X-Correlation-ID
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid authentication
+
+  schemas:
+    ProbeHealthBody:
+      type: object
+      properties:
+        service:
+          type: string
+          example: tshepo-audit
+        status:
+          type: string
+          example: UP
+        tenant_id:
+          type: string
+        pod_id:
+          type: string
+        request_id:
+          type: string
+        correlation_id:
+          type: string
+      additionalProperties: true
+
+    ProbeCommandBody:
+      type: object
+      properties:
+        service:
+          type: string
+        action:
+          type: string
+        request_id:
+          type: string
+        correlation_id:
+          type: string
+        echo:
+          type: object
+          additionalProperties: true
+      additionalProperties: true
+
+    AuditEventRequest:
+      type: object
+      required: [tenantId, eventType, actorId, actorType, action, correlationId]
+      properties:
+        tenantId:
+          type: string
+          format: uuid
+        eventType:
+          type: string
+        actorId:
+          type: string
+        actorType:
+          type: string
+        subjectRef:
+          type: string
+        resourceType:
+          type: string
+        resourceId:
+          type: string
+        action:
+          type: string
+        outcome:
+          type: string
+        purposeOfUse:
+          type: string
+        facilityId:
+          type: string
+          format: uuid
+        correlationId:
+          type: string
+          format: uuid
+        detail:
+          type: object
+          additionalProperties: true
+
+    AuditExportRequest:
+      type: object
+      required: [tenantId, fromTime, toTime]
+      properties:
+        tenantId:
+          type: string
+          format: uuid
+        fromTime:
+          type: string
+          format: date-time
+        toTime:
+          type: string
+          format: date-time
+
+    ChainVerificationRequest:
+      type: object
+      required: [tenantId]
+      properties:
+        tenantId:
+          type: string
+          format: uuid
+
+    # ── ApiResponse wrappers ────────────────────────────────────────────────
+    ApiResponseAuditEvent:
+      type: object
+      description: ApiResponse wrapper — see shared-kernel `ApiResponse`
+      additionalProperties: true
+
+    ApiResponsePagedAuditEvents:
+      type: object
+      description: ApiResponse wrapper with PagedResponse of audit events
+      additionalProperties: true
+
+    ApiResponsePagedAccessHistory:
+      type: object
+      description: ApiResponse wrapper with PagedResponse of redacted access entries
+      additionalProperties: true
+
+    ApiResponseAuditExport:
+      type: object
+      description: ApiResponse wrapper — export bundle metadata
+      additionalProperties: true
+
+    ApiResponseExportVerification:
+      type: object
+      description: ApiResponse wrapper — export integrity check result
+      additionalProperties: true
+
+    ApiResponseChainVerification:
+      type: object
+      description: ApiResponse wrapper — chain integrity verification result
+      additionalProperties: true

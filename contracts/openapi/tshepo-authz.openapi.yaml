@@ -1,0 +1,688 @@
+# =============================================================================
+# TSHEPO Authz — Authorization & Policy Decision Service (OpenAPI 3.0)
+#
+# Phase B baseline: ext_authz HTTP check, break-glass emergency access,
+# policy rule CRUD, step-up authentication, device management, and v1.1
+# companion probe routes. Expand paths incrementally to match controllers.
+# =============================================================================
+openapi: "3.0.3"
+
+info:
+  title: TSHEPO Authz — Authorization & Policy Decision Service
+  version: "1.0.0"
+  description: |
+    TSHEPO Authz is the Envoy ext_authz policy decision point for Impilo Health OS.
+    Every request flows through Envoy ext_authz to this service before reaching any
+    upstream. It evaluates 10-dimension access control (identity, role, org, facility,
+    subject, purpose, consent, assurance, workflow, device) and returns ALLOW, DENY,
+    or STEP_UP_REQUIRED verdicts with obligation headers.
+
+    Includes break-glass emergency override, step-up authentication challenge/verify,
+    policy rule management, and device reputation management.
+
+    Trust headers are enforced by Envoy + TSHEPO; internal probes additionally
+    require Health OS Manifest v1.2 mandatory headers (see `CompanionHeaders`).
+  contact:
+    name: Impilo Platform Team
+  license:
+    name: Proprietary
+
+servers:
+  - url: http://localhost:8081
+    description: Local development
+  - url: https://{tenant}.impilo.health/api
+    description: Production (per-tenant)
+    variables:
+      tenant:
+        default: demo
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Internal-Probe
+    description: Tech-companion v1.1 header and federation proofs
+  - name: Authorize
+    description: Envoy ext_authz HTTP check endpoint
+  - name: Break-Glass
+    description: Emergency access override and review
+  - name: Policy
+    description: ABAC/RBAC policy rule management
+  - name: Step-Up
+    description: Step-up authentication challenge and verification
+  - name: Device
+    description: Device reputation and blocking
+
+paths:
+  # ── Internal probes ───────────────────────────────────────────────────────
+  /internal/v1/health:
+    get:
+      operationId: tshepoAuthzInternalHealth
+      tags: [Internal-Probe]
+      summary: v1.1 probe — returns trust context echo
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+      responses:
+        "200":
+          description: Service UP with context echo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProbeHealthBody"
+
+  /internal/v1/test-command:
+    post:
+      operationId: tshepoAuthzInternalTestCommand
+      tags: [Internal-Probe]
+      summary: v1.1 probe — idempotency / echo
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "201":
+          description: Echo payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProbeCommandBody"
+
+  # ── Authorize ─────────────────────────────────────────────────────────────
+  /v1/authorize:
+    post:
+      operationId: authorize
+      tags: [Authorize]
+      summary: ext_authz HTTP check — evaluate access decision
+      description: |
+        Primary HTTP ext_authz endpoint. Envoy forwards the original request
+        and trust headers. Returns ALLOW (200), DENY (403), or STEP_UP_REQUIRED (401)
+        with obligation header mutations.
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CorrelationId"
+      responses:
+        "200":
+          description: ALLOW — request may proceed; obligation headers injected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthzResponse"
+        "401":
+          description: STEP_UP_REQUIRED — client must complete step-up challenge
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthzResponse"
+        "403":
+          description: DENY — request rejected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthzResponse"
+
+  # ── Break-Glass ───────────────────────────────────────────────────────────
+  /v1/break-glass:
+    post:
+      operationId: requestBreakGlass
+      tags: [Break-Glass]
+      summary: Request break-glass emergency access
+      description: |
+        Clinician requests emergency override access to patient data that would
+        normally be denied by policy. Requires a documented reason.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BreakGlassCreateRequest"
+      responses:
+        "201":
+          description: Break-glass request created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BreakGlassResponse"
+
+  /v1/break-glass/review:
+    get:
+      operationId: getPendingBreakGlassReviews
+      tags: [Break-Glass]
+      summary: List pending break-glass reviews for a tenant
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: List of pending break-glass requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BreakGlassResponse"
+
+  /v1/break-glass/review/{id}:
+    post:
+      operationId: reviewBreakGlass
+      tags: [Break-Glass]
+      summary: Approve or reject a break-glass request
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BreakGlassReviewRequest"
+      responses:
+        "200":
+          description: Review decision recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BreakGlassResponse"
+        "404":
+          description: Break-glass request not found
+        "409":
+          description: Break-glass request already reviewed
+
+  # ── Policies ──────────────────────────────────────────────────────────────
+  /v1/policies:
+    get:
+      operationId: listPolicyRules
+      tags: [Policy]
+      summary: List all policy rules for a tenant
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: List of policy rules
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PolicyRuleResponse"
+    post:
+      operationId: createPolicyRule
+      tags: [Policy]
+      summary: Create a new policy rule
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PolicyRuleRequest"
+      responses:
+        "201":
+          description: Policy rule created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PolicyRuleResponse"
+
+  /v1/policies/{id}:
+    put:
+      operationId: updatePolicyRule
+      tags: [Policy]
+      summary: Update an existing policy rule
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PolicyRuleRequest"
+      responses:
+        "200":
+          description: Policy rule updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PolicyRuleResponse"
+        "403":
+          description: Forbidden — tenant mismatch
+        "404":
+          description: Policy rule not found
+    delete:
+      operationId: deletePolicyRule
+      tags: [Policy]
+      summary: Delete (deactivate) a policy rule
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "204":
+          description: Policy rule deleted
+        "403":
+          description: Forbidden — tenant mismatch
+        "404":
+          description: Policy rule not found
+
+  # ── Step-Up ───────────────────────────────────────────────────────────────
+  /v1/step-up/challenge:
+    post:
+      operationId: issueStepUpChallenge
+      tags: [Step-Up]
+      summary: Issue a new step-up authentication challenge
+      description: |
+        Called after receiving a STEP_UP_REQUIRED verdict. Returns the challenge
+        method (MFA, BIOMETRIC, SUPERVISOR_APPROVAL) and challenge ID.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StepUpChallengeRequest"
+      responses:
+        "201":
+          description: Step-up challenge issued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StepUpChallengeResponse"
+
+  /v1/step-up/verify:
+    post:
+      operationId: verifyStepUpChallenge
+      tags: [Step-Up]
+      summary: Verify (complete) a step-up challenge
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StepUpVerifyRequest"
+      responses:
+        "200":
+          description: Step-up challenge verified
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StepUpChallengeResponse"
+        "400":
+          description: Verification failed — invalid response
+        "403":
+          description: Security error — challenge tampering detected
+
+  /v1/step-up/status/{challengeId}:
+    get:
+      operationId: getStepUpStatus
+      tags: [Step-Up]
+      summary: Get the status of a step-up challenge
+      parameters:
+        - name: challengeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: Step-up challenge status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StepUpChallengeResponse"
+        "404":
+          description: Challenge not found
+
+  # ── Devices ───────────────────────────────────────────────────────────────
+  /v1/devices/{fingerprint}:
+    get:
+      operationId: getDeviceProfile
+      tags: [Device]
+      summary: Get a device profile by fingerprint
+      parameters:
+        - name: fingerprint
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: Device profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeviceProfileResponse"
+        "404":
+          description: Device not found
+
+  /v1/devices/{fingerprint}/block:
+    post:
+      operationId: blockDevice
+      tags: [Device]
+      summary: Block a device — immediate deny for all future requests
+      parameters:
+        - name: fingerprint
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: Device blocked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeviceProfileResponse"
+        "404":
+          description: Device not found
+    delete:
+      operationId: unblockDevice
+      tags: [Device]
+      summary: Unblock a device — reset risk score
+      parameters:
+        - name: fingerprint
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: Device unblocked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeviceProfileResponse"
+        "404":
+          description: Device not found
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    TenantId:
+      name: X-Tenant-ID
+      in: header
+      required: true
+      schema:
+        type: string
+    PodId:
+      name: X-Pod-ID
+      in: header
+      required: true
+      schema:
+        type: string
+    RequestId:
+      name: X-Request-ID
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+    CorrelationId:
+      name: X-Correlation-ID
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid authentication
+
+  schemas:
+    ProbeHealthBody:
+      type: object
+      properties:
+        service:
+          type: string
+          example: tshepo-authz
+        status:
+          type: string
+          example: UP
+        tenant_id:
+          type: string
+        pod_id:
+          type: string
+        request_id:
+          type: string
+        correlation_id:
+          type: string
+      additionalProperties: true
+
+    ProbeCommandBody:
+      type: object
+      properties:
+        service:
+          type: string
+        action:
+          type: string
+        request_id:
+          type: string
+        correlation_id:
+          type: string
+        echo:
+          type: object
+          additionalProperties: true
+      additionalProperties: true
+
+    AuthzResponse:
+      type: object
+      properties:
+        verdict:
+          type: string
+          enum: [ALLOW, DENY, STEP_UP_REQUIRED]
+        errorCode:
+          type: string
+        message:
+          type: string
+        riskScore:
+          type: integer
+        stepUpMethods:
+          type: array
+          items:
+            type: string
+        headerMutations:
+          type: object
+          additionalProperties:
+            type: string
+      additionalProperties: true
+
+    BreakGlassCreateRequest:
+      type: object
+      required: [tenantId, actorId, subjectRef, reason]
+      properties:
+        tenantId:
+          type: string
+          format: uuid
+        actorId:
+          type: string
+        subjectRef:
+          type: string
+        reason:
+          type: string
+        facilityId:
+          type: string
+          format: uuid
+
+    BreakGlassResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        actorId:
+          type: string
+        subjectRef:
+          type: string
+        reason:
+          type: string
+        status:
+          type: string
+          enum: [PENDING, APPROVED, REJECTED, EXPIRED]
+        reviewedBy:
+          type: string
+        reviewNote:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+      additionalProperties: true
+
+    BreakGlassReviewRequest:
+      type: object
+      required: [decision, reviewedBy]
+      properties:
+        decision:
+          type: string
+          enum: [APPROVED, REJECTED]
+        reviewedBy:
+          type: string
+        reviewNote:
+          type: string
+
+    PolicyRuleRequest:
+      type: object
+      required: [tenantId, ruleName, effect]
+      properties:
+        tenantId:
+          type: string
+          format: uuid
+        ruleName:
+          type: string
+        description:
+          type: string
+        effect:
+          type: string
+          enum: [ALLOW, DENY]
+        conditions:
+          type: object
+          additionalProperties: true
+        priority:
+          type: integer
+
+    PolicyRuleResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        tenantId:
+          type: string
+          format: uuid
+        ruleName:
+          type: string
+        description:
+          type: string
+        effect:
+          type: string
+        conditions:
+          type: object
+          additionalProperties: true
+        priority:
+          type: integer
+        active:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      additionalProperties: true
+
+    StepUpChallengeRequest:
+      type: object
+      required: [tenantId, actorId, method]
+      properties:
+        tenantId:
+          type: string
+          format: uuid
+        actorId:
+          type: string
+        method:
+          type: string
+          enum: [MFA, BIOMETRIC, SUPERVISOR_APPROVAL]
+        correlationId:
+          type: string
+          format: uuid
+
+    StepUpVerifyRequest:
+      type: object
+      required: [challengeId, response]
+      properties:
+        challengeId:
+          type: string
+          format: uuid
+        response:
+          type: string
+
+    StepUpChallengeResponse:
+      type: object
+      properties:
+        challengeId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [PENDING, COMPLETED, EXPIRED, FAILED]
+        method:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+      additionalProperties: true
+
+    DeviceProfileResponse:
+      type: object
+      properties:
+        fingerprint:
+          type: string
+        tenantId:
+          type: string
+          format: uuid
+        riskScore:
+          type: integer
+        blocked:
+          type: boolean
+        firstSeen:
+          type: string
+          format: date-time
+        lastSeen:
+          type: string
+          format: date-time
+      additionalProperties: true

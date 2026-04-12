@@ -1,0 +1,562 @@
+# =============================================================================
+# TSHEPO Keys — Cryptographic Key Management & Signing Service (OpenAPI 3.0)
+#
+# Phase B baseline: JWKS distribution, Ed25519 signing, scoped token issuance,
+# key rotation and revocation, certificate trust store management, and v1.1
+# companion probe routes. Expand paths incrementally to match controllers.
+# =============================================================================
+openapi: "3.0.3"
+
+info:
+  title: TSHEPO Keys — Cryptographic Key Management & Signing Service
+  version: "1.0.0"
+  description: |
+    TSHEPO Keys provides Ed25519 key management, JWS signing, JWKS distribution,
+    and certificate trust store operations for Impilo Health OS.
+
+    Includes:
+    - Public JWKS endpoint (RFC 7517, unauthenticated) for JWT/JWS verification
+    - Ed25519 payload signing (raw and JWS compact serialization)
+    - Scoped, short-lived JWS service token issuance
+    - Key rotation, listing, and revocation (admin operations)
+    - CA certificate trust store management for mTLS
+
+    Private keys are encrypted at rest with AES-256-GCM under a KEK sourced
+    from Vault/KMS in production.
+
+    Trust headers are enforced by Envoy + TSHEPO; internal probes additionally
+    require Health OS Manifest v1.2 mandatory headers (see `CompanionHeaders`).
+  contact:
+    name: Impilo Platform Team
+  license:
+    name: Proprietary
+
+servers:
+  - url: http://localhost:8184
+    description: Local development
+  - url: https://{tenant}.impilo.health/api
+    description: Production (per-tenant)
+    variables:
+      tenant:
+        default: demo
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Internal-Probe
+    description: Tech-companion v1.1 header and federation proofs
+  - name: JWKS
+    description: Public JWKS key distribution (unauthenticated)
+  - name: Signing
+    description: Ed25519 signing and scoped token issuance
+  - name: Key-Management
+    description: Admin key lifecycle — list, rotate, revoke
+  - name: Certificates
+    description: CA certificate trust store management
+
+paths:
+  # ── Internal probes ───────────────────────────────────────────────────────
+  /internal/v1/health:
+    get:
+      operationId: tshepoKeysInternalHealth
+      tags: [Internal-Probe]
+      summary: v1.1 probe — returns trust context echo
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+      responses:
+        "200":
+          description: Service UP with context echo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProbeHealthBody"
+
+  /internal/v1/test-command:
+    post:
+      operationId: tshepoKeysInternalTestCommand
+      tags: [Internal-Probe]
+      summary: v1.1 probe — idempotency / echo
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "201":
+          description: Echo payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProbeCommandBody"
+
+  # ── JWKS ──────────────────────────────────────────────────────────────────
+  /v1/keys/jwks:
+    get:
+      operationId: getJwks
+      tags: [JWKS]
+      summary: Public JWKS endpoint — RFC 7517 Ed25519 (OKP) public keys
+      description: |
+        Unauthenticated endpoint so any service or client can fetch public keys
+        for JWT/JWS verification. Response is cached (Cache-Control: public, max-age=60).
+      security: []
+      responses:
+        "200":
+          description: JSON Web Key Set
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JwksResponse"
+
+  # ── Key Management ────────────────────────────────────────────────────────
+  /v1/keys:
+    get:
+      operationId: listSigningKeys
+      tags: [Key-Management]
+      summary: List all signing keys for a tenant
+      parameters:
+        - name: tenantId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: List of signing keys
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SigningKeyResponse"
+
+  /v1/keys/{keyId}:
+    get:
+      operationId: getSigningKey
+      tags: [Key-Management]
+      summary: Get a specific signing key by key ID
+      parameters:
+        - name: keyId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Signing key details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SigningKeyResponse"
+        "404":
+          description: Key not found
+    delete:
+      operationId: revokeSigningKey
+      tags: [Key-Management]
+      summary: Revoke a signing key (marks as REVOKED, not deleted)
+      description: |
+        Revoked keys can no longer be used for signing but remain available
+        for verification of previously-signed artifacts.
+      parameters:
+        - name: keyId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Key revoked
+
+  /v1/keys/rotate:
+    post:
+      operationId: rotateKey
+      tags: [Key-Management]
+      summary: Trigger manual key rotation
+      description: |
+        Generates a new Ed25519 signing key pair for the tenant, marks the
+        current key as ROTATED, and invalidates the JWKS cache.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RotateKeyRequest"
+      responses:
+        "201":
+          description: Key rotated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RotateKeyResponse"
+
+  # ── Signing ───────────────────────────────────────────────────────────────
+  /v1/sign:
+    post:
+      operationId: signPayload
+      tags: [Signing]
+      summary: Sign a payload with the current active Ed25519 key
+      description: |
+        If `jwsCompact` is true, returns a full JWS compact serialization.
+        Otherwise, returns a raw Base64url-encoded Ed25519 signature.
+        Used by other Impilo services for referral packages, QR codes, share links.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SignPayloadRequest"
+      responses:
+        "200":
+          description: Signature result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SignPayloadResponse"
+
+  /v1/sign/token:
+    post:
+      operationId: issueServiceToken
+      tags: [Signing]
+      summary: Issue a scoped, short-lived JWS service token
+      description: |
+        Scoped service tokens for internal authorization. Returns the token
+        string, its expiry, scope, and target service.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IssueTokenRequest"
+      responses:
+        "200":
+          description: Service token issued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokenResponse"
+
+  # ── Certificates ──────────────────────────────────────────────────────────
+  /v1/certificates:
+    post:
+      operationId: importCertificate
+      tags: [Certificates]
+      summary: Import a CA certificate into the trust store
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CertificateImportRequest"
+      responses:
+        "201":
+          description: Certificate imported
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CertificateResponse"
+    get:
+      operationId: listCertificates
+      tags: [Certificates]
+      summary: List all certificates for a tenant
+      parameters:
+        - name: tenantId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: List of trusted certificates
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CertificateResponse"
+
+  /v1/certificates/{id}:
+    delete:
+      operationId: revokeCertificate
+      tags: [Certificates]
+      summary: Revoke a trusted certificate
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: tenantId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Certificate revoked
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    TenantId:
+      name: X-Tenant-ID
+      in: header
+      required: true
+      schema:
+        type: string
+    PodId:
+      name: X-Pod-ID
+      in: header
+      required: true
+      schema:
+        type: string
+    RequestId:
+      name: X-Request-ID
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+    CorrelationId:
+      name: X-Correlation-ID
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid authentication
+
+  schemas:
+    ProbeHealthBody:
+      type: object
+      properties:
+        service:
+          type: string
+          example: tshepo-keys
+        status:
+          type: string
+          example: UP
+        tenant_id:
+          type: string
+        pod_id:
+          type: string
+        request_id:
+          type: string
+        correlation_id:
+          type: string
+      additionalProperties: true
+
+    ProbeCommandBody:
+      type: object
+      properties:
+        service:
+          type: string
+        action:
+          type: string
+        request_id:
+          type: string
+        correlation_id:
+          type: string
+        echo:
+          type: object
+          additionalProperties: true
+      additionalProperties: true
+
+    JwksResponse:
+      type: object
+      properties:
+        keys:
+          type: array
+          items:
+            type: object
+            properties:
+              kty:
+                type: string
+                example: OKP
+              crv:
+                type: string
+                example: Ed25519
+              kid:
+                type: string
+              x:
+                type: string
+                description: Base64url-encoded public key
+              use:
+                type: string
+                example: sig
+            additionalProperties: true
+
+    SigningKeyResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        tenantId:
+          type: string
+          format: uuid
+        keyId:
+          type: string
+        algorithm:
+          type: string
+          example: Ed25519
+        publicKeyPem:
+          type: string
+        status:
+          type: string
+          enum: [ACTIVE, ROTATED, REVOKED]
+        createdAt:
+          type: string
+          format: date-time
+        rotatedAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+      additionalProperties: true
+
+    RotateKeyRequest:
+      type: object
+      required: [tenantId]
+      properties:
+        tenantId:
+          type: string
+          format: uuid
+        reason:
+          type: string
+
+    RotateKeyResponse:
+      type: object
+      properties:
+        previousKeyId:
+          type: string
+        newKeyId:
+          type: string
+        status:
+          type: string
+        rotatedAt:
+          type: string
+          format: date-time
+
+    SignPayloadRequest:
+      type: object
+      required: [tenantId, payload]
+      properties:
+        tenantId:
+          type: string
+          format: uuid
+        payload:
+          type: string
+        jwsCompact:
+          type: boolean
+          default: false
+
+    SignPayloadResponse:
+      type: object
+      properties:
+        keyId:
+          type: string
+        algorithm:
+          type: string
+        signature:
+          type: string
+          description: Base64url-encoded Ed25519 signature or JWS compact serialization
+
+    IssueTokenRequest:
+      type: object
+      required: [tenantId, actorId, actorType, purpose, targetService, scope]
+      properties:
+        tenantId:
+          type: string
+          format: uuid
+        actorId:
+          type: string
+        actorType:
+          type: string
+        purpose:
+          type: string
+        targetService:
+          type: string
+        scope:
+          type: string
+        facilityId:
+          type: string
+          format: uuid
+        subjectHealthId:
+          type: string
+          format: uuid
+        ttlSeconds:
+          type: integer
+
+    TokenResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        expiresAt:
+          type: integer
+          format: int64
+        scope:
+          type: string
+        targetService:
+          type: string
+
+    CertificateImportRequest:
+      type: object
+      required: [tenantId, certificatePem]
+      properties:
+        tenantId:
+          type: string
+          format: uuid
+        certificatePem:
+          type: string
+          description: PEM-encoded CA certificate
+
+    CertificateResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        tenantId:
+          type: string
+          format: uuid
+        subjectDn:
+          type: string
+        issuerDn:
+          type: string
+        serialNumber:
+          type: string
+        fingerprintSha256:
+          type: string
+        status:
+          type: string
+        importedAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+      additionalProperties: true

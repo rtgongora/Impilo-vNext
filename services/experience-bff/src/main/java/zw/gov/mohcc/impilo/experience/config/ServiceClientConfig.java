@@ -63,7 +63,11 @@ public class ServiceClientConfig {
             // Integration / cross-tenant routing (integration-hub-service)
             String integrationHubBaseUrl,
             // Health OS §6: Privacy by Architecture — Data Access Governance
-            String dagsBaseUrl
+            String dagsBaseUrl,
+            // Health OS §7: Trust Layer (TSHEPO cluster)
+            String tshepoAuthzBaseUrl,
+            String tshepoConsentBaseUrl,
+            String tshepoAuditBaseUrl
     ) {
         public ServiceEndpoints(
                 String pctBaseUrl,
@@ -115,6 +119,9 @@ public class ServiceClientConfig {
                     null,
                     null,
                     null,
+                    null,
+                    null,
+                    null,
                     null
             );
         }
@@ -149,6 +156,9 @@ public class ServiceClientConfig {
             if (guidanceBaseUrl == null) guidanceBaseUrl = "http://localhost:8260";
             if (integrationHubBaseUrl == null) integrationHubBaseUrl = "http://localhost:8110";
             if (dagsBaseUrl == null) dagsBaseUrl = "http://localhost:8170";
+            if (tshepoAuthzBaseUrl == null) tshepoAuthzBaseUrl = "http://localhost:8081";
+            if (tshepoConsentBaseUrl == null) tshepoConsentBaseUrl = "http://localhost:8182";
+            if (tshepoAuditBaseUrl == null) tshepoAuditBaseUrl = "http://localhost:8183";
         }
     }
 
