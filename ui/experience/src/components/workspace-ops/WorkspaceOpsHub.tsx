@@ -43,7 +43,7 @@ const TAB_CONFIG: Record<OpsTab, { label: string; icon: React.ComponentType<{ cl
 };
 
 const WORKSPACE_TYPE_META: Record<WorkspaceOpsType, { icon: React.ComponentType<{ className?: string }>; color: string; label: string }> = {
-  clinical: { icon: Stethoscope, color: 'bg-blue-500', label: 'Clinical Workspace' },
+  clinical: { icon: Stethoscope, color: 'bg-impilo-500', label: 'Clinical Workspace' },
   admin: { icon: Shield, color: 'bg-amber-500', label: 'Administration Workspace' },
   support: { icon: Headphones, color: 'bg-green-500', label: 'Support Services Workspace' },
   pharmacy: { icon: Package, color: 'bg-emerald-500', label: 'Pharmacy Workspace' },
@@ -105,7 +105,7 @@ export function WorkspaceOpsHub({
               onClick={() => setActiveTab(tabId)}
               className={`inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 transition-colors ${
                 activeTab === tabId
-                  ? 'border-blue-600 text-blue-600'
+                  ? 'border-impilo-500 text-impilo-500'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >

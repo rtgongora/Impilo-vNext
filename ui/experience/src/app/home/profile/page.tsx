@@ -66,8 +66,8 @@ export default function ProfilePage() {
         <form onSubmit={handleSubmit} className="max-w-xl space-y-6">
           <div className="bg-white rounded-lg border border-gray-200 p-5">
             <div className="flex items-center gap-4 mb-6">
-              <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center">
-                <UserCircle className="w-10 h-10 text-blue-600" />
+              <div className="w-16 h-16 rounded-full bg-impilo-100 flex items-center justify-center">
+                <UserCircle className="w-10 h-10 text-impilo-500" />
               </div>
               <div>
                 <h3 className="font-medium text-gray-900">{user?.displayName || "User"}</h3>
@@ -82,7 +82,7 @@ export default function ProfilePage() {
                   type="text"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
                 />
               </div>
               <div>
@@ -91,7 +91,7 @@ export default function ProfilePage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
                 />
               </div>
               <div>
@@ -101,7 +101,7 @@ export default function ProfilePage() {
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="+263 7X XXX XXXX"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
                 />
               </div>
               <div>
@@ -120,7 +120,7 @@ export default function ProfilePage() {
                   onChange={(e) => setQualifications(e.target.value)}
                   rows={3}
                   placeholder="e.g. MBChB, MMED (Internal Medicine)"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 resize-none"
                 />
               </div>
             </div>
@@ -142,7 +142,7 @@ export default function ProfilePage() {
             <button
               type="submit"
               disabled={updateProfile.isPending}
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-impilo-500 text-white rounded-lg text-sm font-medium hover:bg-impilo-600 disabled:opacity-50"
             >
               {updateProfile.isPending ? (
                 <Loader2 className="w-4 h-4 animate-spin" />

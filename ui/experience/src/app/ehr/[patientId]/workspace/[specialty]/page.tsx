@@ -52,7 +52,7 @@ const SPECIALTY_CONFIGS: Record<string, SpecialtyConfig> = {
   },
   surgery: {
     label: "Surgery", description: "Surgical assessment and planning",
-    icon: Scissors, color: "bg-blue-100 text-blue-600",
+    icon: Scissors, color: "bg-impilo-100 text-impilo-500",
     tools: [
       { label: "Pre-op Checklist", description: "Surgical safety checklist", icon: ClipboardList },
       { label: "Anaesthesia Assessment", description: "ASA classification", icon: Thermometer },
@@ -148,7 +148,7 @@ export default function SpecialtyWorkspacePage() {
             {config.tools.map((tool) => {
               const ToolIcon = tool.icon;
               return (
-                <div key={tool.label} className="bg-gray-50 rounded-lg border border-gray-200 p-4 hover:border-blue-300 transition-colors cursor-pointer">
+                <div key={tool.label} className="bg-gray-50 rounded-lg border border-gray-200 p-4 hover:border-impilo-200 transition-colors cursor-pointer">
                   <ToolIcon className="w-5 h-5 text-gray-400 mb-2" />
                   <p className="text-sm font-medium text-gray-900">{tool.label}</p>
                   <p className="text-xs text-gray-500">{tool.description}</p>
@@ -177,7 +177,7 @@ export default function SpecialtyWorkspacePage() {
           <div className="flex flex-wrap gap-2">
             {config.orderSets.map((orderSet) => (
               <button key={orderSet}
-                className="px-3 py-1.5 text-xs font-medium bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors">
+                className="px-3 py-1.5 text-xs font-medium bg-impilo-50 text-impilo-600 rounded-lg hover:bg-impilo-100 transition-colors">
                 {orderSet}
               </button>
             ))}

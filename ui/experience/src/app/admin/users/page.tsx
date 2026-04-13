@@ -31,7 +31,7 @@ const STATUS_STYLES: Record<string, string> = {
 const ROLE_STYLES: Record<string, string> = {
   SYSTEM_ADMIN: "bg-red-100 text-red-700",
   FACILITY_ADMIN: "bg-orange-100 text-orange-700",
-  CLINICIAN: "bg-blue-100 text-blue-700",
+  CLINICIAN: "bg-impilo-100 text-impilo-600",
   NURSE: "bg-teal-100 text-teal-700",
   PHARMACIST: "bg-green-100 text-green-700",
   CITIZEN: "bg-purple-100 text-purple-700",
@@ -92,10 +92,10 @@ export default function AdminUsersPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input type="text" value={search} onChange={(e) => setSearch(e.target.value)}
               placeholder="Search users by name, email, or role..."
-              className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" />
           </div>
           <button onClick={() => setShowCreate((v) => !v)}
-            className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors ml-4">
+            className="inline-flex items-center gap-1.5 px-4 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 transition-colors ml-4">
             <Plus className="w-4 h-4" /> Create User
           </button>
         </div>
@@ -103,7 +103,7 @@ export default function AdminUsersPage() {
         {showCreate && (
           <form onSubmit={handleCreate} className="bg-white rounded-lg border border-gray-200 p-5 mb-5 space-y-4">
             <h3 className="text-sm font-medium text-gray-900 flex items-center gap-2">
-              <UserPlus className="w-4 h-4 text-blue-500" /> Create Platform User
+              <UserPlus className="w-4 h-4 text-impilo-400" /> Create Platform User
             </h3>
             {createError && (
               <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700">{createError}</div>
@@ -112,28 +112,28 @@ export default function AdminUsersPage() {
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">First Name *</label>
                 <input type="text" required value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" />
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Last Name *</label>
                 <input type="text" required value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" />
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Email *</label>
                 <input type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" />
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Password *</label>
                 <input type="password" required minLength={8} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })}
                   placeholder="Min 8 characters"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" />
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Role *</label>
                 <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400">
                   {ALL_ROLES.map((r) => <option key={r} value={r}>{r.replace(/_/g, " ")}</option>)}
                 </select>
               </div>
@@ -141,14 +141,14 @@ export default function AdminUsersPage() {
                 <label className="block text-xs font-medium text-gray-600 mb-1">Facility ID (optional)</label>
                 <input type="text" value={form.facilityId} onChange={(e) => setForm({ ...form, facilityId: e.target.value })}
                   placeholder="UUID or leave empty"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" />
               </div>
             </div>
             <div className="flex gap-3">
               <button type="button" onClick={() => setShowCreate(false)}
                 className="flex-1 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors">Cancel</button>
               <button type="submit" disabled={creating}
-                className="flex-1 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors">
+                className="flex-1 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors">
                 {creating ? <><Loader2 className="w-4 h-4 animate-spin" /> Creating...</> : <><Save className="w-4 h-4" /> Create User</>}
               </button>
             </div>
@@ -184,7 +184,7 @@ export default function AdminUsersPage() {
                   return (
                     <tr key={user.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-4 py-3">
-                        <Link href={`/admin/users/${user.id}`} className="font-medium text-blue-600 hover:text-blue-800">
+                        <Link href={`/admin/users/${user.id}`} className="font-medium text-impilo-500 hover:text-impilo-700">
                           {a.displayName || (a as Record<string, unknown>).display_name as string || user.id}
                         </Link>
                       </td>

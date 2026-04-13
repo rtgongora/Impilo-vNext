@@ -156,7 +156,7 @@ export default function MsikaGovernancePage() {
           <Link href="/finance" className="inline-flex items-center gap-1 hover:text-gray-700">
             <ArrowLeft className="h-4 w-4" /> Finance dashboard
           </Link>
-          <Link href="/finance/commerce-integrations" className="inline-flex items-center gap-1 text-blue-700 hover:text-blue-800">
+          <Link href="/finance/commerce-integrations" className="inline-flex items-center gap-1 text-impilo-600 hover:text-impilo-700">
             Commerce & payer stack
           </Link>
         </div>

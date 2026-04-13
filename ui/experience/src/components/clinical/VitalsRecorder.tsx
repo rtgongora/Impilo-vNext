@@ -293,7 +293,7 @@ export function VitalsRecorder({
                   value={formData.temperature}
                   onChange={(e) => handleChange("temperature", e.target.value)}
                   placeholder="36.5"
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
                 />
               </div>
 
@@ -312,7 +312,7 @@ export function VitalsRecorder({
                   value={formData.pulse_rate}
                   onChange={(e) => handleChange("pulse_rate", e.target.value)}
                   placeholder="72"
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
                 />
               </div>
 
@@ -331,7 +331,7 @@ export function VitalsRecorder({
                   value={formData.respiratory_rate}
                   onChange={(e) => handleChange("respiratory_rate", e.target.value)}
                   placeholder="16"
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
                 />
               </div>
 
@@ -350,7 +350,7 @@ export function VitalsRecorder({
                   value={formData.oxygen_saturation}
                   onChange={(e) => handleChange("oxygen_saturation", e.target.value)}
                   placeholder="98"
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
                 />
               </div>
 
@@ -365,7 +365,7 @@ export function VitalsRecorder({
                     value={formData.blood_pressure_systolic}
                     onChange={(e) => handleChange("blood_pressure_systolic", e.target.value)}
                     placeholder="120"
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
                   />
                   <span className="text-gray-500 font-medium">/</span>
                   <input
@@ -373,7 +373,7 @@ export function VitalsRecorder({
                     value={formData.blood_pressure_diastolic}
                     onChange={(e) => handleChange("blood_pressure_diastolic", e.target.value)}
                     placeholder="80"
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
                   />
                 </div>
                 {map && (
@@ -396,7 +396,7 @@ export function VitalsRecorder({
                   value={formData.pain_score}
                   onChange={(e) => handleChange("pain_score", e.target.value)}
                   placeholder="0"
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
                 />
               </div>
 
@@ -413,7 +413,7 @@ export function VitalsRecorder({
                   value={formData.gcs}
                   onChange={(e) => handleChange("gcs", e.target.value)}
                   placeholder="15"
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
                 />
               </div>
 
@@ -429,7 +429,7 @@ export function VitalsRecorder({
                   value={formData.blood_glucose}
                   onChange={(e) => handleChange("blood_glucose", e.target.value)}
                   placeholder="5.5"
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
                 />
               </div>
 
@@ -445,7 +445,7 @@ export function VitalsRecorder({
                   value={formData.weight}
                   onChange={(e) => handleChange("weight", e.target.value)}
                   placeholder="70"
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
                 />
               </div>
 
@@ -461,7 +461,7 @@ export function VitalsRecorder({
                   value={formData.height}
                   onChange={(e) => handleChange("height", e.target.value)}
                   placeholder="170"
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
                 />
               </div>
 
@@ -497,7 +497,7 @@ export function VitalsRecorder({
                   onChange={(e) => handleChange("notes", e.target.value)}
                   placeholder="Additional observations..."
                   rows={2}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400 resize-none"
                 />
               </div>
             </div>
@@ -508,9 +508,9 @@ export function VitalsRecorder({
                 disabled={saving}
                 className={`inline-flex items-center px-4 py-2 rounded-md text-sm font-medium text-white ${
                   saving
-                    ? "bg-blue-400 cursor-not-allowed"
-                    : "bg-blue-600 hover:bg-blue-700"
-                } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors`}
+                    ? "bg-impilo-400 cursor-not-allowed"
+                    : "bg-impilo-500 hover:bg-impilo-600"
+                } focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:ring-offset-2 transition-colors`}
               >
                 {saving ? (
                   <>

@@ -172,7 +172,7 @@ export default function KioskPage() {
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-8">
       <div className="max-w-lg w-full">
         <div className="text-center mb-8">
-          <UserPlus className="w-16 h-16 text-blue-600 mx-auto mb-4" />
+          <UserPlus className="w-16 h-16 text-impilo-500 mx-auto mb-4" />
           <h1 className="text-3xl font-bold text-gray-900">Self Check-In</h1>
           <p className="text-gray-500 mt-2">
             {facility ? facility.name : "Welcome"}
@@ -193,11 +193,11 @@ export default function KioskPage() {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Enter your name or ID number"
-                  className="flex-1 px-5 py-4 text-lg border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  className="flex-1 px-5 py-4 text-lg border-2 border-gray-300 rounded-xl focus:border-impilo-400 focus:ring-2 focus:ring-impilo-200"
                   autoFocus
                 />
                 <button type="submit"
-                  className="px-6 py-4 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors">
+                  className="px-6 py-4 bg-impilo-500 text-white rounded-xl hover:bg-impilo-600 transition-colors">
                   <Search className="w-6 h-6" />
                 </button>
               </div>
@@ -215,7 +215,7 @@ export default function KioskPage() {
                   <button key={patient.id}
                     onClick={() => handleCheckIn(patient.id, patient.attributes.displayName ?? patient.attributes.givenName ?? "Patient")}
                     disabled={checkIn.isPending}
-                    className="w-full text-left bg-white rounded-xl border-2 border-gray-200 p-5 hover:border-blue-400 hover:shadow-md transition-all">
+                    className="w-full text-left bg-white rounded-xl border-2 border-gray-200 p-5 hover:border-impilo-400 hover:shadow-md transition-all">
                     <p className="text-lg font-semibold text-gray-900">
                       {patient.attributes.displayName ?? `${patient.attributes.givenName} ${patient.attributes.familyName}`}
                     </p>

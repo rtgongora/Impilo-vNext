@@ -98,7 +98,7 @@ export default function SecureMessagingPage() {
                       type="text"
                       value={searchQuery}
                       onChange={(event) => setSearchQuery(event.target.value)}
-                      className="w-full rounded-lg border border-gray-200 py-2 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full rounded-lg border border-gray-200 py-2 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
                       placeholder="Search channels..."
                     />
                   </div>
@@ -114,7 +114,7 @@ export default function SecureMessagingPage() {
                           key={channel.id}
                           onClick={() => setSelectedChannelId(channel.id)}
                           className={`w-full border-b border-gray-50 px-3 py-3 text-left transition-colors hover:bg-gray-50 ${
-                            active ? "bg-blue-50" : ""
+                            active ? "bg-impilo-50" : ""
                           }`}
                         >
                           <div className="flex items-start justify-between gap-3">
@@ -125,7 +125,7 @@ export default function SecureMessagingPage() {
                               <p className="text-xs text-gray-400">{channel.channel_type}</p>
                               <p className="mt-1 truncate text-xs text-gray-500">{formatDateTime(channel.last_message_at)}</p>
                             </div>
-                            {active ? <span className="text-xs font-medium text-blue-700">Open</span> : null}
+                            {active ? <span className="text-xs font-medium text-impilo-600">Open</span> : null}
                           </div>
                         </button>
                       );
@@ -166,14 +166,14 @@ export default function SecureMessagingPage() {
                             return (
                               <div key={message.id} className={`flex ${isOwn ? "justify-end" : "justify-start"}`}>
                                 <div className={`max-w-md ${isOwn ? "order-2" : ""}`}>
-                                  <div className={`rounded-lg px-4 py-2.5 ${isOwn ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-800"}`}>
+                                  <div className={`rounded-lg px-4 py-2.5 ${isOwn ? "bg-impilo-500 text-white" : "bg-gray-100 text-gray-800"}`}>
                                     <p className="mb-1 text-[11px] font-medium opacity-80">{message.sender_name || message.sender_id}</p>
                                     <p className="text-sm leading-relaxed">{message.content}</p>
                                   </div>
                                   <div className={`mt-1 flex items-center gap-1 ${isOwn ? "justify-end" : ""}`}>
                                     <span className="text-[10px] text-gray-400">{formatDateTime(message.created_at)}</span>
                                     {isOwn ? (
-                                      message.is_read ? <CheckCheck className="h-3 w-3 text-blue-500" /> : <Check className="h-3 w-3 text-gray-400" />
+                                      message.is_read ? <CheckCheck className="h-3 w-3 text-impilo-400" /> : <Check className="h-3 w-3 text-gray-400" />
                                     ) : null}
                                   </div>
                                 </div>
@@ -190,7 +190,7 @@ export default function SecureMessagingPage() {
                           type="text"
                           value={draftMessage}
                           onChange={(event) => setDraftMessage(event.target.value)}
-                          className="flex-1 rounded-lg border border-gray-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="flex-1 rounded-lg border border-gray-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
                           placeholder="Type a message..."
                           onKeyDown={(event) => {
                             if (event.key === "Enter" && draftMessage.trim()) {
@@ -202,7 +202,7 @@ export default function SecureMessagingPage() {
                           onClick={handleSend}
                           disabled={!draftMessage.trim() || sendMessage.isPending}
                           aria-label="Send message"
-                          className="rounded-lg bg-blue-600 p-2.5 text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                          className="rounded-lg bg-impilo-500 p-2.5 text-white transition-colors hover:bg-impilo-600 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           <Send className="h-4 w-4" />
                         </button>
@@ -223,7 +223,7 @@ export default function SecureMessagingPage() {
               {selectedChannel ? (
                 <div className="hidden w-64 border-l border-gray-200 p-4 lg:block">
                   <div className="mb-4 text-center">
-                    <div className="mx-auto mb-2 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 text-xl font-semibold text-blue-700">
+                    <div className="mx-auto mb-2 flex h-16 w-16 items-center justify-center rounded-full bg-impilo-100 text-xl font-semibold text-impilo-600">
                       {(selectedChannel.name || selectedChannel.channel_type).slice(0, 2).toUpperCase()}
                     </div>
                     <p className="font-medium text-gray-900">{selectedChannel.name || `${selectedChannel.channel_type} channel`}</p>

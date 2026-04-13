@@ -110,7 +110,7 @@ export default function ProviderIdLoginPage() {
               value={providerId}
               onChange={(e) => setProviderId(e.target.value)}
               placeholder="e.g. PRV-2024-00001"
-              className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
             />
           </div>
           <p className="mt-1 text-xs text-gray-400">
@@ -140,7 +140,7 @@ export default function ProviderIdLoginPage() {
                 setPin(val);
               }}
               placeholder="Enter your PIN"
-              className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 tracking-widest"
+              className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400 tracking-widest"
             />
           </div>
         </div>
@@ -148,7 +148,7 @@ export default function ProviderIdLoginPage() {
         <button
           type="submit"
           disabled={login.isPending || !providerId.trim() || !pin.trim()}
-          className="w-full py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
+          className="w-full py-2.5 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
         >
           {login.isPending ? (
             <>
@@ -164,7 +164,7 @@ export default function ProviderIdLoginPage() {
       <div className="mt-6 text-center">
         <Link
           href="/auth/login"
-          className="text-xs text-blue-600 hover:text-blue-800"
+          className="text-xs text-impilo-500 hover:text-impilo-700"
         >
           Sign in with email instead
         </Link>

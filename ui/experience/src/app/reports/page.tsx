@@ -34,7 +34,7 @@ const REPORT_CATEGORIES = [
     description: "Patient census, diagnosis summary, lab tests, prescriptions",
     href: "/reports/clinical",
     icon: FileText,
-    color: "bg-blue-100 text-blue-600",
+    color: "bg-impilo-100 text-impilo-500",
   },
   {
     title: "Facility Reports",
@@ -330,14 +330,14 @@ export default function ReportsHubPage() {
               <Link
                 key={cat.href}
                 href={withPlane(cat.href)}
-                className="bg-white rounded-lg border border-gray-200 p-5 hover:border-blue-300 hover:shadow-md transition-all group"
+                className="bg-white rounded-lg border border-gray-200 p-5 hover:border-impilo-200 hover:shadow-md transition-all group"
               >
                 <div className="flex items-start gap-4">
                   <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${cat.color}`}>
                     <cat.icon className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="font-medium text-gray-900 group-hover:text-blue-700">{cat.title}</h3>
+                    <h3 className="font-medium text-gray-900 group-hover:text-impilo-600">{cat.title}</h3>
                     <p className="text-xs text-gray-500 mt-1">{cat.description}</p>
                   </div>
                 </div>

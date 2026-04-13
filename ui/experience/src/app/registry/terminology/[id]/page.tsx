@@ -122,7 +122,7 @@ export default function TermDetailPage() {
                           {rel.targetSystem} &middot; {rel.targetCode}
                         </p>
                       </div>
-                      <span className="inline-block px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-700 font-medium">
+                      <span className="inline-block px-2 py-0.5 text-xs rounded-full bg-impilo-100 text-impilo-600 font-medium">
                         {rel.type}
                       </span>
                     </div>

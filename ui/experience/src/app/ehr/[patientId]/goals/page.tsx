@@ -8,7 +8,7 @@ import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { useEncounters } from "@/hooks/queries/useEncounters";
 import type { PatientGoalUi } from "@/hooks/queries/useCareContinuity";
-import { usePatientGoalsFromCarePlans } from "@/hooks/queries/useCareContinuity";
+import { usePatientGoalsFromCarePlans, useCreateGoal } from "@/hooks/queries/useCareContinuity";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 
 type PatientGoal = PatientGoalUi;
@@ -17,7 +17,7 @@ const STATUS_STYLES: Record<string, string> = {
   "On Track": "bg-green-100 text-green-700",
   "At Risk": "bg-amber-100 text-amber-700",
   Behind: "bg-red-100 text-red-700",
-  Achieved: "bg-blue-100 text-blue-700",
+  Achieved: "bg-impilo-100 text-impilo-600",
   Cancelled: "bg-gray-100 text-gray-600",
 };
 
@@ -29,7 +29,7 @@ const PRIORITY_STYLES: Record<string, string> = {
 
 function progressColor(progress: number): string {
   if (progress >= 75) return "bg-green-500";
-  if (progress >= 50) return "bg-blue-500";
+  if (progress >= 50) return "bg-impilo-500";
   if (progress >= 25) return "bg-amber-500";
   return "bg-red-500";
 }
@@ -41,6 +41,7 @@ export default function GoalsPage() {
   const { data: encountersData } = useEncounters(patientId);
 
   const { data, isLoading, isError, refetch } = usePatientGoalsFromCarePlans(patientId);
+  const createGoal = useCreateGoal();
   const goals: PatientGoal[] = data?.data ?? [];
   const activeEncounter = (encountersData?.data ?? []).find(
     (encounter) =>
@@ -78,7 +79,7 @@ export default function GoalsPage() {
             <button
               type="button"
               onClick={() => void refetch()}
-              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              className="rounded-lg bg-impilo-500 px-4 py-2 text-sm font-medium text-white hover:bg-impilo-600"
             >
               Retry
             </button>
@@ -139,14 +140,14 @@ export default function GoalsPage() {
                 <h2 className="text-lg font-semibold text-gray-900">Patient Goals</h2>
               </div>
               <div className="flex items-center gap-3">
-                <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400">
                   <option>All</option>
                   <option>On Track</option>
                   <option>At Risk</option>
                   <option>Behind</option>
                   <option>Achieved</option>
                 </select>
-                <button type="button" onClick={() => setShowForm(true)} className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700">
+                <button type="button" onClick={() => setShowForm(true)} className="inline-flex items-center gap-1.5 rounded-lg bg-impilo-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-impilo-600">
                   <Plus className="h-4 w-4" /> New Goal
                 </button>
               </div>
@@ -157,7 +158,7 @@ export default function GoalsPage() {
                 { label: "On Track", count: summary.onTrack, color: "text-green-600 bg-green-50" },
                 { label: "At Risk", count: summary.atRisk, color: "text-amber-600 bg-amber-50" },
                 { label: "Behind", count: summary.behind, color: "text-red-600 bg-red-50" },
-                { label: "Achieved", count: summary.achieved, color: "text-blue-600 bg-blue-50" },
+                { label: "Achieved", count: summary.achieved, color: "text-impilo-500 bg-impilo-50" },
               ].map((item) => (
                 <div key={item.label} className={`rounded-lg p-3 ${item.color}`}>
                   <p className="text-2xl font-bold">{item.count}</p>
@@ -175,16 +176,16 @@ export default function GoalsPage() {
                 <div className="space-y-4">
                   <div>
                     <label className="mb-1 block text-xs font-medium text-gray-600">Goal Title</label>
-                    <input type="text" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., Reduce blood pressure to normal range" />
+                    <input type="text" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" placeholder="e.g., Reduce blood pressure to normal range" />
                   </div>
                   <div>
                     <label className="mb-1 block text-xs font-medium text-gray-600">Description</label>
-                    <textarea value={newDescription} onChange={(e) => setNewDescription(e.target.value)} rows={2} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Specific, measurable details..." />
+                    <textarea value={newDescription} onChange={(e) => setNewDescription(e.target.value)} rows={2} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" placeholder="Specific, measurable details..." />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="mb-1 block text-xs font-medium text-gray-600">Priority</label>
-                      <select value={newPriority} onChange={(e) => setNewPriority(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                      <select value={newPriority} onChange={(e) => setNewPriority(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400">
                         <option>High</option>
                         <option>Medium</option>
                         <option>Low</option>
@@ -192,12 +193,36 @@ export default function GoalsPage() {
                     </div>
                     <div>
                       <label className="mb-1 block text-xs font-medium text-gray-600">Target Date</label>
-                      <input type="date" value={newTarget} onChange={(e) => setNewTarget(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                      <input type="date" value={newTarget} onChange={(e) => setNewTarget(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" />
                     </div>
                   </div>
                 </div>
+                {createGoal.isError && (
+                  <p className="text-xs text-red-600 pt-1">Failed to create goal. Please try again.</p>
+                )}
                 <div className="flex items-center gap-3 pt-4">
-                  <button className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700">Create Goal</button>
+                  <button
+                    type="button"
+                    disabled={createGoal.isPending || !newTitle}
+                    onClick={() => {
+                      createGoal.mutate(
+                        { patientId, title: newTitle, description: newDescription, priority: newPriority, targetDate: newTarget },
+                        {
+                          onSuccess: () => {
+                            setNewTitle("");
+                            setNewDescription("");
+                            setNewPriority("Medium");
+                            setNewTarget("");
+                            setShowForm(false);
+                          },
+                        },
+                      );
+                    }}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-impilo-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-impilo-600 disabled:opacity-50"
+                  >
+                    {createGoal.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                    Create Goal
+                  </button>
                   <button onClick={() => setShowForm(false)} className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50">Cancel</button>
                 </div>
               </div>
@@ -221,7 +246,7 @@ export default function GoalsPage() {
                         </div>
                         <p className="text-xs text-gray-500">{goal.description}</p>
                       </div>
-                      <button className="p-1 text-gray-400 transition-colors hover:text-blue-600">
+                      <button className="p-1 text-gray-400 transition-colors hover:text-impilo-500">
                         <Edit3 className="h-3.5 w-3.5" />
                       </button>
                     </div>
@@ -240,7 +265,7 @@ export default function GoalsPage() {
                       {goal.linkedCarePlan && (
                         <>
                           <span className="text-gray-300">|</span>
-                          <span className="flex items-center gap-1 text-blue-500"><Link2 className="h-3 w-3" /> {goal.linkedCarePlan}</span>
+                          <span className="flex items-center gap-1 text-impilo-400"><Link2 className="h-3 w-3" /> {goal.linkedCarePlan}</span>
                         </>
                       )}
                     </div>

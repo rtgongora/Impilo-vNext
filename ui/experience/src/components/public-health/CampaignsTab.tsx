@@ -61,7 +61,7 @@ export function CampaignsTab() {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-lg border border-blue-200 bg-blue-50/80 p-3 text-xs text-blue-900">
+      <div className="rounded-lg border border-impilo-200 bg-impilo-50/80 p-3 text-xs text-impilo-800">
         <strong>Live data:</strong> Campaign registry, plan, and dispatch use{" "}
         <code className="text-[10px]">GET/POST /internal/v1/public-health/campaigns</code> (Experience BFF →
         campaigns-service). <strong>Site Coverage</strong> and <strong>Supply &amp; Logistics</strong> sub-tabs are not
@@ -78,8 +78,8 @@ export function CampaignsTab() {
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
         {kpis.map((kpi) => (
           <div key={kpi.label} className="bg-white rounded-lg border border-gray-200 p-3 flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-blue-50">
-              <kpi.Icon className="h-4 w-4 text-blue-600" />
+            <div className="p-2 rounded-lg bg-impilo-50">
+              <kpi.Icon className="h-4 w-4 text-impilo-500" />
             </div>
             <div className="min-w-0">
               <p className="text-lg font-bold text-gray-900 truncate">{kpi.value}</p>
@@ -117,7 +117,7 @@ export function CampaignsTab() {
             <button
               type="button"
               onClick={() => setShowPlanForm((v) => !v)}
-              className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700"
+              className="inline-flex items-center gap-1 px-3 py-1.5 bg-impilo-500 text-white text-xs font-medium rounded-lg hover:bg-impilo-600"
             >
               <Plus className="h-3.5 w-3.5" /> Plan campaign
             </button>
@@ -246,7 +246,7 @@ export function CampaignsTab() {
                           cam.status.toLowerCase() === "active"
                             ? "bg-green-100 text-green-700"
                             : cam.status.toLowerCase() === "completed"
-                              ? "bg-blue-100 text-blue-700"
+                              ? "bg-impilo-100 text-impilo-600"
                               : "bg-gray-100 text-gray-600"
                         }`}
                       >

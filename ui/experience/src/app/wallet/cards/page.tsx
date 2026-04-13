@@ -73,7 +73,7 @@ function unwrapItems(v: unknown): unknown[] {
 function statusBadge(status: string) {
   const s = status.toUpperCase();
   if (s === "ACTIVE") return "bg-green-100 text-green-800";
-  if (s === "ISSUED") return "bg-blue-100 text-blue-800";
+  if (s === "ISSUED") return "bg-impilo-100 text-impilo-700";
   if (s === "BLOCKED") return "bg-red-100 text-red-800";
   if (s === "EXPIRED") return "bg-gray-100 text-gray-600";
   if (s === "REPLACED") return "bg-amber-100 text-amber-800";
@@ -182,7 +182,7 @@ export default function CardManagementPage() {
               <button
                 type="button"
                 onClick={() => setShowNewCardForm(!showNewCardForm)}
-                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                className="inline-flex items-center gap-2 rounded-lg bg-impilo-500 px-3 py-2 text-sm font-medium text-white hover:bg-impilo-600"
               >
                 <Plus className="h-4 w-4" /> Request New Card
               </button>
@@ -190,7 +190,7 @@ export default function CardManagementPage() {
 
             {/* New card form */}
             {showNewCardForm && (
-              <div className="rounded-xl border border-blue-200 bg-blue-50/40 p-4 space-y-3">
+              <div className="rounded-xl border border-impilo-200 bg-impilo-50/40 p-4 space-y-3">
                 <h3 className="text-sm font-semibold text-gray-900">Request a new card</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
@@ -230,7 +230,7 @@ export default function CardManagementPage() {
                     type="button"
                     onClick={submitNewCard}
                     disabled={issueCard.isPending}
-                    className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                    className="rounded-lg bg-impilo-500 px-4 py-2 text-sm font-medium text-white hover:bg-impilo-600 disabled:opacity-50"
                   >
                     {issueCard.isPending && <Loader2 className="h-4 w-4 animate-spin inline mr-1" />}
                     Request Card
@@ -288,7 +288,7 @@ export default function CardManagementPage() {
                             <button
                               type="button"
                               onClick={() => setExpandedCardId(isExpanded ? null : cardId)}
-                              className="font-mono text-xs text-gray-900 hover:text-blue-700"
+                              className="font-mono text-xs text-gray-900 hover:text-impilo-600"
                             >
                               {masked || "****"}
                             </button>
@@ -329,7 +329,7 @@ export default function CardManagementPage() {
                                     type="button"
                                     onClick={() => syncHealth.mutate({ cardId })}
                                     disabled={syncHealth.isPending}
-                                    className="inline-flex items-center gap-1 text-xs font-medium text-blue-700 hover:text-blue-900 disabled:opacity-40"
+                                    className="inline-flex items-center gap-1 text-xs font-medium text-impilo-600 hover:text-impilo-800 disabled:opacity-40"
                                   >
                                     <RefreshCw className="h-3 w-3" /> Sync
                                   </button>

@@ -194,8 +194,8 @@ describe("EncounterMenu", () => {
     render(<EncounterMenu />);
 
     const vitalsLink = getLinkByHref("/ehr/P-001/vitals");
-    expect(vitalsLink?.className).toContain("bg-blue-50");
-    expect(vitalsLink?.className).toContain("text-blue-700");
+    expect(vitalsLink?.className).toContain("bg-impilo-50");
+    expect(vitalsLink?.className).toContain("text-impilo-600");
   });
 
   it("does not highlight non-active segments", () => {
@@ -206,7 +206,7 @@ describe("EncounterMenu", () => {
 
     const summaryLink = getLinkByHref("/ehr/P-001/summary");
     expect(summaryLink?.className).toContain("text-gray-600");
-    expect(summaryLink?.className).not.toContain("bg-blue-50");
+    expect(summaryLink?.className).not.toContain("bg-impilo-50");
   });
 
   it("generates correct hrefs for each menu item", () => {

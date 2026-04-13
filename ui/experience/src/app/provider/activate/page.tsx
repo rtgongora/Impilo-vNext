@@ -88,9 +88,9 @@ export default function ProviderActivatePage() {
       <PageShell title="Activate Provider Role" subtitle="Health OS §6 — Sign in as a person; practice as a provider only under activated Provider ID">
         <div className="max-w-xl mx-auto">
           {/* Doctrine banner */}
-          <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
+          <div className="mb-6 rounded-lg border border-impilo-200 bg-impilo-50 p-4 text-sm text-impilo-800">
             <div className="flex items-center gap-2 mb-1">
-              <ShieldCheck className="h-4 w-4 text-blue-600" />
+              <ShieldCheck className="h-4 w-4 text-impilo-500" />
               <strong>Provider Role Activation</strong>
             </div>
             <p>
@@ -130,7 +130,7 @@ export default function ProviderActivatePage() {
                 <button
                   key={p.providerId}
                   onClick={() => handleActivate(p)}
-                  className="w-full text-left rounded-lg border border-gray-200 bg-white p-4 hover:border-blue-400 hover:ring-1 hover:ring-blue-200 transition-all"
+                  className="w-full text-left rounded-lg border border-gray-200 bg-white p-4 hover:border-impilo-400 hover:ring-1 hover:ring-impilo-200 transition-all"
                 >
                   <div className="flex items-center justify-between">
                     <div>
@@ -151,7 +151,7 @@ export default function ProviderActivatePage() {
           )}
 
           {activating && (
-            <div className="flex items-center justify-center py-12 text-blue-600">
+            <div className="flex items-center justify-center py-12 text-impilo-500">
               <Loader2 className="h-5 w-5 animate-spin mr-2" /> Activating provider context...
             </div>
           )}

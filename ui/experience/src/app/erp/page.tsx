@@ -69,7 +69,7 @@ export default function ErpHubPage() {
                   <Icon className="h-6 w-6" />
                 </div>
                 <div>
-                  <h2 className="font-semibold text-slate-900 group-hover:text-blue-700">{s.title}</h2>
+                  <h2 className="font-semibold text-slate-900 group-hover:text-impilo-600">{s.title}</h2>
                   <p className="mt-1 text-sm text-slate-600">{s.description}</p>
                 </div>
               </Link>

@@ -165,7 +165,7 @@ const eventTypeConfig: Record<
   TimelineEventType,
   { icon: React.ElementType; color: string; label: string }
 > = {
-  admission: { icon: BedDouble, color: "bg-blue-500", label: "Admission" },
+  admission: { icon: BedDouble, color: "bg-impilo-500", label: "Admission" },
   discharge: { icon: BedDouble, color: "bg-emerald-500", label: "Discharge" },
   note: { icon: FileText, color: "bg-slate-500", label: "Note" },
   vitals: { icon: HeartPulse, color: "bg-pink-500", label: "Vitals" },
@@ -270,7 +270,7 @@ export function PatientTimeline() {
                         type="checkbox"
                         checked={isChecked}
                         readOnly
-                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        className="h-4 w-4 rounded border-gray-300 text-impilo-500 focus:ring-impilo-400"
                       />
                       <div
                         className={`h-2 w-2 rounded-full ${config.color}`}
@@ -317,7 +317,7 @@ export function PatientTimeline() {
                     <div
                       className={`rounded-lg border bg-white p-4 transition-all hover:shadow-md ${
                         event.isImportant
-                          ? "ring-1 ring-blue-300 border-blue-200"
+                          ? "ring-1 ring-impilo-300 border-impilo-200"
                           : "border-gray-200"
                       }`}
                     >
@@ -328,7 +328,7 @@ export function PatientTimeline() {
                               {event.title}
                             </h4>
                             {event.isImportant && (
-                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-700">
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-impilo-100 text-impilo-600">
                                 Important
                               </span>
                             )}

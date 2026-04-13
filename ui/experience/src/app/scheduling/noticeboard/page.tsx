@@ -32,7 +32,7 @@ const categoryIcons: Record<string, typeof Bell> = {
 
 const priorityColors: Record<string, string> = {
   low: "bg-gray-500",
-  normal: "bg-blue-500",
+  normal: "bg-impilo-500",
   high: "bg-orange-500",
   urgent: "bg-red-600",
 };
@@ -121,7 +121,7 @@ export default function ProviderNoticeboardPage() {
           </div>
           <button
             onClick={() => setShowCreate(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-impilo-500 text-white rounded-lg hover:bg-impilo-600 transition-colors"
           >
             <Plus className="w-4 h-4" />
             New Announcement
@@ -190,7 +190,7 @@ export default function ProviderNoticeboardPage() {
                 >
                   <div className="flex items-start gap-4">
                     <div className={`p-2 rounded-lg shrink-0 ${a.priority === "urgent" ? "bg-red-100" : "bg-blue-100"}`}>
-                      <Icon className={`w-5 h-5 ${a.priority === "urgent" ? "text-red-600" : "text-blue-600"}`} />
+                      <Icon className={`w-5 h-5 ${a.priority === "urgent" ? "text-red-600" : "text-impilo-500"}`} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
@@ -292,7 +292,7 @@ export default function ProviderNoticeboardPage() {
                     expiresInDays: form.expiresInDays ? parseInt(form.expiresInDays) : null,
                   })}
                   disabled={!form.title || !form.content || createMutation.isPending}
-                  className="px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                  className="px-4 py-2 text-sm font-medium bg-impilo-500 text-white rounded-lg hover:bg-impilo-600 disabled:opacity-50"
                 >
                   {createMutation.isPending ? (
                     <span className="flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" />Publishing...</span>
@@ -327,7 +327,7 @@ export default function ProviderNoticeboardPage() {
               {selected.requires_acknowledgment && (
                 <button
                   onClick={() => { acknowledgeMutation.mutate(selected.id); setSelected(null); }}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium bg-impilo-500 text-white rounded-lg hover:bg-impilo-600 transition-colors"
                 >
                   <CheckCircle className="w-4 h-4" />
                   Acknowledge

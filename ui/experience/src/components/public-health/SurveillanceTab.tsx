@@ -30,7 +30,7 @@ export function SurveillanceTab() {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-lg border border-blue-200 bg-blue-50/80 p-3 text-xs text-blue-900">
+      <div className="rounded-lg border border-impilo-200 bg-impilo-50/80 p-3 text-xs text-impilo-800">
         <strong>Live data:</strong> threshold signals, case-based reports, and counter snapshots load from the Experience BFF
         → surveillance-service (empty if the service is down or unseeded). <strong>Weekly IDSR / eIDSR</strong> uses the
         &quot;Weekly Aggregate&quot; sub-tab: an <strong>illustrative</strong> facility grid until{" "}
@@ -55,7 +55,7 @@ export function SurveillanceTab() {
           {
             label: "Counter snapshots",
             value: ctrLoading ? "…" : String(counters.length),
-            color: "text-blue-700",
+            color: "text-impilo-600",
             sub: ctrError ? "Could not reach counters" : "From /public-health/counters",
           },
           { label: "Weekly IDSR (demo)", value: "5", color: "text-amber-700", sub: "Facilities in sample W14 grid" },
@@ -103,7 +103,7 @@ export function SurveillanceTab() {
                 <option value="INACTIVE">Inactive</option>
               </select>
               <button onClick={() => setShowNewEvent(!showNewEvent)}
-                className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700">
+                className="inline-flex items-center gap-1 px-3 py-1.5 bg-impilo-500 text-white text-xs font-medium rounded-lg hover:bg-impilo-600">
                 <Plus className="h-3.5 w-3.5" /> Report Event
               </button>
             </div>
@@ -112,7 +112,7 @@ export function SurveillanceTab() {
           <div className="p-4 space-y-4">
             {/* New Event Form */}
             {showNewEvent && (
-              <div className="p-4 border border-blue-200 bg-blue-50 rounded-lg">
+              <div className="p-4 border border-impilo-200 bg-impilo-50 rounded-lg">
                 <h4 className="font-semibold text-sm mb-3">Report New Surveillance Event</h4>
                 <div className="grid grid-cols-3 gap-3">
                   <div>
@@ -163,7 +163,7 @@ export function SurveillanceTab() {
                   <textarea placeholder="Describe symptoms, clinical presentation, epidemiological context..." className="w-full text-xs border border-gray-300 rounded-lg mt-1 p-2 min-h-[60px]" />
                 </div>
                 <div className="flex gap-2 mt-3">
-                  <button className="px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700">Submit Event</button>
+                  <button className="px-3 py-1.5 bg-impilo-500 text-white text-xs font-medium rounded-lg hover:bg-impilo-600">Submit Event</button>
                   <button onClick={() => setShowNewEvent(false)} className="px-3 py-1.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-lg">Cancel</button>
                 </div>
               </div>
@@ -199,7 +199,7 @@ export function SurveillanceTab() {
                 <tbody>
                   {filteredSignals.map((sig) => (
                     <tr key={sig.id}>
-                      <td className={`px-3 py-2 font-mono ${selectedSignal === sig.id ? "bg-blue-50" : ""}`}>{sig.id}</td>
+                      <td className={`px-3 py-2 font-mono ${selectedSignal === sig.id ? "bg-impilo-50" : ""}`}>{sig.id}</td>
                       <td className="px-3 py-2 font-medium text-gray-900">{sig.disease}</td>
                       <td className="px-3 py-2 text-gray-600">{sig.facility}</td>
                       <td className="px-3 py-2 font-bold">{sig.cases || "—"}</td>
@@ -342,7 +342,7 @@ export function SurveillanceTab() {
                   </div>
 
                   <div className="flex gap-2">
-                    <button className="px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700">Save & Initiate Response</button>
+                    <button className="px-3 py-1.5 bg-impilo-500 text-white text-xs font-medium rounded-lg hover:bg-impilo-600">Save & Initiate Response</button>
                     <button className="px-3 py-1.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-lg">Save as Draft</button>
                     <button className="px-3 py-1.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-lg">Link to Outbreak</button>
                     <button onClick={() => setSelectedSignal(null)} className="px-3 py-1.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-lg">Cancel</button>
@@ -363,14 +363,14 @@ export function SurveillanceTab() {
               <p className="text-xs text-gray-500">Individual case investigations for notifiable diseases</p>
             </div>
             <button onClick={() => setShowNewCase(!showNewCase)}
-              className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700">
+              className="inline-flex items-center gap-1 px-3 py-1.5 bg-impilo-500 text-white text-xs font-medium rounded-lg hover:bg-impilo-600">
               <Plus className="h-3.5 w-3.5" /> New Case Report
             </button>
           </div>
 
           <div className="p-4 space-y-4">
             {showNewCase && (
-              <div className="p-4 border border-blue-200 bg-blue-50 rounded-lg">
+              <div className="p-4 border border-impilo-200 bg-impilo-50 rounded-lg">
                 <h4 className="font-semibold text-sm mb-3">New Case-Based Report (CBR)</h4>
                 <div className="grid grid-cols-3 gap-3">
                   <div>
@@ -439,7 +439,7 @@ export function SurveillanceTab() {
                   <textarea placeholder="Symptoms, signs, treatment given..." className="w-full text-xs border border-gray-300 rounded-lg mt-1 p-2 min-h-[60px]" />
                 </div>
                 <div className="flex gap-2 mt-3">
-                  <button className="px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700">Submit CBR</button>
+                  <button className="px-3 py-1.5 bg-impilo-500 text-white text-xs font-medium rounded-lg hover:bg-impilo-600">Submit CBR</button>
                   <button onClick={() => setShowNewCase(false)} className="px-3 py-1.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-lg">Cancel</button>
                 </div>
               </div>
@@ -474,7 +474,7 @@ export function SurveillanceTab() {
                 </thead>
                 <tbody>
                   {apiCases.map((c) => (
-                    <tr key={c.id} className={`border-b hover:bg-gray-50 ${selectedCase === c.id ? "bg-blue-50" : ""}`}>
+                    <tr key={c.id} className={`border-b hover:bg-gray-50 ${selectedCase === c.id ? "bg-impilo-50" : ""}`}>
                       <td className="px-3 py-2 font-mono">{c.id}</td>
                       <td className="px-3 py-2 font-medium text-gray-900">{c.disease}</td>
                       <td className="px-3 py-2 font-mono">{c.patientRef}</td>
@@ -540,7 +540,7 @@ export function SurveillanceTab() {
                     <textarea placeholder="Progress notes..." className="w-full text-xs border border-gray-300 rounded-lg mt-1 p-2 min-h-[40px]" />
                   </div>
                   <div className="flex gap-2">
-                    <button className="px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700">Save Update</button>
+                    <button className="px-3 py-1.5 bg-impilo-500 text-white text-xs font-medium rounded-lg hover:bg-impilo-600">Save Update</button>
                     <button className="px-3 py-1.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-lg">Link Contacts</button>
                     <button className="px-3 py-1.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-lg">Generate Line List</button>
                   </div>

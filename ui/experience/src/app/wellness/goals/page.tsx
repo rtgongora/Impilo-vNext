@@ -11,7 +11,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 
 const GOAL_TEMPLATES = [
-  { title: "Steps & Movement", description: "Daily step count and active minutes targets", color: "bg-blue-50 border-blue-200" },
+  { title: "Steps & Movement", description: "Daily step count and active minutes targets", color: "bg-impilo-50 border-impilo-200" },
   { title: "Weight Management", description: "Set a target weight and track progress over time", color: "bg-green-50 border-green-200" },
   { title: "Nutrition", description: "Daily calorie, water intake, or macronutrient goals", color: "bg-orange-50 border-orange-200" },
   { title: "Sleep Quality", description: "Target sleep duration and consistency goals", color: "bg-indigo-50 border-indigo-200" },

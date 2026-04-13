@@ -74,7 +74,7 @@ export function ReferralPackageBuilder({
   }
 
   return (
-    <div className="bg-white rounded-lg border border-blue-200 p-5">
+    <div className="bg-white rounded-lg border border-impilo-200 p-5">
       {/* Step indicator */}
       <div className="flex items-center gap-1 mb-5">
         {STEPS.map((s, i) => {
@@ -82,7 +82,7 @@ export function ReferralPackageBuilder({
           return (
             <div key={i} className="flex items-center gap-1">
               <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
-                i === step ? "bg-blue-100 text-blue-700" : i < step ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
+                i === step ? "bg-impilo-100 text-impilo-600" : i < step ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
               }`}>
                 {i < step ? <CheckCircle2 className="w-3 h-3" /> : <Icon className="w-3 h-3" />}
                 {s.label}
@@ -111,7 +111,7 @@ export function ReferralPackageBuilder({
           <h4 className="text-sm font-semibold text-gray-900">Clinical Summary</h4>
           <p className="text-xs text-gray-500">Review and edit the auto-generated clinical summary for the referral package.</p>
           {autoSummary && (
-            <div className="bg-blue-50 rounded-lg p-3 text-xs text-blue-700">
+            <div className="bg-impilo-50 rounded-lg p-3 text-xs text-impilo-600">
               <p className="font-medium mb-1">Auto-generated from patient data:</p>
               <p>{autoSummary}</p>
             </div>
@@ -186,7 +186,7 @@ export function ReferralPackageBuilder({
         <div className="flex gap-2">
           <button onClick={onCancel} className="px-3 py-1.5 text-sm text-gray-500 hover:text-gray-700">Cancel</button>
           {step < 3 ? (
-            <button onClick={handleNext} className="inline-flex items-center gap-1 px-4 py-1.5 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+            <button onClick={handleNext} className="inline-flex items-center gap-1 px-4 py-1.5 text-sm font-medium bg-impilo-500 text-white rounded-lg hover:bg-impilo-600">
               Next <ChevronRight className="w-4 h-4" />
             </button>
           ) : (

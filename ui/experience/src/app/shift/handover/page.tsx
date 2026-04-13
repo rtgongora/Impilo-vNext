@@ -127,7 +127,7 @@ export default function ShiftHandoverPage() {
               onChange={(e) => setHandoverNotes(e.target.value)}
               rows={5}
               placeholder="Describe any important information for the incoming shift..."
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 resize-none"
             />
           </div>
 
@@ -153,7 +153,7 @@ export default function ShiftHandoverPage() {
             <button
               onClick={handleCompleteHandover}
               disabled={isPending}
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-impilo-500 text-white rounded-lg text-sm font-medium hover:bg-impilo-600 disabled:opacity-50"
             >
               {isPending ? (
                 <Loader2 className="w-4 h-4 animate-spin" />

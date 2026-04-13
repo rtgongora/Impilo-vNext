@@ -37,7 +37,7 @@ import {
 } from "@/lib/clinical-guidance-events";
 
 const STATUS_BADGE: Record<string, string> = {
-  ORDERED: "bg-blue-100 text-blue-700",
+  ORDERED: "bg-impilo-100 text-impilo-600",
   COLLECTED: "bg-yellow-100 text-yellow-700",
   RESULTED: "bg-green-100 text-green-700",
   REVIEWED: "bg-purple-100 text-purple-700",
@@ -47,7 +47,7 @@ const STATUS_BADGE: Record<string, string> = {
 const PRIORITY_BADGE: Record<string, string> = {
   STAT: "bg-red-100 text-red-700",
   URGENT: "bg-orange-100 text-orange-700",
-  ROUTINE: "bg-blue-100 text-blue-700",
+  ROUTINE: "bg-impilo-100 text-impilo-600",
 };
 
 const EMPTY_FORM = {
@@ -297,7 +297,7 @@ export default function OrdersPage() {
                   type="button"
                   onClick={() => setShowForm((prev) => !prev)}
                   disabled={!activeEncounter}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-impilo-500 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-impilo-600 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <Plus className="h-4 w-4" />
                   Add Order
@@ -387,7 +387,7 @@ export default function OrdersPage() {
                         onChange={(e) => updateField("test_name", e.target.value)}
                         placeholder="e.g. Complete Blood Count"
                         required
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
                       />
                     </div>
                     <div>
@@ -398,7 +398,7 @@ export default function OrdersPage() {
                         onChange={(e) => updateField("test_code", e.target.value)}
                         placeholder="e.g. CBC"
                         required
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
                       />
                     </div>
                     <div>
@@ -406,7 +406,7 @@ export default function OrdersPage() {
                       <select
                         value={form.category}
                         onChange={(e) => updateField("category", e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
                       >
                         <option value="LABORATORY">Laboratory</option>
                         <option value="RADIOLOGY">Radiology</option>
@@ -418,7 +418,7 @@ export default function OrdersPage() {
                       <select
                         value={form.priority}
                         onChange={(e) => updateField("priority", e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
                       >
                         <option value="ROUTINE">Routine</option>
                         <option value="URGENT">Urgent</option>
@@ -433,7 +433,7 @@ export default function OrdersPage() {
                         onChange={(e) => updateField("ordered_by", e.target.value)}
                         placeholder="Practitioner ID"
                         required
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
                       />
                     </div>
                     <div>
@@ -444,7 +444,7 @@ export default function OrdersPage() {
                         onChange={(e) => updateField("ordered_by_name", e.target.value)}
                         placeholder="Dr. Jane Smith"
                         required
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
                       />
                     </div>
                   </div>
@@ -456,7 +456,7 @@ export default function OrdersPage() {
                       onChange={(e) => updateField("facility_id", e.target.value)}
                       placeholder="facility-uuid"
                       required
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
                     />
                   </div>
                   <div>
@@ -466,7 +466,7 @@ export default function OrdersPage() {
                       onChange={(e) => updateField("clinical_notes", e.target.value)}
                       placeholder="Any relevant clinical context..."
                       rows={3}
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 resize-none"
                     />
                   </div>
                   <div className="flex gap-3">
@@ -483,7 +483,7 @@ export default function OrdersPage() {
                     <button
                       type="submit"
                       disabled={createOrder.isPending}
-                      className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-blue-600 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-impilo-500 py-2.5 text-sm font-medium text-white transition-colors hover:bg-impilo-600 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {createOrder.isPending ? (
                         <>
@@ -593,7 +593,7 @@ export default function OrdersPage() {
                   <button
                     type="button"
                     onClick={() => setResultValues([...resultValues, { name: "", value: "", unit: "", referenceRange: "", interpretation: "NORMAL" }])}
-                    className="text-xs text-blue-600 hover:text-blue-800"
+                    className="text-xs text-impilo-500 hover:text-impilo-700"
                   >
                     + Add row
                   </button>

@@ -206,7 +206,7 @@ export default function NotificationSettingsPage() {
                               type="button"
                               onClick={() => toggleChannel(category.key, channel)}
                               className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-                                category[channel] ? "bg-blue-600" : "bg-gray-300"
+                                category[channel] ? "bg-impilo-500" : "bg-gray-300"
                               }`}
                             >
                               <span
@@ -226,7 +226,7 @@ export default function NotificationSettingsPage() {
               <button
                 type="submit"
                 disabled={saveNotifications.isPending}
-                className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-impilo-500 rounded-lg hover:bg-impilo-600 transition-colors disabled:opacity-50"
               >
                 {saveNotifications.isPending ? (
                   <Loader2 className="w-4 h-4 animate-spin" />

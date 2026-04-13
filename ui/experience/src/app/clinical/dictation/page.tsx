@@ -138,7 +138,7 @@ export default function DictationPage() {
               <select
                 value={noteType}
                 onChange={(e) => setNoteType(e.target.value as NoteType)}
-                className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
               >
                 <option>SOAP</option>
                 <option>Progress</option>
@@ -176,7 +176,7 @@ export default function DictationPage() {
                 <p className="text-xs text-amber-500 mt-1">Paused</p>
               )}
               {recordingState === "processing" && (
-                <p className="text-xs text-blue-500 mt-1 flex items-center justify-center gap-1">
+                <p className="text-xs text-impilo-400 mt-1 flex items-center justify-center gap-1">
                   <Loader2 className="w-3 h-3 animate-spin" /> Finishing recording…
                 </p>
               )}
@@ -232,13 +232,13 @@ export default function DictationPage() {
               value={transcript}
               onChange={(e) => setTranscript(e.target.value)}
               rows={8}
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 leading-relaxed"
+              className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 leading-relaxed"
               placeholder="No speech-to-text is connected — type or paste the note here after recording."
             />
             <div className="mt-3 flex flex-wrap items-center gap-3">
               <button
                 disabled={!transcript}
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <Save className="w-4 h-4" /> Save to Notes
               </button>
@@ -280,7 +280,7 @@ export default function DictationPage() {
                       <div className="flex items-center gap-2">
                         <FileText className="w-4 h-4 text-gray-400" />
                         <span className="text-sm font-medium text-gray-900">{d.noteType} Note</span>
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${d.status === "Saved" ? "bg-green-100 text-green-700" : d.status === "Draft" ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"}`}>
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${d.status === "Saved" ? "bg-green-100 text-green-700" : d.status === "Draft" ? "bg-amber-100 text-amber-700" : "bg-impilo-100 text-impilo-600"}`}>
                           {d.status}
                         </span>
                       </div>

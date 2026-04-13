@@ -47,7 +47,7 @@ function getStaffStatusBadge(status: string) {
     on_shift: { label: 'On Shift', color: 'bg-green-500' },
     off_shift: { label: 'Off Shift', color: 'bg-gray-400' },
     on_break: { label: 'On Break', color: 'bg-amber-500' },
-    on_leave: { label: 'On Leave', color: 'bg-blue-400' },
+    on_leave: { label: 'On Leave', color: 'bg-impilo-400' },
   };
   const cfg = map[status] || { label: status, color: 'bg-gray-400' };
   return (
@@ -60,7 +60,7 @@ function getStaffStatusBadge(status: string) {
 
 function getRoleColor(role: string) {
   const map: Record<string, string> = {
-    doctor: 'bg-blue-100 text-blue-700',
+    doctor: 'bg-impilo-100 text-impilo-600',
     specialist: 'bg-purple-100 text-purple-700',
     nurse: 'bg-green-100 text-green-700',
     pharmacist: 'bg-amber-100 text-amber-700',
@@ -101,7 +101,7 @@ export function HRShiftsPanel() {
           <p className="text-lg font-bold text-red-600">{overtime}</p>
         </div>
         <div className="bg-white border border-gray-200 rounded-lg pt-3 pb-2 px-3">
-          <div className="flex items-center gap-2"><Calendar className="h-4 w-4 text-blue-500" /><span className="text-xs text-gray-500">Leave Pending</span></div>
+          <div className="flex items-center gap-2"><Calendar className="h-4 w-4 text-impilo-400" /><span className="text-xs text-gray-500">Leave Pending</span></div>
           <p className="text-lg font-bold">{LEAVE_REQUESTS.filter(l => l.status === 'pending').length}</p>
         </div>
       </div>
@@ -115,7 +115,7 @@ export function HRShiftsPanel() {
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
               className={`inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 transition-colors ${
-                activeTab === tab.key ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'
+                activeTab === tab.key ? 'border-impilo-500 text-impilo-500' : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
               <Icon className="h-3.5 w-3.5" />
@@ -234,7 +234,7 @@ export function HRShiftsPanel() {
                 )}
               </div>
               <div className="flex gap-2 mt-3">
-                <button className="inline-flex items-center gap-1 px-3 py-1.5 text-xs bg-blue-600 text-white rounded hover:bg-blue-700">
+                <button className="inline-flex items-center gap-1 px-3 py-1.5 text-xs bg-impilo-500 text-white rounded hover:bg-impilo-600">
                   <FileText className="h-3 w-3" />View Notes
                 </button>
                 <button className="inline-flex items-center gap-1 px-3 py-1.5 text-xs border border-gray-200 rounded hover:bg-gray-50">

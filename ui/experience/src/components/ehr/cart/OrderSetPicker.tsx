@@ -11,7 +11,7 @@ import { ORDER_SETS, getOrderSetCategories } from "@/data/orderSets";
 import type { OrderSet, OrderSetItem } from "@/data/orderSets";
 
 const TYPE_DOT: Record<string, string> = {
-  INVESTIGATION: "bg-blue-500",
+  INVESTIGATION: "bg-impilo-500",
   MEDICATION: "bg-green-500",
   NURSING: "bg-amber-500",
   DIET: "bg-pink-400",
@@ -50,7 +50,7 @@ export function OrderSetPicker({ onUseSet }: OrderSetPickerProps) {
             onClick={() => setActiveCategory(cat)}
             className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
               activeCategory === cat
-                ? "bg-blue-600 text-white"
+                ? "bg-impilo-500 text-white"
                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
           >
@@ -72,7 +72,7 @@ export function OrderSetPicker({ onUseSet }: OrderSetPickerProps) {
             >
               {/* Card header */}
               <div className="flex items-start gap-3 px-4 py-3">
-                <Package className="mt-0.5 h-5 w-5 flex-shrink-0 text-blue-500" />
+                <Package className="mt-0.5 h-5 w-5 flex-shrink-0 text-impilo-400" />
                 <div className="min-w-0 flex-1">
                   <h4 className="text-sm font-semibold text-gray-900">{os.name}</h4>
                   <p className="text-xs text-gray-500">{os.description}</p>
@@ -101,7 +101,7 @@ export function OrderSetPicker({ onUseSet }: OrderSetPickerProps) {
                   </button>
                   <button
                     onClick={() => onUseSet(os.items)}
-                    className="inline-flex items-center gap-1 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 transition-colors"
+                    className="inline-flex items-center gap-1 rounded-md bg-impilo-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-impilo-600 transition-colors"
                   >
                     <Plus className="h-3 w-3" />
                     Use This Set

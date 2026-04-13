@@ -88,7 +88,7 @@ export default function PrescriptionsPage() {
               onClick={() => setStatusFilter(f.value)}
               className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-colors ${
                 statusFilter === f.value
-                  ? "bg-blue-600 text-white border-blue-600"
+                  ? "bg-impilo-500 text-white border-impilo-500"
                   : "bg-white text-gray-600 border-gray-300 hover:border-gray-400"
               }`}
             >

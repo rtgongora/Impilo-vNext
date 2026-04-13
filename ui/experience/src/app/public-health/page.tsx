@@ -32,7 +32,7 @@ import {
 } from "./publicHealthTabParams";
 
 const JURISDICTION_PACKS = [
-  { id: "city_health", label: "City Health Pack", description: "Urban municipal public health operations", Icon: Building, color: "bg-blue-500", activeIn: "Harare, Bulawayo, Mutare, Gweru, Kwekwe, Masvingo" },
+  { id: "city_health", label: "City Health Pack", description: "Urban municipal public health operations", Icon: Building, color: "bg-impilo-500", activeIn: "Harare, Bulawayo, Mutare, Gweru, Kwekwe, Masvingo" },
   { id: "rdc_health", label: "Rural District Council Health Pack", description: "Rural public health operations and community health", Icon: TreePine, color: "bg-green-500", activeIn: "62 Rural District Councils" },
   { id: "provincial", label: "Provincial Public Health Oversight Pack", description: "Provincial surveillance, coordination, and oversight", Icon: Globe, color: "bg-purple-500", activeIn: "All 10 Provinces" },
   { id: "national", label: "National Public Health Oversight Pack", description: "National surveillance, policy, and coordination", Icon: Shield, color: "bg-red-500", activeIn: "National" },
@@ -79,12 +79,12 @@ export default function PublicHealthPage() {
         subtitle="Shared reusable capability configured for different jurisdictions - not cloned apps"
       >
         {/* Jurisdiction Pack Selector */}
-        <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
+        <div className="mb-6 rounded-lg border border-impilo-200 bg-impilo-50 p-4">
           <div className="flex items-center gap-2 mb-1">
-            <Settings className="h-4 w-4 text-blue-600" />
-            <h3 className="text-sm font-semibold text-blue-900">Active Jurisdiction Pack</h3>
+            <Settings className="h-4 w-4 text-impilo-500" />
+            <h3 className="text-sm font-semibold text-impilo-800">Active Jurisdiction Pack</h3>
           </div>
-          <p className="text-xs text-blue-700 mb-3">Same platform capabilities, configured per jurisdiction</p>
+          <p className="text-xs text-impilo-600 mb-3">Same platform capabilities, configured per jurisdiction</p>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
             {JURISDICTION_PACKS.map(pack => (
               <button
@@ -92,8 +92,8 @@ export default function PublicHealthPage() {
                 onClick={() => setActivePack(pack.id)}
                 className={`p-3 rounded-lg border text-left transition-all ${
                   activePack === pack.id
-                    ? "border-blue-500 bg-white ring-2 ring-blue-200"
-                    : "border-gray-200 bg-white hover:border-blue-300"
+                    ? "border-impilo-400 bg-white ring-2 ring-impilo-200"
+                    : "border-gray-200 bg-white hover:border-impilo-200"
                 }`}
               >
                 <div className="flex items-center gap-2 mb-1">

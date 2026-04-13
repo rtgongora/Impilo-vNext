@@ -26,7 +26,7 @@ export default function DiscoverFacilitiesPage() {
               <input
                 type="text"
                 placeholder="Search by facility name or type..."
-                className="w-full rounded-lg border border-gray-300 py-2.5 pl-10 pr-4 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full rounded-lg border border-gray-300 py-2.5 pl-10 pr-4 text-sm focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-impilo-400"
               />
             </div>
             <div className="relative w-56">
@@ -34,7 +34,7 @@ export default function DiscoverFacilitiesPage() {
               <input
                 type="text"
                 placeholder="Location..."
-                className="w-full rounded-lg border border-gray-300 py-2.5 pl-10 pr-4 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full rounded-lg border border-gray-300 py-2.5 pl-10 pr-4 text-sm focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-impilo-400"
               />
             </div>
             <button className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
@@ -46,7 +46,7 @@ export default function DiscoverFacilitiesPage() {
           {/* Facility type quick filter */}
           <div className="flex flex-wrap gap-2">
             {["Hospital", "Clinic", "Community Health Centre", "Pharmacy", "Laboratory", "Specialist Centre"].map((s) => (
-              <button key={s} className="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-gray-700 hover:border-blue-400 hover:text-blue-600 transition-colors">
+              <button key={s} className="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-gray-700 hover:border-impilo-400 hover:text-impilo-500 transition-colors">
                 {s}
               </button>
             ))}

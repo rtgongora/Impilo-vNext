@@ -50,7 +50,7 @@ const REVENUE_WEEK = [
 ];
 
 const PAYER_MIX = [
-  { name: 'Medical Aid', pct: 62, barColor: 'bg-blue-500' },
+  { name: 'Medical Aid', pct: 62, barColor: 'bg-impilo-500' },
   { name: 'Self-Pay', pct: 22, barColor: 'bg-amber-500' },
   { name: 'Government', pct: 12, barColor: 'bg-green-500' },
   { name: 'Corporate', pct: 4, barColor: 'bg-purple-500' },
@@ -63,10 +63,10 @@ function getStatusBadge(status: string) {
     unbilled: { label: 'Unbilled', classes: 'bg-gray-100 text-gray-600' },
     partial: { label: 'Partial', classes: 'bg-amber-100 text-amber-700' },
     paid: { label: 'Paid', classes: 'bg-green-100 text-green-700' },
-    sent: { label: 'Sent', classes: 'bg-blue-100 text-blue-700' },
+    sent: { label: 'Sent', classes: 'bg-impilo-100 text-impilo-600' },
     draft: { label: 'Draft', classes: 'bg-gray-100 text-gray-600' },
     overdue: { label: 'Overdue', classes: 'bg-red-100 text-red-700' },
-    submitted: { label: 'Submitted', classes: 'bg-blue-100 text-blue-700' },
+    submitted: { label: 'Submitted', classes: 'bg-impilo-100 text-impilo-600' },
     partially_approved: { label: 'Part Approved', classes: 'bg-amber-100 text-amber-700' },
     rejected: { label: 'Rejected', classes: 'bg-red-100 text-red-700' },
   };
@@ -112,7 +112,7 @@ export function BillingPanel() {
           <p className="text-[10px] text-gray-400">{RECENT_PAYMENTS.length} transactions</p>
         </div>
         <div className="bg-white border border-gray-200 rounded-lg pt-3 pb-2 px-3">
-          <div className="flex items-center gap-2"><Send className="h-4 w-4 text-blue-500" /><span className="text-xs text-gray-500">Claims Pending</span></div>
+          <div className="flex items-center gap-2"><Send className="h-4 w-4 text-impilo-400" /><span className="text-xs text-gray-500">Claims Pending</span></div>
           <p className="text-lg font-bold">{claimsPending}</p>
           <p className="text-[10px] text-gray-400">{CLAIMS.filter(c => c.status === 'rejected').length} rejected</p>
         </div>
@@ -127,7 +127,7 @@ export function BillingPanel() {
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
               className={`inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 transition-colors ${
-                activeTab === tab.key ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'
+                activeTab === tab.key ? 'border-impilo-500 text-impilo-500' : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
               <Icon className="h-3.5 w-3.5" />
@@ -151,7 +151,7 @@ export function BillingPanel() {
                 <div key={d.day} className="flex items-center gap-3">
                   <span className="text-xs w-8 text-gray-500">{d.day}</span>
                   <div className="flex-1 bg-gray-100 rounded-full h-2">
-                    <div className="h-2 rounded-full bg-blue-500" style={{ width: `${(d.val / 60) * 100}%` }} />
+                    <div className="h-2 rounded-full bg-impilo-500" style={{ width: `${(d.val / 60) * 100}%` }} />
                   </div>
                   <span className="text-xs font-medium w-12 text-right">R{d.val}k</span>
                 </div>
@@ -190,7 +190,7 @@ export function BillingPanel() {
                 <div className="flex items-center gap-3">
                   <p className="text-sm font-bold">R{ch.amount.toLocaleString()}</p>
                   {getStatusBadge(ch.status)}
-                  <button className="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700">Bill</button>
+                  <button className="px-2 py-1 text-xs bg-impilo-500 text-white rounded hover:bg-impilo-600">Bill</button>
                 </div>
               </div>
             </div>

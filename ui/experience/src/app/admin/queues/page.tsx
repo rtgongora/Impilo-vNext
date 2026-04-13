@@ -14,7 +14,7 @@ import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { apiClient } from "@/lib/api-client";
 
 const SERVICE_TYPE_STYLES: Record<string, string> = {
-  OPD: "bg-blue-100 text-blue-700",
+  OPD: "bg-impilo-100 text-impilo-600",
   EMERGENCY: "bg-red-100 text-red-700",
   PHARMACY: "bg-green-100 text-green-700",
   LABORATORY: "bg-amber-100 text-amber-700",

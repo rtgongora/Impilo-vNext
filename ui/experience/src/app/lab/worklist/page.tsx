@@ -23,7 +23,7 @@ export default function LabWorklistPage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {[
               { label: "Pending Collection", value: "0", Icon: Clock, color: "bg-amber-50 text-amber-600" },
-              { label: "In Progress", value: "0", Icon: ListChecks, color: "bg-blue-50 text-blue-600" },
+              { label: "In Progress", value: "0", Icon: ListChecks, color: "bg-impilo-50 text-impilo-500" },
               { label: "Completed", value: "0", Icon: CheckCircle2, color: "bg-green-50 text-green-600" },
               { label: "Urgent", value: "0", Icon: AlertCircle, color: "bg-red-50 text-red-600" },
             ].map(({ label, value, Icon, color }) => (

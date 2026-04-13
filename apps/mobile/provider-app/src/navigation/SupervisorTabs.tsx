@@ -10,12 +10,14 @@ import { TabBar } from "@impilo/mobile-design-system";
 import { SupervisorDashboardScreen } from "../screens/supervisor/SupervisorDashboardScreen";
 import { TeamOverviewScreen } from "../screens/supervisor/TeamOverviewScreen";
 import { StockScreen } from "../screens/supervisor/StockScreen";
+import { InventoryScreen } from "../screens/supervisor/InventoryScreen";
 import { EscalationsScreen } from "../screens/supervisor/EscalationsScreen";
 
 const TABS = [
   { key: "dashboard", label: "Dashboard", icon: "bar-chart" },
   { key: "team", label: "Team", icon: "users" },
   { key: "stock", label: "Stock", icon: "package" },
+  { key: "inventory", label: "Inventory", icon: "box" },
   { key: "escalations", label: "Escalations", icon: "alert-triangle" },
 ] as const;
 
@@ -36,6 +38,8 @@ export function SupervisorTabs() {
         return <TeamOverviewScreen />;
       case "stock":
         return <StockScreen />;
+      case "inventory":
+        return <InventoryScreen />;
       case "escalations":
         return <EscalationsScreen />;
       default:

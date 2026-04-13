@@ -55,7 +55,7 @@ export default function CitizenHealthIdQrPage() {
         <h1 className="text-xl font-semibold text-gray-900 mb-2">My Health ID QR</h1>
         <p className="text-sm text-gray-600">
           You do not have a registered Health ID yet. Submit a request first on{" "}
-          <a href="/citizen/health-id/request" className="text-blue-600 hover:underline">
+          <a href="/citizen/health-id/request" className="text-impilo-500 hover:underline">
             Request Health ID
           </a>
           .
@@ -72,7 +72,7 @@ export default function CitizenHealthIdQrPage() {
         <button
           type="button"
           onClick={loadProfile}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700"
+          className="bg-impilo-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-impilo-600"
         >
           Retry
         </button>

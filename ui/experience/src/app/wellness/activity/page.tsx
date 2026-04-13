@@ -74,12 +74,12 @@ export default function WellnessActivityPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-6">
               <h3 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <Footprints className="h-5 w-5 text-blue-600" /> Today
+                <Footprints className="h-5 w-5 text-impilo-500" /> Today
               </h3>
               <div className="grid grid-cols-2 gap-4 text-center">
-                <div className="rounded-lg bg-blue-50 p-4">
-                  <p className="text-2xl font-bold text-blue-700">{todayRow?.steps ?? 0}</p>
-                  <p className="text-xs text-blue-600 font-medium">Steps</p>
+                <div className="rounded-lg bg-impilo-50 p-4">
+                  <p className="text-2xl font-bold text-impilo-600">{todayRow?.steps ?? 0}</p>
+                  <p className="text-xs text-impilo-500 font-medium">Steps</p>
                 </div>
                 <div className="rounded-lg bg-cyan-50 p-4">
                   <p className="text-2xl font-bold text-cyan-700">{todayRow?.waterMl ?? 0}</p>
@@ -150,7 +150,7 @@ export default function WellnessActivityPage() {
                   type="button"
                   onClick={save}
                   disabled={logActivity.isPending}
-                  className="mt-2 w-full rounded-lg bg-blue-600 text-white py-2.5 text-sm font-medium hover:bg-blue-700 disabled:opacity-60 flex items-center justify-center gap-2"
+                  className="mt-2 w-full rounded-lg bg-impilo-500 text-white py-2.5 text-sm font-medium hover:bg-impilo-600 disabled:opacity-60 flex items-center justify-center gap-2"
                 >
                   {logActivity.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
                   Save to wellness log

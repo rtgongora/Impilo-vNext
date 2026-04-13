@@ -21,7 +21,7 @@ const typeConfig = {
   error: { bg: "bg-red-50", border: "border-red-200", text: "text-red-700", icon: AlertCircle },
   warning: { bg: "bg-amber-50", border: "border-amber-200", text: "text-amber-700", icon: AlertCircle },
   success: { bg: "bg-emerald-50", border: "border-emerald-200", text: "text-emerald-700", icon: CheckCircle2 },
-  info: { bg: "bg-blue-50", border: "border-blue-200", text: "text-blue-700", icon: Info },
+  info: { bg: "bg-impilo-50", border: "border-impilo-200", text: "text-impilo-600", icon: Info },
 };
 
 export function SystemFeedbackStrip() {

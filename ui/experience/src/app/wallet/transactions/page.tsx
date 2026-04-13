@@ -79,7 +79,7 @@ function channelBadge(channel: string) {
   const ch = channel.toUpperCase();
   if (ch === "MOBILE_MONEY") return "bg-yellow-100 text-yellow-800";
   if (ch === "CARD" || ch === "POS") return "bg-purple-100 text-purple-800";
-  if (ch === "BANK_TRANSFER") return "bg-blue-100 text-blue-800";
+  if (ch === "BANK_TRANSFER") return "bg-impilo-100 text-impilo-700";
   if (ch === "CASH") return "bg-emerald-100 text-emerald-800";
   return "bg-gray-100 text-gray-700";
 }

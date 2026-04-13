@@ -276,7 +276,7 @@ export default function PharmacyDispensePage() {
                           <button
                             onClick={() => handleDispense(rx.id)}
                             disabled={isDispensing}
-                            className="inline-flex items-center gap-1.5 px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            className="inline-flex items-center gap-1.5 px-3 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                           >
                             {isDispensing ? (
                               <>

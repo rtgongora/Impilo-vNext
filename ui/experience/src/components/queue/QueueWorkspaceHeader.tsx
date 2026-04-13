@@ -39,7 +39,7 @@ export function QueueWorkspaceHeader({
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="space-y-3">
               <div className="inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-1 text-xs font-medium text-slate-600">
-                <BadgeIcon className="h-3.5 w-3.5 text-blue-600" />
+                <BadgeIcon className="h-3.5 w-3.5 text-impilo-500" />
                 {badge}
               </div>
               <div>

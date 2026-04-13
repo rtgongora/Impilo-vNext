@@ -41,7 +41,7 @@ export default function SidecarRetirementPage() {
             </Link>
             <Link
               href="/finance/commerce-integrations"
-              className="inline-flex items-center gap-1 text-sm text-blue-700 hover:text-blue-800"
+              className="inline-flex items-center gap-1 text-sm text-impilo-600 hover:text-impilo-700"
             >
               Commerce & payer stack
             </Link>

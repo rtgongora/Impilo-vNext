@@ -157,7 +157,7 @@ export default function ConditionsPage() {
               <button
                 type="button"
                 onClick={() => setShowForm((prev) => !prev)}
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 transition-colors"
               >
                 <Plus className="w-4 h-4" />
                 Add Condition
@@ -180,7 +180,7 @@ export default function ConditionsPage() {
                         onChange={(e) => updateField("condition_name", e.target.value)}
                         placeholder="e.g. Type 2 Diabetes Mellitus"
                         required
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
                       />
                     </div>
                     <div>
@@ -192,7 +192,7 @@ export default function ConditionsPage() {
                         value={form.icd_code}
                         onChange={(e) => updateField("icd_code", e.target.value)}
                         placeholder="e.g. E11.9"
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
                       />
                     </div>
                     <div>
@@ -202,7 +202,7 @@ export default function ConditionsPage() {
                       <select
                         value={form.category}
                         onChange={(e) => updateField("category", e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
                       >
                         <option value="ENCOUNTER_DIAGNOSIS">Encounter Diagnosis</option>
                         <option value="PROBLEM_LIST">Problem List</option>
@@ -216,7 +216,7 @@ export default function ConditionsPage() {
                       <select
                         value={form.clinical_status}
                         onChange={(e) => updateField("clinical_status", e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
                       >
                         <option value="ACTIVE">Active</option>
                         <option value="RESOLVED">Resolved</option>
@@ -230,7 +230,7 @@ export default function ConditionsPage() {
                       <select
                         value={form.severity}
                         onChange={(e) => updateField("severity", e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
                       >
                         <option value="MILD">Mild</option>
                         <option value="MODERATE">Moderate</option>
@@ -245,7 +245,7 @@ export default function ConditionsPage() {
                         type="date"
                         value={form.onset_date}
                         onChange={(e) => updateField("onset_date", e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
                       />
                     </div>
                     <div className="md:col-span-2 lg:col-span-3">
@@ -257,7 +257,7 @@ export default function ConditionsPage() {
                         onChange={(e) => updateField("notes", e.target.value)}
                         rows={2}
                         placeholder="Additional clinical notes..."
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
                       />
                     </div>
                   </div>
@@ -266,7 +266,7 @@ export default function ConditionsPage() {
                     <button
                       type="submit"
                       disabled={createCondition.isPending}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                       {createCondition.isPending && (
                         <Loader2 className="w-4 h-4 animate-spin" />

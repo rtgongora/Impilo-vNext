@@ -46,7 +46,7 @@ export default function FacilityRegistryPage() {
         <div className="mb-4 flex flex-wrap items-center justify-end">
           <Link
             href="/registry/facilities/new"
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-impilo-500 text-white rounded-lg hover:bg-impilo-600 transition-colors"
           >
             <Plus className="w-4 h-4" />
             New Facility
@@ -61,7 +61,7 @@ export default function FacilityRegistryPage() {
               placeholder="Search facilities..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
             />
           </div>
         </div>
@@ -118,7 +118,7 @@ export default function FacilityRegistryPage() {
                       <td className="px-4 py-3 text-right">
                         <Link
                           href={`/registry/facilities/${facility.id}`}
-                          className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                          className="text-xs text-impilo-500 hover:text-impilo-700 font-medium"
                         >
                           View
                         </Link>

@@ -119,7 +119,7 @@ export default function CitizenDelegatedPickupPage() {
           <input value={delegateIdRef} onChange={(e) => setDelegateIdRef(e.target.value)} placeholder="Delegate ID ref (optional)" className="w-full border rounded px-3 py-2" />
           <input value={facilityId} onChange={(e) => setFacilityId(e.target.value)} placeholder="Facility ID" className="w-full border rounded px-3 py-2" required />
           <input value={expiryHours} onChange={(e) => setExpiryHours(e.target.value)} placeholder="Expiry hours (optional)" className="w-full border rounded px-3 py-2" type="number" />
-          <button type="submit" disabled={loading} className="w-full bg-blue-600 text-white py-2 rounded-lg font-medium disabled:opacity-50">
+          <button type="submit" disabled={loading} className="w-full bg-impilo-500 text-white py-2 rounded-lg font-medium disabled:opacity-50">
             {loading ? "Creating…" : "Create pickup"}
           </button>
         </form>
@@ -130,7 +130,7 @@ export default function CitizenDelegatedPickupPage() {
           <p className="text-xs font-mono break-all">Token: {pickupResult.pickupToken}</p>
           <p className="text-xs">OTP: {pickupResult.otp}</p>
           <p className="text-xs text-gray-600">Expires: {pickupResult.expiresAt}</p>
-          <button type="button" onClick={() => setPickupResult(null)} className="text-blue-600 text-sm hover:underline">
+          <button type="button" onClick={() => setPickupResult(null)} className="text-impilo-500 text-sm hover:underline">
             Create another
           </button>
         </div>
@@ -139,7 +139,7 @@ export default function CitizenDelegatedPickupPage() {
         <form onSubmit={handleRedeem} className="space-y-3 text-sm">
           <input value={pickupToken} onChange={(e) => setPickupToken(e.target.value)} placeholder="Pickup token" className="w-full border rounded px-3 py-2" required />
           <input value={otp} onChange={(e) => setOtp(e.target.value)} placeholder="OTP" className="w-full border rounded px-3 py-2" required />
-          <button type="submit" disabled={loading} className="w-full bg-blue-600 text-white py-2 rounded-lg font-medium disabled:opacity-50">
+          <button type="submit" disabled={loading} className="w-full bg-impilo-500 text-white py-2 rounded-lg font-medium disabled:opacity-50">
             {loading ? "Redeeming…" : "Redeem"}
           </button>
         </form>

@@ -36,14 +36,14 @@ import {
 
 const PRIORITY_STYLES: Record<string, string> = {
   Urgent: "bg-red-100 text-red-700",
-  Normal: "bg-blue-100 text-blue-700",
+  Normal: "bg-impilo-100 text-impilo-600",
   Low: "bg-gray-100 text-gray-600",
 };
 
 const ALERT_STYLES: Record<string, string> = {
   critical: "border-l-red-500 bg-red-50",
   warning: "border-l-amber-500 bg-amber-50",
-  info: "border-l-blue-500 bg-blue-50",
+  info: "border-l-blue-500 bg-impilo-50",
 };
 
 export default function ControlTowerPage() {
@@ -93,7 +93,7 @@ export default function ControlTowerPage() {
         value: String(occupied),
         footnote: total > 0 ? `${occupied} occupied of ${total} configured beds` : "No bed rows for facility",
         icon: Users,
-        color: "bg-blue-500",
+        color: "bg-impilo-500",
       },
       {
         label: "Avg wait (waiting, today)",
@@ -139,7 +139,7 @@ export default function ControlTowerPage() {
           <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
             <BarChart3 className="w-10 h-10 text-gray-300 mx-auto mb-3" />
             <p className="text-gray-600 text-sm">Select a facility to load control tower metrics.</p>
-            <Link href="/home" className="mt-2 inline-block text-sm text-blue-600 hover:text-blue-800">
+            <Link href="/home" className="mt-2 inline-block text-sm text-impilo-500 hover:text-impilo-700">
               Go to Home →
             </Link>
           </div>
@@ -242,7 +242,7 @@ export default function ControlTowerPage() {
                           </div>
                           <div className="w-full bg-gray-100 rounded-full h-3 flex overflow-hidden">
                             <div
-                              className="bg-blue-500 h-3"
+                              className="bg-impilo-500 h-3"
                               style={{
                                 width: ward.total > 0 ? `${(ward.occupied / ward.total) * 100}%` : "0%",
                               }}

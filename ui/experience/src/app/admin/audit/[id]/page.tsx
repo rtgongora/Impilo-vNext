@@ -55,7 +55,7 @@ export default function AuditEntryDetailPage() {
             {/* Summary Card */}
             <div className="bg-white rounded-lg border border-gray-200 p-6">
               <div className="flex items-center gap-3 mb-4">
-                <span className="inline-block px-2.5 py-1 text-xs rounded-full bg-blue-100 text-blue-700 font-medium">
+                <span className="inline-block px-2.5 py-1 text-xs rounded-full bg-impilo-100 text-impilo-600 font-medium">
                   {entry.attributes.action}
                 </span>
                 <span className="text-sm text-gray-500">
@@ -70,7 +70,7 @@ export default function AuditEntryDetailPage() {
               {/* Actor */}
               <div className="bg-white rounded-lg border border-gray-200 p-5">
                 <div className="flex items-center gap-2 mb-3">
-                  <User className="w-4 h-4 text-blue-500" />
+                  <User className="w-4 h-4 text-impilo-400" />
                   <h3 className="text-sm font-medium text-gray-900">Actor</h3>
                 </div>
                 <div className="space-y-2">
@@ -118,7 +118,7 @@ export default function AuditEntryDetailPage() {
                   </div>
                   <div>
                     <p className="text-xs text-gray-500">Action</p>
-                    <span className="inline-block px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-700">
+                    <span className="inline-block px-2 py-0.5 text-xs rounded-full bg-impilo-100 text-impilo-600">
                       {entry.attributes.action}
                     </span>
                   </div>

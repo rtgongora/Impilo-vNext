@@ -52,7 +52,7 @@ interface BedResource {
 
 const BED_STATUS_STYLES: Record<string, { bg: string; icon: typeof CheckCircle }> = {
   AVAILABLE: { bg: "bg-green-100 border-green-300 text-green-700", icon: CheckCircle },
-  OCCUPIED: { bg: "bg-blue-100 border-blue-300 text-blue-700", icon: User },
+  OCCUPIED: { bg: "bg-impilo-100 border-impilo-200 text-impilo-600", icon: User },
   RESERVED: { bg: "bg-amber-100 border-amber-300 text-amber-700", icon: Clock },
   MAINTENANCE: { bg: "bg-gray-100 border-gray-300 text-gray-600", icon: Wrench },
   CLEANING: { bg: "bg-purple-100 border-purple-300 text-purple-700", icon: Sparkles },
@@ -138,7 +138,7 @@ export default function BedManagementPage() {
           <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
             <Bed className="w-10 h-10 text-gray-300 mx-auto mb-3" />
             <p className="text-gray-400 text-sm">Select a facility to view bed management</p>
-            <Link href="/home" className="mt-2 inline-block text-sm text-blue-600 hover:text-blue-800">
+            <Link href="/home" className="mt-2 inline-block text-sm text-impilo-500 hover:text-impilo-700">
               Go to Home →
             </Link>
           </div>
@@ -211,21 +211,21 @@ export default function BedManagementPage() {
                 <p className="text-2xl font-bold text-green-700">{available}</p>
                 <p className="text-xs text-green-600">Available</p>
               </div>
-              <div className="bg-blue-50 rounded-lg border border-blue-200 p-4 text-center">
-                <p className="text-2xl font-bold text-blue-700">{occupied}</p>
-                <p className="text-xs text-blue-600">Occupied</p>
+              <div className="bg-impilo-50 rounded-lg border border-impilo-200 p-4 text-center">
+                <p className="text-2xl font-bold text-impilo-600">{occupied}</p>
+                <p className="text-xs text-impilo-500">Occupied</p>
               </div>
             </div>
 
             {/* Ward Filter */}
             <div className="flex flex-wrap gap-2">
               <button onClick={() => setSelectedWard(null)}
-                className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${!selectedWard ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
+                className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${!selectedWard ? "bg-impilo-500 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
                 All Wards
               </button>
               {wards.map((ward) => (
                 <button key={ward.id} onClick={() => setSelectedWard(ward.id)}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${selectedWard === ward.id ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
+                  className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${selectedWard === ward.id ? "bg-impilo-500 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
                   {ward.attributes.name} ({ward.attributes.availableBeds}/{ward.attributes.totalBeds})
                 </button>
               ))}

@@ -83,7 +83,7 @@ export function FrictionGate({ level, onConfirm, actionDescription, children }: 
                   value={pin}
                   onChange={(e) => setPin(e.target.value)}
                   placeholder="PIN"
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-200 focus:outline-none"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-impilo-400 focus:ring-1 focus:ring-impilo-200 focus:outline-none"
                   autoFocus
                 />
               </div>

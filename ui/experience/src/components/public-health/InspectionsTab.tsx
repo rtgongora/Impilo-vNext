@@ -39,7 +39,7 @@ export function InspectionsTab() {
       <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
         {[
           { label: "Inspections (demo month)", value: "142", Icon: ClipboardCheck, tone: "text-violet-800" },
-          { label: "Scheduled (demo)", value: "23", Icon: Calendar, tone: "text-blue-800" },
+          { label: "Scheduled (demo)", value: "23", Icon: Calendar, tone: "text-impilo-700" },
           { label: "Critical findings (demo)", value: "4", Icon: AlertTriangle, tone: "text-red-700" },
           { label: "Avg score (demo)", value: "78%", Icon: Star, tone: "text-amber-800" },
           { label: "Active enforcement (demo)", value: "6", Icon: FileText, tone: "text-gray-800" },

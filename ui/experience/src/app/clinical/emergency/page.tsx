@@ -134,11 +134,11 @@ export default function EmergencyDepartmentPage() {
                 <p className="mt-1 text-xs text-slate-600">
                   This page reads and writes only existing <code className="rounded bg-white px-1">/internal/v1/emergency/*</code>{" "}
                   endpoints. There is no separate ED charting module yet. Use{" "}
-                  <Link className="font-medium text-blue-700 underline" href="/queue/triage">
+                  <Link className="font-medium text-impilo-600 underline" href="/queue/triage">
                     Triage
                   </Link>{" "}
                   for acuity and vitals capture, and{" "}
-                  <Link className="font-medium text-blue-700 underline" href="/queue">
+                  <Link className="font-medium text-impilo-600 underline" href="/queue">
                     Queue
                   </Link>{" "}
                   for waiting-room flow. Action history listing is not exposed by a GET API — logging still posts to the server.
@@ -150,21 +150,21 @@ export default function EmergencyDepartmentPage() {
           <div className="flex flex-wrap gap-3">
             <Link
               href="/queue/triage"
-              className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-800 shadow-sm hover:border-blue-300"
+              className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-800 shadow-sm hover:border-impilo-200"
             >
-              <Stethoscope className="h-4 w-4 text-blue-600" />
+              <Stethoscope className="h-4 w-4 text-impilo-500" />
               Triage queue
             </Link>
             <Link
               href="/queue"
-              className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-800 shadow-sm hover:border-blue-300"
+              className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-800 shadow-sm hover:border-impilo-200"
             >
               <Users className="h-4 w-4 text-orange-600" />
               Patient queue
             </Link>
             <Link
               href="/queue/search"
-              className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-800 shadow-sm hover:border-blue-300"
+              className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-800 shadow-sm hover:border-impilo-200"
             >
               <ClipboardList className="h-4 w-4 text-gray-600" />
               Patient search
@@ -314,7 +314,7 @@ export default function EmergencyDepartmentPage() {
                             {pid ? (
                               <Link
                                 href={`/ehr/${pid}/summary`}
-                                className="inline-flex items-center gap-1 font-medium text-blue-700 hover:underline"
+                                className="inline-flex items-center gap-1 font-medium text-impilo-600 hover:underline"
                               >
                                 <User className="h-3.5 w-3.5" aria-hidden />
                                 Chart
@@ -329,7 +329,7 @@ export default function EmergencyDepartmentPage() {
                                 <button
                                   type="button"
                                   onClick={() => setActionFor(row)}
-                                  className="text-xs font-medium text-blue-700 hover:underline"
+                                  className="text-xs font-medium text-impilo-600 hover:underline"
                                 >
                                   Log action
                                 </button>
@@ -384,7 +384,7 @@ export default function EmergencyDepartmentPage() {
                   <button
                     type="submit"
                     disabled={logAction.isPending}
-                    className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+                    className="rounded-lg bg-impilo-500 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
                   >
                     {logAction.isPending ? "Saving…" : "Submit"}
                   </button>

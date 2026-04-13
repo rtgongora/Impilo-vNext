@@ -30,7 +30,7 @@ export default function MarketplaceCartPage() {
         ) : items.length === 0 ? (
           <div className="rounded-lg border border-gray-200 bg-white p-8 text-center text-sm text-gray-500">
             <ShoppingCart className="h-8 w-8 text-gray-300 mx-auto mb-2" />
-            <p>Your cart is empty. Browse the <a href="/marketplace/catalog" className="text-blue-600 underline">catalog</a> to add items.</p>
+            <p>Your cart is empty. Browse the <a href="/marketplace/catalog" className="text-impilo-500 underline">catalog</a> to add items.</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -59,7 +59,7 @@ export default function MarketplaceCartPage() {
               <button
                 onClick={() => checkout.mutate()}
                 disabled={checkout.isPending}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-impilo-500 rounded-lg hover:bg-impilo-600"
               >
                 <CreditCard className="h-4 w-4" /> {checkout.isPending ? "Processing..." : "Checkout"}
               </button>

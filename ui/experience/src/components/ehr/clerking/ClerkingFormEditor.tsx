@@ -185,7 +185,7 @@ export function ClerkingFormEditor({
             value={value || ""}
             onChange={(e) => handleFieldChange(field.id, e.target.value)}
             placeholder={field.placeholder}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-impilo-400"
           />
         );
 
@@ -196,7 +196,7 @@ export function ClerkingFormEditor({
             value={value || ""}
             onChange={(e) => handleFieldChange(field.id, e.target.value)}
             placeholder={field.placeholder}
-            className="w-full min-h-[100px] rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full min-h-[100px] rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-impilo-400"
           />
         );
 
@@ -208,7 +208,7 @@ export function ClerkingFormEditor({
             value={value || ""}
             onChange={(e) => handleFieldChange(field.id, e.target.value)}
             placeholder={field.placeholder}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-impilo-400"
           />
         );
 
@@ -219,7 +219,7 @@ export function ClerkingFormEditor({
             type="date"
             value={value || ""}
             onChange={(e) => handleFieldChange(field.id, e.target.value)}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-impilo-400"
           />
         );
 
@@ -231,7 +231,7 @@ export function ClerkingFormEditor({
               type="checkbox"
               checked={value || false}
               onChange={(e) => handleFieldChange(field.id, e.target.checked)}
-              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              className="h-4 w-4 rounded border-gray-300 text-impilo-500 focus:ring-impilo-400"
             />
             <label htmlFor={field.id} className="text-sm cursor-pointer">
               {field.label}
@@ -245,7 +245,7 @@ export function ClerkingFormEditor({
             id={field.id}
             value={value || ""}
             onChange={(e) => handleFieldChange(field.id, e.target.value)}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-impilo-400"
           >
             <option value="">Select {field.label.toLowerCase()}</option>
             {field.options?.map((option) => (
@@ -272,7 +272,7 @@ export function ClerkingFormEditor({
                       e.target.checked
                     )
                   }
-                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  className="h-4 w-4 rounded border-gray-300 text-impilo-500 focus:ring-impilo-400"
                 />
                 <label
                   htmlFor={`${field.id}-${option}`}
@@ -316,7 +316,7 @@ export function ClerkingFormEditor({
             <div className="flex items-center gap-2">
               <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-blue-600 rounded-full transition-all"
+                  className="h-full bg-impilo-500 rounded-full transition-all"
                   style={{ width: `${completion}%` }}
                 />
               </div>
@@ -339,7 +339,7 @@ export function ClerkingFormEditor({
           </button>
           <button
             type="button"
-            className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-impilo-500 rounded-md hover:bg-impilo-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={handleSign}
             disabled={completion < 100}
           >
@@ -379,7 +379,7 @@ export function ClerkingFormEditor({
                       className={`p-2 rounded-lg ${
                         hasRequiredFields && !allRequiredFilled
                           ? "bg-amber-100 text-amber-600"
-                          : "bg-blue-100 text-blue-600"
+                          : "bg-impilo-100 text-impilo-500"
                       }`}
                     >
                       <Icon className="w-4 h-4" />

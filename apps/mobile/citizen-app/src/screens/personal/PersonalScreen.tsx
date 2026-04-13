@@ -22,8 +22,11 @@ import { WalletSection } from "./WalletSection";
 import { EmergencySOSSection } from "./EmergencySOSSection";
 import { MonitoringSection } from "./MonitoringSection";
 import { QueueStatusSection } from "./QueueStatusSection";
+import { FinanceSection } from "./FinanceSection";
+import { ChallengesScreen } from "./ChallengesScreen";
+import { ProgramsScreen } from "./ProgramsScreen";
 
-type PersonalTab = "profile" | "health-id" | "appointments" | "prescriptions" | "results" | "records" | "reminders" | "timeline" | "wellness" | "wallet" | "monitoring" | "queue" | "sos" | "coverage" | "settings";
+type PersonalTab = "profile" | "health-id" | "appointments" | "prescriptions" | "results" | "records" | "reminders" | "timeline" | "wellness" | "finance" | "challenges" | "programs" | "wallet" | "monitoring" | "queue" | "sos" | "coverage" | "settings";
 
 const PERSONAL_TABS: TabItem[] = [
   { id: "profile", label: "Profile", icon: "user" },
@@ -34,6 +37,9 @@ const PERSONAL_TABS: TabItem[] = [
   { id: "records", label: "Records", icon: "file-text" },
   { id: "timeline", label: "Timeline", icon: "clock" },
   { id: "wellness", label: "Wellness", icon: "activity" },
+  { id: "finance", label: "Finance", icon: "dollar-sign" },
+  { id: "challenges", label: "Challenges", icon: "trophy" },
+  { id: "programs", label: "Programs", icon: "book-open" },
   { id: "wallet", label: "Wallet", icon: "credit-card" },
   { id: "monitoring", label: "Devices", icon: "bluetooth" },
   { id: "queue", label: "Queue", icon: "list" },
@@ -53,6 +59,9 @@ const SECTIONS: Record<PersonalTab, React.FC> = {
   reminders: RemindersScreen,
   timeline: HealthTimelineScreen,
   wellness: WellnessSection,
+  finance: FinanceSection,
+  challenges: ChallengesScreen,
+  programs: ProgramsScreen,
   wallet: WalletSection,
   monitoring: MonitoringSection,
   queue: QueueStatusSection,

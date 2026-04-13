@@ -164,10 +164,10 @@ export default function RegisterPage() {
                 <button
                   key={role.value}
                   onClick={() => handleRoleSelect(role.value)}
-                  className="w-full flex items-center gap-4 p-4 border border-gray-200 rounded-lg text-left hover:border-blue-300 hover:bg-blue-50 transition-colors"
+                  className="w-full flex items-center gap-4 p-4 border border-gray-200 rounded-lg text-left hover:border-impilo-200 hover:bg-impilo-50 transition-colors"
                 >
-                  <div className="w-11 h-11 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
-                    <Icon className="w-5 h-5 text-blue-600" />
+                  <div className="w-11 h-11 rounded-lg bg-impilo-50 flex items-center justify-center shrink-0">
+                    <Icon className="w-5 h-5 text-impilo-500" />
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-900">{role.label}</p>
@@ -181,7 +181,7 @@ export default function RegisterPage() {
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-500">
               Already have an account?{" "}
-              <Link href="/auth/login" className="text-blue-600 hover:text-blue-800 font-medium">
+              <Link href="/auth/login" className="text-impilo-500 hover:text-impilo-700 font-medium">
                 Sign in
               </Link>
             </p>
@@ -213,14 +213,14 @@ export default function RegisterPage() {
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <input type="text" required value={firstName} onChange={(e) => setFirstName(e.target.value)}
                     placeholder="First name" autoComplete="given-name"
-                    className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" />
                 </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
                 <input type="text" required value={lastName} onChange={(e) => setLastName(e.target.value)}
                   placeholder="Last name" autoComplete="family-name"
-                  className="w-full px-3 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  className="w-full px-3 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" />
               </div>
             </div>
 
@@ -230,7 +230,7 @@ export default function RegisterPage() {
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com" autoComplete="email"
-                  className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" />
               </div>
             </div>
 
@@ -240,7 +240,7 @@ export default function RegisterPage() {
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input type={showPassword ? "text" : "password"} required value={password} onChange={(e) => setPassword(e.target.value)}
                   placeholder="At least 8 characters" autoComplete="new-password" minLength={8}
-                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" />
                 <button type="button" onClick={() => setShowPassword((v) => !v)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -254,7 +254,7 @@ export default function RegisterPage() {
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input type={showPassword ? "text" : "password"} required value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Repeat password" autoComplete="new-password"
-                  className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" />
               </div>
             </div>
 
@@ -298,7 +298,7 @@ export default function RegisterPage() {
           <div className="mt-4 text-center">
             <p className="text-sm text-gray-500">
               Already have an account?{" "}
-              <Link href="/auth/login" className="text-blue-600 hover:text-blue-800 font-medium">
+              <Link href="/auth/login" className="text-impilo-500 hover:text-impilo-700 font-medium">
                 Sign in
               </Link>
             </p>

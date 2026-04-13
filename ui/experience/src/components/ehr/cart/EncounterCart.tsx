@@ -210,7 +210,7 @@ export function EncounterCart({ open, onClose, onSubmit }: EncounterCartProps) {
                         type="text"
                         value={item.dose ?? ""}
                         onChange={(e) => updateDose(item.id, e.target.value)}
-                        className="w-full rounded border border-gray-200 px-2 py-1 text-xs focus:border-blue-300 focus:outline-none"
+                        className="w-full rounded border border-gray-200 px-2 py-1 text-xs focus:border-impilo-200 focus:outline-none"
                         placeholder="e.g. 500mg"
                       />
                     </div>
@@ -220,7 +220,7 @@ export function EncounterCart({ open, onClose, onSubmit }: EncounterCartProps) {
                         type="text"
                         value={item.frequency ?? ""}
                         onChange={(e) => updateFrequency(item.id, e.target.value)}
-                        className="w-full rounded border border-gray-200 px-2 py-1 text-xs focus:border-blue-300 focus:outline-none"
+                        className="w-full rounded border border-gray-200 px-2 py-1 text-xs focus:border-impilo-200 focus:outline-none"
                         placeholder="e.g. TDS"
                       />
                     </div>
@@ -232,7 +232,7 @@ export function EncounterCart({ open, onClose, onSubmit }: EncounterCartProps) {
                     type="text"
                     value={item.notes ?? ""}
                     onChange={(e) => updateNotes(item.id, e.target.value)}
-                    className="w-full rounded border border-gray-200 px-2 py-1 text-xs focus:border-blue-300 focus:outline-none"
+                    className="w-full rounded border border-gray-200 px-2 py-1 text-xs focus:border-impilo-200 focus:outline-none"
                     placeholder="Add notes..."
                   />
                 </div>
@@ -246,7 +246,7 @@ export function EncounterCart({ open, onClose, onSubmit }: EncounterCartProps) {
           <button
             onClick={handleSubmit}
             disabled={cartItems.length === 0}
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-impilo-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-impilo-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
           >
             <Send className="h-4 w-4" />
             Submit {cartItems.length} Order{cartItems.length !== 1 ? "s" : ""}
@@ -262,10 +262,10 @@ export function EncounterCart({ open, onClose, onSubmit }: EncounterCartProps) {
     <div className="fixed inset-y-0 right-0 z-50 flex w-full max-w-lg flex-col border-l border-gray-200 bg-gray-50 shadow-xl">
       {/* Header */}
       <div className="flex items-center gap-3 border-b border-gray-200 bg-white px-4 py-3">
-        <ShoppingCart className="h-5 w-5 text-blue-600" />
+        <ShoppingCart className="h-5 w-5 text-impilo-500" />
         <h2 className="flex-1 text-sm font-semibold text-gray-900">Encounter Cart</h2>
         {cartItems.length > 0 && (
-          <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-700">
+          <span className="rounded-full bg-impilo-100 px-2 py-0.5 text-xs font-semibold text-impilo-600">
             {cartItems.length}
           </span>
         )}
@@ -284,7 +284,7 @@ export function EncounterCart({ open, onClose, onSubmit }: EncounterCartProps) {
               onClick={() => { setActiveTab(tab.id); setSearchQuery(""); setCategoryFilter("ALL"); }}
               className={`flex items-center gap-1.5 border-b-2 px-3 py-2.5 text-xs font-medium transition-colors ${
                 activeTab === tab.id
-                  ? "border-blue-600 text-blue-600"
+                  ? "border-impilo-500 text-impilo-500"
                   : "border-transparent text-gray-500 hover:text-gray-700"
               }`}
             >
@@ -308,7 +308,7 @@ export function EncounterCart({ open, onClose, onSubmit }: EncounterCartProps) {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search investigations..."
-                className="w-full rounded-lg border border-gray-200 bg-white py-2 pl-9 pr-3 text-sm placeholder:text-gray-400 focus:border-blue-300 focus:outline-none"
+                className="w-full rounded-lg border border-gray-200 bg-white py-2 pl-9 pr-3 text-sm placeholder:text-gray-400 focus:border-impilo-200 focus:outline-none"
               />
             </div>
 
@@ -317,7 +317,7 @@ export function EncounterCart({ open, onClose, onSubmit }: EncounterCartProps) {
               <button
                 onClick={() => setCategoryFilter("ALL")}
                 className={`rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors ${
-                  categoryFilter === "ALL" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  categoryFilter === "ALL" ? "bg-impilo-500 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                 }`}
               >
                 All
@@ -327,7 +327,7 @@ export function EncounterCart({ open, onClose, onSubmit }: EncounterCartProps) {
                   key={cat}
                   onClick={() => setCategoryFilter(cat)}
                   className={`rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors ${
-                    categoryFilter === cat ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    categoryFilter === cat ? "bg-impilo-500 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                   }`}
                 >
                   {cat.charAt(0) + cat.slice(1).toLowerCase()}
@@ -350,7 +350,7 @@ export function EncounterCart({ open, onClose, onSubmit }: EncounterCartProps) {
                       className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors ${
                         isInCart(inv.code)
                           ? "border-green-200 bg-green-50 text-green-600 cursor-default"
-                          : "border-gray-200 bg-white text-gray-700 hover:border-blue-300 hover:bg-blue-50"
+                          : "border-gray-200 bg-white text-gray-700 hover:border-impilo-200 hover:bg-impilo-50"
                       }`}
                     >
                       {isInCart(inv.code) ? "✓" : <Plus className="h-3 w-3" />}
@@ -381,7 +381,7 @@ export function EncounterCart({ open, onClose, onSubmit }: EncounterCartProps) {
                     className={`flex-shrink-0 rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
                       isInCart(inv.code)
                         ? "bg-green-50 text-green-600 cursor-default"
-                        : "bg-blue-50 text-blue-600 hover:bg-blue-100"
+                        : "bg-impilo-50 text-impilo-500 hover:bg-impilo-100"
                     }`}
                   >
                     {isInCart(inv.code) ? "Added" : "+ Add"}
@@ -451,11 +451,11 @@ export function EncounterCart({ open, onClose, onSubmit }: EncounterCartProps) {
           <div className="border-t border-gray-100 px-4 py-3">
             <button
               onClick={() => setIsReviewing(true)}
-              className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+              className="flex w-full items-center justify-center gap-2 rounded-lg bg-impilo-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-impilo-600 transition-colors"
             >
               Review & Submit
               <ChevronRight className="h-4 w-4" />
-              <span className="rounded-full bg-blue-500 px-2 py-0.5 text-xs">
+              <span className="rounded-full bg-impilo-500 px-2 py-0.5 text-xs">
                 {cartItems.length}
               </span>
             </button>

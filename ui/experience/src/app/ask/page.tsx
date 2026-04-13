@@ -163,7 +163,7 @@ export default function AskPage() {
             <button
               type="button"
               onClick={() => setMode("general")}
-              className={`text-xs px-3 py-1.5 rounded-full border ${mode === "general" ? "bg-blue-600 text-white border-blue-600" : "bg-white text-gray-700 border-gray-300"}`}
+              className={`text-xs px-3 py-1.5 rounded-full border ${mode === "general" ? "bg-impilo-500 text-white border-impilo-500" : "bg-white text-gray-700 border-gray-300"}`}
             >
               General guidance
             </button>
@@ -229,7 +229,7 @@ export default function AskPage() {
               <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                 <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm ${
                   msg.role === "user"
-                    ? "bg-blue-600 text-white rounded-br-md"
+                    ? "bg-impilo-500 text-white rounded-br-md"
                     : "bg-gray-100 text-gray-900 rounded-bl-md"
                 }`}>
                   {msg.role === "assistant" && (
@@ -261,13 +261,13 @@ export default function AskPage() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Ask about health, wellness, diet, sleep, services..."
-              className="flex-1 rounded-full border border-gray-300 px-4 py-2.5 text-sm focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200"
+              className="flex-1 rounded-full border border-gray-300 px-4 py-2.5 text-sm focus:outline-none focus:border-impilo-400 focus:ring-1 focus:ring-impilo-200"
               disabled={sending}
             />
             <button
               type="submit"
               disabled={sending || !input.trim()}
-              className="rounded-full bg-blue-600 p-2.5 text-white hover:bg-blue-700 disabled:opacity-50 transition-colors"
+              className="rounded-full bg-impilo-500 p-2.5 text-white hover:bg-impilo-600 disabled:opacity-50 transition-colors"
             >
               <Send className="h-4 w-4" />
             </button>

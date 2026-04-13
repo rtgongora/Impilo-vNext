@@ -75,7 +75,7 @@ function formatMoney(n: number, currency = "USD") {
 function statusBadge(status: string) {
   const s = status.toUpperCase();
   if (s === "ACTIVE" || s === "VERIFIED") return "bg-green-100 text-green-800";
-  if (s === "ISSUED") return "bg-blue-100 text-blue-800";
+  if (s === "ISSUED") return "bg-impilo-100 text-impilo-700";
   if (s === "BLOCKED") return "bg-red-100 text-red-800";
   if (s === "EXPIRED" || s === "REPLACED") return "bg-gray-100 text-gray-600";
   return "bg-gray-100 text-gray-700";
@@ -85,7 +85,7 @@ function channelBadge(channel: string) {
   const ch = channel.toUpperCase();
   if (ch === "MOBILE_MONEY") return "bg-yellow-100 text-yellow-800";
   if (ch === "CARD" || ch === "POS") return "bg-purple-100 text-purple-800";
-  if (ch === "BANK_TRANSFER") return "bg-blue-100 text-blue-800";
+  if (ch === "BANK_TRANSFER") return "bg-impilo-100 text-impilo-700";
   if (ch === "CASH") return "bg-emerald-100 text-emerald-800";
   return "bg-gray-100 text-gray-700";
 }
@@ -189,7 +189,7 @@ export default function WalletDashboardPage() {
                   href="/wallet/send"
                   className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-800 hover:bg-gray-50 shadow-sm transition"
                 >
-                  <ArrowUpRight className="h-4 w-4 text-blue-600" />
+                  <ArrowUpRight className="h-4 w-4 text-impilo-500" />
                   Send Money
                 </Link>
                 <Link
@@ -225,7 +225,7 @@ export default function WalletDashboardPage() {
                 </div>
                 <Link
                   href="/wallet/transactions"
-                  className="text-xs font-medium text-blue-700 hover:underline"
+                  className="text-xs font-medium text-impilo-600 hover:underline"
                 >
                   View all
                 </Link>
@@ -303,7 +303,7 @@ export default function WalletDashboardPage() {
                 </div>
                 <Link
                   href="/wallet/cards"
-                  className="text-xs font-medium text-blue-700 hover:underline"
+                  className="text-xs font-medium text-impilo-600 hover:underline"
                 >
                   Manage cards
                 </Link>

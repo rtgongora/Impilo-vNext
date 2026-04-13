@@ -41,6 +41,7 @@ import {
   Wallet,
   X,
 } from "lucide-react";
+import { ImpiloLogo } from "@/components/brand/ImpiloLogo";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { WORK_MODE_LABELS } from "@/hooks/useWorkModeStore";
 import { useExperienceEntry } from "@/providers/ExperienceEntryProvider";
@@ -338,15 +339,19 @@ export function ExperienceSidebar() {
         ].join(" ")}
       >
         <div className="flex items-center justify-between border-b border-white/10 px-4 py-4">
-          {!collapsed && (
+          {!collapsed ? (
             <div className="min-w-0">
-              <Link href="/home" className="block truncate text-sm font-semibold text-white">
-                Impilo Experience
+              <Link href="/home" className="block">
+                <ImpiloLogo variant="full" size={22} className="[&_svg]:text-white [&_span]:!text-white" />
               </Link>
               <p className="mt-1 text-xs text-slate-400">
-                One Experience Layer
+                Health Operating System
               </p>
             </div>
+          ) : (
+            <Link href="/home" className="block">
+              <ImpiloLogo variant="mark" size={24} className="[&_svg]:text-white" />
+            </Link>
           )}
           <div className="flex items-center gap-2">
             <button
@@ -421,7 +426,7 @@ export function ExperienceSidebar() {
               <ShieldCheck className="h-4 w-4 text-emerald-400" />
               <span className="text-xs font-medium text-white">{user.actorType}</span>
               {user.providerId && (
-                <span className="text-[10px] bg-blue-500/20 text-blue-300 rounded-full px-2 py-0.5">Provider</span>
+                <span className="text-[10px] bg-impilo-500/20 text-impilo-300 rounded-full px-2 py-0.5">Provider</span>
               )}
             </div>
             <div className="flex gap-1 flex-wrap">

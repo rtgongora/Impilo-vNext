@@ -86,8 +86,8 @@ export default function FacilityDetailPage() {
             {/* Header */}
             <div className="bg-white rounded-lg border border-gray-200 p-5">
               <div className="flex items-start gap-4 mb-4">
-                <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
-                  <Building2 className="w-6 h-6 text-blue-600" />
+                <div className="w-12 h-12 rounded-lg bg-impilo-100 flex items-center justify-center shrink-0">
+                  <Building2 className="w-6 h-6 text-impilo-500" />
                 </div>
                 <div>
                   <h3 className="text-lg font-medium text-gray-900">{facility.attributes.name}</h3>
@@ -136,7 +136,7 @@ export default function FacilityDetailPage() {
             {/* Capacity Stats */}
             <div className="grid grid-cols-3 gap-4">
               <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
-                <LayoutGrid className="w-6 h-6 text-blue-500 mx-auto mb-1" />
+                <LayoutGrid className="w-6 h-6 text-impilo-400 mx-auto mb-1" />
                 <p className="text-xl font-bold text-gray-900">
                   {facility.attributes.workspaceCount ?? 0}
                 </p>
@@ -196,7 +196,7 @@ export default function FacilityDetailPage() {
                   {facility.attributes.capabilities.map((cap) => (
                     <span
                       key={cap}
-                      className="inline-block px-3 py-1 text-xs rounded-full bg-blue-50 text-blue-700 font-medium"
+                      className="inline-block px-3 py-1 text-xs rounded-full bg-impilo-50 text-impilo-600 font-medium"
                     >
                       {cap}
                     </span>

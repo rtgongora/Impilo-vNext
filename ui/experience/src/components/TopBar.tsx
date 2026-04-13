@@ -61,7 +61,7 @@ export function TopBar() {
     <header className="h-12 border-b bg-white px-4 flex items-center gap-2 shrink-0">
       <Link
         href="/home"
-        className="text-gray-400 hover:text-blue-600 transition-colors"
+        className="text-gray-400 hover:text-impilo-500 transition-colors"
         title="Home"
       >
         <Home className="w-4 h-4" />
@@ -73,7 +73,7 @@ export function TopBar() {
           {crumb.href ? (
             <Link
               href={crumb.href}
-              className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+              className="text-xs text-impilo-500 hover:text-impilo-700 font-medium"
             >
               {crumb.label}
             </Link>
@@ -122,7 +122,7 @@ export function TopBar() {
       <div className="ml-2 pl-2 border-l flex items-center gap-3">
         <PrivacyToggle />
         {facility && (
-          <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-xs font-medium">
+          <span className="bg-impilo-50 text-impilo-600 px-2 py-0.5 rounded text-xs font-medium">
             {facility.name}
           </span>
         )}

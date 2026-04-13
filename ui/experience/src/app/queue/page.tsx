@@ -32,12 +32,12 @@ import { COORDINATION_COPY } from "@/lib/consult-workflows";
 const PRIORITY_LABELS: Record<string, { label: string; className: string }> = {
   EMERGENCY: { label: "Emergency", className: "bg-red-100 text-red-700" },
   URGENT: { label: "Urgent", className: "bg-orange-100 text-orange-700" },
-  NORMAL: { label: "Normal", className: "bg-blue-100 text-blue-700" },
+  NORMAL: { label: "Normal", className: "bg-impilo-100 text-impilo-600" },
   LOW: { label: "Low", className: "bg-gray-100 text-gray-600" },
   // Numeric fallbacks for backward compat
   "1": { label: "Emergency", className: "bg-red-100 text-red-700" },
   "2": { label: "Urgent", className: "bg-orange-100 text-orange-700" },
-  "3": { label: "Normal", className: "bg-blue-100 text-blue-700" },
+  "3": { label: "Normal", className: "bg-impilo-100 text-impilo-600" },
   "4": { label: "Low", className: "bg-gray-100 text-gray-600" },
 };
 
@@ -46,12 +46,12 @@ const TRIAGE_CATEGORY_STYLES: Record<string, string> = {
   ORANGE: "bg-orange-500 text-white",
   YELLOW: "bg-yellow-400 text-black",
   GREEN: "bg-green-500 text-white",
-  BLUE: "bg-blue-500 text-white",
+  BLUE: "bg-impilo-500 text-white",
 };
 
 const STATUS_STYLES: Record<string, string> = {
   WAITING: "bg-yellow-100 text-yellow-700",
-  CALLED: "bg-blue-100 text-blue-700",
+  CALLED: "bg-impilo-100 text-impilo-600",
   IN_PROGRESS: "bg-green-100 text-green-700",
   IN_SERVICE: "bg-green-100 text-green-700",
   SEEN: "bg-green-100 text-green-700",
@@ -128,7 +128,7 @@ export default function QueuePage() {
         <button
           onClick={() => handleCall(entry.id, entry.attributes.patientId)}
           disabled={callPatient.isPending}
-          className="rounded-xl bg-blue-600 px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+          className="rounded-xl bg-impilo-500 px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-impilo-600 disabled:opacity-50"
         >
           {COORDINATION_COPY.startEncounterHandoff}
         </button>
@@ -209,7 +209,7 @@ export default function QueuePage() {
             </div>
             <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
               <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">In handoff</p>
-              <p className="mt-2 text-2xl font-semibold text-blue-700">{(stats.called ?? 0) + (stats.inService ?? 0)}</p>
+              <p className="mt-2 text-2xl font-semibold text-impilo-600">{(stats.called ?? 0) + (stats.inService ?? 0)}</p>
               <p className="mt-1 text-xs text-slate-500">Patients already called or actively in service.</p>
             </div>
             <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -244,7 +244,7 @@ export default function QueuePage() {
             {isQueueManager && (
             <Link
               href="/queue/walk-in"
-              className="mt-3 inline-block text-sm text-blue-600 hover:text-blue-800"
+              className="mt-3 inline-block text-sm text-impilo-500 hover:text-impilo-700"
             >
               Register a walk-in patient
             </Link>
@@ -267,7 +267,7 @@ export default function QueuePage() {
                   title: COORDINATION_COPY.trackingInProgress,
                   description: "Patients already called or actively moving through chart and service handoff.",
                   icon: ClipboardCheck,
-                  iconClassName: "bg-blue-100 text-blue-700",
+                  iconClassName: "bg-impilo-100 text-impilo-600",
                   entries: inHandoffEntries,
                 },
                 {
@@ -436,7 +436,7 @@ export default function QueuePage() {
                               handleCall(entry.id, entry.attributes.patientId)
                             }
                             disabled={callPatient.isPending}
-                            className="px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                            className="px-3 py-1.5 bg-impilo-500 text-white text-xs font-medium rounded-md hover:bg-impilo-600 disabled:opacity-50 transition-colors"
                           >
                             Call
                           </button>

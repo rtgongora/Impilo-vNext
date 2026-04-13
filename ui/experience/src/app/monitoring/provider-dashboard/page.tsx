@@ -22,7 +22,7 @@ export default function ProviderDashboardPage() {
           {/* Summary cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {[
-              { label: "Enrolled Patients", value: "0", Icon: Users, color: "bg-blue-50 text-blue-600" },
+              { label: "Enrolled Patients", value: "0", Icon: Users, color: "bg-impilo-50 text-impilo-500" },
               { label: "Active Alerts", value: "0", Icon: AlertTriangle, color: "bg-red-50 text-red-600" },
               { label: "Readings Today", value: "0", Icon: Activity, color: "bg-green-50 text-green-600" },
               { label: "Pending Review", value: "0", Icon: Filter, color: "bg-amber-50 text-amber-600" },
@@ -46,7 +46,7 @@ export default function ProviderDashboardPage() {
               <input
                 type="text"
                 placeholder="Search patients by name or Health ID..."
-                className="w-full rounded-lg border border-gray-300 py-2.5 pl-10 pr-4 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full rounded-lg border border-gray-300 py-2.5 pl-10 pr-4 text-sm focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-impilo-400"
               />
             </div>
             <button className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">

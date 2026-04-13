@@ -104,7 +104,7 @@ export function AIDiagnosticAssistant({ open, onClose }: AIDiagnosticAssistantPr
     { id: "labs", label: "Lab Analysis", icon: FlaskConical },
   ];
 
-  const severityColor: Record<string, string> = { critical: "bg-red-100 text-red-700 border-red-200", major: "bg-orange-100 text-orange-700 border-orange-200", moderate: "bg-amber-100 text-amber-700 border-amber-200", minor: "bg-blue-100 text-blue-700 border-blue-200" };
+  const severityColor: Record<string, string> = { critical: "bg-red-100 text-red-700 border-red-200", major: "bg-orange-100 text-orange-700 border-orange-200", moderate: "bg-amber-100 text-amber-700 border-amber-200", minor: "bg-impilo-100 text-impilo-600 border-impilo-200" };
   const likelihoodColor: Record<string, string> = { high: "bg-red-100 text-red-700", medium: "bg-amber-100 text-amber-700", low: "bg-gray-100 text-gray-600" };
   const statusColor: Record<string, string> = { critical: "bg-red-100 text-red-700", abnormal: "bg-amber-100 text-amber-700", normal: "bg-green-100 text-green-700" };
 
@@ -115,7 +115,7 @@ export function AIDiagnosticAssistant({ open, onClose }: AIDiagnosticAssistantPr
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-50 rounded-lg"><Brain className="w-5 h-5 text-blue-600" /></div>
+            <div className="p-2 bg-impilo-50 rounded-lg"><Brain className="w-5 h-5 text-impilo-500" /></div>
             <div><h2 className="text-sm font-semibold text-gray-900">AI Diagnostic Assistant</h2></div>
             <span className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded text-[10px] font-medium flex items-center gap-1"><Sparkles className="w-3 h-3" /> Beta</span>
           </div>
@@ -125,7 +125,7 @@ export function AIDiagnosticAssistant({ open, onClose }: AIDiagnosticAssistantPr
         {/* Tabs */}
         <div className="flex border-b px-2">
           {tabs.map(t => (
-            <button key={t.id} onClick={() => setActiveTab(t.id)} className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === t.id ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-700"}`}>
+            <button key={t.id} onClick={() => setActiveTab(t.id)} className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === t.id ? "border-impilo-500 text-impilo-500" : "border-transparent text-gray-500 hover:text-gray-700"}`}>
               <t.icon className="w-4 h-4" /> {t.label}
             </button>
           ))}
@@ -140,7 +140,7 @@ export function AIDiagnosticAssistant({ open, onClose }: AIDiagnosticAssistantPr
                 <h3 className="text-base font-semibold text-gray-900">Symptom Analysis</h3>
                 <p className="text-xs text-gray-500">Enter patient symptoms for differential diagnosis suggestions</p>
                 <textarea value={symptoms} onChange={e => setSymptoms(e.target.value)} placeholder="Enter symptoms separated by commas (e.g., fever, cough, chest pain, shortness of breath)" rows={4} className="w-full px-3 py-2 text-sm border rounded-lg" />
-                <button onClick={() => analyzePatient("diagnostic")} disabled={isLoading || !symptoms.trim()} className="w-full px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2">
+                <button onClick={() => analyzePatient("diagnostic")} disabled={isLoading || !symptoms.trim()} className="w-full px-4 py-2.5 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 disabled:opacity-50 flex items-center justify-center gap-2">
                   {isLoading ? <><Loader2 className="w-4 h-4 animate-spin" /> Analyzing...</> : <><Brain className="w-4 h-4" /> Analyze Symptoms</>}
                 </button>
               </div>
@@ -187,7 +187,7 @@ export function AIDiagnosticAssistant({ open, onClose }: AIDiagnosticAssistantPr
                 <h3 className="text-base font-semibold text-gray-900">Drug Interaction Check</h3>
                 <p className="text-xs text-gray-500">Enter medications to check for interactions</p>
                 <textarea value={medications} onChange={e => setMedications(e.target.value)} placeholder="Enter medications separated by commas (e.g., Warfarin, Aspirin, Lisinopril, Metformin)" rows={4} className="w-full px-3 py-2 text-sm border rounded-lg" />
-                <button onClick={() => analyzePatient("drug-interaction")} disabled={isLoading || !medications.trim()} className="w-full px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2">
+                <button onClick={() => analyzePatient("drug-interaction")} disabled={isLoading || !medications.trim()} className="w-full px-4 py-2.5 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 disabled:opacity-50 flex items-center justify-center gap-2">
                   {isLoading ? <><Loader2 className="w-4 h-4 animate-spin" /> Checking...</> : <><Pill className="w-4 h-4" /> Check Interactions</>}
                 </button>
               </div>
@@ -214,7 +214,7 @@ export function AIDiagnosticAssistant({ open, onClose }: AIDiagnosticAssistantPr
                 <h3 className="text-base font-semibold text-gray-900">Lab Result Interpretation</h3>
                 <p className="text-xs text-gray-500">Enter lab results for clinical interpretation</p>
                 <textarea value={labResults} onChange={e => setLabResults(e.target.value)} placeholder={'Enter as: Potassium:6.2, Creatinine:2.1 or JSON format'} rows={4} className="w-full px-3 py-2 text-sm border rounded-lg font-mono" />
-                <button onClick={() => analyzePatient("lab-interpretation")} disabled={isLoading || !labResults.trim()} className="w-full px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2">
+                <button onClick={() => analyzePatient("lab-interpretation")} disabled={isLoading || !labResults.trim()} className="w-full px-4 py-2.5 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 disabled:opacity-50 flex items-center justify-center gap-2">
                   {isLoading ? <><Loader2 className="w-4 h-4 animate-spin" /> Interpreting...</> : <><FlaskConical className="w-4 h-4" /> Interpret Results</>}
                 </button>
               </div>
@@ -233,9 +233,9 @@ export function AIDiagnosticAssistant({ open, onClose }: AIDiagnosticAssistantPr
                 ))}</div>
               )}
               {labResult?.recommendations && (
-                <div className="border border-blue-200 rounded-lg p-4">
-                  <h4 className="text-sm font-semibold text-blue-700 mb-2">Recommendations</h4>
-                  <ul className="space-y-1">{labResult.recommendations.map((r, i) => <li key={i} className="text-sm flex items-center gap-2"><ChevronRight className="w-3 h-3 text-blue-500" />{r}</li>)}</ul>
+                <div className="border border-impilo-200 rounded-lg p-4">
+                  <h4 className="text-sm font-semibold text-impilo-600 mb-2">Recommendations</h4>
+                  <ul className="space-y-1">{labResult.recommendations.map((r, i) => <li key={i} className="text-sm flex items-center gap-2"><ChevronRight className="w-3 h-3 text-impilo-400" />{r}</li>)}</ul>
                 </div>
               )}
             </>

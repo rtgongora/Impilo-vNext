@@ -111,7 +111,7 @@ export function SecureChartAccessFlow({ pendingAccess, isAuthorizing, onAuthoriz
       <div className="relative bg-white rounded-xl shadow-2xl w-[500px] max-h-[90vh] overflow-y-auto">
         <div className="px-6 py-4 border-b flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center"><Shield className="w-5 h-5 text-blue-600" /></div>
+            <div className="w-10 h-10 rounded-full bg-impilo-100 flex items-center justify-center"><Shield className="w-5 h-5 text-impilo-500" /></div>
             <div><h2 className="text-base font-semibold text-gray-900">Authorize Chart Access</h2><p className="text-xs text-gray-500">Identity verification required</p></div>
           </div>
           <button onClick={onCancel} className="p-1.5 rounded hover:bg-gray-100"><X className="w-4 h-4" /></button>
@@ -120,7 +120,7 @@ export function SecureChartAccessFlow({ pendingAccess, isAuthorizing, onAuthoriz
         <div className="p-6 space-y-5">
           {/* Patient identity */}
           <div className="bg-gray-50 rounded-lg p-4 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center"><User className="w-6 h-6 text-blue-600" /></div>
+            <div className="w-12 h-12 rounded-full bg-impilo-50 flex items-center justify-center"><User className="w-6 h-6 text-impilo-500" /></div>
             <div><p className="text-sm font-semibold text-gray-900">{pendingAccess.patientName}</p><p className="text-xs text-gray-500">MRN: {pendingAccess.patientMrn} &middot; DOB: {pendingAccess.patientDob}</p></div>
           </div>
 
@@ -130,8 +130,8 @@ export function SecureChartAccessFlow({ pendingAccess, isAuthorizing, onAuthoriz
             <div className="mt-2 space-y-2">
               {ACCESS_REASONS.map(r => (
                 <button key={r.id} onClick={() => setSelectedReason(r.id)}
-                  className={`w-full flex items-start gap-3 p-3 rounded-lg border-2 text-left transition-all ${selectedReason === r.id ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:bg-gray-50"}`}>
-                  <div className={`mt-0.5 w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${selectedReason === r.id ? "border-blue-500 bg-blue-500" : "border-gray-300"}`}>
+                  className={`w-full flex items-start gap-3 p-3 rounded-lg border-2 text-left transition-all ${selectedReason === r.id ? "border-impilo-400 bg-impilo-50" : "border-gray-200 hover:bg-gray-50"}`}>
+                  <div className={`mt-0.5 w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${selectedReason === r.id ? "border-impilo-400 bg-impilo-500" : "border-gray-300"}`}>
                     {selectedReason === r.id && <CheckCircle2 className="w-3 h-3 text-white" />}
                   </div>
                   <div><p className="text-sm font-medium text-gray-900">{r.label}</p><p className="text-xs text-gray-500">{r.description}</p>
@@ -146,7 +146,7 @@ export function SecureChartAccessFlow({ pendingAccess, isAuthorizing, onAuthoriz
           {reason?.requiresJustification && (
             <div>
               <label className="text-sm font-medium text-gray-700">Justification <span className="text-red-500">*</span></label>
-              <textarea value={justification} onChange={e => setJustification(e.target.value)} rows={3} placeholder="Explain why you need access to this patient's chart..." className="w-full mt-1 px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+              <textarea value={justification} onChange={e => setJustification(e.target.value)} rows={3} placeholder="Explain why you need access to this patient's chart..." className="w-full mt-1 px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400" />
               {justification.length > 0 && justification.length < 10 && <p className="text-xs text-red-500 mt-1">Minimum 10 characters required</p>}
             </div>
           )}
@@ -161,7 +161,7 @@ export function SecureChartAccessFlow({ pendingAccess, isAuthorizing, onAuthoriz
         <div className="px-6 py-4 border-t flex justify-end gap-3">
           <button onClick={onCancel} className="px-4 py-2 text-sm font-medium text-gray-600 border rounded-lg hover:bg-gray-100">Cancel</button>
           <button onClick={() => selectedReason && onAuthorize(selectedReason, justification || undefined)} disabled={!canProceed || isAuthorizing}
-            className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2">
+            className="px-4 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 disabled:opacity-50 flex items-center gap-2">
             {isAuthorizing ? <><Loader2 className="w-4 h-4 animate-spin" /> Authorizing...</> : <><Shield className="w-4 h-4" /> Authorize & Open Chart</>}
           </button>
         </div>

@@ -40,9 +40,9 @@ const EVENT_TYPE_CONFIG: Record<
   { color: string; bgColor: string; borderColor: string; icon: React.ElementType }
 > = {
   ENCOUNTER: {
-    color: "text-blue-700",
+    color: "text-impilo-600",
     bgColor: "bg-blue-100",
-    borderColor: "border-blue-400",
+    borderColor: "border-impilo-400",
     icon: Stethoscope },
   VITALS: {
     color: "text-red-700",
@@ -133,7 +133,7 @@ export default function TimelinePage() {
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div className="space-y-2">
                   <div className="inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1 text-xs font-medium text-slate-600">
-                    <ArrowRightLeft className="h-3.5 w-3.5 text-blue-600" />
+                    <ArrowRightLeft className="h-3.5 w-3.5 text-impilo-500" />
                     Coordination timeline
                   </div>
                   <div>
@@ -175,7 +175,7 @@ export default function TimelinePage() {
                   </div>
                   <div className="rounded-2xl border border-white/70 bg-white/80 p-4">
                     <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">Receiving here</p>
-                    <p className="mt-2 text-2xl font-semibold text-blue-700">{coordinationPulse.receivingHere}</p>
+                    <p className="mt-2 text-2xl font-semibold text-impilo-600">{coordinationPulse.receivingHere}</p>
                     <p className="mt-1 text-xs text-slate-500">Open handoffs where this facility is the receiver.</p>
                   </div>
                   <div className="rounded-2xl border border-white/70 bg-white/80 p-4">
@@ -194,7 +194,7 @@ export default function TimelinePage() {
 
             {/* Header */}
             <div className="flex items-center gap-2">
-              <Clock className="w-5 h-5 text-blue-500" />
+              <Clock className="w-5 h-5 text-impilo-400" />
               <h2 className="text-lg font-semibold text-gray-900">
                 Timeline ({entries.length} events)
               </h2>

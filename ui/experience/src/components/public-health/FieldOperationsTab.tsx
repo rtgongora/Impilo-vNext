@@ -88,8 +88,8 @@ export function FieldOperationsTab() {
           { label: "GPS check-ins (24h)", value: "—", Icon: Navigation, sub: "No telemetry API" },
         ].map((kpi, i) => (
           <div key={i} className="bg-white rounded-lg border border-gray-200 p-3 flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-blue-50">
-              <kpi.Icon className="h-4 w-4 text-blue-600" />
+            <div className="p-2 rounded-lg bg-impilo-50">
+              <kpi.Icon className="h-4 w-4 text-impilo-500" />
             </div>
             <div>
               <p className="text-lg font-bold text-gray-900">{kpi.value}</p>

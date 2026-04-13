@@ -76,7 +76,7 @@ export default function ForgotPasswordPage() {
           </p>
           <Link
             href="/auth/login"
-            className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+            className="text-sm text-impilo-500 hover:text-impilo-700 font-medium"
           >
             Return to sign in
           </Link>
@@ -99,7 +99,7 @@ export default function ForgotPasswordPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
-                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
               />
             </div>
           </div>
@@ -107,7 +107,7 @@ export default function ForgotPasswordPage() {
           <button
             type="submit"
             disabled={isSubmitting || !email.trim()}
-            className="w-full py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
+            className="w-full py-2.5 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
           >
             {isSubmitting ? (
               <>

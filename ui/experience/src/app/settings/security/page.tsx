@@ -147,7 +147,7 @@ export default function SecuritySettingsPage() {
                     type="password"
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
-                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
                     required
                   />
                 </div>
@@ -160,7 +160,7 @@ export default function SecuritySettingsPage() {
                     type="password"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
                     required
                   />
                 </div>
@@ -173,7 +173,7 @@ export default function SecuritySettingsPage() {
                     type="password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
                     required
                   />
                   {confirmPassword && newPassword !== confirmPassword && (
@@ -183,7 +183,7 @@ export default function SecuritySettingsPage() {
                 <button
                   type="submit"
                   disabled={changePassword.isPending || newPassword !== confirmPassword}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-impilo-500 rounded-lg hover:bg-impilo-600 transition-colors disabled:opacity-50"
                 >
                   {changePassword.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
                   Change Password
@@ -213,7 +213,7 @@ export default function SecuritySettingsPage() {
                   onClick={() => toggleMfa.mutate(!security?.attributes.mfaEnabled)}
                   disabled={toggleMfa.isPending}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    security?.attributes.mfaEnabled ? "bg-blue-600" : "bg-gray-300"
+                    security?.attributes.mfaEnabled ? "bg-impilo-500" : "bg-gray-300"
                   } disabled:opacity-50`}
                 >
                   <span

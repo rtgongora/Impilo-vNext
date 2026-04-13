@@ -207,7 +207,7 @@ export function EncounterMenu() {
               {activeItem?.label ?? "Workspace"}
             </span>
             {activeEncounter && (
-              <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-medium text-blue-700">
+              <span className="rounded-full bg-impilo-50 px-2.5 py-1 text-[10px] font-medium text-impilo-600">
                 {String(activeEncounter.attributes.encounterType)}
               </span>
             )}
@@ -229,7 +229,7 @@ export function EncounterMenu() {
         </Link>
         <Link
           href={`/ehr/${patientId}/encounters`}
-          className="flex items-center gap-1.5 mt-1.5 px-3 text-xs text-gray-500 hover:text-blue-600 transition-colors"
+          className="flex items-center gap-1.5 mt-1.5 px-3 text-xs text-gray-500 hover:text-impilo-500 transition-colors"
         >
           <Activity className="w-3 h-3" />
           Encounters
@@ -254,25 +254,25 @@ export function EncounterMenu() {
                   href={href}
                   className={`flex items-center gap-3 px-3 py-2 mx-1 rounded-lg text-left transition-all ${
                     isActive
-                      ? "bg-blue-50 text-blue-700"
+                      ? "bg-impilo-50 text-impilo-600"
                       : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                   }`}
                 >
                   <div className={`w-8 h-8 rounded-md flex items-center justify-center transition-colors ${
                     isActive
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-100 text-gray-400 group-hover:bg-blue-100 group-hover:text-blue-600"
+                      ? "bg-impilo-500 text-white"
+                      : "bg-gray-100 text-gray-400 group-hover:bg-impilo-100 group-hover:text-impilo-500"
                   }`}>
                     <Icon className="w-4 h-4" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className={`text-sm truncate ${isActive ? "font-medium" : ""}`}>{item.label}</div>
                     <div className={`text-[10px] truncate ${
-                      isActive ? "text-blue-600/70" : "text-gray-400"
+                      isActive ? "text-impilo-500/70" : "text-gray-400"
                     }`}>{item.description}</div>
                   </div>
                   <ChevronRight className={`w-3.5 h-3.5 shrink-0 ${
-                    isActive ? "text-blue-600" : "text-gray-300"
+                    isActive ? "text-impilo-500" : "text-gray-300"
                   }`} />
                 </Link>
               );

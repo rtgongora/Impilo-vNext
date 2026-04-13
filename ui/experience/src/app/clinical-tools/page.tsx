@@ -167,7 +167,7 @@ function OfflineTab() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-blue-50 rounded-lg border border-blue-200 p-4 text-sm text-blue-800">
+      <div className="bg-impilo-50 rounded-lg border border-impilo-200 p-4 text-sm text-impilo-700">
         <strong>Offline Sync Engine:</strong> The mobile app syncs data in the background every 30 seconds. Conflicts are presented for user resolution. All operations are queued and replayed when connectivity resumes.
       </div>
 
@@ -178,9 +178,9 @@ function OfflineTab() {
           <p className="text-xs text-green-600">{String(syncInfo.syncEngine ?? "Available")}</p>
         </div>
         <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
-          <RefreshCw className="w-8 h-8 text-blue-500 mx-auto mb-2" />
+          <RefreshCw className="w-8 h-8 text-impilo-400 mx-auto mb-2" />
           <p className="text-sm font-semibold text-gray-900">Auto-Sync Interval</p>
-          <p className="text-xs text-blue-600">{Number(syncInfo.autoSyncInterval ?? 30000) / 1000}s</p>
+          <p className="text-xs text-impilo-500">{Number(syncInfo.autoSyncInterval ?? 30000) / 1000}s</p>
         </div>
         <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
           <AlertTriangle className="w-8 h-8 text-amber-500 mx-auto mb-2" />
@@ -218,7 +218,7 @@ function DocumentsTab() {
 
       <div className="grid grid-cols-3 gap-4">
         <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
-          <FileText className="w-6 h-6 text-blue-500 mx-auto mb-1" /><p className="text-lg font-bold text-gray-900">{docs.length}</p><p className="text-xs text-gray-500">Documents</p>
+          <FileText className="w-6 h-6 text-impilo-400 mx-auto mb-1" /><p className="text-lg font-bold text-gray-900">{docs.length}</p><p className="text-xs text-gray-500">Documents</p>
         </div>
         <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
           <Shield className="w-6 h-6 text-green-500 mx-auto mb-1" /><p className="text-lg font-bold text-gray-900">SHA-256</p><p className="text-xs text-gray-500">Content Verify</p>
@@ -234,7 +234,7 @@ function DocumentsTab() {
         <div className="space-y-2">{docs.map((doc, i) => (
           <div key={i} className="bg-white rounded-lg border border-gray-200 p-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <FileText className="w-5 h-5 text-blue-500" />
+              <FileText className="w-5 h-5 text-impilo-400" />
               <div><p className="text-sm font-medium text-gray-900">{String(doc.filename ?? doc.name ?? "Document")}</p>
                 <p className="text-xs text-gray-500">{String(doc.content_type ?? doc.mime_type ?? "—")} · {String(doc.created_at ?? "—")}</p></div>
             </div>
@@ -276,9 +276,9 @@ function CdsTab() {
             ] as const).map(([rule,source,condition,severity]) => (
               <tr key={rule} className="border-b last:border-0 hover:bg-gray-50">
                 <td className="px-3 py-2 font-medium text-gray-900">{rule}</td>
-                <td className="px-3 py-2"><span className="px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 text-[10px]">{source}</span></td>
+                <td className="px-3 py-2"><span className="px-1.5 py-0.5 rounded bg-impilo-100 text-impilo-600 text-[10px]">{source}</span></td>
                 <td className="px-3 py-2 text-gray-600">{condition}</td>
-                <td className="px-3 py-2"><span className={`px-1.5 py-0.5 rounded text-[10px] ${severity === "critical" ? "bg-red-100 text-red-700" : severity === "warning" ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"}`}>{severity}</span></td>
+                <td className="px-3 py-2"><span className={`px-1.5 py-0.5 rounded text-[10px] ${severity === "critical" ? "bg-red-100 text-red-700" : severity === "warning" ? "bg-amber-100 text-amber-700" : "bg-impilo-100 text-impilo-600"}`}>{severity}</span></td>
               </tr>
             ))}
           </tbody>
@@ -306,7 +306,7 @@ function ProductivityTab() {
           <p className="text-xs text-green-600 mt-2">✓ Active in Vitals page</p>
         </div>
         <div className="bg-white rounded-lg border border-gray-200 p-5">
-          <ClipboardList className="w-6 h-6 text-blue-500 mb-2" />
+          <ClipboardList className="w-6 h-6 text-impilo-400 mb-2" />
           <h4 className="text-sm font-semibold text-gray-900">Referral Package Builder</h4>
           <p className="text-xs text-gray-500 mt-1">4-step wizard that auto-generates clinical summaries from patient conditions, allergies, and medications.</p>
           <p className="text-xs text-green-600 mt-2">✓ Active in Consults page</p>

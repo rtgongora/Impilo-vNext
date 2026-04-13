@@ -49,7 +49,7 @@ export default function PreferencesPage() {
             <select
               value={language}
               onChange={(e) => setLanguage(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
             >
               <option value="en">English</option>
               <option value="sn">Shona</option>
@@ -74,7 +74,7 @@ export default function PreferencesPage() {
                   key={opt.value}
                   className={`flex-1 text-center p-3 rounded-lg border cursor-pointer text-sm transition-colors ${
                     theme === opt.value
-                      ? "border-blue-400 bg-blue-50 text-blue-700 font-medium"
+                      ? "border-impilo-400 bg-impilo-50 text-impilo-600 font-medium"
                       : "border-gray-200 text-gray-600 hover:border-gray-300"
                   }`}
                 >
@@ -144,7 +144,7 @@ export default function PreferencesPage() {
             <button
               type="submit"
               disabled={savePreferences.isPending}
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-impilo-500 text-white rounded-lg text-sm font-medium hover:bg-impilo-600 disabled:opacity-50"
             >
               {savePreferences.isPending ? (
                 <Loader2 className="w-4 h-4 animate-spin" />

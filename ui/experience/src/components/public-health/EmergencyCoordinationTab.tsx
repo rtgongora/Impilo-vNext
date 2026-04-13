@@ -154,7 +154,7 @@ export function EmergencyCoordinationTab() {
           <div className="bg-white rounded-lg border border-gray-200">
             <div className="px-4 py-3 border-b flex justify-between items-center">
               <h4 className="text-sm font-semibold">Recent activations</h4>
-              <button type="button" onClick={() => refetch()} className="text-xs text-blue-600 hover:underline">Refresh</button>
+              <button type="button" onClick={() => refetch()} className="text-xs text-impilo-500 hover:underline">Refresh</button>
             </div>
             <div className="p-4">
               {isLoading && (
@@ -194,7 +194,7 @@ export function EmergencyCoordinationTab() {
                 <input value={actionType} onChange={(e) => setActionType(e.target.value)} className="w-full border rounded px-2 py-1.5" placeholder="Action type" />
                 <textarea value={actionDescription} onChange={(e) => setActionDescription(e.target.value)} className="w-full border rounded px-2 py-1.5 min-h-[60px]" placeholder="Description" />
                 <div className="flex gap-2">
-                  <button type="submit" disabled={logAction.isPending} className="px-3 py-1.5 bg-blue-600 text-white rounded">Save</button>
+                  <button type="submit" disabled={logAction.isPending} className="px-3 py-1.5 bg-impilo-500 text-white rounded">Save</button>
                   <button type="button" onClick={() => setActionFor(null)} className="px-3 py-1.5 border rounded">Cancel</button>
                 </div>
               </form>

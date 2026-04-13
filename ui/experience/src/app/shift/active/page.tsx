@@ -58,7 +58,7 @@ export default function ActiveShiftPage() {
             <p className="text-gray-400 text-sm">No active shift. Start a shift to begin.</p>
             <button
               onClick={() => router.push("/shift")}
-              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
+              className="mt-4 px-4 py-2 bg-impilo-500 text-white rounded-lg text-sm font-medium hover:bg-impilo-600"
             >
               Start Shift
             </button>
@@ -91,7 +91,7 @@ export default function ActiveShiftPage() {
                 <div>
                   <dt className="text-gray-500">Duration</dt>
                   <dd className="font-medium text-gray-900 mt-0.5 flex items-center gap-1">
-                    <Clock className="w-4 h-4 text-blue-500" />
+                    <Clock className="w-4 h-4 text-impilo-400" />
                     {formatDuration(shift.startedAt)}
                   </dd>
                 </div>
@@ -122,7 +122,7 @@ export default function ActiveShiftPage() {
           {/* Activity Summary */}
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-white rounded-lg border border-gray-200 p-5 text-center">
-              <Users className="w-8 h-8 text-blue-500 mx-auto mb-2" />
+              <Users className="w-8 h-8 text-impilo-400 mx-auto mb-2" />
               <p className="text-2xl font-bold text-gray-900">{activeEncounters.length}</p>
               <p className="text-xs text-gray-500 mt-1">Encounters In Progress</p>
             </div>

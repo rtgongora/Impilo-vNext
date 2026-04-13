@@ -58,14 +58,14 @@ const CATEGORY_ICONS: Record<NotificationCategory, React.ComponentType<{ classNa
 const PRIORITY_ICON_COLORS: Record<Priority, string> = {
   critical: 'bg-red-100 text-red-600',
   high: 'bg-amber-100 text-amber-600',
-  normal: 'bg-blue-100 text-blue-600',
+  normal: 'bg-impilo-100 text-impilo-500',
   low: 'bg-gray-100 text-gray-500',
 };
 
 const PRIORITY_BADGE_COLORS: Record<Priority, string> = {
   critical: 'bg-red-100 text-red-700 border border-red-200',
   high: 'bg-amber-100 text-amber-700 border border-amber-200',
-  normal: 'bg-blue-100 text-blue-700 border border-blue-200',
+  normal: 'bg-impilo-100 text-impilo-600 border border-impilo-200',
   low: 'bg-gray-100 text-gray-600 border border-gray-200',
 };
 
@@ -188,7 +188,7 @@ export function NotificationsCommsHub() {
               <div className="flex items-center gap-1">
                 <button
                   onClick={markAllRead}
-                  className="text-xs text-blue-600 hover:underline mr-2"
+                  className="text-xs text-impilo-500 hover:underline mr-2"
                 >
                   Mark all read
                 </button>
@@ -211,13 +211,13 @@ export function NotificationsCommsHub() {
                     key={tab.id}
                     onClick={() => setFilter(tab.id)}
                     className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
-                      filter === tab.id ? 'bg-blue-100 text-blue-700' : 'text-gray-500 hover:bg-gray-100'
+                      filter === tab.id ? 'bg-impilo-100 text-impilo-600' : 'text-gray-500 hover:bg-gray-100'
                     }`}
                   >
                     {Icon && <Icon className="h-3 w-3" />}
                     {tab.label}
                     {tab.id !== 'all' && (categoryUnread[tab.id] || 0) > 0 && (
-                      <span className="ml-0.5 h-4 min-w-[1rem] px-0.5 rounded-full bg-blue-600 text-white text-[9px] flex items-center justify-center">
+                      <span className="ml-0.5 h-4 min-w-[1rem] px-0.5 rounded-full bg-impilo-500 text-white text-[9px] flex items-center justify-center">
                         {categoryUnread[tab.id]}
                       </span>
                     )}
@@ -228,7 +228,7 @@ export function NotificationsCommsHub() {
 
             {/* Action buttons */}
             <div className="flex gap-2 px-3 py-2 border-b border-gray-200">
-              <button onClick={() => setPanelView(panelView === 'compose' ? 'list' : 'compose')} className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${panelView === 'compose' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+              <button onClick={() => setPanelView(panelView === 'compose' ? 'list' : 'compose')} className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${panelView === 'compose' ? 'bg-impilo-100 text-impilo-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
                 <Send className="w-3 h-3" /> New Message
               </button>
               <button onClick={() => setPanelView(panelView === 'page' ? 'list' : 'page')} className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${panelView === 'page' ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
@@ -238,7 +238,7 @@ export function NotificationsCommsHub() {
 
             {/* Compose Message Panel */}
             {panelView === 'compose' && (
-              <div className="p-3 border-b border-gray-200 bg-blue-50/30 space-y-2">
+              <div className="p-3 border-b border-gray-200 bg-impilo-50/30 space-y-2">
                 <h4 className="text-xs font-semibold text-gray-700">New Message</h4>
                 <input value={composeRecipient} onChange={e => setComposeRecipient(e.target.value)} placeholder="To (name or role)..." className="w-full px-2.5 py-1.5 text-xs border rounded-lg" />
                 <input value={composeSubject} onChange={e => setComposeSubject(e.target.value)} placeholder="Subject (optional)" className="w-full px-2.5 py-1.5 text-xs border rounded-lg" />
@@ -249,7 +249,7 @@ export function NotificationsCommsHub() {
                   </select>
                   <div className="flex gap-2">
                     <button onClick={() => setPanelView('list')} className="px-3 py-1.5 text-xs text-gray-500 hover:bg-gray-100 rounded">Cancel</button>
-                    <button onClick={handleSendMessage} disabled={!composeRecipient || !composeBody} className="px-3 py-1.5 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-1"><Send className="w-3 h-3" /> Send</button>
+                    <button onClick={handleSendMessage} disabled={!composeRecipient || !composeBody} className="px-3 py-1.5 text-xs bg-impilo-500 text-white rounded-lg hover:bg-impilo-600 disabled:opacity-50 flex items-center gap-1"><Send className="w-3 h-3" /> Send</button>
                   </div>
                 </div>
               </div>
@@ -262,7 +262,7 @@ export function NotificationsCommsHub() {
                 <input value={pageRecipient} onChange={e => setPageRecipient(e.target.value)} placeholder="Page to (Dr. Name / On-call team)..." className="w-full px-2.5 py-1.5 text-xs border rounded-lg" />
                 <div className="flex gap-2">
                   {(['routine', 'urgent', 'stat'] as const).map(u => (
-                    <button key={u} onClick={() => setPageUrgency(u)} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${pageUrgency === u ? u === 'stat' ? 'bg-red-100 text-red-700' : u === 'urgent' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'}`}>{u.toUpperCase()}</button>
+                    <button key={u} onClick={() => setPageUrgency(u)} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${pageUrgency === u ? u === 'stat' ? 'bg-red-100 text-red-700' : u === 'urgent' ? 'bg-amber-100 text-amber-700' : 'bg-impilo-100 text-impilo-600' : 'bg-gray-100 text-gray-500'}`}>{u.toUpperCase()}</button>
                   ))}
                 </div>
                 <textarea value={pageMessage} onChange={e => setPageMessage(e.target.value)} placeholder="Message..." rows={2} className="w-full px-2.5 py-1.5 text-xs border rounded-lg" />
@@ -288,7 +288,7 @@ export function NotificationsCommsHub() {
                   return (
                     <div
                       key={n.id}
-                      className={`px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer ${!n.read ? 'bg-blue-50/30' : ''}`}
+                      className={`px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer ${!n.read ? 'bg-impilo-50/30' : ''}`}
                       onClick={() => markRead(n.id)}
                     >
                       <div className="flex items-start gap-3">
@@ -306,7 +306,7 @@ export function NotificationsCommsHub() {
                             {n.workspaceScoped && (
                               <span className="px-1.5 py-0 rounded border border-gray-200 text-[9px] text-gray-500 shrink-0">Workspace</span>
                             )}
-                            {!n.read && <div className="h-2 w-2 rounded-full bg-blue-600 shrink-0" />}
+                            {!n.read && <div className="h-2 w-2 rounded-full bg-impilo-500 shrink-0" />}
                           </div>
                           <p className="text-xs text-gray-500 line-clamp-2 mt-0.5">{n.body}</p>
 
@@ -335,7 +335,7 @@ export function NotificationsCommsHub() {
                             {n.actionUrl && n.actionLabel && (
                               <button
                                 onClick={e => { e.stopPropagation(); }}
-                                className="text-[10px] text-blue-600 hover:underline flex items-center gap-0.5"
+                                className="text-[10px] text-impilo-500 hover:underline flex items-center gap-0.5"
                               >
                                 {n.actionLabel}
                                 <ArrowRight className="h-2.5 w-2.5" />
@@ -352,12 +352,12 @@ export function NotificationsCommsHub() {
                                     value={replyText}
                                     onChange={e => setReplyText(e.target.value)}
                                     placeholder="Type reply..."
-                                    className="flex-1 px-2 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                    className="flex-1 px-2 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-impilo-400"
                                     onClick={e => e.stopPropagation()}
                                   />
                                   <button
                                     onClick={e => { e.stopPropagation(); sendReply(); }}
-                                    className="px-2 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700"
+                                    className="px-2 py-1 bg-impilo-500 text-white rounded text-xs hover:bg-impilo-600"
                                   >
                                     <Send className="h-3 w-3" />
                                   </button>
@@ -365,7 +365,7 @@ export function NotificationsCommsHub() {
                               ) : (
                                 <button
                                   onClick={e => { e.stopPropagation(); setReplyTo(n.id); }}
-                                  className="text-xs text-blue-600 hover:underline"
+                                  className="text-xs text-impilo-500 hover:underline"
                                 >
                                   Reply
                                 </button>
@@ -400,7 +400,7 @@ export function NotificationsCommsHub() {
               </div>
               <div className="flex items-center justify-between">
                 <button className="text-xs text-gray-500 hover:text-gray-700 flex items-center gap-1">
-                  {isMuted ? <BellOff className="h-3 w-3" /> : <Bell className="h-3 w-3 text-blue-600" />}
+                  {isMuted ? <BellOff className="h-3 w-3" /> : <Bell className="h-3 w-3 text-impilo-500" />}
                   {isMuted ? 'Unmute' : 'Notifications on'}
                 </button>
                 <button

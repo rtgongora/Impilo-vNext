@@ -87,7 +87,7 @@ export default function RegistryAdminLandingPage() {
               Pick a sub-plane to focus tooling; your selection is remembered for this session (
               <button
                 type="button"
-                className="text-blue-600 hover:underline"
+                className="text-impilo-500 hover:underline"
                 onClick={() => {
                   useOperationalContextStore.getState().setRegistryAdminSubtype(null);
                   rehydrate();

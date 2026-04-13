@@ -142,7 +142,7 @@ export default function MfaPage() {
       </div>
 
       <div className="flex items-center gap-2 mb-1">
-        <ShieldCheck className="w-5 h-5 text-blue-600" />
+        <ShieldCheck className="w-5 h-5 text-impilo-500" />
         <h2 className="text-xl font-semibold text-gray-900">
           Verification Code
         </h2>
@@ -173,7 +173,7 @@ export default function MfaPage() {
               onKeyDown={(e) => handleKeyDown(index, e)}
               onPaste={index === 0 ? handlePaste : undefined}
               disabled={isSubmitting}
-              className="w-12 h-14 text-center text-xl font-semibold border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-12 h-14 text-center text-xl font-semibold border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400 disabled:opacity-50 disabled:cursor-not-allowed"
               aria-label={`Digit ${index + 1}`}
             />
           ))}
@@ -182,7 +182,7 @@ export default function MfaPage() {
         <button
           type="submit"
           disabled={isSubmitting || digits.some((d) => d === "")}
-          className="w-full py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
+          className="w-full py-2.5 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
         >
           {isSubmitting ? (
             <>

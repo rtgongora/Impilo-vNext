@@ -235,8 +235,8 @@ export default function TelemedicineSessionPage() {
               <div className="flex items-start justify-between">
                 <div>
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center">
-                      <Video className="w-6 h-6 text-blue-600" />
+                    <div className="w-12 h-12 rounded-full bg-impilo-50 flex items-center justify-center">
+                      <Video className="w-6 h-6 text-impilo-500" />
                     </div>
                     <div>
                       <h2 className="text-lg font-semibold text-gray-900">
@@ -247,7 +247,7 @@ export default function TelemedicineSessionPage() {
                           isActive
                             ? "bg-green-100 text-green-700"
                             : attrs.status === "SCHEDULED"
-                              ? "bg-blue-100 text-blue-700"
+                              ? "bg-impilo-100 text-impilo-600"
                               : "bg-gray-100 text-gray-600"
                         }`}
                       >
@@ -259,7 +259,7 @@ export default function TelemedicineSessionPage() {
                     {attrs.patient_id && (
                       <Link
                         href={`/ehr/${attrs.patient_id}`}
-                        className="flex items-center gap-1 text-blue-600 hover:text-blue-800 transition-colors"
+                        className="flex items-center gap-1 text-impilo-500 hover:text-impilo-700 transition-colors"
                       >
                         <User className="w-4 h-4" />
                         Patient: {attrs.patient_id.substring(0, 8)}...
@@ -383,7 +383,7 @@ export default function TelemedicineSessionPage() {
                         value={systolic}
                         onChange={(e) => setSystolic(e.target.value)}
                         placeholder="120"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
                       />
                     </div>
                     <div>
@@ -395,7 +395,7 @@ export default function TelemedicineSessionPage() {
                         value={diastolic}
                         onChange={(e) => setDiastolic(e.target.value)}
                         placeholder="80"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
                       />
                     </div>
                     <div>
@@ -407,7 +407,7 @@ export default function TelemedicineSessionPage() {
                         value={heartRate}
                         onChange={(e) => setHeartRate(e.target.value)}
                         placeholder="72"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
                       />
                     </div>
                     <div>
@@ -420,7 +420,7 @@ export default function TelemedicineSessionPage() {
                         value={temperature}
                         onChange={(e) => setTemperature(e.target.value)}
                         placeholder="36.5"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
                       />
                     </div>
                   </div>
@@ -459,7 +459,7 @@ export default function TelemedicineSessionPage() {
                     onChange={(e) => setNoteBody(e.target.value)}
                     rows={6}
                     placeholder="Document the teleconsultation findings, assessment, and plan..."
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 resize-none"
                   />
                   <button
                     onClick={handleSaveNote}
@@ -581,7 +581,7 @@ export default function TelemedicineSessionPage() {
                         onChange={(e) => setSessionNotes(e.target.value)}
                         rows={3}
                         placeholder="Summary of the teleconsultation session..."
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 resize-none"
                       />
                     </div>
                     <button

@@ -304,7 +304,7 @@ export default function ClinicalNotesPage() {
 
             <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
               <div className="flex items-center gap-2">
-                <Plus className="h-4 w-4 text-blue-600" />
+                <Plus className="h-4 w-4 text-impilo-500" />
                 <h3 className="text-sm font-semibold text-slate-900">Quick start</h3>
               </div>
               <p className="mt-2 text-sm text-slate-600">
@@ -317,7 +317,7 @@ export default function ClinicalNotesPage() {
                     key={noteType}
                     type="button"
                     onClick={() => handleStartNote(noteType)}
-                    className="flex items-center justify-between rounded-2xl border border-slate-200 px-4 py-3 text-left transition-colors hover:border-blue-200 hover:bg-blue-50"
+                    className="flex items-center justify-between rounded-2xl border border-slate-200 px-4 py-3 text-left transition-colors hover:border-impilo-200 hover:bg-impilo-50"
                   >
                     <span className="text-sm font-medium text-slate-900">{noteType}</span>
                     <ArrowUpRight className="h-4 w-4 text-slate-400" />
@@ -364,8 +364,8 @@ export default function ClinicalNotesPage() {
                 onClick={() => setFilterType("")}
                 className={`rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
                   filterType === ""
-                    ? "bg-blue-600 text-white"
-                    : "bg-blue-50 text-blue-700 hover:bg-blue-100"
+                    ? "bg-impilo-500 text-white"
+                    : "bg-impilo-50 text-impilo-600 hover:bg-impilo-100"
                 }`}
               >
                 All types
@@ -377,8 +377,8 @@ export default function ClinicalNotesPage() {
                   onClick={() => setFilterType(noteType)}
                   className={`rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
                     filterType === noteType
-                      ? "bg-blue-600 text-white"
-                      : "bg-blue-50 text-blue-700 hover:bg-blue-100"
+                      ? "bg-impilo-500 text-white"
+                      : "bg-impilo-50 text-impilo-600 hover:bg-impilo-100"
                   }`}
                 >
                   {noteType}
@@ -418,7 +418,7 @@ export default function ClinicalNotesPage() {
                     name="noteType"
                     value={form.noteType}
                     onChange={handleFieldChange}
-                    className="w-full rounded-2xl border border-slate-300 px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-2xl border border-slate-300 px-3 py-2.5 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-impilo-400"
                   >
                     {NOTE_TYPES.map((noteType) => (
                       <option key={noteType} value={noteType}>
@@ -440,7 +440,7 @@ export default function ClinicalNotesPage() {
                       onChange={handleFieldChange}
                       rows={4}
                       placeholder="Patient-reported symptoms, concerns, and history..."
-                      className="w-full rounded-2xl border border-slate-300 px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full rounded-2xl border border-slate-300 px-3 py-2.5 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-impilo-400"
                     />
                   </div>
                   <div>
@@ -454,7 +454,7 @@ export default function ClinicalNotesPage() {
                       onChange={handleFieldChange}
                       rows={4}
                       placeholder="Observed findings, vitals, and measurable data..."
-                      className="w-full rounded-2xl border border-slate-300 px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full rounded-2xl border border-slate-300 px-3 py-2.5 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-impilo-400"
                     />
                   </div>
                   <div>
@@ -468,7 +468,7 @@ export default function ClinicalNotesPage() {
                       onChange={handleFieldChange}
                       rows={4}
                       placeholder="Clinical interpretation, diagnosis, and working impression..."
-                      className="w-full rounded-2xl border border-slate-300 px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full rounded-2xl border border-slate-300 px-3 py-2.5 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-impilo-400"
                     />
                   </div>
                   <div>
@@ -482,7 +482,7 @@ export default function ClinicalNotesPage() {
                       onChange={handleFieldChange}
                       rows={4}
                       placeholder="Orders, follow-up, treatment, and coordination steps..."
-                      className="w-full rounded-2xl border border-slate-300 px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full rounded-2xl border border-slate-300 px-3 py-2.5 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-impilo-400"
                     />
                   </div>
                 </div>
@@ -498,7 +498,7 @@ export default function ClinicalNotesPage() {
                     onChange={handleFieldChange}
                     rows={4}
                     placeholder="Free-text details, coordination notes, or specialist context..."
-                    className="w-full rounded-2xl border border-slate-300 px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-2xl border border-slate-300 px-3 py-2.5 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-impilo-400"
                   />
                 </div>
 
@@ -513,7 +513,7 @@ export default function ClinicalNotesPage() {
                       type="text"
                       value={form.authorId}
                       onChange={handleFieldChange}
-                      className="w-full rounded-2xl border border-slate-300 px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full rounded-2xl border border-slate-300 px-3 py-2.5 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-impilo-400"
                     />
                   </div>
                   <div>
@@ -526,7 +526,7 @@ export default function ClinicalNotesPage() {
                       type="text"
                       value={form.authorName}
                       onChange={handleFieldChange}
-                      className="w-full rounded-2xl border border-slate-300 px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full rounded-2xl border border-slate-300 px-3 py-2.5 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-impilo-400"
                     />
                   </div>
                 </div>
@@ -535,7 +535,7 @@ export default function ClinicalNotesPage() {
                   <button
                     type="submit"
                     disabled={createNote.isPending}
-                    className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+                    className="inline-flex items-center gap-2 rounded-xl bg-impilo-500 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-impilo-600 disabled:opacity-50"
                   >
                     {createNote.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
                     Save Note
@@ -571,7 +571,7 @@ export default function ClinicalNotesPage() {
               <button
                 type="button"
                 onClick={() => handleStartNote(noteTypeFilter ?? "PROGRESS")}
-                className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+                className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-impilo-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-impilo-600"
               >
                 <Plus className="h-4 w-4" />
                 Start First Note
@@ -614,7 +614,7 @@ export default function ClinicalNotesPage() {
                               <span
                                 className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
                                   isLinkedToActiveEncounter
-                                    ? "bg-blue-100 text-blue-700"
+                                    ? "bg-impilo-100 text-impilo-600"
                                     : "bg-slate-100 text-slate-600"
                                 }`}
                               >

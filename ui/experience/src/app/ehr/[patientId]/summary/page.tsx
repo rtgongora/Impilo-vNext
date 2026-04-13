@@ -219,7 +219,7 @@ export default function PatientSummaryPage() {
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                   <div className="space-y-2">
                     <div className="inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1 text-xs font-medium text-slate-600">
-                      <ArrowRightLeft className="h-3.5 w-3.5 text-blue-600" />
+                      <ArrowRightLeft className="h-3.5 w-3.5 text-impilo-500" />
                       Coordination snapshot
                     </div>
                     <div>
@@ -261,7 +261,7 @@ export default function PatientSummaryPage() {
                     </div>
                     <div className="rounded-2xl border border-white/70 bg-white/80 p-4">
                       <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">Receiving context</p>
-                      <p className="mt-2 text-2xl font-semibold text-blue-700">{coordinationPulse.receivingHere}</p>
+                      <p className="mt-2 text-2xl font-semibold text-impilo-600">{coordinationPulse.receivingHere}</p>
                       <p className="mt-1 text-xs text-slate-500">Referrals where this facility is acting on the receiving side.</p>
                     </div>
                     <div className="rounded-2xl border border-white/70 bg-white/80 p-4">
@@ -316,7 +316,7 @@ export default function PatientSummaryPage() {
                               stage.tone === "amber"
                                 ? "bg-amber-100 text-amber-700"
                                 : stage.tone === "blue"
-                                  ? "bg-blue-100 text-blue-700"
+                                  ? "bg-impilo-100 text-impilo-600"
                                   : stage.tone === "purple"
                                     ? "bg-purple-100 text-purple-700"
                                     : stage.tone === "green"
@@ -386,7 +386,7 @@ export default function PatientSummaryPage() {
                     </div>
                   )}
                 </div>
-                <Link href={`/ehr/${patientId}/vitals`} className="mt-2 inline-block text-xs text-blue-600 hover:text-blue-800">
+                <Link href={`/ehr/${patientId}/vitals`} className="mt-2 inline-block text-xs text-impilo-500 hover:text-impilo-700">
                   View all vitals
                 </Link>
               </div>
@@ -415,7 +415,7 @@ export default function PatientSummaryPage() {
                     ))}
                   </div>
                 )}
-                <Link href={`/ehr/${patientId}/conditions`} className="mt-2 inline-block text-xs text-blue-600 hover:text-blue-800">
+                <Link href={`/ehr/${patientId}/conditions`} className="mt-2 inline-block text-xs text-impilo-500 hover:text-impilo-700">
                   View all
                 </Link>
               </div>
@@ -442,7 +442,7 @@ export default function PatientSummaryPage() {
                     ))}
                   </div>
                 )}
-                <Link href={`/ehr/${patientId}/allergies`} className="mt-2 inline-block text-xs text-blue-600 hover:text-blue-800">
+                <Link href={`/ehr/${patientId}/allergies`} className="mt-2 inline-block text-xs text-impilo-500 hover:text-impilo-700">
                   View all
                 </Link>
               </div>
@@ -469,7 +469,7 @@ export default function PatientSummaryPage() {
                     ))}
                   </div>
                 )}
-                <Link href={`/ehr/${patientId}/medications`} className="mt-2 inline-block text-xs text-blue-600 hover:text-blue-800">
+                <Link href={`/ehr/${patientId}/medications`} className="mt-2 inline-block text-xs text-impilo-500 hover:text-impilo-700">
                   View all
                 </Link>
               </div>
@@ -503,7 +503,7 @@ export default function PatientSummaryPage() {
                     ))}
                   </div>
                 )}
-                <Link href={`/ehr/${patientId}/encounters`} className="mt-2 inline-block text-xs text-blue-600 hover:text-blue-800">
+                <Link href={`/ehr/${patientId}/encounters`} className="mt-2 inline-block text-xs text-impilo-500 hover:text-impilo-700">
                   View all
                 </Link>
               </div>

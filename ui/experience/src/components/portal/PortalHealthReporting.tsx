@@ -94,7 +94,7 @@ const REPORT_CATEGORIES: ReportCategory[] = [
     icon: Megaphone,
     description:
       "Issues with health facilities, providers, or public health services",
-    color: "text-blue-600",
+    color: "text-impilo-500",
   },
 ];
 
@@ -143,7 +143,7 @@ export function PortalHealthReporting() {
                       setSelectedCategory(cat.value);
                       setShowForm(true);
                     }}
-                    className="p-4 border rounded-lg text-left hover:border-blue-400 hover:bg-blue-50/50 transition-all"
+                    className="p-4 border rounded-lg text-left hover:border-impilo-400 hover:bg-impilo-50/50 transition-all"
                   >
                     <div className="flex items-center gap-3 mb-2">
                       <div className="p-2 rounded-lg bg-gray-100">
@@ -176,7 +176,7 @@ export function PortalHealthReporting() {
                   {selectedCategory?.replace(/_/g, " ")}
                 </span>
                 <button
-                  className="text-xs text-blue-600 hover:underline"
+                  className="text-xs text-impilo-500 hover:underline"
                   onClick={() => {
                     setShowForm(false);
                     setSelectedCategory(null);
@@ -194,7 +194,7 @@ export function PortalHealthReporting() {
                   <input
                     type="text"
                     placeholder="Brief title, e.g. 'Dirty water from borehole'"
-                    className="w-full h-9 px-3 text-sm border rounded-md border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full h-9 px-3 text-sm border rounded-md border-gray-300 focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
                   />
                 </div>
                 <div>
@@ -205,7 +205,7 @@ export function PortalHealthReporting() {
                     <input
                       type="text"
                       placeholder="Area, address, or landmark"
-                      className="flex-1 h-9 px-3 text-sm border rounded-md border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="flex-1 h-9 px-3 text-sm border rounded-md border-gray-300 focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
                     />
                     <button className="h-9 w-9 flex items-center justify-center border rounded-md border-gray-300 hover:bg-gray-50">
                       <MapPin className="h-4 w-4 text-gray-500" />
@@ -220,7 +220,7 @@ export function PortalHealthReporting() {
                 </label>
                 <textarea
                   placeholder="Provide as much detail as possible: What did you see? When did it start? How many people are affected?"
-                  className="w-full min-h-[100px] px-3 py-2 text-sm border rounded-md border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full min-h-[100px] px-3 py-2 text-sm border rounded-md border-gray-300 focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
                 />
               </div>
 
@@ -278,7 +278,7 @@ export function PortalHealthReporting() {
 
               <div className="flex gap-2">
                 <button
-                  className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
+                  className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-white bg-impilo-500 rounded-md hover:bg-impilo-600 transition-colors"
                   onClick={handleSubmit}
                 >
                   <Send className="h-4 w-4" /> Submit Report
@@ -331,7 +331,7 @@ export function PortalHealthReporting() {
                     r.status === "resolved"
                       ? "bg-green-50 text-green-700"
                       : r.status === "responded"
-                        ? "bg-blue-50 text-blue-700"
+                        ? "bg-impilo-50 text-impilo-600"
                         : "bg-amber-50 text-amber-700"
                   }`}
                 >
@@ -343,7 +343,7 @@ export function PortalHealthReporting() {
                   )}
                   {r.status}
                 </span>
-                <button className="text-xs text-blue-600 hover:underline">
+                <button className="text-xs text-impilo-500 hover:underline">
                   Details
                 </button>
               </div>

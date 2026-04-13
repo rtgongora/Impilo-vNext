@@ -37,7 +37,7 @@ const MOCK_QUEUE_NAME = "OPD Morning Queue";
 // Variant styles
 // ---------------------------------------------------------------------------
 const VARIANT_STYLES = {
-  default: "bg-blue-50 text-blue-700 border-blue-200",
+  default: "bg-impilo-50 text-impilo-600 border-impilo-200",
   secondary: "bg-gray-100 text-gray-700 border-gray-200",
   destructive: "bg-red-50 text-red-700 border-red-200",
   outline: "bg-white text-gray-600 border-gray-300",

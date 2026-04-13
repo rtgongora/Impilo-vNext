@@ -367,7 +367,7 @@ export default function VitalsPage() {
     const u = level.toUpperCase();
     if (u === "HIGH") return "bg-red-100 text-red-800";
     if (u === "MEDIUM") return "bg-amber-100 text-amber-900";
-    if (u === "LOW") return "bg-blue-100 text-blue-800";
+    if (u === "LOW") return "bg-impilo-100 text-impilo-700";
     return "bg-gray-100 text-gray-700";
   }
 
@@ -429,7 +429,7 @@ export default function VitalsPage() {
               <button
                 type="button"
                 onClick={() => setShowForm((prev) => !prev)}
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 transition-colors"
               >
                 <Plus className="w-4 h-4" />
                 Record Vitals
@@ -1437,7 +1437,7 @@ export default function VitalsPage() {
                                     })
                                   }
                                   disabled={acceptXfer.isPending}
-                                  className="text-xs font-medium text-blue-700 underline disabled:opacity-50"
+                                  className="text-xs font-medium text-impilo-600 underline disabled:opacity-50"
                                 >
                                   Accept
                                 </button>
@@ -1473,7 +1473,7 @@ export default function VitalsPage() {
                         type="number"
                         value={systolic}
                         onChange={(e) => setSystolic(e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
                         placeholder="120"
                       />
                     </div>
@@ -1485,7 +1485,7 @@ export default function VitalsPage() {
                         type="number"
                         value={diastolic}
                         onChange={(e) => setDiastolic(e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
                         placeholder="80"
                       />
                     </div>
@@ -1497,7 +1497,7 @@ export default function VitalsPage() {
                         type="number"
                         value={heartRate}
                         onChange={(e) => setHeartRate(e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
                         placeholder="72"
                       />
                     </div>
@@ -1510,7 +1510,7 @@ export default function VitalsPage() {
                         step="0.1"
                         value={temperature}
                         onChange={(e) => setTemperature(e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
                         placeholder="36.6"
                       />
                     </div>
@@ -1522,7 +1522,7 @@ export default function VitalsPage() {
                         type="number"
                         value={respiratoryRate}
                         onChange={(e) => setRespiratoryRate(e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
                         placeholder="16"
                       />
                     </div>
@@ -1534,7 +1534,7 @@ export default function VitalsPage() {
                         type="number"
                         value={oxygenSaturation}
                         onChange={(e) => setOxygenSaturation(e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
                         placeholder="98"
                       />
                     </div>
@@ -1547,7 +1547,7 @@ export default function VitalsPage() {
                         step="0.1"
                         value={weight}
                         onChange={(e) => setWeight(e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
                         placeholder="70"
                       />
                     </div>
@@ -1560,7 +1560,7 @@ export default function VitalsPage() {
                         step="0.1"
                         value={height}
                         onChange={(e) => setHeight(e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
                         placeholder="170"
                       />
                     </div>
@@ -1574,7 +1574,7 @@ export default function VitalsPage() {
                         max="10"
                         value={painScore}
                         onChange={(e) => setPainScore(e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
                         placeholder="0"
                       />
                     </div>
@@ -1586,7 +1586,7 @@ export default function VitalsPage() {
                         value={notes}
                         onChange={(e) => setNotes(e.target.value)}
                         rows={2}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
                         placeholder="Additional observations..."
                       />
                     </div>
@@ -1596,7 +1596,7 @@ export default function VitalsPage() {
                     <button
                       type="submit"
                       disabled={recordVitals.isPending}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                       {recordVitals.isPending && (
                         <Loader2 className="w-4 h-4 animate-spin" />

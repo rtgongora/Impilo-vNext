@@ -11,7 +11,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 
 const SECTIONS = [
-  { label: "FHIR Statistics", description: "Resource counts, storage usage, and throughput metrics", Icon: BarChart3, color: "bg-blue-50 text-blue-600" },
+  { label: "FHIR Statistics", description: "Resource counts, storage usage, and throughput metrics", Icon: BarChart3, color: "bg-impilo-50 text-impilo-500" },
   { label: "Reconciliation", description: "Reconcile SHR records with source-of-truth systems", Icon: RefreshCcw, color: "bg-amber-50 text-amber-600" },
   { label: "Subscription Triggers", description: "Manage FHIR subscription and event triggers", Icon: Activity, color: "bg-green-50 text-green-600" },
   { label: "Configuration", description: "SHR storage, replication, and retention settings", Icon: Settings, color: "bg-slate-100 text-slate-600" },

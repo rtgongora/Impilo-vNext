@@ -16,7 +16,7 @@ const REGISTRY_SECTIONS = [
     description: "View and manage registered healthcare providers",
     href: "/registry/providers",
     icon: UserCheck,
-    color: "bg-blue-100 text-blue-600",
+    color: "bg-impilo-100 text-impilo-500",
   },
   {
     title: "Facilities",
@@ -55,7 +55,7 @@ export default function RegistryHubPage() {
               <Link
                 key={section.href}
                 href={section.href}
-                className="bg-white rounded-lg border border-gray-200 p-6 hover:border-blue-300 hover:shadow-md transition-all group"
+                className="bg-white rounded-lg border border-gray-200 p-6 hover:border-impilo-200 hover:shadow-md transition-all group"
               >
                 <div className="flex items-start gap-4">
                   <div
@@ -64,7 +64,7 @@ export default function RegistryHubPage() {
                     <Icon className="w-6 h-6" />
                   </div>
                   <div>
-                    <h3 className="font-medium text-gray-900 group-hover:text-blue-600 transition-colors">
+                    <h3 className="font-medium text-gray-900 group-hover:text-impilo-500 transition-colors">
                       {section.title}
                     </h3>
                     <p className="text-sm text-gray-500 mt-1">{section.description}</p>

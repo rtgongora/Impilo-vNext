@@ -144,10 +144,10 @@ export default function WalkInPage() {
 
         <div className="max-w-2xl space-y-6">
           {selectedPatient ? (
-            <div className="rounded-3xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
+            <div className="rounded-3xl border border-impilo-200 bg-impilo-50 p-4 text-sm text-impilo-800">
               <p className="font-medium">Selected patient</p>
               <p className="mt-1">{getPatientDisplayName(selectedPatient)}</p>
-              <p className="mt-1 text-xs text-blue-800">{getPatientQueueSummary(selectedPatient)}</p>
+              <p className="mt-1 text-xs text-impilo-700">{getPatientQueueSummary(selectedPatient)}</p>
             </div>
           ) : null}
 
@@ -162,7 +162,7 @@ export default function WalkInPage() {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Search by name, ID, or date of birth..."
-                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
                 />
               </div>
               <button
@@ -185,7 +185,7 @@ export default function WalkInPage() {
                 <p className="text-sm text-gray-500">No patients found</p>
                 <button
                   onClick={() => setShowNewPatient(true)}
-                  className="mt-2 text-sm text-blue-600 hover:text-blue-800"
+                  className="mt-2 text-sm text-impilo-500 hover:text-impilo-700"
                 >
                   Register new patient
                 </button>
@@ -203,7 +203,7 @@ export default function WalkInPage() {
                     }}
                     className={`w-full flex items-center gap-3 p-3 rounded-lg border text-left transition-colors ${
                       selectedPatient?.id === patient.id
-                        ? "border-blue-400 bg-blue-50"
+                        ? "border-impilo-400 bg-impilo-50"
                         : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
                     }`}
                   >
@@ -239,7 +239,7 @@ export default function WalkInPage() {
                     value={newName}
                     onChange={(e) => setNewName(e.target.value)}
                     placeholder="Patient full name"
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -252,7 +252,7 @@ export default function WalkInPage() {
                       required
                       value={newDob}
                       onChange={(e) => setNewDob(e.target.value)}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
                     />
                   </div>
                   <div>
@@ -262,7 +262,7 @@ export default function WalkInPage() {
                     <select
                       value={newGender}
                       onChange={(e) => setNewGender(e.target.value)}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
                     >
                       <option value="male">Male</option>
                       <option value="female">Female</option>
@@ -285,7 +285,7 @@ export default function WalkInPage() {
             <button
               onClick={handleCreateEntry}
               disabled={isSubmitting}
-              className="w-full py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
+              className="w-full py-2.5 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
             >
               {isSubmitting ? (
                 <>

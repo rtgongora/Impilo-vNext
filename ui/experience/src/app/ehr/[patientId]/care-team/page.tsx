@@ -2,28 +2,16 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import { Activity, Mail, Loader2, Phone, Plus, Star, Trash2, Users, X, FileText, ClipboardList } from "lucide-react";
+import { Activity, Loader2, Plus, Trash2, Users, X, FileText, ClipboardList, CheckCircle2, AlertCircle } from "lucide-react";
 import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { useEncounters } from "@/hooks/queries/useEncounters";
+import { useCareTeam, useAddCareTeamMember, useRemoveCareTeamMember } from "@/hooks/queries/useCareContinuity";
+import type { CareTeamMember } from "@/hooks/queries/useCareContinuity";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { usePrivacyDisplayStore } from "@/hooks/usePrivacyDisplayStore";
 import { maskPhone, maskEmail } from "@/lib/pii-mask";
-
-interface CareTeamMember {
-  id: string;
-  name: string;
-  role: string;
-  specialty: string;
-  isPrimary: boolean;
-  phone: string;
-  email: string;
-  facility: string;
-  assignedDate: string;
-  status: "Active" | "Inactive";
-  avatar: string;
-}
 
 export default function CareTeamPage() {
   const params = useParams<{ patientId: string }>();
@@ -31,17 +19,19 @@ export default function CareTeamPage() {
   const facility = useFacilityStore((state) => state.facility);
   const { data: encountersData } = useEncounters(patientId);
 
-  /** No BFF care-team roster yet (Agent 0: patient-scoped care team assignments API + persistence). */
-  const members: CareTeamMember[] = [];
-  const isLoading = false;
+  const { data: careTeamData, isLoading, isError } = useCareTeam(patientId);
+  const addMember = useAddCareTeamMember();
+  const removeMember = useRemoveCareTeamMember();
+  const members = careTeamData?.data ?? [];
+  const [successMsg, setSuccessMsg] = useState("");
   const activeEncounter = (encountersData?.data ?? []).find(
     (encounter) =>
       encounter.attributes.status === "IN_PROGRESS" || encounter.attributes.status === "ACTIVE"
   );
-  const activeMembers = members.filter((member) => member.status === "Active");
-  const inactiveMembers = members.filter((member) => member.status === "Inactive");
-  const primaryMembers = activeMembers.filter((member) => member.isPrimary).length;
-  const externalMembers = activeMembers.filter((member) => member.facility !== facility?.name).length;
+  const activeMembers = members.filter((member) => member.status === "active");
+  const inactiveMembers = members.filter((member) => member.status === "inactive");
+  const primaryMembers = activeMembers.length > 0 ? 1 : 0;
+  const externalMembers = 0;
 
   const [showForm, setShowForm] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -57,15 +47,25 @@ export default function CareTeamPage() {
             <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
             <span className="ml-2 text-sm text-gray-500">Loading care team...</span>
           </div>
+        ) : isError ? (
+          <div className="flex flex-col items-center justify-center gap-3 py-16">
+            <AlertCircle className="h-6 w-6 text-red-400" />
+            <p className="text-sm text-gray-600">Unable to load care team.</p>
+          </div>
         ) : (
           <div className="space-y-6">
-            <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
-              <p className="font-medium">Care team roster not connected</p>
-              <p className="mt-1 text-amber-900/90">
-                The experience BFF does not expose a patient care-team assignment store yet. Use Care Plans and Notes for
-                ownership until Agent 0 adds a supported API and data contract.
-              </p>
-            </div>
+            {successMsg && (
+              <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800">
+                <CheckCircle2 className="h-4 w-4 text-green-600" />
+                {successMsg}
+              </div>
+            )}
+            {addMember.isError && (
+              <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+                <AlertCircle className="h-4 w-4 text-red-600" />
+                Failed to add team member. Please try again.
+              </div>
+            )}
             <ClinicalReviewHeader
               badge="Care team"
               badgeIcon={Users}
@@ -116,16 +116,16 @@ export default function CareTeamPage() {
 
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-blue-600" />
+                <Users className="h-5 w-5 text-impilo-500" />
                 <h2 className="text-lg font-semibold text-gray-900">Care Team</h2>
                 <span className="text-xs text-gray-400">{activeMembers.length} active members</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="overflow-hidden rounded-lg border border-gray-300">
-                  <button onClick={() => setViewMode("grid")} className={`px-3 py-1.5 text-xs ${viewMode === "grid" ? "bg-blue-600 text-white" : "bg-white text-gray-600 hover:bg-gray-50"}`}>Grid</button>
-                  <button onClick={() => setViewMode("list")} className={`px-3 py-1.5 text-xs ${viewMode === "list" ? "bg-blue-600 text-white" : "bg-white text-gray-600 hover:bg-gray-50"}`}>List</button>
+                  <button onClick={() => setViewMode("grid")} className={`px-3 py-1.5 text-xs ${viewMode === "grid" ? "bg-impilo-500 text-white" : "bg-white text-gray-600 hover:bg-gray-50"}`}>Grid</button>
+                  <button onClick={() => setViewMode("list")} className={`px-3 py-1.5 text-xs ${viewMode === "list" ? "bg-impilo-500 text-white" : "bg-white text-gray-600 hover:bg-gray-50"}`}>List</button>
                 </div>
-                <button type="button" onClick={() => setShowForm(true)} className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700">
+                <button type="button" onClick={() => setShowForm(true)} className="inline-flex items-center gap-1.5 rounded-lg bg-impilo-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-impilo-600">
                   <Plus className="h-4 w-4" />
                   Add Member
                 </button>
@@ -141,11 +141,11 @@ export default function CareTeamPage() {
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                   <div>
                     <label className="mb-1 block text-xs font-medium text-gray-600">Provider Name</label>
-                    <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Search providers..." />
+                    <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" placeholder="Search providers..." />
                   </div>
                   <div>
                     <label className="mb-1 block text-xs font-medium text-gray-600">Role</label>
-                    <select value={newRole} onChange={(e) => setNewRole(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <select value={newRole} onChange={(e) => setNewRole(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400">
                       <option value="">Select role...</option>
                       <option>Primary Physician</option>
                       <option>Specialist</option>
@@ -158,11 +158,33 @@ export default function CareTeamPage() {
                   </div>
                   <div>
                     <label className="mb-1 block text-xs font-medium text-gray-600">Specialty</label>
-                    <input type="text" value={newSpecialty} onChange={(e) => setNewSpecialty(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., Cardiology" />
+                    <input type="text" value={newSpecialty} onChange={(e) => setNewSpecialty(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" placeholder="e.g., Cardiology" />
                   </div>
                 </div>
                 <div className="flex items-center gap-3 pt-4">
-                  <button className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700">Add to Team</button>
+                  <button
+                    type="button"
+                    disabled={addMember.isPending || !newName || !newRole}
+                    onClick={() => {
+                      addMember.mutate(
+                        { patientId, name: newName, role: newRole, specialty: newSpecialty },
+                        {
+                          onSuccess: () => {
+                            setNewName("");
+                            setNewRole("");
+                            setNewSpecialty("");
+                            setShowForm(false);
+                            setSuccessMsg("Team member added successfully.");
+                            setTimeout(() => setSuccessMsg(""), 4000);
+                          },
+                        },
+                      );
+                    }}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-impilo-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-impilo-600 disabled:opacity-50"
+                  >
+                    {addMember.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                    Add to Team
+                  </button>
                   <button onClick={() => setShowForm(false)} className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50">Cancel</button>
                 </div>
               </div>
@@ -177,19 +199,25 @@ export default function CareTeamPage() {
               <>
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                   {activeMembers.map((member) => (
-                    <div key={member.id} className="rounded-lg border border-gray-200 bg-white p-5 transition-colors hover:border-blue-200">
+                    <div key={member.id} className="rounded-lg border border-gray-200 bg-white p-5 transition-colors hover:border-impilo-200">
                       <div className="mb-3 flex items-start justify-between">
                         <div className="flex items-center gap-3">
-                          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-100 text-sm font-semibold text-blue-700">{member.avatar}</div>
+                          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-impilo-100 text-sm font-semibold text-impilo-600">
+                            {member.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
+                          </div>
                           <div>
                             <h3 className="flex items-center gap-1 text-sm font-medium text-gray-900">
                               {member.name}
-                              {member.isPrimary && <Star className="h-3.5 w-3.5 fill-amber-500 text-amber-500" />}
                             </h3>
-                            <p className="text-xs text-blue-600">{member.role}</p>
+                            <p className="text-xs text-impilo-500">{member.role}</p>
                           </div>
                         </div>
-                        <button className="p-1 text-gray-400 transition-colors hover:text-red-500">
+                        <button
+                          type="button"
+                          onClick={() => removeMember.mutate({ memberId: member.id, patientId })}
+                          disabled={removeMember.isPending}
+                          className="p-1 text-gray-400 transition-colors hover:text-red-500 disabled:opacity-50"
+                        >
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>
                       </div>
@@ -215,10 +243,12 @@ export default function CareTeamPage() {
                       {inactiveMembers.map((member) => (
                         <div key={member.id} className="rounded-lg border border-gray-200 bg-white p-5">
                           <div className="mb-2 flex items-center gap-3">
-                            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gray-100 text-sm font-semibold text-gray-500">{member.avatar}</div>
+                            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gray-100 text-sm font-semibold text-gray-500">
+                              {member.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
+                            </div>
                             <div>
                               <h3 className="text-sm font-medium text-gray-700">{member.name}</h3>
-                              <p className="text-xs text-gray-500">{member.role} � {member.specialty}</p>
+                              <p className="text-xs text-gray-500">{member.role} &middot; {member.specialty}</p>
                             </div>
                           </div>
                         </div>
@@ -235,24 +265,26 @@ export default function CareTeamPage() {
                       <th className="px-4 py-3 text-left font-medium text-gray-600">Name</th>
                       <th className="px-4 py-3 text-left font-medium text-gray-600">Role</th>
                       <th className="px-4 py-3 text-left font-medium text-gray-600">Specialty</th>
-                      <th className="px-4 py-3 text-left font-medium text-gray-600">Facility</th>
-                      <th className="px-4 py-3 text-left font-medium text-gray-600">Contact</th>
+                      <th className="px-4 py-3 text-left font-medium text-gray-600">Assigned</th>
                       <th className="px-4 py-3 text-left font-medium text-gray-600">Status</th>
+                      <th className="px-4 py-3 text-left font-medium text-gray-600"></th>
                     </tr>
                   </thead>
                   <tbody>
                     {members.map((member) => (
                       <tr key={member.id} className="border-b border-gray-100 transition-colors hover:bg-gray-50">
-                        <td className="flex items-center gap-1 px-4 py-3 text-gray-900">
-                          {member.name}
-                          {member.isPrimary && <Star className="h-3 w-3 fill-amber-500 text-amber-500" />}
-                        </td>
+                        <td className="px-4 py-3 text-gray-900">{member.name}</td>
                         <td className="px-4 py-3 text-gray-700">{member.role}</td>
                         <td className="px-4 py-3 text-gray-700">{member.specialty}</td>
                         <td className="px-4 py-3 text-gray-500">{member.facility}</td>
                         <td className="px-4 py-3 text-xs text-gray-500">{maskPhone(member.phone, usePrivacyDisplayStore.getState().level)}</td>
                         <td className="px-4 py-3">
-                          <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${member.status === "Active" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"}`}>{member.status}</span>
+                          <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${member.status === "active" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"}`}>{member.status}</span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <button type="button" onClick={() => removeMember.mutate({ memberId: member.id, patientId })} disabled={removeMember.isPending} className="p-1 text-gray-400 hover:text-red-500 disabled:opacity-50">
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
                         </td>
                       </tr>
                     ))}

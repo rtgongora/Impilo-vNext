@@ -113,7 +113,7 @@ export function ClinicalKnowledgeDock() {
               ) : !encounterId ? (
                 <p>
                   Open an{" "}
-                  <Link href={`/ehr/${patientId}/encounters`} className="text-blue-600 underline">
+                  <Link href={`/ehr/${patientId}/encounters`} className="text-impilo-500 underline">
                     encounter
                   </Link>{" "}
                   to attach context to the prescribing evaluation.
@@ -125,7 +125,7 @@ export function ClinicalKnowledgeDock() {
           )}
         </div>
         <div className="border-t border-gray-100 px-3 py-2 text-[10px] text-gray-500">
-          <Link href="/ask" className="text-blue-600 hover:underline" onClick={closeDock}>
+          <Link href="/ask" className="text-impilo-500 hover:underline" onClick={closeDock}>
             Open Ask (conversational EDLIZ)
           </Link>
         </div>

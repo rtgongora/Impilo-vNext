@@ -116,9 +116,9 @@ const severityConfig = {
     pulse: false,
   },
   info: {
-    bg: "bg-blue-50",
-    border: "border-blue-200",
-    text: "text-blue-700",
+    bg: "bg-impilo-50",
+    border: "border-impilo-200",
+    text: "text-impilo-600",
     icon: Lightbulb,
     pulse: false,
   },
@@ -311,8 +311,8 @@ export function ActiveCDSBanner({ hasActivePatient = true }: ActiveCDSBannerProp
           <div className="px-3 pb-2 space-y-1.5 border-t border-gray-200/30">
             {/* AI insight banner */}
             {aiInsight && (
-              <div className="flex items-start gap-2 px-2 py-1.5 mt-1.5 rounded bg-blue-50 border border-blue-100">
-                <Sparkles className="h-3.5 w-3.5 text-blue-600 mt-0.5 shrink-0" />
+              <div className="flex items-start gap-2 px-2 py-1.5 mt-1.5 rounded bg-impilo-50 border border-impilo-100">
+                <Sparkles className="h-3.5 w-3.5 text-impilo-500 mt-0.5 shrink-0" />
                 <p className="text-[11px] text-gray-500 leading-relaxed">
                   <span className="font-medium text-gray-900">
                     AI Clinical Pearls:{" "}

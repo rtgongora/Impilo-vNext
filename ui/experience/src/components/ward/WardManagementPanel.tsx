@@ -131,7 +131,7 @@ function getBedColor(status: BedData['status'], acuity?: string): string {
   if (status === 'maintenance') return 'bg-yellow-100 border-yellow-300 text-yellow-800';
   if (status === 'cleaning') return 'bg-purple-100 border-purple-300 text-purple-800';
   if (status === 'occupied' && acuity === 'critical') return 'bg-red-100 border-red-300 text-red-800';
-  return 'bg-blue-100 border-blue-300 text-blue-800';
+  return 'bg-impilo-100 border-impilo-200 text-impilo-700';
 }
 
 // ─── Component ───
@@ -240,7 +240,7 @@ export function WardManagementPanel() {
             <p className="text-[10px] text-gray-500">Total Beds</p>
           </div>
           <div className="bg-white border border-gray-200 rounded-lg p-2.5">
-            <div className="text-lg font-bold text-blue-600">{wardOccupied.length}</div>
+            <div className="text-lg font-bold text-impilo-500">{wardOccupied.length}</div>
             <p className="text-[10px] text-gray-500">Occupied</p>
           </div>
           <div className="bg-white border border-gray-200 rounded-lg p-2.5">
@@ -271,7 +271,7 @@ export function WardManagementPanel() {
                 onClick={() => setWardTab(tab.key)}
                 className={`inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 transition-colors ${
                   wardTab === tab.key
-                    ? 'border-blue-600 text-blue-600'
+                    ? 'border-impilo-500 text-impilo-500'
                     : 'border-transparent text-gray-500 hover:text-gray-700'
                 }`}
               >
@@ -300,7 +300,7 @@ export function WardManagementPanel() {
                     className="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="h-9 w-9 rounded-lg bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xs">
+                      <div className="h-9 w-9 rounded-lg bg-impilo-100 flex items-center justify-center text-impilo-600 font-bold text-xs">
                         {bed.bedNumber}
                       </div>
                       <div>
@@ -331,7 +331,7 @@ export function WardManagementPanel() {
             <div>
               <div className="flex gap-4 mb-3 text-xs text-gray-500">
                 <span className="flex items-center gap-1"><span className="h-3 w-3 rounded bg-green-400" /> Available</span>
-                <span className="flex items-center gap-1"><span className="h-3 w-3 rounded bg-blue-400" /> Occupied</span>
+                <span className="flex items-center gap-1"><span className="h-3 w-3 rounded bg-impilo-400" /> Occupied</span>
                 <span className="flex items-center gap-1"><span className="h-3 w-3 rounded bg-yellow-400" /> Maintenance</span>
                 <span className="flex items-center gap-1"><span className="h-3 w-3 rounded bg-red-400" /> Critical</span>
               </div>
@@ -358,7 +358,7 @@ export function WardManagementPanel() {
             <div className="space-y-2">
               {ACTIVITY_LOG.map(item => (
                 <div key={item.id} className="flex items-start gap-3 p-3 rounded-lg bg-gray-50">
-                  <div className="h-2 w-2 rounded-full bg-blue-500 mt-1.5 shrink-0" />
+                  <div className="h-2 w-2 rounded-full bg-impilo-500 mt-1.5 shrink-0" />
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm">{item.action}</p>
                     <p className="text-xs text-gray-500">{item.detail} &middot; {item.actor}</p>
@@ -390,8 +390,8 @@ export function WardManagementPanel() {
                 {/* Patient Info */}
                 <div className="p-4 rounded-lg bg-gray-50 space-y-3">
                   <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                      <User className="h-5 w-5 text-blue-600" />
+                    <div className="h-10 w-10 rounded-full bg-impilo-100 flex items-center justify-center">
+                      <User className="h-5 w-5 text-impilo-500" />
                     </div>
                     <div>
                       <p className="font-semibold">{patientDetailBed.patient.name}</p>
@@ -493,7 +493,7 @@ export function WardManagementPanel() {
                   <select
                     value={transferTargetWard}
                     onChange={e => { setTransferTargetWard(e.target.value); setTransferTargetBed(''); }}
-                    className="w-full h-9 border border-gray-200 rounded-md px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full h-9 border border-gray-200 rounded-md px-3 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
                   >
                     <option value="">Select ward...</option>
                     {WARDS.map(w => (
@@ -508,7 +508,7 @@ export function WardManagementPanel() {
                     value={transferTargetBed}
                     onChange={e => setTransferTargetBed(e.target.value)}
                     disabled={!transferTargetWard}
-                    className="w-full h-9 border border-gray-200 rounded-md px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-400"
+                    className="w-full h-9 border border-gray-200 rounded-md px-3 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 disabled:bg-gray-100 disabled:text-gray-400"
                   >
                     <option value="">{transferTargetWard ? 'Select bed...' : 'Select ward first'}</option>
                     {availableTargetBeds.map(b => (
@@ -527,7 +527,7 @@ export function WardManagementPanel() {
                     onChange={e => setTransferReason(e.target.value)}
                     placeholder="Clinical reason for bed transfer..."
                     rows={2}
-                    className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
                   />
                 </div>
               </div>
@@ -542,7 +542,7 @@ export function WardManagementPanel() {
                 <button
                   onClick={handleTransferConfirm}
                   disabled={!transferTargetBed}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 text-sm bg-impilo-500 text-white rounded-lg hover:bg-impilo-600 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <ArrowRightLeft className="h-3.5 w-3.5" />
                   Confirm Transfer
@@ -588,11 +588,11 @@ export function WardManagementPanel() {
       {/* Hospital-wide KPI stats */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 shrink-0">
         {[
-          { label: 'Total Beds', value: totalBeds, icon: Bed, iconBg: 'bg-blue-100', iconColor: 'text-blue-600' },
+          { label: 'Total Beds', value: totalBeds, icon: Bed, iconBg: 'bg-impilo-100', iconColor: 'text-impilo-500' },
           { label: 'Occupied', value: totalOccupied, icon: Users, iconBg: 'bg-orange-100', iconColor: 'text-orange-600' },
           { label: 'Available', value: totalAvailable, icon: Bed, iconBg: 'bg-green-100', iconColor: 'text-green-600' },
           { label: 'Maintenance', value: totalMaintenance, icon: RefreshCw, iconBg: 'bg-yellow-100', iconColor: 'text-yellow-600' },
-          { label: 'Occupancy', value: `${occupancyRate}%`, icon: Activity, iconBg: occupancyRate > 90 ? 'bg-red-100' : 'bg-blue-100', iconColor: occupancyRate > 90 ? 'text-red-600' : 'text-blue-600', textColor: occupancyRate > 90 ? 'text-red-600' : '' },
+          { label: 'Occupancy', value: `${occupancyRate}%`, icon: Activity, iconBg: occupancyRate > 90 ? 'bg-red-100' : bg-impilo-100', iconColor: occupancyRate > 90 ? 'text-red-600' : 'text-impilo-500', textColor: occupancyRate > 90 ? 'text-red-600' : '' },
           { label: 'Critical', value: criticalPatients, icon: AlertTriangle, iconBg: 'bg-red-100', iconColor: 'text-red-600', textColor: 'text-red-600' },
         ].map(kpi => {
           const Icon = kpi.icon;
@@ -643,7 +643,7 @@ export function WardManagementPanel() {
               <div
                 key={ward.id}
                 onClick={() => handleSelectWard(ward.id)}
-                className={`bg-white border rounded-lg cursor-pointer hover:shadow-md transition-all ${isFull ? 'border-red-200' : 'border-gray-200 hover:border-blue-300'}`}
+                className={`bg-white border rounded-lg cursor-pointer hover:shadow-md transition-all ${isFull ? 'border-red-200' : 'border-gray-200 hover:border-impilo-200'}`}
               >
                 <div className="px-3 pt-3 pb-2 flex items-center justify-between">
                   <h4 className="text-sm font-semibold flex items-center gap-2">

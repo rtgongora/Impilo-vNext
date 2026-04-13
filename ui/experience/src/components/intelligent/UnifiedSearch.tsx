@@ -50,7 +50,7 @@ interface SearchCategory {
 }
 
 const CATEGORIES: SearchCategory[] = [
-  { type: "PATIENT", label: "Patients", icon: User, color: "text-blue-600 bg-blue-50" },
+  { type: "PATIENT", label: "Patients", icon: User, color: "text-impilo-500 bg-impilo-50" },
   { type: "PROVIDER", label: "Providers", icon: Stethoscope, color: "text-green-600 bg-green-50" },
   { type: "FACILITY", label: "Facilities", icon: Building2, color: "text-amber-600 bg-amber-50" },
   { type: "MEDICATION", label: "Medications", icon: Pill, color: "text-purple-600 bg-purple-50" },

@@ -33,7 +33,7 @@ import {
 } from "@/hooks/queries/useTelemedicine";
 
 const STATUS_STYLES: Record<string, { label: string; className: string }> = {
-  SCHEDULED: { label: "Scheduled", className: "bg-blue-100 text-blue-700" },
+  SCHEDULED: { label: "Scheduled", className: "bg-impilo-100 text-impilo-600" },
   IN_PROGRESS: { label: "In Progress", className: "bg-green-100 text-green-700" },
   COMPLETED: { label: "Completed", className: "bg-gray-100 text-gray-600" },
   CANCELLED: { label: "Cancelled", className: "bg-red-100 text-red-600" },
@@ -191,18 +191,18 @@ export default function TelemedicinePage() {
         ) : (
           <>
             <div className="mb-6 grid gap-4 lg:grid-cols-3">
-              <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5">
+              <div className="rounded-2xl border border-impilo-200 bg-impilo-50 p-5">
                 <div className="mb-3 flex items-center gap-2">
-                  <ArrowDownLeft className="h-5 w-5 text-blue-600" />
-                  <h3 className="text-sm font-semibold text-blue-900">Incoming Consults</h3>
+                  <ArrowDownLeft className="h-5 w-5 text-impilo-500" />
+                  <h3 className="text-sm font-semibold text-impilo-800">Incoming Consults</h3>
                 </div>
                 <p className="text-3xl font-semibold text-gray-900">{incomingSessions.length}</p>
-                <p className="mt-1 text-sm text-blue-800">
+                <p className="mt-1 text-sm text-impilo-700">
                   Sessions initiated by another clinician and waiting on your team.
                 </p>
                 <Link
                   href="/queue/incoming-referrals"
-                  className="mt-4 inline-flex text-sm font-medium text-blue-700 transition-colors hover:text-blue-900"
+                  className="mt-4 inline-flex text-sm font-medium text-impilo-600 transition-colors hover:text-impilo-800"
                 >
                   Review incoming referrals
                 </Link>
@@ -282,7 +282,7 @@ export default function TelemedicinePage() {
                         value={composer.patientId}
                         onChange={(event) => updateComposer("patientId", event.target.value)}
                         placeholder="Patient identifier"
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
                       />
                     </label>
 
@@ -293,7 +293,7 @@ export default function TelemedicinePage() {
                         value={composer.referralId}
                         onChange={(event) => updateComposer("referralId", event.target.value)}
                         placeholder="Optional referral link"
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
                       />
                     </label>
                   </div>
@@ -304,7 +304,7 @@ export default function TelemedicinePage() {
                       <select
                         value={composer.sessionType}
                         onChange={(event) => updateComposer("sessionType", event.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
                       >
                         <option value="VIDEO">Video</option>
                         <option value="AUDIO">Audio</option>
@@ -320,7 +320,7 @@ export default function TelemedicinePage() {
                         type="datetime-local"
                         value={composer.scheduledAt}
                         onChange={(event) => updateComposer("scheduledAt", event.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
                       />
                     </label>
                   </div>
@@ -332,7 +332,7 @@ export default function TelemedicinePage() {
                       onChange={(event) => updateComposer("notes", event.target.value)}
                       rows={4}
                       placeholder="Reason for consult, prep requested, or coordination notes"
-                      className="w-full resize-none rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full resize-none rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
                     />
                   </label>
 
@@ -374,7 +374,7 @@ export default function TelemedicinePage() {
                       type="button"
                       onClick={handleCreateSession}
                       disabled={createSession.isPending || !composer.patientId.trim()}
-                      className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="flex-1 rounded-lg bg-impilo-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-impilo-600 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {createSession.isPending ? "Scheduling..." : "Create Session"}
                     </button>
@@ -391,7 +391,7 @@ export default function TelemedicinePage() {
                   onClick={() => setActiveTab(tab.key)}
                   className={`border-b-2 px-4 py-2.5 text-sm font-medium transition-colors ${
                     activeTab === tab.key
-                      ? "border-blue-600 text-blue-600"
+                      ? "border-impilo-500 text-impilo-500"
                       : "border-transparent text-gray-500 hover:text-gray-700"
                   }`}
                 >
@@ -415,7 +415,7 @@ export default function TelemedicinePage() {
                 <button
                   type="button"
                   onClick={() => setShowComposer(true)}
-                  className="mt-4 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+                  className="mt-4 inline-flex items-center gap-2 rounded-lg bg-impilo-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-impilo-600"
                 >
                   <Plus className="h-4 w-4" />
                   Schedule first session
@@ -442,13 +442,13 @@ export default function TelemedicinePage() {
                           <div className="mb-3 flex items-start gap-3">
                             <div
                               className={`flex h-11 w-11 items-center justify-center rounded-full ${
-                                isOutgoing ? "bg-emerald-50" : "bg-blue-50"
+                                isOutgoing ? "bg-emerald-50" : "bg-impilo-50"
                               }`}
                             >
                               {isOutgoing ? (
                                 <ArrowUpRight className="h-5 w-5 text-emerald-600" />
                               ) : (
-                                <ArrowDownLeft className="h-5 w-5 text-blue-600" />
+                                <ArrowDownLeft className="h-5 w-5 text-impilo-500" />
                               )}
                             </div>
                             <div className="min-w-0">
@@ -461,7 +461,7 @@ export default function TelemedicinePage() {
                                 </span>
                                 <span
                                   className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                                    isOutgoing ? "bg-emerald-100 text-emerald-700" : "bg-blue-100 text-blue-700"
+                                    isOutgoing ? "bg-emerald-100 text-emerald-700" : "bg-impilo-100 text-impilo-600"
                                   }`}
                                 >
                                   {isOutgoing ? "Outgoing" : "Incoming"}
@@ -499,7 +499,7 @@ export default function TelemedicinePage() {
                           {(attrs.referral_id || attrs.notes) && (
                             <div className="space-y-2 pl-14">
                               {attrs.referral_id && (
-                                <p className="text-xs font-medium text-blue-700">
+                                <p className="text-xs font-medium text-impilo-600">
                                   Referral-linked orchestration is enabled for this session.
                                 </p>
                               )}

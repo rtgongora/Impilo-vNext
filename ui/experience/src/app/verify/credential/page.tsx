@@ -90,7 +90,7 @@ export default function VerifyCredentialPage() {
         <button
           type="submit"
           disabled={loading}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 shrink-0"
+          className="px-4 py-2 bg-impilo-500 text-white rounded-lg text-sm font-medium hover:bg-impilo-600 disabled:opacity-50 shrink-0"
         >
           {loading ? "Verifying…" : "Verify"}
         </button>

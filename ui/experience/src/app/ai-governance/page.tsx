@@ -65,7 +65,7 @@ const STATUS_BADGE: Record<string, string> = {
 const SEVERITY_BADGE: Record<string, string> = {
   HIGH: "bg-red-100 text-red-800",
   MEDIUM: "bg-amber-100 text-amber-800",
-  LOW: "bg-blue-100 text-blue-800",
+  LOW: "bg-impilo-100 text-impilo-700",
 };
 
 export default function AiModelRegistryPage() {

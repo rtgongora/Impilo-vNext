@@ -69,7 +69,7 @@ export default function SearchPage() {
               value={draftQuery}
               onChange={(e) => setDraftQuery(e.target.value)}
               placeholder="Search for health topics, services, providers, conditions..."
-              className="w-full rounded-xl border border-gray-300 pl-12 pr-4 py-3 text-sm focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+              className="w-full rounded-xl border border-gray-300 pl-12 pr-4 py-3 text-sm focus:outline-none focus:border-impilo-400 focus:ring-2 focus:ring-impilo-100"
             />
           </form>
 
@@ -81,7 +81,7 @@ export default function SearchPage() {
                 onClick={() => setDraftDomain(d.id)}
                 className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
                   draftDomain === d.id
-                    ? "bg-blue-600 text-white"
+                    ? "bg-impilo-500 text-white"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
               >

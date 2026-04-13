@@ -33,7 +33,7 @@ interface PrescriptionResource {
 const STATUS_STYLES: Record<string, string> = {
   PENDING: "bg-amber-100 text-amber-700",
   ACTIVE: "bg-green-100 text-green-700",
-  DISPENSED: "bg-blue-100 text-blue-700",
+  DISPENSED: "bg-impilo-100 text-impilo-600",
   CANCELLED: "bg-gray-100 text-gray-600",
   REFILL_REQUESTED: "bg-purple-100 text-purple-700",
 };
@@ -113,7 +113,7 @@ export default function MyMedicationsPage() {
                         <button
                           onClick={() => requestRefill.mutate(rx.id)}
                           disabled={requestRefill.isPending}
-                          className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                          className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-impilo-500 text-white rounded-lg hover:bg-impilo-600 disabled:opacity-50 transition-colors"
                         >
                           {requestRefill.isPending
                             ? <Loader2 className="w-3 h-3 animate-spin" />

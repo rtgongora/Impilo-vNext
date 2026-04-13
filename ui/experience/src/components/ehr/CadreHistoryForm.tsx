@@ -66,7 +66,7 @@ function SelectField({ label, value, onChange, options }: { label: string; value
   return (
     <div className="space-y-1.5">
       <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{label}</label>
-      <select value={value} onChange={e => onChange(e.target.value)} className="w-full h-10 px-3 text-sm rounded-md border border-gray-300 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+      <select value={value} onChange={e => onChange(e.target.value)} className="w-full h-10 px-3 text-sm rounded-md border border-gray-300 bg-white focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400">
         <option value="">Select...</option>
         {options.map(o => <option key={o} value={o}>{o}</option>)}
       </select>
@@ -79,7 +79,7 @@ function NumberInput({ label, value, onChange, unit }: { label: string; value: s
     <div className="space-y-1.5">
       <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{label}</label>
       <div className="flex items-center gap-2">
-        <input type="number" value={value} onChange={e => onChange(e.target.value)} className="w-full h-10 px-3 text-sm rounded-md border border-gray-300 bg-white tabular-nums focus:ring-2 focus:ring-blue-500" />
+        <input type="number" value={value} onChange={e => onChange(e.target.value)} className="w-full h-10 px-3 text-sm rounded-md border border-gray-300 bg-white tabular-nums focus:ring-2 focus:ring-impilo-400" />
         {unit && <span className="text-xs text-gray-500 shrink-0">{unit}</span>}
       </div>
     </div>
@@ -95,8 +95,8 @@ function CheckGroup({ title, items, checked, onToggle }: { title: string; items:
           const isChecked = checked.includes(item);
           return (
             <button key={item} type="button" onClick={() => onToggle(item)}
-              className={`flex items-center gap-2 p-2.5 rounded-lg text-left text-sm transition-all ${isChecked ? "bg-blue-50 border border-blue-200 font-medium" : "bg-gray-50 border border-transparent hover:bg-gray-100"}`}>
-              <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${isChecked ? "border-blue-500 bg-blue-500 text-white" : "border-gray-300"}`}>
+              className={`flex items-center gap-2 p-2.5 rounded-lg text-left text-sm transition-all ${isChecked ? "bg-impilo-50 border border-impilo-200 font-medium" : "bg-gray-50 border border-transparent hover:bg-gray-100"}`}>
+              <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${isChecked ? "border-impilo-400 bg-impilo-500 text-white" : "border-gray-300"}`}>
                 {isChecked && <CheckCircle2 className="w-3 h-3" />}
               </div>
               {item}
@@ -124,9 +124,9 @@ function CHWHistoryScreen({ config, onSave }: { config: CadreFormConfig; onSave?
 
   return (
     <div className="space-y-4">
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center gap-3">
-        <ShieldAlert className="w-6 h-6 text-blue-600 shrink-0" />
-        <div><p className="font-semibold text-base text-blue-900">Community Health Worker Screening</p><p className="text-sm text-blue-700">{config.labels.guidanceText}</p></div>
+      <div className="bg-impilo-50 border border-impilo-200 rounded-lg p-4 flex items-center gap-3">
+        <ShieldAlert className="w-6 h-6 text-impilo-500 shrink-0" />
+        <div><p className="font-semibold text-base text-impilo-800">Community Health Worker Screening</p><p className="text-sm text-impilo-600">{config.labels.guidanceText}</p></div>
       </div>
       <div className={`bg-white rounded-lg border ${hasDangerSigns ? "border-red-300" : ""} p-4`}>
         <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2 mb-3">
@@ -146,14 +146,14 @@ function CHWHistoryScreen({ config, onSave }: { config: CadreFormConfig; onSave?
         <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2 mb-3"><ClipboardCheck className="w-6 h-6" /> Symptom Checklist</h3>
         <div className="grid grid-cols-2 gap-2">
           {SYMPTOM_CHECKLIST.map(s => (
-            <button key={s} type="button" onClick={() => toggleSymptom(s)} className={`flex items-center gap-2 p-3 rounded-lg text-left text-sm font-medium transition-all ${symptoms.includes(s) ? "bg-blue-50 border-2 border-blue-300" : "bg-gray-50 border-2 border-transparent hover:bg-gray-100"}`}>
-              <div className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 ${symptoms.includes(s) ? "border-blue-500 bg-blue-500 text-white" : "border-gray-300"}`}>{symptoms.includes(s) && <CheckCircle2 className="w-3 h-3" />}</div>
+            <button key={s} type="button" onClick={() => toggleSymptom(s)} className={`flex items-center gap-2 p-3 rounded-lg text-left text-sm font-medium transition-all ${symptoms.includes(s) ? "bg-impilo-50 border-2 border-impilo-200" : "bg-gray-50 border-2 border-transparent hover:bg-gray-100"}`}>
+              <div className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 ${symptoms.includes(s) ? "border-impilo-400 bg-impilo-500 text-white" : "border-gray-300"}`}>{symptoms.includes(s) && <CheckCircle2 className="w-3 h-3" />}</div>
               {s}
             </button>
           ))}
         </div>
       </div>
-      <div className="bg-white rounded-lg border-2 border-blue-200 p-4">
+      <div className="bg-white rounded-lg border-2 border-impilo-200 p-4">
         <h3 className="text-lg font-semibold mb-3">Decision</h3>
         <div className="grid grid-cols-2 gap-4">
           <button type="button" onClick={() => setDecision("refer")} className={`h-20 rounded-lg text-lg font-bold flex flex-col items-center justify-center gap-1 transition-all ${decision === "refer" ? "bg-red-600 text-white" : "border-2 border-gray-200 text-gray-600 hover:bg-gray-50"}`}><ArrowRight className="w-7 h-7" /> REFER</button>
@@ -161,7 +161,7 @@ function CHWHistoryScreen({ config, onSave }: { config: CadreFormConfig; onSave?
         </div>
         {hasDangerSigns && decision !== "refer" && <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg text-red-800 text-sm font-semibold flex items-center gap-2"><AlertTriangle className="w-5 h-5" /> Danger signs present — referral strongly recommended</div>}
       </div>
-      <button type="button" onClick={() => onSave?.({ checkedSigns, symptoms, decision })} className="w-full h-14 bg-blue-600 text-white text-lg font-bold rounded-lg hover:bg-blue-700">{config.labels.saveLabel}</button>
+      <button type="button" onClick={() => onSave?.({ checkedSigns, symptoms, decision })} className="w-full h-14 bg-impilo-500 text-white text-lg font-bold rounded-lg hover:bg-impilo-600">{config.labels.saveLabel}</button>
     </div>
   );
 }
@@ -180,9 +180,9 @@ function NursingHistoryForm({ config, onSave }: { config: CadreFormConfig; onSav
 
   return (
     <div className="space-y-4">
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center gap-3">
-        <Stethoscope className="w-6 h-6 text-blue-600 shrink-0" />
-        <div><p className="font-semibold text-base text-blue-900">Nursing Assessment</p><p className="text-sm text-blue-700">{config.labels.guidanceText}</p></div>
+      <div className="bg-impilo-50 border border-impilo-200 rounded-lg p-4 flex items-center gap-3">
+        <Stethoscope className="w-6 h-6 text-impilo-500 shrink-0" />
+        <div><p className="font-semibold text-base text-impilo-800">Nursing Assessment</p><p className="text-sm text-impilo-600">{config.labels.guidanceText}</p></div>
       </div>
 
       {/* Presenting Complaint */}
@@ -234,7 +234,7 @@ function NursingHistoryForm({ config, onSave }: { config: CadreFormConfig; onSav
         </div>
       )}
 
-      <button type="button" onClick={() => onSave?.({ formData, checkedItems })} className="w-full h-12 bg-blue-600 text-white text-base font-semibold rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2"><CheckCircle2 className="w-5 h-5" /> {config.labels.saveLabel}</button>
+      <button type="button" onClick={() => onSave?.({ formData, checkedItems })} className="w-full h-12 bg-impilo-500 text-white text-base font-semibold rounded-lg hover:bg-impilo-600 flex items-center justify-center gap-2"><CheckCircle2 className="w-5 h-5" /> {config.labels.saveLabel}</button>
     </div>
   );
 }
@@ -279,9 +279,9 @@ function DoctorHistoryForm({ config, onSave }: { config: CadreFormConfig; onSave
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">ICD-10 / SNOMED CT coded</span>
-          <span className="px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">{savedEntries.length} entries saved</span>
+          <span className="px-2 py-0.5 rounded text-xs font-medium bg-impilo-100 text-impilo-600">{savedEntries.length} entries saved</span>
         </div>
-        <button type="button" onClick={() => setIsAddingEntry(!isAddingEntry)} className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 ${isAddingEntry ? "bg-gray-100 text-gray-600" : "bg-blue-600 text-white"}`}>
+        <button type="button" onClick={() => setIsAddingEntry(!isAddingEntry)} className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 ${isAddingEntry ? "bg-gray-100 text-gray-600" : "bg-impilo-500 text-white"}`}>
           {isAddingEntry ? <><X className="w-4 h-4" /> Close</> : <><Plus className="w-4 h-4" /> New History Entry</>}
         </button>
       </div>
@@ -297,7 +297,7 @@ function DoctorHistoryForm({ config, onSave }: { config: CadreFormConfig; onSave
                 <button key={s.id} type="button" onClick={() => setActiveSection(s.id)}
                   className={`px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors ${
                     activeSection === s.id
-                      ? "bg-blue-600 text-white"
+                      ? "bg-impilo-500 text-white"
                       : saved
                         ? "bg-green-100 text-green-700 border border-green-300"
                         : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -345,7 +345,7 @@ function DoctorHistoryForm({ config, onSave }: { config: CadreFormConfig; onSave
                         <button key={s} type="button" onClick={() => toggleCheck("associated", s)}
                           className={`p-2 rounded text-xs font-medium transition-all ${
                             active
-                              ? "bg-blue-50 border border-blue-200 text-blue-700"
+                              ? "bg-impilo-50 border border-impilo-200 text-impilo-600"
                               : "bg-gray-50 border border-transparent hover:bg-gray-100 text-gray-600"
                           }`}>
                           {s}
@@ -364,7 +364,7 @@ function DoctorHistoryForm({ config, onSave }: { config: CadreFormConfig; onSave
               </div>
               <div className="flex justify-end mt-4">
                 <button type="button" onClick={saveSection}
-                  className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 flex items-center gap-2">
+                  className="px-4 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4" /> Save HPI
                 </button>
               </div>
@@ -377,11 +377,11 @@ function DoctorHistoryForm({ config, onSave }: { config: CadreFormConfig; onSave
               <div className="flex items-center justify-between"><h3 className="text-base font-semibold text-gray-900">Past Medical History</h3><span className="px-2 py-0.5 rounded text-[10px] font-medium bg-gray-100 text-gray-500">ICD-10</span></div>
               <div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" /><input type="text" placeholder="Search ICD-10 conditions..." value={conditionSearch} onChange={e => setConditionSearch(e.target.value)} className="w-full h-10 pl-10 pr-3 text-sm rounded-md border border-gray-300 bg-white" /></div>
               {selectedConditions.length > 0 && <div className="flex flex-wrap gap-2">{selectedConditions.map(c => (
-                <span key={c.code} className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium"><span className="font-mono text-[10px]">{c.code}</span> {c.display}<button type="button" onClick={() => setSelectedConditions(prev => prev.filter(x => x.code !== c.code))} className="ml-1 hover:bg-blue-200 rounded-full p-0.5"><X className="w-3 h-3" /></button></span>
+                <span key={c.code} className="inline-flex items-center gap-1 px-2 py-1 bg-impilo-100 text-impilo-600 rounded text-xs font-medium"><span className="font-mono text-[10px]">{c.code}</span> {c.display}<button type="button" onClick={() => setSelectedConditions(prev => prev.filter(x => x.code !== c.code))} className="ml-1 hover:bg-impilo-200 rounded-full p-0.5"><X className="w-3 h-3" /></button></span>
               ))}</div>}
               <div className="max-h-64 overflow-y-auto space-y-1">{filteredConditions.map(c => {
                 const selected = selectedConditions.some(s => s.code === c.code);
-                return <button key={c.code} type="button" onClick={() => selected ? setSelectedConditions(prev => prev.filter(x => x.code !== c.code)) : setSelectedConditions(prev => [...prev, c])} className={`w-full flex items-center justify-between p-2.5 rounded-lg text-left text-sm transition-all ${selected ? "bg-blue-50 border border-blue-200" : "hover:bg-gray-50"}`}><span className="font-medium">{c.display}</span><span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-gray-100 text-gray-500">{c.code}</span></button>;
+                return <button key={c.code} type="button" onClick={() => selected ? setSelectedConditions(prev => prev.filter(x => x.code !== c.code)) : setSelectedConditions(prev => [...prev, c])} className={`w-full flex items-center justify-between p-2.5 rounded-lg text-left text-sm transition-all ${selected ? "bg-impilo-50 border border-impilo-200" : "hover:bg-gray-50"}`}><span className="font-medium">{c.display}</span><span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-gray-100 text-gray-500">{c.code}</span></button>;
               })}</div>
               {selectedConditions.length > 0 && <div className="space-y-2 pt-2 border-t">{selectedConditions.map(c => (
                 <div key={c.code} className="flex items-center gap-3"><span className="text-sm font-medium flex-1">{c.display}</span>
@@ -389,7 +389,7 @@ function DoctorHistoryForm({ config, onSave }: { config: CadreFormConfig; onSave
                   <input type="number" placeholder="Year Dx" min={1950} max={2026} className="w-24 h-8 px-2 text-xs rounded border border-gray-300 bg-white" onChange={e => update(`pmh_year_${c.code}`, e.target.value)} />
                 </div>
               ))}</div>}
-              <div className="flex justify-end"><button type="button" onClick={saveSection} className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Save PMH</button></div>
+              <div className="flex justify-end"><button type="button" onClick={saveSection} className="px-4 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Save PMH</button></div>
             </div>
           )}
 
@@ -404,7 +404,7 @@ function DoctorHistoryForm({ config, onSave }: { config: CadreFormConfig; onSave
                   <SelectField label="Complications" value={formData[`psh_comp_${i}`] || ""} onChange={v => update(`psh_comp_${i}`, v)} options={["None", "Infection", "Bleeding", "DVT/PE", "Anaesthetic complication", "Other"]} />
                 </div>
               ))}
-              <div className="flex justify-end"><button type="button" onClick={saveSection} className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Save Surgical Hx</button></div>
+              <div className="flex justify-end"><button type="button" onClick={saveSection} className="px-4 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Save Surgical Hx</button></div>
             </div>
           )}
 
@@ -422,11 +422,11 @@ function DoctorHistoryForm({ config, onSave }: { config: CadreFormConfig; onSave
                 <div key={item.field} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <span className="text-sm font-medium text-gray-700">{item.condition}</span>
                   <div className="flex gap-1.5">{["None", "Father", "Mother", "Sibling", "Multiple"].map(rel => (
-                    <button key={rel} type="button" onClick={() => update(item.field, rel)} className={`px-3 py-1.5 rounded text-xs font-medium transition-all ${formData[item.field] === rel ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-600 hover:bg-gray-300"}`}>{rel}</button>
+                    <button key={rel} type="button" onClick={() => update(item.field, rel)} className={`px-3 py-1.5 rounded text-xs font-medium transition-all ${formData[item.field] === rel ? "bg-impilo-500 text-white" : "bg-gray-200 text-gray-600 hover:bg-gray-300"}`}>{rel}</button>
                   ))}</div>
                 </div>
               ))}
-              <div className="flex justify-end"><button type="button" onClick={saveSection} className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Save Family Hx</button></div>
+              <div className="flex justify-end"><button type="button" onClick={saveSection} className="px-4 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Save Family Hx</button></div>
             </div>
           )}
 
@@ -442,7 +442,7 @@ function DoctorHistoryForm({ config, onSave }: { config: CadreFormConfig; onSave
               <SelectField label="Exercise" value={formData.shx_exercise || ""} onChange={v => update("shx_exercise", v)} options={["Sedentary", "Light (1-2x/wk)", "Moderate (3-4x/wk)", "Active (5+/wk)"]} />
               <SelectField label="Diet" value={formData.shx_diet || ""} onChange={v => update("shx_diet", v)} options={["Balanced", "Vegetarian", "Vegan", "High salt/fat", "Restricted — medical"]} />
               <SelectField label="Living Situation" value={formData.shx_living || ""} onChange={v => update("shx_living", v)} options={["Lives alone", "With spouse/partner", "With family", "Assisted living", "Homeless", "Institution"]} />
-              <div className="flex justify-end"><button type="button" onClick={saveSection} className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Save Social Hx</button></div>
+              <div className="flex justify-end"><button type="button" onClick={saveSection} className="px-4 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Save Social Hx</button></div>
             </div>
           )}
 
@@ -457,7 +457,7 @@ function DoctorHistoryForm({ config, onSave }: { config: CadreFormConfig; onSave
               <SelectField label="Menstrual Cycle" value={formData.obs_cycle || ""} onChange={v => update("obs_cycle", v)} options={["Regular (28±7 days)", "Irregular", "Amenorrhoea", "Post-menopausal", "On contraception"]} />
               <SelectField label="Contraception" value={formData.obs_contraception || ""} onChange={v => update("obs_contraception", v)} options={["None", "OCP", "Injectable", "IUD/IUS", "Implant", "Condom", "Sterilised", "Natural methods"]} />
               <SelectField label="Last Cervical Screening" value={formData.obs_pap || ""} onChange={v => update("obs_pap", v)} options={["Within 1 year", "1-3 years ago", "3-5 years ago", ">5 years / Never", "Unknown"]} />
-              <div className="flex justify-end"><button type="button" onClick={saveSection} className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Save Obs/Gyn</button></div>
+              <div className="flex justify-end"><button type="button" onClick={saveSection} className="px-4 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Save Obs/Gyn</button></div>
             </div>
           )}
 
@@ -473,7 +473,7 @@ function DoctorHistoryForm({ config, onSave }: { config: CadreFormConfig; onSave
                   <div className="space-y-1"><label className="text-[10px] font-bold text-gray-500 uppercase">Frequency</label><select value={formData[`drug_freq_${i}`] || ""} onChange={e => update(`drug_freq_${i}`, e.target.value)} className="w-full h-9 px-2 text-xs rounded border border-gray-300 bg-white"><option value="">—</option><option>OD</option><option>BD</option><option>TDS</option><option>QDS</option><option>PRN</option><option>Nocte</option><option>Stat</option><option>Weekly</option></select></div>
                 </div>
               ))}
-              <div className="flex justify-end"><button type="button" onClick={saveSection} className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Save Medications</button></div>
+              <div className="flex justify-end"><button type="button" onClick={saveSection} className="px-4 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Save Medications</button></div>
             </div>
           )}
 
@@ -482,7 +482,7 @@ function DoctorHistoryForm({ config, onSave }: { config: CadreFormConfig; onSave
             <div className="bg-white rounded-lg border border-amber-200 p-4 space-y-3">
               <h3 className="text-base font-semibold text-amber-700 flex items-center gap-2"><AlertTriangle className="w-5 h-5" /> Allergies & Adverse Reactions</h3>
               <div className="flex gap-3 mb-2">{["NKDA", "Unable to assess", "Has allergies"].map(opt => (
-                <button key={opt} type="button" onClick={() => update("allergy_status", opt)} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${formData.allergy_status === opt ? opt === "Has allergies" ? "bg-amber-100 border-2 border-amber-400 text-amber-800" : "bg-blue-50 border-2 border-blue-300 text-blue-700" : "bg-gray-100 border-2 border-transparent hover:bg-gray-200 text-gray-600"}`}>{opt}</button>
+                <button key={opt} type="button" onClick={() => update("allergy_status", opt)} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${formData.allergy_status === opt ? opt === "Has allergies" ? "bg-amber-100 border-2 border-amber-400 text-amber-800" : "bg-impilo-50 border-2 border-impilo-200 text-impilo-600" : "bg-gray-100 border-2 border-transparent hover:bg-gray-200 text-gray-600"}`}>{opt}</button>
               ))}</div>
               {formData.allergy_status === "Has allergies" && [1, 2, 3].map(i => (
                 <div key={i} className="grid grid-cols-4 gap-2 p-3 bg-amber-50 border border-amber-100 rounded-lg">
@@ -492,7 +492,7 @@ function DoctorHistoryForm({ config, onSave }: { config: CadreFormConfig; onSave
                   <div className="space-y-1"><label className="text-[10px] font-bold text-gray-500 uppercase">Severity</label><select value={formData[`allergen_sev_${i}`] || ""} onChange={e => update(`allergen_sev_${i}`, e.target.value)} className="w-full h-9 px-2 text-xs rounded border border-gray-300 bg-white"><option value="">—</option><option>Mild</option><option>Moderate</option><option>Severe</option><option>Life-threatening</option></select></div>
                 </div>
               ))}
-              <div className="flex justify-end"><button type="button" onClick={saveSection} className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Save Allergies</button></div>
+              <div className="flex justify-end"><button type="button" onClick={saveSection} className="px-4 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Save Allergies</button></div>
             </div>
           )}
 
@@ -522,7 +522,7 @@ function DoctorHistoryForm({ config, onSave }: { config: CadreFormConfig; onSave
                   </div>
                 </div>
               ))}
-              <div className="flex justify-end"><button type="button" onClick={saveSection} className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Save ROS</button></div>
+              <div className="flex justify-end"><button type="button" onClick={saveSection} className="px-4 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Save ROS</button></div>
             </div>
           )}
         </>
@@ -540,7 +540,7 @@ function DoctorHistoryForm({ config, onSave }: { config: CadreFormConfig; onSave
               </div>
             ))}</div>
           </div>
-          <button type="button" onClick={() => onSave?.({ entries: savedEntries, isComplete: true })} className="w-full h-14 bg-blue-600 text-white text-lg font-bold rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2">
+          <button type="button" onClick={() => onSave?.({ entries: savedEntries, isComplete: true })} className="w-full h-14 bg-impilo-500 text-white text-lg font-bold rounded-lg hover:bg-impilo-600 flex items-center justify-center gap-2">
             <CheckCircle2 className="w-6 h-6" /> {config.labels.saveLabel}
           </button>
         </div>

@@ -79,7 +79,7 @@ function utilizationBarTone(pct: number) {
 }
 
 const CLAIM_STATUS: Record<string, string> = {
-  SUBMITTED: "bg-blue-100 text-blue-800",
+  SUBMITTED: "bg-impilo-100 text-impilo-700",
   ADJUDICATED: "bg-amber-100 text-amber-800",
   PAID: "bg-green-100 text-green-800",
   REJECTED: "bg-red-100 text-red-800",
@@ -102,7 +102,7 @@ const CONTRIB_STATUS: Record<string, string> = {
 
 const APPEAL_STATUS: Record<string, string> = {
   PENDING: "bg-amber-100 text-amber-800",
-  UNDER_REVIEW: "bg-blue-100 text-blue-800",
+  UNDER_REVIEW: "bg-impilo-100 text-impilo-700",
   APPROVED: "bg-green-100 text-green-800",
   DENIED: "bg-red-100 text-red-800",
 };
@@ -348,7 +348,7 @@ export default function MemberCoveragePage() {
 
           <Section
             title="Claim history"
-            icon={<History className="h-4 w-4 text-blue-600" />}
+            icon={<History className="h-4 w-4 text-impilo-500" />}
             isLoading={claimsQ.isLoading}
             isError={claimsQ.isError}
           >

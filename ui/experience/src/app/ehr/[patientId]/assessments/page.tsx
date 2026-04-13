@@ -97,7 +97,7 @@ export default function AssessmentsPage() {
               <p className="mt-1 text-slate-600">
                 There is no experience-BFF API yet for longitudinal structured instruments (e.g. PHQ-9, GAD-7) tied to this
                 chart. For functional ADL/IADL scores, open{" "}
-                <a href={`/ehr/${patientId}/functional-status`} className="font-medium text-blue-700 underline">
+                <a href={`/ehr/${patientId}/functional-status`} className="font-medium text-impilo-600 underline">
                   Functional Status
                 </a>
                 . Agent 0: patient-scoped assessment-results store + read API.
@@ -157,10 +157,10 @@ export default function AssessmentsPage() {
                 <h2 className="text-lg font-semibold text-gray-900">Clinical Assessments</h2>
               </div>
               <div className="flex items-center gap-3">
-                <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400">
                   {categories.map((category) => <option key={category}>{category}</option>)}
                 </select>
-                <button className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700">
+                <button className="inline-flex items-center gap-1.5 rounded-lg bg-impilo-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-impilo-600">
                   <Plus className="h-4 w-4" /> New Assessment
                 </button>
               </div>

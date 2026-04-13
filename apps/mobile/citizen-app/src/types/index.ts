@@ -396,3 +396,91 @@ export interface CrowdfundingCampaign {
   verified: boolean;
   endsAt?: string;
 }
+
+/* ── Finance ── */
+
+export interface Transaction {
+  id: string;
+  date: string;
+  description: string;
+  amount: number;
+  currency: string;
+  type: "CREDIT" | "DEBIT";
+  status: string;
+  reference?: string;
+  category?: string;
+}
+
+export interface Balance {
+  amount: number;
+  currency: string;
+  updatedAt: string;
+}
+
+export interface PendingCharge {
+  id: string;
+  description: string;
+  amount: number;
+  currency: string;
+  facilityName?: string;
+  chargeDate: string;
+  status: string;
+}
+
+/* ── Wellness Goals ── */
+
+export type GoalPriority = "LOW" | "MEDIUM" | "HIGH";
+
+export interface WellnessGoal {
+  id: string;
+  title: string;
+  description?: string;
+  targetValue: number;
+  currentValue: number;
+  unit?: string;
+  priority: GoalPriority;
+  targetDate: string;
+  status: string;
+  createdAt: string;
+}
+
+/* ── Wellness Programs ── */
+
+export interface WellnessProgram {
+  id: string;
+  name: string;
+  description: string;
+  duration: string;
+  category: string;
+  imageUrl?: string;
+  status: string;
+}
+
+export interface Enrollment {
+  id: string;
+  programId: string;
+  programName: string;
+  progress: number;
+  enrolledAt: string;
+  status: string;
+}
+
+/* ── Marketplace Cart ── */
+
+export interface CartItem {
+  id: string;
+  productId: string;
+  productName: string;
+  quantity: number;
+  unitPrice: number;
+  currency: string;
+  imageUrl?: string;
+}
+
+export interface Cart {
+  id: string;
+  items: CartItem[];
+  totalItems: number;
+  totalAmount: number;
+  currency: string;
+}

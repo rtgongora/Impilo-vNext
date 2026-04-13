@@ -36,7 +36,7 @@ export default function ErpProcurementPage() {
     <AppLayout>
       <PageShell title="Procurement" subtitle="Suppliers through RFQs via BFF">
         <div className="mb-4 flex flex-wrap items-center gap-3">
-          <Link href="/erp" className="text-sm text-blue-600 hover:underline">
+          <Link href="/erp" className="text-sm text-impilo-500 hover:underline">
             ← ERP hub
           </Link>
           <label className="flex items-center gap-2 text-sm text-slate-700">

@@ -22,7 +22,7 @@ import {
 } from "@/hooks/queries/useFacilityAdmin";
 
 const inputClass =
-  "w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500";
+  "w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400";
 
 function coerceLevel(v: unknown): FacilityLevel {
   const s = String(v ?? "").toUpperCase();
@@ -251,7 +251,7 @@ export default function EditFacilityPage() {
               <button
                 type="submit"
                 disabled={updateMutation.isPending}
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-impilo-500 text-white rounded-lg hover:bg-impilo-600 disabled:opacity-50 transition-colors"
               >
                 {updateMutation.isPending ? (
                   <>

@@ -42,7 +42,7 @@ const STATUS_STYLES: Record<string, string> = {
   DRAFT: "bg-gray-100 text-gray-600",
   ACCUMULATING: "bg-yellow-100 text-yellow-700",
   APPROVAL_PENDING: "bg-orange-100 text-orange-700",
-  APPROVED: "bg-blue-100 text-blue-700",
+  APPROVED: "bg-impilo-100 text-impilo-600",
   FINAL: "bg-green-100 text-green-700",
   VOID: "bg-red-100 text-red-700",
   ADJUSTED: "bg-purple-100 text-purple-700",
@@ -176,7 +176,7 @@ export default function BillingPage() {
                           <td className="px-4 py-3">
                             <Link
                               href={billingHref}
-                              className="font-medium text-blue-600 hover:text-blue-800"
+                              className="font-medium text-impilo-500 hover:text-impilo-700"
                             >
                               {invoice.attributes.invoiceNumber}
                             </Link>

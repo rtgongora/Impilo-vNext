@@ -49,7 +49,7 @@ function defaultTenantId(): string {
 }
 
 const VISIT_STATUS_STYLES: Record<string, string> = {
-  SCHEDULED: "bg-blue-100 text-blue-800",
+  SCHEDULED: "bg-impilo-100 text-impilo-700",
   IN_PROGRESS: "bg-amber-100 text-amber-800",
   COMPLETED: "bg-green-100 text-green-800",
 };

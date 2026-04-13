@@ -44,11 +44,11 @@ export default function IntegrationStatusPage() {
             <span className="text-xs text-gray-400">GET /internal/v1/integration-hub/*</span>
           </div>
 
-          <div className="rounded-lg border border-blue-200 bg-blue-50/90 p-4 flex gap-3">
-            <Info className="w-5 h-5 text-blue-700 shrink-0 mt-0.5" />
-            <div className="text-sm text-blue-950">
+          <div className="rounded-lg border border-impilo-200 bg-impilo-50/90 p-4 flex gap-3">
+            <Info className="w-5 h-5 text-impilo-600 shrink-0 mt-0.5" />
+            <div className="text-sm text-impilo-800">
               <p className="font-medium">Live data from Experience BFF</p>
-              <p className="mt-2 text-xs leading-relaxed text-blue-900/90">
+              <p className="mt-2 text-xs leading-relaxed text-impilo-800/90">
                 Route rows are loaded from <code className="text-[11px]">GET /internal/v1/integration-hub/routes</code>.
                 Dead letters preview uses{" "}
                 <code className="text-[11px]">GET /internal/v1/integration-hub/deadletters</code>. Other external system

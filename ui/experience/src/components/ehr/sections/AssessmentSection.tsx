@@ -283,7 +283,7 @@ function HistoryPanel() {
                 <span
                   className={`text-xs font-medium rounded px-2 py-0.5 ${
                     condition.status === "active"
-                      ? "bg-blue-600 text-white"
+                      ? "bg-impilo-500 text-white"
                       : "bg-gray-200 text-gray-600"
                   }`}
                 >
@@ -480,7 +480,7 @@ function ExaminationPanel() {
       <select
         value={findings[fieldKey]}
         onChange={(e) => updateFinding(fieldKey, e.target.value)}
-        className="w-full h-9 px-2 text-sm rounded-md border border-gray-300 bg-white focus:ring-1 focus:ring-blue-500"
+        className="w-full h-9 px-2 text-sm rounded-md border border-gray-300 bg-white focus:ring-1 focus:ring-impilo-400"
       >
         {options.map((o) => (
           <option key={o} value={o}>
@@ -509,7 +509,7 @@ function ExaminationPanel() {
           type="number"
           value={findings[fieldKey]}
           onChange={(e) => updateFinding(fieldKey, e.target.value)}
-          className="w-full h-9 px-2 text-sm rounded-md border border-gray-300 bg-white focus:ring-1 focus:ring-blue-500 tabular-nums"
+          className="w-full h-9 px-2 text-sm rounded-md border border-gray-300 bg-white focus:ring-1 focus:ring-impilo-400 tabular-nums"
         />
         {unit && (
           <span className="text-xs text-gray-500 shrink-0">{unit}</span>
@@ -638,7 +638,7 @@ function ExaminationPanel() {
               <span
                 className={`text-sm font-bold rounded px-2 py-0.5 ${
                   gcsTotal >= 13
-                    ? "bg-blue-600 text-white"
+                    ? "bg-impilo-500 text-white"
                     : gcsTotal >= 9
                       ? "bg-gray-200 text-gray-700"
                       : "bg-red-600 text-white"
@@ -666,7 +666,7 @@ function ExaminationPanel() {
       </div>
 
       <div className="flex justify-end gap-2">
-        <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors">
+        <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-impilo-500 rounded-md hover:bg-impilo-600 transition-colors">
           <CheckCircle2 className="w-4 h-4" />
           Save Examination
         </button>
@@ -720,7 +720,7 @@ export function AssessmentSection() {
       {/* Cadre Context Badges */}
       <div className="flex items-center gap-2 flex-wrap">
         <span className="px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600 capitalize">{cadreConfig.cadre} &middot; {cadreConfig.complexity}</span>
-        <span className="px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700 capitalize">{cadreConfig.visitType} visit</span>
+        <span className="px-2 py-0.5 rounded text-xs font-medium bg-impilo-100 text-impilo-600 capitalize">{cadreConfig.visitType} visit</span>
         <span className={`px-2 py-0.5 rounded text-xs font-medium capitalize ${cadreConfig.acuity === "red" ? "bg-red-100 text-red-700" : cadreConfig.acuity === "orange" ? "bg-amber-100 text-amber-700" : cadreConfig.acuity === "yellow" ? "bg-yellow-100 text-yellow-700" : "bg-green-100 text-green-700"}`}>{cadreConfig.acuity} acuity</span>
       </div>
 
@@ -735,7 +735,7 @@ export function AssessmentSection() {
                 onClick={() => setActiveTab(tab.key)}
                 className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
                   activeTab === tab.key
-                    ? "border-blue-600 text-blue-600"
+                    ? "border-impilo-500 text-impilo-500"
                     : "border-transparent text-gray-500 hover:text-gray-700"
                 }`}
               >
