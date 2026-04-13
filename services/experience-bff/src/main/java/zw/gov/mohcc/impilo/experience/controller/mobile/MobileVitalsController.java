@@ -5,13 +5,10 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 import zw.gov.mohcc.impilo.experience.controller.ResourceNotFoundException;
-import zw.gov.mohcc.impilo.experience.service.OutboxService;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -31,15 +28,8 @@ import java.util.*;
 @RequestMapping("/internal/v1/mobile/provider/vitals")
 public class MobileVitalsController {
 
-    // STRANGLER: JdbcTemplate retained for local reads during migration; writes delegated to PctServiceClient
-    private final JdbcTemplate jdbcTemplate;
-    private final OutboxService outboxService;
     private final PctServiceClient pctClient;
 
-    public MobileVitalsController(JdbcTemplate jdbcTemplate, OutboxService outboxService,
-                                  PctServiceClient pctClient) {
-        this.jdbcTemplate = jdbcTemplate;
-        this.outboxService = outboxService;
         this.pctClient = pctClient;
     }
 
@@ -57,7 +47,6 @@ public class MobileVitalsController {
     ) {}
 
     @PostMapping
-    @Transactional
     public ResponseEntity<Map<String, Object>> recordVital(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.POD_ID) String podId,
@@ -68,34 +57,6 @@ public class MobileVitalsController {
 
         UUID vitalId = UUID.randomUUID();
         OffsetDateTime now = OffsetDateTime.now();
-
-        jdbcTemplate.update("""
-            INSERT INTO vitals
-                (id, tenant_id, encounter_id, patient_id, vital_type, value, unit, notes, recorded_at, created_at, updated_at)
-            VALUES (?, ?, ?::uuid, ?::uuid, ?, ?, ?, ?, ?, ?, ?)
-            """,
-                vitalId, tenantId, request.encounter_id(), request.patient_id(),
-                request.vital_type(), request.value(), request.unit(), request.notes(),
-                now, now, now);
-
-        outboxService.writeOutboxEvent(
-                "impilo.experience.vital.recorded.v1",
-                correlationId,
-                requestId,
-                idempotencyKey != null ? idempotencyKey : requestId,
-                tenantId,
-                podId,
-                "Vital",
-                vitalId.toString(),
-                Map.of(
-                        "vital_id", vitalId.toString(),
-                        "encounter_id", request.encounter_id(),
-                        "patient_id", request.patient_id(),
-                        "vital_type", request.vital_type(),
-                        "value", request.value().toString()
-                ),
-                Map.of()
-        );
 
         Map<String, Object> attributes = new LinkedHashMap<>();
         attributes.put("encounter_id", request.encounter_id());
@@ -122,7 +83,6 @@ public class MobileVitalsController {
     }
 
     @PostMapping("/batch")
-    @Transactional
     public ResponseEntity<Map<String, Object>> recordVitalsBatch(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.POD_ID) String podId,
@@ -136,34 +96,6 @@ public class MobileVitalsController {
 
         for (RecordVitalRequest vital : request.vitals()) {
             UUID vitalId = UUID.randomUUID();
-
-            jdbcTemplate.update("""
-                INSERT INTO vitals
-                    (id, tenant_id, encounter_id, patient_id, vital_type, value, unit, notes, recorded_at, created_at, updated_at)
-                VALUES (?, ?, ?::uuid, ?::uuid, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                    vitalId, tenantId, vital.encounter_id(), vital.patient_id(),
-                    vital.vital_type(), vital.value(), vital.unit(), vital.notes(),
-                    now, now, now);
-
-            outboxService.writeOutboxEvent(
-                    "impilo.experience.vital.recorded.v1",
-                    correlationId,
-                    requestId,
-                    (idempotencyKey != null ? idempotencyKey : requestId) + ":" + vitalId,
-                    tenantId,
-                    podId,
-                    "Vital",
-                    vitalId.toString(),
-                    Map.of(
-                            "vital_id", vitalId.toString(),
-                            "encounter_id", vital.encounter_id(),
-                            "patient_id", vital.patient_id(),
-                            "vital_type", vital.vital_type(),
-                            "value", vital.value().toString()
-                    ),
-                    Map.of()
-            );
 
             Map<String, Object> attributes = new LinkedHashMap<>();
             attributes.put("encounter_id", vital.encounter_id());
@@ -201,39 +133,7 @@ public class MobileVitalsController {
             @RequestParam(name = "encounter_id") String encounterId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
-
-        int limit = Math.min(size, 100);
-        int offset = page * limit;
-
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList("""
-            SELECT id, encounter_id, patient_id, vital_type, value, unit, notes,
-                   recorded_at, created_at, updated_at
-            FROM vitals
-            WHERE tenant_id = ? AND encounter_id = ?::uuid
-            ORDER BY recorded_at DESC
-            LIMIT ? OFFSET ?
-            """, tenantId, encounterId, limit, offset);
-
-        Long total = jdbcTemplate.queryForObject("""
-            SELECT count(*) FROM vitals WHERE tenant_id = ? AND encounter_id = ?::uuid
-            """, Long.class, tenantId, encounterId);
-
-        List<Map<String, Object>> data = rows.stream().map(this::toResource).toList();
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", data);
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId,
-                "page", Map.of(
-                        "number", page,
-                        "size", limit,
-                        "total_elements", total != null ? total : 0L,
-                        "total_pages", total != null ? (int) Math.ceil((double) total / limit) : 0
-                )
-        ));
-
-        return ResponseEntity.ok(response);
+        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
     }
 
     @GetMapping("/latest")
@@ -242,30 +142,10 @@ public class MobileVitalsController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(name = "patient_id") String patientId) {
-
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList("""
-            SELECT DISTINCT ON (vital_type)
-                   id, encounter_id, patient_id, vital_type, value, unit, notes,
-                   recorded_at, created_at, updated_at
-            FROM vitals
-            WHERE tenant_id = ? AND patient_id = ?::uuid
-            ORDER BY vital_type, recorded_at DESC
-            """, tenantId, patientId);
-
-        List<Map<String, Object>> data = rows.stream().map(this::toResource).toList();
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", data);
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId
-        ));
-
-        return ResponseEntity.ok(response);
+        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
     }
 
     @DeleteMapping("/{id}")
-    @Transactional
     public ResponseEntity<Map<String, Object>> deleteVital(
             @PathVariable UUID id,
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
@@ -274,26 +154,9 @@ public class MobileVitalsController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey) {
 
-        int deleted = jdbcTemplate.update("""
-            DELETE FROM vitals WHERE id = ? AND tenant_id = ?
-            """, id, tenantId);
-
         if (deleted == 0) {
             throw new ResourceNotFoundException("Vital not found: " + id);
         }
-
-        outboxService.writeOutboxEvent(
-                "impilo.experience.vital.deleted.v1",
-                correlationId,
-                requestId,
-                idempotencyKey != null ? idempotencyKey : requestId,
-                tenantId,
-                podId,
-                "Vital",
-                id.toString(),
-                Map.of("vital_id", id.toString()),
-                Map.of()
-        );
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", Map.of("id", id.toString(), "deleted", true));

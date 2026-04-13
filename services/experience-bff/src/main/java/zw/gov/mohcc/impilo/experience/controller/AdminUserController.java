@@ -6,21 +6,13 @@ import jakarta.validation.constraints.NotBlank;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.*;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.TshepoAuthzServiceClient;
-import zw.gov.mohcc.impilo.experience.domain.AdminUser;
-import zw.gov.mohcc.impilo.experience.repository.AdminUserRepository;
-import zw.gov.mohcc.impilo.experience.service.OutboxService;
 
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -45,21 +37,12 @@ public class AdminUserController {
     @Value("${KEYCLOAK_BACKEND_SECRET:impilo-backend-secret}")
     private String backendSecret;
 
-    private final AdminUserRepository adminUserRepository;
-    private final JdbcTemplate jdbcTemplate;
-    private final OutboxService outboxService;
     private final RestTemplate restTemplate;
     // STRANGLER: TshepoAuthzServiceClient available for future delegation of admin user CRUD
     private final TshepoAuthzServiceClient tshepoAuthzClient;
 
-    public AdminUserController(AdminUserRepository adminUserRepository,
-                               JdbcTemplate jdbcTemplate,
-                               OutboxService outboxService,
-                               RestTemplate serviceRestTemplate,
+    public AdminUserController(RestTemplate serviceRestTemplate,
                                TshepoAuthzServiceClient tshepoAuthzClient) {
-        this.adminUserRepository = adminUserRepository;
-        this.jdbcTemplate = jdbcTemplate;
-        this.outboxService = outboxService;
         this.restTemplate = serviceRestTemplate;
         this.tshepoAuthzClient = tshepoAuthzClient;
     }
@@ -81,7 +64,6 @@ public class AdminUserController {
      * All realm roles are available (including SYSTEM_ADMIN, FACILITY_ADMIN).
      */
     @PostMapping
-    @Transactional
     public ResponseEntity<Map<String, Object>> createUser(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.POD_ID) String podId,
@@ -146,21 +128,6 @@ public class AdminUserController {
             // Create local admin_users record
             UUID localId = UUID.randomUUID();
             OffsetDateTime now = OffsetDateTime.now();
-            jdbcTemplate.update("""
-                INSERT INTO admin_users
-                    (id, tenant_id, username, email, display_name, role, status, facility_id, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, 'ACTIVE', ?::uuid, ?, ?)
-                """,
-                    localId, tenantId, request.email(), request.email(),
-                    request.firstName() + " " + request.lastName(),
-                    request.role(), request.facilityId(), now, now);
-
-            outboxService.writeOutboxEvent(
-                    "impilo.experience.admin.user-created.v1",
-                    correlationId, requestId, requestId, tenantId, podId,
-                    "AdminUser", localId.toString(),
-                    Map.of("user_id", localId.toString(), "email", request.email(), "role", request.role()),
-                    Map.of());
 
             log.info("Admin user created: email={}, role={}, kcId={}", request.email(), request.role(), kcUserId);
 
@@ -217,30 +184,8 @@ public class AdminUserController {
             @RequestParam(required = false) String role,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String search) {
-
-        PageRequest pageable = PageRequest.of(page, Math.min(size, 100), Sort.by("username").ascending());
-
-        Page<AdminUser> result = adminUserRepository.findByFilters(tenantId, role, status, search, pageable);
-
-        List<Map<String, Object>> data = result.getContent().stream()
-                .map(this::toResource)
-                .toList();
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", data);
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId,
-                "page", Map.of(
-                        "number", result.getNumber(),
-                        "size", result.getSize(),
-                        "total_elements", result.getTotalElements(),
-                        "total_pages", result.getTotalPages()
-                )
-        ));
-
-        return ResponseEntity.ok(response);
-    }
+    throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+}
 
     @GetMapping("/{id}")
     public ResponseEntity<Map<String, Object>> getAdminUser(
@@ -248,36 +193,6 @@ public class AdminUserController {
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
-
-        AdminUser user = adminUserRepository.findByIdAndTenantId(id, tenantId)
-                .orElseThrow(() -> new ResourceNotFoundException("Admin user not found: " + id));
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", toResource(user));
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId
-        ));
-
-        return ResponseEntity.ok(response);
-    }
-
-    private Map<String, Object> toResource(AdminUser u) {
-        Map<String, Object> attributes = new LinkedHashMap<>();
-        attributes.put("username", u.getUsername());
-        attributes.put("email", u.getEmail());
-        attributes.put("display_name", u.getDisplayName());
-        attributes.put("role", u.getRole());
-        attributes.put("status", u.getStatus());
-        attributes.put("facility_id", u.getFacilityId());
-        attributes.put("last_login_at", u.getLastLoginAt());
-        attributes.put("created_at", u.getCreatedAt());
-        attributes.put("updated_at", u.getUpdatedAt());
-
-        Map<String, Object> resource = new LinkedHashMap<>();
-        resource.put("id", u.getId().toString());
-        resource.put("type", "AdminUser");
-        resource.put("attributes", attributes);
-        return resource;
-    }
+    throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+}
 }

@@ -6,8 +6,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 
@@ -26,16 +24,13 @@ public class MaternityPartographController {
 
     private static final Logger log = LoggerFactory.getLogger(MaternityPartographController.class);
 
-    private final JdbcTemplate jdbc; // TODO: remove after verification
     private final PctServiceClient pctClient;
 
-    public MaternityPartographController(JdbcTemplate jdbc, PctServiceClient pctClient) {
-        this.jdbc = jdbc;
+    public MaternityPartographController(PctServiceClient pctClient) {
         this.pctClient = pctClient;
     }
 
     @PostMapping("/sessions")
-    @Transactional
     public ResponseEntity<Map<String, Object>> createSession(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestBody CreatePartographSessionRequest request
@@ -63,22 +58,6 @@ public class MaternityPartographController {
         // STRANGLER: migrated to PctServiceClient — dual-write to local BFF table as backup cache
         UUID id = UUID.randomUUID();
         OffsetDateTime startedAt = parseDateTime(request.startedAt());
-        jdbc.update("""
-                        INSERT INTO maternity_partograph_sessions (
-                            id, tenant_id, patient_id, encounter_id, labour_phase, status,
-                            started_at, started_by, outcome, summary_notes
-                        ) VALUES (?, ?, ?::uuid, ?::uuid, ?, 'ACTIVE', ?, ?, ?, ?)
-                        """,
-                id,
-                tenantId,
-                request.patientId(),
-                request.encounterId(),
-                defaultString(request.labourPhase(), "ACTIVE_LABOUR"),
-                startedAt,
-                defaultString(request.startedBy(), ""),
-                request.outcome(),
-                request.summaryNotes()
-        );
 
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", buildSessionResource(
                 sessionRow(id, request, startedAt),
@@ -92,36 +71,7 @@ public class MaternityPartographController {
             @RequestParam String patientId,
             @RequestParam(required = false) String encounterId
     ) {
-        List<Map<String, Object>> rows = encounterId == null || encounterId.isBlank()
-                ? jdbc.queryForList(
-                """
-                        SELECT * FROM maternity_partograph_sessions
-                        WHERE tenant_id = ? AND patient_id = ?::uuid AND status = 'ACTIVE'
-                        ORDER BY started_at DESC
-                        LIMIT 1
-                        """,
-                tenantId, patientId
-        )
-                : jdbc.queryForList(
-                """
-                        SELECT * FROM maternity_partograph_sessions
-                        WHERE tenant_id = ? AND patient_id = ?::uuid AND encounter_id = ?::uuid AND status = 'ACTIVE'
-                        ORDER BY started_at DESC
-                        LIMIT 1
-                        """,
-                tenantId, patientId, encounterId
-        );
-
-        if (rows.isEmpty()) {
-            Map<String, Object> payload = new LinkedHashMap<>();
-            payload.put("data", null);
-            return ResponseEntity.ok(payload);
-        }
-
-        Map<String, Object> session = rows.getFirst();
-        UUID sessionId = uuidValue(session.get("id"));
-        List<Map<String, Object>> points = loadPoints(sessionId);
-        return ResponseEntity.ok(Map.of("data", buildSessionResource(session, points)));
+        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
     }
 
     @GetMapping("/sessions/{sessionId}")
@@ -130,10 +80,6 @@ public class MaternityPartographController {
             @PathVariable UUID sessionId
     ) {
         try {
-            Map<String, Object> session = jdbc.queryForMap(
-                    "SELECT * FROM maternity_partograph_sessions WHERE tenant_id = ? AND id = ?",
-                    tenantId, sessionId
-            );
             return ResponseEntity.ok(Map.of("data", buildSessionResource(session, loadPoints(sessionId))));
         } catch (EmptyResultDataAccessException ignored) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Partograph session not found"));
@@ -141,61 +87,18 @@ public class MaternityPartographController {
     }
 
     @PostMapping("/sessions/{sessionId}/points")
-    @Transactional
     public ResponseEntity<Map<String, Object>> addPoint(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @PathVariable UUID sessionId,
             @RequestBody RecordPartographPointRequest request
     ) {
         try {
-            Map<String, Object> session = jdbc.queryForMap(
-                    "SELECT * FROM maternity_partograph_sessions WHERE tenant_id = ? AND id = ?",
-                    tenantId, sessionId
-            );
             if (!"ACTIVE".equals(String.valueOf(session.get("status")))) {
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "Partograph session is not active"));
             }
 
             UUID pointId = UUID.randomUUID();
             OffsetDateTime observedAt = parseDateTime(request.observedAt());
-            jdbc.update("""
-                            INSERT INTO maternity_partograph_points (
-                                id, session_id, tenant_id, patient_id, encounter_id, observed_at, recorded_by,
-                                fetal_heart_rate_bpm, contraction_frequency_10min, contraction_duration_sec,
-                                cervical_dilation_cm, fetal_descent_fifths, maternal_pulse_bpm,
-                                systolic_bp, diastolic_bp, temperature_c, liquor, moulding, caput,
-                                oxytocin_rate_miu_min, urine_volume_ml, urine_protein, urine_acetone,
-                                maternal_condition, notes
-                            ) VALUES (
-                                ?, ?, ?, ?::uuid, ?::uuid, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
-                            )
-                            """,
-                    pointId,
-                    sessionId,
-                    tenantId,
-                    session.get("patient_id"),
-                    session.get("encounter_id"),
-                    observedAt,
-                    defaultString(request.recordedBy(), ""),
-                    request.fetalHeartRateBpm(),
-                    request.contractionFrequency10Min(),
-                    request.contractionDurationSec(),
-                    request.cervicalDilationCm(),
-                    request.fetalDescentFifths(),
-                    request.maternalPulseBpm(),
-                    request.systolicBp(),
-                    request.diastolicBp(),
-                    request.temperatureC(),
-                    request.liquor(),
-                    request.moulding(),
-                    request.caput(),
-                    request.oxytocinRateMiuMin(),
-                    request.urineVolumeMl(),
-                    request.urineProtein(),
-                    request.urineAcetone(),
-                    request.maternalCondition(),
-                    request.notes()
-            );
 
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", enrichPoint(pointRow(
                     pointId,
@@ -210,7 +113,6 @@ public class MaternityPartographController {
     }
 
     @PatchMapping("/sessions/{sessionId}/close")
-    @Transactional
     public ResponseEntity<Map<String, Object>> closeSession(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @PathVariable UUID sessionId,
@@ -222,28 +124,6 @@ public class MaternityPartographController {
             String outcome = request != null ? request.outcome() : null;
             String summaryNotes = request != null ? request.summaryNotes() : null;
 
-            jdbc.update("""
-                            UPDATE maternity_partograph_sessions
-                            SET status = 'CLOSED',
-                                closed_at = ?,
-                                closed_by = ?,
-                                outcome = COALESCE(?, outcome),
-                                summary_notes = COALESCE(?, summary_notes),
-                                updated_at = NOW()
-                            WHERE tenant_id = ? AND id = ?
-                            """,
-                    closedAt,
-                    defaultString(closedBy, ""),
-                    outcome,
-                    summaryNotes,
-                    tenantId,
-                    sessionId
-            );
-
-            Map<String, Object> session = jdbc.queryForMap(
-                    "SELECT * FROM maternity_partograph_sessions WHERE tenant_id = ? AND id = ?",
-                    tenantId, sessionId
-            );
             return ResponseEntity.ok(Map.of("data", buildSessionResource(session, loadPoints(sessionId))));
         } catch (EmptyResultDataAccessException ignored) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Partograph session not found"));
@@ -291,10 +171,6 @@ public class MaternityPartographController {
     ) {}
 
     private List<Map<String, Object>> loadPoints(UUID sessionId) {
-        return jdbc.queryForList(
-                "SELECT * FROM maternity_partograph_points WHERE session_id = ? ORDER BY observed_at ASC",
-                sessionId
-        ).stream().map(this::enrichPoint).toList();
     }
 
     private Map<String, Object> buildSessionResource(Map<String, Object> session, List<Map<String, Object>> points) {

@@ -7,7 +7,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -35,14 +34,9 @@ public class GrowthController {
 
     private static final Logger log = LoggerFactory.getLogger(GrowthController.class);
 
-    private final JdbcTemplate jdbcTemplate; // TODO: remove after verification
     private final GrowthStandardsService growthStandardsService;
     private final PctServiceClient pctClient;
 
-    public GrowthController(JdbcTemplate jdbcTemplate,
-                            GrowthStandardsService growthStandardsService,
-                            PctServiceClient pctClient) {
-        this.jdbcTemplate = jdbcTemplate;
         this.growthStandardsService = growthStandardsService;
         this.pctClient = pctClient;
     }
@@ -67,42 +61,7 @@ public class GrowthController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(name = "patient_id") String patientId) {
-
-        // STRANGLER: delegate to PctServiceClient
-        try {
-            JsonNode pctData = pctClient.listGrowthMeasurements(patientId);
-            if (pctData != null) {
-                Map<String, Object> response = new LinkedHashMap<>();
-                response.put("data", pctData);
-                response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
-                return ResponseEntity.ok(response);
-            }
-        } catch (Exception e) {
-            log.warn("PCT listGrowthMeasurements failed, falling back to local: {}", e.getMessage());
-        }
-
-        // STRANGLER: migrated to PctServiceClient — fallback to local JDBC
-        GrowthStandardsService.PatientContext patient = loadPatientContext(tenantId, patientId);
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList("""
-                SELECT id, patient_id, encounter_id, measured_at, recorded_by,
-                       weight_kg, length_cm, height_cm, head_circumference_cm, muac_cm,
-                       bmi, measurement_mode, notes, created_at
-                FROM growth_measurements
-                WHERE tenant_id = ? AND patient_id = ?::uuid
-                ORDER BY measured_at DESC, created_at DESC
-                """, tenantId, patientId);
-
-        List<Map<String, Object>> data = rows.stream()
-                .map(row -> toResource(row, patient))
-                .toList();
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", data);
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId
-        ));
-        return ResponseEntity.ok(response);
+        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
     }
 
     @PostMapping
@@ -139,18 +98,6 @@ public class GrowthController {
                 : OffsetDateTime.now();
         BigDecimal bmi = deriveBmi(request.weight_kg(), request.length_cm(), request.height_cm());
         UUID id = UUID.randomUUID();
-
-        jdbcTemplate.update("""
-                INSERT INTO growth_measurements
-                    (id, tenant_id, patient_id, encounter_id, measured_at, recorded_by,
-                     weight_kg, length_cm, height_cm, head_circumference_cm, muac_cm,
-                     bmi, measurement_mode, notes, created_at)
-                VALUES (?, ?, ?::uuid, ?::uuid, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
-                """,
-                id, tenantId, request.patient_id(), request.encounter_id(), measuredAt, request.recorded_by(),
-                request.weight_kg(), request.length_cm(), request.height_cm(), request.head_circumference_cm(),
-                request.muac_cm(), bmi, request.measurement_mode() != null ? request.measurement_mode() : "AUTO",
-                request.notes());
 
         GrowthStandardsService.PatientContext patient = loadPatientContext(tenantId, request.patient_id());
 
@@ -230,11 +177,6 @@ public class GrowthController {
     }
 
     private GrowthStandardsService.PatientContext loadPatientContext(String tenantId, String patientId) {
-        Map<String, Object> patient = jdbcTemplate.queryForMap("""
-                SELECT date_of_birth, sex
-                FROM patients
-                WHERE tenant_id = ? AND id = ?::uuid
-                """, tenantId, patientId);
 
         LocalDate dateOfBirth = patient.get("date_of_birth") instanceof LocalDate value
                 ? value

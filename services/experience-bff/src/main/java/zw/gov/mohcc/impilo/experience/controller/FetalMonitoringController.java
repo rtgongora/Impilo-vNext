@@ -6,8 +6,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -31,22 +29,19 @@ public class FetalMonitoringController {
     private static final Logger log = LoggerFactory.getLogger(FetalMonitoringController.class);
     private static final TypeReference<List<BigDecimal>> SAMPLE_LIST_TYPE = new TypeReference<>() {};
 
-    private final JdbcTemplate jdbc; // TODO: remove after verification
     private final ObjectMapper objectMapper;
     private final FetalMonitoringStreamService streamService;
     private final PctServiceClient pctClient;
 
-    public FetalMonitoringController(JdbcTemplate jdbc, ObjectMapper objectMapper,
+    public FetalMonitoringController(ObjectMapper objectMapper,
                                      FetalMonitoringStreamService streamService,
                                      PctServiceClient pctClient) {
-        this.jdbc = jdbc;
         this.objectMapper = objectMapper;
         this.streamService = streamService;
         this.pctClient = pctClient;
     }
 
     @PostMapping("/sessions")
-    @Transactional
     public ResponseEntity<Map<String, Object>> createSession(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestBody CreateFetalMonitoringSessionRequest request
@@ -76,24 +71,6 @@ public class FetalMonitoringController {
         // STRANGLER: migrated to PctServiceClient — dual-write to local BFF table as backup cache
         UUID id = UUID.randomUUID();
         OffsetDateTime startedAt = parseDateTime(request.startedAt());
-        jdbc.update("""
-                        INSERT INTO ctg_monitoring_sessions (
-                            id, tenant_id, patient_id, encounter_id, status, started_at, started_by,
-                            device_id, monitoring_mode, baseline_fhr_bpm, baseline_maternal_hr_bpm, summary_notes
-                        ) VALUES (?, ?, ?::uuid, ?::uuid, 'ACTIVE', ?, ?, ?, ?, ?, ?, ?)
-                        """,
-                id,
-                tenantId,
-                request.patientId(),
-                request.encounterId(),
-                startedAt,
-                defaultString(request.startedBy(), ""),
-                request.deviceId(),
-                defaultString(request.monitoringMode(), "EXTERNAL_CTG"),
-                request.baselineFhrBpm(),
-                request.baselineMaternalHrBpm(),
-                request.summaryNotes()
-        );
 
         Map<String, Object> sessionPayload = buildSessionResource(sessionRow(id, request, startedAt), List.of(), List.of());
         streamService.publishSessionOpened(tenantId, id, sessionPayload);
@@ -106,31 +83,7 @@ public class FetalMonitoringController {
             @RequestParam String patientId,
             @RequestParam(required = false) String encounterId
     ) {
-        List<Map<String, Object>> rows = encounterId == null || encounterId.isBlank()
-                ? jdbc.queryForList("""
-                        SELECT * FROM ctg_monitoring_sessions
-                        WHERE tenant_id = ? AND patient_id = ?::uuid AND status = 'ACTIVE'
-                        ORDER BY started_at DESC
-                        LIMIT 1
-                        """, tenantId, patientId)
-                : jdbc.queryForList("""
-                        SELECT * FROM ctg_monitoring_sessions
-                        WHERE tenant_id = ? AND patient_id = ?::uuid AND encounter_id = ?::uuid AND status = 'ACTIVE'
-                        ORDER BY started_at DESC
-                        LIMIT 1
-                        """, tenantId, patientId, encounterId);
-
-        if (rows.isEmpty()) {
-            return ResponseEntity.ok(Map.of("data", null));
-        }
-
-        Map<String, Object> session = rows.getFirst();
-        UUID sessionId = uuidValue(session.get("id"));
-        return ResponseEntity.ok(Map.of("data", buildSessionResource(
-                session,
-                loadAnnotations(sessionId),
-                loadChunks(sessionId, null, null, null)
-        )));
+        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
     }
 
     @GetMapping("/sessions/{sessionId}")
@@ -139,10 +92,6 @@ public class FetalMonitoringController {
             @PathVariable UUID sessionId
     ) {
         try {
-            Map<String, Object> session = jdbc.queryForMap(
-                    "SELECT * FROM ctg_monitoring_sessions WHERE tenant_id = ? AND id = ?",
-                    tenantId, sessionId
-            );
             return ResponseEntity.ok(Map.of("data", buildSessionResource(
                     session,
                     loadAnnotations(sessionId),
@@ -154,7 +103,6 @@ public class FetalMonitoringController {
     }
 
     @PostMapping("/sessions/{sessionId}/chunks")
-    @Transactional
     public ResponseEntity<Map<String, Object>> addChunk(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @PathVariable UUID sessionId,
@@ -171,10 +119,6 @@ public class FetalMonitoringController {
         }
 
         try {
-            Map<String, Object> session = jdbc.queryForMap(
-                    "SELECT * FROM ctg_monitoring_sessions WHERE tenant_id = ? AND id = ?",
-                    tenantId, sessionId
-            );
             if (!"ACTIVE".equals(String.valueOf(session.get("status")))) {
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "CTG monitoring session is not active"));
             }
@@ -186,33 +130,6 @@ public class FetalMonitoringController {
                     .divide(request.sampleRateHz(), 3, RoundingMode.HALF_UP);
             OffsetDateTime endedAt = startedAt.plusNanos(durationSeconds.multiply(BigDecimal.valueOf(1_000_000_000L)).longValue());
             String sampleJson = toJson(request.samples());
-
-            jdbc.update("""
-                            INSERT INTO ctg_trace_chunks (
-                                id, session_id, tenant_id, patient_id, encounter_id, channel,
-                                started_at, ended_at, sample_rate_hz, sample_count, duration_seconds,
-                                unit, samples_json, captured_by, device_id, notes
-                            ) VALUES (
-                                ?, ?, ?, ?::uuid, ?::uuid, ?, ?, ?, ?, ?, ?, ?, ?::jsonb, ?, ?, ?
-                            )
-                            """,
-                    chunkId,
-                    sessionId,
-                    tenantId,
-                    session.get("patient_id"),
-                    session.get("encounter_id"),
-                    request.channel().trim().toUpperCase(),
-                    startedAt,
-                    endedAt,
-                    request.sampleRateHz(),
-                    sampleCount,
-                    durationSeconds,
-                    defaultString(request.unit(), defaultUnitForChannel(request.channel())),
-                    sampleJson,
-                    defaultString(request.capturedBy(), ""),
-                    coalesce(request.deviceId(), session.get("device_id")),
-                    request.notes()
-            );
 
             Map<String, Object> chunkPayload = enrichChunk(chunkRow(
                     chunkId,
@@ -240,7 +157,6 @@ public class FetalMonitoringController {
             @RequestParam(required = false) String to
     ) {
         try {
-            jdbc.queryForMap("SELECT id FROM ctg_monitoring_sessions WHERE tenant_id = ? AND id = ?", tenantId, sessionId);
             List<Map<String, Object>> chunks = loadChunks(
                     sessionId,
                     channel == null || channel.isBlank() ? null : channel.trim().toUpperCase(),
@@ -254,7 +170,6 @@ public class FetalMonitoringController {
     }
 
     @PostMapping("/sessions/{sessionId}/annotations")
-    @Transactional
     public ResponseEntity<Map<String, Object>> addAnnotation(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @PathVariable UUID sessionId,
@@ -265,38 +180,12 @@ public class FetalMonitoringController {
         }
 
         try {
-            Map<String, Object> session = jdbc.queryForMap(
-                    "SELECT * FROM ctg_monitoring_sessions WHERE tenant_id = ? AND id = ?",
-                    tenantId, sessionId
-            );
             if (!"ACTIVE".equals(String.valueOf(session.get("status")))) {
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "CTG monitoring session is not active"));
             }
 
             UUID annotationId = UUID.randomUUID();
             OffsetDateTime recordedAt = parseDateTime(request.recordedAt());
-            jdbc.update("""
-                            INSERT INTO ctg_annotations (
-                                id, session_id, tenant_id, patient_id, encounter_id, recorded_at,
-                                category, channel, sample_offset_sec, value, severity, notes, recorded_by
-                            ) VALUES (
-                                ?, ?, ?, ?::uuid, ?::uuid, ?, ?, ?, ?, ?, ?, ?, ?
-                            )
-                            """,
-                    annotationId,
-                    sessionId,
-                    tenantId,
-                    session.get("patient_id"),
-                    session.get("encounter_id"),
-                    recordedAt,
-                    request.category().trim().toUpperCase(),
-                    request.channel() == null || request.channel().isBlank() ? null : request.channel().trim().toUpperCase(),
-                    request.sampleOffsetSec(),
-                    request.value(),
-                    request.severity() == null || request.severity().isBlank() ? null : request.severity().trim().toUpperCase(),
-                    request.notes(),
-                    defaultString(request.recordedBy(), "")
-            );
 
             Map<String, Object> annotationPayload = annotationRow(
                     annotationId,
@@ -404,14 +293,9 @@ public class FetalMonitoringController {
             args.add(to);
         }
         sql.append(" ORDER BY started_at ASC");
-        return jdbc.queryForList(sql.toString(), args.toArray()).stream().map(this::enrichChunk).toList();
     }
 
     private List<Map<String, Object>> loadAnnotations(UUID sessionId) {
-        return jdbc.queryForList(
-                "SELECT * FROM ctg_annotations WHERE session_id = ? ORDER BY recorded_at ASC",
-                sessionId
-        );
     }
 
     private Map<String, Object> enrichChunk(Map<String, Object> row) {

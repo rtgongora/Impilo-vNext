@@ -2,7 +2,6 @@ package zw.gov.mohcc.impilo.experience.controller.mobile.citizen;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.ButanoServiceClient;
@@ -22,14 +21,9 @@ import java.util.*;
 @RequestMapping("/internal/v1/mobile/citizen/summary")
 public class CitizenHealthSummaryController {
 
-    private final JdbcTemplate jdbcTemplate;
     private final ButanoServiceClient butanoClient;
     private final PctServiceClient pctClient;
 
-    public CitizenHealthSummaryController(JdbcTemplate jdbcTemplate,
-                                          ButanoServiceClient butanoClient,
-                                          PctServiceClient pctClient) {
-        this.jdbcTemplate = jdbcTemplate;
         this.butanoClient = butanoClient;
         this.pctClient = pctClient;
     }

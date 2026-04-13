@@ -3,13 +3,10 @@ package zw.gov.mohcc.impilo.experience.controller;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.CommunityServiceClient;
 
-import java.time.OffsetDateTime;
 import java.util.*;
 
 /**
@@ -20,11 +17,8 @@ import java.util.*;
 @RequestMapping("/internal/v1/omnichannel")
 public class OmnichannelController {
 
-    private final JdbcTemplate jdbcTemplate;
     private final CommunityServiceClient communityClient;
 
-    public OmnichannelController(JdbcTemplate jdbcTemplate, CommunityServiceClient communityClient) {
-        this.jdbcTemplate = jdbcTemplate;
         this.communityClient = communityClient;
     }
 
@@ -44,7 +38,6 @@ public class OmnichannelController {
     }
 
     @PostMapping("/callbacks")
-    @Transactional
     public ResponseEntity<Map<String, Object>> createCallback(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
@@ -60,7 +53,6 @@ public class OmnichannelController {
     }
 
     @PostMapping("/callbacks/{id}/complete")
-    @Transactional
     public ResponseEntity<Map<String, Object>> completeCallback(
             @PathVariable UUID id, @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
@@ -97,7 +89,6 @@ public class OmnichannelController {
     }
 
     @PostMapping("/sms-journeys")
-    @Transactional
     public ResponseEntity<Map<String, Object>> createSmsJourney(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
@@ -143,7 +134,6 @@ public class OmnichannelController {
     }
 
     @PostMapping("/disclosure-rules")
-    @Transactional
     public ResponseEntity<Map<String, Object>> createDisclosureRule(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,

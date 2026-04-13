@@ -2,22 +2,14 @@ package zw.gov.mohcc.impilo.experience.controller;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import zw.gov.mohcc.impilo.experience.client.DocumentServiceClient;
-import zw.gov.mohcc.impilo.experience.domain.ClinicalDocument;
-import zw.gov.mohcc.impilo.experience.repository.ClinicalDocumentRepository;
-import zw.gov.mohcc.impilo.experience.service.OutboxService;
 
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -36,18 +28,9 @@ public class ClinicalDocumentsController {
 
     private static final Logger log = LoggerFactory.getLogger(ClinicalDocumentsController.class);
 
-    private final ClinicalDocumentRepository clinicalDocumentRepository;
-    private final OutboxService outboxService;
-    private final JdbcTemplate jdbcTemplate;
     private final DocumentServiceClient documentServiceClient;
 
-    public ClinicalDocumentsController(ClinicalDocumentRepository clinicalDocumentRepository,
-                                       OutboxService outboxService,
-                                       JdbcTemplate jdbcTemplate,
-                                       DocumentServiceClient documentServiceClient) {
-        this.clinicalDocumentRepository = clinicalDocumentRepository;
-        this.outboxService = outboxService;
-        this.jdbcTemplate = jdbcTemplate;
+    public ClinicalDocumentsController(DocumentServiceClient documentServiceClient) {
         this.documentServiceClient = documentServiceClient;
     }
 
@@ -71,38 +54,10 @@ public class ClinicalDocumentsController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false, name = "patient_id") String patientId) {
-
-        PageRequest pageable = PageRequest.of(page, Math.min(size, 100), Sort.by("createdAt").descending());
-
-        Page<ClinicalDocument> result;
-        if (patientId != null) {
-            result = clinicalDocumentRepository.findByTenantIdAndPatientId(tenantId, UUID.fromString(patientId), pageable);
-        } else {
-            result = clinicalDocumentRepository.findAll(pageable);
-        }
-
-        List<Map<String, Object>> data = result.getContent().stream()
-                .map(this::toResource)
-                .toList();
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", data);
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId,
-                "page", Map.of(
-                        "number", result.getNumber(),
-                        "size", result.getSize(),
-                        "total_elements", result.getTotalElements(),
-                        "total_pages", result.getTotalPages()
-                )
-        ));
-
-        return ResponseEntity.ok(response);
+        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
     }
 
     @PostMapping
-    @Transactional
     public ResponseEntity<Map<String, Object>> createDocument(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.POD_ID) String podId,
@@ -113,40 +68,6 @@ public class ClinicalDocumentsController {
 
         UUID documentId = UUID.randomUUID();
         OffsetDateTime now = OffsetDateTime.now();
-
-        jdbcTemplate.update("""
-            INSERT INTO clinical_documents
-                (id, tenant_id, patient_id, encounter_id, document_type,
-                 title, description, mime_type, file_size, storage_key,
-                 uploaded_by, status, created_at, updated_at)
-            VALUES (?, ?, ?::uuid, ?::uuid, ?, ?, ?, ?, ?, ?, ?, 'ACTIVE', ?, ?)
-            """,
-                documentId, tenantId, request.patient_id(), request.encounter_id(),
-                request.document_type(),
-                request.title(), request.description(),
-                request.mime_type(), request.file_size(), request.storage_key(),
-                request.uploaded_by(),
-                now, now);
-
-        outboxService.writeOutboxEvent(
-                "impilo.experience.document.uploaded.v1",
-                correlationId,
-                requestId,
-                idempotencyKey != null ? idempotencyKey : requestId,
-                tenantId,
-                podId,
-                "ClinicalDocument",
-                documentId.toString(),
-                Map.of(
-                        "document_id", documentId.toString(),
-                        "patient_id", request.patient_id(),
-                        "document_type", request.document_type(),
-                        "title", request.title(),
-                        "storage_key", request.storage_key(),
-                        "status", "ACTIVE"
-                ),
-                Map.of()
-        );
 
         Map<String, Object> attributes = new LinkedHashMap<>();
         attributes.put("patient_id", request.patient_id());
@@ -174,47 +95,5 @@ public class ClinicalDocumentsController {
         ));
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
-    }
-
-    private Map<String, Object> toResource(ClinicalDocument d) {
-        Map<String, Object> attributes = new LinkedHashMap<>();
-        attributes.put("patient_id", d.getPatientId());
-        attributes.put("encounter_id", d.getEncounterId());
-        attributes.put("document_type", d.getDocumentType());
-        attributes.put("title", d.getTitle());
-        attributes.put("description", d.getDescription());
-        attributes.put("mime_type", d.getMimeType());
-        attributes.put("file_size", d.getFileSize());
-        attributes.put("storage_key", d.getStorageKey());
-        attributes.put("uploaded_by", d.getUploadedBy());
-        attributes.put("status", d.getStatus());
-        attributes.put("created_at", d.getCreatedAt());
-        attributes.put("updated_at", d.getUpdatedAt());
-
-        // V15 bridge: include document_object_id and download URL if available
-        try {
-            List<Map<String, Object>> objRows = jdbcTemplate.queryForList(
-                    "SELECT document_object_id FROM clinical_documents WHERE id = ?", d.getId());
-            if (!objRows.isEmpty() && objRows.get(0).get("document_object_id") != null) {
-                UUID objectId = (UUID) objRows.get(0).get("document_object_id");
-                attributes.put("document_object_id", objectId.toString());
-                try {
-                    JsonNode signedUrl = documentServiceClient.getSignedUrl(objectId);
-                    if (signedUrl != null && signedUrl.has("url")) {
-                        attributes.put("download_url", signedUrl.get("url").asText());
-                    }
-                } catch (Exception e) {
-                    log.debug("Could not generate download URL for object {}: {}", objectId, e.getMessage());
-                }
-            }
-        } catch (Exception e) {
-            // V15 column may not exist yet
-        }
-
-        Map<String, Object> resource = new LinkedHashMap<>();
-        resource.put("id", d.getId().toString());
-        resource.put("type", "ClinicalDocument");
-        resource.put("attributes", attributes);
-        return resource;
     }
 }

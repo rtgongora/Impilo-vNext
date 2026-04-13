@@ -4,21 +4,14 @@ import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.MsikaFlowServiceClient;
-import zw.gov.mohcc.impilo.experience.domain.MarketplaceOrder;
-import zw.gov.mohcc.impilo.experience.repository.MarketplaceOrderRepository;
-import zw.gov.mohcc.impilo.experience.service.OutboxService;
 
-import java.time.OffsetDateTime;
 import java.util.*;
 
 /**
@@ -31,18 +24,9 @@ import java.util.*;
 @RequestMapping("/internal/v1/marketplace")
 public class MarketplaceController {
 
-    private final MarketplaceOrderRepository marketplaceOrderRepository;
-    private final OutboxService outboxService;
-    private final JdbcTemplate jdbcTemplate;
     private final MsikaFlowServiceClient msikaFlowClient;
 
-    public MarketplaceController(MarketplaceOrderRepository marketplaceOrderRepository,
-                                 OutboxService outboxService,
-                                 JdbcTemplate jdbcTemplate,
-                                 MsikaFlowServiceClient msikaFlowClient) {
-        this.marketplaceOrderRepository = marketplaceOrderRepository;
-        this.outboxService = outboxService;
-        this.jdbcTemplate = jdbcTemplate;
+    public MarketplaceController(MsikaFlowServiceClient msikaFlowClient) {
         this.msikaFlowClient = msikaFlowClient;
     }
 
@@ -189,24 +173,6 @@ public class MarketplaceController {
         // jdbcTemplate.update("""
         //     INSERT INTO marketplace_orders (...) VALUES (...)
         //     """, ...);
-
-        outboxService.writeOutboxEvent(
-                "impilo.experience.marketplace.order-created.v1",
-                correlationId,
-                requestId,
-                idempotencyKey != null ? idempotencyKey : requestId,
-                tenantId,
-                podId,
-                "MarketplaceOrder",
-                requestId,
-                Map.of(
-                        "facility_id", request.facility_id(),
-                        "order_number", request.order_number(),
-                        "ordered_by", request.ordered_by(),
-                        "status", "PENDING"
-                ),
-                Map.of()
-        );
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", result.getBody());

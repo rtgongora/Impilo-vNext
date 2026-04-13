@@ -5,15 +5,12 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.CommunityServiceClient;
 import zw.gov.mohcc.impilo.experience.controller.ResourceNotFoundException;
-import zw.gov.mohcc.impilo.experience.service.OutboxService;
 
-import java.time.OffsetDateTime;
 import java.util.*;
 
 /**
@@ -28,14 +25,8 @@ import java.util.*;
 @RequestMapping("/internal/v1/mobile/citizen/support")
 public class CitizenSupportController {
 
-    private final JdbcTemplate jdbcTemplate;
-    private final OutboxService outboxService;
     private final CommunityServiceClient communityClient;
 
-    public CitizenSupportController(JdbcTemplate jdbcTemplate, OutboxService outboxService,
-                                    CommunityServiceClient communityClient) {
-        this.jdbcTemplate = jdbcTemplate;
-        this.outboxService = outboxService;
         this.communityClient = communityClient;
     }
 
@@ -93,13 +84,6 @@ public class CitizenSupportController {
         // jdbcTemplate.update("""
         //     INSERT INTO citizen_support_tickets (...) VALUES (...)
         //     """, ...);
-
-        outboxService.writeOutboxEvent(
-                "impilo.experience.citizen.support-ticket-created.v1",
-                correlationId, requestId, requestId, tenantId, podId,
-                "CitizenSupportTicket", requestId,
-                Map.of("category", body.category(), "status", "OPEN"),
-                Map.of());
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", result);

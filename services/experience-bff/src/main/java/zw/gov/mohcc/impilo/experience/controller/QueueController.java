@@ -6,19 +6,11 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
-import zw.gov.mohcc.impilo.experience.domain.QueueEntry;
-import zw.gov.mohcc.impilo.experience.repository.QueueEntryRepository;
-import zw.gov.mohcc.impilo.experience.service.OutboxService;
 
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -36,18 +28,9 @@ public class QueueController {
 
     private static final Logger log = LoggerFactory.getLogger(QueueController.class);
 
-    private final QueueEntryRepository queueEntryRepository;
-    private final OutboxService outboxService;
-    private final JdbcTemplate jdbcTemplate; // TODO: remove after verification
     private final PctServiceClient pctClient;
 
-    public QueueController(QueueEntryRepository queueEntryRepository,
-                           OutboxService outboxService,
-                           JdbcTemplate jdbcTemplate,
-                           PctServiceClient pctClient) {
-        this.queueEntryRepository = queueEntryRepository;
-        this.outboxService = outboxService;
-        this.jdbcTemplate = jdbcTemplate;
+    public QueueController(PctServiceClient pctClient) {
         this.pctClient = pctClient;
     }
 
@@ -72,36 +55,10 @@ public class QueueController {
             @RequestParam(required = false, name = "facility_id") String facilityId,
             @RequestParam(required = false) String status,
             @RequestParam(required = false, name = "queue_type") String queueType) {
-
-        // Sort by arrival time ascending (FIFO — longest waiting first)
-        PageRequest pageable = PageRequest.of(page, Math.min(size, 100),
-                Sort.by(Sort.Order.asc("arrivalTime")));
-
-        Page<QueueEntry> result = queueEntryRepository.findByFilters(
-                tenantId, facilityId, status, queueType, pageable);
-
-        List<Map<String, Object>> data = result.getContent().stream()
-                .map(this::toResource)
-                .toList();
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", data);
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId,
-                "page", Map.of(
-                        "number", result.getNumber(),
-                        "size", result.getSize(),
-                        "total_elements", result.getTotalElements(),
-                        "total_pages", result.getTotalPages()
-                )
-        ));
-
-        return ResponseEntity.ok(response);
+        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
     }
 
     @PostMapping("/entries")
-    @Transactional
     public ResponseEntity<Map<String, Object>> createEntry(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.POD_ID) String podId,
@@ -113,48 +70,14 @@ public class QueueController {
         UUID entryId = UUID.randomUUID();
         OffsetDateTime now = OffsetDateTime.now();
 
-        jdbcTemplate.update("""
-            INSERT INTO queue_entries
-                (id, tenant_id, facility_id, patient_id, queue_type, priority, reason, status,
-                 arrival_time, created_at, updated_at)
-            VALUES (?, ?, ?::uuid, ?::uuid, ?, ?, ?, 'WAITING', ?, ?, ?)
-            """,
-                entryId, tenantId, request.facility_id(), request.patient_id(),
-                request.queue_type(),
-                request.priority() != null ? request.priority() : "NORMAL",
-                request.reason(),
-                now, now, now);
-
         // Store patient_cpid for later PCT delegation
         String cpid = request.patient_cpid();
         if (cpid == null || cpid.isBlank()) {
             // Resolve CPID from patients table
-            List<Map<String, Object>> cpidRows = jdbcTemplate.queryForList(
-                    "SELECT cpid FROM patients WHERE id = ?::uuid AND tenant_id = ?",
-                    request.patient_id(), tenantId);
             if (!cpidRows.isEmpty() && cpidRows.get(0).get("cpid") != null) {
                 cpid = cpidRows.get(0).get("cpid").toString();
             }
         }
-
-        outboxService.writeOutboxEvent(
-                "impilo.experience.queue.entry-created.v1",
-                correlationId,
-                requestId,
-                idempotencyKey != null ? idempotencyKey : requestId,
-                tenantId,
-                podId,
-                "QueueEntry",
-                entryId.toString(),
-                Map.of(
-                        "queue_entry_id", entryId.toString(),
-                        "patient_id", request.patient_id(),
-                        "facility_id", request.facility_id(),
-                        "queue_type", request.queue_type(),
-                        "status", "WAITING"
-                ),
-                Map.of()
-        );
 
         // Delegate to PCT: start a journey so the sovereign service tracks this visit
         String pctJourneyId = null;
@@ -171,11 +94,6 @@ public class QueueController {
                 log.info("PCT journey started: {} for queue entry {}", pctJourneyId, entryId);
 
                 // Persist the PCT journey reference
-                if (pctJourneyId != null) {
-                    jdbcTemplate.update(
-                            "UPDATE queue_entries SET pct_journey_id = ? WHERE id = ?",
-                            pctJourneyId, entryId);
-                }
             } catch (Exception e) {
                 log.warn("PCT journey delegation failed (non-blocking): {}", e.getMessage());
             }
@@ -209,7 +127,6 @@ public class QueueController {
     }
 
     @PostMapping("/entries/{id}/call")
-    @Transactional
     public ResponseEntity<Map<String, Object>> callEntry(
             @PathVariable UUID id,
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
@@ -217,37 +134,7 @@ public class QueueController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey) {
-
-        QueueEntry entry = queueEntryRepository.findByIdAndTenantId(id, tenantId)
-                .orElseThrow(() -> new ResourceNotFoundException("Queue entry not found: " + id));
-
-        entry.call();
-        queueEntryRepository.save(entry);
-
-        outboxService.writeOutboxEvent(
-                "impilo.experience.queue.entry-called.v1",
-                correlationId,
-                requestId,
-                idempotencyKey != null ? idempotencyKey : requestId,
-                tenantId,
-                podId,
-                "QueueEntry",
-                id.toString(),
-                Map.of(
-                        "queue_entry_id", id.toString(),
-                        "status", "CALLED"
-                ),
-                Map.of()
-        );
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", toResource(entry));
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId
-        ));
-
-        return ResponseEntity.ok(response);
+        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
     }
 
     /**
@@ -258,7 +145,6 @@ public class QueueController {
      * triage_category and priority based on acuity level.
      */
     @PostMapping("/entries/{id}/triage")
-    @Transactional
     public ResponseEntity<Map<String, Object>> triageEntry(
             @PathVariable UUID id,
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
@@ -267,9 +153,6 @@ public class QueueController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @RequestBody Map<String, Object> body) {
-
-        QueueEntry entry = queueEntryRepository.findByIdAndTenantId(id, tenantId)
-                .orElseThrow(() -> new ResourceNotFoundException("Queue entry not found: " + id));
 
         int acuity = body.containsKey("acuity") ? ((Number) body.get("acuity")).intValue() : 3;
         String notes = body.containsKey("notes") ? (String) body.get("notes") : null;
@@ -293,10 +176,6 @@ public class QueueController {
 
         // Update queue entry triage status
         OffsetDateTime now = OffsetDateTime.now();
-        jdbcTemplate.update("""
-            UPDATE queue_entries SET triage_category = ?, priority = ?, updated_at = ?
-            WHERE id = ? AND tenant_id = ?
-            """, triageCategory, priority, now, id, tenantId);
 
         // Create triage record via triage API
         UUID triageId = UUID.randomUUID();
@@ -318,51 +197,18 @@ public class QueueController {
         String triagedBy = body.containsKey("triaged_by") ? (String) body.get("triaged_by") : "system";
         String triagedByName = body.containsKey("triaged_by_name") ? (String) body.get("triaged_by_name") : "";
 
-        jdbcTemplate.update("""
-            INSERT INTO triage_records
-                (id, tenant_id, patient_id, queue_entry_id, pct_journey_id,
-                 acuity, chief_complaint, danger_signs, vitals, notes,
-                 triaged_by, triaged_by_name, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?::jsonb, ?::jsonb, ?, ?, ?, ?, ?)
-            """,
-                triageId, tenantId, entry.getPatientId(), id,
-                null, // pct_journey_id resolved below
-                acuity,
-                body.containsKey("chief_complaint") ? (String) body.get("chief_complaint") : null,
-                dangerSignsJson, vitalsJson, notes,
-                triagedBy, triagedByName, now, now);
-
         // Delegate to PCT if journey ID available
         String pctJourneyId = null;
-        List<Map<String, Object>> journeyRows = jdbcTemplate.queryForList(
-                "SELECT pct_journey_id FROM queue_entries WHERE id = ? AND tenant_id = ?", id, tenantId);
         if (!journeyRows.isEmpty() && journeyRows.get(0).get("pct_journey_id") != null) {
             pctJourneyId = journeyRows.get(0).get("pct_journey_id").toString();
             try {
                 pctClient.recordTriage(pctJourneyId, String.valueOf(acuity), null, notes);
                 // Update triage record with journey ID
-                jdbcTemplate.update("UPDATE triage_records SET pct_journey_id = ? WHERE id = ?",
-                        pctJourneyId, triageId);
                 log.info("PCT triage delegated from queue for journey={}", pctJourneyId);
             } catch (Exception e) {
                 log.warn("PCT triage delegation from queue failed (non-blocking): {}", e.getMessage());
             }
         }
-
-        outboxService.writeOutboxEvent(
-                "impilo.experience.queue.entry-triaged.v1",
-                correlationId, requestId,
-                idempotencyKey != null ? idempotencyKey : requestId,
-                tenantId, podId,
-                "QueueEntry", id.toString(),
-                Map.of(
-                        "queue_entry_id", id.toString(),
-                        "acuity", acuity,
-                        "triage_category", triageCategory,
-                        "priority", priority
-                ),
-                Map.of()
-        );
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", Map.of(
@@ -378,7 +224,6 @@ public class QueueController {
     }
 
     @PostMapping("/entries/{id}/complete")
-    @Transactional
     public ResponseEntity<Map<String, Object>> completeEntry(
             @PathVariable UUID id,
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
@@ -386,41 +231,10 @@ public class QueueController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey) {
-
-        QueueEntry entry = queueEntryRepository.findByIdAndTenantId(id, tenantId)
-                .orElseThrow(() -> new ResourceNotFoundException("Queue entry not found: " + id));
-
-        entry.complete();
-        queueEntryRepository.save(entry);
-
-        outboxService.writeOutboxEvent(
-                "impilo.experience.queue.entry-completed.v1",
-                correlationId,
-                requestId,
-                idempotencyKey != null ? idempotencyKey : requestId,
-                tenantId,
-                podId,
-                "QueueEntry",
-                id.toString(),
-                Map.of(
-                        "queue_entry_id", id.toString(),
-                        "status", "COMPLETED"
-                ),
-                Map.of()
-        );
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", toResource(entry));
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId
-        ));
-
-        return ResponseEntity.ok(response);
+        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
     }
 
     @PostMapping("/entries/{id}/no-show")
-    @Transactional
     public ResponseEntity<Map<String, Object>> markNoShow(
             @PathVariable UUID id,
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
@@ -428,16 +242,7 @@ public class QueueController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
 
         OffsetDateTime now = OffsetDateTime.now();
-        int updated = jdbcTemplate.update("""
-            UPDATE queue_entries SET status = 'NO_SHOW', no_show_at = ?, updated_at = ?
-            WHERE id = ? AND tenant_id = ? AND status IN ('WAITING', 'CALLED')
-            """, now, now, id, tenantId);
         if (updated == 0) throw new ResourceNotFoundException("Queue entry not found or not in callable state: " + id);
-
-        outboxService.writeOutboxEvent(
-                "impilo.experience.queue.entry-noshow.v1", correlationId, requestId,
-                requestId, tenantId, "", "QueueEntry", id.toString(),
-                Map.of("queue_entry_id", id.toString(), "status", "NO_SHOW"), Map.of());
 
         return ResponseEntity.ok(Map.of(
                 "data", Map.of("id", id.toString(), "status", "NO_SHOW"),
@@ -445,7 +250,6 @@ public class QueueController {
     }
 
     @PostMapping("/entries/{id}/transfer")
-    @Transactional
     public ResponseEntity<Map<String, Object>> transferEntry(
             @PathVariable UUID id,
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
@@ -457,26 +261,12 @@ public class QueueController {
         String reason = body.getOrDefault("reason", "");
         OffsetDateTime now = OffsetDateTime.now();
 
-        jdbcTemplate.update("""
-            UPDATE queue_entries SET status = 'TRANSFERRED', transferred_to = ?::uuid,
-                transfer_reason = ?, updated_at = ?
-            WHERE id = ? AND tenant_id = ?
-            """, targetFacilityId, reason, now, id, tenantId);
-
-        outboxService.writeOutboxEvent(
-                "impilo.experience.queue.entry-transferred.v1", correlationId, requestId,
-                requestId, tenantId, "", "QueueEntry", id.toString(),
-                Map.of("queue_entry_id", id.toString(), "status", "TRANSFERRED",
-                        "target_facility_id", targetFacilityId != null ? targetFacilityId : ""),
-                Map.of());
-
         return ResponseEntity.ok(Map.of(
                 "data", Map.of("id", id.toString(), "status", "TRANSFERRED"),
                 "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 
     @PostMapping("/entries/{id}/pause")
-    @Transactional
     public ResponseEntity<Map<String, Object>> pauseEntry(
             @PathVariable UUID id,
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
@@ -484,10 +274,6 @@ public class QueueController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
 
         OffsetDateTime now = OffsetDateTime.now();
-        int updated = jdbcTemplate.update("""
-            UPDATE queue_entries SET status = 'PAUSED', updated_at = ?
-            WHERE id = ? AND tenant_id = ? AND status IN ('CALLED', 'IN_SERVICE', 'SEEN')
-            """, now, id, tenantId);
         if (updated == 0) throw new ResourceNotFoundException("Queue entry not found or not in pausable state: " + id);
 
         return ResponseEntity.ok(Map.of(
@@ -496,7 +282,6 @@ public class QueueController {
     }
 
     @PostMapping("/entries/{id}/resume")
-    @Transactional
     public ResponseEntity<Map<String, Object>> resumeEntry(
             @PathVariable UUID id,
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
@@ -504,10 +289,6 @@ public class QueueController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
 
         OffsetDateTime now = OffsetDateTime.now();
-        int updated = jdbcTemplate.update("""
-            UPDATE queue_entries SET status = 'IN_SERVICE', updated_at = ?
-            WHERE id = ? AND tenant_id = ? AND status = 'PAUSED'
-            """, now, id, tenantId);
         if (updated == 0) throw new ResourceNotFoundException("Queue entry not found or not paused: " + id);
 
         return ResponseEntity.ok(Map.of(
@@ -521,32 +302,7 @@ public class QueueController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(required = false, name = "facility_id") UUID facilityId) {
-
-        List<Map<String, Object>> rows;
-        if (facilityId != null) {
-            rows = jdbcTemplate.queryForList(
-                    "SELECT * FROM queue_definitions WHERE tenant_id = ? AND facility_id = ? AND is_active = true ORDER BY name",
-                    tenantId, facilityId);
-        } else {
-            rows = jdbcTemplate.queryForList(
-                    "SELECT * FROM queue_definitions WHERE tenant_id = ? AND is_active = true ORDER BY name",
-                    tenantId);
-        }
-
-        List<Map<String, Object>> data = rows.stream().map(row -> {
-            Map<String, Object> attrs = new LinkedHashMap<>();
-            attrs.put("name", row.get("name"));
-            attrs.put("serviceType", row.get("service_type"));
-            attrs.put("queueType", row.get("queue_type"));
-            attrs.put("slaTargetMinutes", row.get("sla_target_minutes"));
-            attrs.put("maxCapacity", row.get("max_capacity"));
-            attrs.put("operatingHours", row.get("operating_hours"));
-            attrs.put("routingRules", row.get("routing_rules"));
-            return Map.<String, Object>of("id", row.get("id").toString(), "type", "queue-definition", "attributes", attrs);
-        }).toList();
-
-        return ResponseEntity.ok(Map.of("data", data,
-                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
     }
 
     @PostMapping("/entries/stats")
@@ -560,14 +316,6 @@ public class QueueController {
 
         Map<String, Object> stats = new LinkedHashMap<>();
         if (facilityId != null) {
-            List<Map<String, Object>> counts = jdbcTemplate.queryForList("""
-                SELECT status, COUNT(*) as count,
-                       AVG(EXTRACT(EPOCH FROM (COALESCE(called_at, now()) - arrival_time))) as avg_wait_seconds
-                FROM queue_entries
-                WHERE tenant_id = ? AND facility_id = ?::uuid
-                    AND created_at >= CURRENT_DATE
-                GROUP BY status
-                """, tenantId, facilityId);
 
             long waiting = 0, called = 0, inService = 0, completed = 0, noShow = 0;
             double avgWait = 0;
@@ -592,31 +340,5 @@ public class QueueController {
 
         return ResponseEntity.ok(Map.of("data", stats,
                 "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
-    }
-
-    private Map<String, Object> toResource(QueueEntry q) {
-        Map<String, Object> attributes = new LinkedHashMap<>();
-        attributes.put("facility_id", q.getFacilityId());
-        attributes.put("workspace_id", q.getWorkspaceId());
-        attributes.put("patient_id", q.getPatientId());
-        attributes.put("queue_type", q.getQueueType());
-        attributes.put("priority", q.getPriority());
-        attributes.put("status", q.getStatus());
-        attributes.put("triage_category", q.getTriageCategory());
-        attributes.put("reason", q.getReason());
-        attributes.put("notes", q.getNotes());
-        attributes.put("assigned_to", q.getAssignedTo());
-        attributes.put("arrival_time", q.getArrivalTime());
-        attributes.put("called_at", q.getCalledAt());
-        attributes.put("seen_at", q.getSeenAt());
-        attributes.put("completed_at", q.getCompletedAt());
-        attributes.put("created_at", q.getCreatedAt());
-        attributes.put("updated_at", q.getUpdatedAt());
-
-        Map<String, Object> resource = new LinkedHashMap<>();
-        resource.put("id", q.getId().toString());
-        resource.put("type", "QueueEntry");
-        resource.put("attributes", attributes);
-        return resource;
     }
 }

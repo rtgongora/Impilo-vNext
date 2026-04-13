@@ -3,17 +3,12 @@ package zw.gov.mohcc.impilo.experience.controller;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
-import zw.gov.mohcc.impilo.experience.domain.AuditLogEntry;
-import zw.gov.mohcc.impilo.experience.repository.AuditLogRepository;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -36,15 +31,11 @@ public class AiGovernanceController {
 
     private final RestTemplate restTemplate;
     private final String dataGovernanceUrl;
-    private final AuditLogRepository auditLogRepository;
 
-    public AiGovernanceController(
-            RestTemplate serviceRestTemplate,
-            ServiceClientConfig.ServiceEndpoints endpoints,
-            AuditLogRepository auditLogRepository) {
+    public AiGovernanceController(RestTemplate serviceRestTemplate,
+            ServiceClientConfig.ServiceEndpoints endpoints) {
         this.restTemplate = serviceRestTemplate;
         this.dataGovernanceUrl = endpoints.dataGovernanceBaseUrl();
-        this.auditLogRepository = auditLogRepository;
     }
 
     @GetMapping("/datasets")
@@ -160,14 +151,8 @@ public class AiGovernanceController {
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
-        PageRequest pageable = PageRequest.of(0, 50, Sort.by("occurredAt").descending());
-        Page<AuditLogEntry> result = auditLogRepository.findByTenantId(tenantId, pageable);
-        List<Map<String, Object>> incidents = result.getContent().stream()
-                .filter(e -> "AI_INCIDENT".equals(e.getResourceType()))
-                .map(this::toAuditResource)
-                .toList();
-        return ResponseEntity.ok(metaEnvelope(incidents, requestId, correlationId));
-    }
+    throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+}
 
     @PostMapping("/incidents")
     public ResponseEntity<Map<String, Object>> reportIncident(
@@ -175,19 +160,8 @@ public class AiGovernanceController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestBody Map<String, Object> body) {
-        // Log AI incident as audit entry with resource_type=AI_INCIDENT
-        AuditLogEntry entry = AuditLogEntry.create(
-                tenantId,
-                body.getOrDefault("actorId", "system").toString(),
-                body.getOrDefault("action", "AI_INCIDENT_REPORTED").toString(),
-                "AI_INCIDENT",
-                body.getOrDefault("resourceId", "").toString(),
-                body.getOrDefault("details", "{}").toString(),
-                body.getOrDefault("ipAddress", "").toString());
-        auditLogRepository.save(entry);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(metaEnvelope(Map.of("id", entry.getId(), "status", "REPORTED"), requestId, correlationId));
-    }
+    throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+}
 
     // ── Audit ───────────────────────────────────────────────────────
 
@@ -198,11 +172,8 @@ public class AiGovernanceController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        PageRequest pageable = PageRequest.of(page, Math.min(size, 100), Sort.by("occurredAt").descending());
-        Page<AuditLogEntry> result = auditLogRepository.findByTenantId(tenantId, pageable);
-        List<Map<String, Object>> entries = result.getContent().stream().map(this::toAuditResource).toList();
-        return ResponseEntity.ok(metaEnvelope(entries, requestId, correlationId));
-    }
+    throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+}
 
     // ── Proxy Helpers ───────────────────────────────────────────────
 
@@ -244,20 +215,5 @@ public class AiGovernanceController {
         return response;
     }
 
-    private Map<String, Object> toAuditResource(AuditLogEntry entry) {
-        Map<String, Object> attributes = new LinkedHashMap<>();
-        attributes.put("actor_id", entry.getActorId());
-        attributes.put("action", entry.getAction());
-        attributes.put("resource_type", entry.getResourceType());
-        attributes.put("resource_id", entry.getResourceId());
-        attributes.put("details", entry.getDetails());
-        attributes.put("ip_address", entry.getIpAddress());
-        attributes.put("occurred_at", entry.getOccurredAt());
-
-        Map<String, Object> resource = new LinkedHashMap<>();
-        resource.put("id", entry.getId().toString());
-        resource.put("type", "AuditLogEntry");
-        resource.put("attributes", attributes);
-        return resource;
-    }
+    
 }

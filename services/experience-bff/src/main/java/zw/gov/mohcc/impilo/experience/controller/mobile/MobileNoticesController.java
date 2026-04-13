@@ -1,7 +1,6 @@
 package zw.gov.mohcc.impilo.experience.controller.mobile;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 
@@ -17,11 +16,6 @@ import java.util.*;
 @RequestMapping("/internal/v1/mobile/provider/notices")
 public class MobileNoticesController {
 
-    // STRANGLER: JdbcTemplate retained for local reads during migration; target sovereign service is notification-service
-    private final JdbcTemplate jdbcTemplate;
-
-    public MobileNoticesController(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
     }
 
     @GetMapping
@@ -32,40 +26,7 @@ public class MobileNoticesController {
             @RequestHeader("X-Actor-ID") String actorId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-
-        int limit = Math.min(size, 100);
-        int offset = page * limit;
-
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList("""
-            SELECT id, title, body, category, priority, published_at, expires_at,
-                   created_at, updated_at
-            FROM feed_items
-            WHERE tenant_id = ? AND category = 'PROVIDER_NOTICE'
-            ORDER BY published_at DESC
-            LIMIT ? OFFSET ?
-            """, tenantId, limit, offset);
-
-        Long total = jdbcTemplate.queryForObject("""
-            SELECT count(*) FROM feed_items
-            WHERE tenant_id = ? AND category = 'PROVIDER_NOTICE'
-            """, Long.class, tenantId);
-
-        List<Map<String, Object>> data = rows.stream().map(this::toResource).toList();
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", data);
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId,
-                "page", Map.of(
-                        "number", page,
-                        "size", limit,
-                        "total_elements", total != null ? total : 0L,
-                        "total_pages", total != null ? (int) Math.ceil((double) total / limit) : 0
-                )
-        ));
-
-        return ResponseEntity.ok(response);
+        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
     }
 
     private Map<String, Object> toResource(Map<String, Object> row) {

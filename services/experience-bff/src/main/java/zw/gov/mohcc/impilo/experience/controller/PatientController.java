@@ -8,10 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.VitoServiceClient;
-import zw.gov.mohcc.impilo.experience.domain.Patient;
-import zw.gov.mohcc.impilo.experience.repository.PatientRepository;
 
-import org.springframework.jdbc.core.JdbcTemplate;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 
@@ -26,14 +23,8 @@ import java.util.*;
 @RequestMapping("/internal/v1/patients")
 public class PatientController {
 
-    private final PatientRepository patientRepository;
-    private final JdbcTemplate jdbcTemplate;
     private final VitoServiceClient vitoClient;
 
-    public PatientController(PatientRepository patientRepository, JdbcTemplate jdbcTemplate,
-                             VitoServiceClient vitoClient) {
-        this.patientRepository = patientRepository;
-        this.jdbcTemplate = jdbcTemplate;
         this.vitoClient = vitoClient;
     }
 

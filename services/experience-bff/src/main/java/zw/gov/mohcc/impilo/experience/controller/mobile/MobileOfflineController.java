@@ -5,12 +5,9 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.TshepoOfflineServiceClient;
-import zw.gov.mohcc.impilo.experience.service.OutboxService;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -32,16 +29,9 @@ import java.util.*;
 @RequestMapping("/internal/v1/mobile/provider/offline")
 public class MobileOfflineController {
 
-    // STRANGLER: JdbcTemplate retained for local reads during migration; writes delegated to TshepoOfflineServiceClient
-    private final JdbcTemplate jdbcTemplate;
-    private final OutboxService outboxService;
     private final ObjectMapper objectMapper;
     private final TshepoOfflineServiceClient tshepoOfflineClient;
 
-    public MobileOfflineController(JdbcTemplate jdbcTemplate, OutboxService outboxService,
-                                   ObjectMapper objectMapper, TshepoOfflineServiceClient tshepoOfflineClient) {
-        this.jdbcTemplate = jdbcTemplate;
-        this.outboxService = outboxService;
         this.objectMapper = objectMapper;
         this.tshepoOfflineClient = tshepoOfflineClient;
     }
@@ -78,13 +68,6 @@ public class MobileOfflineController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @Valid @RequestBody VerifyEntitlementRequest request) {
 
-        List<Map<String, Object>> patientRows = jdbcTemplate.queryForList("""
-            SELECT id, cpid, given_name, family_name, date_of_birth, sex, status,
-                   facility_id, created_at
-            FROM patients
-            WHERE tenant_id = ? AND cpid = ?
-            """, tenantId, request.cpid());
-
         if (patientRows.isEmpty()) {
             Map<String, Object> response = new LinkedHashMap<>();
             response.put("data", Map.of(
@@ -101,15 +84,6 @@ public class MobileOfflineController {
 
         Map<String, Object> patient = patientRows.get(0);
         boolean isActive = "ACTIVE".equals(patient.get("status"));
-
-        List<Map<String, Object>> entitlementRows = jdbcTemplate.queryForList("""
-            SELECT id, scheme_name, scheme_number, coverage_type, valid_from, valid_to, status
-            FROM entitlements
-            WHERE tenant_id = ? AND patient_id = ? AND status = 'ACTIVE'
-              AND (valid_to IS NULL OR valid_to >= CURRENT_DATE)
-            ORDER BY valid_from DESC
-            LIMIT 5
-            """, tenantId, patient.get("id"));
 
         boolean hasEntitlement = !entitlementRows.isEmpty();
 
@@ -154,7 +128,6 @@ public class MobileOfflineController {
     }
 
     @PostMapping("/break-glass/activate")
-    @Transactional
     public ResponseEntity<Map<String, Object>> activateBreakGlass(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.POD_ID) String podId,
@@ -167,35 +140,6 @@ public class MobileOfflineController {
         OffsetDateTime now = OffsetDateTime.now();
         int durationMinutes = request.duration_minutes() != null ? request.duration_minutes() : 60;
         OffsetDateTime expiresAt = now.plusMinutes(durationMinutes);
-
-        jdbcTemplate.update("""
-            INSERT INTO break_glass_sessions
-                (id, tenant_id, facility_id, activated_by, reason, status,
-                 activated_at, expires_at, created_at, updated_at)
-            VALUES (?, ?, ?::uuid, ?, ?, 'ACTIVE', ?, ?, ?, ?)
-            """,
-                breakGlassId, tenantId, request.facility_id(), request.activated_by(),
-                request.reason(), now, expiresAt, now, now);
-
-        outboxService.writeOutboxEvent(
-                "impilo.experience.break_glass.activated.v1",
-                correlationId,
-                requestId,
-                idempotencyKey != null ? idempotencyKey : requestId,
-                tenantId,
-                podId,
-                "BreakGlassSession",
-                breakGlassId.toString(),
-                Map.of(
-                        "break_glass_id", breakGlassId.toString(),
-                        "facility_id", request.facility_id(),
-                        "activated_by", request.activated_by(),
-                        "reason", request.reason(),
-                        "status", "ACTIVE",
-                        "duration_minutes", durationMinutes
-                ),
-                Map.of()
-        );
 
         Map<String, Object> attributes = new LinkedHashMap<>();
         attributes.put("facility_id", request.facility_id());
@@ -222,7 +166,6 @@ public class MobileOfflineController {
     }
 
     @PostMapping("/break-glass/deactivate")
-    @Transactional
     public ResponseEntity<Map<String, Object>> deactivateBreakGlass(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.POD_ID) String podId,
@@ -232,13 +175,6 @@ public class MobileOfflineController {
             @Valid @RequestBody DeactivateBreakGlassRequest request) {
 
         OffsetDateTime now = OffsetDateTime.now();
-
-        List<Map<String, Object>> activeRows = jdbcTemplate.queryForList("""
-            SELECT id FROM break_glass_sessions
-            WHERE tenant_id = ? AND facility_id = ?::uuid AND status = 'ACTIVE'
-            ORDER BY activated_at DESC
-            LIMIT 1
-            """, tenantId, request.facility_id());
 
         if (activeRows.isEmpty()) {
             Map<String, Object> response = new LinkedHashMap<>();
@@ -251,31 +187,6 @@ public class MobileOfflineController {
         }
 
         UUID sessionId = (UUID) activeRows.get(0).get("id");
-
-        jdbcTemplate.update("""
-            UPDATE break_glass_sessions
-            SET status = 'DEACTIVATED', deactivated_by = ?, deactivated_at = ?,
-                notes = ?, updated_at = ?
-            WHERE id = ? AND tenant_id = ?
-            """, request.deactivated_by(), now, request.notes(), now, sessionId, tenantId);
-
-        outboxService.writeOutboxEvent(
-                "impilo.experience.break_glass.deactivated.v1",
-                correlationId,
-                requestId,
-                idempotencyKey != null ? idempotencyKey : requestId,
-                tenantId,
-                podId,
-                "BreakGlassSession",
-                sessionId.toString(),
-                Map.of(
-                        "break_glass_id", sessionId.toString(),
-                        "facility_id", request.facility_id(),
-                        "deactivated_by", request.deactivated_by(),
-                        "status", "DEACTIVATED"
-                ),
-                Map.of()
-        );
 
         Map<String, Object> attributes = new LinkedHashMap<>();
         attributes.put("facility_id", request.facility_id());
@@ -305,56 +216,10 @@ public class MobileOfflineController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(name = "facility_id") String facilityId,
             @RequestParam(required = false, name = "since") String since) {
-
-        List<Map<String, Object>> rows;
-        if (since != null) {
-            OffsetDateTime sinceTime = OffsetDateTime.parse(since);
-            rows = jdbcTemplate.queryForList("""
-                SELECT id, entity_type, entity_id, entity_data, version, updated_at
-                FROM sync_snapshots
-                WHERE tenant_id = ? AND facility_id = ?::uuid AND updated_at > ?
-                ORDER BY updated_at ASC
-                """, tenantId, facilityId, sinceTime);
-        } else {
-            rows = jdbcTemplate.queryForList("""
-                SELECT id, entity_type, entity_id, entity_data, version, updated_at
-                FROM sync_snapshots
-                WHERE tenant_id = ? AND facility_id = ?::uuid
-                ORDER BY updated_at ASC
-                """, tenantId, facilityId);
-        }
-
-        String syncToken = UUID.randomUUID().toString();
-
-        List<Map<String, Object>> data = rows.stream().map(row -> {
-            Map<String, Object> attributes = new LinkedHashMap<>();
-            attributes.put("entity_type", row.get("entity_type"));
-            attributes.put("entity_id", row.get("entity_id"));
-            attributes.put("entity_data", row.get("entity_data"));
-            attributes.put("version", row.get("version"));
-            attributes.put("updated_at", row.get("updated_at"));
-
-            Map<String, Object> resource = new LinkedHashMap<>();
-            resource.put("id", row.get("id").toString());
-            resource.put("type", "SyncRecord");
-            resource.put("attributes", attributes);
-            return resource;
-        }).toList();
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", data);
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId,
-                "sync_token", syncToken,
-                "record_count", data.size()
-        ));
-
-        return ResponseEntity.ok(response);
+        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
     }
 
     @PostMapping("/sync/reconcile")
-    @Transactional
     public ResponseEntity<Map<String, Object>> reconcileSync(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.POD_ID) String podId,
@@ -373,15 +238,6 @@ public class MobileOfflineController {
             try {
                 UUID recordId = UUID.randomUUID();
                 String recordJson = objectMapper.writeValueAsString(record);
-                jdbcTemplate.update("""
-                    INSERT INTO sync_reconciliations
-                        (id, tenant_id, reconciliation_id, facility_id, entity_type, entity_id,
-                         entity_data, sync_token, status, created_at)
-                    VALUES (?, ?, ?, ?::uuid, ?, ?, ?::jsonb, ?, 'ACCEPTED', ?)
-                    """,
-                        recordId, tenantId, reconciliationId, request.facility_id(),
-                        record.get("entity_type"), record.get("entity_id"),
-                        recordJson, request.sync_token(), now);
                 accepted++;
                 results.add(Map.of(
                         "entity_id", record.getOrDefault("entity_id", ""),
@@ -396,24 +252,6 @@ public class MobileOfflineController {
                 ));
             }
         }
-
-        outboxService.writeOutboxEvent(
-                "impilo.experience.sync.reconciled.v1",
-                correlationId,
-                requestId,
-                idempotencyKey != null ? idempotencyKey : requestId,
-                tenantId,
-                podId,
-                "SyncReconciliation",
-                reconciliationId.toString(),
-                Map.of(
-                        "reconciliation_id", reconciliationId.toString(),
-                        "facility_id", request.facility_id(),
-                        "accepted", String.valueOf(accepted),
-                        "rejected", String.valueOf(rejected)
-                ),
-                Map.of()
-        );
 
         Map<String, Object> attributes = new LinkedHashMap<>();
         attributes.put("facility_id", request.facility_id());

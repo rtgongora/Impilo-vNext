@@ -2,13 +2,10 @@ package zw.gov.mohcc.impilo.experience.controller.mobile;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 import zw.gov.mohcc.impilo.experience.controller.ResourceNotFoundException;
-import zw.gov.mohcc.impilo.experience.service.OutboxService;
 
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -25,15 +22,8 @@ import java.util.*;
 @RequestMapping("/internal/v1/mobile/provider/telemedicine")
 public class MobileTelemedicineController {
 
-    // STRANGLER: JdbcTemplate retained for local reads during migration; writes delegated to PctServiceClient
-    private final JdbcTemplate jdbcTemplate;
-    private final OutboxService outboxService;
     private final PctServiceClient pctClient;
 
-    public MobileTelemedicineController(JdbcTemplate jdbcTemplate, OutboxService outboxService,
-                                        PctServiceClient pctClient) {
-        this.jdbcTemplate = jdbcTemplate;
-        this.outboxService = outboxService;
         this.pctClient = pctClient;
     }
 
@@ -49,79 +39,7 @@ public class MobileTelemedicineController {
             @RequestParam(required = false) String status,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-
-        int limit = Math.min(size, 100);
-        int offset = page * limit;
-
-        StringBuilder sql = new StringBuilder("""
-            SELECT id, encounter_id, patient_id, provider_id, facility_id,
-                   session_type, status, room_url, scheduled_at, started_at, ended_at,
-                   duration_seconds, notes, referral_id, created_at, updated_at
-            FROM telemedicine_sessions
-            WHERE tenant_id = ?
-            """);
-        StringBuilder countSql = new StringBuilder(
-                "SELECT count(*) FROM telemedicine_sessions WHERE tenant_id = ?");
-
-        List<Object> params = new ArrayList<>();
-        params.add(tenantId);
-        List<Object> countParams = new ArrayList<>();
-        countParams.add(tenantId);
-
-        if (providerId != null) {
-            sql.append(" AND provider_id = ?");
-            countSql.append(" AND provider_id = ?");
-            params.add(providerId);
-            countParams.add(providerId);
-        }
-        if (patientId != null) {
-            sql.append(" AND patient_id = ?::uuid");
-            countSql.append(" AND patient_id = ?::uuid");
-            params.add(patientId);
-            countParams.add(patientId);
-        }
-        if (facilityId != null) {
-            sql.append(" AND facility_id = ?::uuid");
-            countSql.append(" AND facility_id = ?::uuid");
-            params.add(facilityId);
-            countParams.add(facilityId);
-        }
-        if (referralId != null) {
-            sql.append(" AND referral_id = ?::uuid");
-            countSql.append(" AND referral_id = ?::uuid");
-            params.add(referralId);
-            countParams.add(referralId);
-        }
-        if (status != null) {
-            sql.append(" AND status = ?");
-            countSql.append(" AND status = ?");
-            params.add(status);
-            countParams.add(status);
-        }
-
-        sql.append(" ORDER BY scheduled_at DESC NULLS LAST LIMIT ? OFFSET ?");
-        params.add(limit);
-        params.add(offset);
-
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql.toString(), params.toArray());
-        Long total = jdbcTemplate.queryForObject(countSql.toString(), Long.class, countParams.toArray());
-
-        List<Map<String, Object>> data = rows.stream().map(this::toResource).toList();
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", data);
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId,
-                "page", Map.of(
-                        "number", page,
-                        "size", limit,
-                        "total_elements", total != null ? total : 0L,
-                        "total_pages", total != null ? (int) Math.ceil((double) total / limit) : 0
-                )
-        ));
-
-        return ResponseEntity.ok(response);
+        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
     }
 
     /**
@@ -129,7 +47,6 @@ public class MobileTelemedicineController {
      * POST /internal/v1/mobile/provider/telemedicine/sessions
      */
     @PostMapping("/sessions")
-    @Transactional
     public ResponseEntity<Map<String, Object>> createSession(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.POD_ID) String podId,
@@ -153,32 +70,6 @@ public class MobileTelemedicineController {
         OffsetDateTime scheduled = scheduledAt != null
                 ? OffsetDateTime.parse(scheduledAt)
                 : now.plusHours(1);
-
-        jdbcTemplate.update("""
-            INSERT INTO telemedicine_sessions
-                (id, tenant_id, encounter_id, patient_id, provider_id, facility_id,
-                 session_type, status, room_url, scheduled_at, referral_id, notes,
-                 created_at, updated_at)
-            VALUES (?, ?, ?::uuid, ?::uuid, ?::uuid, ?::uuid, ?, 'SCHEDULED', ?, ?, ?::uuid, ?, ?, ?)
-            """,
-                sessionId, tenantId, encounterId, patientId, providerId, facilityId,
-                sessionType, "session-" + sessionId, scheduled, referralId, notes,
-                now, now);
-
-        outboxService.writeOutboxEvent(
-                "impilo.experience.telemedicine.created.v1",
-                correlationId, requestId,
-                idempotencyKey != null ? idempotencyKey : requestId,
-                tenantId, podId,
-                "TelemedicineSession", sessionId.toString(),
-                Map.of(
-                        "session_id", sessionId.toString(),
-                        "session_type", sessionType,
-                        "status", "SCHEDULED",
-                        "referral_id", referralId != null ? referralId : ""
-                ),
-                Map.of()
-        );
 
         Map<String, Object> attributes = new LinkedHashMap<>();
         attributes.put("session_type", sessionType);
@@ -204,7 +95,6 @@ public class MobileTelemedicineController {
     }
 
     @PostMapping("/sessions/{id}/join")
-    @Transactional
     public ResponseEntity<Map<String, Object>> joinSession(
             @PathVariable UUID id,
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
@@ -213,67 +103,10 @@ public class MobileTelemedicineController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @RequestBody(required = false) Map<String, Object> body) {
-
-        OffsetDateTime now = OffsetDateTime.now();
-
-        int updated = jdbcTemplate.update("""
-            UPDATE telemedicine_sessions
-            SET status = 'IN_PROGRESS', started_at = COALESCE(started_at, ?), updated_at = ?
-            WHERE id = ? AND tenant_id = ? AND status IN ('SCHEDULED', 'IN_PROGRESS')
-            """, now, now, id, tenantId);
-
-        if (updated == 0) {
-            throw new ResourceNotFoundException("Joinable telemedicine session not found: " + id);
-        }
-
-        outboxService.writeOutboxEvent(
-                "impilo.experience.telemedicine.joined.v1",
-                correlationId,
-                requestId,
-                idempotencyKey != null ? idempotencyKey : requestId,
-                tenantId,
-                podId,
-                "TelemedicineSession",
-                id.toString(),
-                Map.of(
-                        "session_id", id.toString(),
-                        "status", "IN_PROGRESS"
-                ),
-                Map.of()
-        );
-
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList("""
-            SELECT id, encounter_id, patient_id, provider_id, facility_id,
-                   session_type, status, room_url, scheduled_at, started_at, ended_at,
-                   duration_seconds, notes, referral_id, created_at, updated_at
-            FROM telemedicine_sessions
-            WHERE id = ? AND tenant_id = ?
-            """, id, tenantId);
-
-        Map<String, Object> sessionData = rows.isEmpty() ? new LinkedHashMap<>() : toResource(rows.get(0));
-        if (!rows.isEmpty()) {
-            @SuppressWarnings("unchecked")
-            Map<String, Object> attrs = (Map<String, Object>) sessionData.get("attributes");
-            String token = UUID.randomUUID().toString();
-            String channel = rows.get(0).get("room_url") != null
-                    ? rows.get(0).get("room_url").toString()
-                    : "session-" + id;
-            attrs.put("token", token);
-            attrs.put("channel", channel);
-        }
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", sessionData);
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId
-        ));
-
-        return ResponseEntity.ok(response);
+        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
     }
 
     @PostMapping("/sessions/{id}/end")
-    @Transactional
     public ResponseEntity<Map<String, Object>> endSession(
             @PathVariable UUID id,
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
@@ -282,54 +115,7 @@ public class MobileTelemedicineController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @RequestBody(required = false) Map<String, Object> body) {
-
-        OffsetDateTime now = OffsetDateTime.now();
-        String notes = body != null && body.containsKey("notes") ? body.get("notes").toString() : null;
-
-        int updated = jdbcTemplate.update("""
-            UPDATE telemedicine_sessions
-            SET status = 'COMPLETED', ended_at = ?,
-                duration_seconds = EXTRACT(EPOCH FROM (? - COALESCE(started_at, created_at)))::int,
-                notes = COALESCE(?, notes), updated_at = ?
-            WHERE id = ? AND tenant_id = ? AND status = 'IN_PROGRESS'
-            """, now, now, notes, now, id, tenantId);
-
-        if (updated == 0) {
-            throw new ResourceNotFoundException("Active telemedicine session not found: " + id);
-        }
-
-        outboxService.writeOutboxEvent(
-                "impilo.experience.telemedicine.ended.v1",
-                correlationId,
-                requestId,
-                idempotencyKey != null ? idempotencyKey : requestId,
-                tenantId,
-                podId,
-                "TelemedicineSession",
-                id.toString(),
-                Map.of(
-                        "session_id", id.toString(),
-                        "status", "COMPLETED"
-                ),
-                Map.of()
-        );
-
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList("""
-            SELECT id, encounter_id, patient_id, provider_id, facility_id,
-                   session_type, status, room_url, scheduled_at, started_at, ended_at,
-                   duration_seconds, notes, referral_id, created_at, updated_at
-            FROM telemedicine_sessions
-            WHERE id = ? AND tenant_id = ?
-            """, id, tenantId);
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", rows.isEmpty() ? Map.of() : toResource(rows.get(0)));
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId
-        ));
-
-        return ResponseEntity.ok(response);
+        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
     }
 
     private Map<String, Object> toResource(Map<String, Object> row) {

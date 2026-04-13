@@ -5,15 +5,12 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 import zw.gov.mohcc.impilo.experience.controller.ResourceNotFoundException;
-import zw.gov.mohcc.impilo.experience.service.OutboxService;
 
-import java.time.OffsetDateTime;
 import java.util.*;
 
 /**
@@ -28,14 +25,8 @@ import java.util.*;
 @RequestMapping("/internal/v1/mobile/citizen/telehealth")
 public class CitizenTelehealthController {
 
-    private final JdbcTemplate jdbcTemplate;
-    private final OutboxService outboxService;
     private final PctServiceClient pctClient;
 
-    public CitizenTelehealthController(JdbcTemplate jdbcTemplate, OutboxService outboxService,
-                                       PctServiceClient pctClient) {
-        this.jdbcTemplate = jdbcTemplate;
-        this.outboxService = outboxService;
         this.pctClient = pctClient;
     }
 
@@ -119,14 +110,6 @@ public class CitizenTelehealthController {
         //     INSERT INTO citizen_telehealth_sessions (...) VALUES (...)
         //     """, ...);
 
-        outboxService.writeOutboxEvent(
-                "impilo.experience.citizen.teleconsult-requested.v1",
-                correlationId, requestId, requestId, tenantId, podId,
-                "TelehealthSession", requestId,
-                Map.of("type", sessionType, "status", "REQUESTED",
-                        "referral_id", body.referralId() != null ? body.referralId() : ""),
-                Map.of());
-
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", result);
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
@@ -151,13 +134,6 @@ public class CitizenTelehealthController {
         //     SET status = 'IN_PROGRESS', started_at = COALESCE(started_at, ?), updated_at = ?
         //     WHERE id = ? AND tenant_id = ? AND status IN ('SCHEDULED', 'REQUESTED', 'IN_PROGRESS')
         //     """, ...);
-
-        outboxService.writeOutboxEvent(
-                "impilo.experience.citizen.teleconsult-joined.v1",
-                correlationId, requestId, requestId, tenantId, podId,
-                "TelehealthSession", id.toString(),
-                Map.of("session_id", id.toString(), "status", "IN_PROGRESS"),
-                Map.of());
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", result);
@@ -184,13 +160,6 @@ public class CitizenTelehealthController {
         //     SET status = 'COMPLETED', ended_at = ?, notes = COALESCE(?, notes), updated_at = ?
         //     WHERE id = ? AND tenant_id = ? AND status = 'IN_PROGRESS'
         //     """, ...);
-
-        outboxService.writeOutboxEvent(
-                "impilo.experience.citizen.teleconsult-ended.v1",
-                correlationId, requestId, requestId, tenantId, podId,
-                "TelehealthSession", id.toString(),
-                Map.of("session_id", id.toString(), "status", "COMPLETED"),
-                Map.of());
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", Map.of("id", id.toString(), "status", "COMPLETED"));

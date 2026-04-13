@@ -7,13 +7,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.OrosServiceClient;
 import zw.gov.mohcc.impilo.experience.controller.ResourceNotFoundException;
-import zw.gov.mohcc.impilo.experience.service.OutboxService;
 
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -31,15 +28,8 @@ public class MobileLabController {
 
     private static final Logger log = LoggerFactory.getLogger(MobileLabController.class);
 
-    // STRANGLER: JdbcTemplate retained for local reads during migration; writes delegated to OrosServiceClient
-    private final JdbcTemplate jdbcTemplate;
-    private final OutboxService outboxService;
     private final OrosServiceClient orosClient;
 
-    public MobileLabController(JdbcTemplate jdbcTemplate, OutboxService outboxService,
-                               OrosServiceClient orosClient) {
-        this.jdbcTemplate = jdbcTemplate;
-        this.outboxService = outboxService;
         this.orosClient = orosClient;
     }
 
@@ -58,7 +48,6 @@ public class MobileLabController {
     ) {}
 
     @PostMapping
-    @Transactional
     public ResponseEntity<Map<String, Object>> createLabOrder(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.POD_ID) String podId,
@@ -71,45 +60,10 @@ public class MobileLabController {
         OffsetDateTime now = OffsetDateTime.now();
         String priority = request.priority() != null ? request.priority() : "ROUTINE";
 
-        jdbcTemplate.update("""
-            INSERT INTO lab_orders
-                (id, tenant_id, encounter_id, patient_id, test_code, test_name,
-                 priority, clinical_notes, specimen_type, status, ordered_at, created_at, updated_at)
-            VALUES (?, ?, ?::uuid, ?::uuid, ?, ?, ?, ?, ?, 'ORDERED', ?, ?, ?)
-            """,
-                labOrderId, tenantId, request.encounter_id(), request.patient_id(),
-                request.test_code(), request.test_name(),
-                priority, request.clinical_notes(), request.specimen_type(),
-                now, now, now);
-
-        outboxService.writeOutboxEvent(
-                "impilo.experience.lab_order.created.v1",
-                correlationId,
-                requestId,
-                idempotencyKey != null ? idempotencyKey : requestId,
-                tenantId,
-                podId,
-                "LabOrder",
-                labOrderId.toString(),
-                Map.of(
-                        "lab_order_id", labOrderId.toString(),
-                        "encounter_id", request.encounter_id(),
-                        "patient_id", request.patient_id(),
-                        "test_code", request.test_code(),
-                        "test_name", request.test_name(),
-                        "priority", priority,
-                        "status", "ORDERED"
-                ),
-                Map.of()
-        );
-
         // Delegate to OROS sovereign service
         String orosOrderId = null;
         try {
             // Resolve patient CPID for OROS
-            List<Map<String, Object>> cpidRows = jdbcTemplate.queryForList(
-                    "SELECT cpid FROM patients WHERE id = ?::uuid AND tenant_id = ?",
-                    request.patient_id(), tenantId);
             String cpid = (!cpidRows.isEmpty() && cpidRows.get(0).get("cpid") != null)
                     ? cpidRows.get(0).get("cpid").toString() : null;
             if (cpid != null) {
@@ -123,8 +77,6 @@ public class MobileLabController {
                         request.clinical_notes(), items);
                 if (orosData != null && orosData.has("orderId")) {
                     orosOrderId = orosData.get("orderId").asText();
-                    jdbcTemplate.update("UPDATE lab_orders SET oros_order_id = ? WHERE id = ?",
-                            orosOrderId, labOrderId);
                 }
                 log.info("OROS order placed from mobile: {} for lab order {}", orosOrderId, labOrderId);
             }
@@ -168,62 +120,7 @@ public class MobileLabController {
             @RequestParam(required = false, name = "patient_id") String patientId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-
-        int limit = Math.min(size, 100);
-        int offset = page * limit;
-
-        List<Map<String, Object>> rows;
-        Long total;
-
-        if (encounterId != null) {
-            rows = jdbcTemplate.queryForList("""
-                SELECT id, encounter_id, patient_id, test_code, test_name, priority,
-                       clinical_notes, specimen_type, status, result_value, result_unit,
-                       result_reference_range, result_interpretation, ordered_at,
-                       collected_at, resulted_at, cancelled_at, cancel_reason, created_at, updated_at
-                FROM lab_orders
-                WHERE tenant_id = ? AND encounter_id = ?::uuid
-                ORDER BY ordered_at DESC
-                LIMIT ? OFFSET ?
-                """, tenantId, encounterId, limit, offset);
-            total = jdbcTemplate.queryForObject("""
-                SELECT count(*) FROM lab_orders WHERE tenant_id = ? AND encounter_id = ?::uuid
-                """, Long.class, tenantId, encounterId);
-        } else if (patientId != null) {
-            rows = jdbcTemplate.queryForList("""
-                SELECT id, encounter_id, patient_id, test_code, test_name, priority,
-                       clinical_notes, specimen_type, status, result_value, result_unit,
-                       result_reference_range, result_interpretation, ordered_at,
-                       collected_at, resulted_at, cancelled_at, cancel_reason, created_at, updated_at
-                FROM lab_orders
-                WHERE tenant_id = ? AND patient_id = ?::uuid
-                ORDER BY ordered_at DESC
-                LIMIT ? OFFSET ?
-                """, tenantId, patientId, limit, offset);
-            total = jdbcTemplate.queryForObject("""
-                SELECT count(*) FROM lab_orders WHERE tenant_id = ? AND patient_id = ?::uuid
-                """, Long.class, tenantId, patientId);
-        } else {
-            rows = List.of();
-            total = 0L;
-        }
-
-        List<Map<String, Object>> data = rows.stream().map(this::toResource).toList();
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", data);
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId,
-                "page", Map.of(
-                        "number", page,
-                        "size", limit,
-                        "total_elements", total != null ? total : 0L,
-                        "total_pages", total != null ? (int) Math.ceil((double) total / limit) : 0
-                )
-        ));
-
-        return ResponseEntity.ok(response);
+        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
     }
 
     @GetMapping("/{id}")
@@ -232,32 +129,10 @@ public class MobileLabController {
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
-
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList("""
-            SELECT id, encounter_id, patient_id, test_code, test_name, priority,
-                   clinical_notes, specimen_type, status, result_value, result_unit,
-                   result_reference_range, result_interpretation, ordered_at,
-                   collected_at, resulted_at, cancelled_at, cancel_reason, created_at, updated_at
-            FROM lab_orders
-            WHERE id = ? AND tenant_id = ?
-            """, id, tenantId);
-
-        if (rows.isEmpty()) {
-            throw new ResourceNotFoundException("Lab order not found: " + id);
-        }
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", toResource(rows.get(0)));
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId
-        ));
-
-        return ResponseEntity.ok(response);
+        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
     }
 
     @PostMapping("/{id}/cancel")
-    @Transactional
     public ResponseEntity<Map<String, Object>> cancelLabOrder(
             @PathVariable UUID id,
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
@@ -266,54 +141,7 @@ public class MobileLabController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @RequestBody(required = false) CancelLabOrderRequest request) {
-
-        OffsetDateTime now = OffsetDateTime.now();
-        String reason = request != null && request.reason() != null ? request.reason() : "Cancelled by provider";
-
-        int updated = jdbcTemplate.update("""
-            UPDATE lab_orders
-            SET status = 'CANCELLED', cancelled_at = ?, cancel_reason = ?, updated_at = ?
-            WHERE id = ? AND tenant_id = ? AND status IN ('ORDERED', 'COLLECTED')
-            """, now, reason, now, id, tenantId);
-
-        if (updated == 0) {
-            throw new ResourceNotFoundException("Cancellable lab order not found: " + id);
-        }
-
-        outboxService.writeOutboxEvent(
-                "impilo.experience.lab_order.cancelled.v1",
-                correlationId,
-                requestId,
-                idempotencyKey != null ? idempotencyKey : requestId,
-                tenantId,
-                podId,
-                "LabOrder",
-                id.toString(),
-                Map.of(
-                        "lab_order_id", id.toString(),
-                        "status", "CANCELLED",
-                        "cancel_reason", reason
-                ),
-                Map.of()
-        );
-
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList("""
-            SELECT id, encounter_id, patient_id, test_code, test_name, priority,
-                   clinical_notes, specimen_type, status, result_value, result_unit,
-                   result_reference_range, result_interpretation, ordered_at,
-                   collected_at, resulted_at, cancelled_at, cancel_reason, created_at, updated_at
-            FROM lab_orders
-            WHERE id = ? AND tenant_id = ?
-            """, id, tenantId);
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", rows.isEmpty() ? Map.of() : toResource(rows.get(0)));
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId
-        ));
-
-        return ResponseEntity.ok(response);
+        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
     }
 
     private Map<String, Object> toResource(Map<String, Object> row) {

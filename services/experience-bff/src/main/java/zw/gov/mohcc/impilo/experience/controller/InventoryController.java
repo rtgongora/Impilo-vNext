@@ -6,15 +6,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.InventoryServiceClient;
-import zw.gov.mohcc.impilo.experience.domain.InventoryItem;
-import zw.gov.mohcc.impilo.experience.repository.InventoryItemRepository;
 
-import java.time.LocalDate;
-import java.time.OffsetDateTime;
 import java.util.*;
 
 /**
@@ -25,15 +20,9 @@ import java.util.*;
 @RequestMapping("/internal/v1/inventory")
 public class InventoryController {
 
-    private final InventoryItemRepository inventoryItemRepository;
-    private final JdbcTemplate jdbcTemplate;
     private final InventoryServiceClient inventoryClient;
     private final ObjectMapper objectMapper;
 
-    public InventoryController(InventoryItemRepository inventoryItemRepository, JdbcTemplate jdbcTemplate,
-                               InventoryServiceClient inventoryClient, ObjectMapper objectMapper) {
-        this.inventoryItemRepository = inventoryItemRepository;
-        this.jdbcTemplate = jdbcTemplate;
         this.inventoryClient = inventoryClient;
         this.objectMapper = objectMapper;
     }

@@ -8,13 +8,11 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.TusoServiceClient;
 
-import java.time.OffsetDateTime;
 import java.util.*;
 
 /**
@@ -26,11 +24,8 @@ import java.util.*;
 @RequestMapping("/internal/v1/admin/wards")
 public class AdminWardController {
 
-    private final JdbcTemplate jdbcTemplate;
     private final TusoServiceClient tusoClient;
 
-    public AdminWardController(JdbcTemplate jdbcTemplate, TusoServiceClient tusoClient) {
-        this.jdbcTemplate = jdbcTemplate;
         this.tusoClient = tusoClient;
     }
 

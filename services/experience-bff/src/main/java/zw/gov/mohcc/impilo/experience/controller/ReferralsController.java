@@ -8,16 +8,11 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
-import zw.gov.mohcc.impilo.experience.domain.Referral;
-import zw.gov.mohcc.impilo.experience.repository.ReferralRepository;
-import zw.gov.mohcc.impilo.experience.service.OutboxService;
 
-import java.time.OffsetDateTime;
 import java.util.*;
 
 /**
@@ -31,18 +26,9 @@ import java.util.*;
 @RequestMapping("/internal/v1/referrals")
 public class ReferralsController {
 
-    private final ReferralRepository referralRepository;
-    private final OutboxService outboxService;
-    private final JdbcTemplate jdbcTemplate;
     private final PctServiceClient pctClient;
 
-    public ReferralsController(ReferralRepository referralRepository,
-                               OutboxService outboxService,
-                               JdbcTemplate jdbcTemplate,
-                               PctServiceClient pctClient) {
-        this.referralRepository = referralRepository;
-        this.outboxService = outboxService;
-        this.jdbcTemplate = jdbcTemplate;
+    public ReferralsController(PctServiceClient pctClient) {
         this.pctClient = pctClient;
     }
 
@@ -188,25 +174,6 @@ public class ReferralsController {
         //     INSERT INTO referrals (...) VALUES (...)
         //     """, ...);
 
-        outboxService.writeOutboxEvent(
-                "impilo.experience.referral.created.v1",
-                correlationId,
-                requestId,
-                idempotencyKey != null ? idempotencyKey : requestId,
-                tenantId,
-                podId,
-                "Referral",
-                requestId,
-                Map.of(
-                        "patient_id", request.patient_id(),
-                        "referral_type", request.referral_type() != null ? request.referral_type() : "",
-                        "specialty", request.specialty() != null ? request.specialty() : "",
-                        "referred_by", request.referred_by(),
-                        "status", "PENDING"
-                ),
-                Map.of()
-        );
-
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", result);
         response.put("meta", Map.of(
@@ -239,23 +206,6 @@ public class ReferralsController {
         // Referral referral = referralRepository.findByIdAndTenantId(id, tenantId)...
         // referral.complete(outcome);
         // referralRepository.save(referral);
-
-        outboxService.writeOutboxEvent(
-                "impilo.experience.referral.completed.v1",
-                correlationId,
-                requestId,
-                idempotencyKey != null ? idempotencyKey : requestId,
-                tenantId,
-                podId,
-                "Referral",
-                id.toString(),
-                Map.of(
-                        "referral_id", id.toString(),
-                        "status", "COMPLETED",
-                        "outcome", outcome != null ? outcome : ""
-                ),
-                Map.of()
-        );
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", result);
@@ -291,21 +241,6 @@ public class ReferralsController {
         // referral.accept(receivingId, request.receiving_facility_name());
         // referralRepository.save(referral);
 
-        outboxService.writeOutboxEvent(
-                "impilo.experience.referral.accepted.v1",
-                correlationId, requestId,
-                idempotencyKey != null ? idempotencyKey : requestId,
-                tenantId, podId,
-                "Referral", id.toString(),
-                Map.of(
-                        "referral_id", id.toString(),
-                        "receiving_facility_id", request.receiving_facility_id() != null ? request.receiving_facility_id() : "",
-                        "receiving_facility_name", request.receiving_facility_name() != null ? request.receiving_facility_name() : "",
-                        "status", "ACCEPTED"
-                ),
-                Map.of()
-        );
-
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", result);
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
@@ -333,21 +268,6 @@ public class ReferralsController {
         // STRANGLER: migrated — was ReferralRepository.findByIdAndTenantId + referral.respond() + save
         // referral.respond(request.response_notes(), request.outcome());
         // referralRepository.save(referral);
-
-        outboxService.writeOutboxEvent(
-                "impilo.experience.referral.responded.v1",
-                correlationId, requestId,
-                idempotencyKey != null ? idempotencyKey : requestId,
-                tenantId, podId,
-                "Referral", id.toString(),
-                Map.of(
-                        "referral_id", id.toString(),
-                        "response_notes", request.response_notes(),
-                        "outcome", request.outcome() != null ? request.outcome() : "",
-                        "status", "RESPONDED"
-                ),
-                Map.of()
-        );
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", result);

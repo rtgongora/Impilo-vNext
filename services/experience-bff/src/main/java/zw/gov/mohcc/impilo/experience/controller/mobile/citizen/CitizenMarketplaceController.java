@@ -5,15 +5,12 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.MsikaFlowServiceClient;
 import zw.gov.mohcc.impilo.experience.controller.ResourceNotFoundException;
-import zw.gov.mohcc.impilo.experience.service.OutboxService;
 
-import java.time.OffsetDateTime;
 import java.util.*;
 
 /**
@@ -29,14 +26,8 @@ import java.util.*;
 @RequestMapping("/internal/v1/mobile/citizen/marketplace")
 public class CitizenMarketplaceController {
 
-    private final JdbcTemplate jdbcTemplate;
-    private final OutboxService outboxService;
     private final MsikaFlowServiceClient msikaFlowClient;
 
-    public CitizenMarketplaceController(JdbcTemplate jdbcTemplate, OutboxService outboxService,
-                                        MsikaFlowServiceClient msikaFlowClient) {
-        this.jdbcTemplate = jdbcTemplate;
-        this.outboxService = outboxService;
         this.msikaFlowClient = msikaFlowClient;
     }
 
@@ -115,13 +106,6 @@ public class CitizenMarketplaceController {
         //     INSERT INTO service_requests (...) VALUES (...)
         //     """, ...);
 
-        outboxService.writeOutboxEvent(
-                "impilo.experience.citizen.service-requested.v1",
-                correlationId, requestId, requestId, tenantId, podId,
-                "ServiceRequest", requestId,
-                Map.of("service_id", body.serviceId(), "status", "PENDING"),
-                Map.of());
-
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", result.getBody());
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
@@ -193,13 +177,6 @@ public class CitizenMarketplaceController {
         //     UPDATE service_requests SET status = 'CANCELLED', updated_at = ?
         //     WHERE id = ? AND tenant_id = ? AND status IN ('PENDING', 'CONFIRMED')
         //     """, ...);
-
-        outboxService.writeOutboxEvent(
-                "impilo.experience.citizen.service-cancelled.v1",
-                correlationId, requestId, requestId, tenantId, podId,
-                "ServiceRequest", id.toString(),
-                Map.of("request_id", id.toString(), "status", "CANCELLED"),
-                Map.of());
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", Map.of("id", id.toString(), "status", "CANCELLED"));

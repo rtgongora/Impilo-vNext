@@ -7,17 +7,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
-import zw.gov.mohcc.impilo.experience.domain.Allergy;
-import zw.gov.mohcc.impilo.experience.repository.AllergyRepository;
-import zw.gov.mohcc.impilo.experience.service.OutboxService;
 
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
 import java.util.*;
 
 /**
@@ -32,18 +26,9 @@ public class AllergiesController {
 
     private static final Logger log = LoggerFactory.getLogger(AllergiesController.class);
 
-    private final AllergyRepository allergyRepository;
-    private final OutboxService outboxService;
-    private final JdbcTemplate jdbcTemplate; // TODO: remove after verification
     private final PctServiceClient pctClient;
 
-    public AllergiesController(AllergyRepository allergyRepository,
-                               OutboxService outboxService,
-                               JdbcTemplate jdbcTemplate,
-                               PctServiceClient pctClient) {
-        this.allergyRepository = allergyRepository;
-        this.outboxService = outboxService;
-        this.jdbcTemplate = jdbcTemplate;
+    public AllergiesController(PctServiceClient pctClient) {
         this.pctClient = pctClient;
     }
 
@@ -82,20 +67,9 @@ public class AllergiesController {
             }
         }
 
-        // STRANGLER: migrated to PctServiceClient — fallback to local repository
-        List<Allergy> records;
-        if (patientId != null) {
-            records = allergyRepository.findByTenantIdAndPatientId(tenantId, UUID.fromString(patientId));
-        } else {
-            records = allergyRepository.findAll();
-        }
-
-        List<Map<String, Object>> data = records.stream()
-                .map(this::toResource)
-                .toList();
-
+        // Fallback: return empty data when PCT unavailable or no patient_id
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", data);
+        response.put("data", List.of());
         response.put("meta", Map.of(
                 "request_id", requestId,
                 "correlation_id", correlationId
@@ -105,7 +79,6 @@ public class AllergiesController {
     }
 
     @PostMapping
-    @Transactional
     public ResponseEntity<Map<String, Object>> createAllergy(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.POD_ID) String podId,
@@ -113,88 +86,10 @@ public class AllergiesController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @Valid @RequestBody CreateAllergyRequest request) {
-
-        // STRANGLER: delegate to PctServiceClient first
-        try {
-            Map<String, Object> pctBody = new LinkedHashMap<>();
-            pctBody.put("patient_id", request.patient_id());
-            pctBody.put("allergen", request.allergen());
-            pctBody.put("allergen_type", request.allergen_type());
-            pctBody.put("reaction", request.reaction());
-            pctBody.put("severity", request.severity() != null ? request.severity() : "UNKNOWN");
-            pctBody.put("onset_date", request.onset_date());
-            pctBody.put("recorded_by", request.recorded_by());
-            JsonNode pctData = pctClient.createAllergy(pctBody);
-            log.info("PCT allergy created successfully for patient={}", request.patient_id());
-        } catch (Exception e) {
-            log.warn("PCT createAllergy failed (non-blocking): {}", e.getMessage());
-        }
-
-        // STRANGLER: migrated to PctServiceClient — dual-write to local BFF table as backup cache
-        UUID allergyId = UUID.randomUUID();
-        OffsetDateTime now = OffsetDateTime.now();
-
-        jdbcTemplate.update("""
-            INSERT INTO allergies
-                (id, tenant_id, patient_id, allergen, allergen_type,
-                 reaction, severity, status, onset_date, recorded_by,
-                 created_at, updated_at)
-            VALUES (?, ?, ?::uuid, ?, ?, ?, ?, 'ACTIVE', ?, ?, ?, ?)
-            """,
-                allergyId, tenantId, request.patient_id(),
-                request.allergen(), request.allergen_type(),
-                request.reaction(), request.severity() != null ? request.severity() : "UNKNOWN",
-                request.onset_date(),
-                request.recorded_by(),
-                now, now);
-
-        outboxService.writeOutboxEvent(
-                "impilo.experience.allergy.recorded.v1",
-                correlationId,
-                requestId,
-                idempotencyKey != null ? idempotencyKey : requestId,
-                tenantId,
-                podId,
-                "Allergy",
-                allergyId.toString(),
-                Map.of(
-                        "allergy_id", allergyId.toString(),
-                        "patient_id", request.patient_id(),
-                        "allergen", request.allergen(),
-                        "severity", request.severity() != null ? request.severity() : "UNKNOWN",
-                        "status", "ACTIVE"
-                ),
-                Map.of()
-        );
-
-        Map<String, Object> attributes = new LinkedHashMap<>();
-        attributes.put("patient_id", request.patient_id());
-        attributes.put("allergen", request.allergen());
-        attributes.put("allergen_type", request.allergen_type());
-        attributes.put("reaction", request.reaction());
-        attributes.put("severity", request.severity() != null ? request.severity() : "UNKNOWN");
-        attributes.put("status", "ACTIVE");
-        attributes.put("onset_date", request.onset_date());
-        attributes.put("recorded_by", request.recorded_by());
-        attributes.put("created_at", now);
-        attributes.put("updated_at", now);
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", Map.of(
-                "id", allergyId.toString(),
-                "type", "Allergy",
-                "attributes", attributes
-        ));
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId
-        ));
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
     }
 
     @DeleteMapping("/{id}")
-    @Transactional
     public ResponseEntity<Map<String, Object>> deactivateAllergy(
             @PathVariable UUID id,
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
@@ -202,72 +97,6 @@ public class AllergiesController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey) {
-
-        Allergy allergy = allergyRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Allergy not found: " + id));
-
-        // STRANGLER: delegate to PctServiceClient first
-        try {
-            pctClient.deactivateAllergy(id.toString());
-            log.info("PCT allergy deactivated: {}", id);
-        } catch (Exception e) {
-            log.warn("PCT deactivateAllergy failed (non-blocking): {}", e.getMessage());
-        }
-
-        // STRANGLER: migrated to PctServiceClient — dual-write to local BFF table as backup cache
-        jdbcTemplate.update("""
-            UPDATE allergies SET status = 'INACTIVE', updated_at = ? WHERE id = ?
-            """, OffsetDateTime.now(), id);
-
-        outboxService.writeOutboxEvent(
-                "impilo.experience.allergy.deactivated.v1",
-                correlationId,
-                requestId,
-                idempotencyKey != null ? idempotencyKey : requestId,
-                tenantId,
-                podId,
-                "Allergy",
-                id.toString(),
-                Map.of(
-                        "allergy_id", id.toString(),
-                        "patient_id", allergy.getPatientId().toString(),
-                        "status", "INACTIVE"
-                ),
-                Map.of()
-        );
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", Map.of(
-                "id", id.toString(),
-                "type", "Allergy",
-                "status", "INACTIVE"
-        ));
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId
-        ));
-
-        return ResponseEntity.ok(response);
-    }
-
-    private Map<String, Object> toResource(Allergy a) {
-        Map<String, Object> attributes = new LinkedHashMap<>();
-        attributes.put("patient_id", a.getPatientId());
-        attributes.put("allergen", a.getAllergen());
-        attributes.put("allergen_type", a.getAllergenType());
-        attributes.put("reaction", a.getReaction());
-        attributes.put("severity", a.getSeverity());
-        attributes.put("status", a.getStatus());
-        attributes.put("onset_date", a.getOnsetDate());
-        attributes.put("recorded_by", a.getRecordedBy());
-        attributes.put("verified_at", a.getVerifiedAt());
-        attributes.put("created_at", a.getCreatedAt());
-        attributes.put("updated_at", a.getUpdatedAt());
-
-        Map<String, Object> resource = new LinkedHashMap<>();
-        resource.put("id", a.getId().toString());
-        resource.put("type", "Allergy");
-        resource.put("attributes", attributes);
-        return resource;
+        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
     }
 }

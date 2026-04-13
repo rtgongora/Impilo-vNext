@@ -3,12 +3,10 @@ package zw.gov.mohcc.impilo.experience.controller;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.experience.client.CommunityServiceClient;
 
-import java.time.OffsetDateTime;
 import java.util.*;
 
 /**
@@ -19,11 +17,9 @@ import java.util.*;
 @RequestMapping("/internal/v1/communication")
 public class CommunicationController {
 
-    private final JdbcTemplate jdbc;
     private final CommunityServiceClient communityClient;
 
-    public CommunicationController(JdbcTemplate jdbc, CommunityServiceClient communityClient) {
-        this.jdbc = jdbc;
+    public CommunicationController(CommunityServiceClient communityClient) {
         this.communityClient = communityClient;
     }
 

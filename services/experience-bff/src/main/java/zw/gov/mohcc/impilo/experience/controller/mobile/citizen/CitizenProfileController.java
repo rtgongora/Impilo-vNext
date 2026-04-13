@@ -3,16 +3,13 @@ package zw.gov.mohcc.impilo.experience.controller.mobile.citizen;
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.VitoServiceClient;
 import zw.gov.mohcc.impilo.experience.client.TshepoConsentServiceClient;
 import zw.gov.mohcc.impilo.experience.controller.ResourceNotFoundException;
-import zw.gov.mohcc.impilo.experience.service.OutboxService;
 
-import java.time.OffsetDateTime;
 import java.util.*;
 
 /**
@@ -27,15 +24,9 @@ import java.util.*;
 @RequestMapping("/internal/v1/mobile/citizen/profile")
 public class CitizenProfileController {
 
-    private final JdbcTemplate jdbcTemplate;
-    private final OutboxService outboxService;
     private final VitoServiceClient vitoClient;
     private final TshepoConsentServiceClient consentClient;
 
-    public CitizenProfileController(JdbcTemplate jdbcTemplate, OutboxService outboxService,
-                                    VitoServiceClient vitoClient, TshepoConsentServiceClient consentClient) {
-        this.jdbcTemplate = jdbcTemplate;
-        this.outboxService = outboxService;
         this.vitoClient = vitoClient;
         this.consentClient = consentClient;
     }
@@ -81,13 +72,6 @@ public class CitizenProfileController {
         //     jdbcTemplate.update("UPDATE patients SET phone = ?, updated_at = ? WHERE tenant_id = ? AND cpid = ?",
         //             updates.get("phone"), now, tenantId, actorId);
         // }
-
-        outboxService.writeOutboxEvent(
-                "impilo.experience.citizen.profile-updated.v1",
-                correlationId, requestId, requestId, tenantId, podId,
-                "CitizenProfile", actorId,
-                Map.of("cpid", actorId, "updated_fields", updates.keySet().toString()),
-                Map.of());
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", updatedProfile);
@@ -142,13 +126,6 @@ public class CitizenProfileController {
         //     WHERE id = ? AND tenant_id = ?
         //     """, ...);
 
-        outboxService.writeOutboxEvent(
-                "impilo.experience.citizen.consent-updated.v1",
-                correlationId, requestId, requestId, tenantId, podId,
-                "ConsentPreference", id.toString(),
-                Map.of("consent_id", id.toString(), "granted", String.valueOf(granted)),
-                Map.of());
-
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", result);
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
@@ -170,13 +147,6 @@ public class CitizenProfileController {
         // STRANGLER: migrated — was direct JdbcTemplate UPDATE setting status='DELETED'
         // jdbcTemplate.update("UPDATE patients SET status = 'DELETED', updated_at = NOW() WHERE tenant_id = ? AND cpid = ?",
         //         tenantId, actorId);
-
-        outboxService.writeOutboxEvent(
-                "impilo.experience.citizen.account-deleted.v1",
-                correlationId, requestId, requestId, tenantId, podId,
-                "CitizenProfile", actorId,
-                Map.of("cpid", actorId, "action", "ACCOUNT_DELETION"),
-                Map.of());
 
         return ResponseEntity.noContent().build();
     }

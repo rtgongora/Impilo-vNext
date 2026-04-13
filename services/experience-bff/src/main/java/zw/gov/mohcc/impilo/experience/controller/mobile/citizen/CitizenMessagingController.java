@@ -5,13 +5,11 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.CommunityServiceClient;
 import zw.gov.mohcc.impilo.experience.controller.ResourceNotFoundException;
-import zw.gov.mohcc.impilo.experience.service.OutboxService;
 
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -31,14 +29,8 @@ import java.util.*;
 @RequestMapping("/internal/v1/mobile/citizen/messaging")
 public class CitizenMessagingController {
 
-    private final JdbcTemplate jdbcTemplate;
-    private final OutboxService outboxService;
     private final CommunityServiceClient communityClient;
 
-    public CitizenMessagingController(JdbcTemplate jdbcTemplate, OutboxService outboxService,
-                                      CommunityServiceClient communityClient) {
-        this.jdbcTemplate = jdbcTemplate;
-        this.outboxService = outboxService;
         this.communityClient = communityClient;
     }
 
@@ -121,13 +113,6 @@ public class CitizenMessagingController {
         //     VALUES (?, ?, ?, ?, 'ACTIVE', ?, ?)
         //     """, ...);
 
-        outboxService.writeOutboxEvent(
-                "impilo.experience.citizen.conversation-created.v1",
-                correlationId, requestId, requestId, tenantId, podId,
-                "Conversation", requestId,
-                Map.of("type", body.type()),
-                Map.of());
-
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", result);
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
@@ -180,13 +165,6 @@ public class CitizenMessagingController {
         //     INSERT INTO messages (id, tenant_id, conversation_id, sender_id, content, message_type, sent_at, created_at)
         //     VALUES (?, ?, ?, ?, ?, 'TEXT', ?, ?)
         //     """, ...);
-
-        outboxService.writeOutboxEvent(
-                "impilo.experience.citizen.message-sent.v1",
-                correlationId, requestId, requestId, tenantId, podId,
-                "Message", requestId,
-                Map.of("conversation_id", id.toString()),
-                Map.of());
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", result);

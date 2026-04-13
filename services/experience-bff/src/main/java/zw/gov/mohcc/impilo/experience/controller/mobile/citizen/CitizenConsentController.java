@@ -5,14 +5,11 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.TshepoConsentServiceClient;
-import zw.gov.mohcc.impilo.experience.service.OutboxService;
 
-import java.time.OffsetDateTime;
 import java.util.*;
 
 /**
@@ -24,14 +21,8 @@ import java.util.*;
 @RequestMapping("/internal/v1/mobile/citizen/consents")
 public class CitizenConsentController {
 
-    private final JdbcTemplate jdbcTemplate;
-    private final OutboxService outboxService;
     private final TshepoConsentServiceClient consentClient;
 
-    public CitizenConsentController(JdbcTemplate jdbcTemplate, OutboxService outboxService,
-                                    TshepoConsentServiceClient consentClient) {
-        this.jdbcTemplate = jdbcTemplate;
-        this.outboxService = outboxService;
         this.consentClient = consentClient;
     }
 
@@ -94,23 +85,6 @@ public class CitizenConsentController {
         //     ON CONFLICT (tenant_id, patient_id, consent_type)
         //     DO UPDATE SET granted = EXCLUDED.granted, updated_at = EXCLUDED.updated_at
         //     """, ...);
-
-        outboxService.writeOutboxEvent(
-                "impilo.experience.consent.updated.v1",
-                correlationId,
-                requestId,
-                idempotencyKey != null ? idempotencyKey : requestId,
-                tenantId,
-                podId,
-                "ConsentPreference",
-                request.patient_id() + ":" + request.consent_type(),
-                Map.of(
-                        "patient_id", request.patient_id(),
-                        "consent_type", request.consent_type(),
-                        "granted", request.granted().toString()
-                ),
-                Map.of()
-        );
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", result);

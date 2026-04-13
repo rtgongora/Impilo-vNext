@@ -5,7 +5,6 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -22,11 +21,8 @@ import java.util.*;
 @RequestMapping("/internal/v1/staffing")
 public class StaffingController {
 
-    private final JdbcTemplate jdbcTemplate;
     private final TusoServiceClient tusoClient;
 
-    public StaffingController(JdbcTemplate jdbcTemplate, TusoServiceClient tusoClient) {
-        this.jdbcTemplate = jdbcTemplate;
         this.tusoClient = tusoClient;
     }
 

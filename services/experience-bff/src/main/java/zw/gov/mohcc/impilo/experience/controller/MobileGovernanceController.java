@@ -3,7 +3,6 @@ package zw.gov.mohcc.impilo.experience.controller;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
@@ -11,8 +10,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
-import zw.gov.mohcc.impilo.experience.domain.AuditLogEntry;
-import zw.gov.mohcc.impilo.experience.repository.AuditLogRepository;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -34,16 +31,12 @@ public class MobileGovernanceController {
     private final RestTemplate restTemplate;
     private final String dataGovernanceUrl;
     private final String notificationUrl;
-    private final AuditLogRepository auditLogRepository;
 
-    public MobileGovernanceController(
-            RestTemplate serviceRestTemplate,
-            ServiceClientConfig.ServiceEndpoints endpoints,
-            AuditLogRepository auditLogRepository) {
+    public MobileGovernanceController(RestTemplate serviceRestTemplate,
+            ServiceClientConfig.ServiceEndpoints endpoints) {
         this.restTemplate = serviceRestTemplate;
         this.dataGovernanceUrl = endpoints.dataGovernanceBaseUrl();
         this.notificationUrl = endpoints.notificationBaseUrl();
-        this.auditLogRepository = auditLogRepository;
     }
 
     @GetMapping("/summary")
@@ -69,10 +62,6 @@ public class MobileGovernanceController {
         }
 
         PageRequest pageable = PageRequest.of(0, 10, Sort.by("occurredAt").descending());
-        long incidentCount = auditLogRepository.findByTenantId(tenantId, pageable)
-                .getContent().stream()
-                .filter(e -> "AI_INCIDENT".equals(e.getResourceType()))
-                .count();
 
         Map<String, Object> summary = new LinkedHashMap<>();
         summary.put("datasets", datasetCount);
@@ -90,19 +79,6 @@ public class MobileGovernanceController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
         PageRequest pageable = PageRequest.of(0, 20, Sort.by("occurredAt").descending());
-        List<Map<String, Object>> incidents = auditLogRepository.findByTenantId(tenantId, pageable)
-                .getContent().stream()
-                .filter(e -> "AI_INCIDENT".equals(e.getResourceType()))
-                .map(e -> {
-                    Map<String, Object> m = new LinkedHashMap<>();
-                    m.put("id", e.getId());
-                    m.put("action", e.getAction());
-                    m.put("actorId", e.getActorId());
-                    m.put("details", e.getDetails());
-                    m.put("occurredAt", e.getOccurredAt());
-                    return m;
-                })
-                .toList();
         return ResponseEntity.ok(Map.of("data", incidents,
                 "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }

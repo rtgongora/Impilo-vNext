@@ -7,7 +7,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
@@ -34,13 +33,9 @@ public class StructuredHistoryController {
 
     private static final Logger log = LoggerFactory.getLogger(StructuredHistoryController.class);
 
-    private final JdbcTemplate jdbcTemplate; // TODO: remove after verification
     private final ObjectMapper objectMapper;
     private final PctServiceClient pctClient;
 
-    public StructuredHistoryController(JdbcTemplate jdbcTemplate, ObjectMapper objectMapper,
-                                       PctServiceClient pctClient) {
-        this.jdbcTemplate = jdbcTemplate;
         this.objectMapper = objectMapper;
         this.pctClient = pctClient;
     }
@@ -70,34 +65,7 @@ public class StructuredHistoryController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(name = "patient_id") String patientIdParam) {
-
-        UUID patientId = parsePatientId(patientIdParam);
-        // STRANGLER: delegate to PctServiceClient
-        try {
-            JsonNode pctData = pctClient.getSocialHistory(patientIdParam);
-            if (pctData != null) {
-                Map<String, Object> body = new LinkedHashMap<>();
-                body.put("data", pctData);
-                body.put("meta", meta(requestId, correlationId));
-                return ResponseEntity.ok(body);
-            }
-        } catch (Exception e) {
-            log.warn("PCT getSocialHistory failed, falling back to local: {}", e.getMessage());
-        }
-        // STRANGLER: migrated to PctServiceClient — fallback to local JDBC
-        List<Map<String, Object>> rows = jdbcTemplate.query("""
-                        SELECT id, category, icon, status, detail, last_updated, risk_level
-                        FROM social_history_entries
-                        WHERE tenant_id = ? AND patient_id = ?
-                        ORDER BY category
-                        """,
-                (rs, rowNum) -> socialRow(rs),
-                tenantId, patientId);
-
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("data", rows);
-        body.put("meta", meta(requestId, correlationId));
-        return ResponseEntity.ok(body);
+        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
     }
 
     private Map<String, Object> socialRow(ResultSet rs) throws SQLException {
@@ -133,14 +101,6 @@ public class StructuredHistoryController {
             log.warn("PCT getFamilyHistory failed, falling back to local: {}", e.getMessage());
         }
         // STRANGLER: migrated to PctServiceClient — fallback to local JDBC
-        List<Map<String, Object>> members = jdbcTemplate.query("""
-                        SELECT id, name, relationship, age, deceased, deceased_age, cause_of_death
-                        FROM family_history_members
-                        WHERE tenant_id = ? AND patient_id = ?
-                        ORDER BY relationship, name
-                        """,
-                (rs, rowNum) -> familyMemberRow(rs),
-                tenantId, patientId);
 
         if (!members.isEmpty()) {
             List<UUID> memberIds = members.stream()
@@ -185,18 +145,6 @@ public class StructuredHistoryController {
                 ORDER BY condition_label
                 """.formatted(placeholders);
 
-        List<Map<String, Object>> flat = jdbcTemplate.query(sql, (rs, rowNum) -> {
-            Map<String, Object> c = new LinkedHashMap<>();
-            c.put("_memberId", rs.getObject("member_id", UUID.class));
-            c.put("id", rs.getObject("id", UUID.class).toString());
-            c.put("condition", rs.getString("condition_label"));
-            int oa = rs.getInt("onset_age");
-            c.put("onsetAge", rs.wasNull() ? null : oa);
-            c.put("status", rs.getString("status"));
-            c.put("notes", rs.getString("notes"));
-            return c;
-        }, memberIds.toArray());
-
         Map<UUID, List<Map<String, Object>>> byMember = new LinkedHashMap<>();
         for (Map<String, Object> row : flat) {
             UUID mid = (UUID) row.remove("_memberId");
@@ -211,34 +159,7 @@ public class StructuredHistoryController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(name = "patient_id") String patientIdParam) {
-
-        UUID patientId = parsePatientId(patientIdParam);
-        // STRANGLER: delegate to PctServiceClient
-        try {
-            JsonNode pctData = pctClient.getFunctionalAssessments(patientIdParam);
-            if (pctData != null) {
-                Map<String, Object> body = new LinkedHashMap<>();
-                body.put("data", pctData);
-                body.put("meta", meta(requestId, correlationId));
-                return ResponseEntity.ok(body);
-            }
-        } catch (Exception e) {
-            log.warn("PCT getFunctionalAssessments failed, falling back to local: {}", e.getMessage());
-        }
-        // STRANGLER: migrated to PctServiceClient — fallback to local JDBC
-        List<Map<String, Object>> rows = jdbcTemplate.query("""
-                        SELECT id, assessment_type, assessment_date, assessor, total_score, max_score, interpretation, activities_json
-                        FROM functional_assessments
-                        WHERE tenant_id = ? AND patient_id = ?
-                        ORDER BY assessment_date DESC, assessment_type
-                        """,
-                (rs, rowNum) -> functionalRow(rs),
-                tenantId, patientId);
-
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("data", rows);
-        body.put("meta", meta(requestId, correlationId));
-        return ResponseEntity.ok(body);
+        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
     }
 
     private Map<String, Object> functionalRow(ResultSet rs) throws SQLException {
@@ -270,34 +191,7 @@ public class StructuredHistoryController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(name = "patient_id") String patientIdParam) {
-
-        UUID patientId = parsePatientId(patientIdParam);
-        // STRANGLER: delegate to PctServiceClient
-        try {
-            JsonNode pctData = pctClient.getProcedures(patientIdParam);
-            if (pctData != null) {
-                Map<String, Object> body = new LinkedHashMap<>();
-                body.put("data", pctData);
-                body.put("meta", meta(requestId, correlationId));
-                return ResponseEntity.ok(body);
-            }
-        } catch (Exception e) {
-            log.warn("PCT getProcedures failed, falling back to local: {}", e.getMessage());
-        }
-        // STRANGLER: migrated to PctServiceClient — fallback to local JDBC
-        List<Map<String, Object>> rows = jdbcTemplate.query("""
-                        SELECT id, name, procedure_type, procedure_date, surgeon, facility, status, notes
-                        FROM patient_procedures
-                        WHERE tenant_id = ? AND patient_id = ?
-                        ORDER BY procedure_date DESC, name
-                        """,
-                (rs, rowNum) -> procedureRow(rs),
-                tenantId, patientId);
-
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("data", rows);
-        body.put("meta", meta(requestId, correlationId));
-        return ResponseEntity.ok(body);
+        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
     }
 
     private Map<String, Object> procedureRow(ResultSet rs) throws SQLException {
@@ -319,35 +213,7 @@ public class StructuredHistoryController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(name = "patient_id") String patientIdParam) {
-
-        UUID patientId = parsePatientId(patientIdParam);
-        // STRANGLER: delegate to PctServiceClient
-        try {
-            JsonNode pctData = pctClient.getAdvanceDirectives(patientIdParam);
-            if (pctData != null) {
-                Map<String, Object> body = new LinkedHashMap<>();
-                body.put("data", pctData);
-                body.put("meta", meta(requestId, correlationId));
-                return ResponseEntity.ok(body);
-            }
-        } catch (Exception e) {
-            log.warn("PCT getAdvanceDirectives failed, falling back to local: {}", e.getMessage());
-        }
-        // STRANGLER: migrated to PctServiceClient — fallback to local JDBC
-        List<Map<String, Object>> rows = jdbcTemplate.query("""
-                        SELECT id, directive_type, status, effective_date, review_date, document_ref, summary,
-                               contact, contact_relation, contact_phone
-                        FROM advance_directives
-                        WHERE tenant_id = ? AND patient_id = ?
-                        ORDER BY effective_date DESC NULLS LAST
-                        """,
-                (rs, rowNum) -> directiveRow(rs),
-                tenantId, patientId);
-
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("data", rows);
-        body.put("meta", meta(requestId, correlationId));
-        return ResponseEntity.ok(body);
+        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
     }
 
     private Map<String, Object> directiveRow(ResultSet rs) throws SQLException {

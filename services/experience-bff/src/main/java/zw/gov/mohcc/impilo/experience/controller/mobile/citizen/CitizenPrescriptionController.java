@@ -3,15 +3,12 @@ package zw.gov.mohcc.impilo.experience.controller.mobile.citizen;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.PharmacyServiceClient;
 import zw.gov.mohcc.impilo.experience.controller.ResourceNotFoundException;
-import zw.gov.mohcc.impilo.experience.service.OutboxService;
 
-import java.time.OffsetDateTime;
 import java.util.*;
 
 /**
@@ -24,14 +21,8 @@ import java.util.*;
 @RequestMapping("/internal/v1/mobile/citizen/prescriptions")
 public class CitizenPrescriptionController {
 
-    private final JdbcTemplate jdbcTemplate;
-    private final OutboxService outboxService;
     private final PharmacyServiceClient pharmacyClient;
 
-    public CitizenPrescriptionController(JdbcTemplate jdbcTemplate, OutboxService outboxService,
-                                         PharmacyServiceClient pharmacyClient) {
-        this.jdbcTemplate = jdbcTemplate;
-        this.outboxService = outboxService;
         this.pharmacyClient = pharmacyClient;
     }
 
@@ -91,13 +82,6 @@ public class CitizenPrescriptionController {
 
         // STRANGLER: migrated — delegate to PharmacyServiceClient
         JsonNode refillResult = pharmacyClient.requestRefill(id.toString(), body != null ? body : Map.of());
-
-        outboxService.writeOutboxEvent(
-                "impilo.experience.citizen.refill-requested.v1",
-                correlationId, requestId, requestId, tenantId, podId,
-                "Prescription", id.toString(),
-                Map.of("prescription_id", id.toString(), "status", "PENDING"),
-                Map.of());
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", refillResult);

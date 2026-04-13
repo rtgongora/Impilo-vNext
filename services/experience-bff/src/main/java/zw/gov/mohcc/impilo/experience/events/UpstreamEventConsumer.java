@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
@@ -21,11 +20,9 @@ public class UpstreamEventConsumer {
 
     private static final Logger log = LoggerFactory.getLogger(UpstreamEventConsumer.class);
 
-    private final JdbcTemplate jdbc;
     private final ObjectMapper objectMapper;
 
-    public UpstreamEventConsumer(JdbcTemplate jdbc, ObjectMapper objectMapper) {
-        this.jdbc = jdbc;
+    public UpstreamEventConsumer(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
     }
 

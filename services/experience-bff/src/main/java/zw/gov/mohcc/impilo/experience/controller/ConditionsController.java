@@ -5,19 +5,11 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
-import zw.gov.mohcc.impilo.experience.domain.Condition;
-import zw.gov.mohcc.impilo.experience.repository.ConditionRepository;
-import zw.gov.mohcc.impilo.experience.service.OutboxService;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -35,18 +27,9 @@ public class ConditionsController {
 
     private static final Logger log = LoggerFactory.getLogger(ConditionsController.class);
 
-    private final ConditionRepository conditionRepository;
-    private final OutboxService outboxService;
-    private final JdbcTemplate jdbcTemplate; // TODO: remove after verification
     private final PctServiceClient pctClient;
 
-    public ConditionsController(ConditionRepository conditionRepository,
-                                OutboxService outboxService,
-                                JdbcTemplate jdbcTemplate,
-                                PctServiceClient pctClient) {
-        this.conditionRepository = conditionRepository;
-        this.outboxService = outboxService;
-        this.jdbcTemplate = jdbcTemplate;
+    public ConditionsController(PctServiceClient pctClient) {
         this.pctClient = pctClient;
     }
 
@@ -71,57 +54,10 @@ public class ConditionsController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false, name = "patient_id") String patientId) {
-
-        // STRANGLER: delegate to PctServiceClient
-        if (patientId != null) {
-            try {
-                JsonNode pctData = pctClient.listConditions(patientId, page, Math.min(size, 100));
-                if (pctData != null) {
-                    Map<String, Object> response = new LinkedHashMap<>();
-                    response.put("data", pctData);
-                    response.put("meta", Map.of(
-                            "request_id", requestId,
-                            "correlation_id", correlationId
-                    ));
-                    return ResponseEntity.ok(response);
-                }
-            } catch (Exception e) {
-                log.warn("PCT listConditions failed, falling back to local: {}", e.getMessage());
-            }
-        }
-
-        // STRANGLER: migrated to PctServiceClient — fallback to local repository
-        PageRequest pageable = PageRequest.of(page, Math.min(size, 100), Sort.by("createdAt").descending());
-
-        Page<Condition> result;
-        if (patientId != null) {
-            result = conditionRepository.findByTenantIdAndPatientId(tenantId, UUID.fromString(patientId), pageable);
-        } else {
-            result = conditionRepository.findAll(pageable);
-        }
-
-        List<Map<String, Object>> data = result.getContent().stream()
-                .map(this::toResource)
-                .toList();
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", data);
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId,
-                "page", Map.of(
-                        "number", result.getNumber(),
-                        "size", result.getSize(),
-                        "total_elements", result.getTotalElements(),
-                        "total_pages", result.getTotalPages()
-                )
-        ));
-
-        return ResponseEntity.ok(response);
+        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
     }
 
     @PostMapping
-    @Transactional
     public ResponseEntity<Map<String, Object>> createCondition(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.POD_ID) String podId,
@@ -154,38 +90,6 @@ public class ConditionsController {
         }
 
         // STRANGLER: migrated to PctServiceClient — dual-write to local BFF table as backup cache
-        jdbcTemplate.update("""
-            INSERT INTO conditions
-                (id, tenant_id, patient_id, encounter_id, condition_name,
-                 icd_code, category, clinical_status, severity, onset_date,
-                 recorded_by, notes, created_at, updated_at)
-            VALUES (?, ?, ?::uuid, ?::uuid, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-                conditionId, tenantId, request.patient_id(), request.encounter_id(),
-                request.condition_name(),
-                request.icd_code(), request.category(), clinicalStatus,
-                request.severity(), request.onset_date(),
-                request.recorded_by(), request.notes(),
-                now, now);
-
-        outboxService.writeOutboxEvent(
-                "impilo.experience.condition.recorded.v1",
-                correlationId,
-                requestId,
-                idempotencyKey != null ? idempotencyKey : requestId,
-                tenantId,
-                podId,
-                "Condition",
-                conditionId.toString(),
-                Map.of(
-                        "condition_id", conditionId.toString(),
-                        "patient_id", request.patient_id(),
-                        "condition_name", request.condition_name(),
-                        "icd_code", request.icd_code() != null ? request.icd_code() : "",
-                        "clinical_status", clinicalStatus
-                ),
-                Map.of()
-        );
 
         Map<String, Object> attributes = new LinkedHashMap<>();
         attributes.put("patient_id", request.patient_id());
@@ -216,7 +120,6 @@ public class ConditionsController {
     }
 
     @PostMapping("/{id}/resolve")
-    @Transactional
     public ResponseEntity<Map<String, Object>> resolveCondition(
             @PathVariable UUID id,
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
@@ -224,9 +127,6 @@ public class ConditionsController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey) {
-
-        Condition condition = conditionRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Condition not found: " + id));
 
         // STRANGLER: delegate to PctServiceClient first
         try {
@@ -237,24 +137,6 @@ public class ConditionsController {
         }
 
         condition.resolve();
-        conditionRepository.save(condition);
-
-        outboxService.writeOutboxEvent(
-                "impilo.experience.condition.resolved.v1",
-                correlationId,
-                requestId,
-                idempotencyKey != null ? idempotencyKey : requestId,
-                tenantId,
-                podId,
-                "Condition",
-                id.toString(),
-                Map.of(
-                        "condition_id", id.toString(),
-                        "patient_id", condition.getPatientId().toString(),
-                        "clinical_status", "RESOLVED"
-                ),
-                Map.of()
-        );
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", toResource(condition));
@@ -264,28 +146,5 @@ public class ConditionsController {
         ));
 
         return ResponseEntity.ok(response);
-    }
-
-    private Map<String, Object> toResource(Condition c) {
-        Map<String, Object> attributes = new LinkedHashMap<>();
-        attributes.put("patient_id", c.getPatientId());
-        attributes.put("encounter_id", c.getEncounterId());
-        attributes.put("condition_name", c.getConditionName());
-        attributes.put("icd_code", c.getIcdCode());
-        attributes.put("category", c.getCategory());
-        attributes.put("clinical_status", c.getClinicalStatus());
-        attributes.put("severity", c.getSeverity());
-        attributes.put("onset_date", c.getOnsetDate());
-        attributes.put("abatement_date", c.getAbatementDate());
-        attributes.put("recorded_by", c.getRecordedBy());
-        attributes.put("notes", c.getNotes());
-        attributes.put("created_at", c.getCreatedAt());
-        attributes.put("updated_at", c.getUpdatedAt());
-
-        Map<String, Object> resource = new LinkedHashMap<>();
-        resource.put("id", c.getId().toString());
-        resource.put("type", "Condition");
-        resource.put("attributes", attributes);
-        return resource;
     }
 }

@@ -5,8 +5,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 
@@ -25,11 +23,9 @@ public class LabourMonitoringController {
 
     private static final Logger log = LoggerFactory.getLogger(LabourMonitoringController.class);
 
-    private final JdbcTemplate jdbc; // TODO: remove after verification
     private final PctServiceClient pctClient;
 
-    public LabourMonitoringController(JdbcTemplate jdbc, PctServiceClient pctClient) {
-        this.jdbc = jdbc;
+    public LabourMonitoringController(PctServiceClient pctClient) {
         this.pctClient = pctClient;
     }
 
@@ -39,28 +35,10 @@ public class LabourMonitoringController {
             @RequestParam String patientId,
             @RequestParam(required = false) String encounterId
     ) {
-        // STRANGLER: delegate to PctServiceClient
-        try {
-            JsonNode pctData = pctClient.listLabourMonitoring(patientId, encounterId);
-            if (pctData != null) return ResponseEntity.ok(Map.of("data", pctData));
-        } catch (Exception e) {
-            log.warn("PCT listLabourMonitoring failed, falling back to local: {}", e.getMessage());
-        }
-        // STRANGLER: migrated to PctServiceClient — fallback to local JDBC
-        List<Map<String, Object>> rows = encounterId == null || encounterId.isBlank()
-                ? jdbc.queryForList(
-                "SELECT * FROM labour_monitoring_entries WHERE tenant_id = ? AND patient_id = ?::uuid ORDER BY recorded_at DESC LIMIT 50",
-                tenantId, patientId
-        )
-                : jdbc.queryForList(
-                "SELECT * FROM labour_monitoring_entries WHERE tenant_id = ? AND patient_id = ?::uuid AND encounter_id = ?::uuid ORDER BY recorded_at DESC LIMIT 50",
-                tenantId, patientId, encounterId
-        );
-        return ResponseEntity.ok(Map.of("data", rows.stream().map(this::enrichRow).toList()));
+        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
     }
 
     @PostMapping
-    @Transactional
     public ResponseEntity<Map<String, Object>> recordLabourMonitoring(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestBody RecordLabourMonitoringRequest request
@@ -91,46 +69,6 @@ public class LabourMonitoringController {
         // STRANGLER: migrated to PctServiceClient — dual-write to local BFF table as backup cache
         UUID id = UUID.randomUUID();
         OffsetDateTime recordedAt = parseRecordedAt(request.recordedAt());
-        jdbc.update("""
-                        INSERT INTO labour_monitoring_entries (
-                            id, tenant_id, patient_id, encounter_id, phase, recorded_at, recorded_by,
-                            fetal_heart_rate_bpm, contraction_frequency_10min, contraction_duration_sec,
-                            cervical_dilation_cm, fetal_descent_fifths,
-                            maternal_pulse_bpm, systolic_bp, diastolic_bp, temperature_c,
-                            liquor, moulding, caput, oxytocin_rate_miu_min,
-                            urine_volume_ml, urine_protein, urine_acetone,
-                            maternal_condition, notes
-                        ) VALUES (
-                            ?, ?, ?::uuid, ?::uuid, ?, ?, ?,
-                            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
-                        )
-                        """,
-                id,
-                tenantId,
-                request.patientId(),
-                request.encounterId(),
-                defaultString(request.phase(), "ACTIVE_LABOUR"),
-                recordedAt,
-                defaultString(request.recordedBy(), ""),
-                request.fetalHeartRateBpm(),
-                request.contractionFrequency10Min(),
-                request.contractionDurationSec(),
-                request.cervicalDilationCm(),
-                request.fetalDescentFifths(),
-                request.maternalPulseBpm(),
-                request.systolicBp(),
-                request.diastolicBp(),
-                request.temperatureC(),
-                request.liquor(),
-                request.moulding(),
-                request.caput(),
-                request.oxytocinRateMiuMin(),
-                request.urineVolumeMl(),
-                request.urineProtein(),
-                request.urineAcetone(),
-                request.maternalCondition(),
-                request.notes()
-        );
 
         Map<String, Object> row = new LinkedHashMap<>();
         row.put("id", id);

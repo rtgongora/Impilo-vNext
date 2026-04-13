@@ -5,16 +5,11 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.TusoServiceClient;
-import zw.gov.mohcc.impilo.experience.domain.Shift;
-import zw.gov.mohcc.impilo.experience.repository.ShiftRepository;
-import zw.gov.mohcc.impilo.experience.service.OutboxService;
 
-import java.time.OffsetDateTime;
 import java.util.*;
 
 /**
@@ -27,18 +22,9 @@ import java.util.*;
 @RequestMapping("/internal/v1/shifts")
 public class ShiftController {
 
-    private final ShiftRepository shiftRepository;
-    private final OutboxService outboxService;
-    private final JdbcTemplate jdbcTemplate;
     private final TusoServiceClient tusoClient;
 
-    public ShiftController(ShiftRepository shiftRepository,
-                           OutboxService outboxService,
-                           JdbcTemplate jdbcTemplate,
-                           TusoServiceClient tusoClient) {
-        this.shiftRepository = shiftRepository;
-        this.outboxService = outboxService;
-        this.jdbcTemplate = jdbcTemplate;
+    public ShiftController(TusoServiceClient tusoClient) {
         this.tusoClient = tusoClient;
     }
 
@@ -100,23 +86,6 @@ public class ShiftController {
         //     INSERT INTO shifts (...) VALUES (...)
         //     """, ...);
 
-        outboxService.writeOutboxEvent(
-                "impilo.experience.shift.started.v1",
-                correlationId,
-                requestId,
-                idempotencyKey != null ? idempotencyKey : requestId,
-                tenantId,
-                podId,
-                "Shift",
-                requestId,
-                Map.of(
-                        "facility_id", request.facility_id(),
-                        "user_id", request.user_id(),
-                        "status", "ACTIVE"
-                ),
-                Map.of()
-        );
-
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", result);
         response.put("meta", Map.of(
@@ -152,22 +121,6 @@ public class ShiftController {
         //         .orElseThrow(() -> new ResourceNotFoundException("Shift not found: " + id));
         // shift.end(handoverNotes);
         // shiftRepository.save(shift);
-
-        outboxService.writeOutboxEvent(
-                "impilo.experience.shift.ended.v1",
-                correlationId,
-                requestId,
-                idempotencyKey != null ? idempotencyKey : requestId,
-                tenantId,
-                podId,
-                "Shift",
-                id.toString(),
-                Map.of(
-                        "shift_id", id.toString(),
-                        "status", "ENDED"
-                ),
-                Map.of()
-        );
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", result);

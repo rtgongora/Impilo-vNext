@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -17,7 +16,6 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -32,13 +30,11 @@ public class MaternitySummaryController {
     private static final Logger log = LoggerFactory.getLogger(MaternitySummaryController.class);
     private static final TypeReference<List<BigDecimal>> SAMPLE_LIST_TYPE = new TypeReference<>() {};
 
-    private final JdbcTemplate jdbc; // TODO: remove after verification
     private final ObjectMapper objectMapper;
     private final PctServiceClient pctClient;
 
-    public MaternitySummaryController(JdbcTemplate jdbc, ObjectMapper objectMapper,
+    public MaternitySummaryController(ObjectMapper objectMapper,
                                       PctServiceClient pctClient) {
-        this.jdbc = jdbc;
         this.objectMapper = objectMapper;
         this.pctClient = pctClient;
     }
@@ -106,35 +102,12 @@ public class MaternitySummaryController {
 
     private Map<String, Object> loadActivePartograph(String tenantId, String patientId, String encounterId) {
         List<Map<String, Object>> rows = encounterId == null || encounterId.isBlank()
-                ? jdbc.queryForList(
-                        """
-                                SELECT * FROM maternity_partograph_sessions
-                                WHERE tenant_id = ? AND patient_id = ?::uuid AND status = 'ACTIVE'
-                                ORDER BY started_at DESC
-                                LIMIT 1
-                                """,
-                        tenantId, patientId)
-                : jdbc.queryForList(
-                        """
-                                SELECT * FROM maternity_partograph_sessions
-                                WHERE tenant_id = ? AND patient_id = ?::uuid AND encounter_id = ?::uuid AND status = 'ACTIVE'
-                                ORDER BY started_at DESC
-                                LIMIT 1
-                                """,
-                        tenantId, patientId, encounterId);
 
         if (rows.isEmpty()) {
             return null;
         }
 
         Map<String, Object> session = new LinkedHashMap<>(rows.getFirst());
-        List<Map<String, Object>> points = jdbc.queryForList(
-                """
-                        SELECT * FROM maternity_partograph_points
-                        WHERE session_id = ?
-                        ORDER BY observed_at ASC
-                        """,
-                session.get("id"));
 
         Map<String, Object> summary = new LinkedHashMap<>();
         summary.put("point_count", points.size());
@@ -155,55 +128,17 @@ public class MaternitySummaryController {
     }
 
     private Map<String, Object> loadLatestPartographPoint(UUID sessionId) {
-        List<Map<String, Object>> rows = jdbc.queryForList(
-                """
-                        SELECT * FROM maternity_partograph_points
-                        WHERE session_id = ?
-                        ORDER BY observed_at DESC
-                        LIMIT 1
-                        """,
-                sessionId);
         return rows.isEmpty() ? null : enrichLabourStyleObservation(rows.getFirst());
     }
 
     private Map<String, Object> loadActiveCtg(String tenantId, String patientId, String encounterId) {
         List<Map<String, Object>> rows = encounterId == null || encounterId.isBlank()
-                ? jdbc.queryForList(
-                        """
-                                SELECT * FROM ctg_monitoring_sessions
-                                WHERE tenant_id = ? AND patient_id = ?::uuid AND status = 'ACTIVE'
-                                ORDER BY started_at DESC
-                                LIMIT 1
-                                """,
-                        tenantId, patientId)
-                : jdbc.queryForList(
-                        """
-                                SELECT * FROM ctg_monitoring_sessions
-                                WHERE tenant_id = ? AND patient_id = ?::uuid AND encounter_id = ?::uuid AND status = 'ACTIVE'
-                                ORDER BY started_at DESC
-                                LIMIT 1
-                                """,
-                        tenantId, patientId, encounterId);
 
         if (rows.isEmpty()) {
             return null;
         }
 
         Map<String, Object> session = new LinkedHashMap<>(rows.getFirst());
-        List<Map<String, Object>> chunkRows = jdbc.queryForList(
-                """
-                        SELECT * FROM ctg_trace_chunks
-                        WHERE session_id = ?
-                        ORDER BY started_at ASC
-                        """,
-                session.get("id"));
-        List<Map<String, Object>> annotationRows = jdbc.queryForList(
-                """
-                        SELECT * FROM ctg_annotations
-                        WHERE session_id = ?
-                        ORDER BY recorded_at ASC
-                        """,
-                session.get("id"));
 
         Map<String, Object> summary = new LinkedHashMap<>();
         summary.put("chunk_count", chunkRows.size());
@@ -216,47 +151,15 @@ public class MaternitySummaryController {
     }
 
     private Map<String, Object> loadLatestCtgChunk(UUID sessionId) {
-        List<Map<String, Object>> rows = jdbc.queryForList(
-                """
-                        SELECT * FROM ctg_trace_chunks
-                        WHERE session_id = ?
-                        ORDER BY started_at DESC
-                        LIMIT 1
-                        """,
-                sessionId);
         return rows.isEmpty() ? null : enrichCtgChunk(rows.getFirst());
     }
 
     private Map<String, Object> loadLatestCtgAnnotation(UUID sessionId) {
-        List<Map<String, Object>> rows = jdbc.queryForList(
-                """
-                        SELECT * FROM ctg_annotations
-                        WHERE session_id = ?
-                        ORDER BY recorded_at DESC
-                        LIMIT 1
-                        """,
-                sessionId);
         return rows.isEmpty() ? null : new LinkedHashMap<>(rows.getFirst());
     }
 
     private Map<String, Object> loadLatestLabourEntry(String tenantId, String patientId, String encounterId) {
         List<Map<String, Object>> rows = encounterId == null || encounterId.isBlank()
-                ? jdbc.queryForList(
-                        """
-                                SELECT * FROM labour_monitoring_entries
-                                WHERE tenant_id = ? AND patient_id = ?::uuid
-                                ORDER BY recorded_at DESC
-                                LIMIT 1
-                                """,
-                        tenantId, patientId)
-                : jdbc.queryForList(
-                        """
-                                SELECT * FROM labour_monitoring_entries
-                                WHERE tenant_id = ? AND patient_id = ?::uuid AND encounter_id = ?::uuid
-                                ORDER BY recorded_at DESC
-                                LIMIT 1
-                                """,
-                        tenantId, patientId, encounterId);
         return rows.isEmpty() ? null : enrichLabourStyleObservation(rows.getFirst());
     }
 

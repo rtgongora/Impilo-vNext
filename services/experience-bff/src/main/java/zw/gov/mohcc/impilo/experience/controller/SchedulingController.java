@@ -7,12 +7,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.TusoServiceClient;
-import zw.gov.mohcc.impilo.experience.service.OutboxService;
 
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -27,15 +25,8 @@ public class SchedulingController {
 
     private static final Logger log = LoggerFactory.getLogger(SchedulingController.class);
 
-    private final JdbcTemplate jdbcTemplate;
-    private final OutboxService outboxService;
     private final TusoServiceClient tusoClient;
 
-    public SchedulingController(JdbcTemplate jdbcTemplate,
-                                OutboxService outboxService,
-                                TusoServiceClient tusoClient) {
-        this.jdbcTemplate = jdbcTemplate;
-        this.outboxService = outboxService;
         this.tusoClient = tusoClient;
     }
 
@@ -108,21 +99,6 @@ public class SchedulingController {
         //     INSERT INTO appointments (...) VALUES (...)
         //     """, ...);
 
-        outboxService.writeOutboxEvent(
-                "impilo.experience.appointment.created.v1",
-                correlationId, requestId,
-                idempotencyKey != null ? idempotencyKey : requestId,
-                tenantId, podId,
-                "Appointment", requestId,
-                Map.of(
-                        "patient_id", request.patient_id(),
-                        "appointment_type", request.appointment_type(),
-                        "scheduled_at", request.scheduled_at(),
-                        "status", "SCHEDULED"
-                ),
-                Map.of()
-        );
-
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", result);
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
@@ -166,14 +142,6 @@ public class SchedulingController {
 
         // STRANGLER: migrated — was direct JdbcTemplate UPDATE on appointments + tusoClient.cancelBooking
         // jdbcTemplate.update("UPDATE appointments SET status = 'CANCELLED' ...", ...);
-
-        outboxService.writeOutboxEvent(
-                "impilo.experience.appointment.cancelled.v1",
-                correlationId, requestId, requestId, tenantId, podId,
-                "Appointment", id.toString(),
-                Map.of("appointment_id", id.toString(), "status", "CANCELLED"),
-                Map.of()
-        );
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", Map.of("id", id.toString(), "status", "CANCELLED"));

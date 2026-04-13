@@ -71,8 +71,7 @@ public class MarketplaceOpsController {
             @RequestParam MultiValueMap<String, String> queryParams,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
-        return forward("list audit events", requestId, correlationId,
-                () -> msikaFlowClient.listAuditEvents(new LinkedMultiValueMap<>(queryParams)));
+        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
     }
 
     @GetMapping("/vendors")

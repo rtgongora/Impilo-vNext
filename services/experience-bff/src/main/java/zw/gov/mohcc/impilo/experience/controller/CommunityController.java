@@ -3,13 +3,11 @@ package zw.gov.mohcc.impilo.experience.controller;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.CommunityServiceClient;
 
-import java.time.OffsetDateTime;
 import java.util.*;
 
 /**
@@ -25,11 +23,8 @@ import java.util.*;
 @RequestMapping("/internal/v1/community")
 public class CommunityController {
 
-    private final JdbcTemplate jdbcTemplate;
     private final CommunityServiceClient communityClient;
 
-    public CommunityController(JdbcTemplate jdbcTemplate, CommunityServiceClient communityClient) {
-        this.jdbcTemplate = jdbcTemplate;
         this.communityClient = communityClient;
     }
 

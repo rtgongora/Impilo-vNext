@@ -6,13 +6,11 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.CommunityServiceClient;
 import zw.gov.mohcc.impilo.experience.controller.ResourceNotFoundException;
-import zw.gov.mohcc.impilo.experience.service.OutboxService;
 
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -28,14 +26,8 @@ import java.util.*;
 @RequestMapping("/internal/v1/mobile/citizen/reminders")
 public class CitizenRemindersController {
 
-    private final JdbcTemplate jdbcTemplate;
-    private final OutboxService outboxService;
     private final CommunityServiceClient communityClient;
 
-    public CitizenRemindersController(JdbcTemplate jdbcTemplate, OutboxService outboxService,
-                                      CommunityServiceClient communityClient) {
-        this.jdbcTemplate = jdbcTemplate;
-        this.outboxService = outboxService;
         this.communityClient = communityClient;
     }
 
@@ -99,13 +91,6 @@ public class CitizenRemindersController {
         //     INSERT INTO reminders (...) VALUES (?)
         //     """, ...);
 
-        outboxService.writeOutboxEvent(
-                "impilo.experience.citizen.reminder-created.v1",
-                correlationId, requestId, requestId, tenantId, podId,
-                "Reminder", requestId,
-                Map.of("title", body.title(), "scheduled_at", body.scheduledAt().toString()),
-                Map.of());
-
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", result);
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
@@ -132,13 +117,6 @@ public class CitizenRemindersController {
         // String updateSql = "UPDATE reminders SET " + String.join(", ", setClauses) + " WHERE id = ? AND tenant_id = ?";
         // jdbcTemplate.update(updateSql, params.toArray());
 
-        outboxService.writeOutboxEvent(
-                "impilo.experience.citizen.reminder-updated.v1",
-                correlationId, requestId, requestId, tenantId, podId,
-                "Reminder", id.toString(),
-                Map.of("reminder_id", id.toString(), "updated_fields", body.keySet().toString()),
-                Map.of());
-
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", result);
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
@@ -161,13 +139,6 @@ public class CitizenRemindersController {
 
         // STRANGLER: migrated — was direct JdbcTemplate DELETE from reminders table
         // jdbcTemplate.update("DELETE FROM reminders WHERE id = ? AND tenant_id = ? AND patient_id = ?", id, tenantId, patientId);
-
-        outboxService.writeOutboxEvent(
-                "impilo.experience.citizen.reminder-deleted.v1",
-                correlationId, requestId, requestId, tenantId, podId,
-                "Reminder", id.toString(),
-                Map.of("reminder_id", id.toString(), "action", "DELETED"),
-                Map.of());
 
         return ResponseEntity.noContent().build();
     }
