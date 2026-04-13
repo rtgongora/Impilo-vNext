@@ -6,6 +6,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
+import zw.gov.mohcc.impilo.tuso.api.dto.ShiftResponse;
+import zw.gov.mohcc.impilo.tuso.api.dto.StartShiftOptionsResponse;
+import zw.gov.mohcc.impilo.tuso.api.dto.WorkspaceResponse;
+import zw.gov.mohcc.impilo.tuso.api.dto.WorkspaceRuleDto;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.EventOutboxEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.ShiftEntity;
@@ -23,6 +27,7 @@ import zw.gov.mohcc.impilo.tuso.persistence.repository.WorkspaceRuleRepository;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -72,10 +77,11 @@ public class WorkspaceService {
      *
      * @param facilityId the owning facility ID
      * @param dto        the workspace creation data
-     * @return the created workspace entity
+     * @return the created workspace response
      */
     @Transactional
-    public WorkspaceEntity createWorkspace(Long facilityId, CreateWorkspaceRequest dto) {
+    public WorkspaceResponse createWorkspace(Long facilityId,
+                                              zw.gov.mohcc.impilo.tuso.api.dto.CreateWorkspaceRequest dto) {
         TrustContext ctx = TrustContextHolder.require();
         UUID tenantId = ctx.tenantId();
         String actorId = ctx.actorId();
@@ -100,34 +106,24 @@ public class WorkspaceService {
 
         UUID workspaceId = workspace.getId();
 
-        // Create eligibility rules
+        // Create eligibility rules from the api DTO (List<WorkspaceRuleDto>)
+        List<WorkspaceRuleDto> savedRules = new ArrayList<>();
         if (dto.rules() != null) {
-            for (WorkspaceRuleData ruleData : dto.rules()) {
+            for (WorkspaceRuleDto ruleDto : dto.rules()) {
                 WorkspaceRuleEntity rule = new WorkspaceRuleEntity();
                 rule.setWorkspace(workspace);
-                rule.setRuleType(ruleData.ruleType());
-                rule.setActorType(ruleData.actorType());
-                rule.setRole(ruleData.role());
-                rule.setPrivilege(ruleData.privilege());
-                rule.setRequired(ruleData.required() == null || ruleData.required());
-                rule.setMetadata(ruleData.metadata());
+                rule.setRuleType(ruleDto.ruleType());
+                rule.setActorType(ruleDto.actorType());
+                rule.setRole(ruleDto.role());
+                rule.setPrivilege(ruleDto.privilege());
+                rule.setRequired(ruleDto.required());
                 ruleRepository.save(rule);
+                savedRules.add(ruleDto);
             }
         }
 
-        // Create dashboard panels
-        if (dto.dashboards() != null) {
-            for (DashboardData dashData : dto.dashboards()) {
-                WorkspaceDashboardEntity dashboard = new WorkspaceDashboardEntity();
-                dashboard.setWorkspace(workspace);
-                dashboard.setPanelName(dashData.panelName());
-                dashboard.setPanelType(dashData.panelType());
-                dashboard.setConfig(dashData.config());
-                dashboard.setSortOrder(dashData.sortOrder() != null ? dashData.sortOrder() : 0);
-                dashboard.setActive(true);
-                dashboardRepository.save(dashboard);
-            }
-        }
+        // dashboards in CreateWorkspaceRequest are List<String> (panel names only)
+        // No WorkspaceDashboardEntity rows created from panel-name strings alone
 
         publishEvent("WORKSPACE", workspaceId.toString(), "tuso.workspace.created",
                 String.format("{\"workspaceId\":\"%s\",\"facilityId\":%d,\"tenantId\":\"%s\"," +
@@ -135,7 +131,7 @@ public class WorkspaceService {
                         workspaceId, facilityId, tenantId, dto.name(), dto.workspaceType()));
 
         log.info("Workspace '{}' created with id {} for facility {}", dto.name(), workspaceId, facilityId);
-        return workspace;
+        return toWorkspaceResponse(workspace, savedRules, Collections.emptyList());
     }
 
     /**
@@ -143,10 +139,11 @@ public class WorkspaceService {
      *
      * @param workspaceId the workspace UUID
      * @param dto         the update data
-     * @return the updated workspace entity
+     * @return the updated workspace response
      */
     @Transactional
-    public WorkspaceEntity updateWorkspace(UUID workspaceId, UpdateWorkspaceRequest dto) {
+    public WorkspaceResponse updateWorkspace(UUID workspaceId,
+                                              zw.gov.mohcc.impilo.tuso.api.dto.UpdateWorkspaceRequest dto) {
         TrustContext ctx = TrustContextHolder.require();
         UUID tenantId = ctx.tenantId();
         String actorId = ctx.actorId();
@@ -175,9 +172,6 @@ public class WorkspaceService {
         if (dto.defaultPanels() != null) {
             workspace.setDefaultPanels(dto.defaultPanels());
         }
-        if (dto.active() != null) {
-            workspace.setActive(dto.active());
-        }
 
         workspace.setUpdatedBy(actorId);
         workspace = workspaceRepository.save(workspace);
@@ -188,35 +182,48 @@ public class WorkspaceService {
                         workspaceId, workspace.getFacility().getId(), tenantId, workspace.getName()));
 
         log.info("Workspace {} updated", workspaceId);
-        return workspace;
+
+        List<WorkspaceRuleEntity> rules = ruleRepository.findByWorkspaceId(workspaceId);
+        List<WorkspaceDashboardEntity> dashboards =
+                dashboardRepository.findByWorkspaceIdAndActiveTrueOrderBySortOrderAsc(workspaceId);
+        return toWorkspaceResponse(workspace, toRuleDtos(rules), toDashboardDetails(dashboards));
     }
 
     /**
      * Get a workspace with its rules and dashboard panels.
      *
      * @param workspaceId the workspace UUID
-     * @return the workspace detail
+     * @return the workspace response
      */
     @Transactional(readOnly = true)
-    public WorkspaceDetail getWorkspace(UUID workspaceId) {
+    public WorkspaceResponse getWorkspace(UUID workspaceId) {
         WorkspaceEntity workspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new IllegalArgumentException("Workspace not found: " + workspaceId));
 
         List<WorkspaceRuleEntity> rules = ruleRepository.findByWorkspaceId(workspaceId);
-        List<WorkspaceDashboardEntity> dashboards = dashboardRepository.findByWorkspaceIdAndActiveTrueOrderBySortOrderAsc(workspaceId);
+        List<WorkspaceDashboardEntity> dashboards =
+                dashboardRepository.findByWorkspaceIdAndActiveTrueOrderBySortOrderAsc(workspaceId);
 
-        return new WorkspaceDetail(workspace, rules, dashboards);
+        return toWorkspaceResponse(workspace, toRuleDtos(rules), toDashboardDetails(dashboards));
     }
 
     /**
      * List all active workspaces for a facility.
      *
      * @param facilityId the facility ID
-     * @return list of active workspace entities
+     * @return list of workspace responses
      */
     @Transactional(readOnly = true)
-    public List<WorkspaceEntity> listWorkspaces(Long facilityId) {
-        return workspaceRepository.findByFacilityIdAndActiveTrue(facilityId);
+    public List<WorkspaceResponse> listWorkspaces(Long facilityId) {
+        List<WorkspaceEntity> entities = workspaceRepository.findByFacilityIdAndActiveTrue(facilityId);
+        List<WorkspaceResponse> result = new ArrayList<>();
+        for (WorkspaceEntity ws : entities) {
+            List<WorkspaceRuleEntity> rules = ruleRepository.findByWorkspaceId(ws.getId());
+            List<WorkspaceDashboardEntity> dashboards =
+                    dashboardRepository.findByWorkspaceIdAndActiveTrueOrderBySortOrderAsc(ws.getId());
+            result.add(toWorkspaceResponse(ws, toRuleDtos(rules), toDashboardDetails(dashboards)));
+        }
+        return result;
     }
 
     /**
@@ -228,12 +235,12 @@ public class WorkspaceService {
      * @param reason       mandatory reason for the override (must not be blank)
      * @param oldValue     the previous value (JSONB map)
      * @param newValue     the new value (JSONB map)
-     * @return the created override log entry
+     * @return the workspace response after override
      */
     @Transactional
-    public WorkspaceOverrideLogEntity overrideWorkspace(UUID workspaceId, String overrideType,
-                                                         String reason, Map<String, Object> oldValue,
-                                                         Map<String, Object> newValue) {
+    public WorkspaceResponse overrideWorkspace(UUID workspaceId, String overrideType,
+                                                String reason, Map<String, Object> oldValue,
+                                                Map<String, Object> newValue) {
         if (reason == null || reason.isBlank()) {
             throw new IllegalArgumentException("Override reason is mandatory and must not be blank");
         }
@@ -260,41 +267,44 @@ public class WorkspaceService {
         overrideLog.setReason(reason);
         overrideLog.setOldValue(oldValue);
         overrideLog.setNewValue(newValue);
-        overrideLog = overrideLogRepository.save(overrideLog);
+        overrideLogRepository.save(overrideLog);
 
         // Apply the override depending on type
         switch (overrideType) {
             case "QUEUE_CONFIG" -> {
                 workspace.setQueueConfig(newValue);
                 workspace.setUpdatedBy(actorId);
-                workspaceRepository.save(workspace);
+                workspace = workspaceRepository.save(workspace);
             }
             case "DEFAULT_PANELS" -> {
                 workspace.setDefaultPanels(newValue);
                 workspace.setUpdatedBy(actorId);
-                workspaceRepository.save(workspace);
+                workspace = workspaceRepository.save(workspace);
             }
             case "ACTIVE_STATUS" -> {
                 workspace.setActive(Boolean.TRUE.equals(newValue.get("active")));
                 workspace.setUpdatedBy(actorId);
-                workspaceRepository.save(workspace);
+                workspace = workspaceRepository.save(workspace);
             }
             default -> log.warn("Unknown override type '{}'; logged but not applied to workspace", overrideType);
         }
 
-        return overrideLog;
+        List<WorkspaceRuleEntity> rules = ruleRepository.findByWorkspaceId(workspaceId);
+        List<WorkspaceDashboardEntity> dashboards =
+                dashboardRepository.findByWorkspaceIdAndActiveTrueOrderBySortOrderAsc(workspaceId);
+        return toWorkspaceResponse(workspace, toRuleDtos(rules), toDashboardDetails(dashboards));
     }
 
     /**
      * Get the workspaces a provider is eligible to start a shift in.
      *
-     * @param facilityId the facility ID
+     * @param facilityId   the facility ID
      * @param providerInfo the provider's eligibility info (actor type, roles, privileges)
-     * @return list of eligibility results
+     * @return the start-shift options response
      */
     @Transactional(readOnly = true)
-    public List<WorkspaceEligibilityEngine.EligibilityResult> getStartShiftOptions(
-            Long facilityId, ProviderEligibilityInfo providerInfo) {
+    public StartShiftOptionsResponse getStartShiftOptions(Long facilityId,
+                                                           ProviderEligibilityInfo providerInfo) {
         List<WorkspaceEntity> workspaces = workspaceRepository.findByFacilityIdAndActiveTrue(facilityId);
 
         List<List<WorkspaceRuleEntity>> rulesPerWorkspace = new ArrayList<>();
@@ -305,8 +315,19 @@ public class WorkspaceService {
         Set<String> roles = providerInfo.roles() != null ? providerInfo.roles() : new HashSet<>();
         Set<String> privileges = providerInfo.privileges() != null ? providerInfo.privileges() : new HashSet<>();
 
-        return eligibilityEngine.evaluateAll(
+        List<WorkspaceEligibilityEngine.EligibilityResult> results = eligibilityEngine.evaluateAll(
                 providerInfo.actorType(), roles, privileges, workspaces, rulesPerWorkspace);
+
+        List<StartShiftOptionsResponse.EligibleWorkspace> eligible = results.stream()
+                .map(r -> new StartShiftOptionsResponse.EligibleWorkspace(
+                        r.workspace().getId(),
+                        r.workspace().getName(),
+                        r.workspace().getWorkspaceType(),
+                        r.eligible(),
+                        r.ineligibilityReasons()))
+                .toList();
+
+        return new StartShiftOptionsResponse(eligible);
     }
 
     /**
@@ -317,11 +338,11 @@ public class WorkspaceService {
      * @param workspaceId  the workspace UUID
      * @param providerId   the provider identifier
      * @param providerType the provider type (e.g. "DOCTOR", "NURSE")
-     * @return the created shift entity
+     * @return the created shift response
      */
     @Transactional
-    public ShiftEntity startShift(Long facilityId, UUID workspaceId,
-                                   String providerId, String providerType) {
+    public ShiftResponse startShift(Long facilityId, UUID workspaceId,
+                                     String providerId, String providerType) {
         TrustContext ctx = TrustContextHolder.require();
         UUID tenantId = ctx.tenantId();
 
@@ -356,7 +377,65 @@ public class WorkspaceService {
 
         log.info("Shift {} started for provider {} in workspace {} at facility {}",
                 shift.getId(), providerId, workspaceId, facilityId);
-        return shift;
+        return toShiftResponse(shift);
+    }
+
+    // ---- Mapping helpers ----
+
+    private WorkspaceResponse toWorkspaceResponse(WorkspaceEntity ws,
+                                                    List<WorkspaceRuleDto> rules,
+                                                    List<WorkspaceResponse.DashboardDetail> dashboards) {
+        return new WorkspaceResponse(
+                ws.getId(),
+                ws.getFacility() != null ? ws.getFacility().getId() : null,
+                ws.getName(),
+                ws.getWorkspaceType(),
+                Boolean.TRUE.equals(ws.getZiboValidated()),
+                ws.getDescription(),
+                ws.getQueueConfig(),
+                ws.getDefaultPanels(),
+                Boolean.TRUE.equals(ws.getActive()),
+                rules,
+                dashboards,
+                ws.getCreatedAt(),
+                ws.getUpdatedAt(),
+                ws.getCreatedBy(),
+                ws.getUpdatedBy());
+    }
+
+    private List<WorkspaceRuleDto> toRuleDtos(List<WorkspaceRuleEntity> rules) {
+        if (rules == null) return Collections.emptyList();
+        return rules.stream()
+                .map(r -> new WorkspaceRuleDto(r.getRuleType(), r.getActorType(),
+                        r.getRole(), r.getPrivilege(), r.isRequired()))
+                .toList();
+    }
+
+    private List<WorkspaceResponse.DashboardDetail> toDashboardDetails(
+            List<WorkspaceDashboardEntity> dashboards) {
+        if (dashboards == null) return Collections.emptyList();
+        return dashboards.stream()
+                .map(d -> new WorkspaceResponse.DashboardDetail(
+                        d.getId(), d.getPanelName(), d.getPanelType(),
+                        d.getConfig(), d.getSortOrder() != null ? d.getSortOrder() : 0,
+                        Boolean.TRUE.equals(d.getActive())))
+                .toList();
+    }
+
+    private ShiftResponse toShiftResponse(ShiftEntity shift) {
+        return new ShiftResponse(
+                shift.getId(),
+                shift.getTenantId(),
+                shift.getFacility() != null ? shift.getFacility().getId() : null,
+                shift.getWorkspace() != null ? shift.getWorkspace().getId() : null,
+                shift.getWorkspace() != null ? shift.getWorkspace().getName() : null,
+                shift.getProviderId(),
+                shift.getProviderType(),
+                shift.getStartedAt(),
+                shift.getEndedAt(),
+                shift.getStatus(),
+                shift.getMetadata(),
+                shift.getCreatedAt());
     }
 
     // ---- Private helpers ----
@@ -371,52 +450,11 @@ public class WorkspaceService {
         outboxRepository.save(event);
     }
 
-    // ---- DTOs ----
-
-    public record CreateWorkspaceRequest(
-            String name,
-            String workspaceType,
-            String description,
-            Map<String, Object> queueConfig,
-            Map<String, Object> defaultPanels,
-            List<WorkspaceRuleData> rules,
-            List<DashboardData> dashboards
-    ) {}
-
-    public record UpdateWorkspaceRequest(
-            String name,
-            String workspaceType,
-            String description,
-            Map<String, Object> queueConfig,
-            Map<String, Object> defaultPanels,
-            Boolean active
-    ) {}
-
-    public record WorkspaceRuleData(
-            String ruleType,
-            String actorType,
-            String role,
-            String privilege,
-            Boolean required,
-            Map<String, Object> metadata
-    ) {}
-
-    public record DashboardData(
-            String panelName,
-            String panelType,
-            Map<String, Object> config,
-            Integer sortOrder
-    ) {}
+    // ---- Internal DTOs ----
 
     public record ProviderEligibilityInfo(
             String actorType,
             Set<String> roles,
             Set<String> privileges
-    ) {}
-
-    public record WorkspaceDetail(
-            WorkspaceEntity workspace,
-            List<WorkspaceRuleEntity> rules,
-            List<WorkspaceDashboardEntity> dashboards
     ) {}
 }

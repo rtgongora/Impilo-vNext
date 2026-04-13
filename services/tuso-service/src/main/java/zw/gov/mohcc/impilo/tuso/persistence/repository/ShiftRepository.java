@@ -27,4 +27,6 @@ public interface ShiftRepository extends JpaRepository<ShiftEntity, UUID> {
 
     Page<ShiftEntity> findByTenantIdAndProviderIdOrderByStartedAtDesc(
             UUID tenantId, String providerId, Pageable pageable);
+
+    List<ShiftEntity> findByTenantIdAndProviderIdAndStatus(UUID tenantId, String providerId, String status);
 }

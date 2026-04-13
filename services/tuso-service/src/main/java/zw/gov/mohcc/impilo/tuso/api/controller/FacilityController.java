@@ -94,7 +94,8 @@ public class FacilityController {
                         PageRequest.of(request.page(), request.size()));
         Page<FacilityListResponse.FacilitySummary> page = entityPage.map(this::toFacilitySummary);
 
-        PagedResponse<FacilityListResponse.FacilitySummary> response = PagedResponse.from(page);
+        PagedResponse<FacilityListResponse.FacilitySummary> response = PagedResponse.of(
+                page.getContent(), page.getNumber(), page.getSize(), page.getTotalElements());
 
         return ResponseEntity.ok(ApiResponse.ok(response, ctx.correlationId().toString()));
     }
