@@ -1,82 +1,77 @@
-# Cursor Build Prompt
+# Developer Runbook — Build Stabilisation
 
-> Copy everything below the line into Cursor's agent chat window.
+> **Audience**: Developers running the first build of the `claude/staging-ux-orchestration-remediation-Yypyl` branch.
+>
+> **Goal**: Compile every component, verify tests pass, document results.
+>
+> See also: `docs/runbooks/first-build-guide.md` for prerequisites and full setup.
 
 ---
 
-You are working on the Impilo vNext Health Operating System. The repo is already cloned at the current working directory. You are on branch `claude/staging-ux-orchestration-remediation-Yypyl`.
+## 1. Java Services (Maven)
 
-Read `CLAUDE.md` at the repo root first — it contains the project's architectural rules, commit conventions, and tech stack. Follow them exactly.
+### Compile all services
 
-Your job is to build every component, fix every error, push every fix, and document what you did. Do not add features. Do not delete tests. Do not downgrade dependencies. Do not create a pull request.
-
-## Context you need to know
-
-- The Experience BFF (`services/experience-bff/`) is a **pure proxy** — no database, no JPA, no Spring Data. All domain entities and repositories were intentionally deleted. If you find any leftover imports referencing `zw.gov.mohcc.impilo.experience.domain.*`, `...repository.*`, `...events.OutboxPublisher`, or `...service.OutboxService`, those are dead imports — remove them.
-- The UI (`ui/experience/`) uses a custom Tailwind colour palette called `impilo` (brand green #1F7A3A). Classes like `bg-impilo-500`, `text-impilo-600` are correct — they are defined in `tailwind.config.ts`.
-- The mobile apps (`apps/mobile/citizen-app/` and `apps/mobile/provider-app/`) use a shared design system where `Button` takes a `title` prop (not `label`) and `size="sm"` (not `size="small"`).
-- BFF runs on port 8160. UI runs on port 3020. Full port map is in `docs/runbooks/port-allocation.md`.
-
-## Step 1 — Java build
-
-Run from the repo root:
-
-```
-mvn clean compile -DskipTests -T1C 2>&1 | tail -200
+```bash
+cd /path/to/Impilo-vNext
+mvn clean compile -DskipTests -T1C
 ```
 
-If it fails, read the FIRST error (not the cascade), fix the root cause, then re-run. Common fixes:
-- Dead import → remove it.
-- Duplicate bean → remove one or add `@Primary`.
-- Missing dependency → check `pom.xml`.
-- Method signature changed → align the caller.
+If the full build is too large for a first pass, focus on the critical path:
 
-After each fix, commit and push:
-```
-git add <changed-files>
-git commit -m "fix(service-name): describe what you fixed"
-git push origin claude/staging-ux-orchestration-remediation-Yypyl
-```
-
-If the full build is too large, focus on the critical path first:
-```
+```bash
 mvn clean compile -pl services/experience-bff -am -DskipTests
 ```
 
-Once compile passes, run tests:
-```
+### Run BFF tests
+
+```bash
 mvn test -pl services/experience-bff
 ```
 
-Fix any test failures. Do not add `@Disabled` — fix the code or the test.
+### Known patterns to watch for
 
-## Step 2 — Experience UI build
+| Symptom | Fix |
+|---------|-----|
+| Import references `experience.domain.*` or `experience.repository.*` | Dead import — the BFF is a pure proxy with no JPA. Delete the import. |
+| Duplicate bean definition | Remove one or annotate with `@Primary`. |
+| `resilience4j` version mismatch | BFF uses `2.2.0`. Check parent POM `<resilience4j.version>`. |
 
-```
+---
+
+## 2. Experience UI (Next.js)
+
+### Install, type-check, build
+
+```bash
 cd ui/experience
 pnpm install
-pnpm type-check
+pnpm type-check                                         # Must be zero errors
+NEXT_PUBLIC_BFF_URL=http://localhost:8160 pnpm build     # Production build
 ```
 
-If `pnpm` is not available, use `npm install && npx tsc --noEmit`.
+### Run tests and lint
 
-Common TypeScript fixes:
-- `TS2307` (Cannot find module) → file moved or deleted, update the import path.
-- `TS2345` (Argument not assignable) → prop type changed, align the call site.
-- `TS1005` (expected comma) → syntax error, check for missing commas or stray control characters.
-
-After type-check passes:
-```
-NEXT_PUBLIC_BFF_URL=http://localhost:8160 pnpm build
+```bash
 pnpm test
 pnpm lint
 ```
 
-Fix every error. Commit and push after each fix.
+### Known patterns to watch for
 
-## Step 3 — Mobile apps build
+| Symptom | Fix |
+|---------|-----|
+| Unknown Tailwind class `bg-impilo-500` | Correct — defined in `tailwind.config.ts`. Do NOT replace with `bg-green-*`. |
+| `TS1005` expected comma | Check for stray control characters (`\x01`). Run `grep -P '\x01' src/**/*.ts` to find them. Replace with `, `. |
+| `TS2307` Cannot find module `@/components/brand/ImpiloLogo` | File should exist at `src/components/brand/ImpiloLogo.tsx`. If missing, the branch checkout was incomplete. |
 
-```
+---
+
+## 3. Mobile Apps (Expo / React Native)
+
+### Install workspace, then type-check each app
+
+```bash
 cd apps/mobile
 pnpm install
 
@@ -89,16 +84,19 @@ pnpm type-check
 pnpm test
 ```
 
-Common mobile fixes:
-- Missing design system export → check `packages/mobile-design-system/src/index.ts`.
-- Wrong Button prop → use `title` not `label`, `size="sm"` not `size="small"`.
-- Missing type → add it to the app's `types/index.ts`.
+### Known patterns to watch for
 
-Commit and push after each fix.
+| Symptom | Fix |
+|---------|-----|
+| `Button` has no prop `label` | Use `title` instead. The `@impilo/mobile-design-system` Button API uses `title`. |
+| `size="small"` is not assignable | Use `size="sm"`. Valid values: `"sm"`, `"md"`, `"lg"`. |
+| Cannot find `@impilo/mobile-design-system` | Run `pnpm install` from `apps/mobile/` (workspace root), not from the individual app. |
 
-## Step 4 — Write the build log
+---
 
-Create `docs/runbooks/build-log.md` with this structure:
+## 4. Build Log Template
+
+After completing all phases, create `docs/runbooks/build-log.md`:
 
 ```markdown
 # Build Log
@@ -106,60 +104,59 @@ Create `docs/runbooks/build-log.md` with this structure:
 ## YYYY-MM-DD — Stabilisation Build
 
 ### Environment
-- Java: (output of java -version)
-- Node: (output of node -v)
-- pnpm: (output of pnpm -v)
-- Maven: (output of mvn -v | head -1)
-- OS: (output of uname -a)
+- Java: (java -version)
+- Node: (node -v)
+- pnpm: (pnpm -v)
+- Maven: (mvn -v | head -1)
+- OS: (uname -a)
 
 ### Java Build
 - mvn clean compile: PASS / FAIL
 - mvn test (BFF): PASS / FAIL (X passed, Y failed)
-- Fixes:
-  1. fix(service): description — commit SHA
-  2. ...
+- Fixes applied:
+  1. description — commit SHA
 
 ### Experience UI Build
 - pnpm type-check: PASS / FAIL
 - pnpm build: PASS / FAIL
 - pnpm test: PASS / FAIL (X passed, Y failed)
 - pnpm lint: PASS / FAIL
-- Fixes:
-  1. fix(ui): description — commit SHA
-  2. ...
+- Fixes applied:
+  1. description — commit SHA
 
 ### Mobile Apps Build
 - Citizen type-check: PASS / FAIL
 - Provider type-check: PASS / FAIL
 - Citizen test: PASS / FAIL
 - Provider test: PASS / FAIL
-- Fixes:
-  1. fix(mobile): description — commit SHA
-  2. ...
+- Fixes applied:
+  1. description — commit SHA
 
 ### Summary
-- Total fixes applied: N
+- Total fixes: N
 - All builds green: YES / NO
 - Remaining blockers: (list or "none")
 ```
 
-Commit and push the build log:
-```
+Commit the log:
+
+```bash
 git add docs/runbooks/build-log.md
 git commit -m "docs: add build log from stabilisation pass"
 git push origin claude/staging-ux-orchestration-remediation-Yypyl
 ```
 
-## Step 5 — Update the build guide if needed
+---
 
-If you discovered missing prerequisites, wrong commands, incorrect ports, or additional required steps, update `docs/runbooks/first-build-guide.md` with corrections.
+## 5. Quick Reference
 
-```
-git add docs/runbooks/first-build-guide.md
-git commit -m "docs: update build guide with corrections from stabilisation"
-git push origin claude/staging-ux-orchestration-remediation-Yypyl
-```
-
-## Final check
-
-Run `git status` — working tree must be clean. Run `git log --oneline -20` and confirm all your fix commits are pushed.
+| Component | Command | Port |
+|-----------|---------|------|
+| BFF compile | `mvn clean compile -pl services/experience-bff -am -DskipTests` | 8160 |
+| BFF run | `cd services/experience-bff && mvn spring-boot:run` | 8160 |
+| BFF health | `curl http://localhost:8160/actuator/health` | — |
+| UI dev | `cd ui/experience && NEXT_PUBLIC_BFF_URL=http://localhost:8160 pnpm dev` | 3020 |
+| UI build | `cd ui/experience && pnpm build` | — |
+| Mobile install | `cd apps/mobile && pnpm install` | — |
+| Citizen dev | `cd apps/mobile/citizen-app && pnpm start` | Expo |
+| Provider dev | `cd apps/mobile/provider-app && pnpm start` | Expo |
