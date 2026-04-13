@@ -9,6 +9,7 @@ import {
   usePublicHealthCounters,
   usePublicHealthSignals,
 } from "@/hooks/queries/usePublicHealth";
+import { DEMO_WEEKLY_IDSR_FACILITIES } from "./publicHealthDemoFixtures";
 
 export function SurveillanceTab() {
   const { data: apiSignals = [], isLoading: sigLoading, isError: sigError } = usePublicHealthSignals();
@@ -30,9 +31,10 @@ export function SurveillanceTab() {
   return (
     <div className="space-y-4">
       <div className="rounded-lg border border-blue-200 bg-blue-50/80 p-3 text-xs text-blue-900">
-        <strong>Live data:</strong> Threshold signal definitions, surveillance cases, and counter snapshots load from the
-        Experience BFF → surveillance-service (empty if the service is down or unseeded). Weekly IDSR facility grids are
-        deferred until a reporting API exists — no fabricated rows.
+        <strong>Live data:</strong> threshold signals, case-based reports, and counter snapshots load from the Experience BFF
+        → surveillance-service (empty if the service is down or unseeded). <strong>Weekly IDSR / eIDSR</strong> uses the
+        &quot;Weekly Aggregate&quot; sub-tab: an <strong>illustrative</strong> facility grid until{" "}
+        <code className="text-[10px]">GET …/weekly-idsr</code> exists.
       </div>
 
       {/* KPI Strip */}
@@ -56,8 +58,8 @@ export function SurveillanceTab() {
             color: "text-blue-700",
             sub: ctrError ? "Could not reach counters" : "From /public-health/counters",
           },
-          { label: "Weekly IDSR grid", value: "—", color: "text-amber-700", sub: "No BFF endpoint yet" },
-          { label: "Reporting completeness", value: "—", color: "text-gray-500", sub: "Derived metrics backlog" },
+          { label: "Weekly IDSR (demo)", value: "5", color: "text-amber-700", sub: "Facilities in sample W14 grid" },
+          { label: "Reporting completeness (demo)", value: "89%", color: "text-emerald-800", sub: "See weekly tab KPIs" },
         ].map((kpi, i) => (
           <div key={i} className="bg-white rounded-lg border border-gray-200 p-3 text-center">
             <p className={`text-2xl font-bold ${kpi.color}`}>{kpi.value}</p>
@@ -549,19 +551,101 @@ export function SurveillanceTab() {
         </div>
       )}
 
-      {/* Weekly IDSR Tab — no fabricated facility rows */}
+      {/* Weekly IDSR / eIDSR — illustrative facility grid (Lovable parity); replace with API when available */}
       {activeSubTab === "weekly" && (
-        <div className="bg-white rounded-lg border border-gray-200">
-          <div className="border-b border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
-            <p className="font-medium">Weekly IDSR aggregate reporting</p>
+        <div className="space-y-4">
+          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+            <p className="font-medium">Weekly aggregate (IDSR / eIDSR)</p>
             <p className="mt-2 text-xs leading-relaxed text-amber-900/90">
-              There is no <code className="text-[11px]">GET /internal/v1/public-health/weekly-idsr</code> (or equivalent)
-              on the Experience BFF yet. The UI does not show sample facilities — use Surveillance signals and cases for
-              operational data until reporting services publish a governed list endpoint.
+              The facility grid below matches the <strong>Lovable / impilo-structure</strong> eIDSR layout for training and
+              demos. There is still no <code className="text-[11px]">GET /internal/v1/public-health/weekly-idsr</code> on the
+              BFF — when reporting services publish it, swap <code className="text-[11px]">DEMO_WEEKLY_IDSR_FACILITIES</code> for
+              live rows.
             </p>
           </div>
-          <div className="px-4 py-16 text-center text-sm text-gray-500">
-            No weekly aggregate rows to display.
+
+          <div className="rounded-lg border border-gray-200 bg-white">
+            <div className="border-b px-4 py-3">
+              <h4 className="text-sm font-semibold text-gray-900">Facility reporting completeness (demo W14-2026)</h4>
+              <p className="text-xs text-gray-500">Zero reporting vs positive counts per notifiable week</p>
+            </div>
+            <div className="overflow-x-auto p-2">
+              <table className="w-full min-w-[640px] text-xs">
+                <thead>
+                  <tr className="border-b bg-gray-50 text-left">
+                    <th className="px-3 py-2 font-medium text-gray-600">Facility</th>
+                    <th className="px-3 py-2 font-medium text-gray-600">Week</th>
+                    <th className="px-3 py-2 font-medium text-gray-600">Submitted</th>
+                    <th className="px-3 py-2 font-medium text-gray-600">On time</th>
+                    <th className="px-3 py-2 font-medium text-gray-600">Diseases</th>
+                    <th className="px-3 py-2 font-medium text-gray-600">Zero reports</th>
+                    <th className="px-3 py-2 font-medium text-gray-600">Positive</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {DEMO_WEEKLY_IDSR_FACILITIES.map((w) => (
+                    <tr key={w.facility} className="border-b hover:bg-gray-50">
+                      <td className="px-3 py-2 font-medium text-gray-900">{w.facility}</td>
+                      <td className="px-3 py-2 font-mono text-gray-600">{w.week}</td>
+                      <td className="px-3 py-2">{w.submitted ? "Yes" : <span className="font-semibold text-red-700">No</span>}</td>
+                      <td className="px-3 py-2">{w.onTime ? "Yes" : <span className="text-amber-800">Late</span>}</td>
+                      <td className="px-3 py-2 tabular-nums">{w.diseases}</td>
+                      <td className="px-3 py-2 tabular-nums">{w.zero}</td>
+                      <td className="px-3 py-2 tabular-nums font-medium text-gray-900">{w.positive}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="rounded-lg border border-gray-200 bg-white p-4">
+              <h5 className="text-sm font-semibold text-gray-900">Aggregate disease counts (demo)</h5>
+              <p className="mb-3 text-xs text-gray-500">Cross-facility roll-up for the same reporting week</p>
+              <ul className="space-y-2 text-xs">
+                {[
+                  { disease: "Acute watery diarrhoea", n: 34, trend: "+12% vs W13" },
+                  { disease: "Typhoid", n: 18, trend: "stable" },
+                  { disease: "Malaria (confirmed)", n: 412, trend: "seasonal rise" },
+                  { disease: "Measles (suspected)", n: 6, trend: "watch" },
+                ].map((d) => (
+                  <li key={d.disease} className="flex justify-between rounded border border-gray-100 px-2 py-1.5">
+                    <span className="font-medium text-gray-800">{d.disease}</span>
+                    <span className="tabular-nums text-gray-700">
+                      {d.n} <span className="text-[10px] text-gray-500">({d.trend})</span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="rounded-lg border border-gray-200 bg-white p-4">
+              <h5 className="text-sm font-semibold text-gray-900">Timeliness &amp; completeness (demo KPIs)</h5>
+              <p className="mb-3 text-xs text-gray-500">Aligns with MoHCC IDSR targets — wire to analytics when ready</p>
+              <ul className="space-y-3 text-xs">
+                {[
+                  { label: "Weekly IDSR completeness", value: 89, target: 80 },
+                  { label: "Timeliness of reporting", value: 76, target: 80 },
+                  { label: "Case investigation rate", value: 92, target: 90 },
+                  { label: "Lab confirmation rate", value: 68, target: 75 },
+                ].map((m) => (
+                  <li key={m.label}>
+                    <div className="mb-1 flex justify-between">
+                      <span className="font-medium text-gray-800">{m.label}</span>
+                      <span className={m.value >= m.target ? "text-emerald-700" : "text-amber-800"}>
+                        {m.value}% (target {m.target}%)
+                      </span>
+                    </div>
+                    <div className="h-2 overflow-hidden rounded-full bg-gray-100">
+                      <div
+                        className={`h-full rounded-full ${m.value >= m.target ? "bg-emerald-500" : "bg-amber-500"}`}
+                        style={{ width: `${Math.min(100, m.value)}%` }}
+                      />
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         </div>
       )}
