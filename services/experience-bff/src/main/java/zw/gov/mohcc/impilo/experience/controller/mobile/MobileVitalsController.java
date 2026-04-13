@@ -1,25 +1,24 @@
 package zw.gov.mohcc.impilo.experience.controller.mobile;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 
 import java.math.BigDecimal;
-import java.time.OffsetDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
- * Mobile vitals endpoints.
- * POST   /internal/v1/mobile/provider/vitals           - record single vital
- * POST   /internal/v1/mobile/provider/vitals/batch      - record multiple vitals
- * GET    /internal/v1/mobile/provider/vitals?encounter_id= - vitals for encounter
- * GET    /internal/v1/mobile/provider/vitals/latest?patient_id= - latest vitals for patient
- * DELETE /internal/v1/mobile/provider/vitals/{id}       - delete a vital
+ * Mobile vitals — delegates recording to PCT vitals API using the same payload shape as {@link zw.gov.mohcc.impilo.experience.controller.VitalsController}.
  */
 @RestController
 @RequestMapping("/internal/v1/mobile/provider/vitals")
@@ -53,31 +52,11 @@ public class MobileVitalsController {
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @Valid @RequestBody RecordVitalRequest request) {
 
-        UUID vitalId = UUID.randomUUID();
-        OffsetDateTime now = OffsetDateTime.now();
-
-        Map<String, Object> attributes = new LinkedHashMap<>();
-        attributes.put("encounter_id", request.encounter_id());
-        attributes.put("patient_id", request.patient_id());
-        attributes.put("vital_type", request.vital_type());
-        attributes.put("value", request.value());
-        attributes.put("unit", request.unit());
-        attributes.put("notes", request.notes());
-        attributes.put("recorded_at", now);
-        attributes.put("created_at", now);
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", Map.of(
-                "id", vitalId.toString(),
-                "type", "Vital",
-                "attributes", attributes
-        ));
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId
-        ));
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        Map<String, Object> pctBody = mobileVitalToPctBody(request);
+        JsonNode created = pctClient.createVitals(pctBody);
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                "data", created != null ? created : Map.of(),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 
     @PostMapping("/batch")
@@ -89,38 +68,19 @@ public class MobileVitalsController {
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @Valid @RequestBody BatchVitalsRequest request) {
 
-        OffsetDateTime now = OffsetDateTime.now();
-        List<Map<String, Object>> createdVitals = new ArrayList<>();
-
+        List<JsonNode> saved = new ArrayList<>();
         for (RecordVitalRequest vital : request.vitals()) {
-            UUID vitalId = UUID.randomUUID();
-
-            Map<String, Object> attributes = new LinkedHashMap<>();
-            attributes.put("encounter_id", vital.encounter_id());
-            attributes.put("patient_id", vital.patient_id());
-            attributes.put("vital_type", vital.vital_type());
-            attributes.put("value", vital.value());
-            attributes.put("unit", vital.unit());
-            attributes.put("notes", vital.notes());
-            attributes.put("recorded_at", now);
-            attributes.put("created_at", now);
-
-            Map<String, Object> resource = new LinkedHashMap<>();
-            resource.put("id", vitalId.toString());
-            resource.put("type", "Vital");
-            resource.put("attributes", attributes);
-            createdVitals.add(resource);
+            JsonNode created = pctClient.createVitals(mobileVitalToPctBody(vital));
+            if (created != null) {
+                saved.add(created);
+            }
         }
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", createdVitals);
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId,
-                "count", createdVitals.size()
-        ));
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                "data", saved,
+                "meta", Map.of(
+                        "request_id", requestId,
+                        "correlation_id", correlationId,
+                        "count", saved.size())));
     }
 
     @GetMapping
@@ -131,7 +91,22 @@ public class MobileVitalsController {
             @RequestParam(name = "encounter_id") String encounterId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
-        return ResponseEntity.ok(Map.of("data", List.of()));
+        String cpid;
+        try {
+            long enc = Long.parseLong(encounterId.trim());
+            JsonNode encNode = pctClient.getEncounter(enc);
+            if (encNode == null || !encNode.has("subjectCpid")) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Encounter not found");
+            }
+            cpid = encNode.get("subjectCpid").asText();
+        } catch (NumberFormatException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "encounter_id must be a numeric PCT encounter id");
+        }
+        JsonNode data = pctClient.listVitals(cpid, page, size);
+        return ResponseEntity.ok(Map.of(
+                "data", data != null ? data : List.of(),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 
     @GetMapping("/latest")
@@ -140,44 +115,55 @@ public class MobileVitalsController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(name = "patient_id") String patientId) {
-        return ResponseEntity.ok(Map.of("data", List.of()));
+        JsonNode data = pctClient.listVitals(patientId, 0, 1);
+        return ResponseEntity.ok(Map.of(
+                "data", data != null ? data : List.of(),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Map<String, Object>> deleteVital(
-            @PathVariable UUID id,
+            @PathVariable String id,
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.POD_ID) String podId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey) {
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", Map.of("id", id.toString(), "deleted", true));
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId
-        ));
-
-        return ResponseEntity.ok(response);
+        // TODO: wire to PctServiceClient when PCT exposes DELETE /v1/vitals/{id}
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(Map.of(
+                "data", Map.of(),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 
-    private Map<String, Object> toResource(Map<String, Object> row) {
-        Map<String, Object> attributes = new LinkedHashMap<>();
-        attributes.put("encounter_id", row.get("encounter_id"));
-        attributes.put("patient_id", row.get("patient_id"));
-        attributes.put("vital_type", row.get("vital_type"));
-        attributes.put("value", row.get("value"));
-        attributes.put("unit", row.get("unit"));
-        attributes.put("notes", row.get("notes"));
-        attributes.put("recorded_at", row.get("recorded_at"));
-        attributes.put("created_at", row.get("created_at"));
-        attributes.put("updated_at", row.get("updated_at"));
+    private static Map<String, Object> mobileVitalToPctBody(RecordVitalRequest request) {
+        Map<String, Object> pctBody = new LinkedHashMap<>();
+        pctBody.put("patient_id", request.patient_id());
+        pctBody.put("encounter_id", request.encounter_id());
+        String note = request.vital_type() + "=" + request.value()
+                + (request.unit() != null && !request.unit().isBlank() ? " " + request.unit() : "");
+        if (request.notes() != null && !request.notes().isBlank()) {
+            note = note + " | " + request.notes();
+        }
+        pctBody.put("notes", note);
+        applyTypedVitals(pctBody, request.vital_type(), request.value());
+        return pctBody;
+    }
 
-        Map<String, Object> resource = new LinkedHashMap<>();
-        resource.put("id", row.get("id").toString());
-        resource.put("type", "Vital");
-        resource.put("attributes", attributes);
-        return resource;
+    private static void applyTypedVitals(Map<String, Object> pctBody, String vitalType, BigDecimal value) {
+        if (vitalType == null) {
+            return;
+        }
+        switch (vitalType.trim().toUpperCase()) {
+            case "SYSTOLIC" -> pctBody.put("systolic", value.intValue());
+            case "DIASTOLIC" -> pctBody.put("diastolic", value.intValue());
+            case "HEART_RATE", "PULSE" -> pctBody.put("heart_rate", value.intValue());
+            case "TEMPERATURE" -> pctBody.put("temperature", value);
+            case "RESPIRATORY_RATE", "RR" -> pctBody.put("respiratory_rate", value.intValue());
+            case "SPO2", "OXYGEN_SATURATION" -> pctBody.put("oxygen_saturation", value);
+            case "WEIGHT" -> pctBody.put("weight", value);
+            case "HEIGHT" -> pctBody.put("height", value);
+            case "PAIN_SCORE" -> pctBody.put("pain_score", value.intValue());
+            default -> { /* value captured only in notes */ }
+        }
     }
 }

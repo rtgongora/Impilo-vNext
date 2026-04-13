@@ -8,26 +8,17 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.CostaServiceClient;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 
-import java.time.OffsetDateTime;
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
- * Mobile provider encounter endpoints.
- *
- * <p>Provides encounter lifecycle operations for mobile provider apps,
- * with PCT sovereign service delegation for journey/encounter management.</p>
- *
- * <p>Endpoints:</p>
- * <ul>
- *   <li>GET  /internal/v1/mobile/provider/encounters?patient_id= — list encounters</li>
- *   <li>POST /internal/v1/mobile/provider/encounters — create encounter</li>
- *   <li>POST /internal/v1/mobile/provider/encounters/{id}/close — close encounter</li>
- *   <li>GET  /internal/v1/mobile/provider/encounters/{id}/summary — patient encounter summary</li>
- * </ul>
+ * Mobile provider encounter endpoints — PCT proxy aligned with {@link zw.gov.mohcc.impilo.experience.controller.EncounterController}.
  */
 @RestController
 @RequestMapping("/internal/v1/mobile/provider/encounters")
@@ -48,13 +39,10 @@ public class MobileEncounterController {
             @NotBlank String facility_id,
             @NotBlank String encounter_type,
             String chief_complaint,
-            String pct_journey_id,
+            @NotBlank String pct_journey_id,
             String patient_cpid
     ) {}
 
-    /**
-     * List encounters for a patient.
-     */
     @GetMapping
     public ResponseEntity<Map<String, Object>> listEncounters(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
@@ -63,12 +51,19 @@ public class MobileEncounterController {
             @RequestParam(name = "patient_id") String patientId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return ResponseEntity.ok(Map.of("data", List.of()));
+        try {
+            JsonNode pctData = pctClient.getPatientTimeline(patientId);
+            return ResponseEntity.ok(Map.of(
+                    "data", pctData != null ? pctData : List.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            log.warn("PCT getPatientTimeline (mobile) failed: {}", e.getMessage());
+            return ResponseEntity.ok(Map.of(
+                    "data", List.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
     }
 
-    /**
-     * Create a new encounter with PCT delegation.
-     */
     @PostMapping
     public ResponseEntity<Map<String, Object>> createEncounter(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
@@ -78,87 +73,74 @@ public class MobileEncounterController {
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @Valid @RequestBody CreateEncounterRequest request) {
 
-        UUID encounterId = UUID.randomUUID();
-        OffsetDateTime now = OffsetDateTime.now();
-
-        // Delegate to PCT
-        String pctEncounterRef = null;
-        if (request.pct_journey_id() != null && !request.pct_journey_id().isBlank()) {
-            try {
-                JsonNode pctEncounter = pctClient.startEncounter(
-                        request.pct_journey_id(), request.encounter_type());
-                if (pctEncounter != null && pctEncounter.has("encounterRef")) {
-                    pctEncounterRef = pctEncounter.get("encounterRef").asText();
-                }
-                log.info("PCT encounter started from mobile: ref={}", pctEncounterRef);
-            } catch (Exception e) {
-                log.warn("PCT encounter delegation from mobile failed (non-blocking): {}", e.getMessage());
-            }
-        }
-
-        Map<String, Object> attributes = new LinkedHashMap<>();
-        attributes.put("patient_id", request.patient_id());
-        attributes.put("facility_id", request.facility_id());
-        attributes.put("encounter_type", request.encounter_type());
-        attributes.put("chief_complaint", request.chief_complaint());
-        attributes.put("status", "IN_PROGRESS");
-        attributes.put("started_at", now);
-        if (pctEncounterRef != null) {
-            attributes.put("pct_encounter_ref", pctEncounterRef);
-        }
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", Map.of("id", encounterId.toString(), "type", "Encounter", "attributes", attributes));
-        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        JsonNode pctEncounter = pctClient.startEncounter(
+                request.pct_journey_id(), request.encounter_type());
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                "data", pctEncounter != null ? pctEncounter : Map.of(),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 
-    /**
-     * Close an encounter with PCT delegation.
-     */
     @PostMapping("/{id}/close")
     public ResponseEntity<Map<String, Object>> closeEncounter(
-            @PathVariable UUID id,
+            @PathVariable String id,
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.POD_ID) String podId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey) {
 
-        // Delegate to COSTA: create bill draft for the closed encounter
+        long encId = parsePctEncounterId(id);
+        JsonNode pct = pctClient.completeEncounter(encId);
         String costaBillId = null;
         try {
-            JsonNode billData = costaClient.createBillDraft(id.toString(), "ENCOUNTER");
+            JsonNode billData = costaClient.createBillDraft(String.valueOf(encId), "ENCOUNTER");
             if (billData != null && billData.has("billId")) {
                 costaBillId = billData.get("billId").asText();
-                log.info("COSTA bill draft created from mobile close: billId={} for encounter={}", costaBillId, id);
             }
         } catch (Exception e) {
-            log.warn("COSTA bill draft creation from mobile close failed (non-blocking): {}", e.getMessage());
+            log.warn("COSTA bill draft from mobile close failed (non-blocking): {}", e.getMessage());
         }
-
-        Map<String, Object> data = new LinkedHashMap<>();
-        data.put("id", id.toString());
-        data.put("status", "COMPLETED");
-        if (costaBillId != null) data.put("costa_bill_id", costaBillId);
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", data);
-        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
-        return ResponseEntity.ok(response);
+        Map<String, Object> meta = new LinkedHashMap<>(Map.of(
+                "request_id", requestId,
+                "correlation_id", correlationId));
+        if (costaBillId != null) {
+            meta.put("costa_bill_id", costaBillId);
+        }
+        return ResponseEntity.ok(Map.of(
+                "data", pct != null ? pct : Map.of(),
+                "meta", meta));
     }
 
-    /**
-     * Get encounter summary — aggregated patient context for mobile.
-     * Includes active encounter, recent vitals, active conditions, allergies, medications.
-     */
     @GetMapping("/{id}/summary")
     public ResponseEntity<Map<String, Object>> getEncounterSummary(
-            @PathVariable UUID id,
+            @PathVariable String id,
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
 
-        return ResponseEntity.ok(Map.of("data", List.of()));
+        long encId = parsePctEncounterId(id);
+        JsonNode enc = pctClient.getEncounter(encId);
+        String cpid = enc != null && enc.has("subjectCpid") ? enc.get("subjectCpid").asText() : null;
+        JsonNode summary = cpid != null && !cpid.isBlank() ? pctClient.getPatientHealthSummary(cpid) : null;
+
+        Map<String, Object> data = new LinkedHashMap<>();
+        if (enc != null) {
+            data.put("encounter", enc);
+        }
+        if (summary != null) {
+            data.put("patient_health_summary", summary);
+        }
+        return ResponseEntity.ok(Map.of(
+                "data", data.isEmpty() ? Map.of() : data,
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+
+    private static long parsePctEncounterId(String raw) {
+        try {
+            return Long.parseLong(raw.trim());
+        } catch (NumberFormatException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Encounter id must be the numeric PCT encounter id");
+        }
     }
 }

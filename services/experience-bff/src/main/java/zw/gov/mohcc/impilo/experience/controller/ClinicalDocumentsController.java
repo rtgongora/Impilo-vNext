@@ -1,26 +1,24 @@
 package zw.gov.mohcc.impilo.experience.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
-import com.fasterxml.jackson.databind.JsonNode;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import zw.gov.mohcc.impilo.experience.client.DocumentServiceClient;
+import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 
-import java.time.OffsetDateTime;
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 /**
- * Clinical document management endpoints.
- * GET  /internal/v1/clinical-documents?patient_id= — list documents for patient (paged).
- * POST /internal/v1/clinical-documents — create document entry (metadata only).
- *
- * <p>When a document has a document_object_id (V15 bridge column), the response
- * includes a download_url generated from the document-service's pre-signed URL.</p>
+ * Clinical documents — list/create via PCT records; optional document-store enrichment for object metadata.
  */
 @RestController
 @RequestMapping("/internal/v1/clinical-documents")
@@ -28,9 +26,12 @@ public class ClinicalDocumentsController {
 
     private static final Logger log = LoggerFactory.getLogger(ClinicalDocumentsController.class);
 
+    private final PctServiceClient pctClient;
     private final DocumentServiceClient documentServiceClient;
 
-    public ClinicalDocumentsController(DocumentServiceClient documentServiceClient) {
+    public ClinicalDocumentsController(PctServiceClient pctClient,
+                                       DocumentServiceClient documentServiceClient) {
+        this.pctClient = pctClient;
         this.documentServiceClient = documentServiceClient;
     }
 
@@ -43,7 +44,8 @@ public class ClinicalDocumentsController {
             String mime_type,
             Long file_size,
             @NotBlank String storage_key,
-            String uploaded_by
+            String uploaded_by,
+            String document_object_id
     ) {}
 
     @GetMapping
@@ -54,13 +56,22 @@ public class ClinicalDocumentsController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false, name = "patient_id") String patientId) {
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", List.of());
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId
-        ));
-        return ResponseEntity.ok(response);
+        if (patientId == null || patientId.isBlank()) {
+            return ResponseEntity.ok(Map.of(
+                    "data", List.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
+        try {
+            JsonNode data = pctClient.getPatientRecords(patientId, null, page, size);
+            return ResponseEntity.ok(Map.of(
+                    "data", data != null ? data : List.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            log.warn("PCT getPatientRecords failed: {}", e.getMessage());
+            return ResponseEntity.ok(Map.of(
+                    "data", List.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
     }
 
     @PostMapping
@@ -72,34 +83,41 @@ public class ClinicalDocumentsController {
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @Valid @RequestBody CreateDocumentRequest request) {
 
-        UUID documentId = UUID.randomUUID();
-        OffsetDateTime now = OffsetDateTime.now();
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("patient_id", request.patient_id());
+        body.put("encounter_id", request.encounter_id());
+        body.put("document_type", request.document_type());
+        body.put("title", request.title());
+        body.put("description", request.description());
+        body.put("mime_type", request.mime_type());
+        body.put("file_size", request.file_size());
+        body.put("storage_key", request.storage_key());
+        body.put("uploaded_by", request.uploaded_by());
 
-        Map<String, Object> attributes = new LinkedHashMap<>();
-        attributes.put("patient_id", request.patient_id());
-        attributes.put("encounter_id", request.encounter_id());
-        attributes.put("document_type", request.document_type());
-        attributes.put("title", request.title());
-        attributes.put("description", request.description());
-        attributes.put("mime_type", request.mime_type());
-        attributes.put("file_size", request.file_size());
-        attributes.put("storage_key", request.storage_key());
-        attributes.put("uploaded_by", request.uploaded_by());
-        attributes.put("status", "ACTIVE");
-        attributes.put("created_at", now);
-        attributes.put("updated_at", now);
+        JsonNode created = pctClient.createPatientRecord(body);
 
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", Map.of(
-                "id", documentId.toString(),
-                "type", "ClinicalDocument",
-                "attributes", attributes
-        ));
-        response.put("meta", Map.of(
+        Map<String, Object> meta = new LinkedHashMap<>(Map.of(
                 "request_id", requestId,
-                "correlation_id", correlationId
-        ));
+                "correlation_id", correlationId));
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        if (request.document_object_id() != null && !request.document_object_id().isBlank()) {
+            try {
+                UUID oid = UUID.fromString(request.document_object_id().trim());
+                JsonNode docMeta = documentServiceClient.getObjectMetadata(oid);
+                if (docMeta != null) {
+                    meta.put("document_object", docMeta);
+                }
+                JsonNode signed = documentServiceClient.getSignedUrl(oid);
+                if (signed != null) {
+                    meta.put("download", signed);
+                }
+            } catch (Exception e) {
+                log.warn("Document store enrichment failed (non-blocking): {}", e.getMessage());
+            }
+        }
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                "data", created != null ? created : Map.of(),
+                "meta", meta));
     }
 }

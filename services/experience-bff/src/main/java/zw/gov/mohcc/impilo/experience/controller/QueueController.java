@@ -3,30 +3,23 @@ package zw.gov.mohcc.impilo.experience.controller;
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 
-import java.time.OffsetDateTime;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 /**
- * Queue management endpoints.
- * GET  /internal/v1/queue/entries — list queue entries with filters.
- * POST /internal/v1/queue/entries — create queue entry.
- * POST /internal/v1/queue/entries/{id}/call — call patient from queue.
- * POST /internal/v1/queue/entries/{id}/complete — complete queue entry.
+ * Queue management — pure proxy to PCT queue and queue-item APIs.
  */
 @RestController
 @RequestMapping("/internal/v1/queue")
 public class QueueController {
-
-    private static final Logger log = LoggerFactory.getLogger(QueueController.class);
 
     private final PctServiceClient pctClient;
 
@@ -36,13 +29,15 @@ public class QueueController {
 
     public record CreateQueueEntryRequest(
             @NotBlank String patient_id,
-            String facility_id,
+            @NotBlank String facility_id,
             @NotBlank String queue_type,
             String priority,
             String reason,
-            String patient_cpid,
+            @NotBlank String patient_cpid,
             String referral_source,
-            String referral_id
+            String referral_id,
+            /** When set, enqueue into this queue; otherwise resolved from facility + queue_type. */
+            String queue_id
     ) {}
 
     @GetMapping("/entries")
@@ -53,15 +48,32 @@ public class QueueController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false, name = "facility_id") String facilityId,
+            @RequestParam(required = false, name = "queue_id") String queueId,
+            @RequestParam(required = false, name = "workspace_id") String workspaceId,
             @RequestParam(required = false) String status,
             @RequestParam(required = false, name = "queue_type") String queueType) {
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", List.of());
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId
-        ));
-        return ResponseEntity.ok(response);
+
+        JsonNode data;
+        if (queueId != null && !queueId.isBlank()) {
+            data = pctClient.listQueueItems(UUID.fromString(queueId.trim()), status);
+        } else if (facilityId != null && !facilityId.isBlank()) {
+            UUID fid = UUID.fromString(facilityId.trim());
+            UUID wid = workspaceId != null && !workspaceId.isBlank() ? UUID.fromString(workspaceId.trim()) : null;
+            JsonNode queues = pctClient.listQueues(fid, wid);
+            if (queueType != null && !queueType.isBlank() && queues != null && queues.isArray()) {
+                UUID match = findQueueIdByType(queues, queueType);
+                data = match != null ? pctClient.listQueueItems(match, status) : queues;
+            } else {
+                data = queues;
+            }
+        } else {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "queue_id or facility_id is required to list queue data from PCT");
+        }
+
+        return ResponseEntity.ok(Map.of(
+                "data", data != null ? data : List.of(),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 
     @PostMapping("/entries")
@@ -73,63 +85,34 @@ public class QueueController {
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @Valid @RequestBody CreateQueueEntryRequest request) {
 
-        UUID entryId = UUID.randomUUID();
-        OffsetDateTime now = OffsetDateTime.now();
+        UUID facilityUuid = UUID.fromString(request.facility_id().trim());
+        JsonNode journeyData = pctClient.startJourney(
+                request.patient_cpid().trim(),
+                facilityUuid,
+                request.referral_source(),
+                request.referral_id());
+        if (journeyData == null || !journeyData.has("journeyId")) {
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "PCT did not return a journeyId");
+        }
+        String journeyId = journeyData.get("journeyId").asText();
 
-        // Store patient_cpid for later PCT delegation
-        String cpid = request.patient_cpid();
-        if (cpid == null || cpid.isBlank()) {
-            // Resolve CPID from patients table
-            if (!cpidRows.isEmpty() && cpidRows.get(0).get("cpid") != null) {
-                cpid = cpidRows.get(0).get("cpid").toString();
+        UUID queueUuid;
+        if (request.queue_id() != null && !request.queue_id().isBlank()) {
+            queueUuid = UUID.fromString(request.queue_id().trim());
+        } else {
+            JsonNode queues = pctClient.listQueues(facilityUuid, null);
+            queueUuid = findQueueIdByType(queues, request.queue_type());
+            if (queueUuid == null) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "No queue found for facility and queue_type=" + request.queue_type());
             }
         }
 
-        // Delegate to PCT: start a journey so the sovereign service tracks this visit
-        String pctJourneyId = null;
-        if (cpid != null && !cpid.isBlank()) {
-            try {
-                JsonNode journeyData = pctClient.startJourney(
-                        cpid,
-                        UUID.fromString(request.facility_id()),
-                        request.referral_source(),
-                        request.referral_id());
-                if (journeyData != null && journeyData.has("journeyId")) {
-                    pctJourneyId = journeyData.get("journeyId").asText();
-                }
-                log.info("PCT journey started: {} for queue entry {}", pctJourneyId, entryId);
-
-                // Persist the PCT journey reference
-            } catch (Exception e) {
-                log.warn("PCT journey delegation failed (non-blocking): {}", e.getMessage());
-            }
-        }
-
-        Map<String, Object> attributes = new LinkedHashMap<>();
-        attributes.put("patient_id", request.patient_id());
-        attributes.put("facility_id", request.facility_id());
-        attributes.put("queue_type", request.queue_type());
-        attributes.put("priority", request.priority() != null ? request.priority() : "NORMAL");
-        attributes.put("reason", request.reason());
-        attributes.put("status", "WAITING");
-        attributes.put("arrival_time", now);
-        attributes.put("created_at", now);
-        if (pctJourneyId != null) {
-            attributes.put("pct_journey_id", pctJourneyId);
-        }
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", Map.of(
-                "id", entryId.toString(),
-                "type", "QueueEntry",
-                "attributes", attributes
-        ));
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId
-        ));
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        int priority = parseQueuePriority(request.priority());
+        JsonNode item = pctClient.enqueue(queueUuid, journeyId, priority);
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                "data", item != null ? item : Map.of(),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 
     @PostMapping("/entries/{id}/call")
@@ -140,21 +123,15 @@ public class QueueController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey) {
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", Map.of("id", id.toString(), "status", "CALLED"));
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId
-        ));
-        return ResponseEntity.ok(response);
+        JsonNode data = pctClient.updateQueueItemStatus(id, "CALLED");
+        return ResponseEntity.ok(Map.of(
+                "data", data != null ? data : Map.of(),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 
     /**
-     * Record a triage assessment for a queue entry.
-     * POST /internal/v1/queue/entries/{id}/triage
-     *
-     * Creates a triage record via the triage API and updates the queue entry's
-     * triage_category and priority based on acuity level.
+     * POST /internal/v1/queue/entries/{id}/triage — delegates triage to PCT for the journey.
+     * The client should pass {@code journey_id} or {@code pct_journey_id} in the body (from the queue item).
      */
     @PostMapping("/entries/{id}/triage")
     public ResponseEntity<Map<String, Object>> triageEntry(
@@ -169,70 +146,23 @@ public class QueueController {
         int acuity = body.containsKey("acuity") ? ((Number) body.get("acuity")).intValue() : 3;
         String notes = body.containsKey("notes") ? (String) body.get("notes") : null;
 
-        // Map acuity to triage category and priority
-        String triageCategory = switch (acuity) {
-            case 1 -> "RED";
-            case 2 -> "ORANGE";
-            case 3 -> "YELLOW";
-            case 4 -> "GREEN";
-            case 5 -> "BLUE";
-            default -> "YELLOW";
-        };
-        String priority = switch (acuity) {
-            case 1 -> "EMERGENCY";
-            case 2 -> "URGENT";
-            case 3 -> "NORMAL";
-            case 4, 5 -> "LOW";
-            default -> "NORMAL";
-        };
-
-        // Update queue entry triage status
-        OffsetDateTime now = OffsetDateTime.now();
-
-        // Create triage record via triage API
-        UUID triageId = UUID.randomUUID();
-        String dangerSignsJson = "[]";
-        String vitalsJson = null;
-        try {
-            if (body.containsKey("danger_signs")) {
-                dangerSignsJson = new com.fasterxml.jackson.databind.ObjectMapper()
-                        .writeValueAsString(body.get("danger_signs"));
-            }
-            if (body.containsKey("vitals")) {
-                vitalsJson = new com.fasterxml.jackson.databind.ObjectMapper()
-                        .writeValueAsString(body.get("vitals"));
-            }
-        } catch (Exception e) {
-            log.warn("Failed to serialize triage data: {}", e.getMessage());
+        Object jid = body.get("journey_id");
+        if (jid == null) {
+            jid = body.get("pct_journey_id");
         }
-
-        String triagedBy = body.containsKey("triaged_by") ? (String) body.get("triaged_by") : "system";
-        String triagedByName = body.containsKey("triaged_by_name") ? (String) body.get("triaged_by_name") : "";
-
-        // Delegate to PCT if journey ID available
-        String pctJourneyId = null;
-        if (!journeyRows.isEmpty() && journeyRows.get(0).get("pct_journey_id") != null) {
-            pctJourneyId = journeyRows.get(0).get("pct_journey_id").toString();
-            try {
-                pctClient.recordTriage(pctJourneyId, String.valueOf(acuity), null, notes);
-                // Update triage record with journey ID
-                log.info("PCT triage delegated from queue for journey={}", pctJourneyId);
-            } catch (Exception e) {
-                log.warn("PCT triage delegation from queue failed (non-blocking): {}", e.getMessage());
-            }
+        if (jid == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "journey_id or pct_journey_id is required for PCT triage");
         }
+        String journeyId = jid.toString();
 
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", Map.of(
-                "id", id.toString(),
-                "triage_id", triageId.toString(),
-                "acuity", acuity,
-                "triage_category", triageCategory,
-                "priority", priority,
-                "status", "TRIAGED"
-        ));
-        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
-        return ResponseEntity.ok(response);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> vitals = body.get("vitals") instanceof Map<?, ?> m ? (Map<String, Object>) m : null;
+
+        JsonNode triage = pctClient.recordTriage(journeyId, String.valueOf(acuity), vitals, notes);
+        return ResponseEntity.ok(Map.of(
+                "data", triage != null ? triage : Map.of(),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 
     @PostMapping("/entries/{id}/complete")
@@ -243,13 +173,10 @@ public class QueueController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey) {
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", Map.of("id", id.toString(), "status", "COMPLETED"));
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId
-        ));
-        return ResponseEntity.ok(response);
+        JsonNode data = pctClient.updateQueueItemStatus(id, "COMPLETED");
+        return ResponseEntity.ok(Map.of(
+                "data", data != null ? data : Map.of(),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 
     @PostMapping("/entries/{id}/no-show")
@@ -258,12 +185,9 @@ public class QueueController {
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
-
-        OffsetDateTime now = OffsetDateTime.now();
-        if (updated == 0) throw new ResourceNotFoundException("Queue entry not found or not in callable state: " + id);
-
+        JsonNode data = pctClient.updateQueueItemStatus(id, "NO_SHOW");
         return ResponseEntity.ok(Map.of(
-                "data", Map.of("id", id.toString(), "status", "NO_SHOW"),
+                "data", data != null ? data : Map.of(),
                 "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 
@@ -275,12 +199,14 @@ public class QueueController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestBody Map<String, String> body) {
 
-        String targetFacilityId = body.get("targetFacilityId");
-        String reason = body.getOrDefault("reason", "");
-        OffsetDateTime now = OffsetDateTime.now();
-
+        String targetQueue = body.get("target_queue_id");
+        if (targetQueue == null || targetQueue.isBlank()) {
+            // TODO: wire facility-to-queue resolution when PCT exposes it; targetFacilityId alone is insufficient
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "target_queue_id is required for PCT transfer");
+        }
+        JsonNode data = pctClient.transferQueueItem(id, UUID.fromString(targetQueue.trim()));
         return ResponseEntity.ok(Map.of(
-                "data", Map.of("id", id.toString(), "status", "TRANSFERRED"),
+                "data", data != null ? data : Map.of(),
                 "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 
@@ -290,12 +216,9 @@ public class QueueController {
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
-
-        OffsetDateTime now = OffsetDateTime.now();
-        if (updated == 0) throw new ResourceNotFoundException("Queue entry not found or not in pausable state: " + id);
-
+        JsonNode data = pctClient.updateQueueItemStatus(id, "PAUSED");
         return ResponseEntity.ok(Map.of(
-                "data", Map.of("id", id.toString(), "status", "PAUSED"),
+                "data", data != null ? data : Map.of(),
                 "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 
@@ -305,12 +228,9 @@ public class QueueController {
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
-
-        OffsetDateTime now = OffsetDateTime.now();
-        if (updated == 0) throw new ResourceNotFoundException("Queue entry not found or not paused: " + id);
-
+        JsonNode data = pctClient.updateQueueItemStatus(id, "IN_SERVICE");
         return ResponseEntity.ok(Map.of(
-                "data", Map.of("id", id.toString(), "status", "IN_SERVICE"),
+                "data", data != null ? data : Map.of(),
                 "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 
@@ -319,14 +239,15 @@ public class QueueController {
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
-            @RequestParam(required = false, name = "facility_id") UUID facilityId) {
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", List.of());
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId
-        ));
-        return ResponseEntity.ok(response);
+            @RequestParam(required = false, name = "facility_id") UUID facilityId,
+            @RequestParam(required = false, name = "workspace_id") UUID workspaceId) {
+        if (facilityId == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "facility_id is required");
+        }
+        JsonNode data = pctClient.listQueues(facilityId, workspaceId);
+        return ResponseEntity.ok(Map.of(
+                "data", data != null ? data : List.of(),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 
     @PostMapping("/entries/stats")
@@ -337,32 +258,45 @@ public class QueueController {
             @RequestBody Map<String, String> body) {
 
         String facilityId = body.get("facilityId");
+        if (facilityId == null || facilityId.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "facilityId is required");
+        }
+        JsonNode data = pctClient.listQueues(UUID.fromString(facilityId.trim()), null);
+        return ResponseEntity.ok(Map.of(
+                "data", data != null ? data : Map.of(),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
 
-        Map<String, Object> stats = new LinkedHashMap<>();
-        if (facilityId != null) {
-
-            long waiting = 0, called = 0, inService = 0, completed = 0, noShow = 0;
-            double avgWait = 0;
-            for (Map<String, Object> row : counts) {
-                String status = row.get("status").toString();
-                long count = ((Number) row.get("count")).longValue();
-                switch (status) {
-                    case "WAITING" -> { waiting = count; avgWait = row.get("avg_wait_seconds") != null ? ((Number) row.get("avg_wait_seconds")).doubleValue() : 0; }
-                    case "CALLED" -> called = count;
-                    case "IN_SERVICE", "SEEN" -> inService = count;
-                    case "COMPLETED" -> completed = count;
-                    case "NO_SHOW" -> noShow = count;
+    private static UUID findQueueIdByType(JsonNode queues, String queueType) {
+        if (queues == null || !queues.isArray() || queueType == null) {
+            return null;
+        }
+        for (JsonNode q : queues) {
+            if (queueType.equalsIgnoreCase(q.path("queueType").asText())) {
+                String qid = q.path("queueId").asText(null);
+                if (qid != null && !qid.isBlank()) {
+                    return UUID.fromString(qid);
                 }
             }
-            stats.put("waiting", waiting);
-            stats.put("called", called);
-            stats.put("inService", inService);
-            stats.put("completed", completed);
-            stats.put("noShow", noShow);
-            stats.put("avgWaitSeconds", Math.round(avgWait));
         }
+        if (queues.size() > 0) {
+            String qid = queues.get(0).path("queueId").asText(null);
+            if (qid != null && !qid.isBlank()) {
+                return UUID.fromString(qid);
+            }
+        }
+        return null;
+    }
 
-        return ResponseEntity.ok(Map.of("data", stats,
-                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    private static int parseQueuePriority(String priority) {
+        if (priority == null || priority.isBlank()) {
+            return 0;
+        }
+        return switch (priority.trim().toUpperCase()) {
+            case "EMERGENCY" -> 100;
+            case "URGENT" -> 50;
+            case "LOW" -> -10;
+            default -> 0;
+        };
     }
 }

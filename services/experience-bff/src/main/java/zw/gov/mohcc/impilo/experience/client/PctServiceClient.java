@@ -121,6 +121,57 @@ public class PctServiceClient {
     }
 
     /**
+     * List queues for a facility (with embedded stats from PCT).
+     */
+    public JsonNode listQueues(UUID facilityId, UUID workspaceId) {
+        UriComponentsBuilder b = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/queues")
+                .queryParam("facilityId", facilityId);
+        if (workspaceId != null) {
+            b.queryParam("workspaceId", workspaceId);
+        }
+        String url = b.toUriString();
+        log.debug("PCT: Listing queues for facility={}", facilityId);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * List items in a queue, optionally filtered by status.
+     */
+    public JsonNode listQueueItems(UUID queueId, String status) {
+        UriComponentsBuilder b = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/queues/" + queueId + "/items");
+        if (status != null && !status.isBlank()) {
+            b.queryParam("status", status);
+        }
+        String url = b.toUriString();
+        log.debug("PCT: Listing queue items queue={} status={}", queueId, status);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Update lifecycle status for a queue item.
+     */
+    public JsonNode updateQueueItemStatus(UUID itemId, String status) {
+        String url = baseUrl + "/v1/queue-items/" + itemId + "/status";
+        Map<String, Object> body = Map.of("status", status);
+        log.info("PCT: Queue item {} -> {}", itemId, status);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Transfer a queue item to another queue.
+     */
+    public JsonNode transferQueueItem(UUID itemId, UUID targetQueueId) {
+        String url = baseUrl + "/v1/queue-items/" + itemId + "/transfer";
+        Map<String, Object> body = Map.of("targetQueueId", targetQueueId.toString());
+        log.info("PCT: Transferring queue item {} to queue {}", itemId, targetQueueId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
      * Start a clinical encounter within a journey.
      *
      * @param journeyId     the PCT journey ID
@@ -147,6 +198,16 @@ public class PctServiceClient {
 
         log.info("PCT: Completing encounter={}", encounterId);
         ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, null, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Load a single encounter by numeric PCT id.
+     */
+    public JsonNode getEncounter(long encounterId) {
+        String url = baseUrl + "/v1/encounters/" + encounterId;
+        log.debug("PCT: Getting encounter id={}", encounterId);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
         return extractData(response);
     }
 
@@ -240,6 +301,16 @@ public class PctServiceClient {
         String url = baseUrl + "/v1/records/" + recordId;
         log.debug("PCT: Getting record id={}", recordId);
         ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Create a clinical record (document metadata) in PCT.
+     */
+    public JsonNode createPatientRecord(Map<String, Object> body) {
+        String url = baseUrl + "/v1/records";
+        log.info("PCT: Creating clinical record for patient={}", body.get("patient_id"));
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
         return extractData(response);
     }
 
@@ -435,6 +506,38 @@ public class PctServiceClient {
     public JsonNode createVitals(Map<String, Object> body) {
         String url = baseUrl + "/v1/vitals";
         log.info("PCT: Recording vitals for patient={}", body.get("patient_id"));
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    // ── Tasks ───────────────────────────────────────────────────
+
+    public JsonNode getMyTasks() {
+        String url = baseUrl + "/v1/tasks/my";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode listWorkspaceTasks(UUID workspaceId) {
+        String url = baseUrl + "/v1/tasks/workspace/" + workspaceId;
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode listJourneyTasks(String journeyId) {
+        String url = baseUrl + "/v1/tasks/journey/" + journeyId;
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode completeTask(UUID taskId) {
+        String url = baseUrl + "/v1/tasks/" + taskId + "/complete";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, null, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode createTask(Map<String, Object> body) {
+        String url = baseUrl + "/v1/tasks";
         ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
         return extractData(response);
     }
