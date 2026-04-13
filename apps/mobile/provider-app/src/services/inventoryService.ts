@@ -5,7 +5,14 @@
  */
 
 import { apiClient } from "@impilo/mobile-api-client";
-import type { StockItem, DispatchRecord } from "../types";
+import type {
+  StockItem,
+  DispatchRecord,
+  InventoryItem,
+  StockAlert,
+  Requisition,
+  RequisitionUrgency,
+} from "../types";
 
 interface StockResource {
   id: string;
@@ -107,4 +114,124 @@ export async function confirmDelivery(dispatchId: string): Promise<DispatchRecor
     `/internal/v1/mobile/provider/inventory/dispatches/${dispatchId}/confirm`
   );
   return mapDispatch(response.data.data);
+}
+
+/* ── On-Hand Inventory ──────────────────────────────────────────────── */
+
+interface InventoryItemResource {
+  id: string;
+  name: string;
+  category: string;
+  quantity: number;
+  unit: string;
+  status: string;
+  reorder_level: number;
+  facility_id: string;
+  last_updated_at?: string;
+}
+
+function mapInventoryItem(r: InventoryItemResource): InventoryItem {
+  return {
+    id: r.id,
+    name: r.name,
+    category: r.category,
+    quantity: r.quantity,
+    unit: r.unit,
+    status: r.status as InventoryItem["status"],
+    reorderLevel: r.reorder_level,
+    facilityId: r.facility_id,
+    lastUpdatedAt: r.last_updated_at,
+  };
+}
+
+export async function fetchInventoryOnHand(): Promise<InventoryItem[]> {
+  const response = await apiClient.get<{ data: InventoryItemResource[] }>(
+    "/internal/v1/mobile/provider/inventory/on-hand"
+  );
+  return response.data.data.map(mapInventoryItem);
+}
+
+/* ── Stock Alerts ───────────────────────────────────────────────────── */
+
+interface StockAlertResource {
+  id: string;
+  item_id: string;
+  item_name: string;
+  alert_type: string;
+  severity: string;
+  current_quantity: number;
+  reorder_level: number;
+  created_at: string;
+}
+
+function mapStockAlert(r: StockAlertResource): StockAlert {
+  return {
+    id: r.id,
+    itemId: r.item_id,
+    itemName: r.item_name,
+    alertType: r.alert_type as StockAlert["alertType"],
+    severity: r.severity as StockAlert["severity"],
+    currentQuantity: r.current_quantity,
+    reorderLevel: r.reorder_level,
+    createdAt: r.created_at,
+  };
+}
+
+export async function fetchStockAlertsList(): Promise<StockAlert[]> {
+  const response = await apiClient.get<{ data: StockAlertResource[] }>(
+    "/internal/v1/mobile/provider/inventory/alerts"
+  );
+  return response.data.data.map(mapStockAlert);
+}
+
+/* ── Requisitions ───────────────────────────────────────────────────── */
+
+interface RequisitionPayload {
+  itemId: string;
+  itemName: string;
+  quantity: number;
+  urgency: RequisitionUrgency;
+  notes?: string;
+}
+
+interface RequisitionResource {
+  id: string;
+  item_id: string;
+  item_name: string;
+  quantity: number;
+  urgency: string;
+  notes?: string;
+  status: string;
+  requested_by: string;
+  created_at: string;
+}
+
+function mapRequisition(r: RequisitionResource): Requisition {
+  return {
+    id: r.id,
+    itemId: r.item_id,
+    itemName: r.item_name,
+    quantity: r.quantity,
+    urgency: r.urgency as Requisition["urgency"],
+    notes: r.notes,
+    status: r.status as Requisition["status"],
+    requestedBy: r.requested_by,
+    createdAt: r.created_at,
+  };
+}
+
+export async function createRequisition(
+  payload: RequisitionPayload
+): Promise<Requisition> {
+  const response = await apiClient.post<{ data: RequisitionResource }>(
+    "/internal/v1/mobile/provider/inventory/requisitions",
+    {
+      item_id: payload.itemId,
+      item_name: payload.itemName,
+      quantity: payload.quantity,
+      urgency: payload.urgency,
+      notes: payload.notes,
+    }
+  );
+  return mapRequisition(response.data.data);
 }

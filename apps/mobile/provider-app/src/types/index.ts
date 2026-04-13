@@ -375,3 +375,139 @@ export interface ProviderMessage {
   sentAt: string;
   readAt?: string;
 }
+
+/* ── Facility Admin ─────────────────────────────────────────────────── */
+
+export interface FacilityStats {
+  facilityId: string;
+  facilityName: string;
+  bedCount: number;
+  occupancyRate: number;
+  staffOnDuty: number;
+  queueLength: number;
+  updatedAt: string;
+}
+
+export type ShiftStatus = "ON_DUTY" | "OFF_DUTY";
+
+export interface StaffMember {
+  id: string;
+  name: string;
+  role: string;
+  shiftStatus: ShiftStatus;
+  department?: string;
+  contactNumber?: string;
+}
+
+export interface AuditEntry {
+  id: string;
+  timestamp: string;
+  actorId: string;
+  actorName: string;
+  action: string;
+  resource: string;
+  resourceId?: string;
+  details?: string;
+}
+
+/* ── Reports ────────────────────────────────────────────────────────── */
+
+export type ReportCategory = "Clinical" | "Operational" | "Financial";
+
+export interface ReportSummary {
+  id: string;
+  name: string;
+  category: ReportCategory;
+  description?: string;
+  lastRunAt?: string;
+}
+
+export interface ReportDataEntry {
+  key: string;
+  value: string | number;
+  unit?: string;
+}
+
+export interface ReportData {
+  reportId: string;
+  reportName: string;
+  generatedAt: string;
+  entries: ReportDataEntry[];
+}
+
+/* ── Finance ────────────────────────────────────────────────────────── */
+
+export interface RevenueSummary {
+  todayRevenue: number;
+  weekTotal: number;
+  monthTotal: number;
+  currency: string;
+  updatedAt: string;
+}
+
+export type ClaimStatus = "PENDING" | "APPROVED" | "REJECTED" | "PAID";
+
+export interface Claim {
+  id: string;
+  patientId: string;
+  patientName: string;
+  amount: number;
+  currency: string;
+  status: ClaimStatus;
+  submittedAt: string;
+  resolvedAt?: string;
+}
+
+export type PaymentStatus = "PAID" | "PENDING" | "REJECTED";
+
+export interface Payment {
+  id: string;
+  patientId: string;
+  patientName: string;
+  amount: number;
+  currency: string;
+  status: PaymentStatus;
+  paidAt: string;
+  reference?: string;
+}
+
+/* ── Inventory (enhanced) ───────────────────────────────────────────── */
+
+export type InventoryStatus = "OK" | "LOW" | "OUT";
+
+export interface InventoryItem {
+  id: string;
+  name: string;
+  category: string;
+  quantity: number;
+  unit: string;
+  status: InventoryStatus;
+  reorderLevel: number;
+  facilityId: string;
+  lastUpdatedAt?: string;
+}
+
+export interface StockAlert {
+  id: string;
+  itemId: string;
+  itemName: string;
+  alertType: "LOW_STOCK" | "STOCKOUT" | "EXPIRING";
+  severity: "WARNING" | "CRITICAL";
+  currentQuantity: number;
+  reorderLevel: number;
+  createdAt: string;
+}
+
+export type RequisitionUrgency = "ROUTINE" | "URGENT" | "EMERGENCY";
+
+export interface Requisition {
+  id: string;
+  itemId: string;
+  itemName: string;
+  quantity: number;
+  urgency: RequisitionUrgency;
+  notes?: string;
+  status: "DRAFT" | "SUBMITTED" | "APPROVED" | "FULFILLED" | "REJECTED";
+  requestedBy: string;
+  createdAt: string;
+}
