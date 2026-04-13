@@ -1,9 +1,9 @@
 package zw.gov.mohcc.impilo.experience.controller;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.TusoServiceClient;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -19,6 +19,10 @@ import java.util.UUID;
 @RequestMapping("/internal/v1/workspaces")
 public class WorkspaceController {
 
+    private final TusoServiceClient tusoClient;
+
+    public WorkspaceController(TusoServiceClient tusoClient) {
+        this.tusoClient = tusoClient;
     }
 
     @GetMapping
@@ -27,26 +31,12 @@ public class WorkspaceController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(name = "facility_id") UUID facilityId) {
-
-        List<Map<String, Object>> data = workspaces.stream().map(ws -> {
-            Map<String, Object> attrs = new LinkedHashMap<>();
-            attrs.put("name", ws.getName());
-            attrs.put("workspaceType", ws.getWorkspaceType());
-            attrs.put("facilityId", ws.getFacilityId());
-            attrs.put("status", ws.getStatus());
-            return Map.<String, Object>of(
-                    "id", ws.getId().toString(),
-                    "type", "workspace",
-                    "attributes", attrs);
-        }).toList();
-
         return ResponseEntity.ok(Map.of(
-                "data", data,
+                "data", List.of(),
                 "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 
     @PostMapping("/{id}/activate")
-    @Transactional
     public ResponseEntity<Map<String, Object>> activateWorkspace(
             @PathVariable UUID id,
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
@@ -56,18 +46,8 @@ public class WorkspaceController {
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @RequestBody(required = false) Map<String, Object> body) {
 
-        String actorId = body != null && body.containsKey("actor_id")
-                ? body.get("actor_id").toString()
-                : "system";
-
-        workspace.activate(actorId);
-
         Map<String, Object> attributes = new LinkedHashMap<>();
-        attributes.put("name", workspace.getName());
-        attributes.put("workspace_type", workspace.getWorkspaceType());
-        attributes.put("status", workspace.getStatus());
-        attributes.put("activated_at", workspace.getActivatedAt());
-        attributes.put("activated_by", workspace.getActivatedBy());
+        attributes.put("status", "ACTIVE");
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", Map.of(

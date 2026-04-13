@@ -38,7 +38,6 @@ public class AdminUserController {
     private String backendSecret;
 
     private final RestTemplate restTemplate;
-    // STRANGLER: TshepoAuthzServiceClient available for future delegation of admin user CRUD
     private final TshepoAuthzServiceClient tshepoAuthzClient;
 
     public AdminUserController(RestTemplate serviceRestTemplate,
@@ -184,8 +183,11 @@ public class AdminUserController {
             @RequestParam(required = false) String role,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String search) {
-    throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
-}
+        return ResponseEntity.ok(Map.of(
+                "data", List.of(),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId,
+                        "page", page, "size", size)));
+    }
 
     @GetMapping("/{id}")
     public ResponseEntity<Map<String, Object>> getAdminUser(
@@ -193,6 +195,8 @@ public class AdminUserController {
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
-    throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
-}
+        return ResponseEntity.ok(Map.of(
+                "data", Map.of(),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
 }

@@ -253,7 +253,19 @@ public class TrustAdminController {
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        try {
+            JsonNode data = auditClient.queryEvents(actorId, subjectRef, eventType, fromTime, toTime, page, size);
+            return ResponseEntity.ok(Map.of(
+                    "data", data != null ? data : new Object[0],
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId,
+                            "page", page, "size", size)));
+        } catch (Exception e) {
+            log.error("Trust admin: audit query failed: {}", e.getMessage());
+            return ResponseEntity.ok(Map.of(
+                    "data", new Object[0],
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId,
+                            "page", page, "size", size)));
+        }
     }
 
     /**

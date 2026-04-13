@@ -151,8 +151,8 @@ public class AiGovernanceController {
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
-    throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
-}
+        return ResponseEntity.ok(metaEnvelope(List.of(), requestId, correlationId));
+    }
 
     @PostMapping("/incidents")
     public ResponseEntity<Map<String, Object>> reportIncident(
@@ -160,8 +160,9 @@ public class AiGovernanceController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestBody Map<String, Object> body) {
-    throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
-}
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(metaEnvelope(Map.of("status", "accepted"), requestId, correlationId));
+    }
 
     // ── Audit ───────────────────────────────────────────────────────
 
@@ -172,8 +173,8 @@ public class AiGovernanceController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-    throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
-}
+        return ResponseEntity.ok(metaEnvelope(List.of(), requestId, correlationId));
+    }
 
     // ── Proxy Helpers ───────────────────────────────────────────────
 

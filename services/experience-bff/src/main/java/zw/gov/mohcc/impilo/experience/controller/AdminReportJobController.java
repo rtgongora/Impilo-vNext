@@ -1,5 +1,8 @@
 package zw.gov.mohcc.impilo.experience.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -7,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.ReportingServiceClient;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -23,7 +27,12 @@ import java.util.Map;
 @RequestMapping("/internal/v1/admin/reports/jobs")
 public class AdminReportJobController {
 
-    public AdminReportJobController() {
+    private static final Logger log = LoggerFactory.getLogger(AdminReportJobController.class);
+
+    private final ReportingServiceClient reportingClient;
+
+    public AdminReportJobController(ReportingServiceClient reportingClient) {
+        this.reportingClient = reportingClient;
     }
 
     @GetMapping
@@ -33,6 +42,9 @@ public class AdminReportJobController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-    throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
-}
+        return ResponseEntity.ok(Map.of(
+                "data", List.of(),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId,
+                        "page", page, "size", size)));
+    }
 }

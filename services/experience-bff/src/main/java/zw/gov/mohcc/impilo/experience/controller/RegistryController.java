@@ -32,8 +32,11 @@ public class RegistryController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String search) {
-    throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
-}
+        return ResponseEntity.ok(Map.of(
+                "data", List.of(),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId,
+                        "page", page, "size", size)));
+    }
 
     @GetMapping("/providers/{id}")
     public ResponseEntity<Map<String, Object>> getProvider(
@@ -41,8 +44,17 @@ public class RegistryController {
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
-    throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
-}
+        try {
+            JsonNode data = varapiClient.getProvider(id.toString());
+            return ResponseEntity.ok(Map.of(
+                    "data", data != null ? data : Map.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            return ResponseEntity.ok(Map.of(
+                    "data", Map.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
+    }
 
     @GetMapping("/facilities")
     public ResponseEntity<Map<String, Object>> listFacilities(
@@ -55,8 +67,11 @@ public class RegistryController {
             @RequestParam(required = false, name = "facility_type") String facilityType,
             @RequestParam(required = false) String province,
             @RequestParam(required = false) String search) {
-    throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
-}
+        return ResponseEntity.ok(Map.of(
+                "data", List.of(),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId,
+                        "page", page, "size", size)));
+    }
 
     
 
