@@ -1,11 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Bed, Users, Activity, AlertTriangle, Building2, ArrowRightLeft,
   User, Clock, RefreshCw, ChevronRight, LogOut,
-  Heart, Eye, ArrowLeft, X,
+  Heart, Eye, ArrowLeft, X, Loader2,
 } from 'lucide-react';
+import { useBeds, useWards, type BedResource } from '@/hooks/queries/useBeds';
+import { useFacilityStore } from '@/hooks/useFacilityStore';
 
 // ─── Types ───
 
@@ -36,79 +38,29 @@ interface Ward {
   name: string;
 }
 
-// ─── Mock Data ───
+// ─── Map API resources to local types ───
 
-const WARDS: Ward[] = [
-  { id: 'ward-med', name: 'Medical Ward' },
-  { id: 'ward-surg', name: 'Surgical Ward' },
-  { id: 'ward-mat', name: 'Maternity Ward' },
-  { id: 'ward-paed', name: 'Paediatric Ward' },
-  { id: 'ward-icu', name: 'ICU' },
-];
-
-const MOCK_PATIENTS: Patient[] = [
-  { id: 'p1', name: 'Thabo Molefe', mrn: 'MRN-10001', diagnosis: 'Pneumonia', attendingPhysician: 'Dr. Nkomo', acuityLevel: 'high', admissionDate: '2026-04-02T08:00:00Z', age: 54, gender: 'Male', vitals: { bp: '140/90', hr: 88, temp: 38.2, spo2: 93 } },
-  { id: 'p2', name: 'Naledi Dube', mrn: 'MRN-10002', diagnosis: 'Diabetic ketoacidosis', attendingPhysician: 'Dr. Sibanda', acuityLevel: 'critical', admissionDate: '2026-04-04T14:00:00Z', age: 38, gender: 'Female', vitals: { bp: '100/60', hr: 112, temp: 37.4, spo2: 96 } },
-  { id: 'p3', name: 'Sipho Khumalo', mrn: 'MRN-10003', diagnosis: 'Congestive heart failure', attendingPhysician: 'Dr. Nkomo', acuityLevel: 'high', admissionDate: '2026-04-01T10:00:00Z', age: 67, gender: 'Male', vitals: { bp: '150/95', hr: 92, temp: 36.8, spo2: 91 } },
-  { id: 'p4', name: 'Lindiwe Zulu', mrn: 'MRN-10004', diagnosis: 'Post appendectomy', attendingPhysician: 'Dr. Mhlanga', acuityLevel: 'medium', admissionDate: '2026-04-05T06:00:00Z', age: 29, gender: 'Female', vitals: { bp: '120/80', hr: 76, temp: 37.0, spo2: 98 } },
-  { id: 'p5', name: 'James Moyo', mrn: 'MRN-10005', diagnosis: 'Fractured femur', attendingPhysician: 'Dr. Mhlanga', acuityLevel: 'medium', admissionDate: '2026-04-03T16:00:00Z', age: 45, gender: 'Male', vitals: { bp: '130/85', hr: 80, temp: 36.9, spo2: 97 } },
-  { id: 'p6', name: 'Precious Ndlovu', mrn: 'MRN-10006', diagnosis: 'Pre-eclampsia', attendingPhysician: 'Dr. Banda', acuityLevel: 'high', admissionDate: '2026-04-05T20:00:00Z', age: 26, gender: 'Female', vitals: { bp: '160/100', hr: 96, temp: 37.1, spo2: 97 } },
-  { id: 'p7', name: 'Rudo Katsande', mrn: 'MRN-10007', diagnosis: 'Normal delivery (postpartum)', attendingPhysician: 'Dr. Banda', acuityLevel: 'low', admissionDate: '2026-04-06T02:00:00Z', age: 32, gender: 'Female', vitals: { bp: '118/72', hr: 70, temp: 36.6, spo2: 99 } },
-  { id: 'p8', name: 'Tafadzwa Chirwa', mrn: 'MRN-10008', diagnosis: 'Bronchiolitis', attendingPhysician: 'Dr. Zulu', acuityLevel: 'medium', admissionDate: '2026-04-04T09:00:00Z', age: 3, gender: 'Male', vitals: { bp: '90/60', hr: 130, temp: 38.0, spo2: 94 } },
-  { id: 'p9', name: 'Chipo Maposa', mrn: 'MRN-10009', diagnosis: 'Severe malaria', attendingPhysician: 'Dr. Zulu', acuityLevel: 'critical', admissionDate: '2026-04-05T22:00:00Z', age: 7, gender: 'Female', vitals: { bp: '85/55', hr: 140, temp: 39.5, spo2: 90 } },
-  { id: 'p10', name: 'Samuel Phiri', mrn: 'MRN-10010', diagnosis: 'Septic shock', attendingPhysician: 'Dr. Sibanda', acuityLevel: 'critical', admissionDate: '2026-04-06T01:00:00Z', age: 60, gender: 'Male', vitals: { bp: '80/50', hr: 120, temp: 39.2, spo2: 88 } },
-  { id: 'p11', name: 'Maria Dlamini', mrn: 'MRN-10011', diagnosis: 'Acute asthma exacerbation', attendingPhysician: 'Dr. Nkomo', acuityLevel: 'high', admissionDate: '2026-04-05T11:00:00Z', age: 42, gender: 'Female', vitals: { bp: '135/88', hr: 100, temp: 37.2, spo2: 92 } },
-  { id: 'p12', name: 'Peter Banda', mrn: 'MRN-10012', diagnosis: 'Total hip replacement - post-op', attendingPhysician: 'Dr. Mhlanga', acuityLevel: 'medium', admissionDate: '2026-04-04T07:00:00Z', age: 71, gender: 'Male', vitals: { bp: '128/78', hr: 74, temp: 36.7, spo2: 97 } },
-];
-
-function generateBeds(): BedData[] {
-  const beds: BedData[] = [];
-  const wardConfigs: { wardId: string; wardName: string; count: number; patientIndices: number[] }[] = [
-    { wardId: 'ward-med', wardName: 'Medical Ward', count: 20, patientIndices: [0, 2, 10] },
-    { wardId: 'ward-surg', wardName: 'Surgical Ward', count: 16, patientIndices: [3, 4, 11] },
-    { wardId: 'ward-mat', wardName: 'Maternity Ward', count: 14, patientIndices: [5, 6] },
-    { wardId: 'ward-paed', wardName: 'Paediatric Ward', count: 12, patientIndices: [7, 8] },
-    { wardId: 'ward-icu', wardName: 'ICU', count: 10, patientIndices: [1, 9] },
-  ];
-
-  wardConfigs.forEach(cfg => {
-    for (let i = 1; i <= cfg.count; i++) {
-      let status: BedData['status'] = 'available';
-      let patient: Patient | undefined;
-
-      if (i <= cfg.patientIndices.length) {
-        status = 'occupied';
-        patient = MOCK_PATIENTS[cfg.patientIndices[i - 1]];
-      } else if (i === cfg.count) {
-        status = 'maintenance';
-      }
-
-      beds.push({
-        id: `${cfg.wardId}-bed-${i}`,
-        bedNumber: `${i}${String.fromCharCode(64 + ((i - 1) % 3 + 1))}`,
-        wardId: cfg.wardId,
-        wardName: cfg.wardName,
-        status,
-        patient,
-      });
-    }
-  });
-
-  return beds;
+function mapBedResource(r: BedResource): BedData {
+  const a = r.attributes;
+  return {
+    id: r.id,
+    bedNumber: a.bedNumber,
+    wardId: a.wardId,
+    wardName: a.wardName,
+    status: (a.status as BedData['status']) || 'available',
+    patient: a.patientId ? {
+      id: a.patientId,
+      name: a.patientName ?? 'Unknown',
+      mrn: a.patientMrn ?? '',
+      diagnosis: (a.patientDiagnosis as string) ?? '',
+      attendingPhysician: (a.patientAttendingPhysician as string) ?? '',
+      acuityLevel: (a.patientAcuityLevel as Patient['acuityLevel']) ?? 'medium',
+      admissionDate: (a.patientAdmissionDate as string) ?? new Date().toISOString(),
+      age: a.patientAge ?? 0,
+      gender: (a.patientGender as string) ?? '',
+    } : undefined,
+  };
 }
-
-const ALL_BEDS = generateBeds();
-
-const ACTIVITY_LOG = [
-  { id: 1, action: 'Patient admitted', detail: 'Bed 1A, Medical Ward - Thabo Molefe', actor: 'Sr. Moyo', time: '08:15' },
-  { id: 2, action: 'Vitals recorded', detail: 'Bed 2A, ICU - Naledi Dube, BP 100/60', actor: 'Sr. Mabena', time: '08:30' },
-  { id: 3, action: 'Discharge completed', detail: 'Bed 5B, Surgical Ward - P. Sithole', actor: 'Dr. Mhlanga', time: '09:00' },
-  { id: 4, action: 'Transfer initiated', detail: 'Bed 3A Medical to Bed 1A ICU', actor: 'Dr. Nkomo', time: '09:45' },
-  { id: 5, action: 'Medication administered', detail: 'Bed 1A Maternity - Precious Ndlovu', actor: 'Sr. Banda', time: '10:00' },
-  { id: 6, action: 'Critical alert', detail: 'Bed 2A Paediatric - SpO2 dropped to 90%', actor: 'Monitor', time: '10:15' },
-  { id: 7, action: 'Bed cleaning complete', detail: 'Bed 8B, Surgical Ward', actor: 'Housekeeping', time: '10:30' },
-  { id: 8, action: 'Ward round started', detail: 'Medical Ward - Dr. Nkomo', actor: 'System', time: '11:00' },
-];
 
 // ─── Helpers ───
 
@@ -140,13 +92,35 @@ type SubView = 'overview' | 'ward-detail';
 type WardTab = 'patients' | 'beds' | 'activity';
 
 export function WardManagementPanel() {
-  const [beds] = useState<BedData[]>(ALL_BEDS);
+  const { facility } = useFacilityStore();
+  const facilityId = facility?.id ?? '';
+  const { data: bedsData, isLoading: bedsLoading } = useBeds(facilityId);
+  const { data: wardsData } = useWards(facilityId);
+
+  const beds = useMemo<BedData[]>(() =>
+    (bedsData?.data ?? []).map(mapBedResource),
+    [bedsData],
+  );
+  const wards = useMemo<Ward[]>(() =>
+    (wardsData?.data ?? []).map((w) => ({ id: w.id, name: w.attributes.name })),
+    [wardsData],
+  );
+
   const [subView, setSubView] = useState<SubView>('overview');
   const [selectedWardId, setSelectedWardId] = useState<string | null>(null);
   const [wardTab, setWardTab] = useState<WardTab>('patients');
   const [patientDetailBed, setPatientDetailBed] = useState<BedData | null>(null);
   const [transferDialogOpen, setTransferDialogOpen] = useState(false);
   const [transferBed, setTransferBed] = useState<BedData | null>(null);
+
+  if (bedsLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-6 w-6 animate-spin text-impilo-500" />
+        <span className="ml-2 text-sm text-gray-500">Loading ward data...</span>
+      </div>
+    );
+  }
   const [transferTargetWard, setTransferTargetWard] = useState('');
   const [transferTargetBed, setTransferTargetBed] = useState('');
   const [transferReason, setTransferReason] = useState('');
@@ -201,7 +175,7 @@ export function WardManagementPanel() {
 
   // ─── Ward Detail View ───
   if (subView === 'ward-detail' && selectedWardId) {
-    const ward = WARDS.find(w => w.id === selectedWardId);
+    const ward = wards.find(w => w.id === selectedWardId);
     const wardBeds = beds.filter(b => b.wardId === selectedWardId);
     const wardOccupied = wardBeds.filter(b => b.status === 'occupied');
     const wardAvailable = wardBeds.filter(b => b.status === 'available');
@@ -356,7 +330,7 @@ export function WardManagementPanel() {
           {/* Activity Tab */}
           {wardTab === 'activity' && (
             <div className="space-y-2">
-              {ACTIVITY_LOG.map(item => (
+              {([] as { id: number; action: string; detail: string; actor: string; time: string }[]).map(item => (
                 <div key={item.id} className="flex items-start gap-3 p-3 rounded-lg bg-gray-50">
                   <div className="h-2 w-2 rounded-full bg-impilo-500 mt-1.5 shrink-0" />
                   <div className="flex-1 min-w-0">
@@ -496,7 +470,7 @@ export function WardManagementPanel() {
                     className="w-full h-9 border border-gray-200 rounded-md px-3 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
                   >
                     <option value="">Select ward...</option>
-                    {WARDS.map(w => (
+                    {wards.map(w => (
                       <option key={w.id} value={w.id}>{w.name}</option>
                     ))}
                   </select>
@@ -621,7 +595,7 @@ export function WardManagementPanel() {
         <div className="flex items-center gap-2 p-3 border border-red-200 bg-red-50 rounded-lg text-red-700 shrink-0">
           <AlertTriangle className="h-4 w-4" />
           <span className="text-sm font-medium">
-            {WARDS.filter(w => {
+            {wards.filter(w => {
               const wb = beds.filter(b => b.wardId === w.id);
               return wb.length > 0 && wb.filter(b => b.status === 'occupied').length >= wb.length;
             }).map(w => w.name).join(', ')} at full capacity
@@ -632,7 +606,7 @@ export function WardManagementPanel() {
       {/* Ward Cards */}
       <div className="flex-1 overflow-auto">
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-          {WARDS.map(ward => {
+          {wards.map(ward => {
             const wardBeds = beds.filter(b => b.wardId === ward.id);
             const wardOccupied = wardBeds.filter(b => b.status === 'occupied').length;
             const pct = wardBeds.length > 0 ? Math.round((wardOccupied / wardBeds.length) * 100) : 0;
