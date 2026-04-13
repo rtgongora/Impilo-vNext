@@ -180,7 +180,9 @@ export function SocialFeedScreen() {
                           title="Learn More"
                           variant="secondary"
                           size="sm"
-                          onPress={() => { Linking.openURL(item.actionUrl); }}
+                          onPress={() => {
+                            Linking.openURL(item.actionUrl!);
+                          }}
                           testID={`action-${item.id}`}
                         />
                       ) : null}

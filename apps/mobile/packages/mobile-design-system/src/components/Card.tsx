@@ -56,16 +56,18 @@ export function Card({
 }
 
 export interface CardHeaderProps {
-  title: string;
+  title?: string;
+  children?: React.ReactNode;
   subtitle?: string;
   action?: React.ReactNode;
 }
 
-export function CardHeader({ title, subtitle, action }: CardHeaderProps) {
+export function CardHeader({ title, children, subtitle, action }: CardHeaderProps) {
+  const resolvedTitle = title ?? (typeof children === "string" ? children : "");
   return (
     <View style={styles.header}>
       <View>
-        <Text style={styles.headerTitle}>{title}</Text>
+        <Text style={styles.headerTitle}>{resolvedTitle}</Text>
         {subtitle ? <Text style={styles.headerSubtitle}>{subtitle}</Text> : null}
       </View>
       {action ?? null}

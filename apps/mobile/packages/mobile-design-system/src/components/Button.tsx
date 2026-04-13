@@ -9,11 +9,25 @@
 import React from "react";
 import { Pressable, Text, View, StyleSheet } from "react-native";
 
-export type ButtonVariant = "primary" | "secondary" | "outline" | "ghost" | "destructive";
-export type ButtonSize = "sm" | "md" | "lg";
+export type ButtonVariant =
+  | "primary"
+  | "secondary"
+  | "outline"
+  | "ghost"
+  | "destructive"
+  /**
+   * Back-compat alias used by older screens.
+   */
+  | "default";
+export type ButtonSize = "sm" | "md" | "lg" | "small";
 
 export interface ButtonProps {
-  title: string;
+  title?: string;
+  /**
+   * Back-compat alias for `title` (older app screens).
+   * Prefer `title`.
+   */
+  label?: string;
   onPress: () => void;
   variant?: ButtonVariant;
   size?: ButtonSize;
@@ -28,6 +42,7 @@ export interface ButtonProps {
 
 export function Button({
   title,
+  label,
   onPress,
   variant = "primary",
   size = "md",
@@ -40,12 +55,13 @@ export function Button({
   testID,
 }: ButtonProps) {
   const isDisabled = disabled || loading;
+  const resolvedTitle = title ?? label ?? "";
 
   return (
     <Pressable
       onPress={isDisabled ? undefined : onPress}
       disabled={isDisabled}
-      accessibilityLabel={accessibilityLabel ?? title}
+      accessibilityLabel={accessibilityLabel ?? resolvedTitle}
       accessibilityRole="button"
       accessibilityState={{ disabled: isDisabled, busy: loading }}
       testID={testID}
@@ -57,7 +73,7 @@ export function Button({
     >
       <View style={styles.content}>
         {icon && iconPosition === "left" ? icon : null}
-        <Text style={styles.label}>{loading ? "Loading..." : title}</Text>
+        <Text style={styles.label}>{loading ? "Loading..." : resolvedTitle}</Text>
         {icon && iconPosition === "right" ? icon : null}
       </View>
     </Pressable>

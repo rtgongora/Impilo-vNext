@@ -1,0 +1,11 @@
+{
+  "name": "@impilo/mobile",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "citizen-app",
+    "provider-app",
+    "packages/*"
+  ]
+}
+

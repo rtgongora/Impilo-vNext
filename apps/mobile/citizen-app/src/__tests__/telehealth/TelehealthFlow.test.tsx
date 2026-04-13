@@ -4,12 +4,12 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const mockApiClient = {
+const mockApiClient = vi.hoisted(() => ({
   get: vi.fn(),
   post: vi.fn(),
   patch: vi.fn(),
   delete: vi.fn(),
-};
+}));
 
 vi.mock("@impilo/mobile-api-client", () => ({
   apiClient: mockApiClient,

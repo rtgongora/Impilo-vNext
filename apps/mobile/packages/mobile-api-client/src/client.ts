@@ -135,7 +135,7 @@ async function executeRequest<T>(
   const validToken = await state.getValidToken();
   const session: SessionContext = { ...state.session, accessToken: validToken };
   if (options?.purposeOfUse) {
-    (session as Record<string, unknown>).purposeOfUse = options.purposeOfUse;
+    (session as unknown as Record<string, unknown>).purposeOfUse = options.purposeOfUse;
   }
 
   // Build trust headers
@@ -166,7 +166,7 @@ async function executeRequest<T>(
 
     // Parse response headers
     const responseHeaders: Record<string, string> = {};
-    response.headers.forEach((value, key) => {
+    response.headers.forEach((value: string, key: string) => {
       responseHeaders[key] = value;
     });
 

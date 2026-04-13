@@ -6,9 +6,14 @@ import React from "react";
 import { View, Text, TextInput, StyleSheet } from "react-native";
 
 export interface TextFieldProps {
-  label: string;
+  label?: string;
   value: string;
-  onChangeText: (text: string) => void;
+  onChangeText?: (text: string) => void;
+  /**
+   * Back-compat alias for `onChangeText` (older app screens).
+   * Prefer `onChangeText`.
+   */
+  onChange?: (text: string) => void;
   placeholder?: string;
   error?: string;
   helperText?: string;
@@ -29,6 +34,7 @@ export function TextField({
   label,
   value,
   onChangeText,
+  onChange,
   placeholder,
   error,
   helperText,
@@ -43,15 +49,19 @@ export function TextField({
   testID,
   accessibilityLabel,
 }: TextFieldProps) {
+  const resolvedOnChangeText = onChangeText ?? onChange ?? (() => {});
+  const resolvedLabel = label ?? "";
   return (
     <View testID={testID}>
-      <Text style={styles.label}>
-        {label}
-        {required ? <Text style={styles.requiredAsterisk}> *</Text> : null}
-      </Text>
+      {label ? (
+        <Text style={styles.label}>
+          {label}
+          {required ? <Text style={styles.requiredAsterisk}> *</Text> : null}
+        </Text>
+      ) : null}
       <TextInput
         value={value}
-        onChangeText={onChangeText}
+        onChangeText={resolvedOnChangeText}
         placeholder={placeholder}
         editable={!disabled}
         secureTextEntry={secureTextEntry}
@@ -60,7 +70,7 @@ export function TextField({
         maxLength={maxLength}
         keyboardType={keyboardType}
         autoCapitalize={autoCapitalize}
-        accessibilityLabel={accessibilityLabel ?? label}
+        accessibilityLabel={accessibilityLabel ?? resolvedLabel}
         accessibilityState={{ disabled }}
         style={[
           styles.input,

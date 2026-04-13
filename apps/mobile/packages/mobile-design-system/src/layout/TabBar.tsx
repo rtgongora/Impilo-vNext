@@ -6,32 +6,48 @@ import React from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 
 export interface TabItem {
-  key: string;
+  key?: string;
+  /**
+   * Back-compat alias for `key` (older app tabs).
+   * Prefer `key`.
+   */
+  id?: string;
   label: string;
-  icon: React.ReactNode;
+  icon?: React.ReactNode;
   badge?: number;
 }
 
 export interface TabBarProps {
-  tabs: TabItem[];
-  activeTab: string;
-  onTabPress: (key: string) => void;
+  tabs?: TabItem[];
+  activeTab?: string;
+  onTabPress?: (key: string) => void;
+  /**
+   * Back-compat aliases for older apps.
+   * Prefer `tabs`, `activeTab`, `onTabPress`.
+   */
+  items?: TabItem[];
+  activeKey?: string;
+  onSelect?: (key: string) => void;
   testID?: string;
 }
 
-export function TabBar({ tabs, activeTab, onTabPress, testID }: TabBarProps) {
+export function TabBar({ tabs, activeTab, onTabPress, items, activeKey, onSelect, testID }: TabBarProps) {
+  const resolvedTabs = tabs ?? items ?? [];
+  const resolvedActiveTab = activeTab ?? activeKey ?? "";
+  const resolvedOnTabPress = onTabPress ?? onSelect ?? (() => {});
   return (
     <View
       testID={testID}
       accessibilityRole="tablist"
       style={styles.container}
     >
-      {tabs.map((tab) => {
-        const isActive = tab.key === activeTab;
+      {resolvedTabs.map((tab) => {
+        const tabKey = tab.key ?? tab.id ?? "";
+        const isActive = tabKey === resolvedActiveTab;
         return (
           <Pressable
-            key={tab.key}
-            onPress={() => onTabPress(tab.key)}
+            key={tabKey}
+            onPress={() => resolvedOnTabPress(tabKey)}
             accessibilityRole="tab"
             accessibilityState={{ selected: isActive }}
             accessibilityLabel={tab.label}

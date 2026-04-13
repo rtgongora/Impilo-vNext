@@ -6,9 +6,15 @@ import React from "react";
 import { View, Text, Switch as RNSwitch, StyleSheet } from "react-native";
 
 export interface SwitchProps {
-  label: string;
-  value: boolean;
-  onValueChange: (value: boolean) => void;
+  label?: string;
+  value?: boolean;
+  onValueChange?: (value: boolean) => void;
+  /**
+   * Back-compat aliases for older app screens.
+   * Prefer `value` + `onValueChange`.
+   */
+  checked?: boolean;
+  onChange?: (value: boolean) => void;
   disabled?: boolean;
   testID?: string;
   accessibilityLabel?: string;
@@ -18,24 +24,30 @@ export function Switch({
   label,
   value,
   onValueChange,
+  checked,
+  onChange,
   disabled = false,
   testID,
   accessibilityLabel,
 }: SwitchProps) {
+  const resolvedValue = value ?? checked ?? false;
+  const resolvedOnValueChange = onValueChange ?? onChange ?? (() => {});
   return (
     <View testID={testID} style={styles.container}>
-      <Text style={[styles.label, disabled ? styles.labelDisabled : undefined]}>
-        {label}
-      </Text>
+      {label ? (
+        <Text style={[styles.label, disabled ? styles.labelDisabled : undefined]}>
+          {label}
+        </Text>
+      ) : null}
       <RNSwitch
-        value={value}
-        onValueChange={onValueChange}
+        value={resolvedValue}
+        onValueChange={resolvedOnValueChange}
         disabled={disabled}
-        accessibilityLabel={accessibilityLabel ?? label}
+        accessibilityLabel={accessibilityLabel ?? label ?? "Switch"}
         accessibilityRole="switch"
-        accessibilityState={{ checked: value, disabled }}
+        accessibilityState={{ checked: resolvedValue, disabled }}
         trackColor={{ false: "#E0E0E0", true: "#A5D6A7" }}
-        thumbColor={value ? "#43A047" : "#FAFAFA"}
+        thumbColor={resolvedValue ? "#43A047" : "#FAFAFA"}
       />
     </View>
   );

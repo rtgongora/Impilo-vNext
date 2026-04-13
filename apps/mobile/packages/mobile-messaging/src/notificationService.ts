@@ -76,6 +76,8 @@ export async function getPreferences(): Promise<NotificationPreference[]> {
 /**
  * Update a notification preference.
  */
-export async function updatePreference(preference: NotificationPreference): Promise<void> {
+export async function updatePreference(
+  preference: Pick<NotificationPreference, "category"> & Partial<Omit<NotificationPreference, "category">>
+): Promise<void> {
   await apiClient.put(`${V1}/preferences/${encodeURIComponent(preference.category)}`, preference);
 }

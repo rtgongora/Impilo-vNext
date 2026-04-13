@@ -97,16 +97,22 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 export function ThemeProvider({
   children,
   defaultMode = "light",
+  mode,
   accentColor,
 }: {
   children: React.ReactNode;
   defaultMode?: ThemeMode;
+  /**
+   * Back-compat alias for `defaultMode` (older app roots).
+   * Prefer `defaultMode`.
+   */
+  mode?: ThemeMode;
   accentColor?: string;
 }) {
-  const [mode, setMode] = useState<ThemeMode>(defaultMode);
+  const [modeState, setMode] = useState<ThemeMode>(mode ?? defaultMode);
   const [accent, setAccentColor] = useState<string | undefined>(accentColor);
 
-  const resolvedMode = mode === "system" ? "light" : mode; // System detection delegated to native
+  const resolvedMode = modeState === "system" ? "light" : modeState; // System detection delegated to native
 
   const theme = useMemo<Theme>(() => {
     const base = resolvedMode === "dark" ? darkTheme : lightTheme;
@@ -121,8 +127,8 @@ export function ThemeProvider({
   }, [resolvedMode, accent]);
 
   const value = useMemo<ThemeContextValue>(
-    () => ({ theme, mode, setMode, setAccentColor }),
-    [theme, mode]
+    () => ({ theme, mode: modeState, setMode, setAccentColor }),
+    [theme, modeState]
   );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;

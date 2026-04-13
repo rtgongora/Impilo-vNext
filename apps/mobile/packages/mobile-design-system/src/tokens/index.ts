@@ -2,6 +2,10 @@
  * Design Tokens — Re-exports all token categories.
  */
 
+import { colors } from "./colors";
+import { spacing } from "./spacing";
+import { typography, textStyles } from "./typography";
+
 export { colors } from "./colors";
 export type { ColorToken } from "./colors";
 

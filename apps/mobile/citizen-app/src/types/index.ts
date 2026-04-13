@@ -83,6 +83,10 @@ export interface CoverageInfo {
   planName: string;
   planType: string;
   memberId: string;
+  /**
+   * Back-compat alias used by older tests/screens.
+   */
+  memberNumber?: string;
   status: string;
   effectiveFrom: string;
   effectiveTo?: string;

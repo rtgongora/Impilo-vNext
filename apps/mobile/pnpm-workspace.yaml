@@ -1,0 +1,4 @@
+packages:
+  - "citizen-app"
+  - "provider-app"
+  - "packages/*"

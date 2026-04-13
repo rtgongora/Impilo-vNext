@@ -9,6 +9,8 @@ import type { MarketplaceService, ServiceRequest } from "../types";
 
 const V1 = "/internal/v1/mobile/citizen/marketplace";
 
+export type { MarketplaceService, ServiceRequest };
+
 interface PagedResult<T> {
   data: T[];
   meta: { page: { number: number; size: number; total_elements: number; total_pages: number } };

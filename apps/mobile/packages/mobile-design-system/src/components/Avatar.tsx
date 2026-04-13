@@ -11,6 +11,11 @@ export type AvatarSize = "xs" | "sm" | "md" | "lg" | "xl";
 export interface AvatarProps {
   name: string;
   imageUrl?: string;
+  /**
+   * Back-compat alias for `imageUrl` (older app screens).
+   * Prefer `imageUrl`.
+   */
+  src?: string;
   size?: AvatarSize;
   testID?: string;
 }
@@ -47,13 +52,14 @@ function hashColor(name: string): string {
   return palette[Math.abs(hash) % palette.length];
 }
 
-export function Avatar({ name, imageUrl, size = "md", testID }: AvatarProps) {
+export function Avatar({ name, imageUrl, src, size = "md", testID }: AvatarProps) {
   const dimension = AVATAR_SIZES[size];
+  const resolvedImageUrl = imageUrl ?? src;
 
-  if (imageUrl) {
+  if (resolvedImageUrl) {
     return (
       <Image
-        source={{ uri: imageUrl }}
+        source={{ uri: resolvedImageUrl }}
         accessibilityLabel={name}
         testID={testID}
         style={{

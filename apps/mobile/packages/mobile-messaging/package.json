@@ -11,6 +11,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@impilo/mobile-auth": "workspace:*",
     "@impilo/mobile-trust": "workspace:*",
     "@impilo/mobile-api-client": "workspace:*",
     "zustand": "^4.5.0"

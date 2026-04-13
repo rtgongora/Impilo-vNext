@@ -10,13 +10,29 @@ export interface HeaderProps {
   subtitle?: string;
   onBack?: () => void;
   actions?: React.ReactNode;
+  /**
+   * Back-compat aliases for older app screens.
+   * Prefer `actions` and `onBack`.
+   */
+  rightElement?: React.ReactNode;
+  leftElement?: React.ReactNode;
   testID?: string;
 }
 
-export function Header({ title, subtitle, onBack, actions, testID }: HeaderProps) {
+export function Header({
+  title,
+  subtitle,
+  onBack,
+  actions,
+  rightElement,
+  leftElement,
+  testID,
+}: HeaderProps) {
+  const resolvedActions = actions ?? rightElement;
   return (
     <View testID={testID} style={styles.container}>
       <View style={styles.leftSection}>
+        {leftElement ?? null}
         {onBack ? (
           <Pressable
             onPress={onBack}
@@ -32,7 +48,7 @@ export function Header({ title, subtitle, onBack, actions, testID }: HeaderProps
           {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
         </View>
       </View>
-      {actions ?? null}
+      {resolvedActions ?? null}
     </View>
   );
 }
