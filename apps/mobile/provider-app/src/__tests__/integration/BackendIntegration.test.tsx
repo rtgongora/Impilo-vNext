@@ -15,7 +15,7 @@ describe("API Client Integration Patterns", () => {
     // Verify the apiClient contract
     const expectedMethods = ["get", "post", "put", "patch", "delete"];
     for (const method of expectedMethods) {
-      expect(typeof apiClient[method]).toBe("function");
+      expect(typeof (apiClient as any)[method]).toBe("function");
     }
   });
 

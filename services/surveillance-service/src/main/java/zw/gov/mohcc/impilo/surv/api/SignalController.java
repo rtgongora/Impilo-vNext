@@ -64,12 +64,11 @@ public class SignalController {
         SignalEntity signal = signalService.createSignal(
                 UUID.fromString(ctx.tenantId()),
                 ctx.podId(),
-                ctx.correlationId(),
+                UUID.fromString(ctx.correlationId()),
                 request.name(), request.description(),
                 request.eventType(), request.conditionField(),
                 request.threshold(), request.windowHours(),
-                request.severity(),
-                idempotencyKey);
+                request.severity());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(signal);
     }

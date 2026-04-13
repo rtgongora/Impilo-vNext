@@ -51,11 +51,11 @@ public class IngestController {
         IngestService.IngestResult result = ingestService.ingest(
                 UUID.fromString(ctx.tenantId()),
                 ctx.podId(),
-                ctx.correlationId(),
+                UUID.fromString(ctx.correlationId()),
                 request.eventType(),
                 request.payload(),
                 request.facilityId(),
-                idempotencyKey != null ? idempotencyKey : ctx.correlationId().toString());
+                idempotencyKey != null ? idempotencyKey : ctx.correlationId());
 
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(result);
     }
