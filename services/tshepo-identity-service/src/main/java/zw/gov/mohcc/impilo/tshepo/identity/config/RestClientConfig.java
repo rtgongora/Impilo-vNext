@@ -21,8 +21,8 @@ public class RestClientConfig {
                                           IdentityProperties properties) {
         return builder
                 .rootUri(properties.vitoServiceUrl())
-                .connectTimeout(Duration.ofSeconds(5))
-                .readTimeout(Duration.ofSeconds(10))
+                .setConnectTimeout(Duration.ofSeconds(5))
+                .setReadTimeout(Duration.ofSeconds(10))
                 .build();
     }
 
@@ -31,8 +31,8 @@ public class RestClientConfig {
                                           IdentityProperties properties) {
         return builder
                 .rootUri(properties.keysServiceUrl())
-                .connectTimeout(Duration.ofSeconds(3))
-                .readTimeout(Duration.ofSeconds(5))
+                .setConnectTimeout(Duration.ofSeconds(3))
+                .setReadTimeout(Duration.ofSeconds(5))
                 .build();
     }
 }
