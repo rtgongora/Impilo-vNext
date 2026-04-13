@@ -46,7 +46,6 @@ public class PaymentIntegrationService {
                                      EventOutboxRepository outboxRepository,
                                      ReceivablesService receivablesService,
                                      ObjectMapper objectMapper,
-                                     EncounterRepository encounterRepository,
                                      PatientAccountService patientAccountService) {
         this.billHeaderRepository = billHeaderRepository;
         this.encounterRepository = encounterRepository;
@@ -57,7 +56,6 @@ public class PaymentIntegrationService {
         this.outboxRepository = outboxRepository;
         this.receivablesService = receivablesService;
         this.objectMapper = objectMapper;
-        this.encounterRepository = encounterRepository;
         this.patientAccountService = patientAccountService;
     }
 
