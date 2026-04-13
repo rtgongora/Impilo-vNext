@@ -592,7 +592,7 @@ export function WardManagementPanel() {
           { label: 'Occupied', value: totalOccupied, icon: Users, iconBg: 'bg-orange-100', iconColor: 'text-orange-600' },
           { label: 'Available', value: totalAvailable, icon: Bed, iconBg: 'bg-green-100', iconColor: 'text-green-600' },
           { label: 'Maintenance', value: totalMaintenance, icon: RefreshCw, iconBg: 'bg-yellow-100', iconColor: 'text-yellow-600' },
-          { label: 'Occupancy', value: `${occupancyRate}%`, icon: Activity, iconBg: occupancyRate > 90 ? 'bg-red-100' : bg-impilo-100', iconColor: occupancyRate > 90 ? 'text-red-600' : 'text-impilo-500', textColor: occupancyRate > 90 ? 'text-red-600' : '' },
+          { label: 'Occupancy', value: `${occupancyRate}%`, icon: Activity, iconBg: occupancyRate > 90 ? 'bg-red-100' : 'bg-impilo-100', iconColor: occupancyRate > 90 ? 'text-red-600' : 'text-impilo-500', textColor: occupancyRate > 90 ? 'text-red-600' : '' },
           { label: 'Critical', value: criticalPatients, icon: AlertTriangle, iconBg: 'bg-red-100', iconColor: 'text-red-600', textColor: 'text-red-600' },
         ].map(kpi => {
           const Icon = kpi.icon;
