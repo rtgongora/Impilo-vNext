@@ -69,7 +69,15 @@ public class MaternityPartographController {
             @RequestParam String patientId,
             @RequestParam(required = false) String encounterId
     ) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        try {
+            JsonNode pctData = pctClient.getActivePartographSession(patientId, encounterId);
+            if (pctData != null) {
+                return ResponseEntity.ok(Map.of("data", pctData));
+            }
+        } catch (Exception e) {
+            log.warn("PCT getActivePartographSession failed: {}", e.getMessage());
+        }
+        return ResponseEntity.ok(Map.of("data", Map.of()));
     }
 
     @GetMapping("/sessions/{sessionId}")

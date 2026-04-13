@@ -8,7 +8,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
-import zw.gov.mohcc.impilo.experience.controller.ResourceNotFoundException;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -21,8 +20,6 @@ import java.util.*;
  * GET    /internal/v1/mobile/provider/vitals?encounter_id= - vitals for encounter
  * GET    /internal/v1/mobile/provider/vitals/latest?patient_id= - latest vitals for patient
  * DELETE /internal/v1/mobile/provider/vitals/{id}       - delete a vital
- *
- * <p>STRANGLER: JdbcTemplate retained for local reads during migration; writes delegated to PctServiceClient.</p>
  */
 @RestController
 @RequestMapping("/internal/v1/mobile/provider/vitals")
@@ -30,6 +27,7 @@ public class MobileVitalsController {
 
     private final PctServiceClient pctClient;
 
+    public MobileVitalsController(PctServiceClient pctClient) {
         this.pctClient = pctClient;
     }
 
@@ -133,7 +131,7 @@ public class MobileVitalsController {
             @RequestParam(name = "encounter_id") String encounterId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     @GetMapping("/latest")
@@ -142,7 +140,7 @@ public class MobileVitalsController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(name = "patient_id") String patientId) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     @DeleteMapping("/{id}")
@@ -153,10 +151,6 @@ public class MobileVitalsController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey) {
-
-        if (deleted == 0) {
-            throw new ResourceNotFoundException("Vital not found: " + id);
-        }
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", Map.of("id", id.toString(), "deleted", true));

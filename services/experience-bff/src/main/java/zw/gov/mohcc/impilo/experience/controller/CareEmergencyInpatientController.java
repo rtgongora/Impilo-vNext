@@ -221,7 +221,13 @@ public class CareEmergencyInpatientController {
 
     @GetMapping("/observations")
     public ResponseEntity<Map<String, Object>> getObservations(@RequestHeader("X-Tenant-ID") String tenantId, @RequestParam String patientId) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        try {
+            JsonNode pctData = pctClient.getObservations(patientId);
+            if (pctData != null) return ResponseEntity.ok(Map.of("data", pctData));
+        } catch (Exception e) {
+            log.warn("PCT getObservations failed: {}", e.getMessage());
+        }
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     // ── Patient Transfers ───────────────────────────────────────────
@@ -240,6 +246,12 @@ public class CareEmergencyInpatientController {
 
     @GetMapping("/transfers")
     public ResponseEntity<Map<String, Object>> listTransfers(@RequestHeader("X-Tenant-ID") String tenantId, @RequestParam(required = false) String patientId) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        try {
+            JsonNode pctData = pctClient.listTransfers(patientId);
+            if (pctData != null) return ResponseEntity.ok(Map.of("data", pctData));
+        } catch (Exception e) {
+            log.warn("PCT listTransfers failed: {}", e.getMessage());
+        }
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 }

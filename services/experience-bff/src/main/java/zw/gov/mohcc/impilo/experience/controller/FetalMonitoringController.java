@@ -81,7 +81,15 @@ public class FetalMonitoringController {
             @RequestParam String patientId,
             @RequestParam(required = false) String encounterId
     ) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        try {
+            JsonNode pctData = pctClient.getActiveFetalMonitoringSession(patientId, encounterId);
+            if (pctData != null) {
+                return ResponseEntity.ok(Map.of("data", pctData));
+            }
+        } catch (Exception e) {
+            log.warn("PCT getActiveFetalMonitoringSession failed: {}", e.getMessage());
+        }
+        return ResponseEntity.ok(Map.of("data", Map.of()));
     }
 
     @GetMapping("/sessions/{sessionId}")

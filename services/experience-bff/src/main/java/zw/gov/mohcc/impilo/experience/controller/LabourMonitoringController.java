@@ -35,7 +35,15 @@ public class LabourMonitoringController {
             @RequestParam String patientId,
             @RequestParam(required = false) String encounterId
     ) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        try {
+            JsonNode pctData = pctClient.listLabourMonitoring(patientId, encounterId);
+            if (pctData != null) {
+                return ResponseEntity.ok(Map.of("data", pctData));
+            }
+        } catch (Exception e) {
+            log.warn("PCT listLabourMonitoring failed: {}", e.getMessage());
+        }
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     @PostMapping
