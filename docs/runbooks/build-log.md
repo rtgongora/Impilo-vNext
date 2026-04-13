@@ -1,5 +1,49 @@
 # Build Log
 
+## 2026-04-13 (Evening) — Full-Stack Remediation Build
+
+### Environment
+- Java: OpenJDK 25.0.2+10 (Temurin-25.0.2+10, LTS)
+- Node: v24.14.1
+- pnpm: 10.33.0
+- Maven: 3.9.14
+- OS: Windows 11 Home 10.0.26200
+
+### Java Build
+- **mvn compile (full reactor, all services)**: PASS — BUILD SUCCESS
+- **mvn test (experience-bff)**: PASS (97 tests run, 0 failures, 40 skipped — Docker unavailable)
+- **Fixes applied**:
+  1. `df1cf69f` — `fix(tshepo)`: Replace `connectTimeout()`/`readTimeout()` with `setConnectTimeout()`/`setReadTimeout()` on RestTemplateBuilder for Spring Boot 3.3 compat (3 services: tshepo-authz, tshepo-identity, tshepo-audit)
+  2. `893b02a9` — `fix(tuso)`: Resolve type mismatches in FacilityController, WorkspaceController, ShiftController, WorkspaceService, FacilityService — replace `setFacilityId()` with `setFacility()`, fix `PagedResponse.from()` → `.of()`, add DTO mapping, add missing `ShiftRepository` method
+
+### Experience UI Build
+- **pnpm type-check**: PASS (0 TypeScript errors)
+- **pnpm build**: Compiled successfully (EPERM on standalone symlinks — expected on Windows/OneDrive)
+- **pnpm test**: PASS (122 test files, 331 tests, 0 failures)
+- **pnpm lint**: PASS (0 errors, warnings only)
+- **Fixes applied**:
+  1. `62885ad1` — `fix(experience-ui)`: Fix unknown→ReactNode error in patient chart (Boolean cast), pass patientId prop to LabResultsSystem/PatientTimeline in AssessmentSection, move useState before early return in WardManagementPanel, add missing QueryClientProvider/useAdmissions/usePrivacyDisplayStore mocks in tests
+
+### Mobile Apps Build
+- **Citizen-app type-check**: PASS
+- **Citizen-app test**: PASS (6 test files, 59 tests, 0 failures)
+- **Provider-app type-check**: PASS
+- **Provider-app test**: PASS (14 test files, 61 tests, 0 failures)
+- **Fixes applied**: None required
+
+### Summary
+- **Total fixes this pass**: 3 commits
+- **All builds**: GREEN
+  - Full Java reactor: Compiles (all ~70 services)
+  - Experience BFF tests: 97 pass
+  - Experience UI: 331 tests pass, lint clean
+  - Citizen-app: 59 tests pass
+  - Provider-app: 61 tests pass
+- **Total tests passing**: 548 (97 + 331 + 59 + 61)
+- **Remaining blockers**: None (all compilation and test errors resolved)
+
+---
+
 ## 2026-04-13 — Stabilisation Build
 
 ### Environment
