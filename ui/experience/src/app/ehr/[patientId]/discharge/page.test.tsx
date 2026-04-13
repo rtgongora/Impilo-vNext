@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { describe, expect, it, vi } from "vitest";
 import VisitOutcomePage from "./page";
 
@@ -32,7 +33,12 @@ vi.mock("@/lib/api-client", () => ({ apiClient: { post: (...args: unknown[]) => 
 
 describe("VisitOutcomePage", () => {
   it("anchors outcome completion to the encounter in scope and keeps closure continuity visible", async () => {
-    render(<VisitOutcomePage />);
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <VisitOutcomePage />
+      </QueryClientProvider>
+    );
 
     expect(screen.getByText("Outcome closure")).toBeInTheDocument();
     expect(screen.getByText("Outcome loop status")).toBeInTheDocument();

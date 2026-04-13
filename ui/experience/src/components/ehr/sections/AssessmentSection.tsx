@@ -676,7 +676,8 @@ import { CLERKING_TEMPLATES, type ClerkingTemplate, type CadreLevel } from "@/da
 type AssessmentTab = "triage" | "vitals" | "clerking" | "cadre-history" | "cadre-exam" | "history" | "examination" | "labs" | "timeline";
 
 export function AssessmentSection() {
-  const params = useParams<{ encounterId?: string }>();
+  const params = useParams<{ patientId?: string; encounterId?: string }>();
+  const patientId = params.patientId ?? "";
   const encounterId = params.encounterId ?? "";
   const cadreConfig = useCadreFormConfig();
   const isSimplified = cadreConfig.complexity === "simplified";
@@ -752,8 +753,8 @@ export function AssessmentSection() {
       {activeTab === "cadre-exam" && <CadreExamForm config={cadreConfig} />}
       {activeTab === "history" && <HistoryPanel history={history} isLoading={historyLoading} />}
       {activeTab === "examination" && <ExaminationPanel />}
-      {activeTab === "labs" && <LabResultsSystem />}
-      {activeTab === "timeline" && <PatientTimeline />}
+      {activeTab === "labs" && <LabResultsSystem patientId={patientId} />}
+      {activeTab === "timeline" && <PatientTimeline patientId={patientId} />}
     </div>
   );
 }

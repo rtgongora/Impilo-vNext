@@ -193,7 +193,7 @@ export default function PatientChartPage() {
                         <span className="rounded-full bg-purple-100 px-2.5 py-1 font-medium text-purple-700">
                           {String(activeAdmission.attributes.status)}
                         </span>
-                        {activeAdmission.attributes.admittedAt && (
+                        {Boolean(activeAdmission.attributes.admittedAt) && (
                           <span className="rounded-full bg-white px-2.5 py-1 text-gray-600 border border-gray-200">
                             Admitted {new Date(String(activeAdmission.attributes.admittedAt ?? activeAdmission.attributes.admitted_at)).toLocaleString()}
                           </span>

@@ -112,6 +112,10 @@ export function WardManagementPanel() {
   const [patientDetailBed, setPatientDetailBed] = useState<BedData | null>(null);
   const [transferDialogOpen, setTransferDialogOpen] = useState(false);
   const [transferBed, setTransferBed] = useState<BedData | null>(null);
+  const [transferTargetWard, setTransferTargetWard] = useState('');
+  const [transferTargetBed, setTransferTargetBed] = useState('');
+  const [transferReason, setTransferReason] = useState('');
+  const [dischargeConfirm, setDischargeConfirm] = useState<BedData | null>(null);
 
   if (bedsLoading) {
     return (
@@ -121,10 +125,6 @@ export function WardManagementPanel() {
       </div>
     );
   }
-  const [transferTargetWard, setTransferTargetWard] = useState('');
-  const [transferTargetBed, setTransferTargetBed] = useState('');
-  const [transferReason, setTransferReason] = useState('');
-  const [dischargeConfirm, setDischargeConfirm] = useState<BedData | null>(null);
 
   const totalBeds = beds.length;
   const totalOccupied = beds.filter(b => b.status === 'occupied').length;

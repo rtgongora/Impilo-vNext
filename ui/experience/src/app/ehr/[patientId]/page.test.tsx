@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { render, screen } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import PatientChartPage from "./page";
 
@@ -115,6 +116,17 @@ vi.mock("@/hooks/queries/useTelemedicine", () => ({
   }),
 }));
 
+vi.mock("@/hooks/queries/useInpatient", () => ({
+  useAdmissions: () => ({ data: { data: [] } }),
+}));
+
+vi.mock("@/hooks/usePrivacyDisplayStore", () => {
+  const state = { masked: false, level: "none" };
+  const usePrivacyDisplayStore = (selector: (state: typeof state) => unknown) => selector(state);
+  usePrivacyDisplayStore.getState = () => state;
+  return { usePrivacyDisplayStore };
+});
+
 describe("PatientChartPage", () => {
   beforeEach(() => {
     push.mockReset();
@@ -122,7 +134,12 @@ describe("PatientChartPage", () => {
   });
 
   it("surfaces the care coordination pulse on the patient chart", () => {
-    render(<PatientChartPage />);
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <PatientChartPage />
+      </QueryClientProvider>
+    );
 
     expect(screen.getByText("Care coordination pulse")).toBeInTheDocument();
     expect(screen.getByText("Consult and teleconsult outcomes are visible from the chart")).toBeInTheDocument();
