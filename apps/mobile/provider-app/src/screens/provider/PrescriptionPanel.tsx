@@ -88,10 +88,12 @@ export function PrescriptionPanel({ encounterId, patientId }: PrescriptionPanelP
         {prescriptions.map((rx) => (
           <RxCard
             key={rx.id}
-            medication={rx.medication}
+            medicationName={rx.medication}
             dosage={rx.dosage}
             frequency={rx.frequency}
-            status={rx.status}
+            status={
+              rx.status === "DISPENSED" || rx.status === "EXPIRED" ? "COMPLETED" : rx.status
+            }
           />
         ))}
       </View>

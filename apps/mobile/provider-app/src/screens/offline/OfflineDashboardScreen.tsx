@@ -24,7 +24,7 @@ import type { EntitlementCheck } from "../../types";
 export function OfflineDashboardScreen() {
   const { isOnline, facilityId, pendingSyncCount } = useAppStore();
   const { status: syncStatus, pendingCount, lastSyncAt, triggerSync } = useSyncEngine();
-  const { snapshot, loading: snapshotLoading, download } = useEdgeSnapshot();
+  const { snapshot, loading: snapshotLoading, download } = useEdgeSnapshot(facilityId ?? "");
   const { conflicts } = useConflicts();
   const [entitlement, setEntitlement] = useState<EntitlementCheck | null>(null);
   const [cpidInput, setCpidInput] = useState("");
@@ -80,7 +80,7 @@ export function OfflineDashboardScreen() {
   const handleDownloadSnapshot = useCallback(async () => {
     if (!facilityId) return;
     try {
-      await download(facilityId);
+      await download();
     } catch {}
   }, [facilityId, download]);
 

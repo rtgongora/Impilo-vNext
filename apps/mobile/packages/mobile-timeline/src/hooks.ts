@@ -9,6 +9,10 @@ import { fetchTimeline, fetchMyTimeline } from "./timelineService";
 export interface UseTimelineResult {
   events: TimelineEvent[];
   isLoading: boolean;
+  /**
+   * Back-compat alias used by older screens.
+   */
+  loading?: boolean;
   error: Error | null;
   hasMore: boolean;
   loadMore: () => void;
@@ -63,7 +67,7 @@ export function useTimeline(
 
   const refresh = useCallback(() => load(undefined, true), [load]);
 
-  return { events, isLoading, error, hasMore, loadMore, refresh, totalElements };
+  return { events, isLoading, loading: isLoading, error, hasMore, loadMore, refresh, totalElements };
 }
 
 /**
@@ -112,5 +116,5 @@ export function useMyTimeline(
 
   const refresh = useCallback(() => load(undefined, true), [load]);
 
-  return { events, isLoading, error, hasMore, loadMore, refresh, totalElements };
+  return { events, isLoading, loading: isLoading, error, hasMore, loadMore, refresh, totalElements };
 }

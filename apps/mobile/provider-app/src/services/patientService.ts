@@ -6,7 +6,7 @@
  */
 
 import { apiClient } from "@impilo/mobile-api-client";
-import { fetchPage, type PaginationParams } from "@impilo/mobile-api-client";
+import { type PaginationParams } from "@impilo/mobile-api-client";
 import type { Patient } from "../types";
 
 interface PatientListResponse {
@@ -98,9 +98,13 @@ export async function getPatientsByFacility(
 ): Promise<{ patients: Patient[]; totalElements: number; totalPages: number }> {
   const page = pagination?.page ?? 0;
   const size = pagination?.size ?? 20;
-  const response = await fetchPage<PatientListResponse>(
-    `/internal/v1/patients?facility_id=${facilityId}`,
-    { page, size }
+  const params = new URLSearchParams({
+    facility_id: facilityId,
+    page: String(page),
+    size: String(size),
+  });
+  const response = await apiClient.get<PatientListResponse>(
+    `/internal/v1/patients?${params.toString()}`
   );
   return {
     patients: response.data.data.map(mapPatient),

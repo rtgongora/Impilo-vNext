@@ -15,23 +15,40 @@ import {
   ErrorState,
 } from "@impilo/mobile-design-system";
 import { useConflicts } from "@impilo/mobile-offline";
+import type { ConflictRecord, ConflictResolution } from "@impilo/mobile-offline";
 import type { ConflictItem } from "../../types";
+
+function extractConflictFields(
+  localData: Record<string, unknown>,
+  serverData: Record<string, unknown>
+): string[] {
+  const keys = new Set([...Object.keys(localData), ...Object.keys(serverData)]);
+  const changed: string[] = [];
+  keys.forEach((k) => {
+    if (localData[k] !== serverData[k]) changed.push(k);
+  });
+  return changed;
+}
 
 export function ConflictReviewScreen() {
   const { conflicts: rawConflicts, resolveConflict } = useConflicts();
   const [error, setError] = useState<string | null>(null);
 
-  const conflicts: ConflictItem[] = (rawConflicts ?? []).map((c: { id: string; resourceType: string; resourceId: string; localVersion: Record<string, unknown>; serverVersion: Record<string, unknown>; conflictFields: string[]; detectedAt: string }) => ({
-    id: c.id,
-    resourceType: c.resourceType,
-    resourceId: c.resourceId,
-    localVersion: c.localVersion,
-    serverVersion: c.serverVersion,
-    conflictFields: c.conflictFields,
-    detectedAt: c.detectedAt,
-  }));
+  const conflicts: ConflictItem[] = (rawConflicts ?? []).map((c: ConflictRecord<unknown>) => {
+    const localVersion = (c.localData ?? {}) as Record<string, unknown>;
+    const serverVersion = (c.serverData ?? {}) as Record<string, unknown>;
+    return {
+      id: c.id,
+      resourceType: c.collection,
+      resourceId: c.recordId,
+      localVersion,
+      serverVersion,
+      conflictFields: extractConflictFields(localVersion, serverVersion),
+      detectedAt: c.detectedAt,
+    };
+  });
 
-  const handleResolve = useCallback(async (id: string, resolution: "LOCAL_WINS" | "SERVER_WINS") => {
+  const handleResolve = useCallback(async (id: string, resolution: ConflictResolution) => {
     setError(null);
     try {
       await resolveConflict(id, resolution);
@@ -87,14 +104,14 @@ export function ConflictReviewScreen() {
                       title="Keep Local"
                       variant="primary"
                       size="sm"
-                      onPress={() => handleResolve(conflict.id, "LOCAL_WINS")}
+                      onPress={() => handleResolve(conflict.id, "KEEP_LOCAL")}
                       testID={`local-wins-${conflict.id}`}
                     />
                     <Button
                       title="Use Server"
                       variant="outline"
                       size="sm"
-                      onPress={() => handleResolve(conflict.id, "SERVER_WINS")}
+                      onPress={() => handleResolve(conflict.id, "KEEP_SERVER")}
                       testID={`server-wins-${conflict.id}`}
                     />
                   </View>

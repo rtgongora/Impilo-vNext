@@ -10,6 +10,11 @@ export interface Notification {
   category: NotificationCategory;
   priority: NotificationPriority;
   read: boolean;
+  /**
+   * Back-compat field used by older apps.
+   * Newer code should rely on `read` (boolean).
+   */
+  readAt?: string;
   createdAt: string;
   expiresAt?: string;
   deepLink?: string;
@@ -46,6 +51,10 @@ export interface Conversation {
   type: ConversationType;
   participants: Participant[];
   subject?: string;
+  /**
+   * Back-compat alias used by older screens.
+   */
+  title?: string;
   lastMessage?: Message;
   unreadCount: number;
   createdAt: string;
@@ -68,6 +77,10 @@ export interface Message {
   senderId: string;
   senderName: string;
   body: string;
+  /**
+   * Back-compat alias used by older screens.
+   */
+  content?: string;
   contentType: MessageContentType;
   sentAt: string;
   readBy: string[];

@@ -44,7 +44,14 @@ export function TriageScreen() {
           </View>
         ))}
         <Text style={styles.sectionTitle}>Chief Complaint</Text>
-        <TextInput style={styles.input} placeholder="Presenting complaint..." value={chiefComplaint} onChangeText={setChiefComplaint} multiline rows={3} />
+        <TextInput
+          style={styles.input}
+          placeholder="Presenting complaint..."
+          value={chiefComplaint}
+          onChangeText={setChiefComplaint}
+          multiline
+          numberOfLines={3}
+        />
         <Button label={mutation.isPending ? "Saving..." : "Record Triage"} onPress={() => mutation.mutate()} disabled={!chiefComplaint || mutation.isPending} />
       </View>
     </Screen>

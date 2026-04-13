@@ -22,8 +22,6 @@ import {
 import {
   useConversations,
   useMessages,
-  sendMessage,
-  createConversation,
   useChannel,
   type Conversation,
   type Message,
@@ -32,7 +30,7 @@ import { useAuth } from "@impilo/mobile-auth";
 
 export function MessagingScreen() {
   const auth = useAuth();
-  const { conversations, loading, error, refresh } = useConversations();
+  const { conversations, isLoading, error, refresh } = useConversations();
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
 
   if (activeConversationId) {
@@ -49,10 +47,10 @@ export function MessagingScreen() {
     <Screen>
       <Header title="Messages" />
       <ScrollView testID="messaging-screen" style={styles.container}>
-        {loading ? (
+        {isLoading ? (
           <LoadingSpinner size="md" />
         ) : error ? (
-          <ErrorState title="Error" message={error} onRetry={refresh} />
+          <ErrorState title="Error" message={error.message} onRetry={refresh} />
         ) : conversations.length === 0 ? (
           <EmptyState title="No conversations" message="Start a new conversation" />
         ) : (
@@ -64,12 +62,12 @@ export function MessagingScreen() {
                   style={styles.conversationRow}
                   onPress={() => setActiveConversationId(conv.id)}
                 >
-                  <Avatar name={conv.title ?? "Unknown"} size="md" />
+                  <Avatar name={conv.title ?? conv.subject ?? "Unknown"} size="md" />
                   <View style={styles.conversationInfo}>
-                    <Text style={styles.bold}>{conv.title}</Text>
+                    <Text style={styles.bold}>{conv.title ?? conv.subject ?? ""}</Text>
                     {conv.lastMessage ? (
                       <Text style={styles.lastMessage}>
-                        {conv.lastMessage.content.substring(0, 60)}
+                        {(conv.lastMessage.content ?? conv.lastMessage.body ?? "").substring(0, 60)}
                       </Text>
                     ) : null}
                     <Text style={styles.timestamp}>
@@ -96,20 +94,18 @@ interface ConversationViewProps {
 }
 
 function ConversationView({ conversationId, currentUserId, onBack }: ConversationViewProps) {
-  const { messages, loading, error, refresh } = useMessages(conversationId);
+  const { messages, isLoading, error, refresh, send } = useMessages(conversationId);
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
 
   // Subscribe to real-time updates
-  const { status: channelStatus } = useChannel(`conversation:${conversationId}`, {
-    onMessage: () => refresh(),
-  });
+  useChannel(`conversation:${conversationId}`);
 
   const handleSend = useCallback(async () => {
     if (!newMessage.trim()) return;
     setSending(true);
     try {
-      await sendMessage(conversationId, { content: newMessage, contentType: "TEXT" });
+      await send(newMessage);
       setNewMessage("");
       refresh();
     } catch {
@@ -117,7 +113,7 @@ function ConversationView({ conversationId, currentUserId, onBack }: Conversatio
     } finally {
       setSending(false);
     }
-  }, [conversationId, newMessage, refresh]);
+  }, [newMessage, refresh, send]);
 
   return (
     <Screen>
@@ -129,7 +125,7 @@ function ConversationView({ conversationId, currentUserId, onBack }: Conversatio
 
         {/* Messages */}
         <ScrollView style={styles.messagesScroll}>
-          {loading ? (
+          {isLoading ? (
             <LoadingSpinner size="sm" />
           ) : (
             messages.map((msg: Message) => (
@@ -158,7 +154,7 @@ function ConversationView({ conversationId, currentUserId, onBack }: Conversatio
                       color: msg.senderId === currentUserId ? "#FFFFFF" : "#111827",
                     }}
                   >
-                    {msg.content}
+                    {msg.content ?? msg.body}
                   </Text>
                   <Text
                     style={[

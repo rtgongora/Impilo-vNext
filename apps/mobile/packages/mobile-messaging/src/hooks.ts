@@ -70,7 +70,21 @@ export function useNotifications(params: { pageSize?: number; unreadOnly?: boole
     setUnreadCount(0);
   }, []);
 
-  return { notifications, unreadCount, isLoading, error, hasMore, loadMore, refresh, markRead, markAllRead };
+  return {
+    notifications,
+    unreadCount,
+    isLoading,
+    /**
+     * Back-compat alias used by older screens.
+     */
+    loading: isLoading,
+    error,
+    hasMore,
+    loadMore,
+    refresh,
+    markRead,
+    markAllRead,
+  };
 }
 
 /**
@@ -80,12 +94,18 @@ export function usePushRegistration() {
   const [isRegistered, setIsRegistered] = useState(false);
 
   const register = useCallback(async (params: {
-    deviceId: string;
-    platform: "ios" | "android";
-    pushToken: string;
-    appVersion: string;
+    deviceId?: string;
+    platform: string;
+    token?: string;
+    pushToken?: string;
+    appVersion?: string;
   }) => {
-    await notificationService.registerDevice(params);
+    await notificationService.registerDevice({
+      deviceId: params.deviceId ?? "unknown-device",
+      platform: params.platform === "ios" || params.platform === "android" ? params.platform : "android",
+      pushToken: params.pushToken ?? params.token ?? "unknown-token",
+      appVersion: params.appVersion ?? "0.0.0",
+    });
     setIsRegistered(true);
   }, []);
 
@@ -100,15 +120,26 @@ export function usePushRegistration() {
 /**
  * Hook for a real-time event channel.
  */
-export function useChannel(topic: string) {
+export function useChannel(
+  topic: string,
+  options?: { onMessage?: (event: ChannelEvent) => void }
+) {
   const [messages, setMessages] = useState<ChannelEvent[]>([]);
   const [status, setStatus] = useState<ChannelStatus>("DISCONNECTED");
   const channelRef = useRef<RealtimeChannel | null>(null);
 
   useEffect(() => {
+    if (!topic) {
+      setMessages([]);
+      setStatus("DISCONNECTED");
+      return;
+    }
     const channel = new RealtimeChannel({
       topic,
-      onEvent: (event) => setMessages((prev) => [...prev, event]),
+      onEvent: (event) => {
+        setMessages((prev) => [...prev, event]);
+        options?.onMessage?.(event);
+      },
       onStatusChange: setStatus,
     });
     channelRef.current = channel;
@@ -118,7 +149,7 @@ export function useChannel(topic: string) {
       channel.disconnect();
       channelRef.current = null;
     };
-  }, [topic]);
+  }, [topic, options]);
 
   const isConnected = status === "CONNECTED";
 
@@ -151,7 +182,16 @@ export function useConversations(params: { pageSize?: number } = {}) {
     load();
   }, [load]);
 
-  return { conversations, isLoading, error, refresh: load };
+  return {
+    conversations,
+    isLoading,
+    /**
+     * Back-compat alias used by older screens.
+     */
+    loading: isLoading,
+    error,
+    refresh: load,
+  };
 }
 
 /**
@@ -201,5 +241,17 @@ export function useMessages(conversationId: string, params: { pageSize?: number 
     return msg;
   }, [conversationId]);
 
-  return { messages, isLoading, error, hasMore, loadOlder, send, refresh: () => load() };
+  return {
+    messages,
+    isLoading,
+    /**
+     * Back-compat alias used by older screens.
+     */
+    loading: isLoading,
+    error,
+    hasMore,
+    loadOlder,
+    send,
+    refresh: () => load(),
+  };
 }

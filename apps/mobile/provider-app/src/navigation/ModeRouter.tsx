@@ -34,7 +34,7 @@ export function ModeRouter() {
   }, [mode]);
 
   return (
-    <View testID="mode-router" style={styles.container}>
+    <View testID="mode-router" style={styles.container} data-mode={mode}>
       <ModeSwitcher />
       {renderMode()}
     </View>

@@ -4,9 +4,10 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import React from "react";
+import type { AppMode } from "../../types";
 
 const mockAppState = {
-  mode: "provider" as const,
+  mode: "provider" as AppMode,
   isOnline: true,
   facilityId: "facility-1",
   facilityName: "Test Facility",
@@ -63,12 +64,8 @@ vi.mock("@impilo/mobile-design-system", () => ({
 import { ModeRouter } from "../../navigation/ModeRouter";
 
 function renderToString(element: React.ReactElement): string {
-  try {
-    const { renderToStaticMarkup } = require("react-dom/server");
-    return renderToStaticMarkup(element);
-  } catch {
-    return JSON.stringify(element);
-  }
+  const { renderToStaticMarkup } = require("react-dom/server");
+  return renderToStaticMarkup(element);
 }
 
 describe("ModeRouter", () => {

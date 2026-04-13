@@ -109,11 +109,11 @@ export function LabOrderPanel({ encounterId, patientId }: LabOrderPanelProps) {
                   ? order.results.map((r) => (
                       <LabResultCard
                         key={r.id}
-                        parameter={r.parameter}
-                        value={r.value}
+                        testName={r.parameter}
+                        value={String(r.value)}
                         unit={r.unit}
                         referenceRange={r.referenceRange}
-                        isAbnormal={r.isAbnormal}
+                        status={r.isAbnormal ? "ABNORMAL" : "NORMAL"}
                       />
                     ))
                   : null}

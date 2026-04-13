@@ -47,7 +47,7 @@ export function initializeApp(): void {
   configureSecureStorage(new ExpoSecureStorage());
 
   configureAuth({
-    url: ENV.KEYCLOAK_URL,
+    baseUrl: ENV.KEYCLOAK_URL,
     realm: ENV.KEYCLOAK_REALM,
     clientId: ENV.KEYCLOAK_CLIENT_ID,
     redirectUri: ENV.REDIRECT_URI,

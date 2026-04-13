@@ -39,10 +39,11 @@ export function PACSViewerScreen() {
 
   if (selectedStudy && studyDetail) {
     const series = ((studyDetail as Record<string, unknown>).Series ?? []) as string[];
+    const tags = ((studyDetail as Record<string, unknown>).MainDicomTags ?? {}) as Record<string, unknown>;
     return (
       <Screen><Header title="Study Series" />
         <View style={styles.container}>
-          <Text style={styles.title}>{String((studyDetail as Record<string, unknown>).MainDicomTags?.StudyDescription ?? "Study")}</Text>
+          <Text style={styles.title}>{String(tags.StudyDescription ?? "Study")}</Text>
           <FlatList data={series} keyExtractor={(s) => s} numColumns={2} renderItem={({ item }) => (
             <TouchableOpacity style={styles.seriesCard} onPress={() => setSelectedInstance(item)}>
               <View style={styles.seriesThumb}><Text style={styles.thumbText}>DICOM</Text></View>

@@ -229,7 +229,9 @@ function EWSPanel() {
       {(scores as Array<Record<string, unknown>>).map((sc) => (
         <View key={String(sc.id)} style={[s.card, { borderLeftColor: riskColors[String(sc.risk_level)] ?? "#6B7280", borderLeftWidth: 4 }]}>
           <Text style={s.cardTitle}>Score: {String(sc.total_score)} — {String(sc.risk_level)}</Text>
-          {sc.escalation_required && <Badge label="ESCALATION REQUIRED" variant="destructive" />}
+          {Boolean(sc.escalation_required) ? (
+            <Badge label="ESCALATION REQUIRED" variant="destructive" />
+          ) : null}
           <Text style={s.meta}>{sc.recorded_at ? new Date(sc.recorded_at as string).toLocaleString() : ""}</Text>
         </View>
       ))}

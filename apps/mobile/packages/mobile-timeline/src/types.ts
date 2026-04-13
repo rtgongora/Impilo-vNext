@@ -6,6 +6,11 @@ export interface TimelineEvent {
   id: string;
   type: TimelineEventType;
   timestamp: string;
+  /**
+   * Back-compat aliases used by older screens.
+   */
+  occurredAt?: string;
+  subjectName?: string;
   title: string;
   summary: string;
   facilityId?: string;

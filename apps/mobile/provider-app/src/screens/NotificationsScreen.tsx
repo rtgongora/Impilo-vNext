@@ -89,7 +89,7 @@ export function NotificationsScreen() {
         <Header title="Notifications" />
         <ErrorState
           title="Failed to load notifications"
-          message={error}
+          message={error.message}
           onRetry={refresh}
         />
       </Screen>

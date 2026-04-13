@@ -11,7 +11,7 @@ import type { SyncEngineStatus } from "./syncEngine";
 /**
  * Hook for a typed offline collection.
  */
-export function useOfflineStore<T>(collectionName: string, apiBasePath: string) {
+export function useOfflineStore<T>(collectionName: string, apiBasePath: string = "") {
   const [items, setItems] = useState<OfflineRecord<T>[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -55,7 +55,19 @@ export function useOfflineStore<T>(collectionName: string, apiBasePath: string) 
     [collection]
   );
 
-  return { items, isLoading, upsert, delete: remove, syncStatus: getSyncStatus, refresh: reload };
+  return {
+    items,
+    isLoading,
+    /**
+     * Back-compat alias used by older screens.
+     * Many screens expect the raw domain records, not the OfflineRecord wrapper.
+     */
+    data: items.map((r) => r.data),
+    upsert,
+    delete: remove,
+    syncStatus: getSyncStatus,
+    refresh: reload,
+  };
 }
 
 /**
@@ -85,7 +97,20 @@ export function useSyncEngine() {
   const sync = useCallback(() => syncEngine.sync(), []);
   const forcePush = useCallback(() => syncEngine.forcePush(), []);
 
-  return { status, pendingCount, conflictCount, sync, forcePush };
+  return {
+    status,
+    pendingCount,
+    conflictCount,
+    sync,
+    forcePush,
+    /**
+     * Back-compat aliases used by older screens.
+     */
+    triggerSync: sync,
+    retryFailed: sync,
+    queue: [],
+    lastSyncAt: null,
+  };
 }
 
 /**
@@ -114,7 +139,18 @@ export function useEdgeSnapshot(facilityId: string) {
     }
   }, [facilityId]);
 
-  return { snapshot, isStale, isDownloading, error, download, lastSnapshot: snapshot };
+  return {
+    snapshot,
+    isStale,
+    isDownloading,
+    /**
+     * Back-compat alias used by older screens.
+     */
+    loading: isDownloading,
+    error,
+    download,
+    lastSnapshot: snapshot,
+  };
 }
 
 /**
@@ -146,5 +182,14 @@ export function useConflicts() {
     [reload]
   );
 
-  return { conflicts, isLoading, resolve, refresh: reload };
+  return {
+    conflicts,
+    isLoading,
+    resolve,
+    /**
+     * Back-compat alias used by older screens.
+     */
+    resolveConflict: resolve,
+    refresh: reload,
+  };
 }

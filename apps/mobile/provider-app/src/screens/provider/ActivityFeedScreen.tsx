@@ -43,7 +43,7 @@ export function ActivityFeedScreen() {
     return (
       <Screen>
         <Header title="Activity" />
-        <ErrorState title="Error" message={error} onRetry={refresh} />
+        <ErrorState title="Error" message={error.message} onRetry={refresh} />
       </Screen>
     );
   }
@@ -63,7 +63,7 @@ export function ActivityFeedScreen() {
                     <Badge variant="secondary">
                       {EVENT_TYPE_LABELS[event.type] ?? event.type}
                     </Badge>
-                    <Text style={styles.timestamp}>{formatTime(event.occurredAt)}</Text>
+                    <Text style={styles.timestamp}>{formatTime(event.occurredAt ?? event.timestamp)}</Text>
                   </View>
                   <Text style={styles.summary}>{event.summary}</Text>
                   {event.subjectName ? (

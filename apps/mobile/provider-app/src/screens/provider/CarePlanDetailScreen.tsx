@@ -211,8 +211,13 @@ export function CarePlanDetailScreen() {
                 <Badge label={String(g.category)} variant="info" />
                 <Badge label={String(g.status)} variant={g.status === "ACHIEVED" ? "success" : "default"} />
               </View>
-              {g.target_value && <Text style={s.goalTarget}>Target: {String(g.target_value)} {g.current_value ? `· Current: ${String(g.current_value)}` : ""}</Text>}
-              {g.target_date && <Text style={s.goalDate}>Due: {String(g.target_date)}</Text>}
+              {g.target_value ? (
+                <Text style={s.goalTarget}>
+                  Target: {String(g.target_value)}{" "}
+                  {g.current_value ? `· Current: ${String(g.current_value)}` : ""}
+                </Text>
+              ) : null}
+              {g.target_date ? <Text style={s.goalDate}>Due: {String(g.target_date)}</Text> : null}
               <View style={s.goalActions}>
                 {g.status !== "ACHIEVED" && (
                   <Button label="Mark Achieved" size="small" onPress={() => updateGoalMut.mutate({ goalId: String(g.id), status: "ACHIEVED" })} />
@@ -273,9 +278,13 @@ export function CarePlanDetailScreen() {
                 <View key={String(int.id)} style={s.intCard}>
                   <Text style={s.intDesc}>{String(int.description)}</Text>
                   <View style={s.intMeta}>
-                    {int.frequency && <Text style={s.intFreq}>⏰ {String(int.frequency)}</Text>}
-                    {int.responsible_role && <Text style={s.intRole}>👤 {String(int.responsible_role)}</Text>}
-                    {int.last_performed && <Text style={s.intPerformed}>Last: {new Date(String(int.last_performed)).toLocaleString()}</Text>}
+                    {int.frequency ? <Text style={s.intFreq}>⏰ {String(int.frequency)}</Text> : null}
+                    {int.responsible_role ? <Text style={s.intRole}>👤 {String(int.responsible_role)}</Text> : null}
+                    {int.last_performed ? (
+                      <Text style={s.intPerformed}>
+                        Last: {new Date(String(int.last_performed)).toLocaleString()}
+                      </Text>
+                    ) : null}
                   </View>
                   <Button label="Document Performance" size="small" onPress={() => performIntMut.mutate(String(int.id))} />
                 </View>

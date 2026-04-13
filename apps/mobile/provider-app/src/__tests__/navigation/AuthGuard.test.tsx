@@ -57,14 +57,8 @@ vi.mock("../../screens/SelectFacilityScreen", () => ({
 import { AuthGuard } from "../../navigation/AuthGuard";
 
 function renderToString(element: React.ReactElement): string {
-  // Simple render-to-string for testing
-  const ReactDOMServer = { renderToStaticMarkup: (el: React.ReactElement) => "" };
-  try {
-    const { renderToStaticMarkup } = require("react-dom/server");
-    return renderToStaticMarkup(element);
-  } catch {
-    return JSON.stringify(element);
-  }
+  const { renderToStaticMarkup } = require("react-dom/server");
+  return renderToStaticMarkup(element);
 }
 
 describe("AuthGuard", () => {

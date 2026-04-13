@@ -21,6 +21,7 @@ import { useAppStore } from "../stores/appStore";
 const TABS = [
   { key: "dashboard", label: "Worklist", icon: "clipboard" },
   { key: "patients", label: "Patients", icon: "users" },
+  { key: "results", label: "Results", icon: "activity" },
   { key: "queue", label: "Queue", icon: "list" },
   { key: "tools", label: "Tools", icon: "briefcase" },
   { key: "professional", label: "Profile", icon: "user" },
@@ -62,7 +63,8 @@ export function ProviderTabs() {
         items={TABS.map((t) => ({
           key: t.key,
           label: t.label,
-          badge: t.key === "notifications" && unreadNotifications > 0 ? unreadNotifications : undefined,
+          icon: t.icon,
+          badge: t.key === "dashboard" && unreadNotifications > 0 ? unreadNotifications : undefined,
         }))}
         activeKey={activeTab}
         onSelect={handleTabChange}
