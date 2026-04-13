@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Activity, Save, Thermometer, Heart, Wind, Droplets, Loader2 } from "lucide-react";
+import { Activity, Save, Thermometer, Heart, Wind, Droplets, Loader2, AlertTriangle } from "lucide-react";
+import { useEncounterVitals, useRecordVitals, type VitalsResource } from "@/hooks/queries/useVitals";
 
 interface VitalsFormData {
   temperature: string;
@@ -34,83 +35,25 @@ interface VitalSign {
   blood_glucose: number | null;
 }
 
-const MOCK_VITALS_HISTORY: VitalSign[] = [
-  {
-    id: "v-001",
-    recorded_at: "2026-04-07T08:30:00Z",
-    temperature: 37.2,
-    pulse_rate: 82,
-    respiratory_rate: 18,
-    blood_pressure_systolic: 128,
-    blood_pressure_diastolic: 78,
-    oxygen_saturation: 97,
-    pain_score: 3,
-    gcs: 15,
-    weight: 72.5,
-    height: 168,
-    blood_glucose: 5.8,
-  },
-  {
-    id: "v-002",
-    recorded_at: "2026-04-07T04:00:00Z",
-    temperature: 38.1,
-    pulse_rate: 98,
-    respiratory_rate: 22,
-    blood_pressure_systolic: 145,
-    blood_pressure_diastolic: 92,
-    oxygen_saturation: 93,
-    pain_score: 6,
-    gcs: 15,
-    weight: 72.5,
-    height: 168,
-    blood_glucose: 7.2,
-  },
-  {
-    id: "v-003",
-    recorded_at: "2026-04-06T22:00:00Z",
-    temperature: 38.6,
-    pulse_rate: 110,
-    respiratory_rate: 24,
-    blood_pressure_systolic: 160,
-    blood_pressure_diastolic: 95,
-    oxygen_saturation: 91,
-    pain_score: 7,
-    gcs: 14,
-    weight: 72.5,
-    height: 168,
-    blood_glucose: 8.1,
-  },
-  {
-    id: "v-004",
-    recorded_at: "2026-04-06T16:00:00Z",
-    temperature: 37.0,
-    pulse_rate: 76,
-    respiratory_rate: 16,
-    blood_pressure_systolic: 122,
-    blood_pressure_diastolic: 74,
-    oxygen_saturation: 98,
-    pain_score: 2,
-    gcs: 15,
-    weight: 72.5,
-    height: 168,
-    blood_glucose: 5.4,
-  },
-  {
-    id: "v-005",
-    recorded_at: "2026-04-06T08:00:00Z",
-    temperature: 36.8,
-    pulse_rate: 70,
-    respiratory_rate: 14,
-    blood_pressure_systolic: 118,
-    blood_pressure_diastolic: 72,
-    oxygen_saturation: 99,
-    pain_score: 1,
-    gcs: 15,
-    weight: 72.5,
-    height: 168,
-    blood_glucose: 5.2,
-  },
-];
+/* ---------- mapper ---------- */
+function mapVitalsResource(resource: VitalsResource): VitalSign {
+  const a = resource.attributes;
+  return {
+    id: resource.id,
+    recorded_at: a.recordedAt,
+    temperature: a.temperature,
+    pulse_rate: a.heartRate,
+    respiratory_rate: a.respiratoryRate,
+    blood_pressure_systolic: a.systolic,
+    blood_pressure_diastolic: a.diastolic,
+    oxygen_saturation: a.oxygenSaturation,
+    pain_score: a.painScore,
+    gcs: null,
+    weight: a.weight,
+    height: a.height,
+    blood_glucose: null,
+  };
+}
 
 const INITIAL_FORM: VitalsFormData = {
   temperature: "",
@@ -129,20 +72,25 @@ const INITIAL_FORM: VitalsFormData = {
 
 interface VitalsRecorderProps {
   encounterId: string;
+  patientId?: string;
   existingVitals?: VitalSign[];
   onVitalsSaved?: () => void;
 }
 
 export function VitalsRecorder({
   encounterId,
+  patientId,
   existingVitals,
   onVitalsSaved,
 }: VitalsRecorderProps) {
-  const [saving, setSaving] = useState(false);
+  const { data, isLoading: vitalsLoading, error: vitalsError } = useEncounterVitals(encounterId);
+  const recordVitalsMutation = useRecordVitals();
   const [formData, setFormData] = useState<VitalsFormData>({ ...INITIAL_FORM });
-  const [vitalsHistory, setVitalsHistory] = useState<VitalSign[]>(
-    existingVitals ?? MOCK_VITALS_HISTORY
-  );
+
+  const vitalsHistory: VitalSign[] = useMemo(() => {
+    if (existingVitals) return existingVitals;
+    return (data?.data ?? []).map(mapVitalsResource);
+  }, [existingVitals, data]);
 
   const handleChange = (field: keyof VitalsFormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -207,39 +155,33 @@ export function VitalsRecorder({
     critical: "bg-red-50 border-red-200 animate-pulse",
   };
 
+  const saving = recordVitalsMutation.isPending;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSaving(true);
 
-    // Simulate async save
-    await new Promise((resolve) => setTimeout(resolve, 600));
-
-    const newVital: VitalSign = {
-      id: `v-${Date.now()}`,
-      recorded_at: new Date().toISOString(),
-      temperature: formData.temperature ? parseFloat(formData.temperature) : null,
-      pulse_rate: formData.pulse_rate ? parseInt(formData.pulse_rate) : null,
-      respiratory_rate: formData.respiratory_rate ? parseInt(formData.respiratory_rate) : null,
-      blood_pressure_systolic: formData.blood_pressure_systolic
-        ? parseInt(formData.blood_pressure_systolic)
-        : null,
-      blood_pressure_diastolic: formData.blood_pressure_diastolic
-        ? parseInt(formData.blood_pressure_diastolic)
-        : null,
-      oxygen_saturation: formData.oxygen_saturation
-        ? parseInt(formData.oxygen_saturation)
-        : null,
-      pain_score: formData.pain_score ? parseInt(formData.pain_score) : null,
-      gcs: formData.gcs ? parseInt(formData.gcs) : null,
-      weight: formData.weight ? parseFloat(formData.weight) : null,
-      height: formData.height ? parseFloat(formData.height) : null,
-      blood_glucose: formData.blood_glucose ? parseFloat(formData.blood_glucose) : null,
-    };
-
-    setVitalsHistory((prev) => [newVital, ...prev]);
-    setFormData({ ...INITIAL_FORM });
-    setSaving(false);
-    onVitalsSaved?.();
+    recordVitalsMutation.mutate(
+      {
+        patientId: patientId ?? "",
+        encounterId,
+        systolic: formData.blood_pressure_systolic ? parseInt(formData.blood_pressure_systolic) : null,
+        diastolic: formData.blood_pressure_diastolic ? parseInt(formData.blood_pressure_diastolic) : null,
+        heartRate: formData.pulse_rate ? parseInt(formData.pulse_rate) : null,
+        temperature: formData.temperature ? parseFloat(formData.temperature) : null,
+        respiratoryRate: formData.respiratory_rate ? parseInt(formData.respiratory_rate) : null,
+        oxygenSaturation: formData.oxygen_saturation ? parseInt(formData.oxygen_saturation) : null,
+        weight: formData.weight ? parseFloat(formData.weight) : null,
+        height: formData.height ? parseFloat(formData.height) : null,
+        painScore: formData.pain_score ? parseInt(formData.pain_score) : null,
+        notes: formData.notes || null,
+      },
+      {
+        onSuccess: () => {
+          setFormData({ ...INITIAL_FORM });
+          onVitalsSaved?.();
+        },
+      }
+    );
   };
 
   const formatDateTime = (iso: string): string => {
@@ -536,7 +478,17 @@ export function VitalsRecorder({
         </div>
         <div className="overflow-y-auto max-h-[500px]">
           <div className="p-4 space-y-3">
-            {vitalsHistory.length === 0 ? (
+            {vitalsLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-5 w-5 animate-spin text-impilo-500" />
+                <span className="ml-2 text-sm text-gray-500">Loading vitals...</span>
+              </div>
+            ) : vitalsError ? (
+              <div className="flex items-center justify-center py-8 text-red-600">
+                <AlertTriangle className="h-4 w-4 mr-2" />
+                <span className="text-sm">Failed to load vitals history.</span>
+              </div>
+            ) : vitalsHistory.length === 0 ? (
               <p className="text-sm text-gray-500 text-center py-4">
                 No vital signs recorded for this encounter
               </p>

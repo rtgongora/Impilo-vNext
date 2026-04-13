@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useMemo } from "react";
 import {
   Calendar,
   Clock,
@@ -17,7 +17,9 @@ import {
   HeartPulse,
   Syringe,
   BedDouble,
+  Loader2,
 } from "lucide-react";
+import { useTimeline, type TimelineEntryResource } from "@/hooks/queries/useTimeline";
 
 /* ---------- types ---------- */
 type TimelineEventType =
@@ -43,122 +45,28 @@ interface TimelineEvent {
   isImportant?: boolean;
 }
 
-/* ---------- mock data ---------- */
-const MOCK_EVENTS: TimelineEvent[] = [
-  {
-    id: "1",
-    type: "admission",
-    title: "Patient Admitted",
-    description: "Emergency admission via A&E",
-    timestamp: new Date(Date.now() - 172800000),
-    author: "Dr. Sarah Moyo",
-    details: {
-      "Chief Complaint": "Chest pain, shortness of breath",
-      Triage: "P2 - Urgent",
-    },
-    isImportant: true,
-  },
-  {
-    id: "2",
-    type: "vitals",
-    title: "Initial Vitals Recorded",
-    description: "BP 160/95, HR 102, SpO2 92%, Temp 37.8\u00b0C",
-    timestamp: new Date(Date.now() - 172500000),
-    author: "Nurse Chipo",
-    details: {
-      "Blood Pressure": "160/95 mmHg",
-      "Heart Rate": "102 bpm",
-      SpO2: "92%",
-      Temperature: "37.8\u00b0C",
-    },
-  },
-  {
-    id: "3",
-    type: "lab",
-    title: "Lab Orders Placed",
-    description: "CBC, BMP, Troponin, D-dimer ordered",
-    timestamp: new Date(Date.now() - 172000000),
-    author: "Dr. Sarah Moyo",
-  },
-  {
-    id: "4",
-    type: "imaging",
-    title: "Chest X-Ray Completed",
-    description: "Findings: Bilateral infiltrates, cardiomegaly",
-    timestamp: new Date(Date.now() - 168000000),
-    author: "Dr. Radiologist",
-    isImportant: true,
-  },
-  {
-    id: "5",
-    type: "alert",
-    title: "Critical Lab Result",
-    description: "Troponin elevated at 2.4 ng/mL (normal <0.04)",
-    timestamp: new Date(Date.now() - 165000000),
-    isImportant: true,
-  },
-  {
-    id: "6",
-    type: "consult",
-    title: "Cardiology Consult Requested",
-    description: "Urgent consult for elevated troponin and ECG changes",
-    timestamp: new Date(Date.now() - 164000000),
-    author: "Dr. Sarah Moyo",
-  },
-  {
-    id: "7",
-    type: "medication",
-    title: "Medications Administered",
-    description: "Aspirin 300mg, Clopidogrel 300mg, Enoxaparin 80mg",
-    timestamp: new Date(Date.now() - 163000000),
-    author: "Nurse Chipo",
-  },
-  {
-    id: "8",
-    type: "note",
-    title: "Cardiology Consult Note",
-    description:
-      "NSTEMI diagnosed. Recommend medical management, cardiac catheterization tomorrow.",
-    timestamp: new Date(Date.now() - 86400000),
-    author: "Dr. James Ncube (Cardiology)",
-    isImportant: true,
-  },
-  {
-    id: "9",
-    type: "procedure",
-    title: "Cardiac Catheterization",
-    description: "LAD 80% stenosis, RCA 50% stenosis. PCI to LAD with DES.",
-    timestamp: new Date(Date.now() - 43200000),
-    author: "Dr. Interventional Cardiologist",
-    isImportant: true,
-  },
-  {
-    id: "10",
-    type: "vitals",
-    title: "Post-Procedure Vitals",
-    description: "BP 128/78, HR 76, SpO2 98%, Stable",
-    timestamp: new Date(Date.now() - 36000000),
-    author: "Nurse Farai",
-  },
-  {
-    id: "11",
-    type: "medication",
-    title: "Discharge Medications Prepared",
-    description: "Aspirin, Clopidogrel, Atorvastatin, Metoprolol, Lisinopril",
-    timestamp: new Date(Date.now() - 7200000),
-    author: "Pharmacist",
-  },
-  {
-    id: "12",
-    type: "note",
-    title: "Discharge Summary",
-    description:
-      "Patient stable for discharge. Follow-up in cardiology clinic in 2 weeks.",
-    timestamp: new Date(Date.now() - 3600000),
-    author: "Dr. Sarah Moyo",
-    isImportant: true,
-  },
+/* ---------- mapper ---------- */
+const KNOWN_EVENT_TYPES: TimelineEventType[] = [
+  "admission", "discharge", "note", "vitals", "medication",
+  "lab", "imaging", "procedure", "alert", "consult",
 ];
+
+function mapEventType(raw: string): TimelineEventType {
+  const lower = raw.toLowerCase() as TimelineEventType;
+  return KNOWN_EVENT_TYPES.includes(lower) ? lower : "note";
+}
+
+function mapTimelineEntry(entry: TimelineEntryResource): TimelineEvent {
+  return {
+    id: entry.id,
+    type: mapEventType(entry.attributes.eventType),
+    title: entry.attributes.title,
+    description: entry.attributes.description ?? "",
+    timestamp: new Date(entry.attributes.occurredAt),
+    author: entry.attributes.actorName ?? undefined,
+    isImportant: false,
+  };
+}
 
 /* ---------- event type config ---------- */
 const eventTypeConfig: Record<
@@ -178,13 +86,23 @@ const eventTypeConfig: Record<
 };
 
 /* ---------- component ---------- */
-export function PatientTimeline() {
+interface PatientTimelineProps {
+  patientId: string;
+}
+
+export function PatientTimeline({ patientId }: PatientTimelineProps) {
+  const { data, isLoading, error } = useTimeline(patientId);
   const [expandedEvents, setExpandedEvents] = useState<string[]>([]);
   const [visibleTypes, setVisibleTypes] = useState<TimelineEventType[]>(
     Object.keys(eventTypeConfig) as TimelineEventType[]
   );
   const [filterOpen, setFilterOpen] = useState(false);
   const filterRef = useRef<HTMLDivElement>(null);
+
+  const events: TimelineEvent[] = useMemo(
+    () => (data?.data ?? []).map(mapTimelineEntry),
+    [data]
+  );
 
   const toggleExpand = (id: string) => {
     setExpandedEvents((prev) =>
@@ -198,7 +116,7 @@ export function PatientTimeline() {
     );
   };
 
-  const filteredEvents = MOCK_EVENTS.filter((event) =>
+  const filteredEvents = events.filter((event) =>
     visibleTypes.includes(event.type)
   );
 
@@ -228,6 +146,24 @@ export function PatientTimeline() {
     if (diffHours < 24) return `${diffHours}h ago`;
     return `${diffDays}d ago`;
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-6 w-6 animate-spin text-impilo-500" />
+        <span className="ml-2 text-sm text-gray-500">Loading timeline...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center py-12 text-red-600">
+        <AlertTriangle className="h-5 w-5 mr-2" />
+        <span className="text-sm">Failed to load timeline. Please try again.</span>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -287,7 +223,13 @@ export function PatientTimeline() {
 
       {/* Timeline */}
       <div className="overflow-y-auto max-h-[600px] space-y-6">
-        {Object.entries(groupedEvents).map(([date, events]) => (
+        {Object.keys(groupedEvents).length === 0 && (
+          <div className="text-center py-12 text-gray-400">
+            <Activity className="w-12 h-12 mx-auto mb-4 opacity-50" />
+            <p>No timeline events found</p>
+          </div>
+        )}
+        {Object.entries(groupedEvents).map(([date, dateEvents]) => (
           <div key={date}>
             {/* Date header */}
             <div className="sticky top-0 bg-white/95 backdrop-blur py-2 z-10">
@@ -299,7 +241,7 @@ export function PatientTimeline() {
 
             {/* Events with vertical line */}
             <div className="ml-4 border-l-2 border-gray-200 pl-6 space-y-4">
-              {events.map((event) => {
+              {dateEvents.map((event) => {
                 const config = eventTypeConfig[event.type];
                 const Icon = config.icon;
                 const isExpanded = expandedEvents.includes(event.id);

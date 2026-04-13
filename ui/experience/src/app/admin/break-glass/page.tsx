@@ -7,33 +7,9 @@
 
 import Link from "next/link";
 import { ArrowLeft, Loader2, AlertTriangle, AlertCircle } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
-import { apiClient, type ApiResponse } from "@/lib/api-client";
-
-interface BreakGlassResource {
-  id: string;
-  type: "break_glass_event";
-  attributes: {
-    timestamp: string;
-    user: string;
-    reason: string;
-    patientAccessed: string;
-    duration: string;
-    reviewStatus: string;
-    [key: string]: unknown;
-  };
-}
-
-type BreakGlassResponse = ApiResponse<BreakGlassResource[]>;
-
-function useBreakGlass() {
-  return useQuery<BreakGlassResponse>({
-    queryKey: ["admin-break-glass"],
-    queryFn: () => apiClient.get<BreakGlassResponse>("/internal/v1/admin/break-glass"),
-  });
-}
+import { useBreakGlassReviews } from "@/hooks/queries/useTrustAdmin";
 
 const REVIEW_STYLES: Record<string, string> = {
   PENDING_REVIEW: "bg-yellow-100 text-yellow-700",
@@ -42,7 +18,7 @@ const REVIEW_STYLES: Record<string, string> = {
 };
 
 export default function BreakGlassPage() {
-  const { data, isLoading, error } = useBreakGlass();
+  const { data, isLoading, error } = useBreakGlassReviews();
 
   const events = data?.data ?? [];
 
@@ -100,13 +76,13 @@ export default function BreakGlassPage() {
                         {new Date(event.attributes.timestamp).toLocaleString()}
                       </td>
                       <td className="px-4 py-3 font-medium text-gray-900">
-                        {event.attributes.user}
+                        {event.attributes.actorName ?? event.attributes.actorId}
                       </td>
                       <td className="px-4 py-3 text-gray-600 max-w-xs truncate">
                         {event.attributes.reason}
                       </td>
                       <td className="px-4 py-3 text-gray-600">
-                        {event.attributes.patientAccessed}
+                        {event.attributes.patientId}
                       </td>
                       <td className="px-4 py-3 text-gray-500">
                         {event.attributes.duration}

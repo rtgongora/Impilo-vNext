@@ -25,6 +25,7 @@ import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { useEncounters } from "@/hooks/queries/useEncounters";
+import { useImagingStudies } from "@/hooks/queries/useImaging";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { apiClient } from "@/lib/api-client";
 
@@ -135,6 +136,8 @@ export default function ImagingPage() {
       encounter.attributes.status === "IN_PROGRESS" || encounter.attributes.status === "ACTIVE"
   );
   const { data: studies = [], isLoading, error } = useStudies(patientId);
+  const { data: imagingStudiesData } = useImagingStudies(patientId);
+  const governedStudies = (imagingStudiesData as { data?: unknown[] } | undefined)?.data ?? [];
 
   const patientMatchedStudies = studies.filter((study) => matchesPatient(study, patientId));
   /** Never list unrelated DICOM patients in this chart's rail — avoids wrong-patient review. */
@@ -248,6 +251,14 @@ export default function ImagingPage() {
                   hasPatientMatch
                     ? "Orthanc returned this many studies for the workspace query; only patient-matched rows appear in the rail."
                     : "Studies exist in PACS but none matched this chart ID — reconcile DICOM PatientID with the chart before expecting a list here.",
+              },
+              {
+                label: "Governed imaging",
+                value: String(governedStudies.length),
+                detail:
+                  governedStudies.length > 0
+                    ? "Studies returned from the governed imaging service for this patient."
+                    : "No governed imaging studies yet; the PACS workspace view is active below.",
               },
               {
                 label: "Next action",

@@ -8,33 +8,10 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ArrowLeft, Loader2, ScrollText, AlertCircle } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
 import { OrganizationPlaneContextBar } from "@/components/experience/OrganizationPlaneContextBar";
 import { PageShell } from "@/components/PageShell";
-import { apiClient, type ApiResponse } from "@/lib/api-client";
-
-interface PolicyResource {
-  id: string;
-  type: "policy";
-  attributes: {
-    name: string;
-    resourceType: string;
-    action: string;
-    effect: string;
-    conditionCount: number;
-    [key: string]: unknown;
-  };
-}
-
-type PoliciesResponse = ApiResponse<PolicyResource[]>;
-
-function usePolicies() {
-  return useQuery<PoliciesResponse>({
-    queryKey: ["admin-policies"],
-    queryFn: () => apiClient.get<PoliciesResponse>("/internal/v1/admin/policies"),
-  });
-}
+import { usePolicyRules } from "@/hooks/queries/useTrustAdmin";
 
 const EFFECT_STYLES: Record<string, string> = {
   ALLOW: "bg-green-100 text-green-700",
@@ -44,7 +21,7 @@ const EFFECT_STYLES: Record<string, string> = {
 export default function PoliciesPage() {
   const searchParams = useSearchParams();
   const fromOrgAdmin = searchParams.get("from") === "organization-admin";
-  const { data, isLoading, error } = usePolicies();
+  const { data, isLoading, error } = usePolicyRules();
 
   const policies = data?.data ?? [];
 
@@ -117,7 +94,7 @@ export default function PoliciesPage() {
                         </span>
                       </td>
                       <td className="px-4 py-3 text-gray-600">
-                        {policy.attributes.conditionCount} condition(s)
+                        {policy.attributes.conditions?.length ?? 0} condition(s)
                       </td>
                     </tr>
                   );

@@ -34,8 +34,8 @@ import Link from "next/link";
 import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
-import { apiClient } from "@/lib/api-client";
 import { useEncounters, type EncounterResource } from "@/hooks/queries/useEncounters";
+import { useDischargeEncounter } from "@/hooks/queries/useDischarge";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useRoleGroup } from "@/hooks/useRoleGroup";
@@ -84,6 +84,7 @@ export default function VisitOutcomePage() {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [billId, setBillId] = useState<string | null>(null);
+  const dischargeMutation = useDischargeEncounter();
 
   // Shared form fields (all dispositions use the same API)
   const [diagnosis, setDiagnosis] = useState("");
@@ -129,18 +130,17 @@ export default function VisitOutcomePage() {
     }
 
     try {
-      const result = await apiClient.post<{ data: { attributes: { costa_bill_id?: string; [key: string]: unknown } } }>(
-        `/internal/v1/encounters/${targetEncounter.id}/discharge`,
-        {
-          discharge_type: dischargeType,
-          discharge_diagnosis: fullDiagnosis || null,
-          treatment_summary: fullSummary || null,
-          follow_up_instructions: followUp || null,
-          medications_at_discharge: medications || null,
-          patient_instructions: fullInstructions || null,
-          discharged_by: user?.id ?? "system" }
-      );
-      const resultBillId = result?.data?.attributes?.costa_bill_id;
+      const result = await dischargeMutation.mutateAsync({
+        encounterId: targetEncounter.id,
+        discharge_type: dischargeType,
+        discharge_diagnosis: fullDiagnosis || undefined,
+        treatment_summary: fullSummary || undefined,
+        follow_up_instructions: followUp || undefined,
+        medications_at_discharge: medications || undefined,
+        patient_instructions: fullInstructions || undefined,
+        discharged_by: user?.id ?? "system",
+      });
+      const resultBillId = (result?.data as { attributes?: { costa_bill_id?: string } })?.attributes?.costa_bill_id;
       if (resultBillId) setBillId(resultBillId);
       setSubmitted(true);
     } catch {

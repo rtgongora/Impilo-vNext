@@ -6,9 +6,10 @@
  * Route: /operations/butano | Zone: operations | Guard: role ADMIN
  */
 
-import { Database, RefreshCcw, Activity, Settings, BarChart3 } from "lucide-react";
+import { Database, RefreshCcw, Activity, Settings, BarChart3, Loader2 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
+import { useFhirCapabilityStatement } from "@/hooks/queries/useFhirInterop";
 
 const SECTIONS = [
   { label: "FHIR Statistics", description: "Resource counts, storage usage, and throughput metrics", Icon: BarChart3, color: "bg-impilo-50 text-impilo-500" },
@@ -18,6 +19,14 @@ const SECTIONS = [
 ];
 
 export default function ButanoOpsPage() {
+  const { data: capabilityData, isLoading: capLoading } = useFhirCapabilityStatement();
+  const capability = (capabilityData?.data ?? {}) as Record<string, unknown>;
+  const fhirVersion = typeof capability.fhirVersion === "string" ? capability.fhirVersion : "--";
+  const resourceTypes = Array.isArray(capability.rest)
+    ? ((capability.rest as Record<string, unknown>[])[0]?.resource as unknown[] | undefined)?.length ?? 0
+    : 0;
+  const serverStatus = capability.status ?? (Object.keys(capability).length > 0 ? "active" : "--");
+
   return (
     <AppLayout>
       <PageShell
@@ -29,14 +38,14 @@ export default function ButanoOpsPage() {
           {/* Summary metrics */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {[
-              { label: "Total Resources", value: "0" },
-              { label: "Patients (CPID)", value: "0" },
-              { label: "Observations", value: "0" },
+              { label: "FHIR Version", value: capLoading ? "..." : fhirVersion },
+              { label: "Resource Types", value: capLoading ? "..." : String(resourceTypes) },
+              { label: "Server Status", value: capLoading ? "..." : String(serverStatus) },
               { label: "Sync Errors", value: "0" },
             ].map(({ label, value }) => (
               <div key={label} className="rounded-lg border border-gray-200 bg-white p-4">
                 <p className="text-sm text-gray-500">{label}</p>
-                <p className="text-2xl font-bold text-gray-900">{value}</p>
+                <p className="text-2xl font-bold text-gray-900">{capLoading ? <Loader2 className="h-6 w-6 animate-spin text-gray-300" /> : value}</p>
               </div>
             ))}
           </div>

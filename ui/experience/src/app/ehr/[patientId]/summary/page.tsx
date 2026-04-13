@@ -35,6 +35,7 @@ import { useReferrals } from "@/hooks/queries/useReferrals";
 import { useClinicalNotes } from "@/hooks/queries/useClinicalNotes";
 import { useTelemedicineSessions } from "@/hooks/queries/useTelemedicine";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
+import { usePatientSummary } from "@/hooks/queries/useSummary";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
 import {
@@ -60,6 +61,8 @@ export default function PatientSummaryPage() {
   const { data: referralsData } = useReferrals(patientId);
   const { data: notesData } = useClinicalNotes(patientId);
   const { data: telemedicineData } = useTelemedicineSessions({ patientId, facilityId: facility?.id });
+  const { data: patientSummaryData } = usePatientSummary(patientId);
+  const patientSummary = patientSummaryData?.data ?? null;
 
   const { data: allergiesData } = useQuery<ApiResponse<GenericResource[]>>({
     queryKey: ["allergies", { patientId }],
@@ -213,6 +216,33 @@ export default function PatientSummaryPage() {
                 </div>
               </div>
             </div>
+
+            {patientSummary && (
+              <div className="bg-white rounded-lg border border-gray-200 p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Stethoscope className="w-4 h-4 text-impilo-500" />
+                  <h3 className="text-sm font-medium text-gray-900">Longitudinal Summary (SHR)</h3>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+                  <div className="p-2 bg-gray-50 rounded-lg">
+                    <div className="text-lg font-semibold text-gray-900">{patientSummary.conditions?.length ?? 0}</div>
+                    <div className="text-[10px] text-gray-500">Conditions</div>
+                  </div>
+                  <div className="p-2 bg-gray-50 rounded-lg">
+                    <div className="text-lg font-semibold text-gray-900">{patientSummary.medications?.length ?? 0}</div>
+                    <div className="text-[10px] text-gray-500">Medications</div>
+                  </div>
+                  <div className="p-2 bg-gray-50 rounded-lg">
+                    <div className="text-lg font-semibold text-gray-900">{patientSummary.allergies?.length ?? 0}</div>
+                    <div className="text-[10px] text-gray-500">Allergies</div>
+                  </div>
+                  <div className="p-2 bg-gray-50 rounded-lg">
+                    <div className="text-lg font-semibold text-gray-900">{patientSummary.immunizations?.length ?? 0}</div>
+                    <div className="text-[10px] text-gray-500">Immunizations</div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
               <div className="rounded-3xl border border-slate-200 bg-[linear-gradient(135deg,#f8fbff_0%,#eef6ff_45%,#fffaf5_100%)] p-5 shadow-sm">

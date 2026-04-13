@@ -31,6 +31,7 @@ import { useEncounters, useCreateEncounter } from "@/hooks/queries/useEncounters
 import { useReferrals } from "@/hooks/queries/useReferrals";
 import { useClinicalNotes } from "@/hooks/queries/useClinicalNotes";
 import { useTelemedicineSessions } from "@/hooks/queries/useTelemedicine";
+import { useAdmissions } from "@/hooks/queries/useInpatient";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { isReferralReceivingHere, parseConsultationCoordinationMeta } from "@/lib/consult-workflows";
 import { usePrivacyDisplayStore } from "@/hooks/usePrivacyDisplayStore";
@@ -64,9 +65,14 @@ export default function PatientChartPage() {
   const { data: referralsData } = useReferrals(patientId);
   const { data: notesData } = useClinicalNotes(patientId);
   const { data: telemedicineData } = useTelemedicineSessions({ patientId, facilityId: facility?.id });
+  const { data: admissionsData } = useAdmissions(patientId);
   const createEncounter = useCreateEncounter();
 
   const patient = patientData?.data;
+  const admissions = (admissionsData as { data?: { id: string; attributes: Record<string, unknown> }[] } | undefined)?.data ?? [];
+  const activeAdmission = admissions.find(
+    (a) => a.attributes.status === "ACTIVE" || a.attributes.status === "ADMITTED",
+  );
   const encounters = encountersData?.data ?? [];
   const referrals = referralsData?.data ?? [];
   const clinicalNotes = notesData?.data ?? [];
@@ -165,6 +171,42 @@ export default function PatientChartPage() {
                       Open Summary
                     </Link>
                   </div>
+                </div>
+              </div>
+            )}
+
+            {activeAdmission && (
+              <div className="bg-gradient-to-r from-purple-50 via-white to-indigo-50 border border-purple-200 rounded-xl p-5">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center shrink-0">
+                      <Activity className="w-6 h-6 text-purple-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-purple-800">
+                        Inpatient admission active
+                      </p>
+                      <p className="mt-1 text-sm text-gray-600">
+                        Ward: {String(activeAdmission.attributes.wardName ?? activeAdmission.attributes.ward_name ?? "Unassigned")}
+                      </p>
+                      <div className="mt-2 flex flex-wrap gap-2 text-xs">
+                        <span className="rounded-full bg-purple-100 px-2.5 py-1 font-medium text-purple-700">
+                          {String(activeAdmission.attributes.status)}
+                        </span>
+                        {activeAdmission.attributes.admittedAt && (
+                          <span className="rounded-full bg-white px-2.5 py-1 text-gray-600 border border-gray-200">
+                            Admitted {new Date(String(activeAdmission.attributes.admittedAt ?? activeAdmission.attributes.admitted_at)).toLocaleString()}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <Link
+                    href={`/beds?patientId=${patientId}`}
+                    className="px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 transition-colors shrink-0"
+                  >
+                    View Bed
+                  </Link>
                 </div>
               </div>
             )}

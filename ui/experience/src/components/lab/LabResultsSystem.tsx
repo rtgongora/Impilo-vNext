@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   TestTube,
   Clock,
@@ -14,7 +14,9 @@ import {
   Minus,
   FileText,
   Beaker,
+  Loader2,
 } from "lucide-react";
+import { useLabOrders, type LabOrderResource } from "@/hooks/queries/useLabOrders";
 
 /* ---------- types ---------- */
 interface LabResult {
@@ -32,322 +34,23 @@ interface LabResult {
   resulted_at: string | null;
 }
 
-/* ---------- mock data ---------- */
-const MOCK_LAB_RESULTS: LabResult[] = [
-  // Full Blood Count (FBC)
-  {
-    id: "lab-001",
-    test_name: "Haemoglobin",
-    test_code: "HGB",
-    category: "Full Blood Count",
-    status: "completed",
-    result_value: "8.2",
-    result_unit: "g/dL",
-    reference_range: "12.0-17.5",
-    is_abnormal: true,
-    is_critical: true,
-    ordered_at: "2026-04-07T06:00:00Z",
-    resulted_at: "2026-04-07T08:30:00Z",
-  },
-  {
-    id: "lab-002",
-    test_name: "White Cell Count",
-    test_code: "WBC",
-    category: "Full Blood Count",
-    status: "completed",
-    result_value: "14.8",
-    result_unit: "x10^9/L",
-    reference_range: "4.0-11.0",
-    is_abnormal: true,
-    is_critical: false,
-    ordered_at: "2026-04-07T06:00:00Z",
-    resulted_at: "2026-04-07T08:30:00Z",
-  },
-  {
-    id: "lab-003",
-    test_name: "Platelets",
-    test_code: "PLT",
-    category: "Full Blood Count",
-    status: "completed",
-    result_value: "245",
-    result_unit: "x10^9/L",
-    reference_range: "150-400",
-    is_abnormal: false,
-    is_critical: false,
-    ordered_at: "2026-04-07T06:00:00Z",
-    resulted_at: "2026-04-07T08:30:00Z",
-  },
-  {
-    id: "lab-004",
-    test_name: "Haematocrit",
-    test_code: "HCT",
-    category: "Full Blood Count",
-    status: "completed",
-    result_value: "25.1",
-    result_unit: "%",
-    reference_range: "36-46",
-    is_abnormal: true,
-    is_critical: true,
-    ordered_at: "2026-04-07T06:00:00Z",
-    resulted_at: "2026-04-07T08:30:00Z",
-  },
-  {
-    id: "lab-005",
-    test_name: "MCV",
-    test_code: "MCV",
-    category: "Full Blood Count",
-    status: "completed",
-    result_value: "82",
-    result_unit: "fL",
-    reference_range: "80-100",
-    is_abnormal: false,
-    is_critical: false,
-    ordered_at: "2026-04-07T06:00:00Z",
-    resulted_at: "2026-04-07T08:30:00Z",
-  },
-  // Urea & Electrolytes (U&E)
-  {
-    id: "lab-010",
-    test_name: "Sodium",
-    test_code: "NA",
-    category: "Urea & Electrolytes",
-    status: "completed",
-    result_value: "141",
-    result_unit: "mmol/L",
-    reference_range: "136-145",
-    is_abnormal: false,
-    is_critical: false,
-    ordered_at: "2026-04-07T06:00:00Z",
-    resulted_at: "2026-04-07T08:45:00Z",
-  },
-  {
-    id: "lab-011",
-    test_name: "Potassium",
-    test_code: "K",
-    category: "Urea & Electrolytes",
-    status: "completed",
-    result_value: "5.8",
-    result_unit: "mmol/L",
-    reference_range: "3.5-5.1",
-    is_abnormal: true,
-    is_critical: true,
-    ordered_at: "2026-04-07T06:00:00Z",
-    resulted_at: "2026-04-07T08:45:00Z",
-  },
-  {
-    id: "lab-012",
-    test_name: "Urea",
-    test_code: "UREA",
-    category: "Urea & Electrolytes",
-    status: "completed",
-    result_value: "12.4",
-    result_unit: "mmol/L",
-    reference_range: "2.5-7.8",
-    is_abnormal: true,
-    is_critical: false,
-    ordered_at: "2026-04-07T06:00:00Z",
-    resulted_at: "2026-04-07T08:45:00Z",
-  },
-  {
-    id: "lab-013",
-    test_name: "Creatinine",
-    test_code: "CREAT",
-    category: "Urea & Electrolytes",
-    status: "completed",
-    result_value: "156",
-    result_unit: "umol/L",
-    reference_range: "60-110",
-    is_abnormal: true,
-    is_critical: false,
-    ordered_at: "2026-04-07T06:00:00Z",
-    resulted_at: "2026-04-07T08:45:00Z",
-  },
-  {
-    id: "lab-014",
-    test_name: "eGFR",
-    test_code: "EGFR",
-    category: "Urea & Electrolytes",
-    status: "completed",
-    result_value: "38",
-    result_unit: "mL/min",
-    reference_range: ">60",
-    is_abnormal: true,
-    is_critical: true,
-    ordered_at: "2026-04-07T06:00:00Z",
-    resulted_at: "2026-04-07T08:45:00Z",
-  },
-  // Liver Function Tests (LFTs)
-  {
-    id: "lab-020",
-    test_name: "ALT",
-    test_code: "ALT",
-    category: "Liver Function Tests",
-    status: "completed",
-    result_value: "42",
-    result_unit: "U/L",
-    reference_range: "7-56",
-    is_abnormal: false,
-    is_critical: false,
-    ordered_at: "2026-04-07T06:00:00Z",
-    resulted_at: "2026-04-07T09:00:00Z",
-  },
-  {
-    id: "lab-021",
-    test_name: "AST",
-    test_code: "AST",
-    category: "Liver Function Tests",
-    status: "completed",
-    result_value: "68",
-    result_unit: "U/L",
-    reference_range: "10-40",
-    is_abnormal: true,
-    is_critical: false,
-    ordered_at: "2026-04-07T06:00:00Z",
-    resulted_at: "2026-04-07T09:00:00Z",
-  },
-  {
-    id: "lab-022",
-    test_name: "ALP",
-    test_code: "ALP",
-    category: "Liver Function Tests",
-    status: "completed",
-    result_value: "95",
-    result_unit: "U/L",
-    reference_range: "44-147",
-    is_abnormal: false,
-    is_critical: false,
-    ordered_at: "2026-04-07T06:00:00Z",
-    resulted_at: "2026-04-07T09:00:00Z",
-  },
-  {
-    id: "lab-023",
-    test_name: "Total Bilirubin",
-    test_code: "TBIL",
-    category: "Liver Function Tests",
-    status: "completed",
-    result_value: "18",
-    result_unit: "umol/L",
-    reference_range: "5-21",
-    is_abnormal: false,
-    is_critical: false,
-    ordered_at: "2026-04-07T06:00:00Z",
-    resulted_at: "2026-04-07T09:00:00Z",
-  },
-  {
-    id: "lab-024",
-    test_name: "Albumin",
-    test_code: "ALB",
-    category: "Liver Function Tests",
-    status: "completed",
-    result_value: "28",
-    result_unit: "g/L",
-    reference_range: "35-52",
-    is_abnormal: true,
-    is_critical: false,
-    ordered_at: "2026-04-07T06:00:00Z",
-    resulted_at: "2026-04-07T09:00:00Z",
-  },
-  {
-    id: "lab-025",
-    test_name: "GGT",
-    test_code: "GGT",
-    category: "Liver Function Tests",
-    status: "completed",
-    result_value: "52",
-    result_unit: "U/L",
-    reference_range: "9-48",
-    is_abnormal: true,
-    is_critical: false,
-    ordered_at: "2026-04-07T06:00:00Z",
-    resulted_at: "2026-04-07T09:00:00Z",
-  },
-  // Cardiac markers
-  {
-    id: "lab-030",
-    test_name: "Troponin I",
-    test_code: "TROP",
-    category: "Cardiac Markers",
-    status: "completed",
-    result_value: "2.4",
-    result_unit: "ng/mL",
-    reference_range: "<0.04",
-    is_abnormal: true,
-    is_critical: true,
-    ordered_at: "2026-04-07T06:00:00Z",
-    resulted_at: "2026-04-07T07:30:00Z",
-  },
-  {
-    id: "lab-031",
-    test_name: "CRP",
-    test_code: "CRP",
-    category: "Cardiac Markers",
-    status: "completed",
-    result_value: "48",
-    result_unit: "mg/L",
-    reference_range: "<5",
-    is_abnormal: true,
-    is_critical: false,
-    ordered_at: "2026-04-07T06:00:00Z",
-    resulted_at: "2026-04-07T07:30:00Z",
-  },
-  {
-    id: "lab-032",
-    test_name: "D-Dimer",
-    test_code: "DDIM",
-    category: "Cardiac Markers",
-    status: "completed",
-    result_value: "0.42",
-    result_unit: "mg/L FEU",
-    reference_range: "<0.50",
-    is_abnormal: false,
-    is_critical: false,
-    ordered_at: "2026-04-07T06:00:00Z",
-    resulted_at: "2026-04-07T07:30:00Z",
-  },
-  // Pending tests
-  {
-    id: "lab-040",
-    test_name: "Blood Culture",
-    test_code: "BCULT",
-    category: "Microbiology",
-    status: "processing",
+/* ---------- mapper ---------- */
+function mapLabOrderToResult(order: LabOrderResource): LabResult {
+  return {
+    id: order.id,
+    test_name: order.attributes.testName,
+    test_code: order.attributes.testCode || null,
+    category: order.attributes.category || "General",
+    status: (order.attributes.status as LabResult["status"]) || "pending",
     result_value: null,
     result_unit: null,
     reference_range: null,
     is_abnormal: false,
     is_critical: false,
-    ordered_at: "2026-04-07T06:00:00Z",
-    resulted_at: null,
-  },
-  {
-    id: "lab-041",
-    test_name: "HbA1c",
-    test_code: "HBA1C",
-    category: "Endocrine",
-    status: "collected",
-    result_value: null,
-    result_unit: null,
-    reference_range: null,
-    is_abnormal: false,
-    is_critical: false,
-    ordered_at: "2026-04-07T06:00:00Z",
-    resulted_at: null,
-  },
-  {
-    id: "lab-042",
-    test_name: "TSH",
-    test_code: "TSH",
-    category: "Endocrine",
-    status: "pending",
-    result_value: null,
-    result_unit: null,
-    reference_range: null,
-    is_abnormal: false,
-    is_critical: false,
-    ordered_at: "2026-04-07T06:30:00Z",
-    resulted_at: null,
-  },
-];
+    ordered_at: order.attributes.createdAt,
+    resulted_at: order.attributes.resultedAt || null,
+  };
+}
 
 /* ---------- status configs ---------- */
 const statusConfig = {
@@ -385,11 +88,19 @@ const orderStatusConfig: Record<
 };
 
 /* ---------- component ---------- */
-export function LabResultsSystem() {
+interface LabResultsSystemProps {
+  patientId: string;
+}
+
+export function LabResultsSystem({ patientId }: LabResultsSystemProps) {
+  const { data, isLoading, error } = useLabOrders(patientId);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<"all" | "pending" | "abnormal">("all");
 
-  const results = MOCK_LAB_RESULTS;
+  const results: LabResult[] = useMemo(
+    () => (data?.data ?? []).map(mapLabOrderToResult),
+    [data]
+  );
 
   const getResultStatus = (result: LabResult): keyof typeof statusConfig => {
     if (result.is_critical) return "critical";
@@ -428,6 +139,24 @@ export function LabResultsSystem() {
     { key: "pending", label: "Pending", count: pendingCount },
     { key: "abnormal", label: "Abnormal", count: abnormalCount },
   ];
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-6 w-6 animate-spin text-impilo-500" />
+        <span className="ml-2 text-sm text-gray-500">Loading lab results...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center py-12 text-red-600">
+        <AlertTriangle className="h-5 w-5 mr-2" />
+        <span className="text-sm">Failed to load lab results. Please try again.</span>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">

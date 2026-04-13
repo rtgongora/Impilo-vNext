@@ -8,7 +8,7 @@
  * referrals. Includes search, category filter, upload, preview/download,
  * and scan actions.
  *
- * Uses mock data; production would integrate with Landela document service.
+ * Integrates with Landela document service via useClinicalDocuments hook.
  */
 
 import { useState, useMemo } from "react";
@@ -27,10 +27,12 @@ import {
   File,
   Image as ImageIcon,
   History,
+  Loader2,
 } from "lucide-react";
+import { useClinicalDocuments, type ClinicalDocumentResource } from "@/hooks/queries/useClinicalDocuments";
 
 // ---------------------------------------------------------------------------
-// Types & Mock Data
+// Types
 // ---------------------------------------------------------------------------
 
 interface PatientDocument {
@@ -44,68 +46,31 @@ interface PatientDocument {
   status: "verified" | "pending_review" | "processing" | "draft";
 }
 
-const MOCK_DOCUMENTS: PatientDocument[] = [
-  {
-    id: "doc-1",
-    title: "Admission Clinical Note",
-    typeCode: "clinical",
-    typeName: "Clinical Note",
-    capturedAt: "2026-04-02",
-    author: "Dr. T. Moyo",
-    size: "24 KB",
-    status: "verified",
-  },
-  {
-    id: "doc-2",
-    title: "Full Blood Count Results",
-    typeCode: "lab",
-    typeName: "Lab Report",
-    capturedAt: "2026-04-03",
-    author: "Lab System",
-    size: "12 KB",
-    status: "verified",
-  },
-  {
-    id: "doc-3",
-    title: "Chest X-Ray PA View",
-    typeCode: "imaging",
-    typeName: "Imaging Report",
-    capturedAt: "2026-04-03",
-    author: "Dr. K. Ndlovu",
-    size: "1.2 MB",
-    status: "verified",
-  },
-  {
-    id: "doc-4",
-    title: "Informed Consent - Procedure",
-    typeCode: "consent",
-    typeName: "Consent Form",
-    capturedAt: "2026-04-02",
-    author: "Sr. J. Phiri",
-    size: "8 KB",
-    status: "verified",
-  },
-  {
-    id: "doc-5",
-    title: "Referral Letter - Cardiology",
-    typeCode: "referral",
-    typeName: "Referral Letter",
-    capturedAt: "2026-04-04",
-    author: "Dr. T. Moyo",
-    size: "18 KB",
-    status: "pending_review",
-  },
-  {
-    id: "doc-6",
-    title: "Discharge Summary Draft",
-    typeCode: "clinical",
-    typeName: "Clinical Note",
-    capturedAt: "2026-04-05",
-    author: "Dr. T. Moyo",
-    size: "32 KB",
-    status: "draft",
-  },
-];
+// ---------------------------------------------------------------------------
+// Mapper
+// ---------------------------------------------------------------------------
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function mapDocumentResource(resource: ClinicalDocumentResource): PatientDocument {
+  const a = resource.attributes;
+  return {
+    id: resource.id,
+    title: a.title,
+    typeCode: a.documentType || "clinical",
+    typeName: a.documentType
+      ? a.documentType.charAt(0).toUpperCase() + a.documentType.slice(1)
+      : "Document",
+    capturedAt: a.createdAt ? a.createdAt.substring(0, 10) : "",
+    author: a.uploadedBy || "",
+    size: formatFileSize(a.fileSize || 0),
+    status: (a.status as PatientDocument["status"]) || "draft",
+  };
+}
 
 const DOCUMENT_CATEGORIES = [
   { id: "all", label: "All Documents" },
@@ -145,7 +110,12 @@ function getDocIcon(typeCode: string) {
 // Component
 // ---------------------------------------------------------------------------
 
-export function EncounterDocumentsSheet() {
+interface EncounterDocumentsSheetProps {
+  patientId: string;
+}
+
+export function EncounterDocumentsSheet({ patientId }: EncounterDocumentsSheetProps) {
+  const { data, isLoading, error } = useClinicalDocuments(patientId);
   const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"browse" | "recent" | "history">(
     "browse",
@@ -153,8 +123,13 @@ export function EncounterDocumentsSheet() {
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
 
+  const documents: PatientDocument[] = useMemo(
+    () => (data?.data ?? []).map(mapDocumentResource),
+    [data]
+  );
+
   const filteredDocuments = useMemo(() => {
-    return MOCK_DOCUMENTS.filter((doc) => {
+    return documents.filter((doc) => {
       const matchesSearch =
         !searchQuery ||
         doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -163,7 +138,7 @@ export function EncounterDocumentsSheet() {
         categoryFilter === "all" || doc.typeCode === categoryFilter;
       return matchesSearch && matchesCategory;
     });
-  }, [searchQuery, categoryFilter]);
+  }, [documents, searchQuery, categoryFilter]);
 
   return (
     <>
@@ -175,7 +150,7 @@ export function EncounterDocumentsSheet() {
         <FolderOpen className="w-3.5 h-3.5" />
         Documents
         <span className="h-4 px-1 text-[10px] font-medium bg-gray-100 text-gray-600 rounded">
-          {MOCK_DOCUMENTS.length}
+          {documents.length}
         </span>
       </button>
 
@@ -273,7 +248,17 @@ export function EncounterDocumentsSheet() {
 
                 {/* Document list */}
                 <div className="flex-1 overflow-y-auto px-5 py-3">
-                  {filteredDocuments.length === 0 ? (
+                  {isLoading ? (
+                    <div className="flex items-center justify-center py-12">
+                      <Loader2 className="h-6 w-6 animate-spin text-impilo-500" />
+                      <span className="ml-2 text-sm text-gray-500">Loading documents...</span>
+                    </div>
+                  ) : error ? (
+                    <div className="flex items-center justify-center py-12 text-red-600">
+                      <AlertTriangle className="h-5 w-5 mr-2" />
+                      <span className="text-sm">Failed to load documents.</span>
+                    </div>
+                  ) : filteredDocuments.length === 0 ? (
                     <div className="text-center py-12">
                       <FileText className="h-10 w-10 text-gray-300 mx-auto mb-3" />
                       <p className="text-sm font-medium mb-1">

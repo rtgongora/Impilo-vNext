@@ -10,19 +10,9 @@
  * "Temporary identity should feel like a guided journey, not a dead end."
  */
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ShieldAlert, ArrowUpRight, CheckCircle2 } from "lucide-react";
-import { apiClient } from "@/lib/api-client";
-
-interface AssuranceStatus {
-  assuranceState: string;
-  reason: string;
-  permissionsAvailable: string[];
-  upgradeRequirements: string[];
-  eligibleUpgradePathways: { id: string; label: string; href: string }[];
-  nextBestStep: string;
-}
+import { useAssuranceStatus, type AssuranceStatus } from "@/hooks/queries/useIdentity";
 
 const STATE_LABELS: Record<string, { label: string; color: string }> = {
   SELF_REGISTERED: { label: "Self-Registered", color: "border-amber-300 bg-amber-50 text-amber-900" },
@@ -34,18 +24,10 @@ const STATE_LABELS: Record<string, { label: string; color: string }> = {
 };
 
 export function IdentityAssuranceBanner() {
-  const [status, setStatus] = useState<AssuranceStatus | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: assuranceData, isLoading } = useAssuranceStatus();
+  const status: AssuranceStatus | null = assuranceData?.data ?? null;
 
-  useEffect(() => {
-    apiClient
-      .get<{ data: AssuranceStatus }>("/internal/v1/identity/assurance/status")
-      .then((res) => setStatus(res?.data ?? null))
-      .catch(() => setStatus(null))
-      .finally(() => setLoading(false));
-  }, []);
-
-  if (loading) return null;
+  if (isLoading) return null;
   if (!status) return null;
   if (status.assuranceState === "FULLY_VERIFIED") return null; // No banner needed
 
