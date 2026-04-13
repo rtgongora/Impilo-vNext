@@ -94,7 +94,12 @@ public class ServiceClientConfig {
             String aiModelRegistryBaseUrl,
             String generalLedgerBaseUrl,
             String hrPayrollBaseUrl,
-            String procurementBaseUrl
+            String procurementBaseUrl,
+            // Health OS §14: Support, Channels, Dispatch, Wellness
+            String supportBaseUrl,
+            String channelsBaseUrl,
+            String dispatchBaseUrl,
+            String wellnessBaseUrl
     ) {
         public ServiceEndpoints(
                 String pctBaseUrl,
@@ -137,6 +142,10 @@ public class ServiceClientConfig {
                     dataGovernanceBaseUrl,
                     landelaBaseUrl,
                     notificationBaseUrl,
+                    null,
+                    null,
+                    null,
+                    null,
                     null,
                     null,
                     null,
@@ -232,6 +241,10 @@ public class ServiceClientConfig {
             if (generalLedgerBaseUrl == null) generalLedgerBaseUrl = "http://localhost:8281";
             if (hrPayrollBaseUrl == null) hrPayrollBaseUrl = "http://localhost:8282";
             if (procurementBaseUrl == null) procurementBaseUrl = "http://localhost:8283";
+            if (supportBaseUrl == null) supportBaseUrl = "http://localhost:8300";
+            if (channelsBaseUrl == null) channelsBaseUrl = "http://localhost:8301";
+            if (dispatchBaseUrl == null) dispatchBaseUrl = "http://localhost:8302";
+            if (wellnessBaseUrl == null) wellnessBaseUrl = "http://localhost:8161";
         }
     }
 

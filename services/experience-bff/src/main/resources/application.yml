@@ -114,6 +114,11 @@ impilo:
     general-ledger-base-url: ${GENERAL_LEDGER_BASE_URL:http://localhost:8281}
     hr-payroll-base-url: ${HR_PAYROLL_BASE_URL:http://localhost:8282}
     procurement-base-url: ${PROCUREMENT_BASE_URL:http://localhost:8283}
+    # Health OS §14: Support, Channels, Dispatch, Wellness
+    support-base-url: ${SUPPORT_BASE_URL:http://localhost:8300}
+    channels-base-url: ${CHANNELS_BASE_URL:http://localhost:8301}
+    dispatch-base-url: ${DISPATCH_BASE_URL:http://localhost:8302}
+    wellness-base-url: ${WELLNESS_BASE_URL:http://localhost:8161}
 
   clinical-platform:
     base-url: ${CLINICAL_KNOWLEDGE_PLATFORM_BASE_URL:http://localhost:8270}
