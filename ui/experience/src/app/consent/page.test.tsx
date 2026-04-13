@@ -55,10 +55,10 @@ describe("ConsentPage", () => {
     render(<ConsentPage />);
 
     expect(screen.getByText("Review Our Policies")).toBeInTheDocument();
-    expect(screen.getByText("Privacy Policy")).toBeInTheDocument();
-    expect(screen.getByText("Terms of Use")).toBeInTheDocument();
-    expect(screen.getByText(/Accept and Continue/)).toBeInTheDocument();
-    expect(screen.getByText(/Decline and Sign Out/)).toBeInTheDocument();
+    expect(screen.getAllByText("Privacy Policy").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Terms of Use").length).toBeGreaterThan(0);
+    expect(screen.getByRole("button", { name: /Accept and Continue/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Decline and Sign Out/ })).toBeInTheDocument();
   });
 
   it("shows the signed-in user email", () => {

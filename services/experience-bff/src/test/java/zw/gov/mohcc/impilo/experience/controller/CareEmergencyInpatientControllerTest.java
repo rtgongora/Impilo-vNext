@@ -1,0 +1,93 @@
+package zw.gov.mohcc.impilo.experience.controller;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.junit.jupiter.api.Test;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
+import zw.gov.mohcc.impilo.experience.client.InpatientServiceClient;
+import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
+import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
+
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
+class CareEmergencyInpatientControllerTest {
+
+    private static final ObjectMapper mapper = new ObjectMapper();
+
+    @Test
+    void listCarePlans_returnsDataFromPct() {
+        CareEmergencyInpatientController controller =
+                new CareEmergencyInpatientController(new StubInpatientClient(), new StubPctClient());
+        ResponseEntity<Map<String, Object>> response =
+                controller.listCarePlans("t1", "patient-1");
+        assertEquals(200, response.getStatusCode().value());
+        assertNotNull(response.getBody().get("data"));
+    }
+
+    @Test
+    void listActivations_returnsEmergencyData() {
+        CareEmergencyInpatientController controller =
+                new CareEmergencyInpatientController(new StubInpatientClient(), new StubPctClient());
+        ResponseEntity<Map<String, Object>> response =
+                controller.listActivations("t1");
+        assertEquals(200, response.getStatusCode().value());
+        assertNotNull(response.getBody().get("data"));
+    }
+
+    @Test
+    void createAdmission_returns201() {
+        CareEmergencyInpatientController controller =
+                new CareEmergencyInpatientController(new StubInpatientClient(), new StubPctClient());
+        ResponseEntity<Map<String, Object>> response =
+                controller.createAdmission("t1", Map.of("patientId", "p1", "wardId", "w1"));
+        assertEquals(201, response.getStatusCode().value());
+        assertNotNull(((Map<?, ?>) response.getBody().get("data")).get("id"));
+    }
+
+    private static ServiceClientConfig.ServiceEndpoints endpoints() {
+        return new ServiceClientConfig.ServiceEndpoints(
+                "http://pct", "http://oros", "http://pharmacy", "http://butano",
+                "http://msika", "http://msika-flow", "http://mushex", "http://vito",
+                "http://tuso", "http://varapi", "http://documents", "http://costa",
+                "http://coverage", "http://surveillance", "http://campaigns",
+                "http://indawo", "http://governance", "http://landela",
+                "http://notifications"
+        );
+    }
+
+    private static final class StubPctClient extends PctServiceClient {
+        StubPctClient() { super(new RestTemplate(), endpoints(), mapper); }
+
+        @Override public JsonNode listCarePlans(String patientId) {
+            ArrayNode arr = mapper.createArrayNode();
+            arr.add(mapper.createObjectNode().put("id", "cp-1").put("status", "ACTIVE"));
+            return arr;
+        }
+
+        @Override public JsonNode listEmergencyActivations() {
+            return mapper.createArrayNode();
+        }
+
+        @Override public JsonNode createCarePlan(Map<String, Object> body) {
+            return mapper.createObjectNode().put("id", "cp-new");
+        }
+    }
+
+    private static final class StubInpatientClient extends InpatientServiceClient {
+        StubInpatientClient() { super(new RestTemplate(), endpoints(), mapper); }
+
+        @Override public JsonNode createAdmission(Map<String, Object> request) {
+            return mapper.createObjectNode().put("id", "adm-1");
+        }
+
+        @Override public JsonNode listAdmissions(String patientCpid) {
+            return mapper.createArrayNode();
+        }
+    }
+}
