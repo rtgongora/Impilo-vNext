@@ -182,18 +182,19 @@ public class AdmissionWorkflow {
         admission.setAdmittedAt(OffsetDateTime.now());
         admission.setUpdatedAt(OffsetDateTime.now());
 
+        String journeyId = admission.getJourneyId();
         admission = admissionRepository.save(admission);
 
         // Transition journey to ADMITTED
-        JourneyEntity journey = journeyRepository.findByJourneyId(admission.getJourneyId())
+        JourneyEntity journey = journeyRepository.findByJourneyId(journeyId)
                 .orElseThrow(() -> new IllegalStateException(
-                        "Journey not found for admission: " + admission.getJourneyId()));
+                        "Journey not found for admission: " + journeyId));
         journeyStateMachine.transition(journey, JourneyState.ADMITTED);
 
         // Outbox event
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("admissionId", admission.getId().toString());
-        payload.put("journeyId", admission.getJourneyId());
+        payload.put("journeyId", journeyId);
         payload.put("patientCpid", admission.getPatientCpid());
         payload.put("wardId", admission.getWardId().toString());
         payload.put("bedId", admission.getBedId() != null ? admission.getBedId().toString() : null);
@@ -206,10 +207,10 @@ public class AdmissionWorkflow {
         Map<String, Object> telemetryData = new LinkedHashMap<>();
         telemetryData.put("admissionId", admission.getId().toString());
         telemetryData.put("wardId", admission.getWardId().toString());
-        telemetryService.record("admission.admitted", admission.getJourneyId(), telemetryData);
+        telemetryService.record("admission.admitted", journeyId, telemetryData);
 
         log.info("Patient admitted: admission={}, journey={}, ward={}, bed={}",
-                admissionId, admission.getJourneyId(), admission.getWardId(), admission.getBedId());
+                admissionId, journeyId, admission.getWardId(), admission.getBedId());
 
         return admission;
     }

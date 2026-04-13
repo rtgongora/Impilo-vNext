@@ -111,7 +111,6 @@ public class TransferService {
         transfer.setTransferType(transferType);
         transfer.setStatus("REQUESTED");
         transfer.setRequestedBy(ctx.actorId());
-        transfer.setCreatedAt(OffsetDateTime.now());
 
         transfer = transferRepository.save(transfer);
 
@@ -182,6 +181,8 @@ public class TransferService {
 
         TransferEntity transfer = transferRepository.findById(transferId)
                 .orElseThrow(() -> new IllegalArgumentException("Transfer not found: " + transferId));
+        UUID admissionId = transfer.getAdmissionId();
+        String journeyId = transfer.getJourneyId();
 
         if (!"REQUESTED".equals(transfer.getStatus()) && !"APPROVED".equals(transfer.getStatus())) {
             throw new IllegalStateException(
@@ -189,9 +190,9 @@ public class TransferService {
         }
 
         // Update admission with new location
-        AdmissionEntity admission = admissionRepository.findById(transfer.getAdmissionId())
+        AdmissionEntity admission = admissionRepository.findById(admissionId)
                 .orElseThrow(() -> new IllegalStateException(
-                        "Admission not found for transfer: " + transfer.getAdmissionId()));
+                        "Admission not found for transfer: " + admissionId));
 
         admission.setWardId(transfer.getToWardId());
         admission.setBedId(transfer.getToBedId());
@@ -205,9 +206,9 @@ public class TransferService {
         transfer = transferRepository.save(transfer);
 
         // Transition journey: current state -> TRANSFERRED -> ADMITTED
-        JourneyEntity journey = journeyRepository.findByJourneyId(transfer.getJourneyId())
+        JourneyEntity journey = journeyRepository.findByJourneyId(journeyId)
                 .orElseThrow(() -> new IllegalStateException(
-                        "Journey not found for transfer: " + transfer.getJourneyId()));
+                        "Journey not found for transfer: " + journeyId));
 
         journeyStateMachine.transition(journey, JourneyState.TRANSFERRED);
         journeyStateMachine.transition(journey, JourneyState.ADMITTED);
@@ -215,8 +216,8 @@ public class TransferService {
         // Outbox event
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("transferId", transfer.getId().toString());
-        payload.put("journeyId", transfer.getJourneyId());
-        payload.put("admissionId", transfer.getAdmissionId().toString());
+        payload.put("journeyId", journeyId);
+        payload.put("admissionId", admissionId.toString());
         payload.put("fromWardId", transfer.getFromWardId().toString());
         payload.put("toWardId", transfer.getToWardId().toString());
         payload.put("transferType", transfer.getTransferType());
@@ -231,10 +232,10 @@ public class TransferService {
         telemetryData.put("fromWardId", transfer.getFromWardId().toString());
         telemetryData.put("toWardId", transfer.getToWardId().toString());
         telemetryData.put("transferType", transfer.getTransferType());
-        telemetryService.record("transfer.completed", transfer.getJourneyId(), telemetryData);
+        telemetryService.record("transfer.completed", journeyId, telemetryData);
 
         log.info("Transfer completed: id={}, journey={}, ward {} -> ward {}",
-                transferId, transfer.getJourneyId(), transfer.getFromWardId(), transfer.getToWardId());
+                transferId, journeyId, transfer.getFromWardId(), transfer.getToWardId());
 
         return transfer;
     }

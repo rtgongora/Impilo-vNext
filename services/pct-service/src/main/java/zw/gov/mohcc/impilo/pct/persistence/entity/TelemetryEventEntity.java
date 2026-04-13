@@ -31,6 +31,9 @@ public class TelemetryEventEntity {
     @Column(name = "journey_id")
     private String journeyId;
 
+    @Column(name = "actor_id")
+    private String actorId;
+
     @Column(name = "payload", columnDefinition = "jsonb")
     private String payload;
 
@@ -61,6 +64,9 @@ public class TelemetryEventEntity {
 
     public String getJourneyId() { return journeyId; }
     public void setJourneyId(String journeyId) { this.journeyId = journeyId; }
+
+    public String getActorId() { return actorId; }
+    public void setActorId(String actorId) { this.actorId = actorId; }
 
     public String getPayload() { return payload; }
     public void setPayload(String payload) { this.payload = payload; }
