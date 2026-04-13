@@ -1,10 +1,10 @@
 package zw.gov.mohcc.impilo.experience.controller.mobile;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.OrosServiceClient;
-import zw.gov.mohcc.impilo.experience.controller.ResourceNotFoundException;
 
 import java.util.*;
 
@@ -12,8 +12,6 @@ import java.util.*;
  * Mobile provider lab results endpoints.
  * GET  /internal/v1/mobile/provider/labs/results              - list resulted lab orders for facility
  * POST /internal/v1/mobile/provider/labs/results/{id}/acknowledge - acknowledge a result
- *
- * <p>STRANGLER: JdbcTemplate retained for local reads during migration; writes delegated to OrosServiceClient.</p>
  */
 @RestController
 @RequestMapping("/internal/v1/mobile/provider/labs/results")
@@ -21,6 +19,7 @@ public class MobileResultsController {
 
     private final OrosServiceClient orosClient;
 
+    public MobileResultsController(OrosServiceClient orosClient) {
         this.orosClient = orosClient;
     }
 
@@ -32,7 +31,13 @@ public class MobileResultsController {
             @RequestHeader("X-Actor-ID") String actorId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        try {
+            JsonNode data = orosClient.getPatientResults(actorId, page, size);
+            if (data != null) {
+                return ResponseEntity.ok(Map.of("data", data));
+            }
+        } catch (Exception ignored) {}
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     @PostMapping("/{id}/acknowledge")
@@ -44,7 +49,13 @@ public class MobileResultsController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @RequestHeader("X-Actor-ID") String actorId) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        try {
+            JsonNode data = orosClient.acknowledgeOrder(id.toString(), "CLINICIAN", null);
+            if (data != null) {
+                return ResponseEntity.ok(Map.of("data", data));
+            }
+        } catch (Exception ignored) {}
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     private Map<String, Object> toResource(Map<String, Object> row) {

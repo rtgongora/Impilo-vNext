@@ -30,7 +30,6 @@ public class MobileProviderController {
     @GetMapping("/tasks/mine")
     public ResponseEntity<Map<String, Object>> getMyTasks(
             @RequestHeader("X-Tenant-ID") String tenantId) {
-        // STRANGLER: migrated to PctServiceClient — queue entries are managed by PCT
         // Previously: jdbc.queryForList("SELECT * FROM queue_entries WHERE tenant_id = ? AND status IN ('WAITING', 'IN_PROGRESS') ...", tenantId)
         return ResponseEntity.ok(Map.of("success", true, "data", List.of()));
     }
@@ -38,7 +37,6 @@ public class MobileProviderController {
     @GetMapping("/tasks")
     public ResponseEntity<Map<String, Object>> getAllTasks(
             @RequestHeader("X-Tenant-ID") String tenantId) {
-        // STRANGLER: migrated to PctServiceClient — queue entries are managed by PCT
         // Previously: jdbc.queryForList("SELECT * FROM queue_entries WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 100", tenantId)
         return ResponseEntity.ok(Map.of("success", true, "data", List.of()));
     }
@@ -46,7 +44,6 @@ public class MobileProviderController {
     @GetMapping("/encounters")
     public ResponseEntity<Map<String, Object>> getEncounters(
             @RequestHeader("X-Tenant-ID") String tenantId) {
-        // STRANGLER: migrated to PctServiceClient — encounters are managed by PCT
         // Previously: jdbc.queryForList("SELECT * FROM encounters WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 50", tenantId)
         return ResponseEntity.ok(Map.of("success", true, "data", List.of()));
     }
@@ -63,7 +60,6 @@ public class MobileProviderController {
     public ResponseEntity<Map<String, Object>> createDiagnosis(
             @RequestBody Map<String, Object> body,
             @RequestHeader("X-Tenant-ID") String tenantId) {
-        // STRANGLER: migrated to PctServiceClient — diagnosis creation via PCT
         return ResponseEntity.ok(Map.of("success", true, "data", body));
     }
 
@@ -71,7 +67,6 @@ public class MobileProviderController {
     public ResponseEntity<Map<String, Object>> getDiagnoses(
             @RequestParam("encounter_id") String encounterId,
             @RequestHeader("X-Tenant-ID") String tenantId) {
-        // STRANGLER: migrated to PctServiceClient
         return ResponseEntity.ok(Map.of("success", true, "data", List.of()));
     }
 
@@ -79,14 +74,12 @@ public class MobileProviderController {
     public ResponseEntity<Map<String, Object>> deleteDiagnosis(
             @PathVariable String id,
             @RequestHeader("X-Tenant-ID") String tenantId) {
-        // STRANGLER: migrated to PctServiceClient
         return ResponseEntity.ok(Map.of("success", true));
     }
 
     @GetMapping("/telemedicine/sessions")
     public ResponseEntity<Map<String, Object>> getTelemedicineSessions(
             @RequestHeader("X-Tenant-ID") String tenantId) {
-        // STRANGLER: migrated to PctServiceClient — telemedicine sessions via PCT
         return ResponseEntity.ok(Map.of("success", true, "data", List.of()));
     }
 
@@ -94,7 +87,6 @@ public class MobileProviderController {
     public ResponseEntity<Map<String, Object>> joinSession(
             @PathVariable String id,
             @RequestHeader("X-Tenant-ID") String tenantId) {
-        // STRANGLER: migrated to PctServiceClient
         return ResponseEntity.ok(Map.of("success", true, "data", Map.of(
                 "sessionId", id, "roomUrl", "", "token", "")));
     }
@@ -103,7 +95,6 @@ public class MobileProviderController {
     public ResponseEntity<Map<String, Object>> endSession(
             @PathVariable String id,
             @RequestHeader("X-Tenant-ID") String tenantId) {
-        // STRANGLER: migrated to PctServiceClient
         return ResponseEntity.ok(Map.of("success", true));
     }
 
@@ -111,7 +102,6 @@ public class MobileProviderController {
     public ResponseEntity<Map<String, Object>> verifyEntitlement(
             @RequestParam("cpid") String cpid,
             @RequestHeader("X-Tenant-ID") String tenantId) {
-        // STRANGLER: migrated to VarapiServiceClient — entitlement verification via VARAPI/Coverage
         return ResponseEntity.ok(Map.of("success", true, "data", Map.of(
                 "cpid", cpid, "eligible", true, "schemes", List.of())));
     }
@@ -120,7 +110,6 @@ public class MobileProviderController {
     public ResponseEntity<Map<String, Object>> activateBreakGlass(
             @RequestBody Map<String, Object> body,
             @RequestHeader("X-Tenant-ID") String tenantId) {
-        // STRANGLER: migrated to PctServiceClient — break-glass via TSHEPO/PCT
         return ResponseEntity.ok(Map.of("success", true, "data", Map.of("active", true)));
     }
 
@@ -128,7 +117,6 @@ public class MobileProviderController {
     public ResponseEntity<Map<String, Object>> deactivateBreakGlass(
             @RequestBody Map<String, Object> body,
             @RequestHeader("X-Tenant-ID") String tenantId) {
-        // STRANGLER: migrated to PctServiceClient
         return ResponseEntity.ok(Map.of("success", true, "data", Map.of("active", false)));
     }
 }

@@ -45,14 +45,12 @@ public class MaternitySummaryController {
             @RequestParam String patientId,
             @RequestParam(required = false) String encounterId
     ) {
-        // STRANGLER: delegate to PctServiceClient
         try {
             JsonNode pctData = pctClient.getMaternitySummary(patientId, encounterId);
             if (pctData != null) return ResponseEntity.ok(Map.of("data", pctData));
         } catch (Exception e) {
             log.warn("PCT getMaternitySummary failed, falling back to local: {}", e.getMessage());
         }
-        // STRANGLER: migrated to PctServiceClient — fallback to local JDBC
         Map<String, Object> activePartograph = loadActivePartograph(tenantId, patientId, encounterId);
         Map<String, Object> latestPartographPoint = activePartograph == null
                 ? null

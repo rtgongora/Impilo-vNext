@@ -45,7 +45,6 @@ public class PatientController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @Valid @RequestBody CreatePatientRequest req) {
 
-        // STRANGLER: migrated — delegate patient registration to VITO
         Map<String, Object> patientData = new LinkedHashMap<>();
         patientData.put("given_name", req.given_name());
         patientData.put("family_name", req.family_name());
@@ -58,7 +57,6 @@ public class PatientController {
 
         JsonNode result = vitoClient.registerPatient(patientData);
 
-        // STRANGLER: migrated — was direct JdbcTemplate INSERT
         // jdbcTemplate.update("""
         //         INSERT INTO patients (id, tenant_id, cpid, given_name, family_name, date_of_birth,
         //             sex, national_id, phone, facility_id, status, created_at, updated_at)
@@ -82,10 +80,8 @@ public class PatientController {
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String status) {
 
-        // STRANGLER: migrated — delegate to VITO
         JsonNode result = vitoClient.listPatients(search, status, page, Math.min(size, 100));
 
-        // STRANGLER: migrated — was PatientRepository.findByFilters
         // PageRequest pageable = PageRequest.of(page, Math.min(size, 100), Sort.by("familyName").ascending());
         // Page<Patient> result = patientRepository.findByFilters(tenantId, search, status, pageable);
 
@@ -106,10 +102,8 @@ public class PatientController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
 
-        // STRANGLER: migrated — delegate to VITO
         JsonNode result = vitoClient.getPatient(id.toString());
 
-        // STRANGLER: migrated — was PatientRepository.findByIdAndTenantId
         // Patient patient = patientRepository.findByIdAndTenantId(id, tenantId)
         //         .orElseThrow(() -> new ResourceNotFoundException("Patient not found: " + id));
 

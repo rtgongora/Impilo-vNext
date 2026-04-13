@@ -36,10 +36,8 @@ public class CitizenRecordsController {
 
         int limit = Math.min(size, 100);
 
-        // STRANGLER: migrated — delegate to PCT for clinical records
         JsonNode records = pctClient.getPatientRecords(actorId, documentType, page, limit);
 
-        // STRANGLER: migrated — was direct JdbcTemplate SELECT from clinical_documents table
         // UUID patientId = resolvePatientId(tenantId, actorId);
         // List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql.toString(), params.toArray());
 
@@ -56,10 +54,8 @@ public class CitizenRecordsController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
 
-        // STRANGLER: migrated — delegate to PCT
         JsonNode record = pctClient.getPatientRecord(id.toString());
 
-        // STRANGLER: migrated — was direct JdbcTemplate SELECT from clinical_documents
         // List<Map<String, Object>> rows = jdbcTemplate.queryForList(..., id, tenantId);
 
         Map<String, Object> response = new LinkedHashMap<>();

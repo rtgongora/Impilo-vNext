@@ -60,9 +60,7 @@ public class BedController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestBody Map<String, String> body) {
 
-        // STRANGLER: delegate to InpatientServiceClient first
         try { inpatientClient.updateBedStatus(id.toString(), body); } catch (Exception e) { log.warn("Inpatient updateBedStatus failed (non-blocking): {}", e.getMessage()); }
-        // STRANGLER: migrated to InpatientServiceClient — dual-write to local BFF table as backup cache
         String newStatus = body.get("status");
 
         return ResponseEntity.ok(Map.of(
@@ -78,9 +76,7 @@ public class BedController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestBody Map<String, String> body) {
 
-        // STRANGLER: delegate to InpatientServiceClient first
         try { inpatientClient.assignPatientToBed(id.toString(), body); } catch (Exception e) { log.warn("Inpatient assignPatientToBed failed (non-blocking): {}", e.getMessage()); }
-        // STRANGLER: migrated to InpatientServiceClient — dual-write to local BFF table as backup cache
         String patientId = body.get("patientId");
         String patientName = body.get("patientName");
         String acuity = body.getOrDefault("acuity", "MEDIUM");
@@ -99,9 +95,7 @@ public class BedController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
 
-        // STRANGLER: delegate to InpatientServiceClient first
         try { inpatientClient.dischargeBed(id.toString()); } catch (Exception e) { log.warn("Inpatient dischargeBed failed (non-blocking): {}", e.getMessage()); }
-        // STRANGLER: migrated to InpatientServiceClient — dual-write to local BFF table as backup cache
         OffsetDateTime now = OffsetDateTime.now();
 
         return ResponseEntity.ok(Map.of(

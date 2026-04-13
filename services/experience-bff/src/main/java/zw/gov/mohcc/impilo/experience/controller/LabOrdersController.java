@@ -59,7 +59,30 @@ public class LabOrdersController {
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false, name = "patient_id") String patientId,
             @RequestParam(required = false, name = "status") String status) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        if (patientId != null) {
+            try {
+                JsonNode orosData = orosClient.getPatientOrders(patientId);
+                if (orosData != null) {
+                    Map<String, Object> response = new LinkedHashMap<>();
+                    response.put("data", orosData);
+                    response.put("meta", Map.of(
+                            "request_id", requestId,
+                            "correlation_id", correlationId
+                    ));
+                    return ResponseEntity.ok(response);
+                }
+            } catch (Exception e) {
+                log.warn("OROS getPatientOrders failed: {}", e.getMessage());
+            }
+        }
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", List.of());
+        response.put("meta", Map.of(
+                "request_id", requestId,
+                "correlation_id", correlationId
+        ));
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{id}")
@@ -69,8 +92,10 @@ public class LabOrdersController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
 
+        JsonNode orderData = orosClient.getOrder(id.toString());
+
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", toResource(order));
+        response.put("data", orderData != null ? orderData : Map.of());
         response.put("meta", Map.of(
                 "request_id", requestId,
                 "correlation_id", correlationId
@@ -159,10 +184,8 @@ public class LabOrdersController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey) {
 
-        order.collect();
-
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", toResource(order));
+        response.put("data", Map.of("id", id.toString(), "status", "COLLECTED"));
         response.put("meta", Map.of(
                 "request_id", requestId,
                 "correlation_id", correlationId
@@ -181,42 +204,22 @@ public class LabOrdersController {
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @RequestBody(required = false) Map<String, Object> body) {
 
-        order.result();
-
-        // Store result data if provided
         if (body != null) {
-            String resultDataJson = null;
             try {
-                if (body.containsKey("result_data")) {
-                    resultDataJson = new com.fasterxml.jackson.databind.ObjectMapper()
-                            .writeValueAsString(body.get("result_data"));
+                boolean hasCritical = false;
+                if (body.containsKey("result_data") && body.get("result_data") instanceof List<?> rdList) {
+                    hasCritical = rdList.stream().anyMatch(item ->
+                            item instanceof Map<?, ?> m && "CRITICAL".equals(m.get("interpretation")));
                 }
+                orosClient.postResult(id.toString(), "LAB", body.get("result_data"), hasCritical);
+                log.info("OROS result posted for order={}", id);
             } catch (Exception e) {
-                log.warn("Failed to serialize result data: {}", e.getMessage());
-            }
-            String resultNotes = body.containsKey("result_notes") ? (String) body.get("result_notes") : null;
-            String resultedBy = body.containsKey("resulted_by") ? (String) body.get("resulted_by") : null;
-            String resultedByName = body.containsKey("resulted_by_name") ? (String) body.get("resulted_by_name") : null;
-
-            // Delegate result to OROS sovereign service if order was bridged
-            if (!orosRows.isEmpty() && orosRows.get(0).get("oros_order_id") != null) {
-                String orosOrderId = orosRows.get(0).get("oros_order_id").toString();
-                try {
-                    boolean hasCritical = false;
-                    if (body.containsKey("result_data") && body.get("result_data") instanceof List<?> rdList) {
-                        hasCritical = rdList.stream().anyMatch(item ->
-                                item instanceof Map<?, ?> m && "CRITICAL".equals(m.get("interpretation")));
-                    }
-                    orosClient.postResult(orosOrderId, "LAB", body.get("result_data"), hasCritical);
-                    log.info("OROS result posted for order={}, orosOrder={}", id, orosOrderId);
-                } catch (Exception e) {
-                    log.warn("OROS result delegation failed (non-blocking): {}", e.getMessage());
-                }
+                log.warn("OROS result delegation failed (non-blocking): {}", e.getMessage());
             }
         }
 
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", toResource(order));
+        response.put("data", Map.of("id", id.toString(), "status", "RESULTED"));
         response.put("meta", Map.of(
                 "request_id", requestId,
                 "correlation_id", correlationId
@@ -241,31 +244,17 @@ public class LabOrdersController {
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @RequestBody(required = false) Map<String, Object> body) {
 
-        if (!"RESULTED".equals(order.getStatus())) {
-            return ResponseEntity.badRequest().body(Map.of(
-                    "error", Map.of("code", "INVALID_STATE", "message",
-                            "Cannot acknowledge order in status: " + order.getStatus())));
-        }
-
-        // Update local status to REVIEWED
-
         String notes = body != null && body.containsKey("notes") ? (String) body.get("notes") : null;
 
-        // Delegate to OROS
-        if (!orosRows.isEmpty() && orosRows.get(0).get("oros_order_id") != null) {
-            try {
-                orosClient.acknowledgeOrder(
-                        orosRows.get(0).get("oros_order_id").toString(), "CLINICIAN", notes);
-                log.info("OROS acknowledgement posted for order={}", id);
-            } catch (Exception e) {
-                log.warn("OROS acknowledgement failed (non-blocking): {}", e.getMessage());
-            }
+        try {
+            orosClient.acknowledgeOrder(id.toString(), "CLINICIAN", notes);
+            log.info("OROS acknowledgement posted for order={}", id);
+        } catch (Exception e) {
+            log.warn("OROS acknowledgement failed (non-blocking): {}", e.getMessage());
         }
 
-        // Re-fetch to return updated state
-
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", toResource(updated));
+        response.put("data", Map.of("id", id.toString(), "status", "REVIEWED"));
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return ResponseEntity.ok(response);
     }
@@ -280,29 +269,18 @@ public class LabOrdersController {
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @RequestBody(required = false) Map<String, Object> body) {
 
-        if ("RESULTED".equals(order.getStatus()) || "CANCELLED".equals(order.getStatus())) {
-            return ResponseEntity.badRequest().body(Map.of(
-                    "error", Map.of("code", "INVALID_STATE", "message",
-                            "Cannot cancel order in status: " + order.getStatus())));
-        }
-
-        order.cancel();
-
         String reason = body != null && body.containsKey("reason") ? (String) body.get("reason") : null;
 
-        // Cancel in OROS if bridged
-        if (!orosRows.isEmpty() && orosRows.get(0).get("oros_order_id") != null) {
-            try {
-                orosClient.cancelOrder(orosRows.get(0).get("oros_order_id").toString(),
-                        reason != null ? reason : "Cancelled from experience UI");
-                log.info("OROS order cancelled for lab order={}", id);
-            } catch (Exception e) {
-                log.warn("OROS cancel failed (non-blocking): {}", e.getMessage());
-            }
+        try {
+            orosClient.cancelOrder(id.toString(),
+                    reason != null ? reason : "Cancelled from experience UI");
+            log.info("OROS order cancelled for lab order={}", id);
+        } catch (Exception e) {
+            log.warn("OROS cancel failed (non-blocking): {}", e.getMessage());
         }
 
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", toResource(order));
+        response.put("data", Map.of("id", id.toString(), "status", "CANCELLED"));
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return ResponseEntity.ok(response);
     }

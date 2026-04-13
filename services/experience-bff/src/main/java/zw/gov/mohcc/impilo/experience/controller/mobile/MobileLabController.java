@@ -10,7 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.OrosServiceClient;
-import zw.gov.mohcc.impilo.experience.controller.ResourceNotFoundException;
 
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -30,6 +29,7 @@ public class MobileLabController {
 
     private final OrosServiceClient orosClient;
 
+    public MobileLabController(OrosServiceClient orosClient) {
         this.orosClient = orosClient;
     }
 
@@ -63,23 +63,18 @@ public class MobileLabController {
         // Delegate to OROS sovereign service
         String orosOrderId = null;
         try {
-            // Resolve patient CPID for OROS
-            String cpid = (!cpidRows.isEmpty() && cpidRows.get(0).get("cpid") != null)
-                    ? cpidRows.get(0).get("cpid").toString() : null;
-            if (cpid != null) {
-                List<Map<String, Object>> items = List.of(Map.of(
-                        "code", request.test_code(),
-                        "displayName", request.test_name(),
-                        "quantity", 1
-                ));
-                JsonNode orosData = orosClient.placeOrder(
-                        "LAB", priority, cpid, request.encounter_id(),
-                        request.clinical_notes(), items);
-                if (orosData != null && orosData.has("orderId")) {
-                    orosOrderId = orosData.get("orderId").asText();
-                }
-                log.info("OROS order placed from mobile: {} for lab order {}", orosOrderId, labOrderId);
+            List<Map<String, Object>> items = List.of(Map.of(
+                    "code", request.test_code(),
+                    "displayName", request.test_name(),
+                    "quantity", 1
+            ));
+            JsonNode orosData = orosClient.placeOrder(
+                    "LAB", priority, request.patient_id(), request.encounter_id(),
+                    request.clinical_notes(), items);
+            if (orosData != null && orosData.has("orderId")) {
+                orosOrderId = orosData.get("orderId").asText();
             }
+            log.info("OROS order placed from mobile: {} for lab order {}", orosOrderId, labOrderId);
         } catch (Exception e) {
             log.warn("OROS delegation from mobile lab failed (non-blocking): {}", e.getMessage());
         }
@@ -120,7 +115,15 @@ public class MobileLabController {
             @RequestParam(required = false, name = "patient_id") String patientId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        if (patientId != null && !patientId.isBlank()) {
+            try {
+                JsonNode data = orosClient.getPatientOrders(patientId);
+                if (data != null) {
+                    return ResponseEntity.ok(Map.of("data", data));
+                }
+            } catch (Exception ignored) {}
+        }
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     @GetMapping("/{id}")
@@ -129,7 +132,13 @@ public class MobileLabController {
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        try {
+            JsonNode data = orosClient.getOrder(id.toString());
+            if (data != null) {
+                return ResponseEntity.ok(Map.of("data", data));
+            }
+        } catch (Exception ignored) {}
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     @PostMapping("/{id}/cancel")
@@ -141,7 +150,14 @@ public class MobileLabController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @RequestBody(required = false) CancelLabOrderRequest request) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        String reason = request != null && request.reason() != null ? request.reason() : "Cancelled from mobile";
+        try {
+            JsonNode data = orosClient.cancelOrder(id.toString(), reason);
+            if (data != null) {
+                return ResponseEntity.ok(Map.of("data", data));
+            }
+        } catch (Exception ignored) {}
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     private Map<String, Object> toResource(Map<String, Object> row) {

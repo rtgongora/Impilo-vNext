@@ -45,10 +45,8 @@ public class ShiftController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(name = "user_id") String userId) {
 
-        // STRANGLER: migrated — delegate to TusoServiceClient
         JsonNode shift = tusoClient.getCurrentShift(userId);
 
-        // STRANGLER: migrated — was ShiftRepository.findCurrentShift
         // Shift shift = shiftRepository.findCurrentShift(tenantId, userId)
         //         .orElseThrow(() -> new ResourceNotFoundException("No active shift found for user: " + userId));
 
@@ -72,7 +70,6 @@ public class ShiftController {
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @Valid @RequestBody StartShiftRequest request) {
 
-        // STRANGLER: migrated — delegate to TusoServiceClient
         Map<String, Object> shiftData = new LinkedHashMap<>();
         shiftData.put("facility_id", request.facility_id());
         shiftData.put("workspace_id", request.workspace_id());
@@ -81,7 +78,6 @@ public class ShiftController {
 
         JsonNode result = tusoClient.startShift(shiftData);
 
-        // STRANGLER: migrated — was direct JdbcTemplate INSERT into shifts table
         // jdbcTemplate.update("""
         //     INSERT INTO shifts (...) VALUES (...)
         //     """, ...);
@@ -107,7 +103,6 @@ public class ShiftController {
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @RequestBody(required = false) EndShiftRequest request) {
 
-        // STRANGLER: migrated — delegate to TusoServiceClient
         Map<String, Object> endData = new LinkedHashMap<>();
         if (request != null && request.handover_notes() != null) {
             endData.put("handover_notes", request.handover_notes());
@@ -115,7 +110,6 @@ public class ShiftController {
 
         JsonNode result = tusoClient.endShift(id.toString(), endData);
 
-        // STRANGLER: migrated — was ShiftRepository.findById + shift.end() + save
         // Shift shift = shiftRepository.findById(id)
         //         .filter(s -> s.getTenantId().equals(tenantId))
         //         .orElseThrow(() -> new ResourceNotFoundException("Shift not found: " + id));

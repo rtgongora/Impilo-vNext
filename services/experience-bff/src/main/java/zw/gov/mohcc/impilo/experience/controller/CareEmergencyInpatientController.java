@@ -37,9 +37,7 @@ public class CareEmergencyInpatientController {
 
     @GetMapping("/care-plans")
     public ResponseEntity<Map<String, Object>> listCarePlans(@RequestHeader("X-Tenant-ID") String tenantId, @RequestParam String patientId) {
-        // STRANGLER: delegate to PctServiceClient
         try { JsonNode pctData = pctClient.listCarePlans(patientId); if (pctData != null) return ResponseEntity.ok(Map.of("data", pctData)); } catch (Exception e) { log.warn("PCT listCarePlans failed, falling back to local: {}", e.getMessage()); }
-        // STRANGLER: migrated to PctServiceClient — fallback to local JDBC
         for (Map<String, Object> plan : plans) {
             UUID planId = (UUID) plan.get("id");
         }
@@ -48,9 +46,7 @@ public class CareEmergencyInpatientController {
 
     @PostMapping("/care-plans")
     public ResponseEntity<Map<String, Object>> createCarePlan(@RequestHeader("X-Tenant-ID") String tenantId, @RequestBody Map<String, Object> body) {
-        // STRANGLER: delegate to PctServiceClient first
         try { pctClient.createCarePlan(body); } catch (Exception e) { log.warn("PCT createCarePlan failed (non-blocking): {}", e.getMessage()); }
-        // STRANGLER: migrated to PctServiceClient — dual-write to local BFF table as backup cache
         UUID id = UUID.randomUUID();
 
         @SuppressWarnings("unchecked") List<Map<String, Object>> goals = (List<Map<String, Object>>) body.getOrDefault("goals", List.of());
@@ -68,9 +64,7 @@ public class CareEmergencyInpatientController {
 
     @GetMapping("/fluid-balance")
     public ResponseEntity<Map<String, Object>> getFluidBalance(@RequestHeader("X-Tenant-ID") String tenantId, @RequestParam String patientId, @RequestParam(required = false) String date) {
-        // STRANGLER: delegate to PctServiceClient
         try { JsonNode pctData = pctClient.getFluidBalance(patientId, date); if (pctData != null) return ResponseEntity.ok(Map.of("data", pctData)); } catch (Exception e) { log.warn("PCT getFluidBalance failed, falling back to local: {}", e.getMessage()); }
-        // STRANGLER: migrated to PctServiceClient — fallback to local JDBC
         String d = date != null ? date : java.time.LocalDate.now().toString();
         int totalIntake = records.stream().filter(r -> "INTAKE".equals(r.get("entry_type"))).mapToInt(r -> (Integer) r.get("volume_ml")).sum();
         int totalOutput = records.stream().filter(r -> "OUTPUT".equals(r.get("entry_type"))).mapToInt(r -> (Integer) r.get("volume_ml")).sum();
@@ -79,9 +73,7 @@ public class CareEmergencyInpatientController {
 
     @PostMapping("/fluid-balance")
     public ResponseEntity<Map<String, Object>> recordFluid(@RequestHeader("X-Tenant-ID") String tenantId, @RequestBody Map<String, Object> body) {
-        // STRANGLER: delegate to PctServiceClient first
         try { pctClient.recordFluidBalance(body); } catch (Exception e) { log.warn("PCT recordFluidBalance failed (non-blocking): {}", e.getMessage()); }
-        // STRANGLER: migrated to PctServiceClient — dual-write to local BFF table as backup cache
         UUID id = UUID.randomUUID();
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", Map.of("id", id)));
     }
@@ -95,7 +87,6 @@ public class CareEmergencyInpatientController {
 
     @PostMapping("/emergency/activate")
     public ResponseEntity<Map<String, Object>> activateEmergency(@RequestHeader("X-Tenant-ID") String tenantId, @RequestBody Map<String, Object> body) {
-        // STRANGLER: delegate to PctServiceClient first
         try { pctClient.activateEmergency(body); } catch (Exception e) { log.warn("PCT activateEmergency failed (non-blocking): {}", e.getMessage()); }
         UUID id = UUID.randomUUID();
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", Map.of("id", id, "status", "ACTIVE")));
@@ -103,14 +94,12 @@ public class CareEmergencyInpatientController {
 
     @PostMapping("/emergency/{id}/action")
     public ResponseEntity<Map<String, Object>> logAction(@PathVariable UUID id, @RequestBody Map<String, Object> body) {
-        // STRANGLER: delegate to PctServiceClient first
         try { pctClient.logEmergencyAction(id.toString(), body); } catch (Exception e) { log.warn("PCT logEmergencyAction failed (non-blocking): {}", e.getMessage()); }
         return ResponseEntity.ok(Map.of("logged", true));
     }
 
     @PostMapping("/emergency/{id}/end")
     public ResponseEntity<Map<String, Object>> endEmergency(@PathVariable UUID id, @RequestBody Map<String, Object> body) {
-        // STRANGLER: delegate to PctServiceClient first
         try { pctClient.endEmergency(id.toString(), body); } catch (Exception e) { log.warn("PCT endEmergency failed (non-blocking): {}", e.getMessage()); }
         return ResponseEntity.ok(Map.of("status", "ENDED"));
     }
@@ -119,7 +108,6 @@ public class CareEmergencyInpatientController {
 
     @PostMapping("/emergency/{activationId}/resuscitation")
     public ResponseEntity<Map<String, Object>> recordResuscitation(@PathVariable UUID activationId, @RequestBody Map<String, Object> body) {
-        // STRANGLER: delegate to PctServiceClient first
         try { pctClient.recordResuscitation(activationId.toString(), body); } catch (Exception e) { log.warn("PCT recordResuscitation failed (non-blocking): {}", e.getMessage()); }
         UUID id = UUID.randomUUID();
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", Map.of("id", id)));
@@ -129,7 +117,6 @@ public class CareEmergencyInpatientController {
 
     @PostMapping("/apgar")
     public ResponseEntity<Map<String, Object>> recordApgar(@RequestHeader("X-Tenant-ID") String tenantId, @RequestBody Map<String, Object> body) {
-        // STRANGLER: delegate to PctServiceClient first
         try { pctClient.recordApgar(body); } catch (Exception e) { log.warn("PCT recordApgar failed (non-blocking): {}", e.getMessage()); }
         UUID id = UUID.randomUUID();
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", Map.of("id", id)));
@@ -144,7 +131,6 @@ public class CareEmergencyInpatientController {
 
     @PostMapping("/ews")
     public ResponseEntity<Map<String, Object>> recordEWS(@RequestHeader("X-Tenant-ID") String tenantId, @RequestBody Map<String, Object> body) {
-        // STRANGLER: delegate to PctServiceClient first
         try { pctClient.recordEWS(body); } catch (Exception e) { log.warn("PCT recordEWS failed (non-blocking): {}", e.getMessage()); }
         UUID id = UUID.randomUUID();
         int totalScore = Integer.parseInt(body.get("totalScore").toString());
@@ -161,7 +147,6 @@ public class CareEmergencyInpatientController {
 
     @PostMapping("/admissions")
     public ResponseEntity<Map<String, Object>> createAdmission(@RequestHeader("X-Tenant-ID") String tenantId, @RequestBody Map<String, Object> body) {
-        // STRANGLER: delegate to InpatientServiceClient first
         try { inpatientClient.createAdmission(body); } catch (Exception e) { log.warn("Inpatient createAdmission failed (non-blocking): {}", e.getMessage()); }
         UUID id = UUID.randomUUID();
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", Map.of("id", id)));
@@ -195,7 +180,6 @@ public class CareEmergencyInpatientController {
 
     @PostMapping("/observations")
     public ResponseEntity<Map<String, Object>> recordObservation(@RequestHeader("X-Tenant-ID") String tenantId, @RequestBody Map<String, Object> body) {
-        // STRANGLER: delegate to PctServiceClient first
         try { pctClient.recordObservation(body); } catch (Exception e) { log.warn("PCT recordObservation failed (non-blocking): {}", e.getMessage()); }
         UUID id = UUID.randomUUID();
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", Map.of("id", id)));
@@ -210,7 +194,6 @@ public class CareEmergencyInpatientController {
 
     @PostMapping("/transfers")
     public ResponseEntity<Map<String, Object>> requestTransfer(@RequestHeader("X-Tenant-ID") String tenantId, @RequestBody Map<String, Object> body) {
-        // STRANGLER: delegate to InpatientServiceClient first
         try { inpatientClient.transferPatient(null, body); } catch (Exception e) { log.warn("Inpatient requestTransfer failed (non-blocking): {}", e.getMessage()); }
         UUID id = UUID.randomUUID();
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", Map.of("id", id, "status", "REQUESTED")));

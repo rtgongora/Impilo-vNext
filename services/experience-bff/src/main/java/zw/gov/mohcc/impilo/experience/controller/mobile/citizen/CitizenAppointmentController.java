@@ -48,10 +48,8 @@ public class CitizenAppointmentController {
 
         int limit = Math.min(size, 100);
 
-        // STRANGLER: migrated — delegate to TusoServiceClient
         JsonNode appointments = tusoClient.listCitizenAppointments(actorId, status, page, limit);
 
-        // STRANGLER: migrated — was direct JdbcTemplate SELECT from appointments table
         // UUID patientId = resolvePatientId(tenantId, actorId);
         // List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql.toString(), params.toArray());
 
@@ -68,10 +66,8 @@ public class CitizenAppointmentController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
 
-        // STRANGLER: migrated — delegate to TusoServiceClient
         JsonNode appointment = tusoClient.getAppointment(id.toString());
 
-        // STRANGLER: migrated — was direct JdbcTemplate SELECT from appointments
         // List<Map<String, Object>> rows = jdbcTemplate.queryForList(..., id, tenantId);
 
         Map<String, Object> response = new LinkedHashMap<>();
@@ -90,7 +86,6 @@ public class CitizenAppointmentController {
             @RequestHeader("X-Actor-ID") String actorId,
             @Valid @RequestBody RequestAppointmentBody body) {
 
-        // STRANGLER: migrated — delegate to TusoServiceClient
         Map<String, Object> appointmentData = new LinkedHashMap<>();
         appointmentData.put("facilityId", body.facilityId());
         appointmentData.put("appointmentType", body.appointmentType());
@@ -99,7 +94,6 @@ public class CitizenAppointmentController {
 
         JsonNode result = tusoClient.createCitizenAppointment(actorId, appointmentData);
 
-        // STRANGLER: migrated — was direct JdbcTemplate INSERT into appointments table
         // jdbcTemplate.update("""
         //     INSERT INTO appointments (...) VALUES (...)
         //     """, ...);
@@ -122,10 +116,8 @@ public class CitizenAppointmentController {
 
         String reason = body != null && body.containsKey("reason") ? body.get("reason").toString() : "Cancelled";
 
-        // STRANGLER: migrated — delegate to TusoServiceClient
         tusoClient.cancelAppointment(id.toString(), reason);
 
-        // STRANGLER: migrated — was direct JdbcTemplate UPDATE on appointments
         // jdbcTemplate.update("""
         //     UPDATE appointments SET status = 'CANCELLED', updated_at = ?
         //     WHERE id = ? AND tenant_id = ? AND status IN ('SCHEDULED', 'CONFIRMED')

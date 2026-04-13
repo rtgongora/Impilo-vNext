@@ -47,11 +47,9 @@ public class InventoryController {
 
         int limit = Math.min(size, 100);
 
-        // STRANGLER: migrated — delegate to InventoryServiceClient
         UUID facilityUuid = facilityId != null ? UUID.fromString(facilityId) : null;
         JsonNode result = inventoryClient.getOnHand(facilityUuid, null, null, null, page, limit);
 
-        // STRANGLER: migrated — was InventoryItemRepository.findByTenantIdAndFacilityId
         // PageRequest pageable = PageRequest.of(page, limit, Sort.by("productName").ascending());
         // Page<InventoryItem> result = inventoryItemRepository.findByTenantIdAndFacilityId(tenantId, facilityId, pageable);
 
@@ -72,10 +70,8 @@ public class InventoryController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(required = false, name = "facility_id") String facilityId) {
 
-        // STRANGLER: migrated — delegate to InventoryServiceClient
         JsonNode result = inventoryClient.getReconcilePending(0, 20);
 
-        // STRANGLER: migrated — was direct JdbcTemplate SELECT from inventory_stock_counts
         // List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql, ...);
 
         return ResponseEntity.ok(response(result, requestId, correlationId));
@@ -88,11 +84,9 @@ public class InventoryController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(required = false, name = "facility_id") String facilityId) {
 
-        // STRANGLER: migrated — delegate to InventoryServiceClient
         UUID facilityUuid = facilityId != null ? UUID.fromString(facilityId) : null;
         JsonNode result = inventoryClient.getLedger(facilityUuid, null, null, 0, 50);
 
-        // STRANGLER: migrated — was direct JdbcTemplate SELECT from inventory_movements
         // List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql, ...);
 
         return ResponseEntity.ok(response(result, requestId, correlationId));
@@ -105,10 +99,8 @@ public class InventoryController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(required = false, name = "facility_id") String facilityId) {
 
-        // STRANGLER: migrated — delegate to InventoryServiceClient
         JsonNode result = inventoryClient.getReconcilePending(0, 50);
 
-        // STRANGLER: migrated — was direct JdbcTemplate SELECT from inventory_requisitions
         // List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql, ...);
 
         return ResponseEntity.ok(response(result, requestId, correlationId));
@@ -121,7 +113,6 @@ public class InventoryController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestBody CreateRequisitionRequest request) {
 
-        // STRANGLER: migrated — delegate to InventoryServiceClient
         JsonNode body = objectMapper.valueToTree(Map.of(
                 "facilityId", request.facility_id() != null ? request.facility_id() : "",
                 "requisitionNumber", request.requisition_number() != null ? request.requisition_number() : "",
@@ -133,7 +124,6 @@ public class InventoryController {
 
         JsonNode result = inventoryClient.createRequisition(body);
 
-        // STRANGLER: migrated — was direct JdbcTemplate INSERT into inventory_requisitions
         // jdbcTemplate.update("""
         //     INSERT INTO inventory_requisitions (...) VALUES (...)
         //     """, ...);

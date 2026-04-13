@@ -32,7 +32,6 @@ public class ClinicalDepthController {
     public ResponseEntity<Map<String, Object>> initClearances(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestBody Map<String, Object> body) {
-        // STRANGLER: delegate to PctServiceClient first
         try {
             JsonNode pctData = pctClient.initDischargeClearances(body);
             if (pctData != null) {
@@ -41,7 +40,6 @@ public class ClinicalDepthController {
         } catch (Exception e) {
             log.warn("PCT initDischargeClearances failed, falling back to local: {}", e.getMessage());
         }
-        // STRANGLER: migrated to PctServiceClient — fallback to local JDBC
         String encounterId = body.get("encounterId").toString();
         String patientId = body.get("patientId").toString();
         String[] types = {"CLINICAL", "NURSING", "PHARMACY", "LABORATORY", "IMAGING", "FINANCIAL", "ADMINISTRATIVE", "RECORDS", "CRVS"};
@@ -57,16 +55,22 @@ public class ClinicalDepthController {
     public ResponseEntity<Map<String, Object>> getClearances(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestParam String encounterId) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        try {
+            JsonNode pctData = pctClient.getDischargeClearances(encounterId);
+            if (pctData != null) {
+                return ResponseEntity.ok(Map.of("data", pctData));
+            }
+        } catch (Exception e) {
+            log.warn("PCT getDischargeClearances failed: {}", e.getMessage());
+        }
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     @PostMapping("/discharge-clearances/{id}/clear")
     public ResponseEntity<Map<String, Object>> clearItem(
             @PathVariable UUID id,
             @RequestBody Map<String, Object> body) {
-        // STRANGLER: delegate to PctServiceClient first
         try { pctClient.clearDischargeClearance(id.toString(), body); } catch (Exception e) { log.warn("PCT clearDischargeClearance failed (non-blocking): {}", e.getMessage()); }
-        // STRANGLER: migrated to PctServiceClient — dual-write to local BFF table as backup cache
         return ResponseEntity.ok(Map.of("status", "CLEARED"));
     }
 
@@ -74,9 +78,7 @@ public class ClinicalDepthController {
     public ResponseEntity<Map<String, Object>> waiveItem(
             @PathVariable UUID id,
             @RequestBody Map<String, Object> body) {
-        // STRANGLER: delegate to PctServiceClient first
         try { pctClient.waiveDischargeClearance(id.toString(), body); } catch (Exception e) { log.warn("PCT waiveDischargeClearance failed (non-blocking): {}", e.getMessage()); }
-        // STRANGLER: migrated to PctServiceClient — dual-write to local BFF table as backup cache
         return ResponseEntity.ok(Map.of("status", "WAIVED"));
     }
 
@@ -86,9 +88,7 @@ public class ClinicalDepthController {
     public ResponseEntity<Map<String, Object>> startPhase(
             @PathVariable UUID activationId,
             @RequestBody Map<String, Object> body) {
-        // STRANGLER: delegate to PctServiceClient first
         try { pctClient.startResuscitationPhase(activationId.toString(), body); } catch (Exception e) { log.warn("PCT startResuscitationPhase failed (non-blocking): {}", e.getMessage()); }
-        // STRANGLER: migrated to PctServiceClient — dual-write to local BFF table as backup cache
         UUID id = UUID.randomUUID();
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", Map.of("id", id)));
     }
@@ -98,15 +98,21 @@ public class ClinicalDepthController {
             @PathVariable UUID activationId,
             @PathVariable UUID phaseId,
             @RequestBody Map<String, Object> body) {
-        // STRANGLER: delegate to PctServiceClient first
         try { pctClient.endResuscitationPhase(activationId.toString(), phaseId.toString(), body); } catch (Exception e) { log.warn("PCT endResuscitationPhase failed (non-blocking): {}", e.getMessage()); }
-        // STRANGLER: migrated to PctServiceClient — dual-write to local BFF table as backup cache
         return ResponseEntity.ok(Map.of("ended", true));
     }
 
     @GetMapping("/emergency/{activationId}/phases")
     public ResponseEntity<Map<String, Object>> getPhases(@PathVariable UUID activationId) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        try {
+            JsonNode pctData = pctClient.getResuscitationPhases(activationId.toString());
+            if (pctData != null) {
+                return ResponseEntity.ok(Map.of("data", pctData));
+            }
+        } catch (Exception e) {
+            log.warn("PCT getResuscitationPhases failed: {}", e.getMessage());
+        }
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     // ── CPR Cycles ──────────────────────────────────────────────────
@@ -115,16 +121,22 @@ public class ClinicalDepthController {
     public ResponseEntity<Map<String, Object>> recordCPRCycle(
             @PathVariable UUID activationId,
             @RequestBody Map<String, Object> body) {
-        // STRANGLER: delegate to PctServiceClient first
         try { pctClient.recordCPRCycle(activationId.toString(), body); } catch (Exception e) { log.warn("PCT recordCPRCycle failed (non-blocking): {}", e.getMessage()); }
-        // STRANGLER: migrated to PctServiceClient — dual-write to local BFF table as backup cache
         UUID id = UUID.randomUUID();
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", Map.of("id", id)));
     }
 
     @GetMapping("/emergency/{activationId}/cpr-cycles")
     public ResponseEntity<Map<String, Object>> getCPRCycles(@PathVariable UUID activationId) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        try {
+            JsonNode pctData = pctClient.getCPRCycles(activationId.toString());
+            if (pctData != null) {
+                return ResponseEntity.ok(Map.of("data", pctData));
+            }
+        } catch (Exception e) {
+            log.warn("PCT getCPRCycles failed: {}", e.getMessage());
+        }
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     // ── Resuscitation Medications ───────────────────────────────────
@@ -133,16 +145,22 @@ public class ClinicalDepthController {
     public ResponseEntity<Map<String, Object>> recordResusMed(
             @PathVariable UUID activationId,
             @RequestBody Map<String, Object> body) {
-        // STRANGLER: delegate to PctServiceClient first
         try { pctClient.recordResuscitationMedication(activationId.toString(), body); } catch (Exception e) { log.warn("PCT recordResuscitationMedication failed (non-blocking): {}", e.getMessage()); }
-        // STRANGLER: migrated to PctServiceClient — dual-write to local BFF table as backup cache
         UUID id = UUID.randomUUID();
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", Map.of("id", id)));
     }
 
     @GetMapping("/emergency/{activationId}/medications")
     public ResponseEntity<Map<String, Object>> getResusMeds(@PathVariable UUID activationId) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        try {
+            JsonNode pctData = pctClient.getResuscitationMedications(activationId.toString());
+            if (pctData != null) {
+                return ResponseEntity.ok(Map.of("data", pctData));
+            }
+        } catch (Exception e) {
+            log.warn("PCT getResuscitationMedications failed: {}", e.getMessage());
+        }
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     // ── Care Plan Goal/Intervention CRUD ────────────────────────────
@@ -151,9 +169,7 @@ public class ClinicalDepthController {
     public ResponseEntity<Map<String, Object>> addGoal(
             @PathVariable UUID planId,
             @RequestBody Map<String, Object> body) {
-        // STRANGLER: delegate to PctServiceClient first
         try { pctClient.addCarePlanGoal(planId.toString(), body); } catch (Exception e) { log.warn("PCT addCarePlanGoal failed (non-blocking): {}", e.getMessage()); }
-        // STRANGLER: migrated to PctServiceClient — dual-write to local BFF table as backup cache
         UUID id = UUID.randomUUID();
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", Map.of("id", id)));
     }
@@ -162,9 +178,7 @@ public class ClinicalDepthController {
     public ResponseEntity<Map<String, Object>> updateGoal(
             @PathVariable UUID planId, @PathVariable UUID goalId,
             @RequestBody Map<String, Object> body) {
-        // STRANGLER: delegate to PctServiceClient first
         try { pctClient.updateCarePlanGoal(planId.toString(), goalId.toString(), body); } catch (Exception e) { log.warn("PCT updateCarePlanGoal failed (non-blocking): {}", e.getMessage()); }
-        // STRANGLER: migrated to PctServiceClient — dual-write to local BFF table as backup cache
         if ("ACHIEVED".equals(body.get("status"))) {
         }
         return ResponseEntity.ok(Map.of("updated", true));
@@ -174,9 +188,7 @@ public class ClinicalDepthController {
     public ResponseEntity<Map<String, Object>> addIntervention(
             @PathVariable UUID planId,
             @RequestBody Map<String, Object> body) {
-        // STRANGLER: delegate to PctServiceClient first
         try { pctClient.addCarePlanIntervention(planId.toString(), body); } catch (Exception e) { log.warn("PCT addCarePlanIntervention failed (non-blocking): {}", e.getMessage()); }
-        // STRANGLER: migrated to PctServiceClient — dual-write to local BFF table as backup cache
         UUID id = UUID.randomUUID();
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", Map.of("id", id)));
     }
@@ -184,9 +196,7 @@ public class ClinicalDepthController {
     @PostMapping("/care-plans/{planId}/interventions/{intId}/perform")
     public ResponseEntity<Map<String, Object>> performIntervention(
             @PathVariable UUID planId, @PathVariable UUID intId) {
-        // STRANGLER: delegate to PctServiceClient first
         try { pctClient.performCarePlanIntervention(planId.toString(), intId.toString()); } catch (Exception e) { log.warn("PCT performCarePlanIntervention failed (non-blocking): {}", e.getMessage()); }
-        // STRANGLER: migrated to PctServiceClient — dual-write to local BFF table as backup cache
         return ResponseEntity.ok(Map.of("performed", true));
     }
 
@@ -196,14 +206,12 @@ public class ClinicalDepthController {
     public ResponseEntity<Map<String, Object>> recordNEWS2Components(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestBody Map<String, Object> body) {
-        // STRANGLER: delegate to PctServiceClient first
         try {
             JsonNode pctData = pctClient.recordNEWS2Components(body);
             if (pctData != null) return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", pctData));
         } catch (Exception e) {
             log.warn("PCT recordNEWS2Components failed, falling back to local: {}", e.getMessage());
         }
-        // STRANGLER: migrated to PctServiceClient — fallback to local JDBC
         // NEWS2 component scoring: each parameter 0-3 points
         int rrScore = toInt(body.getOrDefault("respiratoryRateScore", 0));
         int spo2Score = toInt(body.getOrDefault("spo2Score", 0));

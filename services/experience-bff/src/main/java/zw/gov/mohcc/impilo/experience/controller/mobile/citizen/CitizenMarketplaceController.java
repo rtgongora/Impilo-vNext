@@ -47,7 +47,6 @@ public class CitizenMarketplaceController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
 
-        // STRANGLER: migrated — delegate to MsikaFlowServiceClient
         org.springframework.util.LinkedMultiValueMap<String, String> params = new org.springframework.util.LinkedMultiValueMap<>();
         if (category != null && !category.isBlank()) params.add("category", category);
         if (search != null && !search.isBlank()) params.add("search", search);
@@ -56,7 +55,6 @@ public class CitizenMarketplaceController {
 
         ResponseEntity<String> result = msikaFlowClient.listVendors(params);
 
-        // STRANGLER: migrated — was direct JdbcTemplate SELECT from marketplace_services table
         // List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql.toString(), params.toArray());
 
         Map<String, Object> response = new LinkedHashMap<>();
@@ -72,10 +70,8 @@ public class CitizenMarketplaceController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
 
-        // STRANGLER: migrated — delegate to MsikaFlowServiceClient
         ResponseEntity<String> result = msikaFlowClient.getOrder(id.toString());
 
-        // STRANGLER: migrated — was direct JdbcTemplate SELECT from marketplace_services
         // List<Map<String, Object>> rows = jdbcTemplate.queryForList(..., id, tenantId);
 
         Map<String, Object> response = new LinkedHashMap<>();
@@ -94,14 +90,12 @@ public class CitizenMarketplaceController {
             @RequestHeader("X-Actor-ID") String actorId,
             @Valid @RequestBody ServiceRequestBody body) {
 
-        // STRANGLER: migrated — delegate to MsikaFlowServiceClient
         String orderBody = String.format(
                 "{\"serviceId\":\"%s\",\"citizenCpid\":\"%s\",\"notes\":\"%s\"}",
                 body.serviceId(), actorId, body.notes() != null ? body.notes() : "");
 
         ResponseEntity<String> result = msikaFlowClient.createOrder(orderBody);
 
-        // STRANGLER: migrated — was direct JdbcTemplate INSERT into service_requests table
         // jdbcTemplate.update("""
         //     INSERT INTO service_requests (...) VALUES (...)
         //     """, ...);
@@ -122,7 +116,6 @@ public class CitizenMarketplaceController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
 
-        // STRANGLER: migrated — delegate to MsikaFlowServiceClient
         org.springframework.util.LinkedMultiValueMap<String, String> params = new org.springframework.util.LinkedMultiValueMap<>();
         params.add("citizenCpid", actorId);
         if (status != null) params.add("status", status);
@@ -131,7 +124,6 @@ public class CitizenMarketplaceController {
 
         ResponseEntity<String> result = msikaFlowClient.listVendors(params);
 
-        // STRANGLER: migrated — was direct JdbcTemplate SELECT from service_requests
         // List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql.toString(), params.toArray());
 
         Map<String, Object> response = new LinkedHashMap<>();
@@ -147,10 +139,8 @@ public class CitizenMarketplaceController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
 
-        // STRANGLER: migrated — delegate to MsikaFlowServiceClient
         ResponseEntity<String> result = msikaFlowClient.getOrder(id.toString());
 
-        // STRANGLER: migrated — was direct JdbcTemplate SELECT from service_requests
         // List<Map<String, Object>> rows = jdbcTemplate.queryForList(..., id, tenantId);
 
         Map<String, Object> response = new LinkedHashMap<>();
@@ -169,10 +159,8 @@ public class CitizenMarketplaceController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestBody(required = false) Map<String, Object> body) {
 
-        // STRANGLER: migrated — delegate to MsikaFlowServiceClient
         msikaFlowClient.cancelOrder(id.toString());
 
-        // STRANGLER: migrated — was direct JdbcTemplate UPDATE on service_requests
         // jdbcTemplate.update("""
         //     UPDATE service_requests SET status = 'CANCELLED', updated_at = ?
         //     WHERE id = ? AND tenant_id = ? AND status IN ('PENDING', 'CONFIRMED')

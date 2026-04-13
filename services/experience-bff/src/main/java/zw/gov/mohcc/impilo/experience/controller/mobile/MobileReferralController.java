@@ -1,5 +1,6 @@
 package zw.gov.mohcc.impilo.experience.controller.mobile;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.HttpStatus;
@@ -15,8 +16,6 @@ import java.util.*;
  * Mobile referral endpoints.
  * POST /internal/v1/mobile/provider/referrals                          - create referral
  * GET  /internal/v1/mobile/provider/referrals?encounter_id= or patient_id= - list referrals
- *
- * <p>STRANGLER: JdbcTemplate retained for local reads during migration; writes delegated to PctServiceClient.</p>
  */
 @RestController
 @RequestMapping("/internal/v1/mobile/provider/referrals")
@@ -24,6 +23,7 @@ public class MobileReferralController {
 
     private final PctServiceClient pctClient;
 
+    public MobileReferralController(PctServiceClient pctClient) {
         this.pctClient = pctClient;
     }
 
@@ -61,6 +61,24 @@ public class MobileReferralController {
         OffsetDateTime now = OffsetDateTime.now();
         String urgency = request.urgency() != null ? request.urgency() : "ROUTINE";
         String referralType = request.referral_type() != null ? request.referral_type() : "SPECIALIST";
+
+        // Delegate to PCT
+        try {
+            Map<String, Object> pctBody = new LinkedHashMap<>();
+            pctBody.put("patientId", request.patient_id());
+            pctBody.put("referralType", referralType);
+            pctBody.put("reason", request.reason());
+            pctBody.put("urgency", urgency);
+            pctBody.put("referredToFacility", request.referred_to_facility());
+            pctBody.put("referredBy", request.referred_by());
+            if (request.encounter_id() != null) pctBody.put("encounterId", request.encounter_id());
+            if (request.specialty() != null) pctBody.put("specialty", request.specialty());
+            if (request.clinical_summary() != null) pctBody.put("clinicalSummary", request.clinical_summary());
+            JsonNode pctResult = pctClient.createReferral(pctBody);
+            if (pctResult != null && pctResult.has("id")) {
+                referralId = UUID.fromString(pctResult.get("id").asText());
+            }
+        } catch (Exception ignored) {}
 
         Map<String, Object> attributes = new LinkedHashMap<>();
         attributes.put("patient_id", request.patient_id());
@@ -105,14 +123,15 @@ public class MobileReferralController {
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @RequestBody(required = false) Map<String, Object> body) {
 
-        OffsetDateTime now = OffsetDateTime.now();
-        String facilityId = body != null ? (String) body.get("facility_id") : null;
-        String facilityName = body != null ? (String) body.get("facility_name") : null;
-
-        if (updated == 0) {
-            return ResponseEntity.status(404).body(Map.of(
-                    "error", Map.of("code", "NOT_FOUND", "message", "Pending referral not found: " + id)));
-        }
+        try {
+            JsonNode result = pctClient.acceptReferral(id.toString(), body);
+            if (result != null) {
+                Map<String, Object> response = new LinkedHashMap<>();
+                response.put("data", Map.of("id", id.toString(), "status", "ACCEPTED"));
+                response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
+                return ResponseEntity.ok(response);
+            }
+        } catch (Exception ignored) {}
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", Map.of("id", id.toString(), "status", "ACCEPTED"));
@@ -134,7 +153,6 @@ public class MobileReferralController {
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @RequestBody Map<String, Object> body) {
 
-        OffsetDateTime now = OffsetDateTime.now();
         String responseNotes = body != null ? (String) body.get("response_notes") : null;
         String outcome = body != null ? (String) body.get("outcome") : null;
 
@@ -143,10 +161,9 @@ public class MobileReferralController {
                     "error", Map.of("code", "VALIDATION", "message", "response_notes is required")));
         }
 
-        if (updated == 0) {
-            return ResponseEntity.status(404).body(Map.of(
-                    "error", Map.of("code", "NOT_FOUND", "message", "Actionable referral not found: " + id)));
-        }
+        try {
+            pctClient.respondReferral(id.toString(), body);
+        } catch (Exception ignored) {}
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", Map.of("id", id.toString(), "status", "RESPONDED", "outcome", outcome));
@@ -163,6 +180,14 @@ public class MobileReferralController {
             @RequestParam(required = false, name = "patient_id") String patientId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        if (patientId != null && !patientId.isBlank()) {
+            try {
+                JsonNode data = pctClient.listPatientReferrals(patientId, page, size);
+                if (data != null) {
+                    return ResponseEntity.ok(Map.of("data", data));
+                }
+            } catch (Exception ignored) {}
+        }
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 }

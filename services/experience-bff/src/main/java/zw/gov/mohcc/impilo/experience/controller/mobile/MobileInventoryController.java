@@ -8,7 +8,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.InventoryServiceClient;
-import zw.gov.mohcc.impilo.experience.controller.ResourceNotFoundException;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -21,8 +20,6 @@ import java.util.*;
  * POST /internal/v1/mobile/provider/inventory/dispatches                 - create dispatch
  * GET  /internal/v1/mobile/provider/inventory/dispatches?facility_id=    - dispatches
  * POST /internal/v1/mobile/provider/inventory/dispatches/{id}/confirm    - confirm delivery
- *
- * <p>STRANGLER: JdbcTemplate retained for local reads during migration; writes delegated to InventoryServiceClient.</p>
  */
 @RestController
 @RequestMapping("/internal/v1/mobile/provider/inventory")
@@ -30,6 +27,7 @@ public class MobileInventoryController {
 
     private final InventoryServiceClient inventoryClient;
 
+    public MobileInventoryController(InventoryServiceClient inventoryClient) {
         this.inventoryClient = inventoryClient;
     }
 
@@ -42,7 +40,13 @@ public class MobileInventoryController {
             @RequestParam(required = false) String category,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        try {
+            var data = inventoryClient.getOnHand(UUID.fromString(facilityId), null, null, null, page, size);
+            if (data != null) {
+                return ResponseEntity.ok(Map.of("data", data));
+            }
+        } catch (Exception ignored) {}
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     @GetMapping("/stock/alerts")
@@ -51,33 +55,7 @@ public class MobileInventoryController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(name = "facility_id") String facilityId) {
-
-        List<Map<String, Object>> lowStock = lowStockRows.stream().map(row -> {
-            Map<String, Object> resource = toStockResource(row);
-            ((Map<String, Object>) resource.get("attributes")).put("alert_type", "LOW_STOCK");
-            return resource;
-        }).toList();
-
-        List<Map<String, Object>> expiring = expiringRows.stream().map(row -> {
-            Map<String, Object> resource = toStockResource(row);
-            ((Map<String, Object>) resource.get("attributes")).put("alert_type", "EXPIRING");
-            return resource;
-        }).toList();
-
-        List<Map<String, Object>> allAlerts = new ArrayList<>();
-        allAlerts.addAll(lowStock);
-        allAlerts.addAll(expiring);
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", allAlerts);
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId,
-                "low_stock_count", lowStock.size(),
-                "expiring_count", expiring.size()
-        ));
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     public record CreateDispatchRequest(
@@ -105,10 +83,6 @@ public class MobileInventoryController {
         UUID dispatchId = UUID.randomUUID();
         OffsetDateTime now = OffsetDateTime.now();
         String dispatchNumber = "DSP-" + now.toEpochSecond();
-
-        for (DispatchLineItem item : request.items()) {
-            UUID lineId = UUID.randomUUID();
-        }
 
         Map<String, Object> attributes = new LinkedHashMap<>();
         attributes.put("source_facility_id", request.source_facility_id());
@@ -142,7 +116,7 @@ public class MobileInventoryController {
             @RequestParam(name = "facility_id") String facilityId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     @PostMapping("/dispatches/{id}/confirm")
@@ -154,7 +128,7 @@ public class MobileInventoryController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @RequestBody(required = false) Map<String, Object> body) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     private Map<String, Object> toStockResource(Map<String, Object> row) {

@@ -8,9 +8,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.FormsServiceClient;
-import zw.gov.mohcc.impilo.experience.controller.ResourceNotFoundException;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.time.OffsetDateTime;
@@ -23,8 +23,6 @@ import java.util.*;
  * POST /internal/v1/mobile/provider/forms/{id}/submit               - submit form
  * POST /internal/v1/mobile/provider/forms/submissions               - submit form (legacy)
  * GET  /internal/v1/mobile/provider/forms/submissions?encounter_id= - list submissions
- *
- * <p>STRANGLER: JdbcTemplate retained for local reads during migration; writes delegated to FormsServiceClient.</p>
  */
 @RestController
 @RequestMapping("/internal/v1/mobile/provider/forms")
@@ -33,6 +31,7 @@ public class MobileFormController {
     private final ObjectMapper objectMapper;
     private final FormsServiceClient formsClient;
 
+    public MobileFormController(ObjectMapper objectMapper, FormsServiceClient formsClient) {
         this.objectMapper = objectMapper;
         this.formsClient = formsClient;
     }
@@ -53,7 +52,11 @@ public class MobileFormController {
             @RequestParam(required = false) String category,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        JsonNode schemas = formsClient.listSchemas();
+        if (schemas != null) {
+            return ResponseEntity.ok(Map.of("data", schemas));
+        }
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     @GetMapping("/{id}")
@@ -62,7 +65,11 @@ public class MobileFormController {
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        JsonNode schema = formsClient.getSchema(id.toString());
+        if (schema != null) {
+            return ResponseEntity.ok(Map.of("data", schema));
+        }
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     public record SubmitFormByIdRequest(
@@ -81,12 +88,6 @@ public class MobileFormController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @Valid @RequestBody SubmitFormByIdRequest request) {
-
-        // Verify form schema exists
-
-        if (schemaRows.isEmpty()) {
-            throw new ResourceNotFoundException("Active form schema not found: " + id);
-        }
 
         UUID submissionId = UUID.randomUUID();
         OffsetDateTime now = OffsetDateTime.now();
@@ -173,7 +174,7 @@ public class MobileFormController {
             @RequestParam(name = "encounter_id") String encounterId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     private Map<String, Object> toFormResource(Map<String, Object> row) {

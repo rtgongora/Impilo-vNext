@@ -30,10 +30,8 @@ public class CitizenCoverageController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader("X-Actor-ID") String actorId) {
 
-        // STRANGLER: migrated — delegate to CoverageServiceClient
         JsonNode coverage = coverageClient.getCitizenCoverage(actorId);
 
-        // STRANGLER: migrated — was direct JdbcTemplate SELECT from coverage_plans table
         // UUID patientId = resolvePatientId(tenantId, actorId);
         // List<Map<String, Object>> rows = jdbcTemplate.queryForList(..., tenantId, patientId);
 
@@ -50,10 +48,8 @@ public class CitizenCoverageController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
 
-        // STRANGLER: migrated — delegate to CoverageServiceClient
         JsonNode plan = coverageClient.getPlan(id.toString());
 
-        // STRANGLER: migrated — was direct JdbcTemplate SELECT from coverage_plans
         // List<Map<String, Object>> rows = jdbcTemplate.queryForList(..., id, tenantId);
 
         Map<String, Object> response = new LinkedHashMap<>();

@@ -65,7 +65,19 @@ public class StructuredHistoryController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(name = "patient_id") String patientIdParam) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        parsePatientId(patientIdParam);
+        try {
+            JsonNode pctData = pctClient.getSocialHistory(patientIdParam);
+            if (pctData != null) {
+                Map<String, Object> body = new LinkedHashMap<>();
+                body.put("data", pctData);
+                body.put("meta", meta(requestId, correlationId));
+                return ResponseEntity.ok(body);
+            }
+        } catch (Exception e) {
+            log.warn("PCT getSocialHistory failed: {}", e.getMessage());
+        }
+        return ResponseEntity.ok(Map.of("data", List.of(), "meta", meta(requestId, correlationId)));
     }
 
     private Map<String, Object> socialRow(ResultSet rs) throws SQLException {
@@ -87,8 +99,7 @@ public class StructuredHistoryController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(name = "patient_id") String patientIdParam) {
 
-        UUID patientId = parsePatientId(patientIdParam);
-        // STRANGLER: delegate to PctServiceClient
+        parsePatientId(patientIdParam);
         try {
             JsonNode pctData = pctClient.getFamilyHistory(patientIdParam);
             if (pctData != null) {
@@ -98,25 +109,9 @@ public class StructuredHistoryController {
                 return ResponseEntity.ok(body);
             }
         } catch (Exception e) {
-            log.warn("PCT getFamilyHistory failed, falling back to local: {}", e.getMessage());
+            log.warn("PCT getFamilyHistory failed: {}", e.getMessage());
         }
-        // STRANGLER: migrated to PctServiceClient — fallback to local JDBC
-
-        if (!members.isEmpty()) {
-            List<UUID> memberIds = members.stream()
-                    .map(m -> UUID.fromString((String) m.get("id")))
-                    .toList();
-            Map<UUID, List<Map<String, Object>>> conditionsByMember = loadFamilyConditions(memberIds);
-            for (Map<String, Object> mem : members) {
-                UUID id = UUID.fromString((String) mem.get("id"));
-                mem.put("conditions", conditionsByMember.getOrDefault(id, List.of()));
-            }
-        }
-
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("data", members);
-        body.put("meta", meta(requestId, correlationId));
-        return ResponseEntity.ok(body);
+        return ResponseEntity.ok(Map.of("data", List.of(), "meta", meta(requestId, correlationId)));
     }
 
     private Map<String, Object> familyMemberRow(ResultSet rs) throws SQLException {
@@ -159,7 +154,19 @@ public class StructuredHistoryController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(name = "patient_id") String patientIdParam) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        parsePatientId(patientIdParam);
+        try {
+            JsonNode pctData = pctClient.getFunctionalAssessments(patientIdParam);
+            if (pctData != null) {
+                Map<String, Object> body = new LinkedHashMap<>();
+                body.put("data", pctData);
+                body.put("meta", meta(requestId, correlationId));
+                return ResponseEntity.ok(body);
+            }
+        } catch (Exception e) {
+            log.warn("PCT getFunctionalAssessments failed: {}", e.getMessage());
+        }
+        return ResponseEntity.ok(Map.of("data", List.of(), "meta", meta(requestId, correlationId)));
     }
 
     private Map<String, Object> functionalRow(ResultSet rs) throws SQLException {
@@ -191,7 +198,19 @@ public class StructuredHistoryController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(name = "patient_id") String patientIdParam) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        parsePatientId(patientIdParam);
+        try {
+            JsonNode pctData = pctClient.getProcedures(patientIdParam);
+            if (pctData != null) {
+                Map<String, Object> body = new LinkedHashMap<>();
+                body.put("data", pctData);
+                body.put("meta", meta(requestId, correlationId));
+                return ResponseEntity.ok(body);
+            }
+        } catch (Exception e) {
+            log.warn("PCT getProcedures failed: {}", e.getMessage());
+        }
+        return ResponseEntity.ok(Map.of("data", List.of(), "meta", meta(requestId, correlationId)));
     }
 
     private Map<String, Object> procedureRow(ResultSet rs) throws SQLException {
@@ -213,7 +232,19 @@ public class StructuredHistoryController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(name = "patient_id") String patientIdParam) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        parsePatientId(patientIdParam);
+        try {
+            JsonNode pctData = pctClient.getAdvanceDirectives(patientIdParam);
+            if (pctData != null) {
+                Map<String, Object> body = new LinkedHashMap<>();
+                body.put("data", pctData);
+                body.put("meta", meta(requestId, correlationId));
+                return ResponseEntity.ok(body);
+            }
+        } catch (Exception e) {
+            log.warn("PCT getAdvanceDirectives failed: {}", e.getMessage());
+        }
+        return ResponseEntity.ok(Map.of("data", List.of(), "meta", meta(requestId, correlationId)));
     }
 
     private Map<String, Object> directiveRow(ResultSet rs) throws SQLException {

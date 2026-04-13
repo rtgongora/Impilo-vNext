@@ -54,7 +54,30 @@ public class ClinicalNotesController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false, name = "patient_id") String patientId) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        if (patientId != null) {
+            try {
+                JsonNode pctData = pctClient.listClinicalNotes(patientId, page, size);
+                if (pctData != null) {
+                    Map<String, Object> response = new LinkedHashMap<>();
+                    response.put("data", pctData);
+                    response.put("meta", Map.of(
+                            "request_id", requestId,
+                            "correlation_id", correlationId
+                    ));
+                    return ResponseEntity.ok(response);
+                }
+            } catch (Exception e) {
+                log.warn("PCT listClinicalNotes failed: {}", e.getMessage());
+            }
+        }
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", List.of());
+        response.put("meta", Map.of(
+                "request_id", requestId,
+                "correlation_id", correlationId
+        ));
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{id}")
@@ -64,8 +87,10 @@ public class ClinicalNotesController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
 
+        JsonNode noteData = pctClient.getClinicalNote(id.toString());
+
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", toResource(note));
+        response.put("data", noteData != null ? noteData : Map.of());
         response.put("meta", Map.of(
                 "request_id", requestId,
                 "correlation_id", correlationId
@@ -86,7 +111,6 @@ public class ClinicalNotesController {
         UUID noteId = UUID.randomUUID();
         OffsetDateTime now = OffsetDateTime.now();
 
-        // STRANGLER: delegate to PctServiceClient first
         try {
             Map<String, Object> pctBody = new LinkedHashMap<>();
             pctBody.put("patient_id", request.patient_id());
@@ -104,8 +128,6 @@ public class ClinicalNotesController {
         } catch (Exception e) {
             log.warn("PCT createClinicalNote failed (non-blocking): {}", e.getMessage());
         }
-
-        // STRANGLER: migrated to PctServiceClient — dual-write to local BFF table as backup cache
 
         Map<String, Object> attributes = new LinkedHashMap<>();
         attributes.put("patient_id", request.patient_id());
@@ -145,18 +167,11 @@ public class ClinicalNotesController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey) {
 
-        // STRANGLER: delegate to PctServiceClient first
-        try {
-            pctClient.signClinicalNote(id.toString());
-            log.info("PCT clinical note signed: {}", id);
-        } catch (Exception e) {
-            log.warn("PCT signClinicalNote failed (non-blocking): {}", e.getMessage());
-        }
-
-        note.sign();
+        JsonNode result = pctClient.signClinicalNote(id.toString());
+        log.info("PCT clinical note signed: {}", id);
 
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", toResource(note));
+        response.put("data", result != null ? result : Map.of("id", id.toString(), "status", "SIGNED"));
         response.put("meta", Map.of(
                 "request_id", requestId,
                 "correlation_id", correlationId

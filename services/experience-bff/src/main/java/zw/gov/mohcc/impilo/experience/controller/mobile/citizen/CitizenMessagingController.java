@@ -56,10 +56,8 @@ public class CitizenMessagingController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
 
-        // STRANGLER: migrated — delegate to CommunityServiceClient (channels proxy)
         JsonNode conversations = communityClient.listVisits(actorId);
 
-        // STRANGLER: migrated — was direct JdbcTemplate SELECT from conversations/conversation_participants tables
         // List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql.toString(), params.toArray());
 
         Map<String, Object> response = new LinkedHashMap<>();
@@ -75,10 +73,8 @@ public class CitizenMessagingController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
 
-        // STRANGLER: migrated — delegate to CommunityServiceClient
         JsonNode conversation = communityClient.getUnit(id.toString());
 
-        // STRANGLER: migrated — was direct JdbcTemplate SELECT from conversations
         // List<Map<String, Object>> rows = jdbcTemplate.queryForList(..., id, tenantId);
 
         Map<String, Object> response = new LinkedHashMap<>();
@@ -97,7 +93,6 @@ public class CitizenMessagingController {
             @RequestHeader("X-Actor-ID") String actorId,
             @Valid @RequestBody CreateConversationBody body) {
 
-        // STRANGLER: migrated — delegate to CommunityServiceClient
         Map<String, Object> convRequest = new LinkedHashMap<>();
         convRequest.put("recipientId", body.recipientId());
         convRequest.put("subject", body.subject());
@@ -107,7 +102,6 @@ public class CitizenMessagingController {
 
         JsonNode result = communityClient.createUnit(convRequest);
 
-        // STRANGLER: migrated — was direct JdbcTemplate INSERT into conversations, conversation_participants, messages tables
         // jdbcTemplate.update("""
         //     INSERT INTO conversations (id, tenant_id, subject, conversation_type, status, created_at, updated_at)
         //     VALUES (?, ?, ?, ?, 'ACTIVE', ?, ?)
@@ -128,10 +122,8 @@ public class CitizenMessagingController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
 
-        // STRANGLER: migrated — delegate to CommunityServiceClient
         JsonNode messages = communityClient.listAssignments(id.toString());
 
-        // STRANGLER: migrated — was direct JdbcTemplate SELECT from messages table
         // List<Map<String, Object>> rows = jdbcTemplate.queryForList(..., id, tenantId, limit, offset);
 
         Map<String, Object> response = new LinkedHashMap<>();
@@ -151,7 +143,6 @@ public class CitizenMessagingController {
             @RequestHeader("X-Actor-ID") String actorId,
             @Valid @RequestBody SendMessageBody body) {
 
-        // STRANGLER: migrated — delegate to CommunityServiceClient
         Map<String, Object> msgRequest = new LinkedHashMap<>();
         msgRequest.put("conversationId", id.toString());
         msgRequest.put("senderId", actorId);
@@ -160,7 +151,6 @@ public class CitizenMessagingController {
 
         JsonNode result = communityClient.createAssignment(msgRequest);
 
-        // STRANGLER: migrated — was direct JdbcTemplate INSERT into messages table
         // jdbcTemplate.update("""
         //     INSERT INTO messages (id, tenant_id, conversation_id, sender_id, content, message_type, sent_at, created_at)
         //     VALUES (?, ?, ?, ?, ?, 'TEXT', ?, ?)
@@ -183,13 +173,11 @@ public class CitizenMessagingController {
 
         OffsetDateTime now = OffsetDateTime.now();
 
-        // STRANGLER: migrated — delegate to CommunityServiceClient
         Map<String, Object> readRequest = new LinkedHashMap<>();
         readRequest.put("conversationId", id.toString());
         readRequest.put("participantId", actorId);
         communityClient.startVisit(id.toString());
 
-        // STRANGLER: migrated — was direct JdbcTemplate UPDATE on conversation_participants
         // jdbcTemplate.update("""
         //     UPDATE conversation_participants SET last_read_at = ?
         //     WHERE conversation_id = ? AND participant_id = ?

@@ -74,7 +74,42 @@ public class TriageController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @Valid @RequestBody RecordTriageRequest request) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        Map<String, Object> vitals = request.vitals();
+        String acuityStr = String.valueOf(request.acuity());
+
+        try {
+            pctClient.recordTriage(
+                    request.encounter_id() != null ? request.encounter_id() : request.queue_entry_id(),
+                    acuityStr,
+                    vitals,
+                    request.notes());
+            log.info("PCT triage recorded for patient={}", request.patient_id());
+        } catch (Exception e) {
+            log.warn("PCT recordTriage failed (non-blocking): {}", e.getMessage());
+        }
+
+        String triageCategory = switch (request.acuity()) {
+            case 1 -> "RED";
+            case 2 -> "ORANGE";
+            case 3 -> "YELLOW";
+            case 4 -> "GREEN";
+            case 5 -> "BLUE";
+            default -> "YELLOW";
+        };
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", Map.of(
+                "id", UUID.randomUUID().toString(),
+                "patient_id", request.patient_id(),
+                "acuity", request.acuity(),
+                "triage_category", triageCategory,
+                "status", "TRIAGED"
+        ));
+        response.put("meta", Map.of(
+                "request_id", requestId,
+                "correlation_id", correlationId
+        ));
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     /**
@@ -88,6 +123,12 @@ public class TriageController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(required = false, name = "patient_id") String patientId,
             @RequestParam(required = false, name = "encounter_id") String encounterId) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", List.of());
+        response.put("meta", Map.of(
+                "request_id", requestId,
+                "correlation_id", correlationId
+        ));
+        return ResponseEntity.ok(response);
     }
 }

@@ -38,10 +38,8 @@ public class CitizenProfileController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader("X-Actor-ID") String actorId) {
 
-        // STRANGLER: migrated — delegate to VITO for citizen profile
         JsonNode profile = vitoClient.getCitizenProfile(actorId);
 
-        // STRANGLER: migrated — was direct JdbcTemplate SELECT from patients table
         // List<Map<String, Object>> rows = jdbcTemplate.queryForList("""
         //     SELECT id, cpid, given_name, family_name, date_of_birth, sex,
         //            national_id, phone, status, facility_id, created_at, updated_at
@@ -64,10 +62,8 @@ public class CitizenProfileController {
             @RequestHeader("X-Actor-ID") String actorId,
             @RequestBody Map<String, Object> updates) {
 
-        // STRANGLER: migrated — delegate to VITO
         JsonNode updatedProfile = vitoClient.updateCitizenProfile(actorId, updates);
 
-        // STRANGLER: migrated — was direct JdbcTemplate UPDATE on patients table
         // if (updates.containsKey("phone")) {
         //     jdbcTemplate.update("UPDATE patients SET phone = ?, updated_at = ? WHERE tenant_id = ? AND cpid = ?",
         //             updates.get("phone"), now, tenantId, actorId);
@@ -86,10 +82,8 @@ public class CitizenProfileController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader("X-Actor-ID") String actorId) {
 
-        // STRANGLER: migrated — delegate to TSHEPO Consent service
         JsonNode consents = consentClient.listConsents(actorId, "ACTIVE", 0, 100);
 
-        // STRANGLER: migrated — was direct JdbcTemplate SELECT from consent_preferences table
         // List<Map<String, Object>> rows = jdbcTemplate.queryForList("""
         //     SELECT id, category, description, granted, granted_at, revoked_at
         //     FROM consent_preferences WHERE tenant_id = ? AND patient_id = ? ORDER BY category
@@ -113,14 +107,12 @@ public class CitizenProfileController {
 
         boolean granted = Boolean.TRUE.equals(body.get("granted"));
 
-        // STRANGLER: migrated — delegate to TSHEPO Consent service
         Map<String, Object> updateRequest = new LinkedHashMap<>();
         updateRequest.put("consentId", id.toString());
         updateRequest.put("granted", granted);
         updateRequest.put("tenantId", tenantId);
         JsonNode result = consentClient.updateConsentPreference(updateRequest);
 
-        // STRANGLER: migrated — was direct JdbcTemplate UPDATE on consent_preferences table
         // jdbcTemplate.update("""
         //     UPDATE consent_preferences SET granted = ?, granted_at = ?, revoked_at = NULL, updated_at = ?
         //     WHERE id = ? AND tenant_id = ?
@@ -141,10 +133,8 @@ public class CitizenProfileController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader("X-Actor-ID") String actorId) {
 
-        // STRANGLER: migrated — delegate to VITO
         vitoClient.deleteCitizenAccount(actorId);
 
-        // STRANGLER: migrated — was direct JdbcTemplate UPDATE setting status='DELETED'
         // jdbcTemplate.update("UPDATE patients SET status = 'DELETED', updated_at = NOW() WHERE tenant_id = ? AND cpid = ?",
         //         tenantId, actorId);
 

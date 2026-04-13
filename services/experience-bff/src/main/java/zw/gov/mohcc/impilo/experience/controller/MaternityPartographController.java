@@ -39,7 +39,6 @@ public class MaternityPartographController {
             return ResponseEntity.badRequest().body(Map.of("error", "patientId is required"));
         }
 
-        // STRANGLER: delegate to PctServiceClient first
         try {
             Map<String, Object> pctBody = new LinkedHashMap<>();
             pctBody.put("patientId", request.patientId());
@@ -55,7 +54,6 @@ public class MaternityPartographController {
             log.warn("PCT createPartographSession failed (non-blocking): {}", e.getMessage());
         }
 
-        // STRANGLER: migrated to PctServiceClient — dual-write to local BFF table as backup cache
         UUID id = UUID.randomUUID();
         OffsetDateTime startedAt = parseDateTime(request.startedAt());
 

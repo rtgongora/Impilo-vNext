@@ -38,10 +38,8 @@ public class CitizenPrescriptionController {
 
         int limit = Math.min(size, 100);
 
-        // STRANGLER: migrated — delegate to PharmacyServiceClient
         JsonNode prescriptions = pharmacyClient.getPatientPrescriptions(actorId, status, page, limit);
 
-        // STRANGLER: migrated — was direct JdbcTemplate SELECT from prescriptions table
         // UUID patientId = resolvePatientId(tenantId, actorId);
         // List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql.toString(), params.toArray());
 
@@ -58,10 +56,8 @@ public class CitizenPrescriptionController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
 
-        // STRANGLER: migrated — delegate to PharmacyServiceClient
         JsonNode prescription = pharmacyClient.getPrescription(id.toString());
 
-        // STRANGLER: migrated — was direct JdbcTemplate SELECT from prescriptions
         // List<Map<String, Object>> rows = jdbcTemplate.queryForList(..., id, tenantId);
 
         Map<String, Object> response = new LinkedHashMap<>();
@@ -80,7 +76,6 @@ public class CitizenPrescriptionController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestBody(required = false) Map<String, Object> body) {
 
-        // STRANGLER: migrated — delegate to PharmacyServiceClient
         JsonNode refillResult = pharmacyClient.requestRefill(id.toString(), body != null ? body : Map.of());
 
         Map<String, Object> response = new LinkedHashMap<>();

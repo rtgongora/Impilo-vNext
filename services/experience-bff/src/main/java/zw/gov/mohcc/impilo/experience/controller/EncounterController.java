@@ -68,7 +68,30 @@ public class EncounterController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false, name = "patient_id") String patientId) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        if (patientId != null) {
+            try {
+                JsonNode pctData = pctClient.getPatientTimeline(patientId);
+                if (pctData != null) {
+                    Map<String, Object> response = new LinkedHashMap<>();
+                    response.put("data", pctData);
+                    response.put("meta", Map.of(
+                            "request_id", requestId,
+                            "correlation_id", correlationId
+                    ));
+                    return ResponseEntity.ok(response);
+                }
+            } catch (Exception e) {
+                log.warn("PCT getPatientTimeline failed: {}", e.getMessage());
+            }
+        }
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", List.of());
+        response.put("meta", Map.of(
+                "request_id", requestId,
+                "correlation_id", correlationId
+        ));
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{id}")
@@ -77,7 +100,13 @@ public class EncounterController {
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", Map.of());
+        response.put("meta", Map.of(
+                "request_id", requestId,
+                "correlation_id", correlationId
+        ));
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping

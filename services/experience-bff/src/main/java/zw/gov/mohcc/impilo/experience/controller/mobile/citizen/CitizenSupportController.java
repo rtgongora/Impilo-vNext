@@ -47,10 +47,8 @@ public class CitizenSupportController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
 
-        // STRANGLER: migrated — delegate to support-service via CommunityServiceClient
         JsonNode tickets = communityClient.listVisits(actorId);
 
-        // STRANGLER: migrated — was direct JdbcTemplate SELECT from citizen_support_tickets table
         // UUID patientId = resolvePatientId(tenantId, actorId);
         // List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql.toString(), params.toArray());
 
@@ -70,7 +68,6 @@ public class CitizenSupportController {
             @RequestHeader("X-Actor-ID") String actorId,
             @Valid @RequestBody CreateTicketBody body) {
 
-        // STRANGLER: migrated — delegate to support-service via CommunityServiceClient
         Map<String, Object> ticketRequest = new LinkedHashMap<>();
         ticketRequest.put("citizenCpid", actorId);
         ticketRequest.put("category", body.category());
@@ -80,7 +77,6 @@ public class CitizenSupportController {
 
         JsonNode result = communityClient.createVisit(ticketRequest);
 
-        // STRANGLER: migrated — was direct JdbcTemplate INSERT into citizen_support_tickets table
         // jdbcTemplate.update("""
         //     INSERT INTO citizen_support_tickets (...) VALUES (...)
         //     """, ...);

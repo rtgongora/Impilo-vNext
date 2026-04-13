@@ -73,10 +73,8 @@ public class ReferralsController {
 
         int limit = Math.min(size, 100);
 
-        // STRANGLER: migrated — delegate to PctServiceClient
         JsonNode referrals = pctClient.listPatientReferrals(patientId, page, limit);
 
-        // STRANGLER: migrated — was ReferralRepository.findByTenantIdAndPatientId
         // PageRequest pageable = PageRequest.of(page, limit, Sort.by("createdAt").descending());
         // Page<Referral> result = referralRepository.findByTenantIdAndPatientId(tenantId, UUID.fromString(patientId), pageable);
 
@@ -102,10 +100,8 @@ public class ReferralsController {
 
         int limit = Math.min(size, 100);
 
-        // STRANGLER: migrated — delegate to PctServiceClient
         JsonNode referrals = pctClient.listIncomingReferrals(facilityId, status, page, limit);
 
-        // STRANGLER: migrated — was direct JdbcTemplate SELECT from referrals table
         // List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql.toString(), params.toArray());
 
         Map<String, Object> response = new LinkedHashMap<>();
@@ -125,10 +121,8 @@ public class ReferralsController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
 
-        // STRANGLER: migrated — delegate to PctServiceClient
         JsonNode referral = pctClient.getReferral(id.toString());
 
-        // STRANGLER: migrated — was ReferralRepository.findByIdAndTenantId
         // Referral referral = referralRepository.findByIdAndTenantId(id, tenantId)
         //         .orElseThrow(() -> new ResourceNotFoundException("Referral not found: " + id));
 
@@ -152,7 +146,6 @@ public class ReferralsController {
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @Valid @RequestBody CreateReferralRequest request) {
 
-        // STRANGLER: migrated — delegate to PctServiceClient
         Map<String, Object> referralData = new LinkedHashMap<>();
         referralData.put("patient_id", request.patient_id());
         referralData.put("encounter_id", request.encounter_id());
@@ -169,7 +162,6 @@ public class ReferralsController {
 
         JsonNode result = pctClient.createReferral(referralData);
 
-        // STRANGLER: migrated — was direct JdbcTemplate INSERT into referrals
         // jdbcTemplate.update("""
         //     INSERT INTO referrals (...) VALUES (...)
         //     """, ...);
@@ -197,12 +189,10 @@ public class ReferralsController {
 
         String outcome = request != null ? request.outcome() : null;
 
-        // STRANGLER: migrated — delegate to PctServiceClient
         Map<String, Object> completeData = new LinkedHashMap<>();
         if (outcome != null) completeData.put("outcome", outcome);
         JsonNode result = pctClient.completeReferral(id.toString(), completeData);
 
-        // STRANGLER: migrated — was ReferralRepository.findByIdAndTenantId + referral.complete() + save
         // Referral referral = referralRepository.findByIdAndTenantId(id, tenantId)...
         // referral.complete(outcome);
         // referralRepository.save(referral);
@@ -228,7 +218,6 @@ public class ReferralsController {
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @Valid @RequestBody AcceptReferralRequest request) {
 
-        // STRANGLER: migrated — delegate to PctServiceClient
         Map<String, Object> acceptData = new LinkedHashMap<>();
         acceptData.put("receiving_facility_id", request.receiving_facility_id());
         acceptData.put("receiving_facility_name", request.receiving_facility_name());
@@ -237,7 +226,6 @@ public class ReferralsController {
 
         JsonNode result = pctClient.acceptReferral(id.toString(), acceptData);
 
-        // STRANGLER: migrated — was ReferralRepository.findByIdAndTenantId + referral.accept() + save
         // referral.accept(receivingId, request.receiving_facility_name());
         // referralRepository.save(referral);
 
@@ -258,14 +246,12 @@ public class ReferralsController {
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @Valid @RequestBody RespondReferralRequest request) {
 
-        // STRANGLER: migrated — delegate to PctServiceClient
         Map<String, Object> respondData = new LinkedHashMap<>();
         respondData.put("response_notes", request.response_notes());
         if (request.outcome() != null) respondData.put("outcome", request.outcome());
 
         JsonNode result = pctClient.respondReferral(id.toString(), respondData);
 
-        // STRANGLER: migrated — was ReferralRepository.findByIdAndTenantId + referral.respond() + save
         // referral.respond(request.response_notes(), request.outcome());
         // referralRepository.save(referral);
 

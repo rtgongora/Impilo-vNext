@@ -47,7 +47,6 @@ public class MarketplaceController {
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false, name = "facility_id") String facilityId) {
 
-        // STRANGLER: migrated — delegate to MsikaFlowServiceClient
         LinkedMultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         if (facilityId != null) params.add("facilityId", facilityId);
         params.add("page", String.valueOf(page));
@@ -55,7 +54,6 @@ public class MarketplaceController {
 
         ResponseEntity<String> result = msikaFlowClient.listVendors(params);
 
-        // STRANGLER: migrated — was MarketplaceOrderRepository.findByTenantIdAndFacilityId
         // Page<MarketplaceOrder> result = marketplaceOrderRepository.findByTenantIdAndFacilityId(tenantId, facilityId, pageable);
 
         Map<String, Object> response = new LinkedHashMap<>();
@@ -76,14 +74,12 @@ public class MarketplaceController {
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String search) {
 
-        // STRANGLER: migrated — delegate to MsikaFlowServiceClient
         LinkedMultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         if (category != null && !category.isBlank()) params.add("category", category);
         if (search != null && !search.isBlank()) params.add("search", search);
 
         ResponseEntity<String> result = msikaFlowClient.listVendors(params);
 
-        // STRANGLER: migrated — was direct JdbcTemplate SELECT from marketplace_services
         // List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql.toString(), params.toArray());
 
         Map<String, Object> response = new LinkedHashMap<>();
@@ -98,10 +94,8 @@ public class MarketplaceController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
 
-        // STRANGLER: migrated — delegate to MsikaFlowServiceClient
         ResponseEntity<String> result = msikaFlowClient.listVendors(null);
 
-        // STRANGLER: migrated — was direct JdbcTemplate SELECT from marketplace_services with GROUP BY
         // List<Map<String, Object>> rows = jdbcTemplate.queryForList(..., tenantId);
 
         Map<String, Object> response = new LinkedHashMap<>();
@@ -116,10 +110,8 @@ public class MarketplaceController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
 
-        // STRANGLER: migrated — delegate to MsikaFlowServiceClient
         ResponseEntity<String> result = msikaFlowClient.listVendors(null);
 
-        // STRANGLER: migrated — was direct JdbcTemplate SELECT from service_requests
         // List<Map<String, Object>> rows = jdbcTemplate.queryForList(..., tenantId);
 
         Map<String, Object> response = new LinkedHashMap<>();
@@ -135,10 +127,8 @@ public class MarketplaceController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
 
-        // STRANGLER: migrated — delegate to MsikaFlowServiceClient
         ResponseEntity<String> result = msikaFlowClient.getOrder(id.toString());
 
-        // STRANGLER: migrated — was MarketplaceOrderRepository.findByIdAndTenantId
         // MarketplaceOrder order = marketplaceOrderRepository.findByIdAndTenantId(id, tenantId)
         //         .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + id));
 
@@ -159,7 +149,6 @@ public class MarketplaceController {
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @Valid @RequestBody CreateOrderRequest request) {
 
-        // STRANGLER: migrated — delegate to MsikaFlowServiceClient
         String orderBody = String.format(
                 "{\"facility_id\":\"%s\",\"order_number\":\"%s\",\"items\":%s,\"ordered_by\":\"%s\",\"total_amount\":\"%s\"}",
                 request.facility_id(), request.order_number(),
@@ -169,7 +158,6 @@ public class MarketplaceController {
 
         ResponseEntity<String> result = msikaFlowClient.createOrder(orderBody);
 
-        // STRANGLER: migrated — was direct JdbcTemplate INSERT into marketplace_orders
         // jdbcTemplate.update("""
         //     INSERT INTO marketplace_orders (...) VALUES (...)
         //     """, ...);

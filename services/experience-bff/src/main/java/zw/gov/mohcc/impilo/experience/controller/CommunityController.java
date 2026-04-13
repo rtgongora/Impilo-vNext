@@ -39,10 +39,8 @@ public class CommunityController {
 
         int limit = Math.min(size, 100);
 
-        // STRANGLER: migrated — delegate to CommunityServiceClient
         JsonNode groups = communityClient.listGroups(category, page, limit);
 
-        // STRANGLER: migrated — was direct JdbcTemplate SELECT from community_groups
         // List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql, ...);
 
         return ResponseEntity.ok(Map.of("data", groups != null ? groups : List.of(),
@@ -57,11 +55,9 @@ public class CommunityController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestBody Map<String, Object> body) {
 
-        // STRANGLER: migrated — delegate to CommunityServiceClient
         body.put("tenantId", tenantId);
         JsonNode result = communityClient.createGroup(body);
 
-        // STRANGLER: migrated — was direct JdbcTemplate INSERT into community_groups
         // jdbcTemplate.update("INSERT INTO community_groups (...) VALUES (...)", ...);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
@@ -78,10 +74,8 @@ public class CommunityController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestBody Map<String, Object> body) {
 
-        // STRANGLER: migrated — delegate to CommunityServiceClient
         JsonNode result = communityClient.joinGroup(groupId.toString(), body);
 
-        // STRANGLER: migrated — was direct JdbcTemplate INSERT into community_group_members + UPDATE community_groups
         // jdbcTemplate.update("INSERT INTO community_group_members (...) VALUES (...)", ...);
 
         return ResponseEntity.ok(Map.of("data", result != null ? result : Map.of("joined", true),
@@ -99,10 +93,8 @@ public class CommunityController {
 
         int limit = Math.min(size, 100);
 
-        // STRANGLER: migrated — delegate to CommunityServiceClient
         JsonNode posts = communityClient.listPosts(groupId.toString(), page, limit);
 
-        // STRANGLER: migrated — was direct JdbcTemplate SELECT from discussion_posts
         // List<Map<String, Object>> rows = jdbcTemplate.queryForList(..., groupId, tenantId, limit, offset);
 
         return ResponseEntity.ok(Map.of("data", posts != null ? posts : List.of(),
@@ -118,11 +110,9 @@ public class CommunityController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestBody Map<String, Object> body) {
 
-        // STRANGLER: migrated — delegate to CommunityServiceClient
         body.put("tenantId", tenantId);
         JsonNode result = communityClient.createPost(groupId.toString(), body);
 
-        // STRANGLER: migrated — was direct JdbcTemplate INSERT into discussion_posts
         // jdbcTemplate.update("INSERT INTO discussion_posts (...) VALUES (...)", ...);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(

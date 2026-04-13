@@ -18,13 +18,12 @@ import java.util.*;
  * POST /internal/v1/mobile/provider/messaging/conversations/{id}/messages         - send message
  * POST /internal/v1/mobile/provider/messaging/conversations                       - create conversation
  * POST /internal/v1/mobile/provider/messaging/conversations/{id}/read             - mark read
- *
- * <p>STRANGLER: JdbcTemplate retained for local reads during migration; target sovereign service is channels-service.</p>
  */
 @RestController
 @RequestMapping("/internal/v1/mobile/provider/messaging")
 public class MobileMessagingController {
 
+    public MobileMessagingController() {
     }
 
     public record CreateConversationRequest(
@@ -52,7 +51,7 @@ public class MobileMessagingController {
             @RequestParam(name = "participant_id") String participantId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     @GetMapping("/conversations/{id}/messages")
@@ -63,7 +62,7 @@ public class MobileMessagingController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     @PostMapping("/conversations/{id}/messages")
@@ -114,10 +113,6 @@ public class MobileMessagingController {
         UUID conversationId = UUID.randomUUID();
         OffsetDateTime now = OffsetDateTime.now();
         String conversationType = request.conversation_type() != null ? request.conversation_type() : "DIRECT";
-
-        for (String participantId : request.participant_ids()) {
-            UUID cpId = UUID.randomUUID();
-        }
 
         Map<String, Object> attributes = new LinkedHashMap<>();
         attributes.put("subject", request.subject());

@@ -54,7 +54,30 @@ public class ConditionsController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false, name = "patient_id") String patientId) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        if (patientId != null) {
+            try {
+                JsonNode pctData = pctClient.listConditions(patientId, page, size);
+                if (pctData != null) {
+                    Map<String, Object> response = new LinkedHashMap<>();
+                    response.put("data", pctData);
+                    response.put("meta", Map.of(
+                            "request_id", requestId,
+                            "correlation_id", correlationId
+                    ));
+                    return ResponseEntity.ok(response);
+                }
+            } catch (Exception e) {
+                log.warn("PCT listConditions failed: {}", e.getMessage());
+            }
+        }
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", List.of());
+        response.put("meta", Map.of(
+                "request_id", requestId,
+                "correlation_id", correlationId
+        ));
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping
@@ -70,7 +93,6 @@ public class ConditionsController {
         OffsetDateTime now = OffsetDateTime.now();
         String clinicalStatus = request.clinical_status() != null ? request.clinical_status() : "ACTIVE";
 
-        // STRANGLER: delegate to PctServiceClient first
         try {
             Map<String, Object> pctBody = new LinkedHashMap<>();
             pctBody.put("patient_id", request.patient_id());
@@ -88,8 +110,6 @@ public class ConditionsController {
         } catch (Exception e) {
             log.warn("PCT createCondition failed (non-blocking): {}", e.getMessage());
         }
-
-        // STRANGLER: migrated to PctServiceClient — dual-write to local BFF table as backup cache
 
         Map<String, Object> attributes = new LinkedHashMap<>();
         attributes.put("patient_id", request.patient_id());
@@ -128,18 +148,11 @@ public class ConditionsController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey) {
 
-        // STRANGLER: delegate to PctServiceClient first
-        try {
-            pctClient.resolveCondition(id.toString());
-            log.info("PCT condition resolved: {}", id);
-        } catch (Exception e) {
-            log.warn("PCT resolveCondition failed (non-blocking): {}", e.getMessage());
-        }
-
-        condition.resolve();
+        JsonNode result = pctClient.resolveCondition(id.toString());
+        log.info("PCT condition resolved: {}", id);
 
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", toResource(condition));
+        response.put("data", result != null ? result : Map.of("id", id.toString(), "clinical_status", "RESOLVED"));
         response.put("meta", Map.of(
                 "request_id", requestId,
                 "correlation_id", correlationId

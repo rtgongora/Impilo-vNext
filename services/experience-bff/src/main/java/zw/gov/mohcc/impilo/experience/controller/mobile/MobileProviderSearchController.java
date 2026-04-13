@@ -41,7 +41,6 @@ public class MobileProviderSearchController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @Valid @RequestBody QrSearchRequest request) {
 
-        // STRANGLER: migrated to VitoServiceClient — patient search by QR/CPID/national_id
         // Previously: jdbcTemplate.queryForList("SELECT ... FROM patients p WHERE p.tenant_id = ? AND (p.cpid = ? OR p.national_id = ? OR p.id::text = ?)")
         List<Map<String, Object>> data = new ArrayList<>();
         try {

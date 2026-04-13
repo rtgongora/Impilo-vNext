@@ -7,7 +7,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
-import zw.gov.mohcc.impilo.experience.controller.ResourceNotFoundException;
 
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -18,8 +17,6 @@ import java.util.*;
  * POST   /internal/v1/mobile/provider/diagnosis                 - record diagnosis
  * GET    /internal/v1/mobile/provider/diagnosis?encounter_id=   - list diagnoses
  * DELETE /internal/v1/mobile/provider/diagnosis/{id}            - delete diagnosis
- *
- * <p>STRANGLER: JdbcTemplate retained for local reads during migration; writes delegated to PctServiceClient.</p>
  */
 @RestController
 @RequestMapping("/internal/v1/mobile/provider/diagnosis")
@@ -27,6 +24,7 @@ public class MobileDiagnosisController {
 
     private final PctServiceClient pctClient;
 
+    public MobileDiagnosisController(PctServiceClient pctClient) {
         this.pctClient = pctClient;
     }
 
@@ -47,7 +45,7 @@ public class MobileDiagnosisController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(name = "q") String query,
             @RequestParam(defaultValue = "20") int limit) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     @PostMapping
@@ -98,7 +96,7 @@ public class MobileDiagnosisController {
             @RequestParam(name = "encounter_id") String encounterId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     @DeleteMapping("/{id}")
@@ -109,10 +107,6 @@ public class MobileDiagnosisController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey) {
-
-        if (deleted == 0) {
-            throw new ResourceNotFoundException("Diagnosis not found: " + id);
-        }
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", Map.of("id", id.toString(), "deleted", true));

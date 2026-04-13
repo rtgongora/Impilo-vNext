@@ -35,10 +35,8 @@ public class CitizenResultsController {
 
         int limit = Math.min(size, 100);
 
-        // STRANGLER: migrated — delegate to OrosServiceClient
         JsonNode results = orosClient.getPatientResults(actorId, page, limit);
 
-        // STRANGLER: migrated — was direct JdbcTemplate SELECT from lab_orders table
         // UUID patientId = resolvePatientId(tenantId, actorId);
         // List<Map<String, Object>> rows = jdbcTemplate.queryForList(...);
 
@@ -55,10 +53,8 @@ public class CitizenResultsController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
 
-        // STRANGLER: migrated — delegate to OrosServiceClient
         JsonNode result = orosClient.getResult(id.toString());
 
-        // STRANGLER: migrated — was direct JdbcTemplate SELECT from lab_orders
         // List<Map<String, Object>> rows = jdbcTemplate.queryForList(..., id, tenantId);
 
         Map<String, Object> response = new LinkedHashMap<>();

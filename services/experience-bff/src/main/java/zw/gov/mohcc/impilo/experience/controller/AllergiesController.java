@@ -49,7 +49,6 @@ public class AllergiesController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(required = false, name = "patient_id") String patientId) {
 
-        // STRANGLER: delegate to PctServiceClient
         if (patientId != null) {
             try {
                 JsonNode pctData = pctClient.listAllergies(patientId);
@@ -63,11 +62,10 @@ public class AllergiesController {
                     return ResponseEntity.ok(response);
                 }
             } catch (Exception e) {
-                log.warn("PCT listAllergies failed, falling back to local: {}", e.getMessage());
+                log.warn("PCT listAllergies failed: {}", e.getMessage());
             }
         }
 
-        // Fallback: return empty data when PCT unavailable or no patient_id
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", List.of());
         response.put("meta", Map.of(
@@ -86,7 +84,25 @@ public class AllergiesController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @Valid @RequestBody CreateAllergyRequest request) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        Map<String, Object> pctBody = new LinkedHashMap<>();
+        pctBody.put("patient_id", request.patient_id());
+        pctBody.put("allergen", request.allergen());
+        pctBody.put("allergen_type", request.allergen_type());
+        pctBody.put("reaction", request.reaction());
+        pctBody.put("severity", request.severity());
+        pctBody.put("onset_date", request.onset_date());
+        pctBody.put("recorded_by", request.recorded_by());
+
+        JsonNode result = pctClient.createAllergy(pctBody);
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", result != null ? result : Map.of());
+        response.put("meta", Map.of(
+                "request_id", requestId,
+                "correlation_id", correlationId
+        ));
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @DeleteMapping("/{id}")
@@ -97,6 +113,15 @@ public class AllergiesController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        JsonNode result = pctClient.deactivateAllergy(id.toString());
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", result != null ? result : Map.of("id", id.toString(), "status", "INACTIVE"));
+        response.put("meta", Map.of(
+                "request_id", requestId,
+                "correlation_id", correlationId
+        ));
+
+        return ResponseEntity.ok(response);
     }
 }

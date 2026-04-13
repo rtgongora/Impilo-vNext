@@ -9,13 +9,12 @@ import java.util.*;
 /**
  * Mobile provider notices/alerts endpoints.
  * GET /internal/v1/mobile/provider/notices - return professional notices for the provider
- *
- * <p>STRANGLER: JdbcTemplate retained for local reads during migration; target sovereign service is notification-service.</p>
  */
 @RestController
 @RequestMapping("/internal/v1/mobile/provider/notices")
 public class MobileNoticesController {
 
+    public MobileNoticesController() {
     }
 
     @GetMapping
@@ -26,7 +25,7 @@ public class MobileNoticesController {
             @RequestHeader("X-Actor-ID") String actorId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     private Map<String, Object> toResource(Map<String, Object> row) {

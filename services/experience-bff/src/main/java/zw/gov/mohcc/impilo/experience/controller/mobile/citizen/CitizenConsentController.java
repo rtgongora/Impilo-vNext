@@ -39,10 +39,8 @@ public class CitizenConsentController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(name = "patient_id") String patientId) {
 
-        // STRANGLER: migrated — delegate to TshepoConsentServiceClient
         JsonNode consents = consentClient.listConsents(patientId, null, 0, 100);
 
-        // STRANGLER: migrated — was direct JdbcTemplate SELECT from consent_preferences table
         // List<Map<String, Object>> rows = jdbcTemplate.queryForList("""
         //     SELECT id, consent_type, granted, description, updated_at, created_at
         //     FROM consent_preferences WHERE tenant_id = ? AND patient_id = ?::uuid
@@ -69,7 +67,6 @@ public class CitizenConsentController {
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @Valid @RequestBody UpdateConsentRequest request) {
 
-        // STRANGLER: migrated — delegate to TshepoConsentServiceClient
         Map<String, Object> consentRequest = new LinkedHashMap<>();
         consentRequest.put("patient_id", request.patient_id());
         consentRequest.put("consent_type", request.consent_type());
@@ -78,7 +75,6 @@ public class CitizenConsentController {
 
         JsonNode result = consentClient.updateConsentPreference(consentRequest);
 
-        // STRANGLER: migrated — was direct JdbcTemplate INSERT/ON CONFLICT into consent_preferences table
         // jdbcTemplate.update("""
         //     INSERT INTO consent_preferences (id, tenant_id, patient_id, consent_type, granted, updated_at, created_at)
         //     VALUES (gen_random_uuid(), ?, ?::uuid, ?, ?, ?, ?)

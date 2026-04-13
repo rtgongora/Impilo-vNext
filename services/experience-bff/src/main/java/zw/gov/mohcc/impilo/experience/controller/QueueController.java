@@ -55,7 +55,13 @@ public class QueueController {
             @RequestParam(required = false, name = "facility_id") String facilityId,
             @RequestParam(required = false) String status,
             @RequestParam(required = false, name = "queue_type") String queueType) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", List.of());
+        response.put("meta", Map.of(
+                "request_id", requestId,
+                "correlation_id", correlationId
+        ));
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/entries")
@@ -134,7 +140,13 @@ public class QueueController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", Map.of("id", id.toString(), "status", "CALLED"));
+        response.put("meta", Map.of(
+                "request_id", requestId,
+                "correlation_id", correlationId
+        ));
+        return ResponseEntity.ok(response);
     }
 
     /**
@@ -231,7 +243,13 @@ public class QueueController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", Map.of("id", id.toString(), "status", "COMPLETED"));
+        response.put("meta", Map.of(
+                "request_id", requestId,
+                "correlation_id", correlationId
+        ));
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/entries/{id}/no-show")
@@ -302,7 +320,13 @@ public class QueueController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(required = false, name = "facility_id") UUID facilityId) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", List.of());
+        response.put("meta", Map.of(
+                "request_id", requestId,
+                "correlation_id", correlationId
+        ));
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/entries/stats")

@@ -44,7 +44,6 @@ public class AdminWardController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @Valid @RequestBody CreateWardRequest body) {
 
-        // STRANGLER: migrated — delegate to TusoServiceClient
         Map<String, Object> wardData = new LinkedHashMap<>();
         wardData.put("name", body.name());
         wardData.put("wardType", body.wardType());
@@ -54,7 +53,6 @@ public class AdminWardController {
 
         JsonNode result = tusoClient.createWard(wardData);
 
-        // STRANGLER: migrated — was direct JdbcTemplate INSERT into wards + beds tables
         // jdbcTemplate.update("""
         //     INSERT INTO wards (id, tenant_id, facility_id, name, ward_type, ...) VALUES (...)
         //     """, ...);

@@ -50,10 +50,8 @@ public class CitizenTelehealthController {
 
         int limit = Math.min(size, 100);
 
-        // STRANGLER: migrated — delegate to PctServiceClient
         JsonNode sessions = pctClient.getPatientTelehealthSessions(actorId, status, page, limit);
 
-        // STRANGLER: migrated — was direct JdbcTemplate SELECT from citizen_telehealth_sessions table
         // UUID patientId = resolvePatientId(tenantId, actorId);
         // List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql.toString(), params.toArray());
 
@@ -70,10 +68,8 @@ public class CitizenTelehealthController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
 
-        // STRANGLER: migrated — delegate to PctServiceClient
         JsonNode session = pctClient.getTelehealthSession(id.toString());
 
-        // STRANGLER: migrated — was direct JdbcTemplate SELECT from citizen_telehealth_sessions
         // List<Map<String, Object>> rows = jdbcTemplate.queryForList(..., id, tenantId);
 
         Map<String, Object> response = new LinkedHashMap<>();
@@ -94,7 +90,6 @@ public class CitizenTelehealthController {
 
         String sessionType = body.sessionType() != null ? body.sessionType() : "VIDEO";
 
-        // STRANGLER: migrated — delegate to PctServiceClient
         Map<String, Object> sessionRequest = new LinkedHashMap<>();
         sessionRequest.put("patientCpid", actorId);
         sessionRequest.put("reason", body.reason());
@@ -105,7 +100,6 @@ public class CitizenTelehealthController {
 
         JsonNode result = pctClient.requestTelehealthSession(sessionRequest);
 
-        // STRANGLER: migrated — was direct JdbcTemplate INSERT into citizen_telehealth_sessions table
         // jdbcTemplate.update("""
         //     INSERT INTO citizen_telehealth_sessions (...) VALUES (...)
         //     """, ...);
@@ -125,10 +119,8 @@ public class CitizenTelehealthController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
 
-        // STRANGLER: migrated — delegate to PctServiceClient
         JsonNode result = pctClient.joinTelehealthSession(id.toString());
 
-        // STRANGLER: migrated — was direct JdbcTemplate UPDATE on citizen_telehealth_sessions
         // jdbcTemplate.update("""
         //     UPDATE citizen_telehealth_sessions
         //     SET status = 'IN_PROGRESS', started_at = COALESCE(started_at, ?), updated_at = ?
@@ -151,10 +143,8 @@ public class CitizenTelehealthController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestBody(required = false) Map<String, Object> body) {
 
-        // STRANGLER: migrated — delegate to PctServiceClient
         JsonNode result = pctClient.endTelehealthSession(id.toString(), body != null ? body : Map.of());
 
-        // STRANGLER: migrated — was direct JdbcTemplate UPDATE on citizen_telehealth_sessions
         // jdbcTemplate.update("""
         //     UPDATE citizen_telehealth_sessions
         //     SET status = 'COMPLETED', ended_at = ?, notes = COALESCE(?, notes), updated_at = ?

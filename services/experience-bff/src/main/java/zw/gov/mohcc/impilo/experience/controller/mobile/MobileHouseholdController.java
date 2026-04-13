@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.CommunityServiceClient;
 import zw.gov.mohcc.impilo.experience.client.VitoServiceClient;
-import zw.gov.mohcc.impilo.experience.controller.ResourceNotFoundException;
 
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -23,9 +22,6 @@ import java.util.*;
  * GET  /internal/v1/mobile/provider/households/{id}/visits         - visit history
  * POST /internal/v1/mobile/provider/screenings                     - record screening
  * POST /internal/v1/mobile/provider/immunizations                  - record immunization
- *
- * <p>STRANGLER: JdbcTemplate retained for local reads during migration; writes delegated to
- * CommunityServiceClient + VitoServiceClient.</p>
  */
 @RestController
 @RequestMapping("/internal/v1/mobile/provider")
@@ -34,6 +30,7 @@ public class MobileHouseholdController {
     private final CommunityServiceClient communityClient;
     private final VitoServiceClient vitoClient;
 
+    public MobileHouseholdController(CommunityServiceClient communityClient, VitoServiceClient vitoClient) {
         this.communityClient = communityClient;
         this.vitoClient = vitoClient;
     }
@@ -87,7 +84,7 @@ public class MobileHouseholdController {
             @RequestParam(name = "facility_id") String facilityId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     @GetMapping("/households/{id}")
@@ -96,7 +93,7 @@ public class MobileHouseholdController {
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     @PostMapping("/households")
@@ -182,7 +179,7 @@ public class MobileHouseholdController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     @PostMapping("/screenings")

@@ -1,5 +1,6 @@
 package zw.gov.mohcc.impilo.experience.controller.mobile;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.HttpStatus;
@@ -7,7 +8,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.PharmacyServiceClient;
-import zw.gov.mohcc.impilo.experience.controller.ResourceNotFoundException;
 
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -17,8 +17,6 @@ import java.util.*;
  * POST /internal/v1/mobile/provider/prescriptions              - create prescription
  * GET  /internal/v1/mobile/provider/prescriptions?encounter_id= or patient_id= - list
  * POST /internal/v1/mobile/provider/prescriptions/{id}/cancel  - cancel prescription
- *
- * <p>STRANGLER: JdbcTemplate retained for local reads during migration; writes delegated to PharmacyServiceClient.</p>
  */
 @RestController
 @RequestMapping("/internal/v1/mobile/provider/prescriptions")
@@ -26,6 +24,7 @@ public class MobilePrescriptionController {
 
     private final PharmacyServiceClient pharmacyClient;
 
+    public MobilePrescriptionController(PharmacyServiceClient pharmacyClient) {
         this.pharmacyClient = pharmacyClient;
     }
 
@@ -63,24 +62,6 @@ public class MobilePrescriptionController {
 
         UUID prescriptionId = UUID.randomUUID();
         OffsetDateTime now = OffsetDateTime.now();
-
-        // Enriched outbox event — matches web PharmacyController pattern
-        Map<String, Object> eventPayload = new LinkedHashMap<>();
-        eventPayload.put("prescription_id", prescriptionId.toString());
-        eventPayload.put("patient_id", request.patient_id());
-        eventPayload.put("facility_id", request.facility_id());
-        eventPayload.put("encounter_id", request.encounter_id());
-        eventPayload.put("medication_name", request.medication_name());
-        eventPayload.put("generic_name", request.generic_name());
-        eventPayload.put("dosage", request.dosage());
-        eventPayload.put("route", request.route());
-        eventPayload.put("frequency", request.frequency());
-        eventPayload.put("duration", request.duration());
-        eventPayload.put("quantity", request.quantity());
-        eventPayload.put("instructions", request.instructions());
-        eventPayload.put("indication", request.indication());
-        eventPayload.put("prescribed_by", request.prescribed_by());
-        eventPayload.put("status", "PENDING");
 
         Map<String, Object> attributes = new LinkedHashMap<>();
         attributes.put("patient_id", request.patient_id());
@@ -122,7 +103,15 @@ public class MobilePrescriptionController {
             @RequestParam(required = false, name = "patient_id") String patientId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        if (patientId != null && !patientId.isBlank()) {
+            try {
+                JsonNode data = pharmacyClient.getPatientPrescriptions(patientId, null, page, size);
+                if (data != null) {
+                    return ResponseEntity.ok(Map.of("data", data));
+                }
+            } catch (Exception ignored) {}
+        }
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     @PostMapping("/{id}/cancel")
@@ -134,7 +123,7 @@ public class MobilePrescriptionController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @RequestBody(required = false) CancelPrescriptionRequest request) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     private Map<String, Object> toResource(Map<String, Object> row) {

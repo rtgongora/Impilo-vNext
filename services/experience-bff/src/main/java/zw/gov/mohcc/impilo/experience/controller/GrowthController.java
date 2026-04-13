@@ -61,7 +61,28 @@ public class GrowthController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(name = "patient_id") String patientId) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        try {
+            JsonNode pctData = pctClient.listGrowthMeasurements(patientId);
+            if (pctData != null) {
+                Map<String, Object> response = new LinkedHashMap<>();
+                response.put("data", pctData);
+                response.put("meta", Map.of(
+                        "request_id", requestId,
+                        "correlation_id", correlationId
+                ));
+                return ResponseEntity.ok(response);
+            }
+        } catch (Exception e) {
+            log.warn("PCT listGrowthMeasurements failed: {}", e.getMessage());
+        }
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", List.of());
+        response.put("meta", Map.of(
+                "request_id", requestId,
+                "correlation_id", correlationId
+        ));
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping
@@ -72,7 +93,6 @@ public class GrowthController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @Valid @RequestBody RecordGrowthRequest request) {
 
-        // STRANGLER: delegate to PctServiceClient first
         try {
             Map<String, Object> pctBody = new LinkedHashMap<>();
             pctBody.put("patient_id", request.patient_id());
@@ -92,7 +112,6 @@ public class GrowthController {
             log.warn("PCT recordGrowthMeasurement failed (non-blocking): {}", e.getMessage());
         }
 
-        // STRANGLER: migrated to PctServiceClient — dual-write to local BFF table as backup cache
         OffsetDateTime measuredAt = request.measured_at() != null && !request.measured_at().isBlank()
                 ? OffsetDateTime.parse(request.measured_at())
                 : OffsetDateTime.now();

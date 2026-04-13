@@ -35,10 +35,8 @@ public class CitizenHealthSummaryController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader("X-Actor-ID") String actorId) {
 
-        // STRANGLER: migrated — delegate to PCT for health summary
         JsonNode summary = pctClient.getPatientHealthSummary(actorId);
 
-        // STRANGLER: migrated — was multiple direct JdbcTemplate queries across
         // patients, conditions, allergies, prescriptions, vitals_records, lab_orders,
         // encounters, citizen_telehealth_sessions, clinical_documents tables
         // UUID patientId = resolvePatientId(tenantId, actorId);

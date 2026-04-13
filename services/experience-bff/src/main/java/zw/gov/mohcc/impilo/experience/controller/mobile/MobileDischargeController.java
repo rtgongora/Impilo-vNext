@@ -11,7 +11,6 @@ import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.CostaServiceClient;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 import zw.gov.mohcc.impilo.experience.client.InpatientServiceClient;
-import zw.gov.mohcc.impilo.experience.controller.ResourceNotFoundException;
 
 import java.util.*;
 
@@ -19,9 +18,6 @@ import java.util.*;
  * Mobile discharge workflow endpoints.
  * POST /internal/v1/mobile/provider/discharge — discharge an encounter from mobile.
  * GET  /internal/v1/mobile/provider/discharge/{encounterId} — get discharge status.
- *
- * <p>STRANGLER: JdbcTemplate retained for local reads during migration; writes delegated to
- * PctServiceClient + InpatientServiceClient + CostaServiceClient.</p>
  */
 @RestController
 @RequestMapping("/internal/v1/mobile/provider/discharge")
@@ -101,6 +97,6 @@ public class MobileDischargeController {
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 }

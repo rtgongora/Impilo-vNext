@@ -46,10 +46,8 @@ public class StaffingController {
             @RequestParam(name = "week_start") String weekStartParam,
             @RequestParam(name = "workspace_id", required = false) String workspaceId) {
 
-        // STRANGLER: migrated — delegate to TusoServiceClient
         JsonNode roster = tusoClient.getRosterWeek(facilityId, weekStartParam, workspaceId);
 
-        // STRANGLER: migrated — was direct JdbcTemplate query against shifts/admin_users tables
         // List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql, params.toArray());
 
         Map<String, Object> response = new LinkedHashMap<>();
@@ -67,10 +65,8 @@ public class StaffingController {
             @RequestParam(name = "facility_id") String facilityId,
             @RequestParam(name = "week_start") String weekStartParam) {
 
-        // STRANGLER: migrated — delegate to TusoServiceClient
         JsonNode onCall = tusoClient.listOnCall(facilityId, weekStartParam);
 
-        // STRANGLER: migrated — was direct JdbcTemplate SELECT from on_call_assignments
         // List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql, ...);
 
         Map<String, Object> response = new LinkedHashMap<>();
@@ -87,10 +83,8 @@ public class StaffingController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(name = "facility_id") String facilityId) {
 
-        // STRANGLER: migrated — delegate to TusoServiceClient
         JsonNode swaps = tusoClient.listSwapRequests(facilityId);
 
-        // STRANGLER: migrated — was direct JdbcTemplate SELECT from on_call_swap_requests
         // List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql, tenantId, facilityId);
 
         Map<String, Object> response = new LinkedHashMap<>();
@@ -107,7 +101,6 @@ public class StaffingController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @Valid @RequestBody CreateSwapRequest body) {
 
-        // STRANGLER: migrated — delegate to TusoServiceClient
         Map<String, Object> swapData = new LinkedHashMap<>();
         swapData.put("facility_id", body.facility_id());
         swapData.put("requestor_name", body.requestor_name());
@@ -119,7 +112,6 @@ public class StaffingController {
 
         JsonNode result = tusoClient.createSwapRequest(swapData);
 
-        // STRANGLER: migrated — was direct JdbcTemplate INSERT into on_call_swap_requests
         // jdbcTemplate.update("""
         //     INSERT INTO on_call_swap_requests (...) VALUES (?)
         //     """, ...);
@@ -144,11 +136,9 @@ public class StaffingController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "status must be APPROVED or DECLINED");
         }
 
-        // STRANGLER: migrated — delegate to TusoServiceClient
         Map<String, Object> updateData = Map.of("status", normalized);
         JsonNode result = tusoClient.updateSwapRequest(id.toString(), updateData);
 
-        // STRANGLER: migrated — was direct JdbcTemplate UPDATE on on_call_swap_requests
         // jdbcTemplate.update("""
         //     UPDATE on_call_swap_requests SET status = ?, updated_at = NOW()
         //     WHERE id = ?::uuid AND tenant_id = ?

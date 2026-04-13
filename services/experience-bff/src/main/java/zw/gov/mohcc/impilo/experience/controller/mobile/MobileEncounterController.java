@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.CostaServiceClient;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
-import zw.gov.mohcc.impilo.experience.controller.ResourceNotFoundException;
 
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -39,6 +38,7 @@ public class MobileEncounterController {
     private final PctServiceClient pctClient;
     private final CostaServiceClient costaClient;
 
+    public MobileEncounterController(PctServiceClient pctClient, CostaServiceClient costaClient) {
         this.pctClient = pctClient;
         this.costaClient = costaClient;
     }
@@ -63,7 +63,7 @@ public class MobileEncounterController {
             @RequestParam(name = "patient_id") String patientId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     /**
@@ -125,20 +125,6 @@ public class MobileEncounterController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey) {
 
-        OffsetDateTime now = OffsetDateTime.now();
-
-        if (updated == 0) {
-            throw new ResourceNotFoundException("Active encounter not found: " + id);
-        }
-
-        // Complete queue entries
-        try {
-            if (!encRows.isEmpty()) {
-            }
-        } catch (Exception e) {
-            log.warn("Queue completion from mobile close failed (non-blocking): {}", e.getMessage());
-        }
-
         // Delegate to COSTA: create bill draft for the closed encounter
         String costaBillId = null;
         try {
@@ -150,11 +136,6 @@ public class MobileEncounterController {
         } catch (Exception e) {
             log.warn("COSTA bill draft creation from mobile close failed (non-blocking): {}", e.getMessage());
         }
-
-        Map<String, Object> eventPayload = new LinkedHashMap<>();
-        eventPayload.put("encounter_id", id.toString());
-        eventPayload.put("status", "COMPLETED");
-        if (costaBillId != null) eventPayload.put("costa_bill_id", costaBillId);
 
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("id", id.toString());
@@ -178,26 +159,6 @@ public class MobileEncounterController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
 
-        if (encRows.isEmpty()) {
-            throw new ResourceNotFoundException("Encounter not found: " + id);
-        }
-
-        Map<String, Object> encounter = encRows.get(0);
-        Object patientId = encounter.get("patient_id");
-
-        // Aggregate clinical context
-
-        Map<String, Object> summary = new LinkedHashMap<>();
-        summary.put("encounter", encounter);
-        summary.put("allergies", allergies);
-        summary.put("active_conditions", conditions);
-        summary.put("current_medications", medications);
-        summary.put("latest_vitals", recentVitals.isEmpty() ? null : recentVitals.get(0));
-        summary.put("triage", triage.isEmpty() ? null : triage.get(0));
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", summary);
-        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 }

@@ -32,10 +32,8 @@ public class CitizenTimelineController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
 
-        // STRANGLER: migrated — delegate to PCT for patient timeline
         JsonNode timeline = pctClient.getPatientTimeline(actorId);
 
-        // STRANGLER: migrated — was direct JdbcTemplate SELECT from clinical_timeline table
         // UUID patientId = resolvePatientId(tenantId, actorId);
         // List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql.toString(), params.toArray());
 

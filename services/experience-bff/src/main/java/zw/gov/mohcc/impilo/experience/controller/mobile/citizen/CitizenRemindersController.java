@@ -50,10 +50,8 @@ public class CitizenRemindersController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
 
-        // STRANGLER: migrated — delegate to notification-service via CommunityServiceClient
         JsonNode reminders = communityClient.listVisits(actorId);
 
-        // STRANGLER: migrated — was direct JdbcTemplate SELECT from reminders table
         // UUID patientId = resolvePatientId(tenantId, actorId);
         // List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql, tenantId, patientId, limit, offset);
 
@@ -73,7 +71,6 @@ public class CitizenRemindersController {
             @RequestHeader("X-Actor-ID") String actorId,
             @Valid @RequestBody CreateReminderBody body) {
 
-        // STRANGLER: migrated — delegate to notification-service via CommunityServiceClient
         Map<String, Object> reminderRequest = new LinkedHashMap<>();
         reminderRequest.put("citizenCpid", actorId);
         reminderRequest.put("title", body.title());
@@ -86,7 +83,6 @@ public class CitizenRemindersController {
 
         JsonNode result = communityClient.createVisit(reminderRequest);
 
-        // STRANGLER: migrated — was direct JdbcTemplate INSERT into reminders table
         // jdbcTemplate.update("""
         //     INSERT INTO reminders (...) VALUES (?)
         //     """, ...);
@@ -108,12 +104,10 @@ public class CitizenRemindersController {
             @RequestHeader("X-Actor-ID") String actorId,
             @RequestBody Map<String, Object> body) {
 
-        // STRANGLER: migrated — delegate to notification-service via CommunityServiceClient
         body.put("reminderId", id.toString());
         body.put("citizenCpid", actorId);
         JsonNode result = communityClient.completeVisit(id.toString(), body);
 
-        // STRANGLER: migrated — was direct JdbcTemplate dynamic UPDATE on reminders table
         // String updateSql = "UPDATE reminders SET " + String.join(", ", setClauses) + " WHERE id = ? AND tenant_id = ?";
         // jdbcTemplate.update(updateSql, params.toArray());
 
@@ -133,11 +127,9 @@ public class CitizenRemindersController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader("X-Actor-ID") String actorId) {
 
-        // STRANGLER: migrated — delegate to notification-service via CommunityServiceClient
         // Note: using startVisit as a proxy for delete acknowledgement
         communityClient.startVisit(id.toString());
 
-        // STRANGLER: migrated — was direct JdbcTemplate DELETE from reminders table
         // jdbcTemplate.update("DELETE FROM reminders WHERE id = ? AND tenant_id = ? AND patient_id = ?", id, tenantId, patientId);
 
         return ResponseEntity.noContent().build();

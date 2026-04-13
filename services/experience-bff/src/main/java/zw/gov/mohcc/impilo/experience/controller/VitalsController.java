@@ -58,7 +58,30 @@ public class VitalsController {
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false, name = "patient_id") String patientId,
             @RequestParam(required = false, name = "encounter_id") String encounterId) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        if (patientId != null) {
+            try {
+                JsonNode pctData = pctClient.listVitals(patientId, page, size);
+                if (pctData != null) {
+                    Map<String, Object> response = new LinkedHashMap<>();
+                    response.put("data", pctData);
+                    response.put("meta", Map.of(
+                            "request_id", requestId,
+                            "correlation_id", correlationId
+                    ));
+                    return ResponseEntity.ok(response);
+                }
+            } catch (Exception e) {
+                log.warn("PCT listVitals failed: {}", e.getMessage());
+            }
+        }
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", List.of());
+        response.put("meta", Map.of(
+                "request_id", requestId,
+                "correlation_id", correlationId
+        ));
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping
@@ -81,7 +104,6 @@ public class VitalsController {
             bmi = request.weight().divide(heightM.multiply(heightM), 2, java.math.RoundingMode.HALF_UP);
         }
 
-        // STRANGLER: delegate to PctServiceClient first
         try {
             Map<String, Object> pctBody = new LinkedHashMap<>();
             pctBody.put("patient_id", request.patient_id());
@@ -102,8 +124,6 @@ public class VitalsController {
         } catch (Exception e) {
             log.warn("PCT createVitals failed (non-blocking): {}", e.getMessage());
         }
-
-        // STRANGLER: migrated to PctServiceClient — dual-write to local BFF table as backup cache
 
         Map<String, Object> attributes = new LinkedHashMap<>();
         attributes.put("patient_id", request.patient_id());

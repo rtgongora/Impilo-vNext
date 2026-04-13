@@ -45,14 +45,12 @@ public class MobileProviderExtendedController {
 
     @GetMapping("/queue")
     public ResponseEntity<Map<String, Object>> getQueue(@RequestHeader("X-Tenant-ID") String tenantId) {
-        // STRANGLER: migrated to PctServiceClient — queue entries are managed by PCT
         // Previously: jdbc.queryForList("SELECT * FROM queue_entries WHERE tenant_id = ? AND status IN ('WAITING','IN_PROGRESS') ...", tenantId)
         return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     @PostMapping("/queue/call-next")
     public ResponseEntity<Map<String, Object>> callNext(@RequestHeader("X-Tenant-ID") String tenantId, @RequestBody Map<String, Object> body) {
-        // STRANGLER: migrated to PctServiceClient
         // Previously: jdbc.queryForList + jdbc.update on queue_entries
         String queueId = body.getOrDefault("queueId", "").toString();
         if (!queueId.isBlank()) {
@@ -68,14 +66,12 @@ public class MobileProviderExtendedController {
 
     @PostMapping("/queue/complete/{id}")
     public ResponseEntity<Map<String, Object>> completeQueueEntry(@PathVariable UUID id) {
-        // STRANGLER: migrated to PctServiceClient
         // Previously: jdbc.update("UPDATE queue_entries SET status = 'COMPLETED' ...")
         return ResponseEntity.ok(Map.of("status", "COMPLETED"));
     }
 
     @GetMapping("/queue/stats")
     public ResponseEntity<Map<String, Object>> getQueueStats(@RequestHeader("X-Tenant-ID") String tenantId) {
-        // STRANGLER: migrated to PctServiceClient — queue stats from PCT
         // Previously: jdbc.queryForObject counting queue_entries by status
         return ResponseEntity.ok(Map.of("data", Map.of("waiting", 0L, "inProgress", 0L, "completedToday", 0L)));
     }
@@ -84,7 +80,6 @@ public class MobileProviderExtendedController {
 
     @PostMapping("/triage")
     public ResponseEntity<Map<String, Object>> recordTriage(@RequestHeader("X-Tenant-ID") String tenantId, @RequestBody Map<String, Object> body) {
-        // STRANGLER: migrated to PctServiceClient — triage records managed by PCT
         // Previously: jdbc.update INSERT INTO triage_records
         UUID id = UUID.randomUUID();
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", Map.of("id", id)));
@@ -92,7 +87,6 @@ public class MobileProviderExtendedController {
 
     @GetMapping("/triage/{encounterId}")
     public ResponseEntity<Map<String, Object>> getTriage(@PathVariable String encounterId, @RequestHeader("X-Tenant-ID") String tenantId) {
-        // STRANGLER: migrated to PctServiceClient
         // Previously: jdbc.queryForList("SELECT * FROM triage_records WHERE encounter_id = ?::uuid ...")
         return ResponseEntity.ok(Map.of("data", Map.of()));
     }
@@ -101,21 +95,18 @@ public class MobileProviderExtendedController {
 
     @GetMapping("/beds")
     public ResponseEntity<Map<String, Object>> getBeds(@RequestHeader("X-Tenant-ID") String tenantId) {
-        // STRANGLER: migrated to PctServiceClient — bed/ward management via PCT/Inpatient
         // Previously: jdbc.queryForList on wards + beds tables
         return ResponseEntity.ok(Map.of("data", Map.of("wards", List.of(), "beds", List.of())));
     }
 
     @PostMapping("/beds/{id}/assign")
     public ResponseEntity<Map<String, Object>> assignBed(@PathVariable UUID id, @RequestBody Map<String, Object> body) {
-        // STRANGLER: migrated to PctServiceClient — bed assignment via PCT/Inpatient
         // Previously: jdbc.update("UPDATE beds SET status = 'OCCUPIED' ...")
         return ResponseEntity.ok(Map.of("assigned", true));
     }
 
     @PostMapping("/beds/{id}/discharge")
     public ResponseEntity<Map<String, Object>> dischargeBed(@PathVariable UUID id) {
-        // STRANGLER: migrated to PctServiceClient
         // Previously: jdbc.update("UPDATE beds SET status = 'AVAILABLE' ...")
         return ResponseEntity.ok(Map.of("discharged", true));
     }
@@ -132,7 +123,6 @@ public class MobileProviderExtendedController {
 
     @PostMapping("/patients/register")
     public ResponseEntity<Map<String, Object>> registerPatient(@RequestHeader("X-Tenant-ID") String tenantId, @RequestBody Map<String, Object> body) {
-        // STRANGLER: migrated to VitoServiceClient — patient registration via VITO
         // Previously: jdbc.update INSERT INTO patients
         try {
             var result = vitoClient.registerIdentity(body);
@@ -147,14 +137,12 @@ public class MobileProviderExtendedController {
 
     @GetMapping("/pharmacy/pending")
     public ResponseEntity<Map<String, Object>> getPendingDispensing(@RequestHeader("X-Tenant-ID") String tenantId) {
-        // STRANGLER: migrated to PharmacyServiceClient — pending dispense from pharmacy-service
         // Previously: jdbc.queryForList("SELECT * FROM prescriptions WHERE ... status = 'ACTIVE' ...")
         return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     @PostMapping("/pharmacy/dispense")
     public ResponseEntity<Map<String, Object>> dispense(@RequestHeader("X-Tenant-ID") String tenantId, @RequestBody Map<String, Object> body) {
-        // STRANGLER: migrated to PharmacyServiceClient — dispense via pharmacy-service
         // Previously: jdbc.update("UPDATE prescriptions SET status = 'DISPENSED' ...")
         String prescriptionId = body.get("prescriptionId").toString();
         try {
@@ -168,7 +156,6 @@ public class MobileProviderExtendedController {
     @PostMapping("/pharmacy/verify-five-rights")
     public ResponseEntity<Map<String, Object>> verifyFiveRights(@RequestBody Map<String, Object> body) {
         // 5 rights: right patient, right drug, right dose, right route, right time
-        // STRANGLER: migrated to PharmacyServiceClient — 5-rights check via pharmacy-service
         return ResponseEntity.ok(Map.of("verified", true, "rights", Map.of(
                 "rightPatient", true, "rightDrug", true, "rightDose", true, "rightRoute", true, "rightTime", true)));
     }
@@ -177,14 +164,12 @@ public class MobileProviderExtendedController {
 
     @GetMapping("/billing/charges")
     public ResponseEntity<Map<String, Object>> getCharges(@RequestHeader("X-Tenant-ID") String tenantId, @RequestParam(required = false) String encounterId) {
-        // STRANGLER: migrated to CostaServiceClient — billing charges from COSTA
         // Previously: jdbc.queryForList on bill_lines table
         return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     @PostMapping("/billing/charge")
     public ResponseEntity<Map<String, Object>> captureCharge(@RequestHeader("X-Tenant-ID") String tenantId, @RequestBody Map<String, Object> body) {
-        // STRANGLER: migrated to CostaServiceClient — charge capture via COSTA
         // Previously: jdbc.update INSERT INTO bill_lines
         UUID id = UUID.randomUUID();
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", Map.of("id", id)));
@@ -194,7 +179,6 @@ public class MobileProviderExtendedController {
 
     @GetMapping("/reports/summary")
     public ResponseEntity<Map<String, Object>> getReportSummary(@RequestHeader("X-Tenant-ID") String tenantId) {
-        // STRANGLER: migrated to PctServiceClient + OrosServiceClient — report aggregations from sovereign services
         // Previously: jdbc.queryForObject counting encounters, prescriptions, lab_orders
         return ResponseEntity.ok(Map.of("data", Map.of("encountersToday", 0L, "prescriptionsToday", 0L, "labOrdersToday", 0L)));
     }
@@ -203,14 +187,12 @@ public class MobileProviderExtendedController {
 
     @GetMapping("/paging")
     public ResponseEntity<Map<String, Object>> getPages(@RequestHeader("X-Tenant-ID") String tenantId, @RequestParam(required = false) String recipientId) {
-        // STRANGLER: migrated to PctServiceClient — clinical pages from PCT
         // Previously: jdbc.queryForList on clinical_pages table
         return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     @PostMapping("/paging/send")
     public ResponseEntity<Map<String, Object>> sendPage(@RequestHeader("X-Tenant-ID") String tenantId, @RequestBody Map<String, Object> body) {
-        // STRANGLER: migrated to PctServiceClient — page sending via PCT
         // Previously: jdbc.update INSERT INTO clinical_pages
         UUID id = UUID.randomUUID();
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", Map.of("id", id, "status", "SENT")));
@@ -222,7 +204,6 @@ public class MobileProviderExtendedController {
     public ResponseEntity<Map<String, Object>> checkDrugInteractions(@RequestBody Map<String, Object> body) {
         @SuppressWarnings("unchecked")
         List<String> medications = (List<String>) body.getOrDefault("medications", List.of());
-        // STRANGLER: migrated to PctServiceClient — CDS drug interaction check via PCT/ZIBO
         List<Map<String, Object>> interactions = new ArrayList<>();
         if (medications.size() >= 2) {
             interactions.add(Map.of("severity", "INFO", "message", "No known interactions found for the checked medications", "medications", medications));
@@ -234,7 +215,6 @@ public class MobileProviderExtendedController {
 
     @GetMapping("/clinical/order-sets")
     public ResponseEntity<Map<String, Object>> getOrderSets(@RequestHeader("X-Tenant-ID") String tenantId) {
-        // STRANGLER: migrated to PctServiceClient — order sets from PCT/ZIBO terminology packs
         List<Map<String, Object>> orderSets = List.of(
                 Map.of("id", "os-malaria", "name", "Malaria Treatment Protocol", "category", "INFECTIOUS", "items", List.of("Artemether-Lumefantrine", "Paracetamol", "ORS", "CBC", "Malaria RDT")),
                 Map.of("id", "os-pneumonia", "name", "Community-Acquired Pneumonia", "category", "RESPIRATORY", "items", List.of("Amoxicillin", "Paracetamol", "Chest X-ray", "CBC", "CRP")),
@@ -249,13 +229,11 @@ public class MobileProviderExtendedController {
 
     @GetMapping("/clinical/care-plans")
     public ResponseEntity<Map<String, Object>> getCarePlans(@RequestHeader("X-Tenant-ID") String tenantId, @RequestParam String patientId) {
-        // STRANGLER: migrated to PctServiceClient — care plans stored in PCT
         return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     @PostMapping("/clinical/care-plans")
     public ResponseEntity<Map<String, Object>> createCarePlan(@RequestHeader("X-Tenant-ID") String tenantId, @RequestBody Map<String, Object> body) {
-        // STRANGLER: migrated to PctServiceClient — care plan creation via PCT
         UUID id = UUID.randomUUID();
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", Map.of("id", id, "status", "ACTIVE",
                 "title", body.getOrDefault("title", ""), "goals", body.getOrDefault("goals", List.of()),
@@ -266,14 +244,12 @@ public class MobileProviderExtendedController {
 
     @GetMapping("/clinical/mar")
     public ResponseEntity<Map<String, Object>> getMAR(@RequestHeader("X-Tenant-ID") String tenantId, @RequestParam String patientId) {
-        // STRANGLER: migrated to PharmacyServiceClient — MAR from pharmacy-service
         // Previously: jdbc.queryForList on prescriptions table
         return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     @PostMapping("/clinical/mar/administer")
     public ResponseEntity<Map<String, Object>> administerMedication(@RequestHeader("X-Tenant-ID") String tenantId, @RequestBody Map<String, Object> body) {
-        // STRANGLER: migrated to PharmacyServiceClient — medication administration via pharmacy-service
         UUID id = UUID.randomUUID();
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", Map.of("id", id, "status", "ADMINISTERED",
                 "prescriptionId", body.get("prescriptionId"), "administeredAt", OffsetDateTime.now(), "administeredBy", body.getOrDefault("administeredBy", ""))));
@@ -283,7 +259,6 @@ public class MobileProviderExtendedController {
 
     @PostMapping("/clinical/cds/evaluate")
     public ResponseEntity<Map<String, Object>> evaluateCDS(@RequestBody Map<String, Object> body) {
-        // STRANGLER: migrated to PctServiceClient — CDS evaluation via PCT CDS engine
         String context = body.getOrDefault("context", "").toString();
         List<Map<String, Object>> alerts = new ArrayList<>();
         alerts.add(Map.of("level", "INFO", "category", "GUIDELINE", "message", "Review applicable clinical guidelines for this presentation", "source", "CDS Engine"));
@@ -294,7 +269,6 @@ public class MobileProviderExtendedController {
 
     @GetMapping("/workspaces/specialties")
     public ResponseEntity<Map<String, Object>> getSpecialtyWorkspaces() {
-        // STRANGLER: migrated to PctServiceClient — workspace config from PCT
         List<Map<String, Object>> workspaces = List.of(
                 Map.of("id", "trauma", "name", "Trauma", "icon", "alert-triangle", "tools", List.of("GCS Scale", "Injury Severity Score", "FAST Exam")),
                 Map.of("id", "labour-delivery", "name", "Labour & Delivery", "icon", "baby", "tools", List.of("Partograph", "APGAR Score", "Bishop Score")),
