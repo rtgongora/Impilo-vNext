@@ -3,10 +3,12 @@ package zw.gov.mohcc.impilo.experience;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import zw.gov.mohcc.impilo.experience.config.ClinicalPlatformProperties;
 import zw.gov.mohcc.impilo.experience.config.RegistryDownstreamProperties;
 
 @SpringBootApplication
+@EnableScheduling
 @EnableConfigurationProperties({ClinicalPlatformProperties.class, RegistryDownstreamProperties.class})
 public class ExperienceBffApplication {
 

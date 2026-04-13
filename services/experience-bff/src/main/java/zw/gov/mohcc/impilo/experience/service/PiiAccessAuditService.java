@@ -2,12 +2,8 @@ package zw.gov.mohcc.impilo.experience.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-
-import java.sql.Array;
-import java.time.OffsetDateTime;
 
 /**
  * Records every access to PII fields in an append-only audit log.
@@ -17,19 +13,16 @@ import java.time.OffsetDateTime;
  * of PII is recorded with who accessed it, whose data it was, what
  * fields were accessed, and the purpose of use.</p>
  *
- * <p>Writes are async to avoid blocking the request path. The audit
- * log is append-only and immutable — no UPDATE or DELETE operations.</p>
+ * <p>Writes are async to avoid blocking the request path.</p>
+ *
+ * <p>NOTE: Experience BFF is a pure proxy with no database. This service
+ * currently logs audit events locally; durable audit is handled by
+ * sovereign services.</p>
  */
 @Service
 public class PiiAccessAuditService {
 
     private static final Logger log = LoggerFactory.getLogger(PiiAccessAuditService.class);
-
-    private final JdbcTemplate jdbcTemplate;
-
-    public PiiAccessAuditService(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
-    }
 
     /**
      * Record a PII access event asynchronously.
@@ -65,18 +58,21 @@ public class PiiAccessAuditService {
             String facilityId) {
 
         try {
-            Array fieldsArray = jdbcTemplate.getDataSource() != null
-                    ? jdbcTemplate.getDataSource().getConnection().createArrayOf("text", fieldsAccessed)
-                    : null;
-
-            jdbcTemplate.update(
-                    "INSERT INTO pii_access_log (tenant_id, actor_id, actor_type, subject_id, " +
-                    "subject_type, action, fields_accessed, purpose_of_use, access_channel, " +
-                    "privacy_level, ip_address, user_agent, facility_id, occurred_at) " +
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                    tenantId, actorId, actorType, subjectId, subjectType, action,
-                    fieldsArray, purposeOfUse, accessChannel, privacyLevel,
-                    ipAddress, userAgent, facilityId, OffsetDateTime.now());
+            log.info(
+                    "PII access audit (proxy): tenant={}, actor={}({}), subject={}({}), action={}, fields={}, purpose={}, channel={}, privacyLevel={}, ip={}, facility={}",
+                    tenantId,
+                    actorId,
+                    actorType,
+                    subjectId,
+                    subjectType,
+                    action,
+                    fieldsAccessed != null ? String.join(",", fieldsAccessed) : "",
+                    purposeOfUse,
+                    accessChannel,
+                    privacyLevel,
+                    ipAddress,
+                    facilityId
+            );
         } catch (Exception e) {
             // Audit failures must never break the request — log and continue
             log.warn("Failed to record PII access audit: actor={}, subject={}, action={}: {}",

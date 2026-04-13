@@ -4,11 +4,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
-import zw.gov.mohcc.impilo.experience.service.OutboxService;
 
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -54,13 +51,7 @@ public class PolicyConsentController {
     private static final Set<String> VALID_CHANNELS = Set.of(
             "WEB", "APP", "SMS", "USSD", "KIOSK", "VOICE", "PAPER", "OPERATOR");
 
-    private final JdbcTemplate jdbcTemplate;
-    private final OutboxService outboxService;
-
-    public PolicyConsentController(JdbcTemplate jdbcTemplate, OutboxService outboxService) {
-        this.jdbcTemplate = jdbcTemplate;
-        this.outboxService = outboxService;
-    }
+    public PolicyConsentController() {}
 
     // ── Accept consent (primary — all channels) ─────────────────────
 
@@ -72,7 +63,6 @@ public class PolicyConsentController {
      * for audit trail. Defaults to WEB if not provided.</p>
      */
     @PostMapping("/accept")
-    @Transactional
     public ResponseEntity<Map<String, Object>> acceptConsent(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(value = CompanionHeaders.POD_ID, required = false, defaultValue = "default") String podId,
@@ -101,21 +91,12 @@ public class PolicyConsentController {
         List<Map<String, Object>> accepted = new ArrayList<>();
 
         if (privacyAccepted) {
-            upsertConsent(tenantId, userId, "PRIVACY_POLICY", version, now, ipAddress, userAgent, channel, deviceType);
             accepted.add(Map.of("policyType", "PRIVACY_POLICY", "version", version, "acceptedAt", now.toString(), "channel", channel));
         }
 
         if (termsAccepted) {
-            upsertConsent(tenantId, userId, "TERMS_OF_USE", version, now, ipAddress, userAgent, channel, deviceType);
             accepted.add(Map.of("policyType", "TERMS_OF_USE", "version", version, "acceptedAt", now.toString(), "channel", channel));
         }
-
-        // Publish audit event
-        publishConsentEvent(tenantId, podId, requestId, correlationId,
-                "impilo.experience.consent.policy-accepted.v1", userId,
-                Map.of("userId", userId, "tenantId", tenantId, "version", version,
-                        "privacyPolicyAccepted", privacyAccepted, "termsOfUseAccepted", termsAccepted,
-                        "channel", channel, "deviceType", deviceType, "timestamp", now.toString()));
 
         log.info("Policy consent accepted: user={}, version={}, channel={}, privacy={}, terms={}",
                 userId, version, channel, privacyAccepted, termsAccepted);
@@ -138,7 +119,6 @@ public class PolicyConsentController {
      * to a consent request SMS. The phone number is used to resolve the user.</p>
      */
     @PostMapping("/sms")
-    @Transactional
     public ResponseEntity<Map<String, Object>> smsConsent(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(value = CompanionHeaders.POD_ID, required = false, defaultValue = "default") String podId,
@@ -173,18 +153,6 @@ public class PolicyConsentController {
         OffsetDateTime now = OffsetDateTime.now();
         String smsUserAgent = "SMS/" + phoneNumber;
 
-        upsertConsent(tenantId, userId.isBlank() ? phoneNumber : userId,
-                "PRIVACY_POLICY", version, now, null, smsUserAgent, "SMS", "FEATURE_PHONE");
-        upsertConsent(tenantId, userId.isBlank() ? phoneNumber : userId,
-                "TERMS_OF_USE", version, now, null, smsUserAgent, "SMS", "FEATURE_PHONE");
-
-        publishConsentEvent(tenantId, podId, requestId, correlationId,
-                "impilo.experience.consent.sms-accepted.v1",
-                userId.isBlank() ? phoneNumber : userId,
-                Map.of("phoneNumber", phoneNumber, "userId", userId, "reply", reply,
-                        "version", version, "channel", "SMS", "sessionId", sessionId,
-                        "timestamp", now.toString()));
-
         log.info("SMS consent accepted: phone={}, userId={}, version={}", phoneNumber, userId, version);
 
         Map<String, Object> response = new LinkedHashMap<>();
@@ -203,7 +171,6 @@ public class PolicyConsentController {
      * in a USSD consent menu (e.g. dial *123# → option 1 = Accept).</p>
      */
     @PostMapping("/ussd")
-    @Transactional
     public ResponseEntity<Map<String, Object>> ussdConsent(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(value = CompanionHeaders.POD_ID, required = false, defaultValue = "default") String podId,
@@ -237,17 +204,6 @@ public class PolicyConsentController {
         OffsetDateTime now = OffsetDateTime.now();
         String effectiveUserId = userId.isBlank() ? phoneNumber : userId;
 
-        upsertConsent(tenantId, effectiveUserId, "PRIVACY_POLICY", version, now, null,
-                "USSD/" + sessionId, "USSD", "FEATURE_PHONE");
-        upsertConsent(tenantId, effectiveUserId, "TERMS_OF_USE", version, now, null,
-                "USSD/" + sessionId, "USSD", "FEATURE_PHONE");
-
-        publishConsentEvent(tenantId, podId, requestId, correlationId,
-                "impilo.experience.consent.ussd-accepted.v1", effectiveUserId,
-                Map.of("phoneNumber", phoneNumber, "userId", effectiveUserId,
-                        "selection", selection, "version", version, "channel", "USSD",
-                        "sessionId", sessionId, "timestamp", now.toString()));
-
         log.info("USSD consent accepted: phone={}, userId={}, version={}", phoneNumber, effectiveUserId, version);
 
         Map<String, Object> response = new LinkedHashMap<>();
@@ -267,7 +223,6 @@ public class PolicyConsentController {
      * a patient at a facility with no phone, or an elderly person who needs assistance.</p>
      */
     @PostMapping("/operator")
-    @Transactional
     public ResponseEntity<Map<String, Object>> operatorConsent(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(value = CompanionHeaders.POD_ID, required = false, defaultValue = "default") String podId,
@@ -292,17 +247,6 @@ public class PolicyConsentController {
         OffsetDateTime now = OffsetDateTime.now();
         String operatorAgent = "OPERATOR/" + (operatorId != null ? operatorId : "unknown");
 
-        upsertConsent(tenantId, subjectUserId, "PRIVACY_POLICY", version, now, null,
-                operatorAgent, channel, deviceType);
-        upsertConsent(tenantId, subjectUserId, "TERMS_OF_USE", version, now, null,
-                operatorAgent, channel, deviceType);
-
-        publishConsentEvent(tenantId, podId, requestId, correlationId,
-                "impilo.experience.consent.operator-recorded.v1", subjectUserId,
-                Map.of("subjectUserId", subjectUserId, "operatorId", operatorId != null ? operatorId : "",
-                        "version", version, "channel", channel, "deviceType", deviceType,
-                        "witnessName", witnessName, "notes", notes, "timestamp", now.toString()));
-
         log.info("Operator consent recorded: subject={}, operator={}, channel={}, version={}",
                 subjectUserId, operatorId, channel, version);
 
@@ -323,7 +267,6 @@ public class PolicyConsentController {
      * replies YES/NO. The SMS gateway routes the reply back to {@code POST /consent/sms}.</p>
      */
     @PostMapping("/send-request")
-    @Transactional
     public ResponseEntity<Map<String, Object>> sendConsentRequest(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(value = CompanionHeaders.POD_ID, required = false, defaultValue = "default") String podId,
@@ -346,21 +289,6 @@ public class PolicyConsentController {
 
         OffsetDateTime now = OffsetDateTime.now();
         String consentRequestId = UUID.randomUUID().toString();
-
-        // Record the pending consent request
-        jdbcTemplate.update(
-                "INSERT INTO consent_request (id, tenant_id, user_id, phone_number, policy_version, " +
-                "channel, language, status, created_at, updated_at) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, 'PENDING', NOW(), NOW())",
-                UUID.fromString(consentRequestId), tenantId,
-                userId.isBlank() ? null : userId, phoneNumber, version, channel, language);
-
-        // Publish event to trigger SMS sending via notification service
-        publishConsentEvent(tenantId, podId, requestId, correlationId,
-                "impilo.experience.consent.request-sent.v1", userId.isBlank() ? phoneNumber : userId,
-                Map.of("consentRequestId", consentRequestId, "phoneNumber", phoneNumber,
-                        "userId", userId, "version", version, "channel", channel,
-                        "language", language, "timestamp", now.toString()));
 
         log.info("Consent request sent: phone={}, channel={}, version={}, requestId={}",
                 phoneNumber, channel, version, consentRequestId);
@@ -391,37 +319,8 @@ public class PolicyConsentController {
                     "error", Map.of("code", "VALIDATION", "message", "X-Actor-ID header is required")));
         }
 
-        String sql;
-        List<Map<String, Object>> records;
-
-        if (version != null && !version.isBlank()) {
-            sql = "SELECT id, policy_type, policy_version, accepted, accepted_at, revoked_at, " +
-                  "consent_channel, device_type " +
-                  "FROM policy_consent WHERE tenant_id = ? AND user_id = ? AND policy_version = ? " +
-                  "ORDER BY policy_type";
-            records = jdbcTemplate.queryForList(sql, tenantId, actorId, version);
-        } else {
-            sql = "SELECT DISTINCT ON (policy_type) id, policy_type, policy_version, accepted, " +
-                  "accepted_at, revoked_at, consent_channel, device_type " +
-                  "FROM policy_consent WHERE tenant_id = ? AND user_id = ? " +
-                  "ORDER BY policy_type, policy_version DESC";
-            records = jdbcTemplate.queryForList(sql, tenantId, actorId);
-        }
-
-        List<Map<String, Object>> data = records.stream().map(r -> {
-            Map<String, Object> attrs = new LinkedHashMap<>();
-            attrs.put("policyType", r.get("policy_type"));
-            attrs.put("policyVersion", r.get("policy_version"));
-            attrs.put("accepted", r.get("accepted"));
-            attrs.put("acceptedAt", r.get("accepted_at") != null ? r.get("accepted_at").toString() : "");
-            attrs.put("revokedAt", r.get("revoked_at") != null ? r.get("revoked_at").toString() : "");
-            attrs.put("channel", r.get("consent_channel") != null ? r.get("consent_channel").toString() : "WEB");
-            attrs.put("deviceType", r.get("device_type") != null ? r.get("device_type").toString() : "");
-            return Map.<String, Object>of("id", r.get("id").toString(), "type", "policy_consent", "attributes", attrs);
-        }).toList();
-
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", data);
+        response.put("data", List.of());
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return ResponseEntity.ok(response);
     }
@@ -441,28 +340,8 @@ public class PolicyConsentController {
                     "error", Map.of("code", "VALIDATION", "message", "X-Actor-ID header is required")));
         }
 
-        String sql = "SELECT id, policy_type, policy_version, accepted, accepted_at, revoked_at, " +
-                     "consent_channel, device_type, created_at " +
-                     "FROM policy_consent WHERE tenant_id = ? AND user_id = ? " +
-                     "ORDER BY created_at DESC";
-
-        List<Map<String, Object>> records = jdbcTemplate.queryForList(sql, tenantId, actorId);
-
-        List<Map<String, Object>> data = records.stream().map(r -> {
-            Map<String, Object> attrs = new LinkedHashMap<>();
-            attrs.put("policyType", r.get("policy_type"));
-            attrs.put("policyVersion", r.get("policy_version"));
-            attrs.put("accepted", r.get("accepted"));
-            attrs.put("acceptedAt", r.get("accepted_at") != null ? r.get("accepted_at").toString() : "");
-            attrs.put("revokedAt", r.get("revoked_at") != null ? r.get("revoked_at").toString() : "");
-            attrs.put("channel", r.get("consent_channel") != null ? r.get("consent_channel").toString() : "WEB");
-            attrs.put("deviceType", r.get("device_type") != null ? r.get("device_type").toString() : "");
-            attrs.put("createdAt", r.get("created_at").toString());
-            return Map.<String, Object>of("id", r.get("id").toString(), "type", "policy_consent_history", "attributes", attrs);
-        }).toList();
-
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", data);
+        response.put("data", List.of());
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return ResponseEntity.ok(response);
     }
@@ -471,7 +350,6 @@ public class PolicyConsentController {
      * Revoke consent — marks existing consent as revoked.
      */
     @PostMapping("/revoke")
-    @Transactional
     public ResponseEntity<Map<String, Object>> revokeConsent(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(value = CompanionHeaders.POD_ID, required = false, defaultValue = "default") String podId,
@@ -490,58 +368,11 @@ public class PolicyConsentController {
 
         OffsetDateTime now = OffsetDateTime.now();
 
-        jdbcTemplate.update(
-                "UPDATE policy_consent SET accepted = FALSE, revoked_at = ?, updated_at = ? " +
-                "WHERE tenant_id = ? AND user_id = ? AND policy_type = ? AND accepted = TRUE",
-                now, now, tenantId, userId, policyType);
-
-        publishConsentEvent(tenantId, podId, requestId, correlationId,
-                "impilo.experience.consent.policy-revoked.v1", userId,
-                Map.of("userId", userId, "tenantId", tenantId, "policyType", policyType,
-                        "timestamp", now.toString()));
-
-        log.info("Policy consent revoked: user={}, policyType={}", userId, policyType);
-
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", Map.of("id", userId, "type", "policy_consent_revocation",
                 "attributes", Map.of("policyType", policyType, "revokedAt", now.toString())));
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return ResponseEntity.ok(response);
-    }
-
-    // ── Helpers ──────────────────────────────────────────────────────
-
-    private void upsertConsent(String tenantId, String userId, String policyType,
-                                String version, OffsetDateTime now,
-                                String ipAddress, String userAgent,
-                                String channel, String deviceType) {
-        jdbcTemplate.update(
-                "INSERT INTO policy_consent (id, tenant_id, user_id, policy_type, policy_version, " +
-                "accepted, accepted_at, ip_address, user_agent, consent_channel, device_type, " +
-                "created_at, updated_at) " +
-                "VALUES (gen_random_uuid(), ?, ?, ?, ?, TRUE, ?, ?, ?, ?, ?, NOW(), NOW()) " +
-                "ON CONFLICT (tenant_id, user_id, policy_type, policy_version) " +
-                "DO UPDATE SET accepted = TRUE, accepted_at = ?, revoked_at = NULL, " +
-                "ip_address = ?, user_agent = ?, consent_channel = ?, device_type = ?, updated_at = NOW()",
-                tenantId, userId, policyType, version, now, ipAddress, userAgent, channel, deviceType,
-                now, ipAddress, userAgent, channel, deviceType);
-    }
-
-    private void publishConsentEvent(String tenantId, String podId, String requestId,
-                                      String correlationId, String eventType, String subjectId,
-                                      Map<String, Object> payload) {
-        outboxService.writeOutboxEvent(
-                eventType,
-                correlationId,
-                requestId,               // causationId
-                UUID.randomUUID().toString(), // idempotencyKey
-                tenantId,
-                podId,
-                "PolicyConsent",          // subjectType
-                subjectId,
-                payload,
-                Map.of()
-        );
     }
 
     private String normalizeChannel(String channel) {

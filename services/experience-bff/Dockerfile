@@ -17,9 +17,8 @@ WORKDIR /workspace/services
 RUN --mount=type=cache,target=/root/.m2 \
     mvn -pl experience-bff -am -DskipTests package -q
 
-FROM eclipse-temurin:21-jre-alpine AS runtime
+FROM eclipse-temurin:21-jre
 WORKDIR /app
 COPY --from=build /workspace/services/experience-bff/target/experience-bff-*.jar app.jar
 EXPOSE 8160
-ENV JAVA_OPTS="-XX:+UseZGC -XX:+ZGenerational -Xmx512m -Xms256m"
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
+ENTRYPOINT ["java", "-jar", "app.jar"]

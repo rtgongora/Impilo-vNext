@@ -3,7 +3,6 @@ package zw.gov.mohcc.impilo.experience.controller.mobile;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
-import zw.gov.mohcc.impilo.experience.client.NotificationServiceClient;
 
 import java.util.*;
 
@@ -15,10 +14,7 @@ import java.util.*;
 @RequestMapping("/internal/v1/mobile/provider/notices")
 public class MobileNoticesController {
 
-    private final NotificationServiceClient notificationClient;
-
-    public MobileNoticesController(NotificationServiceClient notificationClient) {
-        this.notificationClient = notificationClient;
+    public MobileNoticesController() {
     }
 
     @GetMapping
@@ -29,18 +25,6 @@ public class MobileNoticesController {
             @RequestHeader("X-Actor-ID") String actorId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        try {
-            var notices = notificationClient.listNotifications(page, size);
-            if (notices != null) {
-                return ResponseEntity.ok(Map.of(
-                        "data", notices,
-                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
-                ));
-            }
-        } catch (Exception ignored) {}
-        return ResponseEntity.ok(Map.of(
-                "data", List.of(),
-                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
-        ));
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 }

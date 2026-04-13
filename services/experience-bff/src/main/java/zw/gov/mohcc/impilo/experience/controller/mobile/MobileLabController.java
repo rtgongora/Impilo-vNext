@@ -119,17 +119,11 @@ public class MobileLabController {
             try {
                 JsonNode data = orosClient.getPatientOrders(patientId);
                 if (data != null) {
-                    return ResponseEntity.ok(Map.of(
-                            "data", data,
-                            "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
-                    ));
+                    return ResponseEntity.ok(Map.of("data", data));
                 }
             } catch (Exception ignored) {}
         }
-        return ResponseEntity.ok(Map.of(
-                "data", List.of(),
-                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
-        ));
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     @GetMapping("/{id}")
@@ -141,16 +135,10 @@ public class MobileLabController {
         try {
             JsonNode data = orosClient.getOrder(id.toString());
             if (data != null) {
-                return ResponseEntity.ok(Map.of(
-                        "data", data,
-                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
-                ));
+                return ResponseEntity.ok(Map.of("data", data));
             }
         } catch (Exception ignored) {}
-        return ResponseEntity.ok(Map.of(
-                "data", Map.of(),
-                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
-        ));
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     @PostMapping("/{id}/cancel")
@@ -166,15 +154,9 @@ public class MobileLabController {
         try {
             JsonNode data = orosClient.cancelOrder(id.toString(), reason);
             if (data != null) {
-                return ResponseEntity.ok(Map.of(
-                        "data", data,
-                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
-                ));
+                return ResponseEntity.ok(Map.of("data", data));
             }
         } catch (Exception ignored) {}
-        return ResponseEntity.ok(Map.of(
-                "data", Map.of("id", id.toString(), "cancelled", true),
-                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
-        ));
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 }

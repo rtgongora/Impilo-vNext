@@ -5,19 +5,13 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
-
-import org.apache.hc.client5.http.config.RequestConfig;
-import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
-import org.apache.hc.client5.http.impl.classic.HttpClients;
-import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
-import org.apache.hc.core5.util.Timeout;
 
 import java.time.Duration;
 import java.util.List;
@@ -39,8 +33,6 @@ public class ServiceClientConfig {
             String pctBaseUrl,
             String orosBaseUrl,
             String pharmacyBaseUrl,
-            String supportBaseUrl,
-            String channelsBaseUrl,
             String butanoBaseUrl,
             String msikaBaseUrl,
             String msikaFlowBaseUrl,
@@ -103,17 +95,11 @@ public class ServiceClientConfig {
             String generalLedgerBaseUrl,
             String hrPayrollBaseUrl,
             String procurementBaseUrl,
-            // Health OS §14: Support, Channels, Dispatch, Wellness
-            String supportBaseUrl,
             String channelsBaseUrl,
             String dispatchBaseUrl,
+            String supportBaseUrl,
             String wellnessBaseUrl
     ) {
-        /**
-         * Backwards-compatible constructor used by unit tests and older callers.
-         *
-         * <p>Support + Channels bases were added later; this overload defaults them to null.</p>
-         */
         public ServiceEndpoints(
                 String pctBaseUrl,
                 String orosBaseUrl,
@@ -139,56 +125,6 @@ public class ServiceClientConfig {
                     pctBaseUrl,
                     orosBaseUrl,
                     pharmacyBaseUrl,
-                    null,
-                    null,
-                    butanoBaseUrl,
-                    msikaBaseUrl,
-                    msikaFlowBaseUrl,
-                    mushexBaseUrl,
-                    vitoBaseUrl,
-                    tusoBaseUrl,
-                    varapiBaseUrl,
-                    documentStoreBaseUrl,
-                    costaBaseUrl,
-                    coverageBaseUrl,
-                    surveillanceBaseUrl,
-                    campaignsBaseUrl,
-                    indawoBaseUrl,
-                    dataGovernanceBaseUrl,
-                    landelaBaseUrl,
-                    notificationBaseUrl
-            );
-        }
-
-        public ServiceEndpoints(
-                String pctBaseUrl,
-                String orosBaseUrl,
-                String pharmacyBaseUrl,
-                String supportBaseUrl,
-                String channelsBaseUrl,
-                String butanoBaseUrl,
-                String msikaBaseUrl,
-                String msikaFlowBaseUrl,
-                String mushexBaseUrl,
-                String vitoBaseUrl,
-                String tusoBaseUrl,
-                String varapiBaseUrl,
-                String documentStoreBaseUrl,
-                String costaBaseUrl,
-                String coverageBaseUrl,
-                String surveillanceBaseUrl,
-                String campaignsBaseUrl,
-                String indawoBaseUrl,
-                String dataGovernanceBaseUrl,
-                String landelaBaseUrl,
-                String notificationBaseUrl
-        ) {
-            this(
-                    pctBaseUrl,
-                    orosBaseUrl,
-                    pharmacyBaseUrl,
-                    supportBaseUrl,
-                    channelsBaseUrl,
                     butanoBaseUrl,
                     msikaBaseUrl,
                     msikaFlowBaseUrl,
@@ -252,8 +188,6 @@ public class ServiceClientConfig {
             if (pctBaseUrl == null) pctBaseUrl = "http://localhost:8088";
             if (orosBaseUrl == null) orosBaseUrl = "http://localhost:8089";
             if (pharmacyBaseUrl == null) pharmacyBaseUrl = "http://localhost:8096";
-            if (supportBaseUrl == null) supportBaseUrl = "http://localhost:8340";
-            if (channelsBaseUrl == null) channelsBaseUrl = "http://localhost:8130";
             if (butanoBaseUrl == null) butanoBaseUrl = "http://localhost:8090";
             if (msikaBaseUrl == null) msikaBaseUrl = "http://localhost:8086";
             if (msikaFlowBaseUrl == null) msikaFlowBaseUrl = "http://localhost:8100";
@@ -306,10 +240,10 @@ public class ServiceClientConfig {
             if (generalLedgerBaseUrl == null) generalLedgerBaseUrl = "http://localhost:8281";
             if (hrPayrollBaseUrl == null) hrPayrollBaseUrl = "http://localhost:8282";
             if (procurementBaseUrl == null) procurementBaseUrl = "http://localhost:8283";
-            if (supportBaseUrl == null) supportBaseUrl = "http://localhost:8300";
-            if (channelsBaseUrl == null) channelsBaseUrl = "http://localhost:8301";
-            if (dispatchBaseUrl == null) dispatchBaseUrl = "http://localhost:8302";
-            if (wellnessBaseUrl == null) wellnessBaseUrl = "http://localhost:8161";
+            if (channelsBaseUrl == null) channelsBaseUrl = "http://localhost:8290";
+            if (dispatchBaseUrl == null) dispatchBaseUrl = "http://localhost:8291";
+            if (supportBaseUrl == null) supportBaseUrl = "http://localhost:8292";
+            if (wellnessBaseUrl == null) wellnessBaseUrl = "http://localhost:8293";
         }
     }
 
@@ -344,22 +278,9 @@ public class ServiceClientConfig {
 
     @Bean
     public RestTemplate serviceRestTemplate(ClientHttpRequestInterceptor trustHeaderForwardingInterceptor) {
-        PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
-        connectionManager.setMaxTotal(500);          // total connections across all services
-        connectionManager.setDefaultMaxPerRoute(50); // max connections per sovereign service
-
-        RequestConfig requestConfig = RequestConfig.custom()
-                .setConnectionRequestTimeout(Timeout.ofSeconds(1)) // wait for pool slot
-                .setResponseTimeout(Timeout.ofSeconds(5))          // read timeout
-                .build();
-
-        CloseableHttpClient httpClient = HttpClients.custom()
-                .setConnectionManager(connectionManager)
-                .setDefaultRequestConfig(requestConfig)
-                .build();
-
-        HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory(httpClient);
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
         factory.setConnectTimeout(Duration.ofSeconds(3));
+        factory.setReadTimeout(Duration.ofSeconds(5));
         RestTemplate restTemplate = new RestTemplate(factory);
         restTemplate.setInterceptors(List.of(trustHeaderForwardingInterceptor));
         return restTemplate;

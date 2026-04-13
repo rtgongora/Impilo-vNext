@@ -56,12 +56,6 @@
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
 
-        <!-- Apache HttpClient 5 (connection pooling for RestTemplate) -->
-        <dependency>
-            <groupId>org.apache.httpcomponents.client5</groupId>
-            <artifactId>httpclient5</artifactId>
-        </dependency>
-
         <!-- PostgreSQL and Flyway REMOVED — BFF is a pure proxy with no database -->
         <!-- All data owned by sovereign services, accessed via typed HTTP clients -->
 

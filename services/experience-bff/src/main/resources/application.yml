@@ -1,31 +1,12 @@
 server:
   port: 8160
-  compression:
-    enabled: true
-    mime-types: application/json,application/xml,text/html,text/plain
-    min-response-size: 1024
-  tomcat:
-    threads:
-      max: 200
-    accept-count: 100
-    connection-timeout: 5000
-    keep-alive-timeout: 30000
-    max-keep-alive-requests: 200
 
 spring:
-  main:
-    lazy-initialization: true
   application:
     name: experience-bff
   threads:
     virtual:
       enabled: true
-  jackson:
-    default-property-inclusion: non_null
-    serialization:
-      write-dates-as-timestamps: false
-    deserialization:
-      fail-on-unknown-properties: false
   data:
     redis:
       host: ${REDIS_HOST:localhost}
@@ -133,11 +114,6 @@ impilo:
     general-ledger-base-url: ${GENERAL_LEDGER_BASE_URL:http://localhost:8281}
     hr-payroll-base-url: ${HR_PAYROLL_BASE_URL:http://localhost:8282}
     procurement-base-url: ${PROCUREMENT_BASE_URL:http://localhost:8283}
-    # Health OS §14: Support, Channels, Dispatch, Wellness
-    support-base-url: ${SUPPORT_BASE_URL:http://localhost:8300}
-    channels-base-url: ${CHANNELS_BASE_URL:http://localhost:8301}
-    dispatch-base-url: ${DISPATCH_BASE_URL:http://localhost:8302}
-    wellness-base-url: ${WELLNESS_BASE_URL:http://localhost:8161}
 
   clinical-platform:
     base-url: ${CLINICAL_KNOWLEDGE_PLATFORM_BASE_URL:http://localhost:8270}
@@ -202,9 +178,6 @@ resilience4j:
           - org.springframework.web.client.ResourceAccessException
         ignore-exceptions:
           - org.springframework.web.client.HttpClientErrorException
-
-  clinical-platform:
-    base-url: ${CLINICAL_KNOWLEDGE_PLATFORM_BASE_URL:http://localhost:8270}
 
 logging:
   level:

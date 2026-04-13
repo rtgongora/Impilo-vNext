@@ -7,7 +7,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
-import zw.gov.mohcc.impilo.experience.client.SupportServiceClient;
+import zw.gov.mohcc.impilo.experience.client.CommunityServiceClient;
+import zw.gov.mohcc.impilo.experience.controller.ResourceNotFoundException;
 
 import java.util.*;
 
@@ -23,10 +24,10 @@ import java.util.*;
 @RequestMapping("/internal/v1/mobile/citizen/support")
 public class CitizenSupportController {
 
-    private final SupportServiceClient supportClient;
+    private final CommunityServiceClient communityClient;
 
-    public CitizenSupportController(SupportServiceClient supportClient) {
-        this.supportClient = supportClient;
+    public CitizenSupportController(CommunityServiceClient communityClient) {
+        this.communityClient = communityClient;
     }
 
     public record CreateTicketBody(
@@ -45,7 +46,8 @@ public class CitizenSupportController {
             @RequestParam(required = false) String status,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        JsonNode tickets = supportClient.listTickets(status, null, null, null, page, size);
+
+        JsonNode tickets = communityClient.listVisits(actorId);
 
         // UUID patientId = resolvePatientId(tenantId, actorId);
         // List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql.toString(), params.toArray());
@@ -66,13 +68,13 @@ public class CitizenSupportController {
             @Valid @RequestBody CreateTicketBody body) {
 
         Map<String, Object> ticketRequest = new LinkedHashMap<>();
-        ticketRequest.put("reporterRef", actorId);
-        ticketRequest.put("title", body.subject());
+        ticketRequest.put("citizenCpid", actorId);
         ticketRequest.put("category", body.category());
+        ticketRequest.put("subject", body.subject());
         ticketRequest.put("description", body.description());
-        ticketRequest.put("priority", body.priority() != null ? body.priority() : "MEDIUM");
+        ticketRequest.put("priority", body.priority() != null ? body.priority() : "NORMAL");
 
-        JsonNode result = supportClient.createTicket(ticketRequest);
+        JsonNode result = communityClient.createVisit(ticketRequest);
 
         // jdbcTemplate.update("""
         //     INSERT INTO citizen_support_tickets (...) VALUES (...)
@@ -93,10 +95,13 @@ public class CitizenSupportController {
             @RequestParam(required = false) String search,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        JsonNode articles = supportClient.listArticles(category, null, page, size);
-        return ResponseEntity.ok(Map.of(
-                "data", articles != null ? articles : List.of(),
-                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
-        ));
+
+        // Knowledge articles are empty until populated; return empty set structure
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", List.of());
+        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId,
+                "page", Map.of("number", page, "size", size,
+                        "total_elements", 0, "total_pages", 0)));
+        return ResponseEntity.ok(response);
     }
 }

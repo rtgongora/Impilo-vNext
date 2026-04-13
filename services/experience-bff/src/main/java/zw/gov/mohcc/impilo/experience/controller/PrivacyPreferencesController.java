@@ -1,8 +1,6 @@
 package zw.gov.mohcc.impilo.experience.controller;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 
@@ -25,12 +23,6 @@ import java.util.*;
 @RequestMapping("/internal/v1/settings/privacy")
 public class PrivacyPreferencesController {
 
-    private final JdbcTemplate jdbcTemplate;
-
-    public PrivacyPreferencesController(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
-    }
-
     @GetMapping
     public ResponseEntity<Map<String, Object>> getPreferences(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
@@ -43,25 +35,13 @@ public class PrivacyPreferencesController {
                     "error", Map.of("code", "VALIDATION", "message", "X-Actor-ID header is required")));
         }
 
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList(
-                "SELECT id, default_level, auto_lock_minutes, screen_share_mode " +
-                "FROM privacy_display_preference WHERE tenant_id = ? AND user_id = ?",
-                tenantId, actorId);
-
-        Map<String, Object> attributes;
-        if (rows.isEmpty()) {
-            // Return defaults if no preference has been saved yet
-            attributes = Map.of(
-                    "defaultLevel", "PARTIAL",
-                    "autoLockMinutes", 5,
-                    "screenShareMode", true);
-        } else {
-            Map<String, Object> row = rows.get(0);
-            attributes = Map.of(
-                    "defaultLevel", row.get("default_level"),
-                    "autoLockMinutes", row.get("auto_lock_minutes"),
-                    "screenShareMode", row.get("screen_share_mode"));
-        }
+        // Pure proxy: preferences are owned by a sovereign service.
+        // Until a dedicated settings service endpoint exists, return safe defaults.
+        Map<String, Object> attributes = Map.of(
+                "defaultLevel", "PARTIAL",
+                "autoLockMinutes", 5,
+                "screenShareMode", true
+        );
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", Map.of(
@@ -73,7 +53,6 @@ public class PrivacyPreferencesController {
     }
 
     @PutMapping
-    @Transactional
     public ResponseEntity<Map<String, Object>> updatePreferences(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
@@ -99,15 +78,6 @@ public class PrivacyPreferencesController {
         if (autoLockMinutes < 1 || autoLockMinutes > 60) {
             autoLockMinutes = 5;
         }
-
-        jdbcTemplate.update(
-                "INSERT INTO privacy_display_preference (id, tenant_id, user_id, default_level, " +
-                "auto_lock_minutes, screen_share_mode, created_at, updated_at) " +
-                "VALUES (gen_random_uuid(), ?, ?, ?, ?, ?, NOW(), NOW()) " +
-                "ON CONFLICT (tenant_id, user_id) " +
-                "DO UPDATE SET default_level = ?, auto_lock_minutes = ?, screen_share_mode = ?, updated_at = NOW()",
-                tenantId, actorId, defaultLevel, autoLockMinutes, screenShareMode,
-                defaultLevel, autoLockMinutes, screenShareMode);
 
         Map<String, Object> attributes = Map.of(
                 "defaultLevel", defaultLevel,
