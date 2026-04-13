@@ -28,7 +28,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
             {facility && (
               <Link
                 href="/facility"
-                className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700"
+                className="rounded-full bg-impilo-50 px-2.5 py-1 text-xs font-medium text-impilo-700"
               >
                 {facility.name}
               </Link>
@@ -61,7 +61,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
             ) : (
               <Link
                 href="/auth/login"
-                className="text-sm text-blue-600 hover:text-blue-700"
+                className="text-sm text-impilo-500 hover:text-impilo-600"
               >
                 Sign In
               </Link>

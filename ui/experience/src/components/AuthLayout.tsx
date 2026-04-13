@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * AuthLayout — Lovable-aligned split-screen authentication layout.
+ * AuthLayout — Split-screen authentication layout with Impilo branding.
  * Layout variant: "auth" (used by /auth/* routes)
  *
  * Structure:
@@ -11,30 +11,33 @@
 
 import { type ReactNode } from "react";
 import { Heart, Shield, Activity } from "lucide-react";
+import { ImpiloLogo } from "@/components/brand/ImpiloLogo";
 
 export function AuthLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen flex bg-gray-50">
       {/* Left Panel — Branding (desktop only) */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-impilo-500 via-impilo-600 to-impilo-800 relative overflow-hidden">
         {/* Decorative elements */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-20 left-20 w-64 h-64 rounded-full bg-white/20 blur-3xl" />
-          <div className="absolute bottom-20 right-20 w-96 h-96 rounded-full bg-white/10 blur-3xl" />
+          <div className="absolute bottom-20 right-20 w-96 h-96 rounded-full bg-brand-yellow/20 blur-3xl" />
         </div>
 
         <div className="relative z-10 flex flex-col justify-between p-12 text-white">
           <div>
-            <h1 className="text-2xl font-bold">Impilo</h1>
-            <p className="text-sm text-blue-200 mt-1">Health Operating System</p>
+            <ImpiloLogo variant="full" size={36} className="[&_svg]:text-white [&_span]:!text-white" />
+            <p className="text-sm text-impilo-100 mt-2">Health Operating System</p>
           </div>
 
           <div className="space-y-6">
             <div>
               <h2 className="text-3xl font-bold leading-tight">
-                Digital Health Platform
+                One Health OS.
+                <br />
+                One experience.
               </h2>
-              <p className="text-lg text-blue-100 mt-3 max-w-md">
+              <p className="text-lg text-impilo-100 mt-3 max-w-md">
                 Empowering healthcare providers with seamless, secure,
                 and intelligent clinical solutions.
               </p>
@@ -45,13 +48,13 @@ export function AuthLayout({ children }: { children: ReactNode }) {
                 <div className="h-9 w-9 rounded-lg bg-white/15 flex items-center justify-center">
                   <Heart className="h-4 w-4" />
                 </div>
-                <span className="text-sm">Patient-Centered</span>
+                <span className="text-sm">Person-Centered</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="h-9 w-9 rounded-lg bg-white/15 flex items-center justify-center">
                   <Shield className="h-4 w-4" />
                 </div>
-                <span className="text-sm">Secure</span>
+                <span className="text-sm">Trust-First</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="h-9 w-9 rounded-lg bg-white/15 flex items-center justify-center">
@@ -62,8 +65,8 @@ export function AuthLayout({ children }: { children: ReactNode }) {
             </div>
           </div>
 
-          <p className="text-xs text-blue-300">
-            Impilo Health Information Exchange
+          <p className="text-xs text-impilo-200">
+            Impilo Health Operating System
           </p>
         </div>
       </div>
@@ -73,7 +76,9 @@ export function AuthLayout({ children }: { children: ReactNode }) {
         <div className="w-full max-w-md">
           {/* Mobile header */}
           <div className="lg:hidden text-center mb-8">
-            <h1 className="text-xl font-bold text-gray-900">Impilo</h1>
+            <div className="flex justify-center">
+              <ImpiloLogo variant="full" size={28} />
+            </div>
             <p className="text-xs text-gray-500 mt-1">Health Operating System</p>
           </div>
 

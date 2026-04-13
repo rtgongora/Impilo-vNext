@@ -16,6 +16,7 @@ import {
   User,
   Activity,
 } from "lucide-react";
+import { ImpiloLogo } from "@/components/brand/ImpiloLogo";
 import { PatientLocationBadge } from "@/components/layout/PatientLocationBadge";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
@@ -37,9 +38,7 @@ export function UtilityStrip() {
     <div className="h-9 min-h-[2.25rem] shrink-0 bg-white border-b border-gray-200 flex items-center justify-between px-3 z-50">
       {/* Left: Logo + Facility */}
       <div className="flex items-center gap-3">
-        <span className="text-sm font-bold text-blue-600 tracking-tight">
-          Impilo
-        </span>
+        <ImpiloLogo variant="full" size={20} />
         <div className="h-4 w-px bg-gray-200" />
         {facility ? (
           <span className="flex items-center gap-1.5 text-xs text-gray-600">

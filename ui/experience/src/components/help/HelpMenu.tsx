@@ -136,7 +136,7 @@ export function HelpMenu({ variant = "icon", className }: HelpMenuProps) {
         return (
           <button
             onClick={() => setOpen(!open)}
-            className={`h-10 rounded-full shadow-md bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200 px-4 flex items-center gap-2 text-xs font-medium backdrop-blur-sm ${className ?? ""}`}
+            className={`h-10 rounded-full shadow-md bg-impilo-50 text-impilo-500 hover:bg-impilo-100 border border-impilo-200 px-4 flex items-center gap-2 text-xs font-medium backdrop-blur-sm ${className ?? ""}`}
           >
             <HelpCircle className="h-3.5 w-3.5" />
             <span>Need Help?</span>
@@ -187,7 +187,7 @@ export function HelpMenu({ variant = "icon", className }: HelpMenuProps) {
                 placeholder="Search help..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full h-8 pl-8 pr-3 text-sm border rounded-md border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full h-8 pl-8 pr-3 text-sm border rounded-md border-gray-300 focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
               />
             </div>
           </div>
@@ -209,8 +209,8 @@ export function HelpMenu({ variant = "icon", className }: HelpMenuProps) {
                     onClick={() => handleNavigate(link.path, link.tab)}
                     className="w-full flex items-center gap-3 px-2 py-2 rounded-md hover:bg-gray-50 transition-colors text-left"
                   >
-                    <div className="h-8 w-8 rounded-md bg-blue-50 flex items-center justify-center shrink-0">
-                      <Icon className="h-4 w-4 text-blue-600" />
+                    <div className="h-8 w-8 rounded-md bg-impilo-50 flex items-center justify-center shrink-0">
+                      <Icon className="h-4 w-4 text-impilo-500" />
                     </div>
                     <div className="min-w-0">
                       <p className="text-sm font-medium leading-tight">
@@ -272,8 +272,8 @@ export function HelpMenu({ variant = "icon", className }: HelpMenuProps) {
                 onClick={() => handleNavigate("/help")}
                 className="w-full flex items-center gap-3 px-2 py-2 rounded-md hover:bg-gray-50 transition-colors text-left"
               >
-                <div className="h-8 w-8 rounded-md bg-blue-50 flex items-center justify-center shrink-0">
-                  <Keyboard className="h-4 w-4 text-blue-600" />
+                <div className="h-8 w-8 rounded-md bg-impilo-50 flex items-center justify-center shrink-0">
+                  <Keyboard className="h-4 w-4 text-impilo-500" />
                 </div>
                 <div>
                   <p className="text-sm font-medium">Keyboard Shortcuts</p>
