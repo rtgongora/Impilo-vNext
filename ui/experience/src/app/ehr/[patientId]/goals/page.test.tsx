@@ -66,6 +66,10 @@ vi.mock("@/hooks/queries/useCareContinuity", () => ({
     isError: false,
     refetch: vi.fn(),
   }),
+  useCreateGoal: () => ({
+    mutate: vi.fn(),
+    isPending: false,
+  }),
 }));
 
 describe("GoalsPage", () => {

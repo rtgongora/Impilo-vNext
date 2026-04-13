@@ -7,6 +7,12 @@ import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useShiftStore } from "@/hooks/useShiftStore";
 import { useWorkspaceStore } from "@/hooks/useWorkspaceStore";
 
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/",
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() }),
+  useSearchParams: () => new URLSearchParams(),
+}));
+
 vi.mock("./AuthGuardProvider", () => ({
   AuthGuardProvider: ({ children }: { children: ReactNode }) => <>{children}</>,
 }));

@@ -42,11 +42,22 @@ vi.mock("@/hooks/queries/useEncounters", () => ({
   }),
 }));
 
+vi.mock("@/hooks/queries/useCareContinuity", () => ({
+  __esModule: true,
+  useCareTeam: () => ({
+    data: { data: [] },
+    isLoading: false,
+    isError: false,
+  }),
+  useAddCareTeamMember: () => ({ mutate: vi.fn(), isPending: false }),
+  useRemoveCareTeamMember: () => ({ mutate: vi.fn(), isPending: false }),
+}));
+
 describe("CareTeamPage", () => {
   it("surfaces team ownership continuity across care planning surfaces", () => {
     render(<CareTeamPage />);
 
-    expect(screen.getByText("Care team roster not connected")).toBeInTheDocument();
+    expect(screen.getAllByRole("heading", { name: "Care Team" }).length).toBeGreaterThan(0);
     expect(screen.getByText("Keep the accountable team visible so plans, consults, and next actions still have an owner")).toBeInTheDocument();
     expect(screen.getByText("Team continuity")).toBeInTheDocument();
     expect(screen.getByText("Cross-facility")).toBeInTheDocument();

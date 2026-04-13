@@ -76,6 +76,10 @@ vi.mock("@/hooks/queries/useCareContinuity", () => ({
     isError: false,
     refetch: vi.fn(),
   }),
+  useCreateCarePlan: () => ({
+    mutate: vi.fn(),
+    isPending: false,
+  }),
 }));
 
 describe("CarePlansPage", () => {

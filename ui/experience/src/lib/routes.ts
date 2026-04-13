@@ -357,7 +357,7 @@ export const ROUTES: RouteDefinition[] = [
 ];
 
 // Total route count assertion
-export const EXPECTED_ROUTE_COUNT = 226;
+export const EXPECTED_ROUTE_COUNT = 237;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary
