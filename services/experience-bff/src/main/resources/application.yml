@@ -4,24 +4,20 @@ server:
 spring:
   application:
     name: experience-bff
-  datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:experience_bff}
-    username: ${DB_USER:impilo}
-    password: ${DB_PASSWORD:impilo}
-    hikari:
-      maximum-pool-size: 10
-      minimum-idle: 2
-  jpa:
-    hibernate:
-      ddl-auto: validate
-    open-in-view: false
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-  flyway:
-    enabled: true
-    locations: classpath:db/migration
-    baseline-on-migrate: true
+  threads:
+    virtual:
+      enabled: true
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 2000
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     consumer:
@@ -122,7 +118,69 @@ impilo:
   clinical-platform:
     base-url: ${CLINICAL_KNOWLEDGE_PLATFORM_BASE_URL:http://localhost:8270}
 
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        failure-rate-threshold: 50
+        slow-call-rate-threshold: 80
+        slow-call-duration-threshold: 3s
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 5
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 20
+        minimum-number-of-calls: 10
+      critical:
+        failure-rate-threshold: 30
+        wait-duration-in-open-state: 15s
+        sliding-window-size: 10
+    instances:
+      pct-service:
+        base-config: critical
+      oros-service:
+        base-config: critical
+      vito-service:
+        base-config: critical
+      pharmacy-service:
+        base-config: default
+      tuso-service:
+        base-config: default
+      butano-service:
+        base-config: default
+      mushex-service:
+        base-config: default
+      coverage-service:
+        base-config: default
+      mushe-wallet-service:
+        base-config: default
+  bulkhead:
+    configs:
+      default:
+        max-concurrent-calls: 100
+        max-wait-duration: 500ms
+      critical:
+        max-concurrent-calls: 200
+        max-wait-duration: 1s
+    instances:
+      pct-service:
+        base-config: critical
+      vito-service:
+        base-config: critical
+      oros-service:
+        base-config: critical
+  retry:
+    configs:
+      default:
+        max-attempts: 2
+        wait-duration: 500ms
+        retry-exceptions:
+          - java.io.IOException
+          - org.springframework.web.client.ResourceAccessException
+        ignore-exceptions:
+          - org.springframework.web.client.HttpClientErrorException
+
 logging:
   level:
     zw.gov.mohcc.impilo: INFO
     org.springframework.web: INFO
+    io.github.resilience4j: INFO
