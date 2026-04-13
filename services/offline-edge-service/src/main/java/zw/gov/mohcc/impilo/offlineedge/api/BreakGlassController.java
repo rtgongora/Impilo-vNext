@@ -46,7 +46,7 @@ public class BreakGlassController {
                             ctx.requestId(), ctx.correlationId()));
         }
 
-        String actorId = body.getOrDefault("actor_id", ctx.userId());
+        String actorId = body.getOrDefault("actor_id", defaultActorId(ctx));
         String facilityId = body.getOrDefault("facility_id", "unknown");
         String patientRef = body.get("patient_ref");
         String overrideType = body.getOrDefault("override_type", "SCOPE_EXTENSION");
@@ -114,7 +114,7 @@ public class BreakGlassController {
                             ctx.requestId(), ctx.correlationId()));
         }
 
-        String reviewedBy = body.getOrDefault("reviewed_by", ctx.userId());
+        String reviewedBy = body.getOrDefault("reviewed_by", defaultActorId(ctx));
         String notes = body.get("notes");
 
         try {
@@ -151,5 +151,12 @@ public class BreakGlassController {
         if (e.getReviewedAt() != null) r.put("reviewed_at", e.getReviewedAt().toString());
         if (e.getReviewNotes() != null) r.put("review_notes", e.getReviewNotes());
         return r;
+    }
+
+    private static String defaultActorId(RequestContext ctx) {
+        if (ctx.principal() != null && ctx.principal().getName() != null && !ctx.principal().getName().isBlank()) {
+            return ctx.principal().getName();
+        }
+        return "unknown";
     }
 }
