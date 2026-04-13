@@ -76,7 +76,7 @@ public class OutboxEventEntity {
     @Column(name = "retry_count", nullable = false)
     private int retryCount = 0;
 
-    protected OutboxEventEntity() {}
+    public OutboxEventEntity() {}
 
     /**
      * Creates an outbox row for {@link CompanionOutboxPublisher}. {@code payloadJson} must be the
