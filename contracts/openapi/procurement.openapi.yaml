@@ -1,0 +1,207 @@
+# =============================================================================
+# PROCUREMENT SERVICE — Requisitions, PO, GRN, invoices, RFQ (port 8283)
+# Publishes `procurement.grn.received` for inventory; Experience via BFF `/erp/procurement`.
+# =============================================================================
+openapi: "3.0.3"
+
+info:
+  title: Procurement Service
+  version: "1.0.0"
+  description: |
+    Native procurement — suppliers, requisitions, purchase orders, goods received,
+    supplier invoices (three-way match), and RFQs.
+  contact:
+    name: Impilo Platform Team
+  license:
+    name: Proprietary
+
+servers:
+  - url: http://localhost:8283
+    description: Local development
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Procurement
+    description: Source-to-pay
+
+paths:
+  /internal/v1/procurement/suppliers:
+    get:
+      operationId: procSuppliers
+      tags: [Procurement]
+      summary: List suppliers
+      responses:
+        "200":
+          description: Suppliers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+  /internal/v1/procurement/requisitions:
+    get:
+      operationId: procRequisitions
+      tags: [Procurement]
+      summary: List requisitions
+      responses:
+        "200":
+          description: Requisitions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+  /internal/v1/procurement/purchase-orders:
+    get:
+      operationId: procPurchaseOrders
+      tags: [Procurement]
+      summary: List purchase orders
+      responses:
+        "200":
+          description: POs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+  /internal/v1/procurement/grn:
+    get:
+      operationId: procListGrn
+      tags: [Procurement]
+      summary: List goods received notes
+      responses:
+        "200":
+          description: GRNs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+    post:
+      operationId: procCreateGrn
+      tags: [Procurement]
+      summary: Record GRN (emits procurement.grn.received)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: GRN created
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/procurement/invoices:
+    get:
+      operationId: procInvoices
+      tags: [Procurement]
+      summary: List supplier invoices
+      responses:
+        "200":
+          description: Invoices
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+  /internal/v1/procurement/invoices/{id}/match:
+    post:
+      operationId: procMatchInvoice
+      tags: [Procurement]
+      summary: Attempt three-way match
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Invoice after match attempt
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/procurement/invoices/{id}/pay:
+    post:
+      operationId: procPayInvoice
+      tags: [Procurement]
+      summary: Mark invoice paid
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Updated invoice
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/procurement/rfqs:
+    get:
+      operationId: procRfqs
+      tags: [Procurement]
+      summary: List RFQs
+      responses:
+        "200":
+          description: RFQs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+  /internal/v1/procurement/rfqs/{id}/responses:
+    get:
+      operationId: procRfqResponses
+      tags: [Procurement]
+      summary: RFQ supplier responses
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Responses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

@@ -114,6 +114,10 @@ impilo:
 
     # Health Intelligence Plane — AI Model Registry
     ai-model-registry-base-url: ${AI_MODEL_REGISTRY_BASE_URL:http://localhost:8280}
+    # ERP Plane — general ledger, HR/payroll, procurement
+    general-ledger-base-url: ${GENERAL_LEDGER_BASE_URL:http://localhost:8281}
+    hr-payroll-base-url: ${HR_PAYROLL_BASE_URL:http://localhost:8282}
+    procurement-base-url: ${PROCUREMENT_BASE_URL:http://localhost:8283}
 
   clinical-platform:
     base-url: ${CLINICAL_KNOWLEDGE_PLATFORM_BASE_URL:http://localhost:8270}

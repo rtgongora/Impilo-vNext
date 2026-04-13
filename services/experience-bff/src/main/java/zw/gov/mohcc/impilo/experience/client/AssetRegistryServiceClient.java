@@ -77,6 +77,18 @@ public class AssetRegistryServiceClient {
         return r.getBody();
     }
 
+    public JsonNode getFixedAssetDetails(UUID assetId) {
+        return getJson(baseUrl + "/internal/v1/fixed-assets/assets/" + assetId + "/details");
+    }
+
+    public JsonNode getFixedAssetDepreciationSchedule(UUID assetId) {
+        return getJson(baseUrl + "/internal/v1/fixed-assets/assets/" + assetId + "/depreciation/schedule");
+    }
+
+    public JsonNode upsertFixedAssetDetails(UUID assetId, JsonNode body) {
+        return exchangeJson(HttpMethod.PUT, baseUrl + "/internal/v1/fixed-assets/assets/" + assetId + "/details", body);
+    }
+
     private JsonNode getJson(String url) {
         log.debug("Asset registry GET {}", url);
         ResponseEntity<JsonNode> r = restTemplate.getForEntity(url, JsonNode.class);

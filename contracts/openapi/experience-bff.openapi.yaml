@@ -4,6 +4,12 @@ info:
   description: |
     Phase F baseline contract for `experience-bff`. Extend with real paths and schemas as the HTTP surface is stabilised.
   version: 0.1.0
+tags:
+  - name: Health
+  - name: ERP-GL
+  - name: ERP-HR
+  - name: ERP-Procurement
+  - name: AssetRegistry
 servers:
   - url: http://localhost:8160
     description: Local default (`default_http_port` in docs/registry/services-registry.yaml)
@@ -17,6 +23,72 @@ paths:
       responses:
         '200':
           description: Service reachable
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/erp/gl/accounts:
+    get:
+      operationId: bffErpGlAccounts
+      tags: [ERP-GL]
+      summary: Proxy — GL accounts
+      responses:
+        '200':
+          description: JSON array from general-ledger-service
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+  /internal/v1/erp/hr/employees:
+    get:
+      operationId: bffErpHrEmployees
+      tags: [ERP-HR]
+      summary: Proxy — HR employees
+      responses:
+        '200':
+          description: JSON array from hr-payroll-service
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+  /internal/v1/erp/procurement/suppliers:
+    get:
+      operationId: bffErpProcSuppliers
+      tags: [ERP-Procurement]
+      summary: Proxy — procurement suppliers
+      responses:
+        '200':
+          description: JSON array from procurement-service
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+  /internal/v1/asset-registry/fixed-assets/{assetId}/details:
+    get:
+      operationId: bffFixedAssetDetails
+      tags: [AssetRegistry]
+      summary: Fixed asset financial details
+      parameters:
+        - name: assetId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Detail payload
           content:
             application/json:
               schema:

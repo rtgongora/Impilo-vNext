@@ -89,7 +89,10 @@ public class ServiceClientConfig {
             String reportingBaseUrl,
             String dataWarehouseBaseUrl,
             String dataIngestionBaseUrl,
-            String aiModelRegistryBaseUrl
+            String aiModelRegistryBaseUrl,
+            String generalLedgerBaseUrl,
+            String hrPayrollBaseUrl,
+            String procurementBaseUrl
     ) {
         public ServiceEndpoints(
                 String pctBaseUrl,
@@ -132,6 +135,9 @@ public class ServiceClientConfig {
                     dataGovernanceBaseUrl,
                     landelaBaseUrl,
                     notificationBaseUrl,
+                    null,
+                    null,
+                    null,
                     null,
                     null,
                     null,
@@ -221,6 +227,9 @@ public class ServiceClientConfig {
             if (dataWarehouseBaseUrl == null) dataWarehouseBaseUrl = "http://localhost:8233";
             if (dataIngestionBaseUrl == null) dataIngestionBaseUrl = "http://localhost:8210";
             if (aiModelRegistryBaseUrl == null) aiModelRegistryBaseUrl = "http://localhost:8280";
+            if (generalLedgerBaseUrl == null) generalLedgerBaseUrl = "http://localhost:8281";
+            if (hrPayrollBaseUrl == null) hrPayrollBaseUrl = "http://localhost:8282";
+            if (procurementBaseUrl == null) procurementBaseUrl = "http://localhost:8283";
         }
     }
 

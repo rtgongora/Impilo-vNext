@@ -100,3 +100,42 @@ export function useRetireAsset() {
     },
   });
 }
+
+// ── Fixed assets (ERP) ────────────────────────────────────────────
+
+export function useFixedAssetDetails(assetId?: string | null) {
+  return useQuery({
+    queryKey: ["asset-registry", "fixed-asset", assetId],
+    queryFn: () =>
+      apiClient.get<unknown>(
+        `/internal/v1/asset-registry/fixed-assets/${encodeURIComponent(assetId!)}/details`,
+      ),
+    enabled: !!assetId,
+  });
+}
+
+export function useFixedAssetDepreciationSchedule(assetId?: string | null) {
+  return useQuery({
+    queryKey: ["asset-registry", "fixed-asset-schedule", assetId],
+    queryFn: () =>
+      apiClient.get<unknown>(
+        `/internal/v1/asset-registry/fixed-assets/${encodeURIComponent(assetId!)}/depreciation/schedule`,
+      ),
+    enabled: !!assetId,
+  });
+}
+
+export function useUpsertFixedAssetDetails() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: { assetId: string; body: Record<string, unknown> }) =>
+      apiClient.put<unknown>(
+        `/internal/v1/asset-registry/fixed-assets/${encodeURIComponent(args.assetId)}/details`,
+        args.body,
+      ),
+    onSuccess: (_d, { assetId }) => {
+      qc.invalidateQueries({ queryKey: ["asset-registry", "fixed-asset", assetId] });
+      qc.invalidateQueries({ queryKey: ["asset-registry", "fixed-asset-schedule", assetId] });
+    },
+  });
+}

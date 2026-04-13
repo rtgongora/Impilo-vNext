@@ -7,7 +7,19 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Receipt, FileText, CreditCard, BookOpen, ClipboardList, User, Layers, DatabaseZap, BarChart3, Wallet } from "lucide-react";
+import {
+  Receipt,
+  FileText,
+  CreditCard,
+  BookOpen,
+  ClipboardList,
+  User,
+  Layers,
+  DatabaseZap,
+  BarChart3,
+  Wallet,
+  Landmark,
+} from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { OrganizationPlaneContextBar } from "@/components/experience/OrganizationPlaneContextBar";
 import { PageShell } from "@/components/PageShell";
@@ -56,6 +68,13 @@ const FINANCE_SECTIONS = [
     href: "/finance/reports",
     icon: BarChart3,
     color: "bg-teal-100 text-teal-700",
+  },
+  {
+    title: "Native ERP",
+    description: "General ledger, HR & payroll, procurement, and fixed assets",
+    href: "/erp",
+    icon: Landmark,
+    color: "bg-slate-100 text-slate-700",
   },
   {
     title: "My healthcare account",

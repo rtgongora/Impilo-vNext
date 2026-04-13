@@ -1,0 +1,205 @@
+# =============================================================================
+# HR & PAYROLL SERVICE — Employees, leave, attendance, payroll (port 8282)
+# Experience surfaces via experience-bff `/erp/hr`.
+# =============================================================================
+openapi: "3.0.3"
+
+info:
+  title: HR & Payroll Service
+  version: "1.0.0"
+  description: |
+    Native HR and payroll — employees, employment contracts, leave, attendance,
+    payroll runs, payslips, and deduction types.
+  contact:
+    name: Impilo Platform Team
+  license:
+    name: Proprietary
+
+servers:
+  - url: http://localhost:8282
+    description: Local development
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: HR
+    description: Human resources
+  - name: Payroll
+    description: Payroll runs and payslips
+
+paths:
+  /internal/v1/hr/employees:
+    get:
+      operationId: hrListEmployees
+      tags: [HR]
+      summary: List employees
+      responses:
+        "200":
+          description: Employees
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+    post:
+      operationId: hrCreateEmployee
+      tags: [HR]
+      summary: Create employee
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/hr/contracts:
+    get:
+      operationId: hrListContracts
+      tags: [HR]
+      summary: Contracts for employee
+      parameters:
+        - name: employee_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Contracts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+  /internal/v1/hr/leave/types:
+    get:
+      operationId: hrLeaveTypes
+      tags: [HR]
+      summary: Leave type catalog
+      responses:
+        "200":
+          description: Types
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+  /internal/v1/hr/leave/requests:
+    get:
+      operationId: hrLeaveRequests
+      tags: [HR]
+      summary: Leave requests for employee
+      parameters:
+        - name: employee_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+  /internal/v1/hr/attendance:
+    get:
+      operationId: hrAttendance
+      tags: [HR]
+      summary: Attendance for employee
+      parameters:
+        - name: employee_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Attendance rows
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+  /internal/v1/hr/payroll/runs:
+    get:
+      operationId: hrPayrollRuns
+      tags: [Payroll]
+      summary: Payroll runs
+      responses:
+        "200":
+          description: Runs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+  /internal/v1/hr/payroll/payslips:
+    get:
+      operationId: hrPayslips
+      tags: [Payroll]
+      summary: Payslips for a run
+      parameters:
+        - name: run_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Payslips
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+  /internal/v1/hr/deductions:
+    get:
+      operationId: hrDeductionTypes
+      tags: [Payroll]
+      summary: Deduction type catalog
+      responses:
+        "200":
+          description: Deduction types
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

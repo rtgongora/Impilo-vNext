@@ -166,6 +166,10 @@
         <module>clinical-knowledge-platform-service</module>
         <module>guidance-service</module>
         <module>ai-model-registry-service</module>
+        <!-- ERP Plane — native general ledger, HR/payroll, procurement -->
+        <module>general-ledger-service</module>
+        <module>hr-payroll-service</module>
+        <module>procurement-service</module>
     </modules>
 
     <dependencyManagement>

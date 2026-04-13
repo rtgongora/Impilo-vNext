@@ -1,0 +1,208 @@
+# =============================================================================
+# GENERAL LEDGER SERVICE — Native ERP chart of accounts, journals, statements
+# Internal REST on port 8281; Experience surfaces via experience-bff `/erp/gl`.
+# =============================================================================
+openapi: "3.0.3"
+
+info:
+  title: General Ledger Service
+  version: "1.0.0"
+  description: |
+    Institutional general ledger — accounts, open periods, journals, trial balance,
+    income statement, balance sheet, and budgets. Trust context from companion headers.
+  contact:
+    name: Impilo Platform Team
+  license:
+    name: Proprietary
+
+servers:
+  - url: http://localhost:8281
+    description: Local development
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: GL
+    description: Chart, journals, statements
+
+paths:
+  /internal/v1/gl/accounts:
+    get:
+      operationId: glListAccounts
+      tags: [GL]
+      summary: List GL accounts
+      responses:
+        "200":
+          description: Accounts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+  /internal/v1/gl/periods/open:
+    get:
+      operationId: glOpenPeriods
+      tags: [GL]
+      summary: List open accounting periods
+      responses:
+        "200":
+          description: Periods
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+  /internal/v1/gl/journals:
+    get:
+      operationId: glListJournals
+      tags: [GL]
+      summary: Journals for a period
+      parameters:
+        - name: period_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Journal entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+    post:
+      operationId: glCreateJournal
+      tags: [GL]
+      summary: Create journal draft
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Created entry
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/gl/journals/{entryId}/post:
+    post:
+      operationId: glPostJournal
+      tags: [GL]
+      summary: Post journal entry
+      parameters:
+        - name: entryId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Posted
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/gl/trial-balance:
+    get:
+      operationId: glTrialBalance
+      tags: [GL]
+      summary: Trial balance for period
+      parameters:
+        - name: period_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Trial balance
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/gl/financial-statements/income-statement:
+    get:
+      operationId: glIncomeStatement
+      tags: [GL]
+      summary: Income statement
+      parameters:
+        - name: period_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Statement
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/gl/financial-statements/balance-sheet:
+    get:
+      operationId: glBalanceSheet
+      tags: [GL]
+      summary: Balance sheet
+      parameters:
+        - name: period_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Statement
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/gl/budgets:
+    get:
+      operationId: glBudgets
+      tags: [GL]
+      summary: Budget lines for fiscal year
+      parameters:
+        - name: fiscalYear
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Budgets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

@@ -63,4 +63,19 @@ public class AssetRegistrySupplyBffController {
     public ResponseEntity<JsonNode> retireAsset(@PathVariable UUID assetId) {
         return ResponseEntity.ok(client.deleteAsset(assetId));
     }
+
+    @GetMapping("/fixed-assets/{assetId}/details")
+    public ResponseEntity<JsonNode> fixedAssetDetails(@PathVariable UUID assetId) {
+        return ResponseEntity.ok(client.getFixedAssetDetails(assetId));
+    }
+
+    @GetMapping("/fixed-assets/{assetId}/depreciation/schedule")
+    public ResponseEntity<JsonNode> fixedAssetSchedule(@PathVariable UUID assetId) {
+        return ResponseEntity.ok(client.getFixedAssetDepreciationSchedule(assetId));
+    }
+
+    @PutMapping("/fixed-assets/{assetId}/details")
+    public ResponseEntity<JsonNode> upsertFixedAsset(@PathVariable UUID assetId, @RequestBody JsonNode body) {
+        return ResponseEntity.ok(client.upsertFixedAssetDetails(assetId, body));
+    }
 }
