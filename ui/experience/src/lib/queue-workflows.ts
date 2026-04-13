@@ -1,5 +1,7 @@
 import type { PatientResource } from "@/hooks/queries/usePatients";
 import type { QueueEntryResource } from "@/hooks/queries/useQueue";
+import { usePrivacyDisplayStore } from "@/hooks/usePrivacyDisplayStore";
+import { maskName, maskDob, displayCpid } from "@/lib/pii-mask";
 
 export const QUEUE_PRIORITY_STYLES: Record<string, { label: string; className: string }> = {
   EMERGENCY: { label: "Emergency", className: "bg-red-100 text-red-700" },
@@ -151,11 +153,13 @@ export function getAppointmentReason(appointment: { attributes: Record<string, u
 }
 
 export function getPatientDisplayName(patient: PatientResource) {
-  return patient.attributes.displayName || patient.id;
+  const level = usePrivacyDisplayStore.getState().level;
+  return maskName(patient.attributes.displayName, level) || patient.id;
 }
 
 export function getPatientQueueSummary(patient: PatientResource) {
-  return [patient.attributes.dateOfBirth, patient.attributes.gender, patient.attributes.cpid]
+  const level = usePrivacyDisplayStore.getState().level;
+  return [maskDob(patient.attributes.dateOfBirth, level), patient.attributes.gender, displayCpid(patient.attributes.cpid)]
     .filter(Boolean)
     .join(" | ");
 }

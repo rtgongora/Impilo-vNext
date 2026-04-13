@@ -10,6 +10,7 @@
  */
 
 import { type ReactNode } from "react";
+import Link from "next/link";
 import { Heart, Shield, Activity } from "lucide-react";
 
 export function AuthLayout({ children }: { children: ReactNode }) {
@@ -79,10 +80,23 @@ export function AuthLayout({ children }: { children: ReactNode }) {
 
           <div className="bg-white rounded-xl shadow-lg p-8">{children}</div>
 
-          <div className="mt-4 text-center">
+          <div className="mt-4 text-center space-y-2">
             <p className="text-xs text-gray-400 flex items-center justify-center gap-1.5">
               <Shield className="w-3 h-3" />
               Secure authentication powered by Impilo Trust Layer
+            </p>
+            <p className="text-xs text-gray-400 flex items-center justify-center gap-3">
+              <Link href="/privacy" className="hover:text-gray-600 transition-colors">
+                Privacy Policy
+              </Link>
+              <span>&middot;</span>
+              <Link href="/terms" className="hover:text-gray-600 transition-colors">
+                Terms of Use
+              </Link>
+              <span>&middot;</span>
+              <Link href="/account-deletion" className="hover:text-gray-600 transition-colors">
+                Account Deletion
+              </Link>
             </p>
           </div>
         </div>

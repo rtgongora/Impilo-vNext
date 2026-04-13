@@ -14,6 +14,10 @@ const PUBLIC_PREFIXES = [
   "/kiosk",
   "/verify",
   "/share",
+  "/privacy",
+  "/terms",
+  "/consent",
+  "/account-deletion",
   "/_next",
   "/api",
 ];

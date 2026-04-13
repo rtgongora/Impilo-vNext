@@ -27,7 +27,10 @@ import {
 } from "lucide-react";
 import { AuthLayout } from "@/components/AuthLayout";
 import { useAuthStore } from "@/hooks/useAuthStore";
+import { useConsentStore } from "@/hooks/useConsentStore";
+import { useAcceptPolicyConsent } from "@/hooks/queries/usePolicyConsent";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
+import { CURRENT_CONSENT_VERSION } from "@/hooks/useConsentStore";
 
 const ROLES = [
   { value: "CITIZEN", label: "Citizen / Patient", icon: Heart, description: "Access your health records" },
@@ -39,6 +42,8 @@ const ROLES = [
 export default function RegisterPage() {
   const router = useRouter();
   const { setAuth } = useAuthStore();
+  const { acceptConsent } = useConsentStore();
+  const acceptPolicyConsent = useAcceptPolicyConsent();
 
   const [step, setStep] = useState<"role" | "details">("role");
   const [selectedRole, setSelectedRole] = useState("");
@@ -48,6 +53,8 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -74,6 +81,10 @@ export default function RegisterPage() {
     }
     if (password !== confirmPassword) {
       setError("Passwords do not match.");
+      return;
+    }
+    if (!acceptedTerms || !acceptedPrivacy) {
+      setError("You must accept the Privacy Policy and Terms of Use to create an account.");
       return;
     }
 
@@ -114,6 +125,14 @@ export default function RegisterPage() {
           attrs.refreshToken,
           attrs.expiresAt
         );
+        // Record consent accepted during registration — both client and server
+        acceptConsent(attrs.user.id);
+        acceptPolicyConsent.mutate({
+          version: CURRENT_CONSENT_VERSION,
+          privacyPolicyAccepted: true,
+          termsOfUseAccepted: true,
+          channel: "WEB",
+        });
         router.push("/home");
       } else {
         // Registration succeeded but auto-login failed
@@ -239,7 +258,38 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            <button type="submit" disabled={submitting}
+            <div className="space-y-2 pt-1">
+              <label className="flex items-start gap-2.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={acceptedPrivacy}
+                  onChange={(e) => setAcceptedPrivacy(e.target.checked)}
+                  className="mt-0.5 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="text-xs text-gray-600">
+                  I have read and accept the{" "}
+                  <Link href="/privacy" target="_blank" className="text-blue-600 hover:text-blue-800 underline">
+                    Privacy Policy
+                  </Link>
+                </span>
+              </label>
+              <label className="flex items-start gap-2.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={acceptedTerms}
+                  onChange={(e) => setAcceptedTerms(e.target.checked)}
+                  className="mt-0.5 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="text-xs text-gray-600">
+                  I have read and accept the{" "}
+                  <Link href="/terms" target="_blank" className="text-blue-600 hover:text-blue-800 underline">
+                    Terms of Use
+                  </Link>
+                </span>
+              </label>
+            </div>
+
+            <button type="submit" disabled={submitting || !acceptedTerms || !acceptedPrivacy}
               className="w-full py-3 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors">
               {submitting ? <><Loader2 className="w-4 h-4 animate-spin" /> Creating account...</> : <><UserPlus className="w-4 h-4" /> Create Account</>}
             </button>

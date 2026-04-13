@@ -49,6 +49,13 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/auth/mfa", zone: "auth", layout: "auth", sidebar: "main", guard: "none", pageTitle: "Multi-Factor Authentication", navLabel: "MFA" },
   { path: "/auth/logout", zone: "auth", layout: "auth", sidebar: "main", guard: "none", pageTitle: "Signing Out", navLabel: "Sign Out" },
 
+  // ── Zone: Legal / Consent ──────────────────────────────────────
+  { path: "/privacy", zone: "auth", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Privacy Policy", navLabel: "Privacy Policy" },
+  { path: "/terms", zone: "auth", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Terms of Use", navLabel: "Terms of Use" },
+  { path: "/consent", zone: "auth", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Review Policies", navLabel: "Consent" },
+  { path: "/account-deletion", zone: "auth", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Account Deletion", navLabel: "Account Deletion" },
+  { path: "/privacy/app-stores", zone: "auth", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "App Store Privacy", navLabel: "App Store Privacy" },
+
   // ── Zone: Home ──────────────────────────────────────────────────
   // ── Zone: Clinical Hub ──────────────────────────────────────────
   { path: "/clinical", zone: "queue", layout: "app", sidebar: "queue", guard: "shift", pageTitle: "Clinical Care", navLabel: "Clinical Hub", navZone: "work" },
@@ -266,6 +273,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/settings/notifications", zone: "settings", layout: "app", sidebar: "settings", guard: "auth", pageTitle: "Notification Preferences", navLabel: "Notifications", navZone: "professional" },
   { path: "/settings/display", zone: "settings", layout: "app", sidebar: "settings", guard: "auth", pageTitle: "Display Settings", navLabel: "Display", navZone: "professional" },
   { path: "/settings/integrations", zone: "settings", layout: "app", sidebar: "settings", guard: "auth", pageTitle: "Integrations", navLabel: "Integrations", navZone: "professional" },
+  { path: "/settings/privacy", zone: "settings", layout: "app", sidebar: "settings", guard: "auth", pageTitle: "Privacy & Data", navLabel: "Privacy & Data", navZone: "professional" },
   { path: "/telemedicine", zone: "queue", layout: "app", sidebar: "queue", guard: "shift", pageTitle: "Telemedicine Hub", navLabel: "Telemedicine", navZone: "work" },
   { path: "/telemedicine/session/[sessionId]", zone: "queue", layout: "app", sidebar: "queue", guard: "shift", pageTitle: "Telemedicine Session", navLabel: "Session", navZone: "work" },
 

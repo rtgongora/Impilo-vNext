@@ -270,6 +270,27 @@ public class SecurityConfig {
                     .requestMatchers("/internal/v1/emergency/**")
                             .hasAnyRole(CLINICAL_ROLES)
 
+                    // ── Consent pipeline (Privacy Policy / Terms) ────────
+                    // Self-service consent: any authenticated user
+                    .requestMatchers("/internal/v1/consent/accept").authenticated()
+                    .requestMatchers("/internal/v1/consent/status").authenticated()
+                    .requestMatchers("/internal/v1/consent/history").authenticated()
+                    .requestMatchers("/internal/v1/consent/revoke").authenticated()
+                    // Operator-assisted consent: requires clinical or admin role
+                    .requestMatchers("/internal/v1/consent/operator").hasAnyRole(CLINICAL_ROLES)
+                    // SMS/USSD inbound (system-to-system from gateway): admin/system only
+                    .requestMatchers("/internal/v1/consent/sms").hasAnyRole(ADMIN_ROLES)
+                    .requestMatchers("/internal/v1/consent/ussd").hasAnyRole(ADMIN_ROLES)
+                    .requestMatchers("/internal/v1/consent/send-request").hasAnyRole(ADMIN_ROLES)
+
+                    // ── Account deletion (Privacy Policy §13) ───────────
+                    .requestMatchers("/internal/v1/account/delete").authenticated()
+                    .requestMatchers("/internal/v1/account/delete/status").authenticated()
+                    .requestMatchers("/internal/v1/account/delete/cancel").authenticated()
+
+                    // ── Privacy preferences ─────────────────────────────
+                    .requestMatchers("/internal/v1/settings/privacy/**").authenticated()
+
                     // ── All other endpoints — authenticated ───────────────
                     .anyRequest().authenticated()
                 )

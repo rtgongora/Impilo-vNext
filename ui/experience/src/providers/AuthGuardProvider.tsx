@@ -10,11 +10,15 @@
 import { usePathname, useRouter } from "next/navigation";
 import { type ReactNode, useEffect } from "react";
 import { useAuthStore } from "@/hooks/useAuthStore";
+import { useConsentStore } from "@/hooks/useConsentStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useWorkspaceStore } from "@/hooks/useWorkspaceStore";
 import { useShiftStore } from "@/hooks/useShiftStore";
 import { matchRouteDefinition } from "@/lib/routes";
 import { isSchedulingClusterPath } from "@/lib/scheduling-paths";
+
+/** Paths that bypass the consent gate (legal pages, consent page itself, auth). */
+const CONSENT_EXEMPT_PREFIXES = ["/auth", "/consent", "/privacy", "/terms", "/account-deletion", "/kiosk", "/verify", "/share"];
 
 /**
  * Map abstract role-group names used in routes.ts to concrete Keycloak roles.
@@ -62,11 +66,23 @@ export function AuthGuardProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { isAuthenticated, hasRole, hasActiveProvider } = useAuthStore();
+  const { hasConsented } = useConsentStore();
   const { hasFacility } = useFacilityStore();
   const { hasWorkspace } = useWorkspaceStore();
   const { hasShift } = useShiftStore();
 
   useEffect(() => {
+    // Consent gate: redirect authenticated users who haven't consented,
+    // unless they're on a consent-exempt path.
+    if (
+      isAuthenticated &&
+      !hasConsented &&
+      !CONSENT_EXEMPT_PREFIXES.some((p) => pathname.startsWith(p))
+    ) {
+      router.replace(`/consent?returnTo=${encodeURIComponent(pathname)}`);
+      return;
+    }
+
     const routeInfo = matchRouteDefinition(pathname);
     if (!routeInfo) return;
 
@@ -115,7 +131,7 @@ export function AuthGuardProvider({ children }: { children: ReactNode }) {
         if (requiredRole && !matchesRequiredRole(hasRole, requiredRole)) { router.replace("/home"); return; }
         break;
     }
-  }, [pathname, isAuthenticated, hasFacility, hasWorkspace, hasShift, hasRole, hasActiveProvider, router]);
+  }, [pathname, isAuthenticated, hasConsented, hasFacility, hasWorkspace, hasShift, hasRole, hasActiveProvider, router]);
 
   return <>{children}</>;
 }

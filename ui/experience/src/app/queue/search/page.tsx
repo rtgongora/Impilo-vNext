@@ -15,6 +15,8 @@ import { QueueWorkspaceHeader } from "@/components/queue/QueueWorkspaceHeader";
 import { usePatients, type PatientResource } from "@/hooks/queries/usePatients";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { getPatientDisplayName, getPatientQueueSummary } from "@/lib/queue-workflows";
+import { usePrivacyDisplayStore } from "@/hooks/usePrivacyDisplayStore";
+import { maskDob, displayCpid } from "@/lib/pii-mask";
 
 type SearchWorkflow = "default" | "lims" | "pacs";
 
@@ -174,8 +176,8 @@ export default function PatientSearchPage() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-gray-600 font-mono text-xs">{patient.attributes.cpid}</td>
-                      <td className="px-4 py-3 text-gray-600">{patient.attributes.dateOfBirth}</td>
+                      <td className="px-4 py-3 text-gray-600 font-mono text-xs">{displayCpid(patient.attributes.cpid)}</td>
+                      <td className="px-4 py-3 text-gray-600">{maskDob(patient.attributes.dateOfBirth, usePrivacyDisplayStore.getState().level)}</td>
                       <td className="px-4 py-3 text-gray-600 capitalize">{patient.attributes.gender}</td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex justify-end gap-2">

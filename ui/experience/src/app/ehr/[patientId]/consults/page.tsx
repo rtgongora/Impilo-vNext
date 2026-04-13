@@ -62,6 +62,8 @@ import {
   parseConsultationCoordinationMeta,
   toDateTimeLocalValue,
 } from "@/lib/consult-workflows";
+import { usePrivacyDisplayStore } from "@/hooks/usePrivacyDisplayStore";
+import { maskName, maskDob } from "@/lib/pii-mask";
 import { ReferralPackageBuilder } from "@/components/ReferralPackageBuilder";
 import { useQuery } from "@tanstack/react-query";
 
@@ -155,9 +157,13 @@ export default function ConsultsPage() {
   const patientMedications = (medsData?.data ?? []).map((m) => (m.attributes.medication_name as string) ?? "").filter(Boolean);
 
   const patient = patientData?.data;
-  const patientName = (patient?.attributes as Record<string, unknown>)?.displayName as string
-    ?? (patient?.attributes as Record<string, unknown>)?.givenName as string ?? "Patient";
-  const patientDob = (patient?.attributes as Record<string, unknown>)?.dateOfBirth as string | undefined;
+  const privacyLevel = usePrivacyDisplayStore((s) => s.level);
+  const patientName = maskName(
+    ((patient?.attributes as Record<string, unknown>)?.displayName as string)
+    ?? ((patient?.attributes as Record<string, unknown>)?.givenName as string) ?? "Patient",
+    privacyLevel,
+  );
+  const patientDob = maskDob((patient?.attributes as Record<string, unknown>)?.dateOfBirth as string | undefined, privacyLevel);
   const encounters = encountersData?.data ?? [];
   const activeEncounter = encounters.find(
     (e) => e.attributes.status === "IN_PROGRESS" || e.attributes.status === "ACTIVE"
@@ -549,7 +555,7 @@ export default function ConsultsPage() {
                       <Sparkles className="h-3.5 w-3.5 text-blue-600" />
                       Unified consults workspace
                     </div>
-                    <h3 className="mt-3 text-xl font-semibold text-slate-900">{patient.attributes.displayName}</h3>
+                    <h3 className="mt-3 text-xl font-semibold text-slate-900">{patientName}</h3>
                     <p className="mt-1 text-sm text-slate-600">
                       Consultations, referrals, and teleconsults now run as one coordinated encounter surface.
                     </p>

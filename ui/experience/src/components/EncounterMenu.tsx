@@ -47,6 +47,8 @@ import { useClinicalNotes } from "@/hooks/queries/useClinicalNotes";
 import { useEncounters } from "@/hooks/queries/useEncounters";
 import { usePatient } from "@/hooks/queries/usePatients";
 import { useVitals } from "@/hooks/queries/useVitals";
+import { usePrivacyDisplayStore } from "@/hooks/usePrivacyDisplayStore";
+import { maskName, displayCpid } from "@/lib/pii-mask";
 
 interface MenuItem {
   label: string;
@@ -184,10 +186,10 @@ export function EncounterMenu() {
           <div className="flex items-start justify-between gap-2">
             <div>
               <p className="text-sm font-semibold text-slate-900">
-                {String(patient?.attributes.displayName ?? "Patient workspace")}
+                {maskName(String(patient?.attributes.displayName ?? ""), usePrivacyDisplayStore.getState().level) || "Patient workspace"}
               </p>
               <p className="mt-0.5 text-[11px] text-slate-500">
-                {String(patient?.attributes.cpid ?? patientId)}
+                {displayCpid(String(patient?.attributes.cpid ?? patientId))}
               </p>
             </div>
             {activeEncounter ? (

@@ -36,6 +36,8 @@ import { useQuery } from "@tanstack/react-query";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useShiftStore } from "@/hooks/useShiftStore";
+import { usePrivacyDisplayStore } from "@/hooks/usePrivacyDisplayStore";
+import { maskName, maskDob, safeAge, displayCpid, genderChar } from "@/lib/pii-mask";
 
 interface GenericResource {
   id: string;
@@ -99,21 +101,16 @@ export function PatientBanner() {
       e.attributes.status === "IN_PROGRESS" || e.attributes.status === "ACTIVE"
   );
 
+  const privacyLevel = usePrivacyDisplayStore((s) => s.level);
   const attrs = patient.attributes;
-  const age = attrs.dateOfBirth
-    ? Math.floor(
-        (Date.now() - new Date(attrs.dateOfBirth).getTime()) /
-          (365.25 * 24 * 60 * 60 * 1000)
-      )
-    : null;
+  const age = safeAge(attrs.dateOfBirth);
   const genderBadge =
     attrs.gender === "female"
       ? "bg-pink-50 text-pink-600 border-pink-200"
       : attrs.gender === "male"
         ? "bg-blue-50 text-blue-600 border-blue-200"
         : "bg-purple-50 text-purple-600 border-purple-200";
-  const genderChar =
-    attrs.gender === "female" ? "F" : attrs.gender === "male" ? "M" : "O";
+  const gChar = genderChar(attrs.gender);
 
   function toggleExpanded(next: boolean | ((current: boolean) => boolean)) {
     const resolved = typeof next === "function" ? next(expanded) : next;
@@ -139,15 +136,15 @@ export function PatientBanner() {
                   href={`/ehr/${patientId}`}
                   className="text-base font-semibold text-gray-900 hover:text-blue-700 transition-colors"
                 >
-                  {attrs.displayName}
+                  {maskName(attrs.displayName, privacyLevel)}
                 </Link>
                 <span className="px-1.5 py-0.5 text-xs font-mono bg-gray-100 text-gray-600 rounded border border-gray-200">
-                  {attrs.cpid}
+                  {displayCpid(attrs.cpid)}
                 </span>
                 <span
                   className={`px-1.5 py-0.5 text-xs rounded border ${genderBadge}`}
                 >
-                  {genderChar}
+                  {gChar}
                   {age != null ? ` • ${age}y` : ""}
                 </span>
               </div>
@@ -155,7 +152,7 @@ export function PatientBanner() {
                 {attrs.dateOfBirth && (
                   <span className="flex items-center gap-1">
                     <Calendar className="w-3 h-3" />
-                    DOB: {attrs.dateOfBirth}
+                    {maskDob(attrs.dateOfBirth, privacyLevel)}
                   </span>
                 )}
                 {facility && (

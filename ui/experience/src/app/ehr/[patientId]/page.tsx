@@ -33,6 +33,8 @@ import { useClinicalNotes } from "@/hooks/queries/useClinicalNotes";
 import { useTelemedicineSessions } from "@/hooks/queries/useTelemedicine";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { isReferralReceivingHere, parseConsultationCoordinationMeta } from "@/lib/consult-workflows";
+import { usePrivacyDisplayStore } from "@/hooks/usePrivacyDisplayStore";
+import { maskName, maskDob, displayCpid } from "@/lib/pii-mask";
 
 const CHART_SECTIONS = [
   { label: "Vitals", href: "vitals", icon: Activity, color: "bg-red-100 text-red-600" },
@@ -238,12 +240,12 @@ export default function PatientChartPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <h2 className="text-lg font-semibold text-gray-900">
-                    {patient.attributes.displayName}
+                    {maskName(patient.attributes.displayName, usePrivacyDisplayStore.getState().level)}
                   </h2>
                   <div className="mt-1 flex flex-wrap gap-x-6 gap-y-1 text-sm text-gray-500">
-                    <span>DOB: {patient.attributes.dateOfBirth}</span>
+                    <span>{maskDob(patient.attributes.dateOfBirth, usePrivacyDisplayStore.getState().level)}</span>
                     <span>Gender: {patient.attributes.gender}</span>
-                    <span>CPID: {patient.attributes.cpid}</span>
+                    <span>CPID: {displayCpid(patient.attributes.cpid)}</span>
                   </div>
                 </div>
                 {activeEncounter ? (

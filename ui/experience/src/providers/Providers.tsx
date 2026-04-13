@@ -16,6 +16,10 @@ import { ExperienceEntryProvider } from "./ExperienceEntryProvider";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useOperationalContextStore } from "@/hooks/useOperationalContextStore";
+import { useConsentStore } from "@/hooks/useConsentStore";
+import { usePrivacyDisplayStore } from "@/hooks/usePrivacyDisplayStore";
+import { InactivityLockProvider } from "./InactivityLockProvider";
+import { PrivacyWatermark } from "@/components/PrivacyWatermark";
 import { loadHydratedExperienceContinuity, resetExperienceContinuity } from "@/lib/session-continuity";
 import { useWorkspaceStore } from "@/hooks/useWorkspaceStore";
 import { useShiftStore } from "@/hooks/useShiftStore";
@@ -41,6 +45,8 @@ function StoreHydrator({ children }: { children: ReactNode }) {
         const user = JSON.parse(userStr);
         setAuth(user, token, refreshToken, expiresAt);
         useOperationalContextStore.getState().ensureDefaultFromUser(user);
+        useConsentStore.getState().hydrate(user.id);
+        usePrivacyDisplayStore.getState().hydrate();
         hasAuthenticatedSession = true;
       } else {
         resetExperienceContinuity();
@@ -93,7 +99,12 @@ export function Providers({ children }: { children: ReactNode }) {
     <QueryClientProvider client={queryClient}>
       <StoreHydrator>
         <ExperienceEntryProvider>
-          <AuthGuardProvider>{children}</AuthGuardProvider>
+          <AuthGuardProvider>
+            <InactivityLockProvider>
+              <PrivacyWatermark />
+              {children}
+            </InactivityLockProvider>
+          </AuthGuardProvider>
         </ExperienceEntryProvider>
       </StoreHydrator>
     </QueryClientProvider>

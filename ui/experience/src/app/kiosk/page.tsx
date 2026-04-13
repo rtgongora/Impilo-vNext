@@ -1,25 +1,37 @@
 "use client";
 
 /**
- * Self-Service Kiosk — Patient check-in terminal.
+ * Self-Service Kiosk — Patient check-in terminal with consent step.
  * Route: /kiosk
  *
- * Allows patients to check themselves in by entering their ID or name.
- * Creates a queue entry automatically upon successful lookup.
+ * Flow: Consent → Search → Select → Check-In → Success
+ *
+ * Includes a consent step per the digital consent pipeline.
+ * Patients must accept Privacy Policy and Terms of Use before
+ * proceeding. Consent is recorded with channel=KIOSK.
  */
 
 import { useState, type FormEvent } from "react";
-import { Search, Loader2, CheckCircle2, UserPlus, AlertCircle } from "lucide-react";
+import Link from "next/link";
+import {
+  Search,
+  Loader2,
+  CheckCircle2,
+  UserPlus,
+  AlertCircle,
+  Shield,
+} from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { usePatients } from "@/hooks/queries/usePatients";
 import { apiClient } from "@/lib/api-client";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
+import { CURRENT_CONSENT_VERSION } from "@/hooks/useConsentStore";
 
 export default function KioskPage() {
   const facility = useFacilityStore((s) => s.facility);
+  const [step, setStep] = useState<"consent" | "search" | "done">("consent");
   const [searchTerm, setSearchTerm] = useState("");
   const [searchSubmitted, setSearchSubmitted] = useState("");
-  const [checkedIn, setCheckedIn] = useState(false);
   const [checkedInName, setCheckedInName] = useState("");
 
   const { data: patientsData, isLoading: searching } = usePatients(
@@ -30,13 +42,27 @@ export default function KioskPage() {
   const checkIn = useMutation({
     mutationFn: (body: { patient_id: string; facility_id: string; queue_type: string; priority: string }) =>
       apiClient.post("/internal/v1/queue/entries", body),
-    onSuccess: () => setCheckedIn(true),
+    onSuccess: () => setStep("done"),
   });
+
+  function handleConsentAccept() {
+    // Record kiosk consent server-side (fire-and-forget)
+    apiClient
+      .post("/internal/v1/consent/accept", {
+        version: CURRENT_CONSENT_VERSION,
+        privacyPolicyAccepted: true,
+        termsOfUseAccepted: true,
+        channel: "KIOSK",
+        deviceType: "KIOSK_TERMINAL",
+      })
+      .catch(() => {});
+
+    setStep("search");
+  }
 
   function handleSearch(e: FormEvent) {
     e.preventDefault();
     setSearchSubmitted(searchTerm.trim());
-    setCheckedIn(false);
   }
 
   function handleCheckIn(patientId: string, patientName: string) {
@@ -50,7 +76,15 @@ export default function KioskPage() {
     });
   }
 
-  if (checkedIn) {
+  function resetKiosk() {
+    setStep("consent");
+    setSearchTerm("");
+    setSearchSubmitted("");
+    setCheckedInName("");
+  }
+
+  // ── Step 3: Check-in complete ──────────────────────────────────
+  if (step === "done") {
     return (
       <div className="min-h-screen bg-green-50 flex items-center justify-center p-8">
         <div className="max-w-md w-full text-center">
@@ -60,8 +94,8 @@ export default function KioskPage() {
           <p className="text-sm text-gray-500 mb-8">
             You have been added to the queue at {facility?.name}. Please wait to be called.
           </p>
-          <button onClick={() => { setCheckedIn(false); setSearchTerm(""); setSearchSubmitted(""); }}
-            className="px-8 py-3 bg-green-600 text-white text-lg font-medium rounded-xl hover:bg-green-700 transition-colors">
+          <button onClick={resetKiosk}
+            className="px-8 py-4 bg-green-600 text-white text-lg font-medium rounded-xl hover:bg-green-700 transition-colors">
             Next Patient
           </button>
         </div>
@@ -69,6 +103,71 @@ export default function KioskPage() {
     );
   }
 
+  // ── Step 1: Consent ────────────────────────────────────────────
+  if (step === "consent") {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-8">
+        <div className="max-w-lg w-full">
+          <div className="text-center mb-8">
+            <Shield className="w-16 h-16 text-blue-600 mx-auto mb-4" />
+            <h1 className="text-3xl font-bold text-gray-900">Privacy Consent</h1>
+            <p className="text-gray-500 mt-2">
+              {facility ? facility.name : "Impilo Health Kiosk"}
+            </p>
+          </div>
+
+          <div className="bg-white rounded-xl border-2 border-gray-200 p-8">
+            <p className="text-base text-gray-700 mb-6">
+              Before checking in, please acknowledge the Impilo Privacy Policy
+              and Terms of Use. Your information is protected under privacy-by-design
+              principles.
+            </p>
+
+            <div className="space-y-3 mb-6 text-sm text-gray-600">
+              <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg">
+                <Shield className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-medium text-gray-800">Privacy Policy</p>
+                  <p className="text-xs mt-0.5">
+                    How we handle your personal data and health information.{" "}
+                    <Link href="/privacy" target="_blank" className="text-blue-600 underline">
+                      Read full policy
+                    </Link>
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 p-3 bg-indigo-50 rounded-lg">
+                <Shield className="w-5 h-5 text-indigo-600 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-medium text-gray-800">Terms of Use</p>
+                  <p className="text-xs mt-0.5">
+                    The rules governing use of the Impilo platform.{" "}
+                    <Link href="/terms" target="_blank" className="text-blue-600 underline">
+                      Read full terms
+                    </Link>
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={handleConsentAccept}
+              className="w-full py-5 bg-blue-600 text-white text-xl font-bold rounded-xl hover:bg-blue-700 transition-colors flex items-center justify-center gap-3"
+            >
+              <CheckCircle2 className="w-7 h-7" />
+              I Accept — Continue to Check-In
+            </button>
+
+            <p className="mt-4 text-center text-xs text-gray-400">
+              By tapping Accept, you agree to the Privacy Policy and Terms of Use (v{CURRENT_CONSENT_VERSION}).
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Step 2: Search and check-in ────────────────────────────────
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-8">
       <div className="max-w-lg w-full">

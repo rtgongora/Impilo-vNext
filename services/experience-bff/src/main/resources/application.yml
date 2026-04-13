@@ -179,6 +179,9 @@ resilience4j:
         ignore-exceptions:
           - org.springframework.web.client.HttpClientErrorException
 
+  clinical-platform:
+    base-url: ${CLINICAL_KNOWLEDGE_PLATFORM_BASE_URL:http://localhost:8270}
+
 logging:
   level:
     zw.gov.mohcc.impilo: INFO

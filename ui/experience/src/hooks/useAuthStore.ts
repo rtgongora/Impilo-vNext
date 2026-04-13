@@ -106,6 +106,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       sessionStorage.removeItem("exp:auth_user");
       sessionStorage.removeItem("exp:refresh_token");
       sessionStorage.removeItem("exp:expires_at");
+      sessionStorage.removeItem("exp:consent_accepted");
+      sessionStorage.removeItem("exp:consent_version");
     }
     if (typeof document !== "undefined") {
       document.cookie = "exp_has_session=;path=/;expires=Thu, 01 Jan 1970 00:00:00 GMT";
