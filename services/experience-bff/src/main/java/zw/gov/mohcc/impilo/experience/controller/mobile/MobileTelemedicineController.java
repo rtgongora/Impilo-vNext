@@ -154,29 +154,4 @@ public class MobileTelemedicineController {
         } catch (Exception ignored) {}
         return ResponseEntity.ok(Map.of("data", List.of()));
     }
-
-    private Map<String, Object> toResource(Map<String, Object> row) {
-        Map<String, Object> attributes = new LinkedHashMap<>();
-        attributes.put("encounter_id", row.get("encounter_id"));
-        attributes.put("patient_id", row.get("patient_id"));
-        attributes.put("provider_id", row.get("provider_id"));
-        attributes.put("facility_id", row.get("facility_id"));
-        attributes.put("session_type", row.get("session_type"));
-        attributes.put("status", row.get("status"));
-        attributes.put("room_url", row.get("room_url"));
-        attributes.put("scheduled_at", row.get("scheduled_at"));
-        attributes.put("started_at", row.get("started_at"));
-        attributes.put("ended_at", row.get("ended_at"));
-        attributes.put("duration_seconds", row.get("duration_seconds"));
-        attributes.put("notes", row.get("notes"));
-        attributes.put("referral_id", row.get("referral_id"));
-        attributes.put("created_at", row.get("created_at"));
-        attributes.put("updated_at", row.get("updated_at"));
-
-        Map<String, Object> resource = new LinkedHashMap<>();
-        resource.put("id", row.get("id").toString());
-        resource.put("type", "TelemedicineSession");
-        resource.put("attributes", attributes);
-        return resource;
-    }
 }

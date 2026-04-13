@@ -50,6 +50,21 @@ public class ErpHrBffController {
         return ResponseEntity.ok(client.getPayrollRuns());
     }
 
+    @PostMapping("/payroll/runs")
+    public ResponseEntity<JsonNode> createPayrollRun(@RequestBody JsonNode body) {
+        return ResponseEntity.ok(client.postPayrollRun(body));
+    }
+
+    @PostMapping("/payroll/runs/{runId}/calculate")
+    public ResponseEntity<JsonNode> calculatePayroll(@PathVariable String runId) {
+        return ResponseEntity.ok(client.postPayrollCalculate(runId));
+    }
+
+    @PostMapping("/payroll/runs/{runId}/pay")
+    public ResponseEntity<JsonNode> payPayroll(@PathVariable String runId, @RequestBody(required = false) JsonNode body) {
+        return ResponseEntity.ok(client.postPayrollPay(runId, body));
+    }
+
     @GetMapping("/payroll/payslips")
     public ResponseEntity<JsonNode> payslips(@RequestParam("run_id") String runId) {
         return ResponseEntity.ok(client.getPayslips(runId));

@@ -3,12 +3,8 @@ package zw.gov.mohcc.impilo.experience.controller;
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
@@ -137,7 +133,6 @@ public class ReferralsController {
     }
 
     @PostMapping
-    @Transactional
     public ResponseEntity<Map<String, Object>> createReferral(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.POD_ID) String podId,
@@ -177,7 +172,6 @@ public class ReferralsController {
     }
 
     @PostMapping("/{id}/complete")
-    @Transactional
     public ResponseEntity<Map<String, Object>> completeReferral(
             @PathVariable UUID id,
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
@@ -208,7 +202,6 @@ public class ReferralsController {
     }
 
     @PostMapping("/{id}/accept")
-    @Transactional
     public ResponseEntity<Map<String, Object>> acceptReferral(
             @PathVariable UUID id,
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
@@ -236,7 +229,6 @@ public class ReferralsController {
     }
 
     @PostMapping("/{id}/respond")
-    @Transactional
     public ResponseEntity<Map<String, Object>> respondReferral(
             @PathVariable UUID id,
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,

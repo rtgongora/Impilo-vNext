@@ -55,6 +55,14 @@ public class ProcurementServiceClient {
         return exchange(HttpMethod.POST, baseUrl + "/internal/v1/procurement/grn", body);
     }
 
+    public JsonNode postInvoiceMatch(String invoiceId) {
+        return postWithoutBody(baseUrl + "/internal/v1/procurement/invoices/" + invoiceId + "/match");
+    }
+
+    public JsonNode postInvoicePay(String invoiceId) {
+        return postWithoutBody(baseUrl + "/internal/v1/procurement/invoices/" + invoiceId + "/pay");
+    }
+
     private JsonNode get(String url) {
         ResponseEntity<JsonNode> r = restTemplate.getForEntity(url, JsonNode.class);
         return r.getBody();
@@ -65,5 +73,11 @@ public class ProcurementServiceClient {
         h.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<JsonNode> e = new HttpEntity<>(body, h);
         return restTemplate.exchange(url, method, e, JsonNode.class).getBody();
+    }
+
+    private JsonNode postWithoutBody(String url) {
+        HttpHeaders h = new HttpHeaders();
+        HttpEntity<Void> e = new HttpEntity<>(h);
+        return restTemplate.exchange(url, HttpMethod.POST, e, JsonNode.class).getBody();
     }
 }

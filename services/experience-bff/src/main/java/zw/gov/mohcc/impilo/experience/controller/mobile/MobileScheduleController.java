@@ -38,24 +38,4 @@ public class MobileScheduleController {
         } catch (Exception ignored) {}
         return ResponseEntity.ok(Map.of("data", List.of()));
     }
-
-    private Map<String, Object> toResource(Map<String, Object> row) {
-        Map<String, Object> attributes = new LinkedHashMap<>();
-        attributes.put("user_id", row.get("user_id"));
-        attributes.put("facility_id", row.get("facility_id") != null ? row.get("facility_id").toString() : null);
-        attributes.put("shift_date", row.get("shift_date"));
-        attributes.put("start_time", row.get("start_time"));
-        attributes.put("end_time", row.get("end_time"));
-        attributes.put("shift_type", row.get("shift_type"));
-        attributes.put("status", row.get("status"));
-        attributes.put("notes", row.get("notes"));
-        attributes.put("created_at", row.get("created_at"));
-        attributes.put("updated_at", row.get("updated_at"));
-
-        Map<String, Object> resource = new LinkedHashMap<>();
-        resource.put("id", row.get("id").toString());
-        resource.put("type", "Shift");
-        resource.put("attributes", attributes);
-        return resource;
-    }
 }

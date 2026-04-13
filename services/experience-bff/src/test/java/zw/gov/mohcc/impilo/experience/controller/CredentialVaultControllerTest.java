@@ -70,21 +70,7 @@ class CredentialVaultControllerTest {
                             "http://indawo",
                             "http://governance",
                             "http://landela",
-                            "http://notifications",
-                            "http://credentials",
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null));
+                            "http://notifications"));
         }
 
         @Override

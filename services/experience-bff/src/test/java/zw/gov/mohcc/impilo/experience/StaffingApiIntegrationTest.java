@@ -27,9 +27,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * <p>
  * <b>Windows + Docker Desktop 29+:</b> the bundled docker-java client often gets HTTP 400 on the
  * named pipe. Set {@code EXPERIENCE_BFF_TEST_JDBC_URL} to a reachable Postgres (e.g. compose
- * {@code experience-db} on {@code jdbc:postgresql://localhost:5433/experience_bff}) and optional
- * {@code EXPERIENCE_BFF_TEST_DB_USER} / {@code EXPERIENCE_BFF_TEST_DB_PASSWORD} (default {@code impilo}).
- * When unset, an embedded Testcontainers Postgres is started (typical Linux CI).
+ * {@code EXPERIENCE_BFF_TEST_REDIS_HOST} / {@code EXPERIENCE_BFF_TEST_REDIS_PORT}.
+ * When unset, an embedded Testcontainers Redis is started (typical Linux CI).
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -38,18 +37,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(DockerOrExternalPostgresCondition.class)
 class StaffingApiIntegrationTest {
 
-    private static final ExperienceBffTestDatabaseSupport DATABASE =
-            ExperienceBffTestDatabaseSupport.fromEnvironment("experience_bff_staffing");
+    private static final ExperienceBffTestRedisSupport REDIS = ExperienceBffTestRedisSupport.fromEnvironment();
 
     @AfterAll
     static void stopContainer() {
-        DATABASE.stop();
+        REDIS.stop();
     }
 
     @DynamicPropertySource
     static void configure(DynamicPropertyRegistry registry) {
-        DATABASE.configure(registry);
-            // application-test.yml defaults to ContainerDatabaseDriver — not valid for a plain Postgres URL.
+        REDIS.configure(registry);
     }
 
     @Autowired

@@ -125,32 +125,4 @@ public class MobilePrescriptionController {
             @RequestBody(required = false) CancelPrescriptionRequest request) {
         return ResponseEntity.ok(Map.of("data", List.of()));
     }
-
-    private Map<String, Object> toResource(Map<String, Object> row) {
-        Map<String, Object> attributes = new LinkedHashMap<>();
-        attributes.put("patient_id", row.get("patient_id"));
-        attributes.put("facility_id", row.get("facility_id"));
-        attributes.put("encounter_id", row.get("encounter_id"));
-        attributes.put("medication_name", row.get("medication_name"));
-        attributes.put("generic_name", row.get("generic_name"));
-        attributes.put("dosage", row.get("dosage"));
-        attributes.put("route", row.get("route"));
-        attributes.put("frequency", row.get("frequency"));
-        attributes.put("duration", row.get("duration"));
-        attributes.put("quantity", row.get("quantity"));
-        attributes.put("instructions", row.get("instructions"));
-        attributes.put("indication", row.get("indication"));
-        attributes.put("status", row.get("status"));
-        attributes.put("prescribed_by", row.get("prescribed_by"));
-        attributes.put("dispensed_by", row.get("dispensed_by"));
-        attributes.put("dispensed_at", row.get("dispensed_at"));
-        attributes.put("created_at", row.get("created_at"));
-        attributes.put("updated_at", row.get("updated_at"));
-
-        Map<String, Object> resource = new LinkedHashMap<>();
-        resource.put("id", row.get("id").toString());
-        resource.put("type", "Prescription");
-        resource.put("attributes", attributes);
-        return resource;
-    }
 }

@@ -8,15 +8,22 @@ import org.testcontainers.DockerClientFactory;
 import java.util.Map;
 import java.util.function.BooleanSupplier;
 
+/**
+ * Enables integration tests when Docker is available for Testcontainers Redis, or when an
+ * external Redis host is configured via {@link ExperienceBffTestRedisSupport#REDIS_HOST_ENV}.
+ */
 final class DockerOrExternalPostgresCondition implements ExecutionCondition {
 
     private static final String REASON =
-            "Unsupported validation environment: start Docker/Testcontainers or set EXPERIENCE_BFF_TEST_JDBC_URL "
-                    + "with optional EXPERIENCE_BFF_TEST_DB_USER / EXPERIENCE_BFF_TEST_DB_PASSWORD.";
+            "Unsupported validation environment: start Docker/Testcontainers for Redis, or set "
+                    + ExperienceBffTestRedisSupport.REDIS_HOST_ENV
+                    + " (optional "
+                    + ExperienceBffTestRedisSupport.REDIS_PORT_ENV
+                    + ").";
 
     static ConditionEvaluationResult evaluate(Map<String, String> env, BooleanSupplier dockerAvailable) {
-        if (ExperienceBffTestDatabaseSupport.hasExternalJdbc(env)) {
-            return ConditionEvaluationResult.enabled("External Postgres configured for experience-bff integration tests.");
+        if (ExperienceBffTestRedisSupport.hasExternalRedis(env)) {
+            return ConditionEvaluationResult.enabled("External Redis configured for experience-bff integration tests.");
         }
 
         try {

@@ -2,9 +2,6 @@ package zw.gov.mohcc.impilo.experience.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
@@ -23,6 +20,7 @@ public class InventoryController {
     private final InventoryServiceClient inventoryClient;
     private final ObjectMapper objectMapper;
 
+    public InventoryController(InventoryServiceClient inventoryClient, ObjectMapper objectMapper) {
         this.inventoryClient = inventoryClient;
         this.objectMapper = objectMapper;
     }

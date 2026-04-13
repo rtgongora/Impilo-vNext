@@ -2,25 +2,21 @@ package zw.gov.mohcc.impilo.experience;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -39,37 +35,28 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
-@Testcontainers
 @ActiveProfiles("test")
+@ExtendWith(DockerOrExternalPostgresCondition.class)
 class ExperienceV11ComplianceTest {
 
-    @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine")
-            .withDatabaseName("experience_bff_compliance")
-            .withUsername("test")
-            .withPassword("test");
+    private static final ExperienceBffTestRedisSupport REDIS = ExperienceBffTestRedisSupport.fromEnvironment();
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
+        REDIS.configure(registry);
+    }
+
+    @AfterAll
+    static void stopRedis() {
+        REDIS.stop();
     }
 
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private JdbcTemplate jdbc;
-
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final String TENANT_ID = "moh-zw";
     private static final String POD_ID = "national";
-
-    @BeforeEach
-    void cleanUp() {
-        jdbc.execute("DELETE FROM event_outbox");
-    }
 
     // ── 1. Header Enforcement ──────────────────────────────────────
 
@@ -195,64 +182,19 @@ class ExperienceV11ComplianceTest {
 
     @Nested
     @DisplayName("Outbox Write Fields — Experience BFF")
+    @org.junit.jupiter.api.Disabled("BFF proxy: local PostgreSQL event_outbox removed; sovereign services emit outbox events")
     class OutboxFields {
 
         @Test
         @DisplayName("Outbox event from report generation contains all required fields")
-        void outboxEventContainsRequiredFields() throws Exception {
-            String correlationId = "corr-outbox-" + UUID.randomUUID();
-
-            mockMvc.perform(post("/internal/v1/reports/generate")
-                            .header("X-Tenant-ID", TENANT_ID)
-                            .header("X-Pod-ID", POD_ID)
-                            .header("X-Request-ID", UUID.randomUUID().toString())
-                            .header("X-Correlation-ID", correlationId)
-                            .header("Idempotency-Key", "outbox-test-" + UUID.randomUUID())
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content("{\"report_type\":\"OUTBOX_TEST\",\"requested_by\":\"tester\",\"parameters\":{}}"))
-                    .andExpect(status().isCreated());
-
-            List<Map<String, Object>> events = jdbc.queryForList(
-                    "SELECT * FROM event_outbox WHERE correlation_id = ?", correlationId);
-            assertThat(events).isNotEmpty();
-
-            Map<String, Object> event = events.get(0);
-            assertThat(event.get("tenant_id")).isEqualTo(TENANT_ID);
-            assertThat(event.get("pod_id")).isEqualTo(POD_ID);
-            assertThat(event.get("correlation_id")).isEqualTo(correlationId);
-            assertThat((Integer) event.get("schema_version")).isGreaterThanOrEqualTo(1);
-            assertThat(event.get("event_type").toString()).matches("impilo\\.experience\\..+\\.v1");
-            assertThat(event.get("occurred_at")).isNotNull();
-            assertThat(event.get("payload")).isNotNull();
-            assertThat(event.get("subject_type")).isNotNull();
-            assertThat(event.get("subject_id")).isNotNull();
+        void outboxEventContainsRequiredFields() {
+            // Obsolete: see nested class @Disabled
         }
 
         @Test
         @DisplayName("Encounter creation writes outbox event with correct event_type")
-        void encounterOutboxEventType() throws Exception {
-            String correlationId = "corr-enc-outbox-" + UUID.randomUUID();
-
-            mockMvc.perform(post("/internal/v1/encounters")
-                            .header("X-Tenant-ID", TENANT_ID)
-                            .header("X-Pod-ID", POD_ID)
-                            .header("X-Request-ID", UUID.randomUUID().toString())
-                            .header("X-Correlation-ID", correlationId)
-                            .header("Idempotency-Key", "enc-outbox-" + UUID.randomUUID())
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(MAPPER.writeValueAsString(Map.of(
-                                    "patient_id", "a1000000-0000-0000-0000-000000000001",
-                                    "facility_id", "f1000000-0000-0000-0000-000000000001",
-                                    "encounter_type", "OUTPATIENT",
-                                    "chief_complaint", "Compliance test"
-                            ))))
-                    .andExpect(status().isCreated());
-
-            List<Map<String, Object>> events = jdbc.queryForList(
-                    "SELECT * FROM event_outbox WHERE correlation_id = ? AND event_type = 'impilo.experience.encounter.created.v1'",
-                    correlationId);
-            assertThat(events).hasSize(1);
-            assertThat((Integer) events.get(0).get("schema_version")).isGreaterThanOrEqualTo(1);
+        void encounterOutboxEventType() {
+            // Obsolete: see nested class @Disabled
         }
     }
 

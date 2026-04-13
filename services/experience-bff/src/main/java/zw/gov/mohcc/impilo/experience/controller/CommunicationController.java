@@ -3,7 +3,6 @@ package zw.gov.mohcc.impilo.experience.controller;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.experience.client.CommunityServiceClient;
 
@@ -53,7 +52,6 @@ public class CommunicationController {
     }
 
     @PostMapping("/announcements")
-    @Transactional
     public ResponseEntity<Map<String, Object>> createAnnouncement(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestBody Map<String, Object> body) {
@@ -69,7 +67,6 @@ public class CommunicationController {
     }
 
     @PostMapping("/announcements/{id}/acknowledge")
-    @Transactional
     public ResponseEntity<Map<String, Object>> acknowledgeAnnouncement(
             @PathVariable UUID id,
             @RequestBody Map<String, Object> body) {
@@ -82,7 +79,6 @@ public class CommunicationController {
     }
 
     @DeleteMapping("/announcements/{id}")
-    @Transactional
     public ResponseEntity<Map<String, Object>> archiveAnnouncement(
             @PathVariable UUID id,
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -107,7 +103,6 @@ public class CommunicationController {
     }
 
     @PostMapping("/pages")
-    @Transactional
     public ResponseEntity<Map<String, Object>> sendPage(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestBody Map<String, Object> body) {
@@ -119,14 +114,12 @@ public class CommunicationController {
     }
 
     @PostMapping("/pages/{id}/read")
-    @Transactional
     public ResponseEntity<Map<String, Object>> markPageRead(@PathVariable UUID id) {
         communityClient.startVisit(id.toString());
         return ResponseEntity.ok(Map.of("status", "READ"));
     }
 
     @PostMapping("/pages/{id}/respond")
-    @Transactional
     public ResponseEntity<Map<String, Object>> respondToPage(@PathVariable UUID id) {
         communityClient.completeVisit(id.toString(), Map.of("status", "RESPONDED"));
         return ResponseEntity.ok(Map.of("status", "RESPONDED"));
@@ -151,7 +144,6 @@ public class CommunicationController {
     }
 
     @PostMapping("/messages")
-    @Transactional
     public ResponseEntity<Map<String, Object>> sendMessage(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestBody Map<String, Object> body) {

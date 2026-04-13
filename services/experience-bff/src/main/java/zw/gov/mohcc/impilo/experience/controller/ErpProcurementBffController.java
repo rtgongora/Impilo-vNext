@@ -45,6 +45,16 @@ public class ErpProcurementBffController {
         return ResponseEntity.ok(client.getInvoices());
     }
 
+    @PostMapping("/invoices/{invoiceId}/match")
+    public ResponseEntity<JsonNode> matchInvoice(@PathVariable String invoiceId) {
+        return ResponseEntity.ok(client.postInvoiceMatch(invoiceId));
+    }
+
+    @PostMapping("/invoices/{invoiceId}/pay")
+    public ResponseEntity<JsonNode> payInvoice(@PathVariable String invoiceId) {
+        return ResponseEntity.ok(client.postInvoicePay(invoiceId));
+    }
+
     @GetMapping("/rfqs")
     public ResponseEntity<JsonNode> rfqs() {
         return ResponseEntity.ok(client.getRfqs());

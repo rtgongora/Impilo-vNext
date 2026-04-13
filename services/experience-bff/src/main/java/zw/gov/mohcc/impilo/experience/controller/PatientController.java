@@ -1,9 +1,6 @@
 package zw.gov.mohcc.impilo.experience.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
@@ -25,6 +22,7 @@ public class PatientController {
 
     private final VitoServiceClient vitoClient;
 
+    public PatientController(VitoServiceClient vitoClient) {
         this.vitoClient = vitoClient;
     }
 

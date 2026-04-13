@@ -3,8 +3,6 @@ package zw.gov.mohcc.impilo.experience.controller;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
@@ -61,7 +59,16 @@ public class MobileGovernanceController {
             log.warn("Failed to fetch rule count: {}", e.getMessage());
         }
 
-        PageRequest pageable = PageRequest.of(0, 10, Sort.by("occurredAt").descending());
+        int incidentCount = 0;
+        try {
+            JsonNode incidentsProbe = restTemplate.getForEntity(
+                    dataGovernanceUrl + "/internal/v1/governance/audit?page=0&size=1", JsonNode.class).getBody();
+            if (incidentsProbe != null && incidentsProbe.isArray()) {
+                incidentCount = incidentsProbe.size();
+            }
+        } catch (Exception e) {
+            log.debug("Incident/audit probe skipped: {}", e.getMessage());
+        }
 
         Map<String, Object> summary = new LinkedHashMap<>();
         summary.put("datasets", datasetCount);
@@ -78,7 +85,16 @@ public class MobileGovernanceController {
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
-        PageRequest pageable = PageRequest.of(0, 20, Sort.by("occurredAt").descending());
+        Object incidents = List.of();
+        try {
+            JsonNode body = restTemplate.getForEntity(
+                    dataGovernanceUrl + "/internal/v1/governance/audit?page=0&size=20", JsonNode.class).getBody();
+            if (body != null) {
+                incidents = body;
+            }
+        } catch (Exception e) {
+            log.warn("Failed to fetch governance audit/incidents: {}", e.getMessage());
+        }
         return ResponseEntity.ok(Map.of("data", incidents,
                 "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }

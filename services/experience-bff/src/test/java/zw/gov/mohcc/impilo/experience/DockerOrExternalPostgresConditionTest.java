@@ -11,12 +11,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class DockerOrExternalPostgresConditionTest {
 
     @Test
-    @DisplayName("condition enables execution when external JDBC is configured")
-    void enablesForExternalJdbc() {
+    @DisplayName("condition enables execution when external Redis is configured")
+    void enablesForExternalRedis() {
         ConditionEvaluationResult result = DockerOrExternalPostgresCondition.evaluate(
-                Map.of(ExperienceBffTestDatabaseSupport.JDBC_ENV, "jdbc:postgresql://localhost:5433/experience_bff"),
-                () -> false
-        );
+                Map.of(ExperienceBffTestRedisSupport.REDIS_HOST_ENV, "127.0.0.1"), () -> false);
 
         assertTrue(!result.isDisabled());
     }
@@ -30,11 +28,11 @@ class DockerOrExternalPostgresConditionTest {
     }
 
     @Test
-    @DisplayName("condition disables execution with explicit guidance when neither Docker nor external JDBC is available")
+    @DisplayName("condition disables execution with explicit guidance when neither Docker nor external Redis is available")
     void disablesWhenEnvironmentUnsupported() {
         ConditionEvaluationResult result = DockerOrExternalPostgresCondition.evaluate(Map.of(), () -> false);
 
         assertTrue(result.isDisabled());
-        assertTrue(result.getReason().orElse("").contains("EXPERIENCE_BFF_TEST_JDBC_URL"));
+        assertTrue(result.getReason().orElse("").contains(ExperienceBffTestRedisSupport.REDIS_HOST_ENV));
     }
 }

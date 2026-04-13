@@ -57,31 +57,4 @@ public class MobileResultsController {
         } catch (Exception ignored) {}
         return ResponseEntity.ok(Map.of("data", List.of()));
     }
-
-    private Map<String, Object> toResource(Map<String, Object> row) {
-        Map<String, Object> attributes = new LinkedHashMap<>();
-        attributes.put("encounter_id", row.get("encounter_id"));
-        attributes.put("patient_id", row.get("patient_id"));
-        attributes.put("test_code", row.get("test_code"));
-        attributes.put("test_name", row.get("test_name"));
-        attributes.put("priority", row.get("priority"));
-        attributes.put("clinical_notes", row.get("clinical_notes"));
-        attributes.put("specimen_type", row.get("specimen_type"));
-        attributes.put("status", row.get("status"));
-        attributes.put("result_value", row.get("result_value"));
-        attributes.put("result_unit", row.get("result_unit"));
-        attributes.put("result_reference_range", row.get("result_reference_range"));
-        attributes.put("result_interpretation", row.get("result_interpretation"));
-        attributes.put("ordered_at", row.get("ordered_at"));
-        attributes.put("collected_at", row.get("collected_at"));
-        attributes.put("resulted_at", row.get("resulted_at"));
-        attributes.put("created_at", row.get("created_at"));
-        attributes.put("updated_at", row.get("updated_at"));
-
-        Map<String, Object> resource = new LinkedHashMap<>();
-        resource.put("id", row.get("id").toString());
-        resource.put("type", "LabResult");
-        resource.put("attributes", attributes);
-        return resource;
-    }
 }

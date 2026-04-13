@@ -22,9 +22,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * Flyway V32 structured history endpoints for EHR continuity (seeded patient from V4).
  *
- * <p>Uses the shared experience-bff database preflight: Testcontainers when Docker is
- * available, or an externally supplied Postgres via EXPERIENCE_BFF_TEST_JDBC_URL and
- * optional EXPERIENCE_BFF_TEST_DB_USER / EXPERIENCE_BFF_TEST_DB_PASSWORD.</p>
+ * <p>Uses shared Redis preflight: Testcontainers when Docker is available, or external Redis via
+ * EXPERIENCE_BFF_TEST_REDIS_HOST and optional EXPERIENCE_BFF_TEST_REDIS_PORT.</p>
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -32,12 +31,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(DockerOrExternalPostgresCondition.class)
 class StructuredHistoryApiIntegrationTest {
 
-    static final ExperienceBffTestDatabaseSupport DATABASE =
-            ExperienceBffTestDatabaseSupport.fromEnvironment("experience_bff_structured_history");
+    static final ExperienceBffTestRedisSupport REDIS = ExperienceBffTestRedisSupport.fromEnvironment();
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
-        DATABASE.configure(registry);
+        REDIS.configure(registry);
     }
 
     @Autowired
@@ -50,7 +48,7 @@ class StructuredHistoryApiIntegrationTest {
 
     @AfterAll
     static void stopDatabase() {
-        DATABASE.stop();
+        REDIS.stop();
     }
 
     @Test
