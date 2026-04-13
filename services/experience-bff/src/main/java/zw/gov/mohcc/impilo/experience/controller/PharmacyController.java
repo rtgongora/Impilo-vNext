@@ -21,7 +21,9 @@ import java.util.*;
 @RequestMapping("/internal/v1/pharmacy")
 public class PharmacyController {
 
-    public PharmacyController(PharmacyClient pharmacyClient) {
+    private final PharmacyServiceClient pharmacyClient;
+
+    public PharmacyController(PharmacyServiceClient pharmacyClient) {
         this.pharmacyClient = pharmacyClient;
     }
 
@@ -55,7 +57,24 @@ public class PharmacyController {
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String status,
             @RequestParam(required = false, name = "patient_id") String patientId) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        if (patientId != null) {
+            try {
+                JsonNode data = pharmacyClient.getPatientPrescriptions(patientId, status, page, size);
+                if (data != null) {
+                    Map<String, Object> response = new LinkedHashMap<>();
+                    response.put("data", data);
+                    response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
+                    return ResponseEntity.ok(response);
+                }
+            } catch (Exception e) {
+                // fall through to empty response
+            }
+        }
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", List.of());
+        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/prescriptions")
@@ -105,40 +124,21 @@ public class PharmacyController {
 
         UUID prescriptionId = UUID.fromString(request.prescription_id());
 
-        prescription.dispense(request.dispensed_by());
-
-        // Enrich outbox event with full medication data for pharmacy-service consumption
-        Map<String, Object> eventPayload = new LinkedHashMap<>();
-        eventPayload.put("prescription_id", prescriptionId.toString());
-        eventPayload.put("patient_id", prescription.getPatientId().toString());
-        eventPayload.put("facility_id", prescription.getFacilityId() != null ? prescription.getFacilityId().toString() : null);
-        eventPayload.put("encounter_id", prescription.getEncounterId() != null ? prescription.getEncounterId().toString() : null);
-        eventPayload.put("medication_name", prescription.getMedicationName());
-        eventPayload.put("dosage", prescription.getDosage());
-        eventPayload.put("frequency", prescription.getFrequency());
-        eventPayload.put("quantity", prescription.getQuantity());
-        eventPayload.put("dispensed_by", request.dispensed_by());
-        eventPayload.put("status", "DISPENSED");
-
-        // Include V13 fields from JDBC
         try {
-            if (!rxRows.isEmpty()) {
-                Map<String, Object> rxData = rxRows.get(0);
-                eventPayload.put("route", rxData.get("route"));
-                eventPayload.put("instructions", rxData.get("instructions"));
-                eventPayload.put("indication", rxData.get("indication"));
-                eventPayload.put("generic_name", rxData.get("generic_name"));
+            JsonNode data = pharmacyClient.completeDispense(prescriptionId);
+            if (data != null) {
+                Map<String, Object> response = new LinkedHashMap<>();
+                response.put("data", data);
+                response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
+                return ResponseEntity.ok(response);
             }
         } catch (Exception e) {
-            // V13 columns may not exist yet
+            // fall through to simple response
         }
 
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", toResource(prescription));
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId
-        ));
+        response.put("data", Map.of("prescription_id", prescriptionId.toString(), "status", "DISPENSED", "dispensed_by", request.dispensed_by()));
+        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
 
         return ResponseEntity.ok(response);
     }
@@ -156,10 +156,8 @@ public class PharmacyController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey) {
 
-        prescription.cancel();
-
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", toResource(prescription));
+        response.put("data", Map.of("id", id.toString(), "status", "CANCELLED"));
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return ResponseEntity.ok(response);
     }

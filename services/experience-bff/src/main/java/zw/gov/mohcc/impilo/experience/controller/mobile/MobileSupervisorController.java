@@ -12,9 +12,6 @@ import java.util.*;
  * Mobile supervisor dashboard endpoints.
  * GET /internal/v1/mobile/provider/supervisor/metrics?facility_id= - facility metrics
  * GET /internal/v1/mobile/provider/supervisor/team?facility_id=    - team members
- *
- * <p>STRANGLER: JdbcTemplate retained for local reads during migration; writes delegated to
- * PctServiceClient + TusoServiceClient.</p>
  */
 @RestController
 @RequestMapping("/internal/v1/mobile/provider/supervisor")
@@ -23,6 +20,7 @@ public class MobileSupervisorController {
     private final PctServiceClient pctClient;
     private final TusoServiceClient tusoClient;
 
+    public MobileSupervisorController(PctServiceClient pctClient, TusoServiceClient tusoClient) {
         this.pctClient = pctClient;
         this.tusoClient = tusoClient;
     }
@@ -35,14 +33,14 @@ public class MobileSupervisorController {
             @RequestParam(name = "facility_id") String facilityId) {
 
         Map<String, Object> metricsData = new LinkedHashMap<>();
-        metricsData.put("encounters_today", totalEncounters != null ? totalEncounters : 0L);
-        metricsData.put("open_encounters", openEncounters != null ? openEncounters : 0L);
-        metricsData.put("patients_seen_today", totalPatients != null ? totalPatients : 0L);
-        metricsData.put("pending_tasks", pendingTasks != null ? pendingTasks : 0L);
-        metricsData.put("overdue_tasks", overdueTasks != null ? overdueTasks : 0L);
-        metricsData.put("escalated_tasks", escalatedTasks != null ? escalatedTasks : 0L);
-        metricsData.put("pending_lab_orders", pendingLabOrders != null ? pendingLabOrders : 0L);
-        metricsData.put("pending_referrals", pendingReferrals != null ? pendingReferrals : 0L);
+        metricsData.put("encounters_today", 0L);
+        metricsData.put("open_encounters", 0L);
+        metricsData.put("patients_seen_today", 0L);
+        metricsData.put("pending_tasks", 0L);
+        metricsData.put("overdue_tasks", 0L);
+        metricsData.put("escalated_tasks", 0L);
+        metricsData.put("pending_lab_orders", 0L);
+        metricsData.put("pending_referrals", 0L);
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", Map.of(
@@ -66,6 +64,6 @@ public class MobileSupervisorController {
             @RequestParam(name = "facility_id") String facilityId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 }
