@@ -226,8 +226,12 @@ public final class OutboxEventBuilder {
     private static Map<String, Object> deltaToMap(DeltaPayload delta) {
         Map<String, Object> map = new HashMap<>();
         map.put("op", delta.op());
-        map.put("before", delta.before());
-        map.put("after", delta.after());
+        if (delta.before() != null) {
+            map.put("before", delta.before());
+        }
+        if (delta.after() != null) {
+            map.put("after", delta.after());
+        }
         map.put("changed_fields", delta.changedFields());
         return map;
     }
