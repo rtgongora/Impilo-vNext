@@ -344,6 +344,11 @@ function extractPagedItems(raw: unknown): unknown[] {
   return Array.isArray(items) ? items : [];
 }
 
+function extractDataArray(raw: unknown): Record<string, unknown>[] {
+  const data = asRecord(raw).data;
+  return Array.isArray(data) ? (data as Record<string, unknown>[]) : [];
+}
+
 export interface InventoryItem {
   id: string;
   facilityId: string;
@@ -442,9 +447,25 @@ export function useInventoryItems(facilityId: string) {
     queryKey: ["inventory-items", facilityId],
     queryFn: async () => {
       const raw = await apiClient.get<unknown>(
-        `/internal/v1/inventory/on-hand${q({ facilityId, page: 0, size: 500 })}`,
+        `/internal/v1/inventory/items${q({ facility_id: facilityId })}`,
       );
-      return extractPagedItems(raw).map((row) => mapOnHandToInventoryItem(row, facilityId));
+      return extractDataArray(raw).map((resource) => {
+        const attrs = asRecord(resource.attributes);
+        return {
+          id: str(resource.id),
+          facilityId: str(attrs.facility_id) || facilityId,
+          productCode: str(attrs.product_code),
+          productName: str(attrs.product_name),
+          category: str(attrs.category),
+          quantityOnHand: Number(attrs.quantity_on_hand ?? 0) || 0,
+          reorderLevel: Number(attrs.reorder_level ?? 0) || 0,
+          unit: str(attrs.unit) || "EA",
+          status: str(attrs.status) || "ACTIVE",
+          lastCountedAt: (attrs.last_counted_at as string | null) ?? null,
+          createdAt: str(attrs.created_at),
+          updatedAt: str(attrs.updated_at),
+        } satisfies InventoryItem;
+      });
     },
     enabled: !!facilityId,
   });
@@ -456,19 +477,48 @@ export function useInventoryMovements(facilityId: string) {
     queryKey: ["inventory-movements", facilityId],
     queryFn: async () => {
       const raw = await apiClient.get<unknown>(
-        `/internal/v1/inventory/ledger${q({ facilityId, page: 0, size: 200 })}`,
+        `/internal/v1/inventory/movements${q({ facility_id: facilityId })}`,
       );
-      return extractPagedItems(raw).map(mapLedgerToMovement);
+      return extractDataArray(raw).map((resource) => {
+        const attrs = asRecord(resource.attributes);
+        return {
+          id: str(resource.id),
+          movedAt: str(attrs.moved_at),
+          itemName: str(attrs.item_name),
+          fromLocation: str(attrs.from_location) || "—",
+          toLocation: str(attrs.to_location) || "—",
+          quantity: Number(attrs.quantity ?? 0) || 0,
+          reason: str(attrs.reason) || "—",
+          performedBy: str(attrs.performed_by) || "—",
+        } satisfies InventoryMovement;
+      });
     },
     enabled: !!facilityId,
   });
 }
 
-/** No list endpoint on inventory-service yet — keeps dashboards stable. */
+/** Facility requisitions list. */
 export function useInventoryRequisitions(facilityId: string) {
   return useQuery({
     queryKey: ["inventory-requisitions", facilityId],
-    queryFn: async (): Promise<InventoryRequisition[]> => [],
+    queryFn: async (): Promise<InventoryRequisition[]> => {
+      const raw = await apiClient.get<unknown>(
+        `/internal/v1/inventory/requisitions${q({ facility_id: facilityId })}`,
+      );
+      return extractDataArray(raw).map((resource) => {
+        const attrs = asRecord(resource.attributes);
+        return {
+          id: str(resource.id),
+          requisitionNumber: str(attrs.requisition_number),
+          requestedBy: str(attrs.requested_by),
+          itemCount: Number(attrs.item_count ?? 0) || 0,
+          status: str(attrs.status),
+          neededBy: (attrs.needed_by as string | null) ?? null,
+          notes: str(attrs.notes),
+          createdAt: str(attrs.created_at),
+        } satisfies InventoryRequisition;
+      });
+    },
     enabled: !!facilityId,
   });
 }
@@ -547,11 +597,20 @@ export interface CreateInventoryRequisitionPayload {
 }
 
 export function useCreateInventoryRequisition() {
-  return useMutation({
-    mutationFn: async (_payload: CreateInventoryRequisitionPayload) => {
-      throw new Error(
-        "Inter-store requisitions need fromStoreId, toStoreId, and line items (itemCode, qtyRequested). Extend the form or call POST /internal/v1/inventory/requisitions with that JSON.",
-      );
+  const qc = useQueryClient();
+  return useMutation<unknown, unknown, CreateInventoryRequisitionPayload>({
+    mutationFn: async (payload) => {
+      return apiClient.post("/internal/v1/inventory/requisitions", {
+        facility_id: payload.facilityId,
+        requested_by: payload.requestedBy,
+        item_count: payload.itemCount,
+        needed_by: payload.neededBy,
+        notes: payload.notes,
+        requisition_number: payload.requisitionNumber,
+      });
+    },
+    onSuccess: (_data, payload) => {
+      qc.invalidateQueries({ queryKey: ["inventory-requisitions", payload.facilityId] });
     },
   });
 }

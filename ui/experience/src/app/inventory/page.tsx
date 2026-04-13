@@ -24,7 +24,7 @@ import {
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 
 function formatDate(value: string | null) {
-  if (!value) return "—";
+  if (!value) return "â€”";
   return new Date(value).toLocaleString();
 }
 
@@ -68,7 +68,7 @@ export default function InventoryPage() {
     <AppLayout>
       <PageShell
         title="Inventory Dashboard"
-        subtitle="Supply Plane — stock summary, recent movements, and shortcuts to catalog, stock levels, requisitions, reconciliation, and assets."
+        subtitle="Supply Plane â€” stock summary, recent movements, and shortcuts to catalog, stock levels, requisitions, reconciliation, and assets"
       >
         {!facility ? (
           <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
@@ -230,7 +230,7 @@ export default function InventoryPage() {
                 {loading ? (
                   <div className="mt-8 flex items-center justify-center gap-2 py-12 text-sm text-slate-500">
                     <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
-                    Loading movements…
+                    Loading movementsâ€¦
                   </div>
                 ) : recentMovements.length === 0 ? (
                   <div className="mt-6 rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-10 text-center text-sm text-slate-500">
@@ -273,7 +273,7 @@ export default function InventoryPage() {
                   {loading ? (
                     <div className="flex items-center gap-2 py-8 text-sm text-slate-500">
                       <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
-                      Loading items…
+                      Loading itemsâ€¦
                     </div>
                   ) : lowStockItems.length === 0 ? (
                     <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
@@ -288,7 +288,7 @@ export default function InventoryPage() {
                         <div>
                           <div className="text-sm font-medium text-slate-900">{item.productName}</div>
                           <div className="text-xs text-slate-500">
-                            {item.productCode} • {item.category}
+                            {item.productCode} â€¢ {item.category}
                           </div>
                         </div>
                         <div className="flex gap-6 text-xs sm:text-sm">
