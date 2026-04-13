@@ -58,7 +58,7 @@ export default function FamilyHistoryPage() {
             <button
               type="button"
               onClick={() => void refetch()}
-              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              className="rounded-lg bg-impilo-500 px-4 py-2 text-sm font-medium text-white hover:bg-impilo-600"
             >
               Retry
             </button>
@@ -121,7 +121,7 @@ export default function FamilyHistoryPage() {
               <button
                 type="button"
                 onClick={() => setShowForm(true)}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-impilo-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-impilo-600"
               >
                 <Plus className="h-4 w-4" />
                 Add Family Member
@@ -153,26 +153,26 @@ export default function FamilyHistoryPage() {
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                   <div>
                     <label className="mb-1 block text-xs font-medium text-gray-600">Relationship</label>
-                    <select value={newRelationship} onChange={(e) => setNewRelationship(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <select value={newRelationship} onChange={(e) => setNewRelationship(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400">
                       <option value="">Select relationship...</option>
                       {RELATIONSHIPS.map((relationship) => (<option key={relationship}>{relationship}</option>))}
                     </select>
                   </div>
                   <div>
                     <label className="mb-1 block text-xs font-medium text-gray-600">Name / Initials</label>
-                    <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., John M." />
+                    <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" placeholder="e.g., John M." />
                   </div>
                   <div>
                     <label className="mb-1 block text-xs font-medium text-gray-600">Current Age</label>
-                    <input type="number" value={newAge} onChange={(e) => setNewAge(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="65" />
+                    <input type="number" value={newAge} onChange={(e) => setNewAge(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" placeholder="65" />
                   </div>
                 </div>
                 <div className="mt-4">
                   <label className="mb-1 block text-xs font-medium text-gray-600">Known Condition (search)</label>
-                  <input type="text" value={newCondition} onChange={(e) => setNewCondition(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Search conditions (e.g., diabetes, hypertension)..." />
+                  <input type="text" value={newCondition} onChange={(e) => setNewCondition(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" placeholder="Search conditions (e.g., diabetes, hypertension)..." />
                 </div>
                 <div className="flex items-center gap-3 pt-4">
-                  <button className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700">Add Member</button>
+                  <button className="rounded-lg bg-impilo-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-impilo-600">Add Member</button>
                   <button onClick={() => setShowForm(false)} className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50">Cancel</button>
                 </div>
               </div>

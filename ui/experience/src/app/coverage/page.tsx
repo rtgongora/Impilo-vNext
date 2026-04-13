@@ -181,11 +181,11 @@ function DashboardTab() {
           <p className="text-xs text-green-600">Remittance rows</p>
           <p className="text-[10px] text-green-600/90 mt-1">Not a claims ledger total</p>
         </div>
-        <div className="bg-blue-50 rounded-lg border border-blue-200 p-4 text-center">
-          <p className="text-2xl font-bold text-blue-700">
+        <div className="bg-impilo-50 rounded-lg border border-impilo-200 p-4 text-center">
+          <p className="text-2xl font-bold text-impilo-600">
             {remQ.isLoading ? "…" : formatCoverageCurrency(remittanceTotal, primaryCurrency)}
           </p>
-          <p className="text-xs text-blue-600">Sum of remittance amounts</p>
+          <p className="text-xs text-impilo-500">Sum of remittance amounts</p>
         </div>
         <div className="bg-amber-50 rounded-lg border border-amber-200 p-4 text-center">
           <p className="text-2xl font-bold text-amber-700">—</p>
@@ -329,7 +329,7 @@ function ClaimsTab() {
       <div className="flex items-center justify-between">
         <h3 className="text-base font-semibold text-gray-900">Claims & Adjudication</h3>
         <button type="button" onClick={() => setShowForm(!showForm)}
-          className="inline-flex items-center gap-1.5 px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">
+          className="inline-flex items-center gap-1.5 px-3 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600">
           <Plus className="w-4 h-4" /> Submit Claim
         </button>
       </div>
@@ -361,7 +361,7 @@ function ClaimsTab() {
       </p>
 
       {showForm && (
-        <div className="bg-white rounded-lg border border-blue-200 p-5 space-y-3">
+        <div className="bg-white rounded-lg border border-impilo-200 p-5 space-y-3">
           <h4 className="text-sm font-semibold text-gray-900">New Claim Submission</h4>
           <div className="grid grid-cols-2 gap-3">
             <input type="text" placeholder="Coverage ID" className="px-3 py-2 text-sm border border-gray-300 rounded-lg" id="claim-coverage" />
@@ -387,7 +387,7 @@ function ClaimsTab() {
                 }
               );
             }} disabled={submit.isPending}
-              className="flex-1 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50">
+              className="flex-1 py-2 bg-impilo-500 text-white text-sm rounded-lg hover:bg-impilo-600 disabled:opacity-50">
               {submit.isPending ? "Submitting..." : "Submit Claim"}
             </button>
           </div>
@@ -497,12 +497,12 @@ function MembershipTab() {
       <div className="flex items-center justify-between">
         <h3 className="text-base font-semibold text-gray-900">Membership Administration</h3>
         <button onClick={() => setShowForm(!showForm)}
-          className="inline-flex items-center gap-1.5 px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">
+          className="inline-flex items-center gap-1.5 px-3 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600">
           <Plus className="w-4 h-4" /> Enroll Member
         </button>
       </div>
       {showForm && (
-        <div className="bg-white rounded-lg border border-blue-200 p-5 space-y-3">
+        <div className="bg-white rounded-lg border border-impilo-200 p-5 space-y-3">
           <h4 className="text-sm font-semibold text-gray-900">New Member Enrollment</h4>
           <div className="grid grid-cols-2 gap-3">
             <input type="text" placeholder="Client ID (CPID)" className="px-3 py-2 text-sm border border-gray-300 rounded-lg" id="mem-client" />
@@ -525,7 +525,7 @@ function MembershipTab() {
                 { onSuccess: () => setShowForm(false) }
               );
             }} disabled={enroll.isPending}
-              className="flex-1 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50">
+              className="flex-1 py-2 bg-impilo-500 text-white text-sm rounded-lg hover:bg-impilo-600 disabled:opacity-50">
               {enroll.isPending ? "Enrolling..." : "Enroll"}
             </button>
           </div>
@@ -554,12 +554,12 @@ function PreauthTab() {
       <div className="flex items-center justify-between">
         <h3 className="text-base font-semibold text-gray-900">Pre-Authorization Requests</h3>
         <button onClick={() => setShowForm(!showForm)}
-          className="inline-flex items-center gap-1.5 px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">
+          className="inline-flex items-center gap-1.5 px-3 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600">
           <Plus className="w-4 h-4" /> New Pre-Auth
         </button>
       </div>
       {showForm && (
-        <div className="bg-white rounded-lg border border-blue-200 p-5 space-y-3">
+        <div className="bg-white rounded-lg border border-impilo-200 p-5 space-y-3">
           <h4 className="text-sm font-semibold text-gray-900">Pre-Authorization Request</h4>
           <div className="grid grid-cols-2 gap-3">
             <input type="text" placeholder="Coverage ID" className="px-3 py-2 text-sm border border-gray-300 rounded-lg" id="pa-coverage" />
@@ -579,7 +579,7 @@ function PreauthTab() {
               const clinicalInfo = (document.getElementById("pa-clinical") as HTMLTextAreaElement)?.value;
               create.mutate({ coverageId, requestType, facilityId, providerId, clinicalInfo });
             }} disabled={create.isPending}
-              className="flex-1 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50">
+              className="flex-1 py-2 bg-impilo-500 text-white text-sm rounded-lg hover:bg-impilo-600 disabled:opacity-50">
               {create.isPending ? "Submitting..." : "Submit Pre-Auth"}
             </button>
           </div>

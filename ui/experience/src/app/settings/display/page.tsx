@@ -138,18 +138,18 @@ export default function DisplaySettingsPage() {
                         onClick={() => setTheme(t.value)}
                         className={`flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-colors ${
                           theme === t.value
-                            ? "border-blue-500 bg-blue-50"
+                            ? "border-impilo-400 bg-impilo-50"
                             : "border-gray-200 hover:border-gray-300"
                         }`}
                       >
                         <Icon
                           className={`w-6 h-6 ${
-                            theme === t.value ? "text-blue-600" : "text-gray-400"
+                            theme === t.value ? "text-impilo-500" : "text-gray-400"
                           }`}
                         />
                         <span
                           className={`text-sm font-medium ${
-                            theme === t.value ? "text-blue-700" : "text-gray-600"
+                            theme === t.value ? "text-impilo-600" : "text-gray-600"
                           }`}
                         >
                           {t.label}
@@ -171,7 +171,7 @@ export default function DisplaySettingsPage() {
                       onClick={() => setFontSize(fs.value)}
                       className={`px-4 py-2.5 rounded-lg border-2 text-sm font-medium transition-colors ${
                         fontSize === fs.value
-                          ? "border-blue-500 bg-blue-50 text-blue-700"
+                          ? "border-impilo-400 bg-impilo-50 text-impilo-600"
                           : "border-gray-200 text-gray-600 hover:border-gray-300"
                       }`}
                     >
@@ -192,7 +192,7 @@ export default function DisplaySettingsPage() {
                       onClick={() => setDensity(d.value)}
                       className={`px-4 py-2.5 rounded-lg border-2 text-sm font-medium transition-colors ${
                         density === d.value
-                          ? "border-blue-500 bg-blue-50 text-blue-700"
+                          ? "border-impilo-400 bg-impilo-50 text-impilo-600"
                           : "border-gray-200 text-gray-600 hover:border-gray-300"
                       }`}
                     >
@@ -205,7 +205,7 @@ export default function DisplaySettingsPage() {
               <button
                 type="submit"
                 disabled={saveDisplay.isPending}
-                className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-impilo-500 rounded-lg hover:bg-impilo-600 transition-colors disabled:opacity-50"
               >
                 {saveDisplay.isPending ? (
                   <Loader2 className="w-4 h-4 animate-spin" />

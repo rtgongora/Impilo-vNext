@@ -80,7 +80,7 @@ export default function AdminBedsPage() {
             <ArrowLeft className="w-4 h-4" /> Back to Admin
           </Link>
           <button onClick={() => setShowForm(!showForm)}
-            className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">
+            className="inline-flex items-center gap-1.5 px-4 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600">
             <Plus className="w-4 h-4" /> Add Ward
           </button>
         </div>
@@ -151,7 +151,7 @@ export default function AdminBedsPage() {
             </div>
             <button onClick={() => createWard.mutate({ name: wardName, wardType, totalBeds, facilityId: facility?.id })}
               disabled={!wardName || createWard.isPending}
-              className="mt-3 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50">
+              className="mt-3 px-4 py-2 bg-impilo-500 text-white text-sm rounded-lg hover:bg-impilo-600 disabled:opacity-50">
               {createWard.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Create Ward & Beds"}
             </button>
           </div>
@@ -181,9 +181,9 @@ export default function AdminBedsPage() {
                   </div>
                   <div className="flex items-center gap-4 text-xs">
                     <span className="text-green-600 font-medium">{a.availableBeds as number} available</span>
-                    <span className="text-blue-600 font-medium">{a.occupiedBeds as number} occupied</span>
+                    <span className="text-impilo-500 font-medium">{a.occupiedBeds as number} occupied</span>
                     <span className="text-gray-500">{a.totalBeds as number} total</span>
-                    <Link href="/beds" className="text-blue-600 hover:text-blue-800 font-medium">Manage →</Link>
+                    <Link href="/beds" className="text-impilo-500 hover:text-impilo-700 font-medium">Manage →</Link>
                   </div>
                 </div>
               );

@@ -150,7 +150,7 @@ export default function CitizenRequestHealthIdPage() {
         <button
           type="submit"
           disabled={submitting}
-          className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+          className="w-full bg-impilo-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-impilo-600 disabled:opacity-50"
         >
           {submitting ? "Submitting…" : "Submit request"}
         </button>

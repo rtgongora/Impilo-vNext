@@ -22,7 +22,7 @@ import { useWellnessActivities } from "@/hooks/queries/useCitizenWellness";
 
 const SECTIONS = [
   { href: "/wellness/goals", label: "Health Goals", description: "Set and track personal health targets", Icon: Target, color: "bg-green-50 text-green-600" },
-  { href: "/wellness/activity", label: "Activity & Fitness", description: "Track physical activity, steps, and exercise", Icon: Activity, color: "bg-blue-50 text-blue-600" },
+  { href: "/wellness/activity", label: "Activity & Fitness", description: "Track physical activity, steps, and exercise", Icon: Activity, color: "bg-impilo-50 text-impilo-500" },
   { href: "/wellness/diet", label: "Diet & Nutrition", description: "Dietary support, healthy eating guidance, and food tracking", Icon: UtensilsCrossed, color: "bg-orange-50 text-orange-600" },
   { href: "/wellness/sleep", label: "Sleep & Recovery", description: "Sleep patterns, recovery support, and rest tracking", Icon: Moon, color: "bg-indigo-50 text-indigo-600" },
   { href: "/wellness/clubs", label: "Clubs & Communities", description: "Walking, running, and fitness clubs near you", Icon: Users2, color: "bg-purple-50 text-purple-600" },
@@ -48,10 +48,10 @@ function TodaySnapshot() {
   if (!todayRow && activities.length === 0) return null;
 
   return (
-    <div className="mb-6 rounded-xl border border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50 px-4 py-4 flex flex-wrap items-center gap-6 text-sm">
+    <div className="mb-6 rounded-xl border border-impilo-100 bg-gradient-to-r from-blue-50 to-indigo-50 px-4 py-4 flex flex-wrap items-center gap-6 text-sm">
       <span className="font-semibold text-gray-800">Today</span>
       <span className="text-gray-700">
-        <strong className="text-blue-700">{todayRow?.steps ?? 0}</strong> steps
+        <strong className="text-impilo-600">{todayRow?.steps ?? 0}</strong> steps
       </span>
       <span className="text-gray-700">
         <strong className="text-cyan-700">{todayRow?.waterMl ?? 0}</strong> ml water
@@ -65,7 +65,7 @@ function TodaySnapshot() {
         </span>
       )}
       <div className="ml-auto flex flex-wrap gap-4 text-sm">
-        <Link href="/wellness/activity" className="text-blue-600 font-medium hover:underline">
+        <Link href="/wellness/activity" className="text-impilo-500 font-medium hover:underline">
           Log activity
         </Link>
         <Link href="/wellness/connect" className="text-indigo-600 font-medium hover:underline">
@@ -102,10 +102,10 @@ export default function WellnessPage() {
         <TodaySnapshot />
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {SECTIONS.map(({ href, label, description, Icon, color }) => (
-            <Link key={href} href={href} className="rounded-xl border border-gray-200 bg-white p-5 hover:border-blue-400 hover:shadow-md transition-all group">
+            <Link key={href} href={href} className="rounded-xl border border-gray-200 bg-white p-5 hover:border-impilo-400 hover:shadow-md transition-all group">
               <div className="flex items-center gap-3 mb-2">
                 <div className={`rounded-lg p-2 ${color.split(" ")[0]}`}><Icon className={`h-5 w-5 ${color.split(" ")[1]}`} /></div>
-                <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">{label}</h3>
+                <h3 className="font-semibold text-gray-900 group-hover:text-impilo-500 transition-colors">{label}</h3>
               </div>
               <p className="text-sm text-gray-600">{description}</p>
             </Link>

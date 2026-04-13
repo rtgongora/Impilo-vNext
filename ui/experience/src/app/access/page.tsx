@@ -38,7 +38,7 @@ export default function AccessPage() {
             return (
               <button key={t.id} onClick={() => setTab(t.id)}
                 className={`flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium border-b-2 transition-colors ${
-                  tab === t.id ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-700"
+                  tab === t.id ? "border-impilo-500 text-impilo-500" : "border-transparent text-gray-500 hover:text-gray-700"
                 }`}>
                 <Icon className="w-4 h-4" /> {t.label}
               </button>
@@ -77,7 +77,7 @@ function CommunicationTab() {
         </div>
         <textarea placeholder="Message content" value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} rows={3} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
         <button onClick={() => sendMutation.mutate(form)} disabled={!form.recipientId || !form.message || sendMutation.isPending}
-          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg disabled:opacity-50">
+          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-impilo-500 text-white rounded-lg disabled:opacity-50">
           <Send className="w-4 h-4" /> {sendMutation.isPending ? "Sending..." : "Send"}
         </button>
         {sendMutation.isSuccess && <p className="text-sm text-green-600">Notification sent</p>}
@@ -130,7 +130,7 @@ function KioskTab() {
         <Monitor className="w-12 h-12 text-gray-300 mx-auto mb-3" />
         <p className="text-sm text-gray-600">Kiosk check-in is available at <strong>/kiosk</strong></p>
         <p className="text-xs text-gray-400 mt-1">Patients can self-check-in, verify identity, and join queues</p>
-        <Link href="/kiosk" className="mt-4 inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+        <Link href="/kiosk" className="mt-4 inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-impilo-500 text-white rounded-lg hover:bg-impilo-600">
           Open Kiosk Mode
         </Link>
       </div>

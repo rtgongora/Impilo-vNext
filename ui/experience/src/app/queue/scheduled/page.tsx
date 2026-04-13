@@ -152,7 +152,7 @@ export default function ScheduledQueuePage() {
                           {patientId ? (
                             <Link
                               href={`/ehr/${patientId}`}
-                              className="rounded-xl bg-blue-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-blue-700"
+                              className="rounded-xl bg-impilo-500 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-impilo-600"
                             >
                               Open Chart
                             </Link>

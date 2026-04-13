@@ -27,7 +27,7 @@ import { useAuthStore } from "@/hooks/useAuthStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 
 const DOC_TYPE_CONFIG: Record<string, { label: string; icon: typeof FileText; color: string }> = {
-  CLINICAL_NOTE: { label: "Clinical Note", icon: FileText, color: "bg-blue-100 text-blue-700" },
+  CLINICAL_NOTE: { label: "Clinical Note", icon: FileText, color: "bg-impilo-100 text-impilo-600" },
   LAB_REPORT: { label: "Lab Report", icon: ClipboardList, color: "bg-green-100 text-green-700" },
   IMAGING: { label: "Imaging", icon: Image, color: "bg-purple-100 text-purple-700" },
   CONSENT_FORM: { label: "Consent Form", icon: File, color: "bg-yellow-100 text-yellow-700" },
@@ -171,13 +171,13 @@ export default function DocumentsPage() {
 
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <FileText className="h-5 w-5 text-blue-500" />
+                <FileText className="h-5 w-5 text-impilo-400" />
                 <h2 className="text-sm font-semibold text-gray-900">Documents ({documents.length})</h2>
               </div>
               <button
                 type="button"
                 onClick={() => setShowForm((value) => !value)}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-impilo-500 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-impilo-600"
               >
                 <Plus className="h-4 w-4" />
                 Upload Document
@@ -187,7 +187,7 @@ export default function DocumentsPage() {
             {showForm && (
               <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border border-gray-200 bg-white p-5">
                 <h3 className="flex items-center gap-2 text-sm font-medium text-gray-900">
-                  <Paperclip className="h-4 w-4 text-blue-500" />
+                  <Paperclip className="h-4 w-4 text-impilo-400" />
                   Upload Clinical Document
                 </h3>
                 <div className="grid grid-cols-2 gap-3">
@@ -199,7 +199,7 @@ export default function DocumentsPage() {
                       value={form.title}
                       onChange={(e) => updateField("title", e.target.value)}
                       placeholder="e.g. Blood Test Results"
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
                     />
                   </div>
                   <div>
@@ -207,7 +207,7 @@ export default function DocumentsPage() {
                     <select
                       value={form.document_type}
                       onChange={(e) => updateField("document_type", e.target.value)}
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
                     >
                       {Object.entries(DOC_TYPE_CONFIG).map(([key, config]) => (
                         <option key={key} value={key}>{config.label}</option>
@@ -222,7 +222,7 @@ export default function DocumentsPage() {
                     onChange={(e) => updateField("description", e.target.value)}
                     rows={2}
                     placeholder="Brief description of the document content..."
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 resize-none"
                   />
                 </div>
                 <div>
@@ -232,7 +232,7 @@ export default function DocumentsPage() {
                     value={form.storage_key}
                     onChange={(e) => updateField("storage_key", e.target.value)}
                     placeholder="e.g. documents/patient-123/file.pdf (or paste URL)"
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
                   />
                 </div>
                 {activeEncounter && (
@@ -251,7 +251,7 @@ export default function DocumentsPage() {
                   <button
                     type="submit"
                     disabled={uploadDocument.isPending}
-                    className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-blue-600 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+                    className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-impilo-500 py-2 text-sm font-medium text-white transition-colors hover:bg-impilo-600 disabled:opacity-50"
                   >
                     {uploadDocument.isPending ? (
                       <>

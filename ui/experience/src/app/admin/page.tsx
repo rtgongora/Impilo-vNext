@@ -28,7 +28,7 @@ const ADMIN_SECTIONS = [
     description: "Manage user accounts, roles, and permissions",
     href: "/admin/users",
     icon: Users,
-    color: "bg-blue-100 text-blue-600",
+    color: "bg-impilo-100 text-impilo-500",
   },
   {
     title: "Roles",
@@ -116,7 +116,7 @@ export default function AdminPage() {
               <Link
                 key={section.href}
                 href={section.href}
-                className="bg-white rounded-lg border border-gray-200 p-5 hover:border-blue-300 hover:shadow-md transition-all group"
+                className="bg-white rounded-lg border border-gray-200 p-5 hover:border-impilo-200 hover:shadow-md transition-all group"
               >
                 <div className="flex items-start gap-3">
                   <div
@@ -125,7 +125,7 @@ export default function AdminPage() {
                     <Icon className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="font-medium text-gray-900 text-sm group-hover:text-blue-600 transition-colors">
+                    <h3 className="font-medium text-gray-900 text-sm group-hover:text-impilo-500 transition-colors">
                       {section.title}
                     </h3>
                     <p className="text-xs text-gray-500 mt-0.5">{section.description}</p>

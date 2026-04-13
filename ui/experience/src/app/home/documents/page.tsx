@@ -92,12 +92,12 @@ export default function MyDocumentsPage() {
         icon={<FileText className="h-6 w-6" />}
       >
         <div className="space-y-6">
-          <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
-            <p className="font-semibold text-blue-950">Canonical Experience document vault</p>
+          <div className="rounded-xl border border-impilo-200 bg-impilo-50 p-4 text-sm text-impilo-800">
+            <p className="font-semibold text-impilo-800">Canonical Experience document vault</p>
             <p className="mt-1">
               This page now reads your document vault through the Experience clinical-tools bridge. It focuses on retrieval
               and download access. Public claim flow still lives at{" "}
-              <Link href="/share/claim" className="font-medium text-blue-700 underline underline-offset-2">
+              <Link href="/share/claim" className="font-medium text-impilo-600 underline underline-offset-2">
                 /share/claim
               </Link>
               .
@@ -107,7 +107,7 @@ export default function MyDocumentsPage() {
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <div className="rounded-lg border border-gray-200 bg-white p-5">
               <div className="mb-3 flex items-center gap-2">
-                <FileText className="h-5 w-5 text-blue-600" />
+                <FileText className="h-5 w-5 text-impilo-500" />
                 <h3 className="font-semibold text-gray-900">Vault</h3>
               </div>
               <p className="text-2xl font-semibold text-gray-900">{documents.length}</p>
@@ -145,7 +145,7 @@ export default function MyDocumentsPage() {
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
                     placeholder="Search title, type, or mime type"
-                    className="w-full rounded-lg border border-gray-300 py-2 pl-9 pr-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    className="w-full rounded-lg border border-gray-300 py-2 pl-9 pr-3 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-impilo-400/20"
                   />
                 </label>
               </div>
@@ -186,7 +186,7 @@ export default function MyDocumentsPage() {
                           <div className="min-w-0 flex-1">
                             <div className="flex flex-wrap items-center gap-2">
                               <h3 className="text-sm font-semibold text-gray-900">{document.title}</h3>
-                              <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">
+                              <span className="rounded-full bg-impilo-50 px-2.5 py-1 text-xs font-medium text-impilo-600">
                                 {document.documentTypeCode}
                               </span>
                               <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs text-gray-600">
@@ -207,7 +207,7 @@ export default function MyDocumentsPage() {
                                 href={downloadUrl}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+                                className="inline-flex items-center gap-1.5 rounded-lg bg-impilo-500 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-impilo-600"
                               >
                                 <Download className="h-4 w-4" />
                                 Download document

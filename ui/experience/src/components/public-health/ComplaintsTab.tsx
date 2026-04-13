@@ -28,7 +28,7 @@ export function ComplaintsTab() {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-lg border border-blue-200 bg-blue-50/90 p-3 text-xs text-blue-950">
+      <div className="rounded-lg border border-impilo-200 bg-impilo-50/90 p-3 text-xs text-impilo-800">
         <strong>Environmental complaints:</strong> table below is <strong>demonstration data</strong> (same shape as Lovable /
         impilo-structure) until <code className="text-[10px]">GET/POST …/complaints</code> exists on the BFF.
         <strong className="ml-1">Syndrome alerts:</strong> switch to &quot;Health &amp; surveillance alerts&quot; for live{" "}
@@ -59,7 +59,7 @@ export function ComplaintsTab() {
             {[
               { label: "Open (demo)", value: String(demoOpen), color: "text-amber-800" },
               { label: "Critical (demo)", value: String(demoCritical), color: "text-red-700" },
-              { label: "Avg resolution (demo)", value: "4.2d", color: "text-blue-800" },
+              { label: "Avg resolution (demo)", value: "4.2d", color: "text-impilo-700" },
               { label: "Resolved month (demo)", value: "34", color: "text-emerald-800" },
               { label: "Satisfaction (demo)", value: "4.1/5", color: "text-violet-800" },
             ].map((kpi) => (

@@ -76,7 +76,7 @@ export function EncounterPatientHeader() {
     patient.gender === "female"
       ? "bg-pink-50 text-pink-600 border-pink-200"
       : patient.gender === "male"
-        ? "bg-blue-50 text-blue-600 border-blue-200"
+        ? "bg-impilo-50 text-impilo-500 border-impilo-200"
         : "bg-purple-50 text-purple-600 border-purple-200";
 
   const genderLabel =
@@ -87,8 +87,8 @@ export function EncounterPatientHeader() {
       <div className="flex items-center justify-between">
         {/* Left: avatar + demographics */}
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center border-2 border-blue-200">
-            <User className="w-5 h-5 text-blue-600" />
+          <div className="w-10 h-10 rounded-full bg-impilo-50 flex items-center justify-center border-2 border-impilo-200">
+            <User className="w-5 h-5 text-impilo-500" />
           </div>
           <div>
             <div className="flex items-center gap-2">
@@ -115,7 +115,7 @@ export function EncounterPatientHeader() {
               </span>
               {primaryDiagnosis && (
                 <span className="flex items-center gap-1">
-                  <Stethoscope className="w-3 h-3 text-blue-600" />
+                  <Stethoscope className="w-3 h-3 text-impilo-500" />
                   {primaryDiagnosis.name}
                   <span className="text-[9px] border rounded px-1 py-0.5 font-mono text-gray-400 border-gray-200">
                     {primaryDiagnosis.icdCode}
@@ -131,7 +131,7 @@ export function EncounterPatientHeader() {
           <span
             className={`inline-block text-[10px] font-medium rounded px-2 py-0.5 ${
               encounter.status === "active"
-                ? "bg-blue-600 text-white"
+                ? "bg-impilo-500 text-white"
                 : "bg-gray-100 text-gray-600"
             }`}
           >

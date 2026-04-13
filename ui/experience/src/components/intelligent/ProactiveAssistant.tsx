@@ -56,7 +56,7 @@ interface AssistantState {
 const SEVERITY_STYLES: Record<string, { bg: string; border: string; icon: typeof AlertTriangle; iconColor: string }> = {
   CRITICAL: { bg: "bg-red-50", border: "border-red-200", icon: AlertTriangle, iconColor: "text-red-600" },
   HIGH: { bg: "bg-amber-50", border: "border-amber-200", icon: AlertTriangle, iconColor: "text-amber-600" },
-  MEDIUM: { bg: "bg-blue-50", border: "border-blue-200", icon: Info, iconColor: "text-blue-600" },
+  MEDIUM: { bg: "bg-impilo-50", border: "border-impilo-200", icon: Info, iconColor: "text-impilo-500" },
   LOW: { bg: "bg-gray-50", border: "border-gray-200", icon: Info, iconColor: "text-gray-500" },
   INFO: { bg: "bg-emerald-50", border: "border-emerald-200", icon: Lightbulb, iconColor: "text-emerald-600" },
 };

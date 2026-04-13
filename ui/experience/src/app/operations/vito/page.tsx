@@ -12,7 +12,7 @@ import { PageShell } from "@/components/PageShell";
 
 const SECTIONS = [
   { label: "Deduplication Queue", description: "Review and resolve potential duplicate person records", Icon: GitMerge, color: "bg-amber-50 text-amber-600" },
-  { label: "Health ID Issuance", description: "Pending Health ID issuance requests and approvals", Icon: CreditCard, color: "bg-blue-50 text-blue-600" },
+  { label: "Health ID Issuance", description: "Pending Health ID issuance requests and approvals", Icon: CreditCard, color: "bg-impilo-50 text-impilo-500" },
   { label: "Match Review", description: "Manual review of probabilistic identity matches", Icon: UserCheck, color: "bg-green-50 text-green-600" },
   { label: "Identity Exceptions", description: "Flagged identity records requiring administrative action", Icon: AlertCircle, color: "bg-red-50 text-red-600" },
 ];

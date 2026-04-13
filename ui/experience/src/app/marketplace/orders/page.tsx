@@ -11,7 +11,7 @@ import { useAuthStore } from "@/hooks/useAuthStore";
 
 const STATUS_STYLES: Record<string, string> = {
   PENDING: "bg-amber-100 text-amber-800",
-  APPROVED: "bg-blue-100 text-blue-800",
+  APPROVED: "bg-impilo-100 text-impilo-700",
   SHIPPED: "bg-indigo-100 text-indigo-800",
   DELIVERED: "bg-emerald-100 text-emerald-800",
   CANCELLED: "bg-rose-100 text-rose-800",
@@ -130,7 +130,7 @@ export default function OrdersPage() {
                         {orders.map((order) => (
                           <tr key={order.id} className="border-t border-slate-100 hover:bg-slate-50">
                             <td className="px-4 py-3">
-                              <Link href={`/marketplace/orders/${order.id}`} className="inline-flex items-center gap-1 font-medium text-blue-600 hover:text-blue-800">
+                              <Link href={`/marketplace/orders/${order.id}`} className="inline-flex items-center gap-1 font-medium text-impilo-500 hover:text-impilo-700">
                                 <Package className="h-3.5 w-3.5" />
                                 {order.orderNumber}
                               </Link>

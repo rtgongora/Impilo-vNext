@@ -12,7 +12,7 @@ import { type ClinicalAlert, type AlertSeverity } from "@/hooks/useClinicalAlert
 const SEVERITY_STYLES: Record<AlertSeverity, { bg: string; border: string; icon: typeof AlertTriangle; iconColor: string }> = {
   critical: { bg: "bg-red-50", border: "border-red-200", icon: AlertTriangle, iconColor: "text-red-600" },
   warning: { bg: "bg-amber-50", border: "border-amber-200", icon: AlertCircle, iconColor: "text-amber-600" },
-  info: { bg: "bg-blue-50", border: "border-blue-200", icon: Info, iconColor: "text-blue-600" },
+  info: { bg: "bg-impilo-50", border: "border-impilo-200", icon: Info, iconColor: "text-impilo-500" },
 };
 
 export function ClinicalAlerts({ alerts }: { alerts: ClinicalAlert[] }) {

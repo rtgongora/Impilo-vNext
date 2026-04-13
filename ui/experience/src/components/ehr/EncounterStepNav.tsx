@@ -108,7 +108,7 @@ export function EncounterStepNav() {
           wizard.recommendedNext !== next && (
             <button
               onClick={() => navigateTo(wizard.recommendedNext!)}
-              className="flex items-center gap-2 px-3 py-1.5 text-sm text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+              className="flex items-center gap-2 px-3 py-1.5 text-sm text-impilo-500 hover:bg-impilo-50 rounded-md transition-colors"
             >
               <Sparkles className="w-4 h-4" />
               {SECTION_LABELS[wizard.recommendedNext]}

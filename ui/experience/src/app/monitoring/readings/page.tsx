@@ -14,7 +14,7 @@ const METRIC_TYPES = [
   { label: "Blood Pressure", unit: "mmHg", color: "bg-red-50 border-red-200" },
   { label: "Blood Glucose", unit: "mmol/L", color: "bg-amber-50 border-amber-200" },
   { label: "Heart Rate", unit: "bpm", color: "bg-pink-50 border-pink-200" },
-  { label: "Oxygen Saturation", unit: "%", color: "bg-blue-50 border-blue-200" },
+  { label: "Oxygen Saturation", unit: "%", color: "bg-impilo-50 border-impilo-200" },
   { label: "Weight", unit: "kg", color: "bg-green-50 border-green-200" },
   { label: "Temperature", unit: "°C", color: "bg-orange-50 border-orange-200" },
 ];

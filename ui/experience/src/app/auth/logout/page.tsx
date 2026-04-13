@@ -40,7 +40,7 @@ export default function LogoutPage() {
   return (
     <MinimalLayout>
       <div className="min-h-screen flex flex-col items-center justify-center">
-        <Loader2 className="w-8 h-8 text-blue-600 animate-spin mb-4" />
+        <Loader2 className="w-8 h-8 text-impilo-500 animate-spin mb-4" />
         <h2 className="text-lg font-medium text-gray-900 mb-1">
           Signing Out
         </h2>

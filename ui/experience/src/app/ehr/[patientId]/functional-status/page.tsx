@@ -82,7 +82,7 @@ export default function FunctionalStatusPage() {
             <button
               type="button"
               onClick={() => void refetch()}
-              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              className="rounded-lg bg-impilo-500 px-4 py-2 text-sm font-medium text-white hover:bg-impilo-600"
             >
               Retry
             </button>
@@ -142,7 +142,7 @@ export default function FunctionalStatusPage() {
                 <Activity className="h-5 w-5 text-orange-600" />
                 <h2 className="text-lg font-semibold text-gray-900">Functional Status</h2>
               </div>
-              <button className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700">
+              <button className="rounded-lg bg-impilo-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-impilo-600">
                 New Assessment
               </button>
             </div>
@@ -152,7 +152,7 @@ export default function FunctionalStatusPage() {
                 <button
                   key={assessment.id}
                   onClick={() => setActiveTab(assessment.type)}
-                  className={`rounded-lg border bg-white p-4 text-left transition-all ${activeTab === assessment.type ? "border-blue-300 ring-2 ring-blue-100" : "border-gray-200 hover:border-gray-300"}`}
+                  className={`rounded-lg border bg-white p-4 text-left transition-all ${activeTab === assessment.type ? "border-impilo-200 ring-2 ring-blue-100" : "border-gray-200 hover:border-gray-300"}`}
                 >
                   <p className="text-xs font-medium uppercase tracking-wide text-gray-500">{TAB_LABELS[assessment.type]}</p>
                   <div className="mt-1 flex items-baseline gap-1">

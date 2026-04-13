@@ -100,7 +100,7 @@ export default function ShareClaimPage() {
             required
           />
           {error && <p className="text-sm text-red-600">{error}</p>}
-          <button type="submit" disabled={loading} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm disabled:opacity-50">
+          <button type="submit" disabled={loading} className="bg-impilo-500 text-white px-4 py-2 rounded-lg text-sm disabled:opacity-50">
             {loading ? "Checking…" : "Continue"}
           </button>
         </form>
@@ -110,7 +110,7 @@ export default function ShareClaimPage() {
           <label className="block text-sm font-medium text-gray-700">OTP</label>
           <input value={otp} onChange={(e) => setOtp(e.target.value)} className="w-full border rounded-lg px-3 py-2 text-sm" required />
           {error && <p className="text-sm text-red-600">{error}</p>}
-          <button type="submit" disabled={loading} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm disabled:opacity-50">
+          <button type="submit" disabled={loading} className="bg-impilo-500 text-white px-4 py-2 rounded-lg text-sm disabled:opacity-50">
             {loading ? "Claiming…" : "Claim"}
           </button>
         </form>

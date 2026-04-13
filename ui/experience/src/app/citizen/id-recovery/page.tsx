@@ -109,7 +109,7 @@ export default function CitizenIdRecoveryPage() {
           <button
             type="submit"
             disabled={loading || !impiloId}
-            className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50"
+            className="w-full bg-impilo-500 text-white px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50"
           >
             {loading ? "Processing…" : "Start recovery"}
           </button>
@@ -145,7 +145,7 @@ export default function CitizenIdRecoveryPage() {
             <button type="button" onClick={resetFlow} className="flex-1 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg text-sm">
               Back
             </button>
-            <button type="submit" disabled={loading} className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm disabled:opacity-50">
+            <button type="submit" disabled={loading} className="flex-1 bg-impilo-500 text-white px-4 py-2 rounded-lg text-sm disabled:opacity-50">
               {loading ? "Verifying…" : "Verify"}
             </button>
           </div>

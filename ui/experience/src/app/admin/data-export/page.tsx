@@ -49,7 +49,7 @@ interface ExportJobRow {
 
 const STATUS_STYLES: Record<string, { bg: string; icon: React.ElementType }> = {
   Completed: { bg: "bg-green-100 text-green-700", icon: CheckCircle2 },
-  Running: { bg: "bg-blue-100 text-blue-700", icon: RefreshCw },
+  Running: { bg: "bg-impilo-100 text-impilo-600", icon: RefreshCw },
   Failed: { bg: "bg-red-100 text-red-700", icon: AlertCircle },
   Scheduled: { bg: "bg-purple-100 text-purple-700", icon: Clock },
   Queued: { bg: "bg-gray-100 text-gray-600", icon: Clock },
@@ -241,28 +241,28 @@ export default function DataExportPage() {
             {/* Header */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Download className="w-5 h-5 text-blue-600" />
+                <Download className="w-5 h-5 text-impilo-500" />
                 <h2 className="text-lg font-semibold text-gray-900">Export Jobs</h2>
                 <span className="text-xs text-gray-400">{jobs.length} total</span>
               </div>
-              <button type="button" onClick={() => setShowForm(true)} className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
+              <button type="button" onClick={() => setShowForm(true)} className="inline-flex items-center gap-1.5 px-4 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 transition-colors">
                 <Plus className="w-4 h-4" /> New Export
               </button>
             </div>
 
             {lastQueuedJobId && (
-              <div className="rounded-lg border border-blue-200 bg-blue-50/90 px-4 py-3 text-sm text-blue-900 flex flex-wrap items-center justify-between gap-2">
+              <div className="rounded-lg border border-impilo-200 bg-impilo-50/90 px-4 py-3 text-sm text-impilo-800 flex flex-wrap items-center justify-between gap-2">
                 <span>Export queued.</span>
                 <Link
                   href={`/reports/${lastQueuedJobId}`}
-                  className="font-medium text-blue-700 hover:underline"
+                  className="font-medium text-impilo-600 hover:underline"
                 >
                   Open job status →
                 </Link>
                 <button
                   type="button"
                   onClick={() => setLastQueuedJobId(null)}
-                  className="text-xs text-blue-600 hover:text-blue-800 ml-auto"
+                  className="text-xs text-impilo-500 hover:text-impilo-700 ml-auto"
                 >
                   Dismiss
                 </button>
@@ -287,11 +287,11 @@ export default function DataExportPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">Export Name</label>
-                    <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., Monthly Patient Summary" />
+                    <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" placeholder="e.g., Monthly Patient Summary" />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">Format</label>
-                    <select value={newFormat} onChange={(e) => setNewFormat(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <select value={newFormat} onChange={(e) => setNewFormat(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400">
                       <option>CSV</option>
                       <option>JSON</option>
                       <option>FHIR Bundle</option>
@@ -300,11 +300,11 @@ export default function DataExportPage() {
                   </div>
                   <div>
                     <label htmlFor="admin-export-date-from" className="block text-xs font-medium text-gray-600 mb-1">Date From</label>
-                    <input id="admin-export-date-from" type="date" value={newDateFrom} onChange={(e) => setNewDateFrom(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    <input id="admin-export-date-from" type="date" value={newDateFrom} onChange={(e) => setNewDateFrom(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" />
                   </div>
                   <div>
                     <label htmlFor="admin-export-date-to" className="block text-xs font-medium text-gray-600 mb-1">Date To</label>
-                    <input id="admin-export-date-to" type="date" value={newDateTo} onChange={(e) => setNewDateTo(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    <input id="admin-export-date-to" type="date" value={newDateTo} onChange={(e) => setNewDateTo(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" />
                   </div>
                 </div>
                 <div className="mt-4">
@@ -323,7 +323,7 @@ export default function DataExportPage() {
                   <label htmlFor="recurring" className="text-xs text-gray-600">Schedule as recurring export</label>
                 </div>
                 <div className="flex items-center gap-3 pt-4">
-                  <button type="button" onClick={startExport} disabled={generateReport.isPending} className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50">Queue Export</button>
+                  <button type="button" onClick={startExport} disabled={generateReport.isPending} className="px-4 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 transition-colors disabled:opacity-50">Queue Export</button>
                   <button onClick={() => setShowForm(false)} className="px-4 py-2 text-sm font-medium text-gray-700 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors">Cancel</button>
                 </div>
               </div>
@@ -369,7 +369,7 @@ export default function DataExportPage() {
                           <td className="px-4 py-3">
                             <Link
                               href={`/reports/${job.id}`}
-                              className="text-gray-900 font-medium hover:text-blue-600 hover:underline"
+                              className="text-gray-900 font-medium hover:text-impilo-500 hover:underline"
                             >
                               {job.name}
                             </Link>
@@ -389,7 +389,7 @@ export default function DataExportPage() {
                           </td>
                           <td className="px-4 py-3">
                             {job.resultUrl ? (
-                              <a href={job.resultUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 px-2.5 py-1 text-xs text-blue-600 border border-blue-200 rounded hover:bg-blue-50 transition-colors">
+                              <a href={job.resultUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 px-2.5 py-1 text-xs text-impilo-500 border border-impilo-200 rounded hover:bg-impilo-50 transition-colors">
                                 <Download className="w-3 h-3" /> Download
                               </a>
                             ) : job.status === "Completed" ? (

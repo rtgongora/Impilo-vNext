@@ -123,10 +123,10 @@ export default function PatientSearchPage() {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Search by name, CPID, national ID, or date of birth..."
-                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
                 />
               </div>
-              <button type="submit" className="px-6 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
+              <button type="submit" className="px-6 py-2.5 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 transition-colors">
                 Search
               </button>
             </form>
@@ -142,7 +142,7 @@ export default function PatientSearchPage() {
             <div className="rounded-3xl border border-slate-200 bg-white p-12 text-center shadow-sm">
               <User className="mx-auto mb-3 h-10 w-10 text-slate-300" />
               <p className="text-sm text-slate-500">No patients found for &ldquo;{searchSubmitted}&rdquo;</p>
-              <Link href="/queue/walk-in" className="mt-3 inline-block text-sm text-blue-600 hover:text-blue-800">
+              <Link href="/queue/walk-in" className="mt-3 inline-block text-sm text-impilo-500 hover:text-impilo-700">
                 Register new patient
               </Link>
             </div>
@@ -165,8 +165,8 @@ export default function PatientSearchPage() {
                     <tr key={patient.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                            <User className="w-4 h-4 text-blue-600" />
+                          <div className="w-8 h-8 rounded-full bg-impilo-100 flex items-center justify-center">
+                            <User className="w-4 h-4 text-impilo-500" />
                           </div>
                           <div>
                             <span className="font-medium text-gray-900">{getPatientDisplayName(patient)}</span>
@@ -181,7 +181,7 @@ export default function PatientSearchPage() {
                         <div className="flex justify-end gap-2">
                           <Link
                             href={workflowCopy.primaryActionHref(patient.id)}
-                            className="inline-block rounded-xl bg-blue-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-blue-700"
+                            className="inline-block rounded-xl bg-impilo-500 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-impilo-600"
                           >
                             {workflowCopy.primaryActionLabel}
                           </Link>

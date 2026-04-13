@@ -62,7 +62,7 @@ const categoryConfig: Record<string, { label: string; color: string }> = {
   procedures: { label: "Procedures", color: "bg-teal-50 text-teal-700" },
   cases: { label: "Cases & Quizzes", color: "bg-orange-50 text-orange-700" },
   podcasts: { label: "Podcasts", color: "bg-pink-50 text-pink-700" },
-  guide: { label: "Guides", color: "bg-blue-50 text-blue-700" },
+  guide: { label: "Guides", color: "bg-impilo-50 text-impilo-600" },
   sop: { label: "SOPs", color: "bg-amber-50 text-amber-700" },
   protocol: { label: "Protocols", color: "bg-emerald-50 text-emerald-700" },
   checklist: { label: "Checklists", color: "bg-rose-50 text-rose-700" },
@@ -115,7 +115,7 @@ export function ClinicalReferences() {
       <button
         onClick={() => setOpen(!open)}
         className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
-          open ? "bg-blue-100 text-blue-700" : "text-gray-600 hover:bg-gray-100"
+          open ? "bg-impilo-100 text-impilo-600" : "text-gray-600 hover:bg-gray-100"
         }`}
       >
         <BookOpen className="w-3.5 h-3.5" />
@@ -138,7 +138,7 @@ export function ClinicalReferences() {
                   placeholder="Search references, guidelines, cases..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full h-8 pl-8 pr-3 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full h-8 pl-8 pr-3 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-impilo-400"
                 />
               </div>
             </div>
@@ -161,8 +161,8 @@ export function ClinicalReferences() {
                           onClick={() => { setOpen(false); router.push("/clinical-tools?tab=documents"); }}
                           className="w-full flex items-center gap-3 px-2 py-2 rounded-md hover:bg-gray-50 transition-colors text-left"
                         >
-                          <div className="h-7 w-7 rounded-md bg-blue-50 flex items-center justify-center shrink-0">
-                            <Icon className="h-3.5 w-3.5 text-blue-600" />
+                          <div className="h-7 w-7 rounded-md bg-impilo-50 flex items-center justify-center shrink-0">
+                            <Icon className="h-3.5 w-3.5 text-impilo-500" />
                           </div>
                           <div className="min-w-0 flex-1">
                             <p className="text-xs font-medium text-gray-900 leading-tight">{ref.label}</p>

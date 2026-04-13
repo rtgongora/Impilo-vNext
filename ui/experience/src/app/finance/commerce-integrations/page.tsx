@@ -65,7 +65,7 @@ export default function CommerceIntegrationsPage() {
                 <tbody className="divide-y divide-slate-100">
                   <tr>
                     <td className="px-3 py-2">
-                      <Link href="/marketplace" className="text-blue-700 hover:underline">
+                      <Link href="/marketplace" className="text-impilo-600 hover:underline">
                         /marketplace
                       </Link>{" "}
                       (+ catalog, orders, vendors, bookings)
@@ -79,7 +79,7 @@ export default function CommerceIntegrationsPage() {
                   </tr>
                   <tr>
                     <td className="px-3 py-2">
-                      <Link href="/marketplace/catalog" className="text-blue-700 hover:underline">
+                      <Link href="/marketplace/catalog" className="text-impilo-600 hover:underline">
                         /marketplace/catalog
                       </Link>{" "}
                       (MSIKA registry mode)
@@ -93,7 +93,7 @@ export default function CommerceIntegrationsPage() {
                   </tr>
                   <tr>
                     <td className="px-3 py-2">
-                      <Link href="/marketplace/orders/[id]" className="text-blue-700 hover:underline">
+                      <Link href="/marketplace/orders/[id]" className="text-impilo-600 hover:underline">
                         /marketplace/orders/[id]
                       </Link>{" "}
                       (MSIKA Flow order detail)
@@ -107,11 +107,11 @@ export default function CommerceIntegrationsPage() {
                   </tr>
                   <tr>
                     <td className="px-3 py-2">
-                      <Link href="/marketplace/pickup" className="text-blue-700 hover:underline">
+                      <Link href="/marketplace/pickup" className="text-impilo-600 hover:underline">
                         /marketplace/pickup
                       </Link>
                       {" "}and{" "}
-                      <Link href="/marketplace/substitutions" className="text-blue-700 hover:underline">
+                      <Link href="/marketplace/substitutions" className="text-impilo-600 hover:underline">
                         /marketplace/substitutions
                       </Link>
                     </td>
@@ -126,11 +126,11 @@ export default function CommerceIntegrationsPage() {
                   </tr>
                   <tr>
                     <td className="px-3 py-2">
-                      <Link href="/marketplace/vendor" className="text-blue-700 hover:underline">
+                      <Link href="/marketplace/vendor" className="text-impilo-600 hover:underline">
                         /marketplace/vendor
                       </Link>
                       ,{" "}
-                      <Link href="/marketplace/vendor/orders" className="text-blue-700 hover:underline">
+                      <Link href="/marketplace/vendor/orders" className="text-impilo-600 hover:underline">
                         /marketplace/vendor/orders
                       </Link>
                     </td>
@@ -143,7 +143,7 @@ export default function CommerceIntegrationsPage() {
                   </tr>
                   <tr>
                     <td className="px-3 py-2">
-                      <Link href="/marketplace/ops" className="text-blue-700 hover:underline">
+                      <Link href="/marketplace/ops" className="text-impilo-600 hover:underline">
                         /marketplace/ops
                       </Link>
                     </td>
@@ -156,7 +156,7 @@ export default function CommerceIntegrationsPage() {
                   </tr>
                   <tr>
                     <td className="px-3 py-2">
-                      <Link href="/finance/msika-governance" className="text-blue-700 hover:underline">
+                      <Link href="/finance/msika-governance" className="text-impilo-600 hover:underline">
                         /finance/msika-governance
                       </Link>
                     </td>
@@ -169,7 +169,7 @@ export default function CommerceIntegrationsPage() {
                   </tr>
                   <tr>
                     <td className="px-3 py-2">
-                      <Link href="/finance/settlements" className="text-blue-700 hover:underline">
+                      <Link href="/finance/settlements" className="text-impilo-600 hover:underline">
                         /finance/settlements
                       </Link>
                     </td>
@@ -182,7 +182,7 @@ export default function CommerceIntegrationsPage() {
                   </tr>
                   <tr>
                     <td className="px-3 py-2">
-                      <Link href="/finance/reconciliation" className="text-blue-700 hover:underline">
+                      <Link href="/finance/reconciliation" className="text-impilo-600 hover:underline">
                         /finance/reconciliation
                       </Link>
                     </td>
@@ -195,7 +195,7 @@ export default function CommerceIntegrationsPage() {
                   </tr>
                   <tr>
                     <td className="px-3 py-2">
-                      <Link href="/finance/refunds" className="text-blue-700 hover:underline">
+                      <Link href="/finance/refunds" className="text-impilo-600 hover:underline">
                         /finance/refunds
                       </Link>
                     </td>
@@ -208,7 +208,7 @@ export default function CommerceIntegrationsPage() {
                   </tr>
                   <tr>
                     <td className="px-3 py-2">
-                      <Link href="/finance/ledger" className="text-blue-700 hover:underline">
+                      <Link href="/finance/ledger" className="text-impilo-600 hover:underline">
                         /finance/ledger
                       </Link>
                     </td>
@@ -221,15 +221,15 @@ export default function CommerceIntegrationsPage() {
                   </tr>
                   <tr>
                     <td className="px-3 py-2">
-                      <Link href="/finance/payer-claims" className="text-blue-700 hover:underline">
+                      <Link href="/finance/payer-claims" className="text-impilo-600 hover:underline">
                         /finance/payer-claims
                       </Link>
                       ,{" "}
-                      <Link href="/finance/payer-ops" className="text-blue-700 hover:underline">
+                      <Link href="/finance/payer-ops" className="text-impilo-600 hover:underline">
                         /finance/payer-ops
                       </Link>
                       {" "}and{" "}
-                      <Link href="/finance/payer-claims/[claimId]" className="text-blue-700 hover:underline">
+                      <Link href="/finance/payer-claims/[claimId]" className="text-impilo-600 hover:underline">
                         /finance/payer-claims/[claimId]
                       </Link>
                     </td>
@@ -243,7 +243,7 @@ export default function CommerceIntegrationsPage() {
                   </tr>
                   <tr>
                     <td className="px-3 py-2">
-                      <Link href="/coverage" className="text-blue-700 hover:underline">
+                      <Link href="/coverage" className="text-impilo-600 hover:underline">
                         /coverage
                       </Link>
                     </td>
@@ -254,19 +254,19 @@ export default function CommerceIntegrationsPage() {
                   </tr>
                   <tr>
                     <td className="px-3 py-2">
-                      <Link href="/finance/billing" className="text-blue-700 hover:underline">
+                      <Link href="/finance/billing" className="text-impilo-600 hover:underline">
                         /finance/billing
                       </Link>
                       ,{" "}
-                      <Link href="/finance/payments" className="text-blue-700 hover:underline">
+                      <Link href="/finance/payments" className="text-impilo-600 hover:underline">
                         /finance/payments
                       </Link>
                       ,{" "}
-                      <Link href="/finance/claims" className="text-blue-700 hover:underline">
+                      <Link href="/finance/claims" className="text-impilo-600 hover:underline">
                         /finance/claims
                       </Link>
                       ,{" "}
-                      <Link href="/finance/tariffs" className="text-blue-700 hover:underline">
+                      <Link href="/finance/tariffs" className="text-impilo-600 hover:underline">
                         /finance/tariffs
                       </Link>
                     </td>
@@ -279,11 +279,11 @@ export default function CommerceIntegrationsPage() {
                   </tr>
                   <tr>
                     <td className="px-3 py-2">
-                      <Link href="/reports" className="text-blue-700 hover:underline">
+                      <Link href="/reports" className="text-impilo-600 hover:underline">
                         /reports
                       </Link>
                       ,{" "}
-                      <Link href="/admin/data-export" className="text-blue-700 hover:underline">
+                      <Link href="/admin/data-export" className="text-impilo-600 hover:underline">
                         /admin/data-export
                       </Link>
                     </td>
@@ -356,7 +356,7 @@ export default function CommerceIntegrationsPage() {
                     <td className="px-3 py-2">
                       Vendor queue wired in Experience via{" "}
                       <code className="text-xs">/internal/v1/commerce/vendor/*</code> (see{" "}
-                      <Link href="/marketplace/vendor/orders" className="text-blue-700 hover:underline">
+                      <Link href="/marketplace/vendor/orders" className="text-impilo-600 hover:underline">
                         /marketplace/vendor/orders
                       </Link>
                       ). Dedicated vendor SSO / actor plane is still out of scope here.
@@ -369,7 +369,7 @@ export default function CommerceIntegrationsPage() {
                     </td>
                     <td className="px-3 py-2">
                       Now covered in Experience via <code className="text-xs">/internal/v1/commerce/ops/*</code> and{" "}
-                      <Link href="/marketplace/ops" className="text-blue-700 hover:underline">
+                      <Link href="/marketplace/ops" className="text-impilo-600 hover:underline">
                         /marketplace/ops
                       </Link>
                       .
@@ -388,31 +388,31 @@ export default function CommerceIntegrationsPage() {
               Sidecars call <code className="text-xs">/mushex/v1/…</code> on the same API host as MSIKA. Experience still
               exposes <strong>no</strong> generic <code className="text-xs">/internal/v1/mushex/…</code> pass-through.
               Instead, typed finance routes proxy MusheX: ledger (
-              <Link href="/finance/ledger" className="text-blue-700 hover:underline">
+              <Link href="/finance/ledger" className="text-impilo-600 hover:underline">
                 /finance/ledger
               </Link>
               ), settlements (
-              <Link href="/finance/settlements" className="text-blue-700 hover:underline">
+              <Link href="/finance/settlements" className="text-impilo-600 hover:underline">
                 /finance/settlements
               </Link>
               ), recon (
-              <Link href="/finance/reconciliation" className="text-blue-700 hover:underline">
+              <Link href="/finance/reconciliation" className="text-impilo-600 hover:underline">
                 /finance/reconciliation
               </Link>
               ), refunds (
-              <Link href="/finance/refunds" className="text-blue-700 hover:underline">
+              <Link href="/finance/refunds" className="text-impilo-600 hover:underline">
                 /finance/refunds
               </Link>
               ), payer/ops (
-              <Link href="/finance/payer-ops" className="text-blue-700 hover:underline">
+              <Link href="/finance/payer-ops" className="text-impilo-600 hover:underline">
                 /finance/payer-ops
               </Link>
               ), payer claims queue (
-              <Link href="/finance/payer-claims" className="text-blue-700 hover:underline">
+              <Link href="/finance/payer-claims" className="text-impilo-600 hover:underline">
                 /finance/payer-claims
               </Link>
               ), payer claim detail (
-              <Link href="/finance/payer-claims/[claimId]" className="text-blue-700 hover:underline">
+              <Link href="/finance/payer-claims/[claimId]" className="text-impilo-600 hover:underline">
                 /finance/payer-claims/[claimId]
               </Link>
               ). Other MusheX paths outside these typed finance routes may still be absent.
@@ -471,7 +471,7 @@ export default function CommerceIntegrationsPage() {
             <p className="font-medium text-slate-800">Health intelligence (admin)</p>
             <p className="mt-1">
               Payer-side analytics that are not claims/remittance reporting remain scoped to{" "}
-              <Link href="/coverage" className="text-blue-700 hover:underline">
+              <Link href="/coverage" className="text-impilo-600 hover:underline">
                 Coverage → Intelligence
               </Link>{" "}
               tab, which only aggregates fields already returned by coverage remittance APIs — no synthetic fraud/MLR KPIs.

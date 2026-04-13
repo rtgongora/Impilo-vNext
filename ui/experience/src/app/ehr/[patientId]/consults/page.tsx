@@ -71,17 +71,17 @@ import { useQuery } from "@tanstack/react-query";
 
 const STATUS_STYLE: Record<string, string> = {
   PENDING: "bg-yellow-100 text-yellow-700",
-  ACCEPTED: "bg-blue-100 text-blue-700",
+  ACCEPTED: "bg-impilo-100 text-impilo-600",
   RESPONDED: "bg-purple-100 text-purple-700",
   COMPLETED: "bg-green-100 text-green-700",
   CANCELLED: "bg-gray-100 text-gray-600",
   IN_PROGRESS: "bg-green-100 text-green-700",
-  SCHEDULED: "bg-blue-100 text-blue-700" };
+  SCHEDULED: "bg-impilo-100 text-impilo-600" };
 
 const URGENCY_STYLE: Record<string, string> = {
   EMERGENCY: "bg-red-100 text-red-700",
   URGENT: "bg-orange-100 text-orange-700",
-  ROUTINE: "bg-blue-100 text-blue-700" };
+  ROUTINE: "bg-impilo-100 text-impilo-600" };
 
 const TAB_META: Record<
   ActiveTab,
@@ -541,12 +541,12 @@ export default function ConsultsPage() {
             <div className="rounded-3xl border border-slate-200 bg-[linear-gradient(135deg,#f8fbff_0%,#eef6ff_50%,#f8fafc_100%)] p-5 shadow-sm">
               <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
                 <div className="flex items-start gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-100 text-blue-700">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-impilo-100 text-impilo-600">
                     <Workflow className="w-5 h-5" />
                   </div>
                   <div>
                     <div className="inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1 text-xs font-medium text-slate-600">
-                      <Sparkles className="h-3.5 w-3.5 text-blue-600" />
+                      <Sparkles className="h-3.5 w-3.5 text-impilo-500" />
                       Unified consults workspace
                     </div>
                     <h3 className="mt-3 text-xl font-semibold text-slate-900">{patient.attributes.displayName}</h3>
@@ -567,7 +567,7 @@ export default function ConsultsPage() {
                         </span>
                       )}
                       {facility && (
-                        <span className="rounded-full bg-blue-50 px-3 py-1 font-medium text-blue-700">
+                        <span className="rounded-full bg-impilo-50 px-3 py-1 font-medium text-impilo-600">
                           {facility.name}
                         </span>
                       )}
@@ -597,7 +597,7 @@ export default function ConsultsPage() {
                         : nextAction.tone === "purple"
                           ? "bg-purple-100 text-purple-700"
                           : nextAction.tone === "blue"
-                            ? "bg-blue-100 text-blue-700"
+                            ? "bg-impilo-100 text-impilo-600"
                             : nextAction.tone === "amber"
                               ? "bg-amber-100 text-amber-700"
                               : "bg-slate-100 text-slate-700"
@@ -649,7 +649,7 @@ export default function ConsultsPage() {
             </Link>
             <Link
               href="/telemedicine"
-              className="inline-flex items-center gap-2 px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+              className="inline-flex items-center gap-2 px-3 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 transition-colors"
             >
               <Video className="w-4 h-4" />
               Telemedicine Hub
@@ -665,7 +665,7 @@ export default function ConsultsPage() {
                   onClick={() => setActiveTab(tab.key)}
                   className={`flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
                     activeTab === tab.key
-                      ? "border-blue-600 text-blue-600"
+                      ? "border-impilo-500 text-impilo-500"
                       : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                   }`}
                 >
@@ -673,7 +673,7 @@ export default function ConsultsPage() {
                   {tab.label}
                   {tab.count > 0 && (
                     <span className={`px-1.5 py-0.5 text-xs rounded-full ${
-                      activeTab === tab.key ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-600"
+                      activeTab === tab.key ? "bg-impilo-100 text-impilo-600" : "bg-gray-100 text-gray-600"
                     }`}>
                       {tab.count}
                     </span>
@@ -703,7 +703,7 @@ export default function ConsultsPage() {
                     <h3 className="text-base font-semibold text-gray-900">Consultation Requests</h3>
                     <button
                       onClick={() => setShowNewConsult((v) => !v)}
-                      className="inline-flex items-center gap-1.5 px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                      className="inline-flex items-center gap-1.5 px-3 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 transition-colors"
                     >
                       <Plus className="w-4 h-4" />
                       Request Consult
@@ -764,7 +764,7 @@ export default function ConsultsPage() {
                     <h3 className="text-base font-semibold text-gray-900">Referral Tracking</h3>
                     <button
                       onClick={() => setShowNewReferral((v) => !v)}
-                      className="inline-flex items-center gap-1.5 px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                      className="inline-flex items-center gap-1.5 px-3 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 transition-colors"
                     >
                       <Plus className="w-4 h-4" />
                       New Referral
@@ -796,7 +796,7 @@ export default function ConsultsPage() {
                               <button
                                 type="button"
                                 onClick={() => toggleReferralAction(acceptedInboundReferrals[0], "respond")}
-                                className="rounded-full bg-blue-100 px-3 py-1 font-medium text-blue-800 transition-colors hover:bg-blue-200"
+                                className="rounded-full bg-impilo-100 px-3 py-1 font-medium text-impilo-700 transition-colors hover:bg-impilo-200"
                               >
                                 Draft response
                               </button>
@@ -841,7 +841,7 @@ export default function ConsultsPage() {
                           item.tone === "amber"
                             ? "text-amber-700"
                             : item.tone === "blue"
-                              ? "text-blue-700"
+                              ? "text-impilo-600"
                               : "text-purple-700"
                         }`}>{item.value}</p>
                         <p className="mt-1 text-xs leading-5 text-slate-500">{item.note}</p>
@@ -1001,9 +1001,9 @@ export default function ConsultsPage() {
 
                   {/* Upcoming Sessions — Lovable pattern */}
                   {patientSessions.filter((s) => s.attributes.status === "SCHEDULED").length > 0 && (
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
+                    <div className="bg-impilo-50 border border-impilo-200 rounded-lg p-4 space-y-3">
                       <h4 className="text-sm font-medium text-gray-900 flex items-center gap-2">
-                        <Clock className="w-4 h-4 text-blue-600" />
+                        <Clock className="w-4 h-4 text-impilo-500" />
                         Upcoming Sessions
                       </h4>
                       {patientSessions
@@ -1012,7 +1012,7 @@ export default function ConsultsPage() {
                           <div key={s.id} className="flex items-center justify-between p-3 bg-white rounded-lg border">
                             <div className="flex items-center gap-3">
                               <div className="p-2 rounded-full bg-blue-100">
-                                <Video className="w-4 h-4 text-blue-600" />
+                                <Video className="w-4 h-4 text-impilo-500" />
                               </div>
                               <div>
                                 <p className="text-sm font-medium">{s.attributes.session_type} Teleconsult</p>
@@ -1023,7 +1023,7 @@ export default function ConsultsPage() {
                             </div>
                             <Link
                               href={`/telemedicine/session/${s.id}`}
-                              className="px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                              className="px-3 py-1.5 bg-impilo-500 text-white text-xs font-medium rounded-lg hover:bg-impilo-600 transition-colors"
                             >
                               Join
                             </Link>
@@ -1038,7 +1038,7 @@ export default function ConsultsPage() {
                     <button
                       onClick={() => openTeleconsultComposer("VIDEO")}
                       disabled={createSession.isPending || !facility}
-                      className="inline-flex items-center gap-1.5 px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                      className="inline-flex items-center gap-1.5 px-3 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 disabled:opacity-50 transition-colors"
                     >
                       <Video className="w-4 h-4" />
                       Schedule Teleconsult
@@ -1046,7 +1046,7 @@ export default function ConsultsPage() {
                   </div>
 
                   {showTeleconsultComposer && (
-                    <div className="rounded-2xl border border-blue-200 bg-blue-50/70 p-4">
+                    <div className="rounded-2xl border border-impilo-200 bg-impilo-50/70 p-4">
                       <div className="flex flex-col gap-4">
                         <div>
                           <h4 className="text-sm font-semibold text-slate-900">Teleconsult launch</h4>
@@ -1074,7 +1074,7 @@ export default function ConsultsPage() {
                                   onClick={() => setTeleconsultMode(mode)}
                                   className={`rounded-xl border px-3 py-2 text-sm font-medium transition-colors ${
                                     teleconsultMode === mode
-                                      ? "border-blue-500 bg-blue-600 text-white"
+                                      ? "border-impilo-400 bg-impilo-500 text-white"
                                       : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
                                   }`}
                                 >
@@ -1093,7 +1093,7 @@ export default function ConsultsPage() {
                               type="datetime-local"
                               value={teleconsultScheduledAt}
                               onChange={(event) => setTeleconsultScheduledAt(event.target.value)}
-                              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-impilo-400"
                             />
                             <p className="mt-1 text-xs text-slate-500">
                               Leave blank to create a ready-to-start teleconsult now.
@@ -1110,7 +1110,7 @@ export default function ConsultsPage() {
                               id="teleconsultReferralId"
                               value={teleconsultReferralId}
                               onChange={(event) => setTeleconsultReferralId(event.target.value)}
-                              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-impilo-400"
                             >
                               <option value="">No linked referral</option>
                               {teleconsultReferralOptions.map((referral) => (
@@ -1131,7 +1131,7 @@ export default function ConsultsPage() {
                               onChange={(event) => setTeleconsultNotes(event.target.value)}
                               rows={3}
                               placeholder="Clinical question, objectives, or prep notes..."
-                              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-impilo-400"
                             />
                           </div>
                         </div>
@@ -1141,7 +1141,7 @@ export default function ConsultsPage() {
                             type="button"
                             onClick={() => handleScheduleTeleconsult(teleconsultMode)}
                             disabled={createSession.isPending || !facility}
-                            className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+                            className="inline-flex items-center gap-2 rounded-xl bg-impilo-500 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-impilo-600 disabled:opacity-50"
                           >
                             {createSession.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Video className="h-4 w-4" />}
                             {teleconsultScheduledAt ? "Schedule session" : "Create session"}
@@ -1279,13 +1279,13 @@ function ReferralCard({
 
   return (
     <div className={`rounded-2xl border p-4 shadow-sm transition-colors ${
-      isActionOpen ? "border-blue-300 bg-blue-50/40" : "border-gray-200 bg-white hover:bg-gray-50"
+      isActionOpen ? "border-impilo-200 bg-impilo-50/40" : "border-gray-200 bg-white hover:bg-gray-50"
     }`}>
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 space-y-2">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-full bg-blue-50">
-              <Building2 className="w-4 h-4 text-blue-600" />
+            <div className="p-2 rounded-full bg-impilo-50">
+              <Building2 className="w-4 h-4 text-impilo-500" />
             </div>
             <div className="flex-1">
               <h4 className="font-semibold text-sm text-gray-900">{a.specialty || a.referralType}</h4>
@@ -1301,7 +1301,7 @@ function ReferralCard({
             stageCopy.tone === "amber"
               ? "border-amber-200 bg-amber-50"
               : stageCopy.tone === "blue"
-                ? "border-blue-200 bg-blue-50"
+                ? "border-impilo-200 bg-impilo-50"
                 : stageCopy.tone === "purple"
                   ? "border-purple-200 bg-purple-50"
                   : stageCopy.tone === "green"
@@ -1311,7 +1311,7 @@ function ReferralCard({
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-sm font-semibold text-slate-900">{stageCopy.title}</span>
               <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-medium ${
-                isReceivingContext ? "bg-white text-blue-700" : "bg-white text-slate-700"
+                isReceivingContext ? "bg-white text-impilo-600" : "bg-white text-slate-700"
               }`}>
                 {isReceivingContext ? "Receiving side" : "Referring side"}
               </span>
@@ -1328,7 +1328,7 @@ function ReferralCard({
               <div className="flex gap-0.5">
                 {[1, 2, 3, 4, 5, 6, 7].map((s) => (
                   <div key={s} className={`h-1.5 flex-1 rounded-full ${
-                    s <= wf.stage ? (s === wf.stage ? "bg-blue-600" : "bg-green-500") : "bg-gray-200"
+                    s <= wf.stage ? (s === wf.stage ? "bg-impilo-500" : "bg-green-500") : "bg-gray-200"
                   }`} />
                 ))}
               </div>
@@ -1385,7 +1385,7 @@ function ReferralCard({
             <div className="flex items-center gap-4 text-xs text-gray-400">
               <span>Created: {new Date(a.createdAt).toLocaleDateString()}</span>
               {(a.acceptedAt || a.accepted_at) && (
-                <span className="text-blue-600">Accepted: {new Date((a.acceptedAt ?? a.accepted_at)!).toLocaleDateString()}</span>
+                <span className="text-impilo-500">Accepted: {new Date((a.acceptedAt ?? a.accepted_at)!).toLocaleDateString()}</span>
               )}
               {(a.respondedAt || a.responded_at) && (
                 <span className="text-purple-600">Responded: {new Date((a.respondedAt ?? a.responded_at)!).toLocaleDateString()}</span>
@@ -1419,7 +1419,7 @@ function ReferralCard({
           {canRespond && (
             <button
               onClick={onRespond}
-              className="flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-blue-700"
+              className="flex items-center gap-1 rounded-lg bg-impilo-500 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-impilo-600"
             >
               <MessageSquare className="w-3 h-3" /> Add Response
             </button>
@@ -1488,7 +1488,7 @@ function ReferralWorkflowPanel({
           isAccept
             ? "bg-amber-100 text-amber-700"
             : isRespond
-              ? "bg-blue-100 text-blue-700"
+              ? "bg-impilo-100 text-impilo-600"
               : "bg-purple-100 text-purple-700"
         }`}>
           {isAccept ? (
@@ -1562,7 +1562,7 @@ function ReferralWorkflowPanel({
               id={`referral-outcome-${referral.id}`}
               value={outcome}
               onChange={(event) => onOutcomeChange(event.target.value as ReferralOutcome)}
-              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-impilo-400"
             >
               <option value="">Select outcome...</option>
               <option value="TREATED">Treated - patient managed</option>
@@ -1585,7 +1585,7 @@ function ReferralWorkflowPanel({
               value={responseNotes}
               onChange={(event) => onResponseNotesChange(event.target.value)}
               placeholder="Assessment findings, treatment provided, follow-up, or recommendations..."
-              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-impilo-400"
             />
           </div>
         )}
@@ -1613,7 +1613,7 @@ function ReferralWorkflowPanel({
               type="button"
               onClick={onRespond}
               disabled={isResponding || !responseNotes.trim()}
-              className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-xl bg-impilo-500 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-impilo-600 disabled:opacity-50"
             >
               {isResponding ? <Loader2 className="h-4 w-4 animate-spin" /> : <MessageSquare className="h-4 w-4" />}
               Send specialist response
@@ -1652,8 +1652,8 @@ function TeleconsultCard({ session }: { session: TelemedicineSession }) {
     <div className="bg-white rounded-lg border border-gray-200 p-4 hover:bg-gray-50 transition-colors">
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-3 flex-1">
-          <div className={`p-2 rounded-full ${a.status === "IN_PROGRESS" ? "bg-green-100" : "bg-blue-50"}`}>
-            <Video className={`w-4 h-4 ${a.status === "IN_PROGRESS" ? "text-green-600" : "text-blue-600"}`} />
+          <div className={`p-2 rounded-full ${a.status === "IN_PROGRESS" ? "bg-green-100" : "bg-impilo-50"}`}>
+            <Video className={`w-4 h-4 ${a.status === "IN_PROGRESS" ? "text-green-600" : "text-impilo-500"}`} />
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-2">
@@ -1668,7 +1668,7 @@ function TeleconsultCard({ session }: { session: TelemedicineSession }) {
                   {new Date(a.scheduled_at).toLocaleString()}
                 </span>
               )}
-              {a.referral_id && <span className="text-blue-600">Linked to referral</span>}
+              {a.referral_id && <span className="text-impilo-500">Linked to referral</span>}
               {a.duration_seconds != null && a.duration_seconds > 0 && (
                 <span>{Math.round(a.duration_seconds / 60)} min</span>
               )}

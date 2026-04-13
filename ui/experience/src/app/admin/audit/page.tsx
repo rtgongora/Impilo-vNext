@@ -79,7 +79,7 @@ export default function AuditTrailPage() {
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="inline-block px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-700">
+                        <span className="inline-block px-2 py-0.5 text-xs rounded-full bg-impilo-100 text-impilo-600">
                           {entry.attributes.action}
                         </span>
                       </td>
@@ -89,7 +89,7 @@ export default function AuditTrailPage() {
                       <td className="px-4 py-3">
                         <Link
                           href={`/admin/audit/${entry.id}`}
-                          className="text-blue-600 hover:text-blue-800 font-mono text-xs"
+                          className="text-impilo-500 hover:text-impilo-700 font-mono text-xs"
                         >
                           {entry.attributes.resourceId}
                         </Link>

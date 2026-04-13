@@ -162,7 +162,7 @@ export default function ReportDetailPage() {
           <div className="max-w-2xl space-y-6">
             {attrs.report_type === "ADMIN_DATA_EXPORT" && (
               <p className="text-xs text-gray-600">
-                <Link href="/admin/data-export" className="font-medium text-blue-700 hover:underline">
+                <Link href="/admin/data-export" className="font-medium text-impilo-600 hover:underline">
                   All data export jobs
                 </Link>
                 <span className="text-gray-500">
@@ -174,8 +174,8 @@ export default function ReportDetailPage() {
             <div className="bg-white rounded-lg border border-gray-200 p-5">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-start gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
-                    <FileText className="w-5 h-5 text-blue-600" />
+                  <div className="w-10 h-10 rounded-lg bg-impilo-100 flex items-center justify-center shrink-0">
+                    <FileText className="w-5 h-5 text-impilo-500" />
                   </div>
                   <div className="min-w-0">
                     <h3 className="font-medium text-gray-900">
@@ -186,7 +186,7 @@ export default function ReportDetailPage() {
                       type="button"
                       aria-label="Copy report job id"
                       onClick={() => void copyJobId(job.id)}
-                      className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-blue-700 hover:text-blue-900"
+                      className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-impilo-600 hover:text-impilo-800"
                     >
                       <Copy className="w-3.5 h-3.5" />
                       {copyState === "copied" ? "Copied" : copyState === "failed" ? "Copy unavailable" : "Copy job ID"}
@@ -272,7 +272,7 @@ export default function ReportDetailPage() {
                   href={attrs.result_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-impilo-500 text-white rounded-lg text-sm font-medium hover:bg-impilo-600"
                 >
                   <Download className="w-4 h-4" />
                   Open download

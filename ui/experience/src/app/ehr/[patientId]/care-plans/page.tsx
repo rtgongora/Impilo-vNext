@@ -25,7 +25,7 @@ import { useFacilityStore } from "@/hooks/useFacilityStore";
 
 const STATUS_STYLES: Record<string, string> = {
   Active: "bg-green-100 text-green-700",
-  Completed: "bg-blue-100 text-blue-700",
+  Completed: "bg-impilo-100 text-impilo-600",
   Draft: "bg-gray-100 text-gray-600",
 };
 
@@ -68,7 +68,7 @@ export default function CarePlansPage() {
             <button
               type="button"
               onClick={() => void refetch()}
-              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              className="rounded-lg bg-impilo-500 px-4 py-2 text-sm font-medium text-white hover:bg-impilo-600"
             >
               Retry
             </button>
@@ -129,14 +129,14 @@ export default function CarePlansPage() {
 
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <ClipboardList className="h-5 w-5 text-blue-600" />
+                <ClipboardList className="h-5 w-5 text-impilo-500" />
                 <h2 className="text-lg font-semibold text-gray-900">Care Plans</h2>
                 <span className="text-sm text-gray-500">({carePlans.length})</span>
               </div>
               <button
                 type="button"
                 onClick={() => setShowForm((prev) => !prev)}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-impilo-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-impilo-600"
               >
                 <Plus className="h-4 w-4" />
                 New Care Plan
@@ -155,11 +155,11 @@ export default function CarePlansPage() {
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                     <div>
                       <label className="mb-1 block text-xs font-medium text-gray-600">Plan Title</label>
-                      <input type="text" value={formTitle} onChange={(e) => setFormTitle(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g. Diabetes Management" />
+                      <input type="text" value={formTitle} onChange={(e) => setFormTitle(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" placeholder="e.g. Diabetes Management" />
                     </div>
                     <div>
                       <label className="mb-1 block text-xs font-medium text-gray-600">Category</label>
-                      <select value={formCategory} onChange={(e) => setFormCategory(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                      <select value={formCategory} onChange={(e) => setFormCategory(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400">
                         <option value="">Select category</option>
                         <option value="Chronic Disease">Chronic Disease</option>
                         <option value="Cardiovascular">Cardiovascular</option>
@@ -170,11 +170,11 @@ export default function CarePlansPage() {
                     </div>
                     <div>
                       <label className="mb-1 block text-xs font-medium text-gray-600">Target Date</label>
-                      <input type="date" value={formTargetDate} onChange={(e) => setFormTargetDate(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                      <input type="date" value={formTargetDate} onChange={(e) => setFormTargetDate(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" />
                     </div>
                   </div>
                   <div className="flex items-center gap-3 pt-2">
-                    <button type="submit" className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700">Create Plan</button>
+                    <button type="submit" className="inline-flex items-center gap-1.5 rounded-lg bg-impilo-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-impilo-600">Create Plan</button>
                     <button type="button" onClick={() => setShowForm(false)} className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50">Cancel</button>
                   </div>
                 </form>
@@ -198,7 +198,7 @@ export default function CarePlansPage() {
                         className="flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-gray-50"
                       >
                         <div className="flex items-center gap-3">
-                          <ClipboardList className="h-5 w-5 text-blue-600" />
+                          <ClipboardList className="h-5 w-5 text-impilo-500" />
                           <div>
                             <div className="font-medium text-gray-900">{plan.title}</div>
                             <div className="text-xs text-gray-500">
@@ -234,7 +234,7 @@ export default function CarePlansPage() {
                                 <div key={goal.id} className="flex items-center gap-3">
                                   <span className="w-48 truncate text-sm text-gray-700">{goal.description}</span>
                                   <div className="h-2 flex-1 rounded-full bg-gray-100">
-                                    <div className="h-2 rounded-full bg-blue-500 transition-all" style={{ width: `${goal.progress}%` }} />
+                                    <div className="h-2 rounded-full bg-impilo-500 transition-all" style={{ width: `${goal.progress}%` }} />
                                   </div>
                                   <span className="w-10 text-right text-xs text-gray-500">{goal.progress}%</span>
                                 </div>

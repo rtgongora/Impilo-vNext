@@ -112,13 +112,13 @@ export default function DietPage() {
           {/* Water tracker + targets sidebar */}
           <div className="space-y-4">
             <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-5 text-center">
-              <Droplets className="h-8 w-8 text-blue-500 mx-auto mb-2" />
+              <Droplets className="h-8 w-8 text-impilo-400 mx-auto mb-2" />
               <h3 className="font-semibold text-gray-800 mb-1">Water Intake</h3>
-              <p className="text-3xl font-bold text-blue-600">{water}<span className="text-base font-normal text-gray-500"> / 8 glasses</span></p>
-              <div className="h-3 mt-2 rounded-full bg-blue-100 overflow-hidden"><div className="h-full rounded-full bg-blue-500 transition-all" style={{ width: `${Math.min((water / 8) * 100, 100)}%` }} /></div>
+              <p className="text-3xl font-bold text-impilo-500">{water}<span className="text-base font-normal text-gray-500"> / 8 glasses</span></p>
+              <div className="h-3 mt-2 rounded-full bg-blue-100 overflow-hidden"><div className="h-full rounded-full bg-impilo-500 transition-all" style={{ width: `${Math.min((water / 8) * 100, 100)}%` }} /></div>
               <div className="flex justify-center gap-4 mt-4">
-                <button onClick={() => setWater(Math.max(0, water - 1))} className="h-10 w-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center hover:bg-blue-200"><Minus className="h-5 w-5" /></button>
-                <button onClick={() => setWater(water + 1)} className="h-10 w-10 rounded-full bg-blue-500 text-white flex items-center justify-center hover:bg-blue-600"><Plus className="h-5 w-5" /></button>
+                <button onClick={() => setWater(Math.max(0, water - 1))} className="h-10 w-10 rounded-full bg-impilo-100 text-impilo-600 flex items-center justify-center hover:bg-impilo-200"><Minus className="h-5 w-5" /></button>
+                <button onClick={() => setWater(water + 1)} className="h-10 w-10 rounded-full bg-impilo-500 text-white flex items-center justify-center hover:bg-impilo-500"><Plus className="h-5 w-5" /></button>
               </div>
             </div>
             <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-5 space-y-3">

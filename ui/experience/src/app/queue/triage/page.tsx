@@ -75,8 +75,8 @@ const ACUITY_LEVELS = [
     level: 5,
     label: "Blue",
     desc: "Non-urgent",
-    color: "border-blue-400 bg-blue-50 text-blue-700",
-    active: "border-blue-500 bg-blue-100 ring-2 ring-blue-300",
+    color: "border-impilo-400 bg-impilo-50 text-impilo-600",
+    active: "border-impilo-400 bg-blue-100 ring-2 ring-impilo-300",
   },
 ];
 
@@ -419,7 +419,7 @@ export default function TriageQueuePage() {
                                   type="button"
                                   onClick={() => handleStartHandoff(entry)}
                                   disabled={callPatient.isPending}
-                                  className="rounded-xl bg-blue-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+                                  className="rounded-xl bg-impilo-500 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-impilo-600 disabled:opacity-50"
                                 >
                                   {COORDINATION_COPY.startEncounterHandoff}
                                 </button>

@@ -67,7 +67,7 @@ export default function CustomReportsPage() {
             <select
               value={reportType}
               onChange={(e) => setReportType(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
             >
               {REPORT_TYPES.map((rt) => (
                 <option key={rt.value} value={rt.value}>{rt.label}</option>
@@ -87,7 +87,7 @@ export default function CustomReportsPage() {
                   type="date"
                   value={dateFrom}
                   onChange={(e) => setDateFrom(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
                 />
               </div>
               <div>
@@ -96,7 +96,7 @@ export default function CustomReportsPage() {
                   type="date"
                   value={dateTo}
                   onChange={(e) => setDateTo(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
                 />
               </div>
             </div>
@@ -111,7 +111,7 @@ export default function CustomReportsPage() {
                 <select
                   value={groupBy}
                   onChange={(e) => setGroupBy(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
                 >
                   <option value="day">Day</option>
                   <option value="week">Week</option>
@@ -124,7 +124,7 @@ export default function CustomReportsPage() {
                 <select
                   value={outputFormat}
                   onChange={(e) => setOutputFormat(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
                 >
                   {OUTPUT_FORMATS.map((f) => (
                     <option key={f.value} value={f.value}>{f.label}</option>
@@ -148,7 +148,7 @@ export default function CustomReportsPage() {
             <button
               onClick={handleGenerate}
               disabled={!dateFrom || !dateTo || generateReport.isPending}
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-impilo-500 text-white rounded-lg text-sm font-medium hover:bg-impilo-600 disabled:opacity-50"
             >
               {generateReport.isPending ? (
                 <Loader2 className="w-4 h-4 animate-spin" />

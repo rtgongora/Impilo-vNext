@@ -64,7 +64,7 @@ export default function IdServicesPage() {
             return (
               <button key={tab.key} onClick={() => setActiveTab(tab.key)}
                 className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === tab.key ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-700"
+                  activeTab === tab.key ? "border-impilo-500 text-impilo-500" : "border-transparent text-gray-500 hover:text-gray-700"
                 }`}>
                 <Icon className="w-4 h-4" /> {tab.label}
               </button>
@@ -264,7 +264,7 @@ function ValidateTab() {
         <div className="flex gap-3 mb-4">
           {(["patient", "provider", "facility"] as const).map((t) => (
             <button key={t} onClick={() => setIdType(t)}
-              className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${idType === t ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
+              className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${idType === t ? "bg-impilo-500 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
               {t === "patient" ? "Patient PHID" : t === "provider" ? "Provider ID" : "Facility ID"}
             </button>
           ))}
@@ -274,7 +274,7 @@ function ValidateTab() {
             placeholder={`Enter ${idType === "patient" ? "PHID or CPID" : idType === "provider" ? "Provider ID" : "Facility ID"}`}
             className="flex-1 px-4 py-3 text-sm border border-gray-300 rounded-lg font-mono" />
           <button onClick={() => resolve.mutate(healthId)} disabled={resolve.isPending || !healthId || idType === "facility"}
-            className="px-6 py-3 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2">
+            className="px-6 py-3 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 disabled:opacity-50 flex items-center gap-2">
             {resolve.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />} Validate
           </button>
         </div>
@@ -380,7 +380,7 @@ function RecoveryTab() {
     <div className="space-y-6">
       <div className="flex gap-2 mb-2">
         <button onClick={() => { setRecoveryType("patient"); setMethod("phone_otp"); setStep("form"); }}
-          className={`px-4 py-2 text-sm font-medium rounded-lg ${recoveryType === "patient" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600"}`}>
+          className={`px-4 py-2 text-sm font-medium rounded-lg ${recoveryType === "patient" ? "bg-impilo-500 text-white" : "bg-gray-100 text-gray-600"}`}>
           Patient PHID Recovery
         </button>
         <button onClick={() => { setRecoveryType("provider"); setMethod("phone_otp"); setStep("form"); }}
@@ -397,7 +397,7 @@ function RecoveryTab() {
             return (
               <button key={m.key} onClick={() => { setMethod(m.key); setStep("form"); }}
                 className={`w-full flex items-center gap-2 px-3 py-2.5 text-sm rounded-lg transition-colors ${
-                  method === m.key ? "bg-blue-50 text-blue-700 font-medium" : "text-gray-600 hover:bg-gray-50"
+                  method === m.key ? "bg-impilo-50 text-impilo-600 font-medium" : "text-gray-600 hover:bg-gray-50"
                 }`}>
                 <MIcon className="w-4 h-4" /> {m.label}
               </button>
@@ -513,7 +513,7 @@ function RecoveryTab() {
               <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-3" />
               <h4 className="text-base font-semibold text-gray-900">ID Recovered Successfully</h4>
               <p className="text-sm text-gray-500 mt-1">Your health ID has been recovered and verified.</p>
-              <button onClick={() => { setStep("form"); setOtp(""); }} className="mt-4 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700">Start New Recovery</button>
+              <button onClick={() => { setStep("form"); setOtp(""); }} className="mt-4 px-4 py-2 bg-impilo-500 text-white text-sm rounded-lg hover:bg-impilo-600">Start New Recovery</button>
             </div>
           )}
         </div>
@@ -623,7 +623,7 @@ function BatchTab() {
 // ── ARCHITECTURE TAB ─────────────────────────────────────────────
 function ArchitectureTab() {
   const cards = [
-    { title: "Patient PHID Architecture", color: "border-blue-200 bg-blue-50",
+    { title: "Patient PHID Architecture", color: "border-impilo-200 bg-impilo-50",
       points: ["Portable Token — PHID travels with the patient across facilities", "Biometric = PHID — fingerprint/face binds to unique identity", "Multi-Recovery — 5 recovery methods for lost IDs"],
       flow: "PHID → Client Registry ID → SHR ID → Health Record" },
     { title: "Provider ID Architecture", color: "border-teal-200 bg-teal-50",

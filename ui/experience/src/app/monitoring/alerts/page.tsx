@@ -24,7 +24,7 @@ export default function MonitoringAlertsPage() {
             {[
               { label: "Critical", count: 0, color: "border-red-200 bg-red-50 text-red-700" },
               { label: "Warning", count: 0, color: "border-amber-200 bg-amber-50 text-amber-700" },
-              { label: "Info", count: 0, color: "border-blue-200 bg-blue-50 text-blue-700" },
+              { label: "Info", count: 0, color: "border-impilo-200 bg-impilo-50 text-impilo-600" },
             ].map(({ label, count, color }) => (
               <div key={label} className={`rounded-lg border p-4 text-center ${color}`}>
                 <p className="text-2xl font-bold">{count}</p>

@@ -26,7 +26,7 @@ interface AssuranceStatus {
 
 const STATE_LABELS: Record<string, { label: string; color: string }> = {
   SELF_REGISTERED: { label: "Self-Registered", color: "border-amber-300 bg-amber-50 text-amber-900" },
-  ASSISTED_REGISTRATION: { label: "Assisted Registration", color: "border-blue-300 bg-blue-50 text-blue-900" },
+  ASSISTED_REGISTRATION: { label: "Assisted Registration", color: "border-impilo-200 bg-impilo-50 text-impilo-800" },
   FACILITY_CONFIRMED: { label: "Facility Confirmed", color: "border-green-300 bg-green-50 text-green-900" },
   REGISTRY_MATCHED: { label: "Registry Matched", color: "border-green-400 bg-green-50 text-green-900" },
   COUNCIL_VALIDATED: { label: "Council Validated", color: "border-emerald-400 bg-emerald-50 text-emerald-900" },

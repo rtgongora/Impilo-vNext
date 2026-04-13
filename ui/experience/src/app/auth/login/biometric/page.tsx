@@ -74,7 +74,7 @@ export default function BiometricLoginPage() {
 
   const stateStyles: Record<VerifyState, string> = {
     idle: "border-gray-300 text-gray-400 bg-gray-50",
-    verifying: "border-blue-400 text-blue-500 bg-blue-50 animate-pulse",
+    verifying: "border-impilo-400 text-impilo-400 bg-impilo-50 animate-pulse",
     success: "border-green-400 text-green-500 bg-green-50",
     error: "border-red-400 text-red-500 bg-red-50",
   };
@@ -136,7 +136,7 @@ export default function BiometricLoginPage() {
         type="button"
         onClick={handleVerify}
         disabled={verifyState === "verifying" || verifyState === "success"}
-        className="w-full py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
+        className="w-full py-2.5 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
       >
         {verifyState === "verifying" ? (
           <>

@@ -133,7 +133,7 @@ function OverviewTab() {
 }
 
 function SummaryCard({ label, value, helper, tone }: { label: string; value: string; helper: string; tone: "teal" | "amber" | "blue" | "green" | "purple" | "indigo" }) {
-  const toneClasses: Record<string, string> = { teal: "bg-teal-50 text-teal-900", amber: "bg-amber-50 text-amber-900", blue: "bg-blue-50 text-blue-900", green: "bg-green-50 text-green-900", purple: "bg-purple-50 text-purple-900", indigo: "bg-indigo-50 text-indigo-900" };
+  const toneClasses: Record<string, string> = { teal: "bg-teal-50 text-teal-900", amber: "bg-amber-50 text-amber-900", blue: "bg-impilo-50 text-impilo-800", green: "bg-green-50 text-green-900", purple: "bg-purple-50 text-purple-900", indigo: "bg-indigo-50 text-indigo-900" };
   return <div className={`rounded-lg p-4 ${toneClasses[tone]}`}><p className="text-xs font-medium uppercase tracking-wide opacity-70">{label}</p><p className="mt-1 text-2xl font-semibold">{value}</p><p className="mt-1 text-xs opacity-80">{helper}</p></div>;
 }
 

@@ -177,7 +177,7 @@ export default function ClinicalHistoryPage() {
             {activeEncounter && typeof (activeEncounter.attributes as Record<string, unknown>).chief_complaint === "string" && (
               <div className="bg-white rounded-lg border border-gray-200 p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <FileText className="w-4 h-4 text-blue-500" />
+                  <FileText className="w-4 h-4 text-impilo-400" />
                   <h3 className="text-sm font-medium text-gray-900">Presenting Complaint</h3>
                 </div>
                 <p className="text-sm text-gray-700">
@@ -251,7 +251,7 @@ export default function ClinicalHistoryPage() {
                     ))}
                   </div>
                 )}
-                <Link href={`/ehr/${patientId}/conditions`} className="mt-2 inline-block text-xs text-blue-600 hover:text-blue-800">
+                <Link href={`/ehr/${patientId}/conditions`} className="mt-2 inline-block text-xs text-impilo-500 hover:text-impilo-700">
                   Manage conditions
                 </Link>
               </div>
@@ -278,7 +278,7 @@ export default function ClinicalHistoryPage() {
                     ))}
                   </div>
                 )}
-                <Link href={`/ehr/${patientId}/medications`} className="mt-2 inline-block text-xs text-blue-600 hover:text-blue-800">
+                <Link href={`/ehr/${patientId}/medications`} className="mt-2 inline-block text-xs text-impilo-500 hover:text-impilo-700">
                   Manage medications
                 </Link>
               </div>
@@ -310,7 +310,7 @@ export default function ClinicalHistoryPage() {
                     ))}
                   </div>
                 )}
-                <Link href={`/ehr/${patientId}/allergies`} className="mt-2 inline-block text-xs text-blue-600 hover:text-blue-800">
+                <Link href={`/ehr/${patientId}/allergies`} className="mt-2 inline-block text-xs text-impilo-500 hover:text-impilo-700">
                   Manage allergies
                 </Link>
               </div>
@@ -390,7 +390,7 @@ export default function ClinicalHistoryPage() {
                     </div>
                   ))}
                 </div>
-                <Link href={`/ehr/${patientId}/immunizations`} className="mt-2 inline-block text-xs text-blue-600 hover:text-blue-800">
+                <Link href={`/ehr/${patientId}/immunizations`} className="mt-2 inline-block text-xs text-impilo-500 hover:text-impilo-700">
                   View all immunizations
                 </Link>
               </div>

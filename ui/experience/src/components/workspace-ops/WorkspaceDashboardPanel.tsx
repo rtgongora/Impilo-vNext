@@ -125,7 +125,7 @@ export function WorkspaceDashboardPanel({ facilityId: facilityIdProp }: Workspac
         <button
           type="button"
           onClick={refresh}
-          className="text-xs text-blue-600 hover:text-blue-800"
+          className="text-xs text-impilo-500 hover:text-impilo-700"
         >
           Refresh data
         </button>
@@ -151,7 +151,7 @@ export function WorkspaceDashboardPanel({ facilityId: facilityIdProp }: Workspac
                 ? `~${avgWaitMin} min avg (today)`
                 : 'Today’s queue snapshot'
             }
-            color="text-blue-600"
+            color="text-impilo-500"
           />
           <MetricCard
             icon={Activity}
@@ -190,7 +190,7 @@ export function WorkspaceDashboardPanel({ facilityId: facilityIdProp }: Workspac
                     ? 'border-red-200 bg-red-50'
                     : alert.type === 'warning'
                       ? 'border-amber-200 bg-amber-50'
-                      : 'border-blue-200 bg-blue-50'
+                      : 'border-impilo-200 bg-impilo-50'
                 }`}
               >
                 <div className="flex items-start justify-between gap-2">

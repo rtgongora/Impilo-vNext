@@ -17,7 +17,7 @@ type Disposition = "discharge" | "admit" | "transfer" | "refer" | "death" | "lam
 
 const DISPOSITIONS: { id: Disposition; label: string; icon: React.ElementType; description: string; color: string }[] = [
   { id: "discharge", label: "Discharge", icon: DoorOpen, description: "Patient ready for discharge home", color: "bg-green-100 text-green-700 border-green-300" },
-  { id: "admit", label: "Admit", icon: Building2, description: "Admit to inpatient ward", color: "bg-blue-100 text-blue-700 border-blue-300" },
+  { id: "admit", label: "Admit", icon: Building2, description: "Admit to inpatient ward", color: "bg-impilo-100 text-impilo-600 border-impilo-200" },
   { id: "transfer", label: "Transfer", icon: ArrowRightLeft, description: "Transfer to another facility", color: "bg-amber-100 text-amber-700 border-amber-300" },
   { id: "refer", label: "Refer", icon: Send, description: "Refer for specialist care", color: "bg-purple-100 text-purple-700 border-purple-300" },
   { id: "death", label: "Death", icon: Heart, description: "Record patient death", color: "bg-gray-100 text-gray-600 border-gray-300" },
@@ -80,7 +80,7 @@ export function OutcomeSection({ onSave }: OutcomeSectionProps) {
       {/* Disposition Selection */}
       <div className="bg-white rounded-lg border p-4">
         <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2 mb-4">
-          <CheckCircle2 className="w-5 h-5 text-blue-600" /> Visit Outcome
+          <CheckCircle2 className="w-5 h-5 text-impilo-500" /> Visit Outcome
         </h3>
         <div className="grid grid-cols-3 gap-3">
           {DISPOSITIONS.map(opt => {
@@ -89,7 +89,7 @@ export function OutcomeSection({ onSave }: OutcomeSectionProps) {
             return (
               <button key={opt.id} onClick={() => setDisposition(opt.id as Disposition)}
                 className={`flex flex-col items-center gap-2 p-4 border-2 rounded-lg transition-all text-center ${
-                  selected ? `${opt.color} ring-2 ring-blue-400 ring-offset-1` : "border-gray-200 hover:bg-gray-50"
+                  selected ? `${opt.color} ring-2 ring-impilo-300 ring-offset-1` : "border-gray-200 hover:bg-gray-50"
                 }`}>
                 <div className={`w-12 h-12 rounded-full flex items-center justify-center ${selected ? "bg-white/60" : "bg-gray-100"}`}>
                   <Icon className="w-6 h-6" />
@@ -129,9 +129,9 @@ export function OutcomeSection({ onSave }: OutcomeSectionProps) {
       {disposition && !isCompleted && (
         <div className="flex justify-end gap-3">
           <button className="px-4 py-2 text-sm font-medium text-gray-600 border rounded-lg hover:bg-gray-100">Save Draft</button>
-          <button className="px-4 py-2 text-sm font-medium text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50">Preview Summary</button>
+          <button className="px-4 py-2 text-sm font-medium text-impilo-500 border border-impilo-200 rounded-lg hover:bg-impilo-50">Preview Summary</button>
           <button onClick={() => { setIsCompleted(true); onSave?.({}); }}
-            className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 flex items-center gap-2">
+            className="px-4 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4" /> Complete Encounter
           </button>
         </div>
@@ -164,7 +164,7 @@ function DischargeTabs({ checkedItems, toggleCheckItem, counselingGiven, toggleC
       <div className="flex border-b">
         {tabs.map(t => (
           <button key={t.id} onClick={() => setActiveTab(t.id)}
-            className={`flex-1 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === t.id ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-700"}`}>{t.label}</button>
+            className={`flex-1 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === t.id ? "border-impilo-500 text-impilo-500" : "border-transparent text-gray-500 hover:text-gray-700"}`}>{t.label}</button>
         ))}
       </div>
 
@@ -177,7 +177,7 @@ function DischargeTabs({ checkedItems, toggleCheckItem, counselingGiven, toggleC
                 {DISCHARGE_DIAGNOSES.map((dx, i) => (
                   <div key={i} className="flex items-center justify-between p-3 border rounded-lg">
                     <div className="flex items-center gap-3">
-                      <span className={`px-2 py-0.5 rounded text-xs font-medium ${dx.type === "Primary" ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-600"}`}>{dx.type}</span>
+                      <span className={`px-2 py-0.5 rounded text-xs font-medium ${dx.type === "Primary" ? "bg-impilo-100 text-impilo-600" : "bg-gray-100 text-gray-600"}`}>{dx.type}</span>
                       <div><span className="text-sm font-medium">{dx.name}</span><span className="text-xs text-gray-400 ml-2">({dx.code})</span></div>
                     </div>
                   </div>
@@ -203,14 +203,14 @@ function DischargeTabs({ checkedItems, toggleCheckItem, counselingGiven, toggleC
         {activeTab === "medications" && (
           <div className="space-y-4">
             <div className="flex items-center justify-between mb-2">
-              <h4 className="text-sm font-semibold text-gray-900 flex items-center gap-2"><Pill className="w-4 h-4 text-blue-600" /> Discharge Medications</h4>
-              <button className="px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 flex items-center gap-1"><Plus className="w-3 h-3" /> Add</button>
+              <h4 className="text-sm font-semibold text-gray-900 flex items-center gap-2"><Pill className="w-4 h-4 text-impilo-500" /> Discharge Medications</h4>
+              <button className="px-3 py-1.5 bg-impilo-500 text-white text-xs font-medium rounded-lg hover:bg-impilo-600 flex items-center gap-1"><Plus className="w-3 h-3" /> Add</button>
             </div>
             {DISCHARGE_MEDICATIONS.map((med, i) => (
               <div key={i} className="p-4 border rounded-lg">
                 <div className="flex items-start justify-between">
                   <div><h4 className="font-medium text-sm">{med.name}</h4><div className="flex items-center gap-2 mt-1 text-xs text-gray-500"><span>{med.dosage}</span><span>&middot;</span><span>{med.duration}</span></div><p className="text-xs text-gray-400 mt-1 italic">{med.instructions}</p></div>
-                  <span className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-xs font-medium">Prescribed</span>
+                  <span className="px-2 py-0.5 bg-impilo-50 text-impilo-500 rounded text-xs font-medium">Prescribed</span>
                 </div>
               </div>
             ))}
@@ -225,24 +225,24 @@ function DischargeTabs({ checkedItems, toggleCheckItem, counselingGiven, toggleC
           <div className="space-y-4">
             {/* Follow-up Scheduling */}
             <div className="border rounded-lg p-4 space-y-3">
-              <h4 className="text-sm font-semibold text-gray-900 flex items-center gap-2"><Calendar className="w-4 h-4 text-blue-600" /> Follow-up Appointments</h4>
+              <h4 className="text-sm font-semibold text-gray-900 flex items-center gap-2"><Calendar className="w-4 h-4 text-impilo-500" /> Follow-up Appointments</h4>
               <div className="grid grid-cols-2 gap-3">
                 <div><label className="text-[10px] font-medium text-gray-500 uppercase">Follow-up Date</label><input type="date" className="w-full mt-0.5 px-3 py-2 text-sm border rounded-lg" /></div>
                 <div><label className="text-[10px] font-medium text-gray-500 uppercase">Provider / Clinic</label><input className="w-full mt-0.5 px-3 py-2 text-sm border rounded-lg" placeholder="Select provider..." /></div>
               </div>
               <div className="flex gap-2">
                 {["1 week", "2 weeks", "1 month", "3 months"].map(p => (
-                  <button key={p} className="px-3 py-1.5 text-xs font-medium text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50">{p}</button>
+                  <button key={p} className="px-3 py-1.5 text-xs font-medium text-impilo-500 border border-impilo-200 rounded-lg hover:bg-impilo-50">{p}</button>
                 ))}
               </div>
             </div>
 
             {/* CHW Tasks */}
             <div className="border rounded-lg p-4 space-y-3">
-              <h4 className="text-sm font-semibold text-gray-900 flex items-center gap-2"><User className="w-4 h-4 text-blue-600" /> CHW Follow-up Tasks</h4>
+              <h4 className="text-sm font-semibold text-gray-900 flex items-center gap-2"><User className="w-4 h-4 text-impilo-500" /> CHW Follow-up Tasks</h4>
               {CHW_TASKS.map(task => (
                 <label key={task} className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
-                  <input type="checkbox" className="rounded border-gray-300 text-blue-600" /><span className="text-sm text-gray-700">{task}</span>
+                  <input type="checkbox" className="rounded border-gray-300 text-impilo-500" /><span className="text-sm text-gray-700">{task}</span>
                 </label>
               ))}
               <button className="w-full flex items-center justify-center gap-1 px-3 py-2 text-sm text-gray-600 border border-dashed rounded-lg hover:bg-gray-50"><Plus className="w-4 h-4" /> Add CHW Task</button>
@@ -250,7 +250,7 @@ function DischargeTabs({ checkedItems, toggleCheckItem, counselingGiven, toggleC
 
             {/* Instructions & Counseling */}
             <div className="border rounded-lg p-4 space-y-4">
-              <h4 className="text-sm font-semibold text-gray-900 flex items-center gap-2"><FileText className="w-4 h-4 text-blue-600" /> Discharge Instructions & Counseling</h4>
+              <h4 className="text-sm font-semibold text-gray-900 flex items-center gap-2"><FileText className="w-4 h-4 text-impilo-500" /> Discharge Instructions & Counseling</h4>
               <div><label className="text-sm font-medium text-gray-700">Instructions</label><textarea rows={4} className="w-full mt-2 px-3 py-2 text-sm border rounded-lg" defaultValue={"1. Take all medications as prescribed\n2. Complete the antibiotic course\n3. Monitor blood glucose twice daily\n4. Return immediately if fever, dysuria, or flank pain recurs\n5. Maintain adequate hydration"} /></div>
               <div>
                 <label className="text-sm font-medium text-gray-700">Counseling Provided</label>
@@ -269,7 +269,7 @@ function DischargeTabs({ checkedItems, toggleCheckItem, counselingGiven, toggleC
 
         {activeTab === "checklist" && (
           <div className="space-y-3">
-            <h4 className="text-sm font-semibold text-gray-900 flex items-center gap-2"><ClipboardList className="w-4 h-4 text-blue-600" /> Discharge Checklist</h4>
+            <h4 className="text-sm font-semibold text-gray-900 flex items-center gap-2"><ClipboardList className="w-4 h-4 text-impilo-500" /> Discharge Checklist</h4>
             {DISCHARGE_CHECKLIST.map(item => (
               <button key={item.id} onClick={() => toggleCheckItem(item.id)}
                 className={`w-full flex items-center gap-3 p-3 border rounded-lg text-left transition-colors ${checkedItems[item.id] ? "bg-green-50 border-green-200" : "hover:bg-gray-50"}`}>
@@ -280,7 +280,7 @@ function DischargeTabs({ checkedItems, toggleCheckItem, counselingGiven, toggleC
             ))}
             <div className="mt-4 p-3 bg-gray-50 rounded-lg">
               <div className="flex items-center justify-between text-sm"><span className="text-gray-600">Progress</span><span className="font-medium text-gray-900">{checkedCount} / {DISCHARGE_CHECKLIST.length}</span></div>
-              <div className="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden"><div className="h-full bg-blue-600 transition-all" style={{ width: `${(checkedCount / DISCHARGE_CHECKLIST.length) * 100}%` }} /></div>
+              <div className="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden"><div className="h-full bg-impilo-500 transition-all" style={{ width: `${(checkedCount / DISCHARGE_CHECKLIST.length) * 100}%` }} /></div>
             </div>
           </div>
         )}
@@ -293,7 +293,7 @@ function DischargeTabs({ checkedItems, toggleCheckItem, counselingGiven, toggleC
 function AdmitForm() {
   return (
     <div className="bg-white rounded-lg border p-4 space-y-4">
-      <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2"><Building2 className="w-5 h-5 text-blue-600" /> Admission Details</h3>
+      <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2"><Building2 className="w-5 h-5 text-impilo-500" /> Admission Details</h3>
       <div className="grid grid-cols-2 gap-4">
         <div><label className="text-sm font-medium text-gray-700">Admitting Ward</label><select className="w-full mt-1 px-3 py-2 text-sm border rounded-lg"><option value="">Select ward...</option>{WARDS.map(w => <option key={w} value={w}>{w}</option>)}</select></div>
         <div><label className="text-sm font-medium text-gray-700">Bed Assignment</label><input className="w-full mt-1 px-3 py-2 text-sm border rounded-lg" placeholder="Bed number (if known)" /></div>
@@ -359,7 +359,7 @@ function ReferForm() {
         <div className="flex flex-wrap gap-2 mt-1">
           {["Discharge summary", "Lab results", "Imaging", "Medication list", "Referral letter"].map(d => (
             <label key={d} className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 text-xs text-gray-600 cursor-pointer hover:bg-gray-50">
-              <input type="checkbox" className="rounded border-gray-300 text-blue-600" /> {d}
+              <input type="checkbox" className="rounded border-gray-300 text-impilo-500" /> {d}
             </label>
           ))}
         </div>
@@ -384,7 +384,7 @@ function DeathForm() {
         <div className="flex gap-2 mt-1">{["Natural", "Accident", "Homicide", "Suicide", "Pending Investigation", "Unknown"].map(m => <button key={m} className="px-3 py-1.5 rounded-lg text-xs font-medium border border-gray-200 text-gray-600 hover:bg-gray-50">{m}</button>)}</div>
       </div>
       <label className="flex items-center gap-2 px-3 py-2 border rounded-lg cursor-pointer hover:bg-gray-50">
-        <input type="checkbox" className="rounded border-gray-300 text-blue-600" /><span className="text-sm text-gray-700">Post-mortem examination requested</span>
+        <input type="checkbox" className="rounded border-gray-300 text-impilo-500" /><span className="text-sm text-gray-700">Post-mortem examination requested</span>
       </label>
       <div><label className="text-sm font-medium text-gray-700">Additional Notes</label><textarea rows={3} className="w-full mt-1 px-3 py-2 text-sm border rounded-lg" /></div>
     </div>
@@ -403,13 +403,13 @@ function LAMAForm() {
       <div><label className="text-sm font-medium text-gray-700">Date & Time of Departure</label><input type="datetime-local" className="w-full mt-1 px-3 py-2 text-sm border rounded-lg" /></div>
       <div><label className="text-sm font-medium text-gray-700">Risks Explained to Patient</label><textarea rows={3} className="w-full mt-1 px-3 py-2 text-sm border rounded-lg" placeholder="Document specific risks discussed (infection, deterioration, death...)" /></div>
       <label className="flex items-center gap-2 px-3 py-2 border rounded-lg cursor-pointer hover:bg-gray-50">
-        <input type="checkbox" className="rounded border-gray-300 text-blue-600" /><span className="text-sm text-gray-700">Patient has decision-making capacity</span>
+        <input type="checkbox" className="rounded border-gray-300 text-impilo-500" /><span className="text-sm text-gray-700">Patient has decision-making capacity</span>
       </label>
       <label className="flex items-center gap-2 px-3 py-2 border rounded-lg cursor-pointer hover:bg-gray-50">
-        <input type="checkbox" className="rounded border-gray-300 text-blue-600" /><span className="text-sm text-gray-700">LAMA form signed by patient</span>
+        <input type="checkbox" className="rounded border-gray-300 text-impilo-500" /><span className="text-sm text-gray-700">LAMA form signed by patient</span>
       </label>
       <label className="flex items-center gap-2 px-3 py-2 border rounded-lg cursor-pointer hover:bg-gray-50">
-        <input type="checkbox" className="rounded border-gray-300 text-blue-600" /><span className="text-sm text-gray-700">Witnessed by second clinician</span>
+        <input type="checkbox" className="rounded border-gray-300 text-impilo-500" /><span className="text-sm text-gray-700">Witnessed by second clinician</span>
       </label>
       <div>
         <label className="text-sm font-medium text-gray-700">Witness Name & Designation</label>

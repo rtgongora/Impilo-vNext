@@ -68,7 +68,7 @@ export default function RolesPage() {
           </h2>
           <button
             onClick={() => setShowCreate(!showCreate)}
-            className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-white bg-impilo-500 rounded-lg hover:bg-impilo-600 transition-colors"
           >
             <Plus className="w-4 h-4" />
             Create Role
@@ -76,7 +76,7 @@ export default function RolesPage() {
         </div>
 
         {showCreate && (
-          <div className="mb-4 bg-white rounded-lg border border-blue-200 p-4">
+          <div className="mb-4 bg-white rounded-lg border border-impilo-200 p-4">
             <h3 className="text-sm font-medium text-gray-900 mb-3">Create New Role</h3>
             <form
               onSubmit={(e) => {
@@ -94,17 +94,17 @@ export default function RolesPage() {
                 name="name"
                 placeholder="Role name"
                 required
-                className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
               />
               <input
                 name="description"
                 placeholder="Description"
-                className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
               />
               <div className="flex gap-2">
                 <button
                   type="submit"
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-white bg-impilo-500 rounded-lg hover:bg-impilo-600 transition-colors"
                 >
                   Create
                 </button>
@@ -159,7 +159,7 @@ export default function RolesPage() {
                         {role.attributes.description}
                       </td>
                       <td className="px-4 py-3 text-gray-600">
-                        <span className="inline-block px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-700">
+                        <span className="inline-block px-2 py-0.5 text-xs rounded-full bg-impilo-100 text-impilo-600">
                           {role.attributes.permissionCount} permissions
                         </span>
                       </td>

@@ -39,7 +39,7 @@ const CHART_SECTIONS = [
   { label: "Conditions", href: "conditions", icon: AlertCircle, color: "bg-orange-100 text-orange-600" },
   { label: "Medications", href: "medications", icon: Pill, color: "bg-green-100 text-green-600" },
   { label: "Allergies", href: "allergies", icon: AlertCircle, color: "bg-yellow-100 text-yellow-600" },
-  { label: "Orders", href: "orders", icon: ClipboardList, color: "bg-blue-100 text-blue-600" },
+  { label: "Orders", href: "orders", icon: ClipboardList, color: "bg-impilo-100 text-impilo-500" },
   { label: "Results", href: "results", icon: TestTube2, color: "bg-purple-100 text-purple-600" },
   { label: "Notes", href: "notes", icon: FileText, color: "bg-indigo-100 text-indigo-600" },
   { label: "Immunizations", href: "immunizations", icon: Syringe, color: "bg-teal-100 text-teal-600" },
@@ -142,7 +142,7 @@ export default function PatientChartPage() {
                           Started {new Date(activeEncounter.attributes.startedAt).toLocaleString()}
                         </span>
                         {queueEntry && (
-                          <span className="rounded-full bg-blue-100 px-2.5 py-1 font-medium text-blue-700">
+                          <span className="rounded-full bg-impilo-100 px-2.5 py-1 font-medium text-impilo-600">
                             Entered from queue
                           </span>
                         )}
@@ -171,7 +171,7 @@ export default function PatientChartPage() {
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div className="space-y-2">
                   <div className="inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1 text-xs font-medium text-slate-600">
-                    <ArrowRightLeft className="h-3.5 w-3.5 text-blue-600" />
+                    <ArrowRightLeft className="h-3.5 w-3.5 text-impilo-500" />
                     Care coordination pulse
                   </div>
                   <div>
@@ -213,7 +213,7 @@ export default function PatientChartPage() {
                   </div>
                   <div className="rounded-2xl border border-white/70 bg-white/80 p-4">
                     <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">Receiving context</p>
-                    <p className="mt-2 text-2xl font-semibold text-blue-700">{coordinationPulse.receivingHere}</p>
+                    <p className="mt-2 text-2xl font-semibold text-impilo-600">{coordinationPulse.receivingHere}</p>
                     <p className="mt-1 text-xs text-slate-500">Referrals where this facility is currently on the receiving side.</p>
                   </div>
                   <div className="rounded-2xl border border-white/70 bg-white/80 p-4">
@@ -233,8 +233,8 @@ export default function PatientChartPage() {
             {/* Patient Summary Card */}
             <div className="bg-white rounded-lg border border-gray-200 p-5">
               <div className="flex items-start gap-4">
-                <div className="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
-                  <User className="w-7 h-7 text-blue-600" />
+                <div className="w-14 h-14 rounded-full bg-impilo-100 flex items-center justify-center shrink-0">
+                  <User className="w-7 h-7 text-impilo-500" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h2 className="text-lg font-semibold text-gray-900">
@@ -274,7 +274,7 @@ export default function PatientChartPage() {
                       );
                     }}
                     disabled={createEncounter.isPending || !facility}
-                    className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors shrink-0 flex items-center gap-1.5"
+                    className="px-4 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 disabled:opacity-50 transition-colors shrink-0 flex items-center gap-1.5"
                   >
                     {createEncounter.isPending ? (
                       <><Loader2 className="w-4 h-4 animate-spin" /> Starting...</>
@@ -294,7 +294,7 @@ export default function PatientChartPage() {
                   <Link
                     key={section.href}
                     href={`/ehr/${patientId}/${section.href}`}
-                    className="bg-white rounded-lg border border-gray-200 p-4 text-center hover:border-blue-300 hover:shadow-sm transition-all group"
+                    className="bg-white rounded-lg border border-gray-200 p-4 text-center hover:border-impilo-200 hover:shadow-sm transition-all group"
                   >
                     <div
                       className={`w-10 h-10 rounded-lg ${section.color} flex items-center justify-center mx-auto mb-2`}

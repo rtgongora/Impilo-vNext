@@ -57,7 +57,7 @@ export function OutbreaksTab() {
           )}
           <p className="text-[10px] text-gray-500 mt-4">
             For threshold signals and weekly IDSR context, use{" "}
-            <Link href="/public-health?tab=surveillance" className="text-blue-600 hover:underline">
+            <Link href="/public-health?tab=surveillance" className="text-impilo-500 hover:underline">
               Surveillance / eIDSR
             </Link>
             .

@@ -22,7 +22,7 @@ export default function TicketsPage() {
           {/* Status summary */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {[
-              { label: "Open", value: "0", Icon: Clock, color: "bg-blue-50 text-blue-600" },
+              { label: "Open", value: "0", Icon: Clock, color: "bg-impilo-50 text-impilo-500" },
               { label: "In Progress", value: "0", Icon: Clock, color: "bg-amber-50 text-amber-600" },
               { label: "Resolved", value: "0", Icon: CheckCircle2, color: "bg-green-50 text-green-600" },
               { label: "Total", value: "0", Icon: Ticket, color: "bg-gray-50 text-gray-600" },

@@ -39,7 +39,7 @@ const specialtyIcons: Record<Specialty, any> = {
 };
 
 const specialtyColors: Record<Specialty, string> = {
-  'general-medicine': 'bg-blue-500/10 text-blue-600 border-blue-500/30',
+  'general-medicine': 'bg-impilo-500/10 text-impilo-500 border-impilo-400/30',
   'surgery': 'bg-red-500/10 text-red-600 border-red-500/30',
   'obstetrics-gynecology': 'bg-pink-500/10 text-pink-600 border-pink-500/30',
   'pediatrics': 'bg-green-500/10 text-green-600 border-green-500/30',
@@ -98,8 +98,8 @@ export function ClerkingTemplateSelector({ onSelect, onCancel }: ClerkingTemplat
               key={cadre.value}
               className={`flex items-center space-x-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${
                 selectedCadre === cadre.value
-                  ? 'border-blue-600 bg-blue-50'
-                  : 'border-gray-200 hover:border-blue-300'
+                  ? 'border-impilo-500 bg-impilo-50'
+                  : 'border-gray-200 hover:border-impilo-200'
               }`}
               onClick={() => setSelectedCadre(cadre.value)}
             >
@@ -109,7 +109,7 @@ export function ClerkingTemplateSelector({ onSelect, onCancel }: ClerkingTemplat
                 value={cadre.value}
                 checked={selectedCadre === cadre.value}
                 onChange={() => setSelectedCadre(cadre.value)}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                className="h-4 w-4 text-impilo-500 focus:ring-impilo-400"
               />
               <div className="flex-1">
                 <label
@@ -137,7 +137,7 @@ export function ClerkingTemplateSelector({ onSelect, onCancel }: ClerkingTemplat
           )}
           <button
             type="button"
-            className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
+            className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-impilo-500 rounded-md hover:bg-impilo-600 transition-colors"
             onClick={handleConfirm}
           >
             Start Clerking
@@ -166,9 +166,9 @@ export function ClerkingTemplateSelector({ onSelect, onCancel }: ClerkingTemplat
             return (
               <div
                 key={template.id}
-                className={`cursor-pointer rounded-lg border bg-white p-0 transition-all hover:border-blue-600 hover:shadow-md ${
+                className={`cursor-pointer rounded-lg border bg-white p-0 transition-all hover:border-impilo-500 hover:shadow-md ${
                   selectedTemplate?.id === template.id
-                    ? 'border-blue-600 ring-2 ring-blue-600/20'
+                    ? 'border-impilo-500 ring-2 ring-impilo-500/20'
                     : 'border-gray-200'
                 }`}
                 onClick={() => handleTemplateSelect(template)}

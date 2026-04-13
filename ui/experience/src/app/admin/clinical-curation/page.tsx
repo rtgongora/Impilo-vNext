@@ -51,7 +51,7 @@ export default function ClinicalCurationPage() {
           <Link href="/admin" className="inline-flex items-center gap-1 hover:text-gray-700">
             <ArrowLeft className="h-4 w-4" /> Administration
           </Link>
-          <Link href="/admin/sidecar-retirement" className="inline-flex items-center gap-1 text-blue-700 hover:text-blue-800">
+          <Link href="/admin/sidecar-retirement" className="inline-flex items-center gap-1 text-impilo-600 hover:text-impilo-700">
             Sidecar retirement ledger
           </Link>
         </div>

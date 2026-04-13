@@ -146,7 +146,7 @@ export function ClinicalPathwaySessionPanel({ patientId, encounterId, compact }:
 
   return (
     <div className={compact ? "space-y-2" : "space-y-3"}>
-      <div className="flex items-center gap-2 text-sm font-medium text-blue-900">
+      <div className="flex items-center gap-2 text-sm font-medium text-impilo-800">
         <Route className="h-4 w-4 shrink-0" />
         National pathways
       </div>
@@ -156,7 +156,7 @@ export function ClinicalPathwaySessionPanel({ patientId, encounterId, compact }:
             <p className="text-xs text-gray-500">Loading pathways…</p>
           ) : (
             <select
-              className="w-full rounded border border-blue-200 bg-white px-2 py-1.5 text-sm"
+              className="w-full rounded border border-impilo-200 bg-white px-2 py-1.5 text-sm"
               value={pathwayId}
               onChange={(e) => setPathwayId(e.target.value)}
             >
@@ -172,7 +172,7 @@ export function ClinicalPathwaySessionPanel({ patientId, encounterId, compact }:
             type="button"
             disabled={!pathwayId || start.isPending}
             onClick={handleStart}
-            className="inline-flex items-center gap-2 rounded-md bg-blue-700 px-3 py-1.5 text-sm text-white hover:bg-blue-800 disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-md bg-impilo-600 px-3 py-1.5 text-sm text-white hover:bg-impilo-700 disabled:opacity-50"
           >
             {start.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
             Start session
@@ -240,7 +240,7 @@ export function ClinicalPathwaySessionPanel({ patientId, encounterId, compact }:
                 type="button"
                 disabled={advance.isPending}
                 onClick={handleAdvance}
-                className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-md bg-impilo-500 px-3 py-1.5 text-sm text-white hover:bg-impilo-600 disabled:opacity-50"
               >
                 {advance.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                 Submit step

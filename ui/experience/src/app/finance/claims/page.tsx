@@ -40,7 +40,7 @@ function useClaims() {
 }
 
 const STATUS_STYLES: Record<string, string> = {
-  SUBMITTED: "bg-blue-100 text-blue-700",
+  SUBMITTED: "bg-impilo-100 text-impilo-600",
   ADJUDICATED: "bg-yellow-100 text-yellow-700",
   PAID: "bg-green-100 text-green-700",
   REJECTED: "bg-red-100 text-red-700",
@@ -183,7 +183,7 @@ export default function ClaimsPage() {
                           <td className="px-4 py-3">
                             <Link
                               href={withHandoff(`/finance/claims/${claim.id}`)}
-                              className="font-medium text-blue-600 hover:text-blue-800"
+                              className="font-medium text-impilo-500 hover:text-impilo-700"
                             >
                               {claim.attributes.claimNumber}
                             </Link>

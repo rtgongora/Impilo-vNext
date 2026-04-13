@@ -18,12 +18,12 @@ export const QUEUE_TRIAGE_STYLES: Record<string, string> = {
   ORANGE: "bg-orange-500 text-white",
   YELLOW: "bg-yellow-400 text-black",
   GREEN: "bg-green-500 text-white",
-  BLUE: "bg-blue-500 text-white",
+  BLUE: "bg-impilo-500 text-white",
 };
 
 export const QUEUE_STATUS_STYLES: Record<string, string> = {
   WAITING: "bg-yellow-100 text-yellow-700",
-  CALLED: "bg-blue-100 text-blue-700",
+  CALLED: "bg-impilo-100 text-impilo-600",
   IN_PROGRESS: "bg-green-100 text-green-700",
   IN_SERVICE: "bg-green-100 text-green-700",
   SEEN: "bg-green-100 text-green-700",
@@ -32,7 +32,7 @@ export const QUEUE_STATUS_STYLES: Record<string, string> = {
   NO_SHOW: "bg-red-100 text-red-700",
   TRANSFERRED: "bg-purple-100 text-purple-700",
   CANCELLED: "bg-slate-100 text-slate-500",
-  SCHEDULED: "bg-blue-100 text-blue-700",
+  SCHEDULED: "bg-impilo-100 text-impilo-600",
   CONFIRMED: "bg-green-100 text-green-700",
 };
 

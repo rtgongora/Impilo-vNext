@@ -93,7 +93,7 @@ export default function DataAccessGovernancePage() {
                 onClick={() => setTab(t.id)}
                 className={`flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium border-b-2 transition-colors ${
                   tab === t.id
-                    ? "border-blue-600 text-blue-600"
+                    ? "border-impilo-500 text-impilo-500"
                     : "border-transparent text-gray-500 hover:text-gray-700"
                 }`}
               >
@@ -168,7 +168,7 @@ function PoliciesTab() {
         </h3>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-impilo-500 text-white rounded-lg hover:bg-impilo-600 transition-colors"
         >
           {showForm ? "Cancel" : "New Policy"}
         </button>
@@ -235,7 +235,7 @@ function PoliciesTab() {
             <button
               onClick={handleCreate}
               disabled={!form.name || !form.resourceType || createMutation.isPending}
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg disabled:opacity-50 hover:bg-blue-700 transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-impilo-500 text-white rounded-lg disabled:opacity-50 hover:bg-impilo-600 transition-colors"
             >
               {createMutation.isPending ? (
                 <>
@@ -292,7 +292,7 @@ function PoliciesTab() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-gray-600">
-                      <span className="inline-block px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-700">
+                      <span className="inline-block px-2 py-0.5 text-xs rounded-full bg-impilo-100 text-impilo-600">
                         {policy.attributes.dataClassification}
                       </span>
                     </td>

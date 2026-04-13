@@ -152,7 +152,7 @@ export default function AllergiesPage() {
               <button
                 type="button"
                 onClick={() => setShowForm((prev) => !prev)}
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 transition-colors"
               >
                 <Plus className="w-4 h-4" />
                 Add Allergy
@@ -175,7 +175,7 @@ export default function AllergiesPage() {
                         onChange={(e) => updateField("allergen", e.target.value)}
                         placeholder="e.g. Penicillin"
                         required
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
                       />
                     </div>
                     <div>
@@ -185,7 +185,7 @@ export default function AllergiesPage() {
                       <select
                         value={form.allergen_type}
                         onChange={(e) => updateField("allergen_type", e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
                       >
                         <option value="MEDICATION">Medication</option>
                         <option value="FOOD">Food</option>
@@ -201,7 +201,7 @@ export default function AllergiesPage() {
                         value={form.reaction}
                         onChange={(e) => updateField("reaction", e.target.value)}
                         placeholder="e.g. Rash, Anaphylaxis"
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
                       />
                     </div>
                     <div>
@@ -211,7 +211,7 @@ export default function AllergiesPage() {
                       <select
                         value={form.severity}
                         onChange={(e) => updateField("severity", e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
                       >
                         <option value="MILD">Mild</option>
                         <option value="MODERATE">Moderate</option>
@@ -226,7 +226,7 @@ export default function AllergiesPage() {
                         type="date"
                         value={form.onset_date}
                         onChange={(e) => updateField("onset_date", e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
                       />
                     </div>
                     <div>
@@ -239,7 +239,7 @@ export default function AllergiesPage() {
                         onChange={(e) => updateField("recorded_by", e.target.value)}
                         placeholder="Dr. Jane Smith"
                         required
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
                       />
                     </div>
                   </div>
@@ -248,7 +248,7 @@ export default function AllergiesPage() {
                     <button
                       type="submit"
                       disabled={createAllergy.isPending}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                       {createAllergy.isPending && (
                         <Loader2 className="w-4 h-4 animate-spin" />

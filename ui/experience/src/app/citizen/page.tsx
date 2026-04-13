@@ -31,7 +31,7 @@ export default function CitizenHubPage() {
           <li key={l.href}>
             <Link
               href={l.href}
-              className="block rounded-lg border border-gray-200 bg-white p-4 hover:border-blue-300 hover:shadow-sm transition-all"
+              className="block rounded-lg border border-gray-200 bg-white p-4 hover:border-impilo-200 hover:shadow-sm transition-all"
             >
               <span className="font-medium text-gray-900">{l.label}</span>
               <p className="text-xs text-gray-500 mt-1">{l.note}</p>

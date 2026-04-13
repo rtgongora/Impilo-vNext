@@ -30,7 +30,7 @@ const STATUS_BADGE: Record<string, string> = {
   IN_PROGRESS: "bg-green-100 text-green-700",
   ACTIVE: "bg-green-100 text-green-700",
   COMPLETED: "bg-gray-100 text-gray-600",
-  DISCHARGED: "bg-blue-100 text-blue-700",
+  DISCHARGED: "bg-impilo-100 text-impilo-600",
   ADMITTED: "bg-purple-100 text-purple-700",
   TRANSFERRED: "bg-amber-100 text-amber-700",
   REFERRED: "bg-indigo-100 text-indigo-700",
@@ -129,7 +129,7 @@ export default function EncountersPage() {
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div className="space-y-2">
                   <div className="inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1 text-xs font-medium text-slate-600">
-                    <ArrowRightLeft className="h-3.5 w-3.5 text-blue-600" />
+                    <ArrowRightLeft className="h-3.5 w-3.5 text-impilo-500" />
                     Encounter coordination
                   </div>
                   <div>
@@ -171,7 +171,7 @@ export default function EncountersPage() {
                   </div>
                   <div className="rounded-2xl border border-white/70 bg-white/80 p-4">
                     <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">Receiving here</p>
-                    <p className="mt-2 text-2xl font-semibold text-blue-700">{coordinationPulse.receivingHere}</p>
+                    <p className="mt-2 text-2xl font-semibold text-impilo-600">{coordinationPulse.receivingHere}</p>
                     <p className="mt-1 text-xs text-slate-500">Handoffs where this facility is the current receiver.</p>
                   </div>
                   <div className="rounded-2xl border border-white/70 bg-white/80 p-4">
@@ -197,7 +197,7 @@ export default function EncountersPage() {
             {/* Header row with action button */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <ClipboardList className="w-5 h-5 text-blue-500" />
+                <ClipboardList className="w-5 h-5 text-impilo-400" />
                 <h2 className="text-lg font-semibold text-gray-900">
                   Encounters ({encounters.length})
                 </h2>
@@ -206,7 +206,7 @@ export default function EncountersPage() {
               <button
                 type="button"
                 onClick={() => setShowForm((prev) => !prev)}
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 transition-colors"
               >
                 <Plus className="w-4 h-4" />
                 Start Encounter
@@ -227,7 +227,7 @@ export default function EncountersPage() {
                       <select
                         value={form.encounter_type}
                         onChange={(e) => updateField("encounter_type", e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
                       >
                         <option value="OUTPATIENT">Outpatient</option>
                         <option value="INPATIENT">Inpatient</option>
@@ -246,7 +246,7 @@ export default function EncountersPage() {
                         onChange={(e) => updateField("chief_complaint", e.target.value)}
                         placeholder="e.g. Chest pain, headache"
                         required
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
                       />
                     </div>
                   </div>
@@ -255,7 +255,7 @@ export default function EncountersPage() {
                     <button
                       type="submit"
                       disabled={createEncounter.isPending}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                       {createEncounter.isPending && (
                         <Loader2 className="w-4 h-4 animate-spin" />
@@ -319,7 +319,7 @@ export default function EncountersPage() {
                             <td className="px-4 py-3">
                               <Link
                                 href={`/ehr/${patientId}/encounter/${encounter.id}`}
-                                className="font-medium text-blue-600 hover:text-blue-800 hover:underline"
+                                className="font-medium text-impilo-500 hover:text-impilo-700 hover:underline"
                               >
                                 {a.encounterType.replace(/_/g, " ")}
                               </Link>

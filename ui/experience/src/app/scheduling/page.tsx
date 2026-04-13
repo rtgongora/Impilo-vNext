@@ -59,7 +59,7 @@ interface AppointmentResource {
 }
 
 const STATUS_BADGE: Record<string, { label: string; className: string }> = {
-  SCHEDULED: { label: "Scheduled", className: "bg-blue-100 text-blue-700" },
+  SCHEDULED: { label: "Scheduled", className: "bg-impilo-100 text-impilo-600" },
   CONFIRMED: { label: "Confirmed", className: "bg-green-100 text-green-700" },
   CANCELLED: { label: "Cancelled", className: "bg-gray-100 text-gray-600" },
   COMPLETED: { label: "Completed", className: "bg-purple-100 text-purple-700" },
@@ -335,7 +335,7 @@ export default function SchedulingPage() {
                     onClick={() => setActiveTab(tab.key)}
                     className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
                       activeTab === tab.key
-                        ? "border-blue-600 text-blue-600"
+                        ? "border-impilo-500 text-impilo-500"
                         : "border-transparent text-gray-500 hover:text-gray-700"
                     }`}
                   >
@@ -347,7 +347,7 @@ export default function SchedulingPage() {
           </div>
           <button
             onClick={() => setShowCreate((v) => !v)}
-            className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+            className="inline-flex items-center gap-1.5 px-4 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 transition-colors"
           >
             <Plus className="w-4 h-4" />
             New Appointment
@@ -358,7 +358,7 @@ export default function SchedulingPage() {
         {showCreate && (
           <div className="bg-white rounded-lg border border-gray-200 p-5 mb-5 space-y-4">
             <h3 className="text-sm font-medium text-gray-900 flex items-center gap-2">
-              <CalendarDays className="w-4 h-4 text-blue-500" />
+              <CalendarDays className="w-4 h-4 text-impilo-400" />
               Schedule Appointment
             </h3>
             <div className="grid grid-cols-2 gap-3">
@@ -372,7 +372,7 @@ export default function SchedulingPage() {
                     onChange={(e) => handlePatientSearchChange(e.target.value)}
                     onFocus={() => patients.length > 0 && setShowPatientDropdown(true)}
                     placeholder="Search by name or CPID..."
-                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
                   />
                 </div>
                 {selectedPatient && (
@@ -387,7 +387,7 @@ export default function SchedulingPage() {
                       <button
                         key={p.id}
                         onClick={() => handleSelectPatient(p)}
-                        className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-blue-50 transition-colors"
+                        className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-impilo-50 transition-colors"
                       >
                         <User className="w-4 h-4 text-gray-400" />
                         <div>
@@ -407,19 +407,19 @@ export default function SchedulingPage() {
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Type</label>
                 <select value={form.appointment_type} onChange={(e) => setForm({ ...form, appointment_type: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400">
                   {APPOINTMENT_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
                 </select>
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Date *</label>
                 <input type="date" required value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" />
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Resource (optional)</label>
                 <select value={selectedResourceId} onChange={(e) => setSelectedResourceId(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400">
                   <option value="">No specific resource</option>
                   {resources.map((r) => (
                     <option key={r.id} value={r.id}>{r.name} ({r.resourceType})</option>
@@ -445,9 +445,9 @@ export default function SchedulingPage() {
                         onClick={() => setForm({ ...form, time: slot.time })}
                         className={`px-2 py-1.5 text-xs font-medium rounded border transition-colors ${
                           form.time === slot.time
-                            ? "bg-blue-600 text-white border-blue-600"
+                            ? "bg-impilo-500 text-white border-impilo-500"
                             : slot.available
-                              ? "bg-white text-gray-700 border-gray-200 hover:bg-blue-50 hover:border-blue-300"
+                              ? "bg-white text-gray-700 border-gray-200 hover:bg-impilo-50 hover:border-impilo-200"
                               : "bg-gray-100 text-gray-400 border-gray-100 cursor-not-allowed line-through"
                         }`}
                       >
@@ -466,7 +466,7 @@ export default function SchedulingPage() {
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Time</label>
                 <select value={form.time} onChange={(e) => setForm({ ...form, time: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400">
                   {TIME_SLOTS.map((t) => <option key={t} value={t}>{t}</option>)}
                 </select>
               </div>
@@ -477,13 +477,13 @@ export default function SchedulingPage() {
                 <label className="block text-xs font-medium text-gray-600 mb-1">Reason</label>
                 <input type="text" value={form.reason} onChange={(e) => setForm({ ...form, reason: e.target.value })}
                   placeholder="e.g. Follow-up diabetes check"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" />
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Notes</label>
                 <input type="text" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })}
                   placeholder="Additional scheduling notes"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" />
               </div>
             </div>
             <div className="flex gap-3">
@@ -492,7 +492,7 @@ export default function SchedulingPage() {
                 Cancel
               </button>
               <button onClick={handleCreate} disabled={creating || !selectedPatient || !form.date}
-                className="flex-1 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors">
+                className="flex-1 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors">
                 {creating ? <><Loader2 className="w-4 h-4 animate-spin" /> Scheduling...</> : <><Save className="w-4 h-4" /> Schedule</>}
               </button>
             </div>
@@ -533,12 +533,12 @@ export default function SchedulingPage() {
                 const isToday = isSameDay(date, new Date());
 
                 return (
-                  <div key={date.toISOString()} className={`bg-white rounded-lg border ${isToday ? "border-blue-400 ring-2 ring-blue-100" : "border-gray-200"}`}>
-                    <div className={`px-3 py-2 border-b ${isToday ? "bg-blue-50" : "bg-gray-50"}`}>
-                      <div className={`text-xs font-medium ${isToday ? "text-blue-700" : "text-gray-600"}`}>
+                  <div key={date.toISOString()} className={`bg-white rounded-lg border ${isToday ? "border-impilo-400 ring-2 ring-blue-100" : "border-gray-200"}`}>
+                    <div className={`px-3 py-2 border-b ${isToday ? "bg-impilo-50" : "bg-gray-50"}`}>
+                      <div className={`text-xs font-medium ${isToday ? "text-impilo-600" : "text-gray-600"}`}>
                         {date.toLocaleDateString("en-ZA", { weekday: "short" })}
                       </div>
-                      <div className={`text-lg font-semibold ${isToday ? "text-blue-700" : "text-gray-900"}`}>
+                      <div className={`text-lg font-semibold ${isToday ? "text-impilo-600" : "text-gray-900"}`}>
                         {date.getDate()}
                       </div>
                     </div>
@@ -605,11 +605,11 @@ export default function SchedulingPage() {
                 <div key={appt.id} className="bg-white rounded-lg border border-gray-200 p-4">
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-lg bg-impilo-50 flex items-center justify-center">
                         {a.appointment_type === "TELECONSULT" ? (
-                          <Video className="w-5 h-5 text-blue-600" />
+                          <Video className="w-5 h-5 text-impilo-500" />
                         ) : (
-                          <CalendarDays className="w-5 h-5 text-blue-600" />
+                          <CalendarDays className="w-5 h-5 text-impilo-500" />
                         )}
                       </div>
                       <div>
@@ -634,7 +634,7 @@ export default function SchedulingPage() {
                             </span>
                           )}
                           {a.patient_id && (
-                            <Link href={`/ehr/${a.patient_id}`} className="flex items-center gap-1 text-blue-600 hover:text-blue-800">
+                            <Link href={`/ehr/${a.patient_id}`} className="flex items-center gap-1 text-impilo-500 hover:text-impilo-700">
                               <User className="w-3 h-3" />
                               Patient
                             </Link>

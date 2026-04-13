@@ -362,7 +362,7 @@ const statusConfig = {
     label: "High",
   },
   low: {
-    bg: "bg-blue-50 text-blue-700 border border-blue-200",
+    bg: "bg-impilo-50 text-impilo-600 border border-impilo-200",
     icon: TrendingDown,
     label: "Low",
   },
@@ -378,7 +378,7 @@ const orderStatusConfig: Record<
   { bg: string; icon: React.ElementType; label: string }
 > = {
   pending: { bg: "bg-gray-100 text-gray-600", icon: Clock, label: "Pending" },
-  collected: { bg: "bg-blue-50 text-blue-600", icon: TestTube, label: "Collected" },
+  collected: { bg: "bg-impilo-50 text-impilo-500", icon: TestTube, label: "Collected" },
   processing: { bg: "bg-amber-50 text-amber-600", icon: Beaker, label: "Processing" },
   resulted: { bg: "bg-emerald-50 text-emerald-600", icon: CheckCircle, label: "Resulted" },
   completed: { bg: "bg-emerald-50 text-emerald-600", icon: CheckCircle, label: "Completed" },
@@ -456,7 +456,7 @@ export function LabResultsSystem() {
           placeholder="Search tests..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-10 pr-4 py-2 rounded-md border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full pl-10 pr-4 py-2 rounded-md border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
         />
       </div>
 
@@ -468,7 +468,7 @@ export function LabResultsSystem() {
             onClick={() => setActiveTab(tab.key)}
             className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
               activeTab === tab.key
-                ? "border-blue-500 text-blue-600"
+                ? "border-impilo-400 text-impilo-500"
                 : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
             } ${tab.key === "abnormal" ? "text-red-600" : ""}`}
           >
@@ -488,7 +488,7 @@ export function LabResultsSystem() {
           Object.entries(groupedResults).map(([category, categoryResults]) => (
             <div key={category}>
               <h3 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                <TestTube className="h-4 w-4 text-blue-500" />
+                <TestTube className="h-4 w-4 text-impilo-400" />
                 {category}
               </h3>
               <div className="space-y-2">
@@ -507,8 +507,8 @@ export function LabResultsSystem() {
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
-                              <TestTube className="h-5 w-5 text-blue-600" />
+                            <div className="h-10 w-10 rounded-lg bg-impilo-50 flex items-center justify-center flex-shrink-0">
+                              <TestTube className="h-5 w-5 text-impilo-500" />
                             </div>
                             <div>
                               <h4 className="font-medium text-gray-900">{result.test_name}</h4>

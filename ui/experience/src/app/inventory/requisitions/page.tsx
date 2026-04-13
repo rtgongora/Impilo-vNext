@@ -16,7 +16,7 @@ import { useFacilityStore } from "@/hooks/useFacilityStore";
 const STATUS_STYLES: Record<string, string> = {
   PENDING: "bg-slate-100 text-slate-800",
   DRAFT: "bg-slate-100 text-slate-700",
-  SUBMITTED: "bg-blue-100 text-blue-800",
+  SUBMITTED: "bg-impilo-100 text-impilo-700",
   APPROVED: "bg-emerald-100 text-emerald-800",
   DISPATCHED: "bg-indigo-100 text-indigo-900",
   RECEIVED: "bg-teal-100 text-teal-900",

@@ -145,11 +145,11 @@ export default function SystemMonitorPage() {
               </button>
             </div>
 
-            <div className="rounded-lg border border-blue-200 bg-blue-50/80 p-4 flex gap-3 text-sm text-blue-900">
+            <div className="rounded-lg border border-impilo-200 bg-impilo-50/80 p-4 flex gap-3 text-sm text-impilo-800">
               <Info className="w-5 h-5 shrink-0 mt-0.5" />
               <div>
                 <p className="font-medium">Scope of this monitor</p>
-                <p className="mt-1 text-xs text-blue-800/90 leading-relaxed">
+                <p className="mt-1 text-xs text-impilo-700/90 leading-relaxed">
                   Only the Experience BFF <code className="text-[11px]">GET /health</code> probe and the tenant audit log
                   are wired here. Downstream service cards (identity, clinical stacks, Kafka, Redis, etc.) are{" "}
                   <strong>not</strong> aggregated by this BFF—use your runtime platform (mesh, k8s, APM) for those signals.

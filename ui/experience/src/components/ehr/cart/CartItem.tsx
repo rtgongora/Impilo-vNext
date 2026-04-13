@@ -26,7 +26,7 @@ export interface CartItemData {
 }
 
 const TYPE_CONFIG: Record<CartItemType, { label: string; color: string; icon: typeof FlaskConical }> = {
-  LAB:     { label: "LAB",     color: "bg-blue-100 text-blue-700",     icon: FlaskConical },
+  LAB:     { label: "LAB",     color: "bg-impilo-100 text-impilo-600",     icon: FlaskConical },
   IMAGING: { label: "IMAGING", color: "bg-purple-100 text-purple-700", icon: Scan },
   MED:     { label: "MED",     color: "bg-green-100 text-green-700",   icon: Pill },
   NURSING: { label: "NURSING", color: "bg-amber-100 text-amber-700",   icon: HeartPulse },
@@ -105,7 +105,7 @@ export function CartItem({ item, onRemove, onPriorityChange, onNotesChange }: Ca
           value={item.notes ?? ""}
           onChange={(e) => onNotesChange(item.id, e.target.value)}
           placeholder="Add clinical notes..."
-          className="w-full rounded border border-gray-200 bg-gray-50 px-2 py-1 text-xs text-gray-700 placeholder:text-gray-400 focus:border-blue-300 focus:outline-none"
+          className="w-full rounded border border-gray-200 bg-gray-50 px-2 py-1 text-xs text-gray-700 placeholder:text-gray-400 focus:border-impilo-200 focus:outline-none"
         />
       )}
     </div>

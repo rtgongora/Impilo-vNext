@@ -73,7 +73,7 @@ const TYPE_ICONS: Record<InvestigationType, typeof FlaskConical> = {
 };
 
 const TYPE_COLORS: Record<InvestigationType, string> = {
-  LABORATORY: "bg-blue-100 text-blue-700",
+  LABORATORY: "bg-impilo-100 text-impilo-600",
   IMAGING: "bg-purple-100 text-purple-700",
   POINT_OF_CARE: "bg-amber-100 text-amber-700",
   CARDIOLOGY_DX: "bg-red-100 text-red-700",
@@ -155,7 +155,7 @@ export function InvestigationSearch({
               onChange={(e) => { setQuery(e.target.value); setShowDropdown(true); }}
               onFocus={() => query.length >= 2 && setShowDropdown(true)}
               placeholder="Search investigations — type name, code, or keyword..."
-              className="w-full rounded-xl border border-gray-300 pl-11 pr-4 py-3 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              className="w-full rounded-xl border border-gray-300 pl-11 pr-4 py-3 text-sm focus:outline-none focus:border-impilo-400 focus:ring-2 focus:ring-impilo-100"
               autoComplete="off"
             />
             {query && (
@@ -172,13 +172,13 @@ export function InvestigationSearch({
               <div className="sticky top-0 bg-white border-b border-gray-100 px-3 py-2 flex gap-1 flex-wrap">
                 <button
                   onClick={() => setDomainFilter("ALL")}
-                  className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${domainFilter === "ALL" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600"}`}
+                  className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${domainFilter === "ALL" ? "bg-impilo-500 text-white" : "bg-gray-100 text-gray-600"}`}
                 >All</button>
                 {getClinicalDomains().slice(0, 8).map((d) => (
                   <button
                     key={d}
                     onClick={() => setDomainFilter(d)}
-                    className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${domainFilter === d ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600"}`}
+                    className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${domainFilter === d ? "bg-impilo-500 text-white" : "bg-gray-100 text-gray-600"}`}
                   >{DOMAIN_LABELS[d]}</button>
                 ))}
               </div>
@@ -191,7 +191,7 @@ export function InvestigationSearch({
                     onClick={() => !isSelected && handleAdd(inv)}
                     disabled={isSelected}
                     className={`w-full text-left px-4 py-2.5 flex items-center gap-3 border-b border-gray-50 last:border-0 transition-colors ${
-                      isSelected ? "bg-blue-50 opacity-50 cursor-not-allowed" : "hover:bg-blue-50 cursor-pointer"
+                      isSelected ? "bg-impilo-50 opacity-50 cursor-not-allowed" : "hover:bg-impilo-50 cursor-pointer"
                     }`}
                   >
                     <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${TYPE_COLORS[inv.type]}`}>
@@ -206,7 +206,7 @@ export function InvestigationSearch({
                       </p>
                     </div>
                     {isSelected ? (
-                      <span className="text-[10px] text-blue-600 font-medium">Added</span>
+                      <span className="text-[10px] text-impilo-500 font-medium">Added</span>
                     ) : (
                       <Plus className="h-4 w-4 text-gray-400" />
                     )}
@@ -274,8 +274,8 @@ export function InvestigationSearch({
                     disabled={isSelected}
                     className={`rounded-full px-3 py-1.5 text-xs font-medium border transition-all ${
                       isSelected
-                        ? "bg-blue-50 border-blue-200 text-blue-400 cursor-not-allowed"
-                        : "bg-white border-gray-200 text-gray-700 hover:border-blue-400 hover:bg-blue-50"
+                        ? "bg-impilo-50 border-impilo-200 text-impilo-300 cursor-not-allowed"
+                        : "bg-white border-gray-200 text-gray-700 hover:border-impilo-400 hover:bg-impilo-50"
                     }`}
                   >
                     {isSelected && "✓ "}{inv.shortName}
@@ -291,10 +291,10 @@ export function InvestigationSearch({
       <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-gray-50 rounded-t-xl">
           <div className="flex items-center gap-2">
-            <Package className="h-4 w-4 text-blue-600" />
+            <Package className="h-4 w-4 text-impilo-500" />
             <h3 className="text-sm font-semibold text-gray-800">Order Cart</h3>
           </div>
-          <span className="rounded-full bg-blue-600 text-white text-xs font-bold px-2 py-0.5">
+          <span className="rounded-full bg-impilo-500 text-white text-xs font-bold px-2 py-0.5">
             {selected.length}
           </span>
         </div>

@@ -54,7 +54,7 @@ export function ClinicalToolbar({ hasActivePatient = true }: ClinicalToolbarProp
             type="button"
             className={cn(
               "h-8 gap-1.5 text-xs shrink-0 px-2 rounded flex items-center hover:bg-gray-100",
-              pathwaysHighlighted && "bg-blue-50 text-blue-600",
+              pathwaysHighlighted && "bg-impilo-50 text-impilo-500",
             )}
             onClick={togglePathwaysDock}
             title="National clinical pathways"
@@ -85,7 +85,7 @@ export function ClinicalToolbar({ hasActivePatient = true }: ClinicalToolbarProp
             )}
           </button>
           {aiAssistEnabled && (
-            <button className="h-8 gap-1.5 text-xs shrink-0 px-2 rounded flex items-center hover:bg-gray-100 text-blue-600">
+            <button className="h-8 gap-1.5 text-xs shrink-0 px-2 rounded flex items-center hover:bg-gray-100 text-impilo-500">
               <Sparkles className="w-3.5 h-3.5" />
               AI Assist
             </button>

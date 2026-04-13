@@ -35,7 +35,7 @@ export default function DiscoverServicesPage() {
               <input
                 type="text"
                 placeholder="Search services..."
-                className="w-full rounded-lg border border-gray-300 py-2.5 pl-10 pr-4 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full rounded-lg border border-gray-300 py-2.5 pl-10 pr-4 text-sm focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-impilo-400"
               />
             </div>
             <button className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
@@ -49,7 +49,7 @@ export default function DiscoverServicesPage() {
             {CATEGORIES.map(({ label, description }) => (
               <div
                 key={label}
-                className="rounded-lg border border-gray-200 bg-white p-5 hover:border-blue-400 hover:shadow-sm transition-all cursor-pointer"
+                className="rounded-lg border border-gray-200 bg-white p-5 hover:border-impilo-400 hover:shadow-sm transition-all cursor-pointer"
               >
                 <h3 className="font-semibold text-gray-900 mb-1">{label}</h3>
                 <p className="text-sm text-gray-600">{description}</p>

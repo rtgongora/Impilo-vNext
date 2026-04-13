@@ -66,7 +66,7 @@ export default function SocialHistoryPage() {
             <button
               type="button"
               onClick={() => void refetch()}
-              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              className="rounded-lg bg-impilo-500 px-4 py-2 text-sm font-medium text-white hover:bg-impilo-600"
             >
               Retry
             </button>
@@ -161,7 +161,7 @@ export default function SocialHistoryPage() {
                                 {section.riskLevel} Risk
                               </span>
                               {!isEditing && (
-                                <button onClick={() => startEdit(section)} className="p-1 text-gray-400 transition-colors hover:text-blue-600">
+                                <button onClick={() => startEdit(section)} className="p-1 text-gray-400 transition-colors hover:text-impilo-500">
                                   <Edit3 className="h-3.5 w-3.5" />
                                 </button>
                               )}
@@ -172,14 +172,14 @@ export default function SocialHistoryPage() {
                             <div className="mt-2 space-y-3">
                               <div>
                                 <label className="mb-1 block text-xs font-medium text-gray-600">Status</label>
-                                <input type="text" value={editStatus} onChange={(e) => setEditStatus(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                                <input type="text" value={editStatus} onChange={(e) => setEditStatus(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" />
                               </div>
                               <div>
                                 <label className="mb-1 block text-xs font-medium text-gray-600">Details</label>
-                                <textarea value={editDetail} onChange={(e) => setEditDetail(e.target.value)} rows={3} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                                <textarea value={editDetail} onChange={(e) => setEditDetail(e.target.value)} rows={3} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" />
                               </div>
                               <div className="flex items-center gap-2">
-                                <button className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-blue-700">
+                                <button className="inline-flex items-center gap-1 rounded-lg bg-impilo-500 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-impilo-600">
                                   <Save className="h-3 w-3" /> Save
                                 </button>
                                 <button onClick={cancelEdit} className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50">Cancel</button>

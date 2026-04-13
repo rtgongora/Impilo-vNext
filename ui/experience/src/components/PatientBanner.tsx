@@ -110,7 +110,7 @@ export function PatientBanner() {
     attrs.gender === "female"
       ? "bg-pink-50 text-pink-600 border-pink-200"
       : attrs.gender === "male"
-        ? "bg-blue-50 text-blue-600 border-blue-200"
+        ? "bg-impilo-50 text-impilo-500 border-impilo-200"
         : "bg-purple-50 text-purple-600 border-purple-200";
   const genderChar =
     attrs.gender === "female" ? "F" : attrs.gender === "male" ? "M" : "O";
@@ -130,14 +130,14 @@ export function PatientBanner() {
         <div className="flex items-center justify-between gap-4">
           {/* Patient Identity */}
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center border-2 border-blue-200">
-              <User className="w-5 h-5 text-blue-600" />
+            <div className="w-10 h-10 rounded-full bg-impilo-50 flex items-center justify-center border-2 border-impilo-200">
+              <User className="w-5 h-5 text-impilo-500" />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <Link
                   href={`/ehr/${patientId}`}
-                  className="text-base font-semibold text-gray-900 hover:text-blue-700 transition-colors"
+                  className="text-base font-semibold text-gray-900 hover:text-impilo-600 transition-colors"
                 >
                   {attrs.displayName}
                 </Link>
@@ -396,7 +396,7 @@ export function PatientBanner() {
                   {activeConditions.length > 5 && (
                     <Link
                       href={`/ehr/${patientId}/conditions`}
-                      className="text-xs text-blue-600 hover:text-blue-800"
+                      className="text-xs text-impilo-500 hover:text-impilo-700"
                     >
                       +{activeConditions.length - 5} more conditions
                     </Link>

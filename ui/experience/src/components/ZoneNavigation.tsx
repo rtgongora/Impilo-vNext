@@ -32,7 +32,7 @@ const WORK_MODE_COLORS: Record<WorkMode, string> = {
   clinical: "bg-green-400",
   pharmacy: "bg-emerald-400",
   admin: "bg-red-400",
-  finance: "bg-blue-400",
+  finance: "bg-impilo-400",
   oversight: "bg-purple-400",
   independent_practice: "bg-amber-400",
   emergency_response: "bg-red-500",
@@ -284,7 +284,7 @@ export function LegacyZoneNavigation() {
       {/* Header */}
       <div className="h-14 flex items-center justify-between px-3 border-b border-gray-700">
         {!collapsed && (
-          <Link href="/home" className="text-white font-semibold text-sm hover:text-blue-300 truncate">
+          <Link href="/home" className="text-white font-semibold text-sm hover:text-impilo-300 truncate">
             Impilo
           </Link>
         )}
@@ -343,7 +343,7 @@ export function LegacyZoneNavigation() {
                       collapsed ? "justify-center px-2 py-2.5" : "px-4 py-2"
                     } text-sm ${
                       isActive
-                        ? "bg-gray-800 text-white font-medium border-l-2 border-blue-400"
+                        ? "bg-gray-800 text-white font-medium border-l-2 border-impilo-400"
                         : "hover:bg-gray-800 hover:text-white"
                     }`}
                   >

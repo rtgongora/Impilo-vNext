@@ -97,7 +97,7 @@ export default function UserDetailPage() {
             <div className="bg-white rounded-lg border border-gray-200 p-6">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-full bg-impilo-100 text-impilo-500 flex items-center justify-center">
                     <User className="w-6 h-6" />
                   </div>
                   <div>
@@ -141,7 +141,7 @@ export default function UserDetailPage() {
                   <Shield className="w-4 h-4 text-indigo-500" />
                   <h3 className="text-sm font-medium text-gray-900">Role</h3>
                 </div>
-                <span className="inline-block px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-700">
+                <span className="inline-block px-2 py-0.5 text-xs rounded-full bg-impilo-100 text-impilo-600">
                   {user.attributes.role}
                 </span>
               </div>
@@ -184,7 +184,7 @@ export default function UserDetailPage() {
                           {new Date(entry.attributes.timestamp).toLocaleString()}
                         </td>
                         <td className="px-4 py-3">
-                          <span className="inline-block px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-700">
+                          <span className="inline-block px-2 py-0.5 text-xs rounded-full bg-impilo-100 text-impilo-600">
                             {entry.attributes.action}
                           </span>
                         </td>

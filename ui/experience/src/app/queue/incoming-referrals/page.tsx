@@ -57,14 +57,14 @@ interface IncomingReferral {
 }
 
 const URGENCY_BADGE: Record<string, string> = {
-  ROUTINE: "bg-blue-100 text-blue-700",
+  ROUTINE: "bg-impilo-100 text-impilo-600",
   URGENT: "bg-orange-100 text-orange-700",
   EMERGENCY: "bg-red-100 text-red-700",
 };
 
 const STATUS_BADGE: Record<string, string> = {
   PENDING: "bg-yellow-100 text-yellow-700",
-  ACCEPTED: "bg-blue-100 text-blue-700",
+  ACCEPTED: "bg-impilo-100 text-impilo-600",
   RESPONDED: "bg-purple-100 text-purple-700",
   COMPLETED: "bg-green-100 text-green-700",
 };
@@ -267,7 +267,7 @@ export default function IncomingReferralsPage() {
             <p className="text-sm text-gray-500">Please select a facility first</p>
             <Link
               href="/facility"
-              className="mt-2 inline-block text-sm text-blue-600 hover:text-blue-800"
+              className="mt-2 inline-block text-sm text-impilo-500 hover:text-impilo-700"
             >
               Select Facility
             </Link>
@@ -309,7 +309,7 @@ export default function IncomingReferralsPage() {
                     card.tone === "amber"
                       ? "text-amber-700"
                       : card.tone === "blue"
-                        ? "text-blue-700"
+                        ? "text-impilo-600"
                         : "text-purple-700"
                   }`}>{card.value}</p>
                 </div>
@@ -356,7 +356,7 @@ export default function IncomingReferralsPage() {
                         stageCopy.tone === "amber"
                           ? "border-amber-200 bg-amber-50"
                           : stageCopy.tone === "blue"
-                            ? "border-blue-200 bg-blue-50"
+                            ? "border-impilo-200 bg-impilo-50"
                             : stageCopy.tone === "purple"
                               ? "border-purple-200 bg-purple-50"
                               : "border-emerald-200 bg-emerald-50"
@@ -397,7 +397,7 @@ export default function IncomingReferralsPage() {
                           {new Date(attrs.created_at).toLocaleString()}
                         </span>
                         {attrs.accepted_at && (
-                          <span className="text-blue-600">Accepted {new Date(attrs.accepted_at).toLocaleString()}</span>
+                          <span className="text-impilo-500">Accepted {new Date(attrs.accepted_at).toLocaleString()}</span>
                         )}
                         {attrs.responded_at && (
                           <span className="text-purple-600">Responded {new Date(attrs.responded_at).toLocaleString()}</span>
@@ -405,7 +405,7 @@ export default function IncomingReferralsPage() {
                         {attrs.patient_id && (
                           <Link
                             href={`/ehr/${attrs.patient_id}`}
-                            className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
+                            className="flex items-center gap-1 text-impilo-500 hover:text-impilo-700"
                           >
                             <User className="h-3 w-3" />
                             View Patient

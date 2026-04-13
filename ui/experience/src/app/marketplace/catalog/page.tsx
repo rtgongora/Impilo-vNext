@@ -184,14 +184,14 @@ export default function CatalogPage() {
               placeholder={mode === "product_registry" ? "Search MSIKA registry (q)..." : "Search services or supplies..."}
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
-              className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
             />
           </div>
           {mode === "facility_marketplace" ? (
             <select
               value={category}
               onChange={(event) => setCategory(event.target.value)}
-              className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
             >
               {CATEGORIES.map((value) => <option key={value} value={value}>{value}</option>)}
             </select>

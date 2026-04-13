@@ -58,7 +58,7 @@ function dayShortLabel(ymd: string): string {
 }
 
 const SPECIALTY_COLORS: Record<string, string> = {
-  "Internal Medicine": "bg-blue-100 text-blue-700",
+  "Internal Medicine": "bg-impilo-100 text-impilo-600",
   Surgery: "bg-red-100 text-red-700",
   Paediatrics: "bg-green-100 text-green-700",
   Obstetrics: "bg-pink-100 text-pink-700",
@@ -208,14 +208,14 @@ export default function OnCallPage() {
                   <button
                     type="button"
                     onClick={() => setViewMode("calendar")}
-                    className={`px-3 py-1.5 text-xs ${viewMode === "calendar" ? "bg-blue-600 text-white" : "bg-white text-gray-600 hover:bg-gray-50"}`}
+                    className={`px-3 py-1.5 text-xs ${viewMode === "calendar" ? "bg-impilo-500 text-white" : "bg-white text-gray-600 hover:bg-gray-50"}`}
                   >
                     Calendar
                   </button>
                   <button
                     type="button"
                     onClick={() => setViewMode("list")}
-                    className={`px-3 py-1.5 text-xs ${viewMode === "list" ? "bg-blue-600 text-white" : "bg-white text-gray-600 hover:bg-gray-50"}`}
+                    className={`px-3 py-1.5 text-xs ${viewMode === "list" ? "bg-impilo-500 text-white" : "bg-white text-gray-600 hover:bg-gray-50"}`}
                   >
                     List
                   </button>
@@ -223,7 +223,7 @@ export default function OnCallPage() {
                 <button
                   type="button"
                   onClick={() => setShowSwapForm((v) => !v)}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 transition-colors"
                 >
                   <ArrowRightLeft className="w-4 h-4" /> Request Swap
                 </button>
@@ -289,7 +289,7 @@ export default function OnCallPage() {
                     type="button"
                     disabled={createSwap.isPending}
                     onClick={() => void submitSwapRequest()}
-                    className="px-3 py-1.5 text-xs bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                    className="px-3 py-1.5 text-xs bg-impilo-500 text-white rounded-md hover:bg-impilo-600 disabled:opacity-50"
                   >
                     {createSwap.isPending ? "Submitting…" : "Submit request"}
                   </button>
@@ -358,7 +358,7 @@ export default function OnCallPage() {
                         type="button"
                         onClick={() => setSelectedDate(date)}
                         className={`flex flex-col items-center px-4 py-2 rounded-lg border transition-colors shrink-0 ${
-                          isSelected ? "border-blue-300 bg-blue-50 text-blue-700" : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+                          isSelected ? "border-impilo-200 bg-impilo-50 text-impilo-600" : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
                         }`}
                       >
                         <span className="text-xs font-medium">{dayShortLabel(date)}</span>
@@ -508,7 +508,7 @@ function renderAssignmentCard(oc: OnCallAssignmentResource) {
         <p className="text-[10px] font-medium text-gray-400 uppercase tracking-wide mb-1">Primary</p>
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-semibold">
+            <div className="w-8 h-8 rounded-full bg-impilo-100 text-impilo-600 flex items-center justify-center text-xs font-semibold">
               {o.primary_staff_name
                 .split(" ")
                 .map((w) => w[0])
@@ -518,7 +518,7 @@ function renderAssignmentCard(oc: OnCallAssignmentResource) {
             <span className="text-sm font-medium text-gray-900">{o.primary_staff_name}</span>
           </div>
           {primaryPhone ? (
-            <a href={`tel:${primaryPhone}`} className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700">
+            <a href={`tel:${primaryPhone}`} className="inline-flex items-center gap-1 text-xs text-impilo-500 hover:text-impilo-600">
               <Phone className="w-3 h-3" /> {primaryPhone}
             </a>
           ) : (
@@ -540,7 +540,7 @@ function renderAssignmentCard(oc: OnCallAssignmentResource) {
             <span className="text-sm text-gray-700">{o.backup_staff_name}</span>
           </div>
           {backupPhone ? (
-            <a href={`tel:${backupPhone}`} className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-blue-600">
+            <a href={`tel:${backupPhone}`} className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-impilo-500">
               <Phone className="w-3 h-3" /> {backupPhone}
             </a>
           ) : (

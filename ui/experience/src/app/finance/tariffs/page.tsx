@@ -42,7 +42,7 @@ const STATUS_STYLES: Record<string, string> = {
   ACTIVE: "bg-green-100 text-green-700",
   INACTIVE: "bg-gray-100 text-gray-600",
   DRAFT: "bg-yellow-100 text-yellow-700",
-  SUPERSEDED: "bg-blue-100 text-blue-700",
+  SUPERSEDED: "bg-impilo-100 text-impilo-600",
 };
 
 export default function TariffsPage() {

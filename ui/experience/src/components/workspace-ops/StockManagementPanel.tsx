@@ -66,9 +66,9 @@ function getStatusBadge(status: string) {
     draft: { label: 'Draft', classes: 'bg-gray-100 text-gray-600' },
     pending_approval: { label: 'Pending Approval', classes: 'bg-amber-100 text-amber-700' },
     approved: { label: 'Approved', classes: 'bg-green-100 text-green-700' },
-    shipped: { label: 'Shipped', classes: 'bg-blue-100 text-blue-700' },
+    shipped: { label: 'Shipped', classes: 'bg-impilo-100 text-impilo-600' },
     delivered: { label: 'Delivered', classes: 'bg-green-100 text-green-700' },
-    in_transit: { label: 'In Transit', classes: 'bg-blue-100 text-blue-700' },
+    in_transit: { label: 'In Transit', classes: 'bg-impilo-100 text-impilo-600' },
     arrived: { label: 'Arrived', classes: 'bg-green-100 text-green-700' },
     pending: { label: 'Pending', classes: 'bg-amber-100 text-amber-700' },
     completed: { label: 'Completed', classes: 'bg-green-100 text-green-700' },
@@ -107,7 +107,7 @@ export function StockManagementPanel() {
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <div className="bg-white border border-gray-200 rounded-lg pt-3 pb-2 px-3">
-          <div className="flex items-center gap-2"><Package className="h-4 w-4 text-blue-500" /><span className="text-xs text-gray-500">Total Items</span></div>
+          <div className="flex items-center gap-2"><Package className="h-4 w-4 text-impilo-400" /><span className="text-xs text-gray-500">Total Items</span></div>
           <p className="text-lg font-bold">{INVENTORY_ITEMS.length}</p>
         </div>
         <div className={`bg-white border rounded-lg pt-3 pb-2 px-3 ${lowStockCount > 0 ? 'border-amber-300' : 'border-gray-200'}`}>
@@ -133,7 +133,7 @@ export function StockManagementPanel() {
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
               className={`inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 transition-colors ${
-                activeTab === tab.key ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'
+                activeTab === tab.key ? 'border-impilo-500 text-impilo-500' : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
               <Icon className="h-3.5 w-3.5" />
@@ -154,7 +154,7 @@ export function StockManagementPanel() {
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
               <input
                 placeholder="Search items..."
-                className="w-full pl-9 pr-3 h-9 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full pl-9 pr-3 h-9 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-impilo-400"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
               />
@@ -162,7 +162,7 @@ export function StockManagementPanel() {
             <select
               value={categoryFilter}
               onChange={e => setCategoryFilter(e.target.value)}
-              className="h-9 border border-gray-200 rounded-md px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="h-9 border border-gray-200 rounded-md px-3 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
             >
               <option value="all">All Categories</option>
               <option value="Medication">Medication</option>
@@ -172,7 +172,7 @@ export function StockManagementPanel() {
             </select>
             <button
               onClick={() => setNewOrderOpen(true)}
-              className="inline-flex items-center gap-1 px-3 h-9 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              className="inline-flex items-center gap-1 px-3 h-9 text-sm bg-impilo-500 text-white rounded-md hover:bg-impilo-600"
             >
               <Plus className="h-3.5 w-3.5" />New Order
             </button>
@@ -182,7 +182,7 @@ export function StockManagementPanel() {
               <div key={item.id} className="flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className={`h-8 w-8 rounded-lg flex items-center justify-center text-xs font-bold ${
-                    item.status === 'out' ? 'bg-red-100 text-red-600' : item.status === 'low' ? 'bg-amber-100 text-amber-600' : 'bg-blue-100 text-blue-600'
+                    item.status === 'out' ? 'bg-red-100 text-red-600' : item.status === 'low' ? 'bg-amber-100 text-amber-600' : 'bg-impilo-100 text-impilo-500'
                   }`}>
                     {item.code.split('-')[0]}
                   </div>
@@ -211,7 +211,7 @@ export function StockManagementPanel() {
             <p className="text-sm text-gray-500">{PURCHASE_ORDERS.length} orders</p>
             <button
               onClick={() => setNewOrderOpen(true)}
-              className="inline-flex items-center gap-1 px-3 py-1.5 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              className="inline-flex items-center gap-1 px-3 py-1.5 text-sm bg-impilo-500 text-white rounded-md hover:bg-impilo-600"
             >
               <Plus className="h-3.5 w-3.5" />Create Order
             </button>
@@ -257,7 +257,7 @@ export function StockManagementPanel() {
                   <div className="flex items-center gap-2">
                     {getStatusBadge(grn.status)}
                     {grn.status === 'arrived' && (
-                      <button className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700">
+                      <button className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-impilo-500 text-white rounded hover:bg-impilo-600">
                         <ClipboardCheck className="h-3 w-3" />Receive
                       </button>
                     )}
@@ -346,7 +346,7 @@ export function StockManagementPanel() {
             <div className="space-y-3">
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">Supplier</label>
-                <select className="w-full h-9 border border-gray-200 rounded-md px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <select className="w-full h-9 border border-gray-200 rounded-md px-3 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400">
                   <option value="">Select supplier</option>
                   <option value="medsupply">MedSupply SA</option>
                   <option value="pharma">PharmaWholesale</option>
@@ -355,7 +355,7 @@ export function StockManagementPanel() {
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">Priority</label>
-                <select className="w-full h-9 border border-gray-200 rounded-md px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <select className="w-full h-9 border border-gray-200 rounded-md px-3 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400">
                   <option value="normal">Normal</option>
                   <option value="urgent">Urgent</option>
                   <option value="emergency">Emergency</option>
@@ -365,7 +365,7 @@ export function StockManagementPanel() {
                 <label className="block text-xs font-medium text-gray-700 mb-1">Notes</label>
                 <textarea
                   placeholder="Order notes..."
-                  className="w-full h-20 border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full h-20 border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
                 />
               </div>
             </div>
@@ -373,7 +373,7 @@ export function StockManagementPanel() {
               <button onClick={() => setNewOrderOpen(false)} className="px-4 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50">
                 Cancel
               </button>
-              <button onClick={() => setNewOrderOpen(false)} className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+              <button onClick={() => setNewOrderOpen(false)} className="px-4 py-2 text-sm bg-impilo-500 text-white rounded-lg hover:bg-impilo-600">
                 Create Order
               </button>
             </div>

@@ -458,7 +458,7 @@ export default function EncounterPage() {
                 existingTriage.attributes.acuity === 2 ? "border-orange-400 bg-orange-50" :
                 existingTriage.attributes.acuity === 3 ? "border-yellow-400 bg-yellow-50" :
                 existingTriage.attributes.acuity === 4 ? "border-green-400 bg-green-50" :
-                "border-blue-400 bg-blue-50"
+                "border-impilo-400 bg-impilo-50"
               }`}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -537,7 +537,7 @@ export default function EncounterPage() {
                       { level: 2, label: "Orange", desc: "Emergency", color: "border-orange-400 bg-orange-50 text-orange-700", active: "border-orange-500 bg-orange-100 ring-2 ring-orange-300" },
                       { level: 3, label: "Yellow", desc: "Urgent", color: "border-yellow-400 bg-yellow-50 text-yellow-700", active: "border-yellow-500 bg-yellow-100 ring-2 ring-yellow-300" },
                       { level: 4, label: "Green", desc: "Standard", color: "border-green-400 bg-green-50 text-green-700", active: "border-green-500 bg-green-100 ring-2 ring-green-300" },
-                      { level: 5, label: "Blue", desc: "Non-urgent", color: "border-blue-400 bg-blue-50 text-blue-700", active: "border-blue-500 bg-blue-100 ring-2 ring-blue-300" },
+                      { level: 5, label: "Blue", desc: "Non-urgent", color: "border-impilo-400 bg-impilo-50 text-impilo-600", active: "border-impilo-400 bg-blue-100 ring-2 ring-impilo-300" },
                     ].map((t) => (
                       <button
                         key={t.level}
@@ -663,47 +663,47 @@ export default function EncounterPage() {
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">Systolic (mmHg)</label>
                     <input type="number" value={systolic} onChange={(e) => setSystolic(e.target.value)} placeholder="120" disabled={!isActive}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400" />
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 disabled:bg-gray-50 disabled:text-gray-400" />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">Diastolic (mmHg)</label>
                     <input type="number" value={diastolic} onChange={(e) => setDiastolic(e.target.value)} placeholder="80" disabled={!isActive}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400" />
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 disabled:bg-gray-50 disabled:text-gray-400" />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">Heart Rate (bpm)</label>
                     <input type="number" value={heartRate} onChange={(e) => setHeartRate(e.target.value)} placeholder="72" disabled={!isActive}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400" />
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 disabled:bg-gray-50 disabled:text-gray-400" />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">Temperature (°C)</label>
                     <input type="number" step="0.1" value={temperature} onChange={(e) => setTemperature(e.target.value)} placeholder="36.5" disabled={!isActive}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400" />
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 disabled:bg-gray-50 disabled:text-gray-400" />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">Resp. Rate (/min)</label>
                     <input type="number" value={respiratoryRate} onChange={(e) => setRespiratoryRate(e.target.value)} placeholder="16" disabled={!isActive}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400" />
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 disabled:bg-gray-50 disabled:text-gray-400" />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">SpO2 (%)</label>
                     <input type="number" value={oxygenSat} onChange={(e) => setOxygenSat(e.target.value)} placeholder="98" disabled={!isActive}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400" />
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 disabled:bg-gray-50 disabled:text-gray-400" />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">Weight (kg)</label>
                     <input type="number" step="0.1" value={weight} onChange={(e) => setWeight(e.target.value)} placeholder="70" disabled={!isActive}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400" />
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 disabled:bg-gray-50 disabled:text-gray-400" />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">Height (cm)</label>
                     <input type="number" step="0.1" value={height} onChange={(e) => setHeight(e.target.value)} placeholder="170" disabled={!isActive}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400" />
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 disabled:bg-gray-50 disabled:text-gray-400" />
                   </div>
                   <div className="col-span-2">
                     <label className="block text-xs font-medium text-gray-600 mb-1">Pain Score (0-10)</label>
                     <input type="number" min="0" max="10" value={painScore} onChange={(e) => setPainScore(e.target.value)} placeholder="0" disabled={!isActive}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400" />
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 disabled:bg-gray-50 disabled:text-gray-400" />
                   </div>
                 </div>
                 {vitalsError && <p className="mt-2 text-xs text-red-600">{vitalsError}</p>}
@@ -732,7 +732,7 @@ export default function EncounterPage() {
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">Note Type</label>
                     <select value={noteType} onChange={(e) => setNoteType(e.target.value)} disabled={!isActive}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50">
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 disabled:bg-gray-50">
                       <option value="PROGRESS">Progress Note</option>
                       <option value="ASSESSMENT">Assessment</option>
                       <option value="DISCHARGE">Discharge Summary</option>
@@ -742,27 +742,27 @@ export default function EncounterPage() {
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">Subjective</label>
                     <textarea value={subjective} onChange={(e) => setSubjective(e.target.value)} disabled={!isActive} rows={2} placeholder="Patient's reported symptoms..."
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none disabled:bg-gray-50" />
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 resize-none disabled:bg-gray-50" />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">Objective</label>
                     <textarea value={objective} onChange={(e) => setObjective(e.target.value)} disabled={!isActive} rows={2} placeholder="Clinical findings..."
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none disabled:bg-gray-50" />
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 resize-none disabled:bg-gray-50" />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">Assessment</label>
                     <textarea value={assessment} onChange={(e) => setAssessment(e.target.value)} disabled={!isActive} rows={2} placeholder="Clinical assessment..."
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none disabled:bg-gray-50" />
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 resize-none disabled:bg-gray-50" />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">Plan</label>
                     <textarea value={plan} onChange={(e) => setPlan(e.target.value)} disabled={!isActive} rows={2} placeholder="Treatment plan..."
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none disabled:bg-gray-50" />
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 resize-none disabled:bg-gray-50" />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">Additional Notes</label>
                     <textarea value={noteBody} onChange={(e) => setNoteBody(e.target.value)} disabled={!isActive} rows={3} placeholder="Any additional notes..."
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none disabled:bg-gray-50" />
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 resize-none disabled:bg-gray-50" />
                   </div>
                 </div>
                 {noteError && <p className="mt-2 text-xs text-red-600">{noteError}</p>}
@@ -861,7 +861,7 @@ export default function EncounterPage() {
                               <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${
                                 ref.attributes.status === "RESPONDED" ? "bg-purple-100 text-purple-700" :
                                 ref.attributes.status === "COMPLETED" ? "bg-green-100 text-green-700" :
-                                ref.attributes.status === "ACCEPTED" ? "bg-blue-100 text-blue-700" :
+                                ref.attributes.status === "ACCEPTED" ? "bg-impilo-100 text-impilo-600" :
                                 "bg-yellow-100 text-yellow-700"
                               }`}>
                                 {ref.attributes.status}
@@ -874,7 +874,7 @@ export default function EncounterPage() {
                           </div>
                           <Link
                             href={`/ehr/${patientId}/referrals`}
-                            className="text-xs text-blue-600 hover:text-blue-800"
+                            className="text-xs text-impilo-500 hover:text-impilo-700"
                           >
                             View all
                           </Link>

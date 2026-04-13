@@ -75,7 +75,7 @@ export default function FinancePayerClaimsPage() {
           <Link href="/finance/payer-ops" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700">
             <ArrowLeft className="h-4 w-4" /> Payer ops
           </Link>
-          <Link href="/finance/commerce-integrations" className="text-sm text-blue-700 hover:text-blue-800">
+          <Link href="/finance/commerce-integrations" className="text-sm text-impilo-600 hover:text-impilo-700">
             Commerce & payer stack
           </Link>
         </div>
@@ -166,7 +166,7 @@ export default function FinancePayerClaimsPage() {
                         <td className="px-3 py-3">
                           <Link
                             href={`/finance/payer-claims/${encodeURIComponent(claim.claimId)}`}
-                            className="text-blue-700 hover:underline"
+                            className="text-impilo-600 hover:underline"
                           >
                             Open claim
                           </Link>

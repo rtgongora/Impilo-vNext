@@ -291,7 +291,7 @@ export default function ImagingPage() {
                       : "Patient-matched studies only (no cross-patient fallback)"}
                   </p>
                 </div>
-                <div className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">
+                <div className="rounded-full bg-impilo-50 px-2.5 py-1 text-xs font-medium text-impilo-600">
                   {visibleStudies.length}
                 </div>
               </div>
@@ -299,7 +299,7 @@ export default function ImagingPage() {
               <div className="max-h-[calc(100vh-340px)] space-y-2 overflow-y-auto p-3">
                 {isLoading && (
                   <div className="flex items-center justify-center py-12">
-                    <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
+                    <Loader2 className="h-6 w-6 animate-spin text-impilo-400" />
                     <span className="ml-2 text-sm text-gray-500">Loading studies...</span>
                   </div>
                 )}
@@ -347,12 +347,12 @@ export default function ImagingPage() {
                       }}
                       className={`w-full rounded-xl border p-3 text-left transition-colors ${
                         isSelected
-                          ? "border-blue-500 bg-blue-50"
+                          ? "border-impilo-400 bg-impilo-50"
                           : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
                       }`}
                     >
                       <div className="flex items-start gap-3">
-                        <Monitor className="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-600" />
+                        <Monitor className="mt-0.5 h-4 w-4 flex-shrink-0 text-impilo-500" />
                         <div className="min-w-0">
                           <p className="truncate text-sm font-medium text-gray-800">
                             {study.MainDicomTags?.StudyDescription || "Unnamed study"}
@@ -530,7 +530,7 @@ function SeriesBrowser({
   if (isLoading) {
     return (
       <div className="flex h-full flex-col items-center justify-center text-center">
-        <Loader2 className="mb-2 h-8 w-8 animate-spin text-blue-400" />
+        <Loader2 className="mb-2 h-8 w-8 animate-spin text-impilo-300" />
         <p className="text-sm text-gray-400">Loading series...</p>
       </div>
     );
@@ -556,7 +556,7 @@ function SeriesBrowser({
               onSelectInstance(entry.instances[0]);
             }
           }}
-          className="rounded-xl border border-gray-700 bg-gray-800 p-3 text-left transition-colors hover:border-blue-500"
+          className="rounded-xl border border-gray-700 bg-gray-800 p-3 text-left transition-colors hover:border-impilo-400"
         >
           <div className="mb-2 flex aspect-square items-center justify-center rounded-lg bg-gray-900">
             <Image className="h-8 w-8 text-gray-600" />

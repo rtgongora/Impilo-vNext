@@ -26,7 +26,7 @@ interface PrescriptionResource {
 }
 
 const STATUS_BADGE: Record<string, string> = {
-  PENDING: "bg-blue-100 text-blue-700",
+  PENDING: "bg-impilo-100 text-impilo-600",
   ACTIVE: "bg-green-100 text-green-700",
   DISPENSED: "bg-purple-100 text-purple-700",
   CANCELLED: "bg-gray-100 text-gray-600",

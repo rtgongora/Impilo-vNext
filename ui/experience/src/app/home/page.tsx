@@ -68,10 +68,10 @@ function getModuleCategories(roles: {
       id: "clinical",
       title: "Clinical Care & Orders",
       icon: Stethoscope,
-      color: "bg-blue-500",
+      color: "bg-impilo-500",
       modules: [
         ...(roles.isClinical ? [
-          { label: "Clinical Hub", description: "All 10 clinical modules", href: "/clinical", icon: Stethoscope, color: "bg-blue-100 text-blue-600" },
+          { label: "Clinical Hub", description: "All 10 clinical modules", href: "/clinical", icon: Stethoscope, color: "bg-impilo-100 text-impilo-500" },
           { label: "Queues & Wards", description: "Intake, triage, waiting, and ward status", href: "/queue", icon: Users, color: "bg-orange-100 text-orange-600" },
           { label: "Walk-in Registration", description: "Register a patient directly into queue flow", href: "/queue/walk-in", icon: Users, color: "bg-amber-100 text-amber-600" },
           { label: "Bookings & Appointments", description: "Scheduling, waitlist, and planned arrivals", href: "/scheduling", icon: Calendar, color: "bg-cyan-100 text-cyan-600" },
@@ -98,7 +98,7 @@ function getModuleCategories(roles: {
         ] : []),
         { label: "Control Tower", description: "Real-time facility operations", href: "/clinical/control-tower", icon: BarChart3, color: "bg-rose-100 text-rose-600" },
         { label: "Operations & Roster", description: "Shifts, roster, and workforce visibility", href: "/shift", icon: Clock, color: "bg-cyan-100 text-cyan-600" },
-        { label: "Communication Hub", description: "Messages, pages, and calls", href: "/communication", icon: MessageSquare, color: "bg-blue-100 text-blue-600" },
+        { label: "Communication Hub", description: "Messages, pages, and calls", href: "/communication", icon: MessageSquare, color: "bg-impilo-100 text-impilo-500" },
         { label: "Provider Noticeboard", description: "Announcements and staffing updates", href: "/scheduling/noticeboard", icon: ClipboardList, color: "bg-purple-100 text-purple-600" },
         ...(roles.isAdmin ? [
           { label: "Omnichannel Hub", description: "SMS, callbacks, disclosure, and access channels", href: "/omnichannel", icon: Radio, color: "bg-teal-100 text-teal-600" },
@@ -114,7 +114,7 @@ function getModuleCategories(roles: {
       icon: Receipt,
       color: "bg-emerald-500",
       modules: [
-        { label: "Billing", description: "Bills & invoices", href: "/finance/billing", icon: FileText, color: "bg-blue-100 text-blue-600" },
+        { label: "Billing", description: "Bills & invoices", href: "/finance/billing", icon: FileText, color: "bg-impilo-100 text-impilo-500" },
         { label: "Payments", description: "Payment tracking", href: "/finance/payments", icon: Receipt, color: "bg-green-100 text-green-600" },
         { label: "Claims", description: "Insurance claims", href: "/finance/claims", icon: ClipboardList, color: "bg-purple-100 text-purple-600" },
         { label: "Tariffs", description: "Tariff schedules", href: "/finance/tariffs", icon: BarChart3, color: "bg-amber-100 text-amber-600" },
@@ -131,7 +131,7 @@ function getModuleCategories(roles: {
       { label: "Providers", description: "Provider registry", href: "/registry/providers", icon: Stethoscope, color: "bg-teal-100 text-teal-600" },
       { label: "Facilities", description: "Facility registry", href: "/registry/facilities", icon: Building2, color: "bg-purple-100 text-purple-600" },
       { label: "Products", description: "Product catalogue", href: "/registry/products", icon: Package, color: "bg-orange-100 text-orange-600" },
-      { label: "Terminology", description: "ICD, SNOMED, LOINC", href: "/registry/terminology", icon: BookOpen, color: "bg-blue-100 text-blue-600" },
+      { label: "Terminology", description: "ICD, SNOMED, LOINC", href: "/registry/terminology", icon: BookOpen, color: "bg-impilo-100 text-impilo-500" },
     ],
   });
 
@@ -143,7 +143,7 @@ function getModuleCategories(roles: {
       color: "bg-indigo-500",
       modules: [
         { label: "ID Services Hub", description: "Generate, validate & recover IDs", href: "/id-services", icon: Shield, color: "bg-indigo-100 text-indigo-600" },
-        { label: "Patient PHID", description: "Generate patient health IDs", href: "/id-services?tab=generate", icon: Users, color: "bg-blue-100 text-blue-600" },
+        { label: "Patient PHID", description: "Generate patient health IDs", href: "/id-services?tab=generate", icon: Users, color: "bg-impilo-100 text-impilo-500" },
         { label: "Provider ID", description: "Healthcare worker IDs", href: "/id-services?tab=generate", icon: Stethoscope, color: "bg-teal-100 text-teal-600" },
         { label: "ID Validation", description: "Verify ID authenticity", href: "/id-services?tab=validate", icon: Shield, color: "bg-green-100 text-green-600" },
         { label: "ID Recovery", description: "Recover lost IDs", href: "/id-services?tab=recovery", icon: Shield, color: "bg-amber-100 text-amber-600" },
@@ -178,7 +178,7 @@ function getModuleCategories(roles: {
         { label: "Eligibility Check", description: "Real-time coverage verification", href: "/coverage?tab=eligibility", icon: Users, color: "bg-green-100 text-green-600" },
         { label: "Claims", description: "Submit and track claims", href: "/coverage?tab=claims", icon: FileText, color: "bg-purple-100 text-purple-600" },
         { label: "Settlement", description: "Remittance & payouts", href: "/coverage?tab=settlement", icon: Receipt, color: "bg-emerald-100 text-emerald-600" },
-        { label: "Schemes", description: "Plan administration", href: "/coverage?tab=schemes", icon: Shield, color: "bg-blue-100 text-blue-600" },
+        { label: "Schemes", description: "Plan administration", href: "/coverage?tab=schemes", icon: Shield, color: "bg-impilo-100 text-impilo-500" },
       ],
     });
   }
@@ -203,8 +203,8 @@ function getModuleCategories(roles: {
       color: "bg-pink-500",
       modules: [
         { label: "Voice Dictation", description: "Speech-to-text for notes", href: "/clinical/dictation", icon: Shield, color: "bg-pink-100 text-pink-600" },
-        { label: "Offline Sync", description: "Sync status & conflicts", href: "/clinical-tools?tab=offline", icon: Shield, color: "bg-blue-100 text-blue-600" },
-        { label: "Documents", description: "Document management", href: "/clinical-tools?tab=documents", icon: FileText, color: "bg-blue-100 text-blue-600" },
+        { label: "Offline Sync", description: "Sync status & conflicts", href: "/clinical-tools?tab=offline", icon: Shield, color: "bg-impilo-100 text-impilo-500" },
+        { label: "Documents", description: "Document management", href: "/clinical-tools?tab=documents", icon: FileText, color: "bg-impilo-100 text-impilo-500" },
         { label: "CDS Alerts", description: "Clinical decision support", href: "/clinical-tools?tab=cds", icon: Shield, color: "bg-red-100 text-red-600" },
       ],
     });
@@ -378,7 +378,7 @@ export default function HomePage() {
   const categories = getModuleCategories({ isClinical, isAdmin, isFinance, isDispenser });
   const workQuickActions = [
     { label: "EHR", href: "/queue/search", icon: Stethoscope, color: "bg-red-100 text-red-600" },
-    { label: "Dashboard", href: "/queue", icon: ClipboardList, color: "bg-blue-100 text-blue-600" },
+    { label: "Dashboard", href: "/queue", icon: ClipboardList, color: "bg-impilo-100 text-impilo-500" },
     { label: "Prescribe", href: "/pharmacy", icon: Pill, color: "bg-emerald-100 text-emerald-600" },
     { label: "LIMS", href: "/queue/search?workflow=lims", icon: TestTube2, color: "bg-violet-100 text-violet-700" },
     { label: "PACS", href: "/queue/search?workflow=pacs", icon: Scan, color: "bg-rose-100 text-rose-700" },
@@ -409,7 +409,7 @@ export default function HomePage() {
                   </span>
                 )}
                 {user?.actorType && (
-                  <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-blue-50 text-blue-700">
+                  <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-impilo-50 text-impilo-600">
                     {user.actorType}
                   </span>
                 )}
@@ -436,7 +436,7 @@ export default function HomePage() {
                 </div>
               )}
               {facility && !shift && (
-                <Link href="/shift" className="flex items-center gap-2 text-sm text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition-colors">
+                <Link href="/shift" className="flex items-center gap-2 text-sm text-impilo-500 bg-impilo-50 px-3 py-1.5 rounded-lg hover:bg-impilo-100 transition-colors">
                   <Clock className="w-4 h-4" />
                   <span>Start a shift</span>
                   <ArrowRight className="w-3 h-3" />
@@ -514,7 +514,7 @@ export default function HomePage() {
                     <Link
                       key={action.label}
                       href={action.href}
-                      className="flex flex-col items-center justify-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-4 py-4 text-center transition-colors hover:border-blue-300 hover:bg-white"
+                      className="flex flex-col items-center justify-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-4 py-4 text-center transition-colors hover:border-impilo-200 hover:bg-white"
                     >
                       <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${action.color}`}>
                         <ActionIcon className="h-5 w-5" />
@@ -534,7 +534,7 @@ export default function HomePage() {
               <div className="bg-white rounded-lg border border-gray-200">
                 <div className="px-5 py-3 border-b flex items-center justify-between">
                   <h3 className="text-sm font-medium text-gray-900">Today&apos;s Schedule</h3>
-                  <Link href="/scheduling" className="text-xs text-blue-600 hover:text-blue-800">View All →</Link>
+                  <Link href="/scheduling" className="text-xs text-impilo-500 hover:text-impilo-700">View All →</Link>
                 </div>
                 {appointments.length === 0 ? (
                   <div className="p-6 text-center">
@@ -562,7 +562,7 @@ export default function HomePage() {
               <div className="bg-white rounded-lg border border-gray-200">
                 <div className="px-5 py-3 border-b flex items-center justify-between">
                   <h3 className="text-sm font-medium text-gray-900">Recent Encounters</h3>
-                  <Link href="/queue" className="text-xs text-blue-600 hover:text-blue-800">Queue →</Link>
+                  <Link href="/queue" className="text-xs text-impilo-500 hover:text-impilo-700">Queue →</Link>
                 </div>
                 {encounters.length === 0 ? (
                   <div className="p-6 text-center">
@@ -600,17 +600,17 @@ export default function HomePage() {
           <div className="bg-white rounded-lg border border-gray-200 p-4">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2">
-                <MessageSquare className="w-5 h-5 text-blue-600" />
+                <MessageSquare className="w-5 h-5 text-impilo-500" />
                 Communication & Access
               </h3>
-              <Link href="/communication" className="text-xs text-blue-600 hover:text-blue-800">
+              <Link href="/communication" className="text-xs text-impilo-500 hover:text-impilo-700">
                 View All →
               </Link>
             </div>
             <div className="flex flex-wrap gap-2 mb-3">
               <Link href="/communication?tab=messages"
-                className="inline-flex items-center gap-2 px-5 py-3 text-sm font-medium border border-gray-200 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-colors">
-                <FileText className="w-5 h-5 text-blue-600" />
+                className="inline-flex items-center gap-2 px-5 py-3 text-sm font-medium border border-gray-200 rounded-lg hover:bg-impilo-50 hover:border-impilo-200 transition-colors">
+                <FileText className="w-5 h-5 text-impilo-500" />
                 Messages
               </Link>
               <Link href="/communication?tab=pages"
@@ -649,7 +649,7 @@ export default function HomePage() {
                     <button
                       onClick={() => setExpandedCategory(isExpanded ? null : cat.id)}
                       className={`w-full text-left rounded-lg border p-4 transition-all ${
-                        isExpanded ? "border-blue-300 bg-blue-50 shadow-sm" : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm"
+                        isExpanded ? "border-impilo-200 bg-impilo-50 shadow-sm" : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm"
                       }`}
                     >
                       <div className="flex items-center gap-3">
@@ -673,7 +673,7 @@ export default function HomePage() {
                                 <ModIcon className="w-3.5 h-3.5" />
                               </div>
                               <div className="min-w-0">
-                                <p className="text-sm text-gray-900 group-hover:text-blue-600">{mod.label}</p>
+                                <p className="text-sm text-gray-900 group-hover:text-impilo-500">{mod.label}</p>
                                 <p className="text-xs text-gray-500 truncate">{mod.description}</p>
                               </div>
                               <ChevronRight className="w-3.5 h-3.5 text-gray-400 shrink-0 ml-auto" />
@@ -693,18 +693,18 @@ export default function HomePage() {
             <div>
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Finance Overview</h3>
-                <Link href="/finance" className="text-xs text-blue-600 hover:text-blue-800">Finance Dashboard →</Link>
+                <Link href="/finance" className="text-xs text-impilo-500 hover:text-impilo-700">Finance Dashboard →</Link>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Link href="/finance/billing" className="bg-white rounded-lg border border-gray-200 p-4 hover:border-blue-300 transition-colors">
-                  <div className="flex items-center gap-2 mb-2"><Receipt className="w-4 h-4 text-blue-500" /><span className="text-sm font-medium text-gray-900">Billing</span></div>
+                <Link href="/finance/billing" className="bg-white rounded-lg border border-gray-200 p-4 hover:border-impilo-200 transition-colors">
+                  <div className="flex items-center gap-2 mb-2"><Receipt className="w-4 h-4 text-impilo-400" /><span className="text-sm font-medium text-gray-900">Billing</span></div>
                   <p className="text-xs text-gray-500">View and manage bills</p>
                 </Link>
-                <Link href="/finance/payments" className="bg-white rounded-lg border border-gray-200 p-4 hover:border-blue-300 transition-colors">
+                <Link href="/finance/payments" className="bg-white rounded-lg border border-gray-200 p-4 hover:border-impilo-200 transition-colors">
                   <div className="flex items-center gap-2 mb-2"><FileText className="w-4 h-4 text-green-500" /><span className="text-sm font-medium text-gray-900">Payments</span></div>
                   <p className="text-xs text-gray-500">Track payment status</p>
                 </Link>
-                <Link href="/finance/claims" className="bg-white rounded-lg border border-gray-200 p-4 hover:border-blue-300 transition-colors">
+                <Link href="/finance/claims" className="bg-white rounded-lg border border-gray-200 p-4 hover:border-impilo-200 transition-colors">
                   <div className="flex items-center gap-2 mb-2"><ClipboardList className="w-4 h-4 text-purple-500" /><span className="text-sm font-medium text-gray-900">Claims</span></div>
                   <p className="text-xs text-gray-500">Insurance claim tracking</p>
                 </Link>
@@ -756,9 +756,9 @@ export default function HomePage() {
               <div className="bg-white rounded-lg border border-gray-200 p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2">
-                    <Award className="w-5 h-5 text-blue-600" /> Credentials & License
+                    <Award className="w-5 h-5 text-impilo-500" /> Credentials & License
                   </h3>
-                  <Link href="/home/credentials" className="text-xs text-blue-600 hover:text-blue-800">
+                  <Link href="/home/credentials" className="text-xs text-impilo-500 hover:text-impilo-700">
                     Full Details →
                   </Link>
                 </div>
@@ -780,7 +780,7 @@ export default function HomePage() {
                     <p className="text-xs text-gray-500 mb-1">CPD Progress</p>
                     <p className="text-sm font-semibold text-gray-900">Current Cycle</p>
                     <div className="mt-2 bg-gray-200 rounded-full h-2">
-                      <div className="bg-blue-500 rounded-full h-2" style={{ width: "72%" }} />
+                      <div className="bg-impilo-500 rounded-full h-2" style={{ width: "72%" }} />
                     </div>
                     <p className="text-xs text-gray-500 mt-1">18/25 points earned</p>
                   </div>
@@ -835,7 +835,7 @@ export default function HomePage() {
                           </div>
                         </div>
                         <button onClick={() => handleFacilitySelect(f)}
-                          className="text-xs text-blue-600 hover:text-blue-800 font-medium">
+                          className="text-xs text-impilo-500 hover:text-impilo-700 font-medium">
                           Start Shift →
                         </button>
                       </div>
@@ -886,8 +886,8 @@ export default function HomePage() {
                   <Heart className="w-5 h-5 text-pink-600" /> My Health
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <Link href="/scheduling" className="flex flex-col items-center gap-2 p-4 rounded-lg bg-blue-50 border border-blue-200 hover:border-blue-400 transition-colors text-center">
-                    <Calendar className="w-6 h-6 text-blue-600" />
+                  <Link href="/scheduling" className="flex flex-col items-center gap-2 p-4 rounded-lg bg-impilo-50 border border-impilo-200 hover:border-impilo-400 transition-colors text-center">
+                    <Calendar className="w-6 h-6 text-impilo-500" />
                     <span className="text-xs font-medium text-gray-900">Book Visit</span>
                   </Link>
                   <Link href="/telemedicine" className="flex flex-col items-center gap-2 p-4 rounded-lg bg-green-50 border border-green-200 hover:border-green-400 transition-colors text-center">
@@ -911,28 +911,28 @@ export default function HomePage() {
                   <User className="w-5 h-5 text-gray-600" /> Account & Settings
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <Link href="/home/profile" className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 border border-gray-200 hover:border-blue-300 transition-colors">
+                  <Link href="/home/profile" className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 border border-gray-200 hover:border-impilo-200 transition-colors">
                     <User className="w-5 h-5 text-gray-400" />
                     <div>
                       <p className="text-sm font-medium text-gray-900">Profile</p>
                       <p className="text-xs text-gray-500">View and edit your profile</p>
                     </div>
                   </Link>
-                  <Link href="/home/preferences" className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 border border-gray-200 hover:border-blue-300 transition-colors">
+                  <Link href="/home/preferences" className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 border border-gray-200 hover:border-impilo-200 transition-colors">
                     <Settings className="w-5 h-5 text-gray-400" />
                     <div>
                       <p className="text-sm font-medium text-gray-900">Preferences</p>
                       <p className="text-xs text-gray-500">Language, notifications, display</p>
                     </div>
                   </Link>
-                  <Link href="/settings/security" className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 border border-gray-200 hover:border-blue-300 transition-colors">
+                  <Link href="/settings/security" className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 border border-gray-200 hover:border-impilo-200 transition-colors">
                     <Shield className="w-5 h-5 text-gray-400" />
                     <div>
                       <p className="text-sm font-medium text-gray-900">Security & Privacy</p>
                       <p className="text-xs text-gray-500">Password, MFA, sessions</p>
                     </div>
                   </Link>
-                  <Link href="/marketplace" className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 border border-gray-200 hover:border-blue-300 transition-colors">
+                  <Link href="/marketplace" className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 border border-gray-200 hover:border-impilo-200 transition-colors">
                     <ShoppingCart className="w-5 h-5 text-gray-400" />
                     <div>
                       <p className="text-sm font-medium text-gray-900">Health Marketplace</p>
@@ -962,7 +962,7 @@ export default function HomePage() {
                         <button
                           onClick={() => joinGroup.mutate({ groupId: group.id, memberId: user?.id ?? "" })}
                           disabled={joinGroup.isPending}
-                          className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                          className="text-xs text-impilo-500 hover:text-impilo-700 font-medium"
                         >
                           Join
                         </button>
@@ -1005,7 +1005,7 @@ function AnnouncementsBanner() {
   const priorityColors: Record<string, string> = {
     urgent: "bg-red-100 text-red-700 border-red-200",
     high: "bg-orange-100 text-orange-700 border-orange-200",
-    normal: "bg-blue-100 text-blue-700 border-blue-200",
+    normal: "bg-impilo-100 text-impilo-600 border-impilo-200",
     low: "bg-gray-100 text-gray-600 border-gray-200",
   };
 
@@ -1032,7 +1032,7 @@ function AnnouncementsBanner() {
             ) : a.is_pinned ? (
               <Shield className="w-4 h-4 text-amber-500" />
             ) : (
-              <Activity className="w-4 h-4 text-blue-500" />
+              <Activity className="w-4 h-4 text-impilo-400" />
             )}
           </div>
           <div className="min-w-0 flex-1">

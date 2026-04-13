@@ -123,7 +123,7 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
             />
           </div>
         </div>
@@ -135,7 +135,7 @@ export default function LoginPage() {
             </label>
             <Link
               href="/auth/forgot-password"
-              className="text-xs text-blue-600 hover:text-blue-800 transition-colors"
+              className="text-xs text-impilo-500 hover:text-impilo-700 transition-colors"
             >
               Forgot password?
             </Link>
@@ -150,7 +150,7 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter your password"
-              className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
             />
             <button
               type="button"
@@ -165,7 +165,7 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={login.isPending}
-          className="w-full py-3 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
+          className="w-full py-3 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
         >
           {login.isPending ? (
             <>
@@ -185,16 +185,16 @@ export default function LoginPage() {
         <div className="flex gap-3">
           <Link
             href="/auth/login/provider-id"
-            className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-700 hover:border-blue-300 hover:bg-blue-50 transition-colors"
+            className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-700 hover:border-impilo-200 hover:bg-impilo-50 transition-colors"
           >
-            <BadgeCheck className="w-4 h-4 text-blue-600" />
+            <BadgeCheck className="w-4 h-4 text-impilo-500" />
             Provider ID
           </Link>
           <Link
             href="/auth/login/biometric"
-            className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-700 hover:border-blue-300 hover:bg-blue-50 transition-colors"
+            className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-700 hover:border-impilo-200 hover:bg-impilo-50 transition-colors"
           >
-            <Fingerprint className="w-4 h-4 text-blue-600" />
+            <Fingerprint className="w-4 h-4 text-impilo-500" />
             Biometric
           </Link>
         </div>
@@ -203,7 +203,7 @@ export default function LoginPage() {
       <div className="mt-4 text-center">
         <p className="text-sm text-gray-500">
           Don&apos;t have an account?{" "}
-          <Link href="/auth/register" className="text-blue-600 hover:text-blue-800 font-medium">
+          <Link href="/auth/register" className="text-impilo-500 hover:text-impilo-700 font-medium">
             Create account
           </Link>
         </p>

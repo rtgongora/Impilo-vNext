@@ -111,7 +111,7 @@ export default function CredentialsPage() {
 
           <div className="rounded-lg border border-gray-200 bg-white p-6">
             <div className="mb-4 flex items-center gap-2">
-              <BookOpen className="h-5 w-5 text-blue-600" />
+              <BookOpen className="h-5 w-5 text-impilo-500" />
               <h3 className="text-base font-semibold text-gray-900">CPD Tracker</h3>
             </div>
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -125,7 +125,7 @@ export default function CredentialsPage() {
                       <div className="flex-1">
                         <div className="h-3 rounded-full bg-gray-200">
                           <div
-                            className="h-3 rounded-full bg-blue-500 transition-all"
+                            className="h-3 rounded-full bg-impilo-500 transition-all"
                             style={{ width: `${Math.min(100, Math.round((cpd.currentCycle.earnedPoints / cpd.currentCycle.requiredPoints) * 100))}%` }}
                           />
                         </div>
@@ -144,7 +144,7 @@ export default function CredentialsPage() {
                 )}
               </div>
               <div className="flex gap-3">
-                <button className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-blue-50 px-4 py-2.5 text-sm font-medium text-blue-700 transition-colors hover:bg-blue-100">
+                <button className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-impilo-50 px-4 py-2.5 text-sm font-medium text-impilo-600 transition-colors hover:bg-impilo-100">
                   <BookOpen className="h-4 w-4" /> Browse Courses
                 </button>
                 <button className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-amber-50 px-4 py-2.5 text-sm font-medium text-amber-700 transition-colors hover:bg-amber-100">
@@ -207,7 +207,7 @@ export default function CredentialsPage() {
                         href={`${BFF_BASE_URL}/internal/v1/credentials/${credential.credentialId}/pdf`}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-blue-700"
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-impilo-500 px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-impilo-600"
                       >
                         <Download className="h-4 w-4" /> Download PDF
                       </a>

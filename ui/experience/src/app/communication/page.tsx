@@ -108,7 +108,7 @@ function MessagesTab() {
         </div>
         <Link
           href="/communication/secure-messaging"
-          className="inline-flex items-center gap-2 rounded-lg border border-blue-200 px-4 py-2 text-sm font-medium text-blue-700 transition-colors hover:bg-blue-50"
+          className="inline-flex items-center gap-2 rounded-lg border border-impilo-200 px-4 py-2 text-sm font-medium text-impilo-600 transition-colors hover:bg-impilo-50"
         >
           <MessageSquare className="h-4 w-4" />
           Open inbox
@@ -138,7 +138,7 @@ function MessagesTab() {
                 className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-4 transition-colors hover:border-gray-300"
               >
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
-                  <User className="h-5 w-5 text-blue-600" />
+                  <User className="h-5 w-5 text-impilo-500" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-gray-900">{channelLabel}</p>
@@ -149,7 +149,7 @@ function MessagesTab() {
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-gray-500">{formatDateTime(channel.last_message_at)}</p>
-                  <span className="text-xs font-medium text-blue-700">Open thread</span>
+                  <span className="text-xs font-medium text-impilo-600">Open thread</span>
                 </div>
               </Link>
             );
@@ -180,7 +180,7 @@ function PagesTab() {
   const urgencyColors: Record<string, string> = {
     urgent: "bg-red-100 text-red-700",
     high: "bg-orange-100 text-orange-700",
-    normal: "bg-blue-100 text-blue-700",
+    normal: "bg-impilo-100 text-impilo-600",
     low: "bg-gray-100 text-gray-600",
   };
 
@@ -200,7 +200,7 @@ function PagesTab() {
         </div>
         <button
           onClick={() => setShowSend((value) => !value)}
-          className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+          className="inline-flex items-center gap-2 rounded-lg bg-impilo-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-impilo-600"
         >
           <Send className="h-4 w-4" />
           Send page
@@ -208,7 +208,7 @@ function PagesTab() {
       </div>
 
       {showSend ? (
-        <div className="space-y-3 rounded-lg border-2 border-blue-200 bg-white p-4">
+        <div className="space-y-3 rounded-lg border-2 border-impilo-200 bg-white p-4">
           <div className="grid gap-3 md:grid-cols-2">
             <input
               type="text"
@@ -285,7 +285,7 @@ function PagesTab() {
                 )
               }
               disabled={!pageForm.message || (!pageForm.recipientId && !pageForm.recipientName) || sendPage.isPending}
-              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+              className="rounded-lg bg-impilo-500 px-4 py-2 text-sm font-medium text-white hover:bg-impilo-600 disabled:opacity-50"
             >
               {sendPage.isPending ? "Sending..." : "Send page"}
             </button>
@@ -391,12 +391,12 @@ function CallsTab() {
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <Link
           href="/telemedicine"
-          className="rounded-lg border border-gray-200 bg-white p-6 text-center transition-colors hover:border-blue-300"
+          className="rounded-lg border border-gray-200 bg-white p-6 text-center transition-colors hover:border-impilo-200"
         >
-          <Phone className="mx-auto mb-3 h-10 w-10 text-blue-500" />
+          <Phone className="mx-auto mb-3 h-10 w-10 text-impilo-400" />
           <h4 className="text-sm font-semibold text-gray-900">Telemedicine sessions</h4>
           <p className="mt-1 text-xs text-gray-500">Launch or join real audio and video consult workflows.</p>
-          <span className="mt-4 inline-flex text-sm font-medium text-blue-700">Open telemedicine</span>
+          <span className="mt-4 inline-flex text-sm font-medium text-impilo-600">Open telemedicine</span>
         </Link>
 
         <Link
@@ -413,7 +413,7 @@ function CallsTab() {
       <div className="rounded-lg border border-gray-200 bg-white p-4">
         <div className="flex items-center justify-between">
           <h4 className="text-sm font-medium text-gray-700">Current callback workload</h4>
-          <Link href="/omnichannel?tab=callbacks" className="text-xs font-medium text-blue-700 hover:underline">
+          <Link href="/omnichannel?tab=callbacks" className="text-xs font-medium text-impilo-600 hover:underline">
             See all callbacks
           </Link>
         </div>
@@ -433,9 +433,9 @@ function CallsTab() {
               <p className="text-xs text-green-700">Completed callbacks</p>
               <p className="mt-1 text-2xl font-semibold text-green-900">{completedCallbacks.length}</p>
             </div>
-            <div className="rounded-lg bg-blue-50 p-3">
-              <p className="text-xs text-blue-700">Total tracked calls</p>
-              <p className="mt-1 text-2xl font-semibold text-blue-900">{callbacks.length}</p>
+            <div className="rounded-lg bg-impilo-50 p-3">
+              <p className="text-xs text-impilo-600">Total tracked calls</p>
+              <p className="mt-1 text-2xl font-semibold text-impilo-800">{callbacks.length}</p>
             </div>
           </div>
         )}

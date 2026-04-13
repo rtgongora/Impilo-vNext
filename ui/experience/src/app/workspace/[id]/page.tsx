@@ -122,7 +122,7 @@ export default function WorkspaceDetailPage() {
             {/* Stats */}
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
-                <Users className="w-6 h-6 text-blue-500 mx-auto mb-1" />
+                <Users className="w-6 h-6 text-impilo-400 mx-auto mb-1" />
                 <p className="text-xl font-bold text-gray-900">
                   {workspace.attributes.assignedStaff?.length ?? 0}
                 </p>
@@ -176,7 +176,7 @@ export default function WorkspaceDetailPage() {
                       <span className="text-sm font-medium text-gray-900">
                         {patient.patientName}
                       </span>
-                      <span className="inline-block px-2 py-0.5 text-xs rounded-full font-medium bg-blue-100 text-blue-700">
+                      <span className="inline-block px-2 py-0.5 text-xs rounded-full font-medium bg-impilo-100 text-impilo-600">
                         {patient.status}
                       </span>
                     </div>

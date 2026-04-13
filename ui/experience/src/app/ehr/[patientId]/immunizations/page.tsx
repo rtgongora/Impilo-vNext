@@ -169,7 +169,7 @@ export default function ImmunizationsPage() {
               <button
                 type="button"
                 onClick={() => setShowForm((prev) => !prev)}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-impilo-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-impilo-600"
               >
                 <Plus className="h-4 w-4" />
                 Record Immunization
@@ -189,7 +189,7 @@ export default function ImmunizationsPage() {
                         onChange={(e) => updateField("vaccine_name", e.target.value)}
                         placeholder="e.g. Influenza"
                         required
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-impilo-400"
                       />
                     </div>
                     <div>
@@ -199,7 +199,7 @@ export default function ImmunizationsPage() {
                         value={form.vaccine_code}
                         onChange={(e) => updateField("vaccine_code", e.target.value)}
                         placeholder="e.g. CVX-141"
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-impilo-400"
                       />
                     </div>
                     <div>
@@ -210,7 +210,7 @@ export default function ImmunizationsPage() {
                         value={form.dose_number}
                         onChange={(e) => updateField("dose_number", e.target.value)}
                         placeholder="1"
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-impilo-400"
                       />
                     </div>
                     <div>
@@ -220,7 +220,7 @@ export default function ImmunizationsPage() {
                         value={form.dose_sequence}
                         onChange={(e) => updateField("dose_sequence", e.target.value)}
                         placeholder="e.g. 1 of 3"
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-impilo-400"
                       />
                     </div>
                     <div>
@@ -230,7 +230,7 @@ export default function ImmunizationsPage() {
                         value={form.lot_number}
                         onChange={(e) => updateField("lot_number", e.target.value)}
                         placeholder="e.g. AB1234"
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-impilo-400"
                       />
                     </div>
                     <div>
@@ -240,7 +240,7 @@ export default function ImmunizationsPage() {
                         value={form.site}
                         onChange={(e) => updateField("site", e.target.value)}
                         placeholder="e.g. Left deltoid"
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-impilo-400"
                       />
                     </div>
                     <div>
@@ -250,7 +250,7 @@ export default function ImmunizationsPage() {
                         value={form.route}
                         onChange={(e) => updateField("route", e.target.value)}
                         placeholder="e.g. Intramuscular"
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-impilo-400"
                       />
                     </div>
                     <div>
@@ -261,7 +261,7 @@ export default function ImmunizationsPage() {
                         onChange={(e) => updateField("administered_by", e.target.value)}
                         placeholder="Nurse Jane"
                         required
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-impilo-400"
                       />
                     </div>
                     <div className="md:col-span-2 lg:col-span-3">
@@ -271,7 +271,7 @@ export default function ImmunizationsPage() {
                         onChange={(e) => updateField("notes", e.target.value)}
                         rows={2}
                         placeholder="Additional notes..."
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-impilo-400"
                       />
                     </div>
                   </div>
@@ -280,7 +280,7 @@ export default function ImmunizationsPage() {
                     <button
                       type="submit"
                       disabled={recordImmunization.isPending}
-                      className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-impilo-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-impilo-600 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {recordImmunization.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
                       Save Immunization

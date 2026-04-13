@@ -25,7 +25,7 @@ interface NotificationResource {
 }
 
 const TYPE_ICONS: Record<string, { icon: typeof Info; className: string }> = {
-  INFO: { icon: Info, className: "bg-blue-100 text-blue-600" },
+  INFO: { icon: Info, className: "bg-impilo-100 text-impilo-500" },
   WARNING: { icon: AlertCircle, className: "bg-amber-100 text-amber-600" },
   ERROR: { icon: AlertTriangle, className: "bg-red-100 text-red-600" },
   SUCCESS: { icon: Check, className: "bg-green-100 text-green-600" },
@@ -69,7 +69,7 @@ export default function NotificationsPage() {
             <button
               onClick={() => markAllRead.mutate()}
               disabled={markAllRead.isPending}
-              className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+              className="text-xs text-impilo-500 hover:text-impilo-700 font-medium"
             >
               Mark all as read
             </button>
@@ -102,7 +102,7 @@ export default function NotificationsPage() {
                   className={`bg-white rounded-lg border p-4 flex items-start gap-3 transition-colors ${
                     notification.attributes.read
                       ? "border-gray-200"
-                      : "border-blue-200 bg-blue-50/30"
+                      : "border-impilo-200 bg-impilo-50/30"
                   }`}
                 >
                   <div
@@ -131,7 +131,7 @@ export default function NotificationsPage() {
                     <button
                       onClick={() => markAsRead.mutate(notification.id)}
                       disabled={markAsRead.isPending}
-                      className="shrink-0 text-xs text-blue-600 hover:text-blue-800"
+                      className="shrink-0 text-xs text-impilo-500 hover:text-impilo-700"
                     >
                       <Check className="w-4 h-4" />
                     </button>

@@ -56,12 +56,12 @@ export default function RegistryClientDirectoryPage() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search patients…"
-                className="w-full rounded-lg border border-gray-300 py-2.5 pl-10 pr-4 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded-lg border border-gray-300 py-2.5 pl-10 pr-4 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-impilo-400"
               />
             </div>
             <button
               type="submit"
-              className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700"
+              className="rounded-lg bg-impilo-500 px-5 py-2.5 text-sm font-medium text-white hover:bg-impilo-600"
             >
               Search directory
             </button>
@@ -104,7 +104,7 @@ export default function RegistryClientDirectoryPage() {
                     <td className="px-4 py-3 text-right">
                       <Link
                         href={`/ehr/${patient.id}?entry=registry`}
-                        className="text-xs font-medium text-blue-600 hover:text-blue-800"
+                        className="text-xs font-medium text-impilo-500 hover:text-impilo-700"
                       >
                         Open chart (requires shift)
                       </Link>

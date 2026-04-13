@@ -96,7 +96,7 @@ export default function DevicesPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {[
-                { label: "Bluetooth Devices", description: "Blood pressure monitors, glucometers, pulse oximeters", Icon: Bluetooth, color: "bg-blue-50 text-blue-600" },
+                { label: "Bluetooth Devices", description: "Blood pressure monitors, glucometers, pulse oximeters", Icon: Bluetooth, color: "bg-impilo-50 text-impilo-500" },
                 { label: "Wi-Fi Devices", description: "Smart scales, sleep trackers, home monitors", Icon: Wifi, color: "bg-green-50 text-green-600" },
                 { label: "Wearables", description: "Fitness bands, smartwatches, CGM sensors", Icon: BatteryMedium, color: "bg-purple-50 text-purple-600" },
               ].map(({ label, description, Icon, color }) => (

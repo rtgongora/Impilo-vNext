@@ -64,7 +64,7 @@ const STATUS_STYLES: Record<string, string> = {
   DRAFT: "bg-gray-100 text-gray-700",
   ACCUMULATING: "bg-yellow-100 text-yellow-700",
   APPROVAL_PENDING: "bg-orange-100 text-orange-700",
-  APPROVED: "bg-blue-100 text-blue-700",
+  APPROVED: "bg-impilo-100 text-impilo-600",
   FINAL: "bg-green-100 text-green-700",
   VOID: "bg-red-100 text-red-700",
   ADJUSTED: "bg-purple-100 text-purple-700",
@@ -355,7 +355,7 @@ export default function BillingDetailPage() {
                 </div>
                 <div>
                   <p className="text-xs text-gray-500">Total Payable</p>
-                  <p className="text-sm font-semibold text-blue-600">
+                  <p className="text-sm font-semibold text-impilo-500">
                     {bill.attributes.currency}{" "}
                     {bill.attributes.amount.toLocaleString(undefined, {
                       minimumFractionDigits: 2,
@@ -388,7 +388,7 @@ export default function BillingDetailPage() {
                   <button
                     onClick={() => billAction.mutate({ action: "submit" })}
                     disabled={billAction.isPending}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-impilo-500 rounded-lg hover:bg-impilo-600 disabled:opacity-50 transition-colors"
                   >
                     {billAction.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                     Submit for Approval
@@ -402,7 +402,7 @@ export default function BillingDetailPage() {
                       placeholder="Approval note (optional)"
                       value={approvalNote}
                       onChange={(e) => setApprovalNote(e.target.value)}
-                      className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-64"
+                      className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400 w-64"
                     />
                     <button
                       onClick={() => billAction.mutate({ action: "approve", body: { note: approvalNote } })}
@@ -449,7 +449,7 @@ export default function BillingDetailPage() {
                               setPaymentAmount(bill.attributes.amount.toFixed(2));
                             }
                           }}
-                          className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                          className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-impilo-400"
                         >
                           <option value="FULL">Full Payment</option>
                           <option value="DEPOSIT">Deposit</option>
@@ -464,7 +464,7 @@ export default function BillingDetailPage() {
                           placeholder="Amount"
                           value={paymentAmount}
                           onChange={(e) => setPaymentAmount(e.target.value)}
-                          className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 w-36"
+                          className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-impilo-400 w-36"
                         />
                         <button
                           onClick={() => createPayment.mutate({ paymentType, amount: paymentAmount })}
@@ -705,14 +705,14 @@ export default function BillingDetailPage() {
                       placeholder="Refund amount"
                       value={refundAmount}
                       onChange={(e) => setRefundAmount(e.target.value)}
-                      className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 w-32"
+                      className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-impilo-400 w-32"
                     />
                     <input
                       type="text"
                       placeholder="Reason for refund"
                       value={refundReason}
                       onChange={(e) => setRefundReason(e.target.value)}
-                      className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 flex-1"
+                      className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-impilo-400 flex-1"
                     />
                     <button
                       onClick={() => createRefund.mutate({ amount: refundAmount, reason: refundReason })}

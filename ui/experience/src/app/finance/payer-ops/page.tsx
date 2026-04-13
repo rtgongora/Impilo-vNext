@@ -80,7 +80,7 @@ export default function FinancePayerOpsPage() {
           <p className="font-medium text-slate-900">Payer claims queue</p>
           <p className="mt-1">
             Search and hand off into MusheX payer-claim detail from{" "}
-            <Link href="/finance/payer-claims" className="text-blue-700 hover:underline">
+            <Link href="/finance/payer-claims" className="text-impilo-600 hover:underline">
               /finance/payer-claims
             </Link>
             .

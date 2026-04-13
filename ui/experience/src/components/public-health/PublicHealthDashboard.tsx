@@ -82,9 +82,9 @@ export function PublicHealthDashboard() {
       Icon: ClipboardCheck,
       value: String(openCases.length),
       label: "Open surveillance cases",
-      color: "text-blue-700",
-      bg: "bg-blue-50",
-      border: "border-blue-200",
+      color: "text-impilo-600",
+      bg: "bg-impilo-50",
+      border: "border-impilo-200",
     },
     {
       Icon: AlertTriangle,

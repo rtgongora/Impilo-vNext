@@ -32,7 +32,7 @@ const STATUS_STYLES: Record<string, { bg: string; icon: ElementType }> = {
 const TYPE_COLORS: Record<string, string> = {
   DNR: "bg-red-100 text-red-600",
   "Living Will": "bg-purple-100 text-purple-600",
-  "Power of Attorney": "bg-blue-100 text-blue-600",
+  "Power of Attorney": "bg-impilo-100 text-impilo-500",
   "Organ Donation": "bg-green-100 text-green-600",
   "Mental Health Directive": "bg-teal-100 text-teal-600",
 };
@@ -77,7 +77,7 @@ export default function AdvanceDirectivesPage() {
             <button
               type="button"
               onClick={() => void refetch()}
-              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              className="rounded-lg bg-impilo-500 px-4 py-2 text-sm font-medium text-white hover:bg-impilo-600"
             >
               Retry
             </button>
@@ -137,7 +137,7 @@ export default function AdvanceDirectivesPage() {
                 <FileText className="h-5 w-5 text-purple-600" />
                 <h2 className="text-lg font-semibold text-gray-900">Advance Directives</h2>
               </div>
-              <button className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700">
+              <button className="inline-flex items-center gap-1.5 rounded-lg bg-impilo-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-impilo-600">
                 <Upload className="h-4 w-4" />
                 Upload Directive
               </button>
@@ -229,7 +229,7 @@ export default function AdvanceDirectivesPage() {
                           </div>
                           <div className="flex items-center gap-2 pt-2">
                             {directive.documentRef && (
-                              <button className="inline-flex items-center gap-1 rounded-lg border border-blue-200 px-3 py-1.5 text-xs font-medium text-blue-600 transition-colors hover:bg-blue-50">
+                              <button className="inline-flex items-center gap-1 rounded-lg border border-impilo-200 px-3 py-1.5 text-xs font-medium text-impilo-500 transition-colors hover:bg-impilo-50">
                                 <Eye className="h-3 w-3" /> View Document
                               </button>
                             )}

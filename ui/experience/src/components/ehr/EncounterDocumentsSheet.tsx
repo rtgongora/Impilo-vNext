@@ -125,7 +125,7 @@ function getStatusIcon(status: string) {
     case "verified":
       return <CheckCircle className="h-3.5 w-3.5 text-green-600" />;
     case "processing":
-      return <Clock className="h-3.5 w-3.5 text-blue-600 animate-spin" />;
+      return <Clock className="h-3.5 w-3.5 text-impilo-500 animate-spin" />;
     case "pending_review":
       return <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />;
     default:
@@ -190,7 +190,7 @@ export function EncounterDocumentsSheet() {
             {/* Header */}
             <div className="px-5 pt-5 pb-3 border-b flex items-center justify-between">
               <h2 className="text-base font-semibold flex items-center gap-2">
-                <FolderOpen className="h-5 w-5 text-blue-600" />
+                <FolderOpen className="h-5 w-5 text-impilo-500" />
                 Patient Documents
               </h2>
               <div className="flex items-center gap-1.5">
@@ -198,7 +198,7 @@ export function EncounterDocumentsSheet() {
                   <ScanLine className="h-3.5 w-3.5" />
                   Scan
                 </button>
-                <button className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors">
+                <button className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-white bg-impilo-500 rounded-md hover:bg-impilo-600 transition-colors">
                   <Upload className="h-3.5 w-3.5" />
                   Upload
                 </button>
@@ -251,7 +251,7 @@ export function EncounterDocumentsSheet() {
                       placeholder="Search documents..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full h-8 pl-8 pr-3 text-xs border rounded-md border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full h-8 pl-8 pr-3 text-xs border rounded-md border-gray-300 focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
                     />
                   </div>
                   <div className="flex gap-1 flex-wrap">
@@ -261,8 +261,8 @@ export function EncounterDocumentsSheet() {
                         onClick={() => setCategoryFilter(cat.id)}
                         className={`text-[10px] px-2 py-0.5 rounded-full border transition-colors ${
                           categoryFilter === cat.id
-                            ? "bg-blue-600 text-white border-blue-600"
-                            : "bg-white text-gray-600 border-gray-200 hover:border-blue-300"
+                            ? "bg-impilo-500 text-white border-impilo-500"
+                            : "bg-white text-gray-600 border-gray-200 hover:border-impilo-200"
                         }`}
                       >
                         {cat.label}
@@ -290,7 +290,7 @@ export function EncounterDocumentsSheet() {
                       {filteredDocuments.map((doc) => (
                         <div
                           key={doc.id}
-                          className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-blue-300 cursor-pointer transition-colors group"
+                          className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-impilo-200 cursor-pointer transition-colors group"
                         >
                           <div className="h-9 w-9 rounded bg-gray-100 flex items-center justify-center shrink-0">
                             {getDocIcon(doc.typeCode)}
@@ -312,13 +312,13 @@ export function EncounterDocumentsSheet() {
                           <div className="flex items-center gap-1.5">
                             {getStatusIcon(doc.status)}
                             <button
-                              className="p-1 text-gray-400 opacity-0 group-hover:opacity-100 hover:text-blue-600 transition-all"
+                              className="p-1 text-gray-400 opacity-0 group-hover:opacity-100 hover:text-impilo-500 transition-all"
                               title="Preview"
                             >
                               <Eye className="h-3.5 w-3.5" />
                             </button>
                             <button
-                              className="p-1 text-gray-400 opacity-0 group-hover:opacity-100 hover:text-blue-600 transition-all"
+                              className="p-1 text-gray-400 opacity-0 group-hover:opacity-100 hover:text-impilo-500 transition-all"
                               title="Download"
                             >
                               <Download className="h-3.5 w-3.5" />

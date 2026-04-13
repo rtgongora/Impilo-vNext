@@ -13,7 +13,7 @@ import { useFacilityStore } from "@/hooks/useFacilityStore";
 
 const STATUS_STYLES: Record<string, string> = {
   Completed: "bg-green-100 text-green-700",
-  Scheduled: "bg-blue-100 text-blue-700",
+  Scheduled: "bg-impilo-100 text-impilo-600",
   Cancelled: "bg-red-100 text-red-700",
   "In Progress": "bg-amber-100 text-amber-700",
 };
@@ -62,7 +62,7 @@ export default function ProceduresPage() {
             <button
               type="button"
               onClick={() => void refetch()}
-              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              className="rounded-lg bg-impilo-500 px-4 py-2 text-sm font-medium text-white hover:bg-impilo-600"
             >
               Retry
             </button>
@@ -138,17 +138,17 @@ export default function ProceduresPage() {
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                   <div>
                     <label className="mb-1 block text-xs font-medium text-gray-600">Procedure Type</label>
-                    <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400">
                       {PROCEDURE_TYPES.map((type) => <option key={type} value={type}>{type}</option>)}
                     </select>
                   </div>
                   <div>
                     <label className="mb-1 block text-xs font-medium text-gray-600">From Date</label>
-                    <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" />
                   </div>
                   <div>
                     <label className="mb-1 block text-xs font-medium text-gray-600">To Date</label>
-                    <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" />
                   </div>
                 </div>
               </div>
