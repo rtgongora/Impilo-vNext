@@ -91,12 +91,15 @@ export default function CardManagementPage() {
   const [expandedCardId, setExpandedCardId] = useState<string | null>(null);
 
   const walletQ = useWalletByOwner(cpid ? "PERSON" : null, cpid || null);
-  const walletData = useMemo(() => asRecord((walletQ.data as Record<string, unknown>)?.data ?? walletQ.data), [walletQ.data]);
+  const walletData = useMemo(() => {
+    const raw = asRecord(walletQ.data).data ?? walletQ.data;
+    return asRecord(raw);
+  }, [walletQ.data]);
   const walletId = readStr(walletData, "walletId", "wallet_id", "id");
 
   const cardsQ = useCards(walletId || null);
   const cards = useMemo(() => {
-    const raw = (cardsQ.data as Record<string, unknown>)?.data ?? cardsQ.data;
+    const raw = asRecord(cardsQ.data).data ?? cardsQ.data;
     return unwrapItems(raw).map(asRecord);
   }, [cardsQ.data]);
 
@@ -115,8 +118,8 @@ export default function CardManagementPage() {
   });
   const pendingUpdates = useMemo(() => {
     if (!pendingUpdatesQ.data) return [];
-    const raw = (pendingUpdatesQ.data as Record<string, unknown>)?.data ?? pendingUpdatesQ.data;
-    const r = raw as Record<string, unknown>;
+    const raw = asRecord(pendingUpdatesQ.data).data ?? pendingUpdatesQ.data;
+    const r = asRecord(raw);
     if (Array.isArray(r.pendingUpdates)) return (r.pendingUpdates as unknown[]).map(asRecord);
     return unwrapItems(raw).map(asRecord);
   }, [pendingUpdatesQ.data]);

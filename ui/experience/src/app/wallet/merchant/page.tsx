@@ -97,22 +97,31 @@ export default function MerchantDashboardPage() {
   });
 
   const merchantQ = useMerchantByProvider(providerId || null);
-  const merchantData = useMemo(() => asRecord((merchantQ.data as Record<string, unknown>)?.data ?? merchantQ.data), [merchantQ.data]);
+  const merchantData = useMemo(() => {
+    const raw = asRecord(merchantQ.data).data ?? merchantQ.data;
+    return asRecord(raw);
+  }, [merchantQ.data]);
   const hasMerchant = Boolean(readStr(merchantData, "merchantId", "merchant_id"));
   const merchantWalletId = readStr(merchantData, "walletId", "wallet_id");
   const merchantStatus = readStr(merchantData, "status") || "UNKNOWN";
 
   const walletQ = useWallet(merchantWalletId || null);
-  const walletData = useMemo(() => asRecord((walletQ.data as Record<string, unknown>)?.data ?? walletQ.data), [walletQ.data]);
+  const walletData = useMemo(() => {
+    const raw = asRecord(walletQ.data).data ?? walletQ.data;
+    return asRecord(raw);
+  }, [walletQ.data]);
   const currency = readStr(walletData, "currency") || "USD";
 
   const balanceQ = useBalance(merchantWalletId || null);
-  const balanceData = useMemo(() => asRecord((balanceQ.data as Record<string, unknown>)?.data ?? balanceQ.data), [balanceQ.data]);
+  const balanceData = useMemo(() => {
+    const raw = asRecord(balanceQ.data).data ?? balanceQ.data;
+    return asRecord(raw);
+  }, [balanceQ.data]);
   const merchantBalance = readNum(balanceData, "availableBalance", "available_balance", "balance");
 
   const txQ = useTransactions(merchantWalletId || null, 0, 20);
   const txRows = useMemo(() => {
-    const raw = (txQ.data as Record<string, unknown>)?.data ?? txQ.data;
+    const raw = asRecord(txQ.data).data ?? txQ.data;
     return unwrapItems(raw).map(asRecord);
   }, [txQ.data]);
 

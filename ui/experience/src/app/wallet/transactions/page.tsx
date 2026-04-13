@@ -109,25 +109,28 @@ export default function TransactionHistoryPage() {
   const [filterTxnType, setFilterTxnType] = useState("");
 
   const walletQ = useWalletByOwner(cpid ? "PERSON" : null, cpid || null);
-  const walletData = useMemo(() => asRecord((walletQ.data as Record<string, unknown>)?.data ?? walletQ.data), [walletQ.data]);
+  const walletData = useMemo(() => {
+    const raw = asRecord(walletQ.data).data ?? walletQ.data;
+    return asRecord(raw);
+  }, [walletQ.data]);
   const walletId = readStr(walletData, "walletId", "wallet_id", "id");
   const currency = readStr(walletData, "currency") || "USD";
 
   const txQ = useTransactions(walletId || null, page, pageSize);
   const rawMeta = useMemo(() => {
     const raw = txQ.data;
+    const r = asRecord(raw);
     if (!raw || typeof raw !== "object") return {};
-    const r = raw as Record<string, unknown>;
     // Try paged response format
     if (r.data && typeof r.data === "object") {
-      const d = r.data as Record<string, unknown>;
+      const d = asRecord(r.data);
       if (typeof d.totalElements === "number") return d;
     }
     return unwrapMeta(raw);
   }, [txQ.data]);
 
   const allRows = useMemo(() => {
-    const raw = (txQ.data as Record<string, unknown>)?.data ?? txQ.data;
+    const raw = asRecord(txQ.data).data ?? txQ.data;
     return unwrapItems(raw).map(asRecord);
   }, [txQ.data]);
 

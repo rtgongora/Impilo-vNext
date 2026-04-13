@@ -65,7 +65,10 @@ export default function SendMoneyPage() {
   const [merchantChannel, setMerchantChannel] = useState("CARD");
 
   const walletQ = useWalletByOwner(cpid ? "PERSON" : null, cpid || null);
-  const walletData = useMemo(() => asRecord((walletQ.data as Record<string, unknown>)?.data ?? walletQ.data), [walletQ.data]);
+  const walletData = useMemo(() => {
+    const raw = asRecord(walletQ.data).data ?? walletQ.data;
+    return asRecord(raw);
+  }, [walletQ.data]);
   const walletId = readStr(walletData, "walletId", "wallet_id", "id");
 
   const transfer = useTransfer();
@@ -86,7 +89,8 @@ export default function SendMoneyPage() {
       },
       {
         onSuccess: (data) => {
-          setSuccess(asRecord((data as Record<string, unknown>)?.data ?? data));
+          const raw = asRecord(data).data ?? data;
+          setSuccess(asRecord(raw));
           setRecipientWalletId("");
           setTransferAmount("");
           setTransferDesc("");
@@ -110,7 +114,8 @@ export default function SendMoneyPage() {
       },
       {
         onSuccess: (data) => {
-          setSuccess(asRecord((data as Record<string, unknown>)?.data ?? data));
+          const raw = asRecord(data).data ?? data;
+          setSuccess(asRecord(raw));
           setMerchantProvider("");
           setMerchantAmount("");
           setMerchantRef("");

@@ -67,12 +67,15 @@ export default function DepositPage() {
   const [cashRef, setCashRef] = useState("");
 
   const walletQ = useWalletByOwner(cpid ? "PERSON" : null, cpid || null);
-  const walletData = useMemo(() => asRecord((walletQ.data as Record<string, unknown>)?.data ?? walletQ.data), [walletQ.data]);
+  const walletData = useMemo(() => {
+    const raw = asRecord(walletQ.data).data ?? walletQ.data;
+    return asRecord(raw);
+  }, [walletQ.data]);
   const walletId = readStr(walletData, "walletId", "wallet_id", "id");
 
   const fundingQ = useFundingSources(walletId || null);
   const sources = useMemo(() => {
-    const raw = (fundingQ.data as Record<string, unknown>)?.data ?? fundingQ.data;
+    const raw = asRecord(fundingQ.data).data ?? fundingQ.data;
     return unwrapList(raw).map(asRecord);
   }, [fundingQ.data]);
 
@@ -95,7 +98,8 @@ export default function DepositPage() {
       },
       {
         onSuccess: (data) => {
-          setSuccess(asRecord((data as Record<string, unknown>)?.data ?? data));
+          const raw = asRecord(data).data ?? data;
+          setSuccess(asRecord(raw));
           setLinkedAmount("");
           setLinkedRef("");
         },
@@ -120,7 +124,8 @@ export default function DepositPage() {
       },
       {
         onSuccess: (data) => {
-          setSuccess(asRecord((data as Record<string, unknown>)?.data ?? data));
+          const raw = asRecord(data).data ?? data;
+          setSuccess(asRecord(raw));
           setCashAmount("");
           setCashRef("");
         },

@@ -94,28 +94,34 @@ export default function WalletDashboardPage() {
   const cpid = useAuthStore((s) => s.user?.id) ?? "";
 
   const walletQ = useWalletByOwner(cpid ? "PERSON" : null, cpid || null);
-  const walletData = useMemo(() => asRecord((walletQ.data as Record<string, unknown>)?.data ?? walletQ.data), [walletQ.data]);
+  const walletData = useMemo(() => {
+    const raw = asRecord(walletQ.data).data ?? walletQ.data;
+    return asRecord(raw);
+  }, [walletQ.data]);
   const walletId = readStr(walletData, "walletId", "wallet_id", "id");
   const currency = readStr(walletData, "currency") || "USD";
 
   const balanceQ = useBalance(walletId || null);
-  const balanceData = useMemo(() => asRecord((balanceQ.data as Record<string, unknown>)?.data ?? balanceQ.data), [balanceQ.data]);
+  const balanceData = useMemo(() => {
+    const raw = asRecord(balanceQ.data).data ?? balanceQ.data;
+    return asRecord(raw);
+  }, [balanceQ.data]);
 
   const txQ = useTransactions(walletId || null, 0, 10);
   const txRows = useMemo(() => {
-    const raw = (txQ.data as Record<string, unknown>)?.data ?? txQ.data;
+    const raw = asRecord(txQ.data).data ?? txQ.data;
     return unwrapItems(raw).map(asRecord);
   }, [txQ.data]);
 
   const cardsQ = useCards(walletId || null);
   const cards = useMemo(() => {
-    const raw = (cardsQ.data as Record<string, unknown>)?.data ?? cardsQ.data;
+    const raw = asRecord(cardsQ.data).data ?? cardsQ.data;
     return unwrapItems(raw).map(asRecord);
   }, [cardsQ.data]);
 
   const fundingQ = useFundingSources(walletId || null);
   const fundingSources = useMemo(() => {
-    const raw = (fundingQ.data as Record<string, unknown>)?.data ?? fundingQ.data;
+    const raw = asRecord(fundingQ.data).data ?? fundingQ.data;
     if (!raw) return [];
     if (Array.isArray(raw)) return raw.map(asRecord);
     return unwrapItems(raw).map(asRecord);
