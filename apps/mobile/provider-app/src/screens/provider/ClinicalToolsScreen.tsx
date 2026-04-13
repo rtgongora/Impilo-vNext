@@ -71,7 +71,7 @@ function SOAPPanel() {
           <TextInput style={styles.textArea} value={soap[field]} onChangeText={(v) => setSOAP({ ...soap, [field]: v })} placeholder={`Enter ${field}...`} multiline />
         </View>
       ))}
-      <Button label="Save SOAP Note" onPress={() => Alert.alert("Saved", "SOAP note recorded")} />
+      <Button title="Save SOAP Note" onPress={() => Alert.alert("Saved", "SOAP note recorded")} />
     </View>
   );
 }
@@ -83,7 +83,7 @@ function DrugInteractionPanel() {
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>Drug Interaction Check</Text>
       <TextInput style={styles.input} value={meds} onChangeText={setMeds} placeholder="Enter medications (comma-separated)" />
-      <Button label="Check Interactions" onPress={() => mutation.mutate()} disabled={!meds || mutation.isPending} />
+      <Button title="Check Interactions" onPress={() => mutation.mutate()} disabled={!meds || mutation.isPending} />
       {mutation.isSuccess && <Text style={styles.result}>No significant interactions found for {meds.split(",").length} medications</Text>}
     </View>
   );
@@ -100,7 +100,7 @@ function OrderSetsPanel() {
           <Text style={styles.cardTitle}>{String(s.name)}</Text>
           <Badge label={String(s.category)} variant="info" />
           <Text style={styles.cardMeta}>Items: {((s.items as string[]) ?? []).join(", ")}</Text>
-          <Button label="Apply Protocol" size="small" onPress={() => Alert.alert("Applied", `${s.name} protocol applied to encounter`)} />
+          <Button title="Apply Protocol" size="sm" onPress={() => Alert.alert("Applied", `${s.name} protocol applied to encounter`)} />
         </View>
       ))}
     </View>
@@ -117,7 +117,7 @@ function CarePlanPanel() {
       <Text style={styles.sectionTitle}>Nursing Care Plan</Text>
       <TextInput style={styles.input} placeholder="Care plan title" value={title} onChangeText={setTitle} />
       <TextInput style={styles.textArea} placeholder="Goals (one per line)" value={goals} onChangeText={setGoals} multiline />
-      <Button label="Create Care Plan" onPress={() => mutation.mutate()} disabled={!title || mutation.isPending} />
+      <Button title="Create Care Plan" onPress={() => mutation.mutate()} disabled={!title || mutation.isPending} />
     </View>
   );
 }
@@ -135,7 +135,7 @@ function MARPanel() {
           <View key={String(m.id)} style={styles.card}>
             <Text style={styles.cardTitle}>{String(m.medication_name)}</Text>
             <Text style={styles.cardMeta}>{String(m.dosage)} · {String(m.frequency)}</Text>
-            <Button label="Administer" size="small" onPress={() => administerMut.mutate(String(m.id))} />
+            <Button title="Administer" size="sm" onPress={() => administerMut.mutate(String(m.id))} />
           </View>
         ))
       }
@@ -149,7 +149,7 @@ function CDSPanel() {
   return (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>Clinical Decision Support</Text>
-      <Button label="Evaluate CDS Rules" onPress={() => mutation.mutate()} disabled={mutation.isPending} />
+      <Button title="Evaluate CDS Rules" onPress={() => mutation.mutate()} disabled={mutation.isPending} />
       {mutation.isSuccess && (mutation.data as Array<Record<string, unknown>>).map((alert, i) => (
         <View key={i} style={[styles.card, { borderLeftColor: alert.level === "WARNING" ? "#F59E0B" : "#3B82F6", borderLeftWidth: 4 }]}>
           <Badge label={String(alert.level)} variant={alert.level === "WARNING" ? "warning" : "info"} />
@@ -170,7 +170,7 @@ function PagingPanel() {
       <Text style={styles.sectionTitle}>Clinical Paging</Text>
       <TextInput style={styles.input} placeholder="Recipient" value={form.recipientName} onChangeText={(v) => setForm({ ...form, recipientName: v })} />
       <TextInput style={styles.textArea} placeholder="Page message..." value={form.message} onChangeText={(v) => setForm({ ...form, message: v })} multiline />
-      <Button label="Send Page" onPress={() => mutation.mutate()} disabled={!form.recipientName || !form.message || mutation.isPending} />
+      <Button title="Send Page" onPress={() => mutation.mutate()} disabled={!form.recipientName || !form.message || mutation.isPending} />
       {isLoading ? <LoadingSpinner /> : (pages as Array<Record<string, unknown>>).slice(0, 5).map((p) => (
         <View key={String(p.id)} style={styles.card}>
           <Text style={styles.cardMeta}>To: {String(p.recipient_name)} · {String(p.urgency)} · {String(p.status)}</Text>
@@ -192,7 +192,7 @@ function BarcodePanel() {
       </View>
       <Text style={styles.label}>Manual Entry</Text>
       <TextInput style={styles.input} placeholder="Enter barcode number" value={manualCode} onChangeText={setManualCode} />
-      <Button label="Look Up" onPress={() => Alert.alert("Lookup", `Searching for barcode: ${manualCode}`)} disabled={!manualCode} />
+      <Button title="Look Up" onPress={() => Alert.alert("Lookup", `Searching for barcode: ${manualCode}`)} disabled={!manualCode} />
     </View>
   );
 }
@@ -213,7 +213,7 @@ function SpecialtyPanel() {
         <View key={w.id} style={styles.card}>
           <Text style={styles.cardTitle}>{w.name}</Text>
           <Text style={styles.cardMeta}>{w.tools.length} tools · {w.icon}</Text>
-          <Button label="Open workspace" size="small" onPress={() => setActiveId(w.id)} />
+          <Button title="Open workspace" size="sm" onPress={() => setActiveId(w.id)} />
         </View>
       ))}
     </View>
