@@ -265,7 +265,7 @@ export default function WellnessDashboardPage() {
 
           <SectionCard
             title="Activity Summary"
-            icon={<Activity className="h-4 w-4 text-impilo-500" />}
+            icon={<Activity className="h-4 w-4 text-blue-600" />}
             isLoading={activitiesQ.isLoading}
             isError={activitiesQ.isError}
           >

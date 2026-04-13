@@ -49,7 +49,7 @@ export default function ProvidersPage() {
         <div className="mb-4 flex flex-wrap items-center justify-end">
           <Link
             href="/registry/providers/new"
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-impilo-500 text-white rounded-lg hover:bg-impilo-600 transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             <Plus className="w-4 h-4" />
             New Provider
@@ -64,7 +64,7 @@ export default function ProvidersPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search providers by name, number, or speciality..."
-              className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+              className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
         </div>
@@ -108,7 +108,7 @@ export default function ProvidersPage() {
                       <td className="px-4 py-3">
                         <Link
                           href={`/registry/providers/${provider.id}`}
-                          className="font-medium text-impilo-500 hover:text-impilo-700 font-mono text-xs"
+                          className="font-medium text-blue-600 hover:text-blue-800 font-mono text-xs"
                         >
                           {provider.attributes.registrationNumber}
                         </Link>
