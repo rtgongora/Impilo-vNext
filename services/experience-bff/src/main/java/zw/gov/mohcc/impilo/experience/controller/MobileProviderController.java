@@ -27,76 +27,16 @@ public class MobileProviderController {
         this.varapiClient = varapiClient;
     }
 
-    @GetMapping("/tasks/mine")
-    public ResponseEntity<Map<String, Object>> getMyTasks(
-            @RequestHeader("X-Tenant-ID") String tenantId) {
-        // Previously: jdbc.queryForList("SELECT * FROM queue_entries WHERE tenant_id = ? AND status IN ('WAITING', 'IN_PROGRESS') ...", tenantId)
-        return ResponseEntity.ok(Map.of("success", true, "data", List.of()));
-    }
-
-    @GetMapping("/tasks")
-    public ResponseEntity<Map<String, Object>> getAllTasks(
-            @RequestHeader("X-Tenant-ID") String tenantId) {
-        // Previously: jdbc.queryForList("SELECT * FROM queue_entries WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 100", tenantId)
-        return ResponseEntity.ok(Map.of("success", true, "data", List.of()));
-    }
-
-    @GetMapping("/encounters")
-    public ResponseEntity<Map<String, Object>> getEncounters(
-            @RequestHeader("X-Tenant-ID") String tenantId) {
-        // Previously: jdbc.queryForList("SELECT * FROM encounters WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 50", tenantId)
-        return ResponseEntity.ok(Map.of("success", true, "data", List.of()));
-    }
-
-    @GetMapping("/diagnosis/icd11/search")
-    public ResponseEntity<Map<String, Object>> searchIcd11(
-            @RequestParam("q") String query,
-            @RequestHeader("X-Tenant-ID") String tenantId) {
-        // ICD-11 search — delegates to ZIBO terminology service via PctServiceClient
-        return ResponseEntity.ok(Map.of("success", true, "data", List.of()));
-    }
-
-    @PostMapping("/diagnosis")
-    public ResponseEntity<Map<String, Object>> createDiagnosis(
-            @RequestBody Map<String, Object> body,
-            @RequestHeader("X-Tenant-ID") String tenantId) {
-        return ResponseEntity.ok(Map.of("success", true, "data", body));
-    }
-
-    @GetMapping("/diagnosis")
-    public ResponseEntity<Map<String, Object>> getDiagnoses(
-            @RequestParam("encounter_id") String encounterId,
-            @RequestHeader("X-Tenant-ID") String tenantId) {
-        return ResponseEntity.ok(Map.of("success", true, "data", List.of()));
-    }
-
-    @DeleteMapping("/diagnosis/{id}")
-    public ResponseEntity<Map<String, Object>> deleteDiagnosis(
-            @PathVariable String id,
-            @RequestHeader("X-Tenant-ID") String tenantId) {
-        return ResponseEntity.ok(Map.of("success", true));
-    }
-
-    @GetMapping("/telemedicine/sessions")
-    public ResponseEntity<Map<String, Object>> getTelemedicineSessions(
-            @RequestHeader("X-Tenant-ID") String tenantId) {
-        return ResponseEntity.ok(Map.of("success", true, "data", List.of()));
-    }
-
-    @PostMapping("/telemedicine/sessions/{id}/join")
-    public ResponseEntity<Map<String, Object>> joinSession(
-            @PathVariable String id,
-            @RequestHeader("X-Tenant-ID") String tenantId) {
-        return ResponseEntity.ok(Map.of("success", true, "data", Map.of(
-                "sessionId", id, "roomUrl", "", "token", "")));
-    }
-
-    @PostMapping("/telemedicine/sessions/{id}/end")
-    public ResponseEntity<Map<String, Object>> endSession(
-            @PathVariable String id,
-            @RequestHeader("X-Tenant-ID") String tenantId) {
-        return ResponseEntity.ok(Map.of("success", true));
-    }
+    // ── Routes migrated to granular controllers in mobile/ ────────────
+    // GET /tasks/mine, GET /tasks         → MobileTaskController
+    // GET /encounters                     → MobileEncounterController
+    // GET /diagnosis/icd11/search         → MobileDiagnosisController
+    // POST /diagnosis                     → MobileDiagnosisController
+    // GET /diagnosis                      → MobileDiagnosisController
+    // DELETE /diagnosis/{id}              → MobileDiagnosisController
+    // GET /telemedicine/sessions          → MobileTelemedicineController
+    // POST /telemedicine/sessions/{id}/join → MobileTelemedicineController
+    // POST /telemedicine/sessions/{id}/end  → MobileTelemedicineController
 
     @GetMapping("/entitlement/verify")
     public ResponseEntity<Map<String, Object>> verifyEntitlement(

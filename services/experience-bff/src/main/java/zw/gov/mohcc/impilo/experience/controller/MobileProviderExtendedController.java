@@ -77,13 +77,7 @@ public class MobileProviderExtendedController {
     }
 
     // ── Patient Sorting / Triage ────────────────────────────────────
-
-    @PostMapping("/triage")
-    public ResponseEntity<Map<String, Object>> recordTriage(@RequestHeader("X-Tenant-ID") String tenantId, @RequestBody Map<String, Object> body) {
-        // Previously: jdbc.update INSERT INTO triage_records
-        UUID id = UUID.randomUUID();
-        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", Map.of("id", id)));
-    }
+    // POST /triage removed — handled by MobileTriageController in mobile/ sub-package.
 
     @GetMapping("/triage/{encounterId}")
     public ResponseEntity<Map<String, Object>> getTriage(@PathVariable String encounterId, @RequestHeader("X-Tenant-ID") String tenantId) {

@@ -95,12 +95,16 @@ public class SecurityConfig {
     @Autowired(required = false)
     private JwtDecoder jwtDecoder;
 
+    @Autowired
+    private org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource;
+
     @Value("${impilo.security.allow-anonymous:false}")
     private boolean allowAnonymous;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+            .cors(cors -> cors.configurationSource(corsConfigurationSource))
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
@@ -108,6 +112,8 @@ public class SecurityConfig {
             log.info("JWT validation ENABLED — enforcing role-based access control");
             http
                 .authorizeHttpRequests(auth -> auth
+                    // ── CORS preflight ───────────────────────────────────
+                    .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                     // ── Public endpoints ──────────────────────────────────
                     .requestMatchers("/internal/v1/auth/**").permitAll()
                     .requestMatchers("/actuator/**").permitAll()

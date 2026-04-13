@@ -31,25 +31,12 @@ class ProductRegistryControllerTest {
 
     private static ServiceClientConfig.ServiceEndpoints endpoints() {
         return new ServiceClientConfig.ServiceEndpoints(
-                "http://pct",
-                "http://oros",
-                "http://pharmacy",
-                "http://butano",
-                "http://msika",
-                "http://msika-flow",
-                "http://mushex",
-                "http://vito",
-                "http://tuso",
-                "http://varapi",
-                "http://documents",
-                "http://costa",
-                "http://coverage",
-                "http://surveillance",
-                "http://campaigns",
-                "http://indawo",
-                "http://governance",
-                "http://landela",
-                "http://notifications"
+                null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null
         );
     }
 

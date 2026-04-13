@@ -144,10 +144,8 @@ public class InventorySupplyBffController {
         return ResponseEntity.ok(inventory.getCountSession(id));
     }
 
-    @PostMapping("/requisitions")
-    public ResponseEntity<JsonNode> createRequisition(@RequestBody JsonNode body) {
-        return ResponseEntity.ok(inventory.createRequisition(body));
-    }
+    // createRequisition removed — handled by InventoryController#createRequisition
+    // which uses a typed CreateRequisitionRequest and companion headers.
 
     @PostMapping("/requisitions/{id}/submit")
     public ResponseEntity<JsonNode> submitRequisition(@PathVariable UUID id) {

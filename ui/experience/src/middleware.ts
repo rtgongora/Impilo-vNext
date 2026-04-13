@@ -20,6 +20,7 @@ const PUBLIC_PREFIXES = [
   "/account-deletion",
   "/_next",
   "/api",
+  "/internal",
 ];
 
 const PUBLIC_FILES = ["/favicon.ico", "/robots.txt", "/manifest.json"];

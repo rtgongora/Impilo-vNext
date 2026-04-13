@@ -41,6 +41,12 @@ public class V11HeaderFilter implements Filter {
         HttpServletRequest httpReq = (HttpServletRequest) request;
         HttpServletResponse httpRes = (HttpServletResponse) response;
 
+        // Let CORS preflight through without header enforcement
+        if ("OPTIONS".equalsIgnoreCase(httpReq.getMethod())) {
+            chain.doFilter(request, response);
+            return;
+        }
+
         String path = httpReq.getRequestURI();
 
         // Only enforce on v1.1 paths
