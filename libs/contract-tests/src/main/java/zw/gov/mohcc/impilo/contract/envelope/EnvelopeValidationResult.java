@@ -14,7 +14,7 @@ public record EnvelopeValidationResult(boolean valid, List<String> violations) {
         violations = violations != null ? List.copyOf(violations) : List.of();
     }
 
-    public static EnvelopeValidationResult valid() {
+    public static EnvelopeValidationResult passed() {
         return new EnvelopeValidationResult(true, List.of());
     }
 

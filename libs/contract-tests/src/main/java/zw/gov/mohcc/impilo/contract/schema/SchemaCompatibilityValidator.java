@@ -47,7 +47,7 @@ public final class SchemaCompatibilityValidator {
         checkRequiredFields(existing, proposed, "", violations);
 
         if (violations.isEmpty()) {
-            return CompatibilityResult.compatible();
+            return CompatibilityResult.passed();
         }
         return CompatibilityResult.incompatible(violations);
     }

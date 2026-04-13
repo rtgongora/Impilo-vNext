@@ -115,7 +115,7 @@ public final class EventEnvelopeValidator {
         }
 
         if (violations.isEmpty()) {
-            return EnvelopeValidationResult.valid();
+            return EnvelopeValidationResult.passed();
         }
         return EnvelopeValidationResult.invalid(violations);
     }

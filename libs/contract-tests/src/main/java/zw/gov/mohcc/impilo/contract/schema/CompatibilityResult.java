@@ -14,7 +14,7 @@ public record CompatibilityResult(boolean compatible, List<String> violations) {
         violations = violations != null ? List.copyOf(violations) : List.of();
     }
 
-    public static CompatibilityResult compatible() {
+    public static CompatibilityResult passed() {
         return new CompatibilityResult(true, List.of());
     }
 
