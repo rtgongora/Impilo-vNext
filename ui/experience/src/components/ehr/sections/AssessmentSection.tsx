@@ -30,64 +30,15 @@ import {
   TestTube,
   Clock,
   ClipboardList,
+  Loader2,
 } from "lucide-react";
+import { useTriage } from "@/hooks/queries/useTriage";
+import { useEncounterVitals } from "@/hooks/queries/useVitals";
+import { useEncounterHistory } from "@/hooks/queries/useEncounterHistory";
 
 // ---------------------------------------------------------------------------
-// Mock Data
+// Data fetched via hooks (useTriage, useEncounterVitals, useEncounterHistory)
 // ---------------------------------------------------------------------------
-
-const MOCK_TRIAGE = {
-  category: "orange" as "red" | "orange" | "yellow" | "green",
-  chiefComplaint: "Persistent fever for 3 days with generalised body aches, chills and headache. No cough or diarrhoea.",
-  triageTime: "2026-04-02T08:15:00",
-  triagedBy: "Sr. M. Ncube",
-  arrivalMode: "walk-in",
-  arrivalTime: "2026-04-02T07:45:00",
-  notes: "Patient appears unwell but alert. Known diabetic and hypertensive.",
-  dangerSigns: [
-    { id: "airway", name: "Airway compromise", present: false },
-    { id: "breathing", name: "Severe respiratory distress", present: false },
-    { id: "circulation", name: "Signs of shock", present: false },
-    { id: "disability", name: "Altered consciousness", present: false },
-    { id: "convulsions", name: "Active convulsions", present: false },
-    { id: "dehydration", name: "Severe dehydration", present: true },
-  ],
-};
-
-const MOCK_VITALS = {
-  heartRate: 92,
-  bpSystolic: 148,
-  bpDiastolic: 92,
-  spo2: 96,
-  temperature: 38.6,
-  respRate: 20,
-};
-
-const MOCK_HISTORY = {
-  presentingComplaint: "Persistent high-grade fever for 3 days with generalised body aches, chills and headache",
-  pastMedicalHistory: [
-    { id: "1", condition: "Type 2 Diabetes", status: "active", icdCode: "E11.9", diagnosed: "Jan 2018" },
-    { id: "2", condition: "Hypertension", status: "active", icdCode: "I10", diagnosed: "Mar 2016" },
-    { id: "3", condition: "Asthma", status: "resolved", icdCode: "J45.9", diagnosed: "Childhood" },
-  ],
-  pastSurgicalHistory: [
-    { id: "1", procedure: "Appendectomy", date: "Jun 2005" },
-  ],
-  medications: [
-    { id: "1", medication: "Metformin", dose: "500mg", frequency: "BD" },
-    { id: "2", medication: "Amlodipine", dose: "5mg", frequency: "OD" },
-    { id: "3", medication: "Aspirin", dose: "75mg", frequency: "OD" },
-  ],
-  allergies: [
-    { id: "1", allergen: "Penicillin", reaction: "Anaphylaxis", severity: "life_threatening" },
-    { id: "2", allergen: "Sulfonamides", reaction: "Skin rash", severity: "moderate" },
-  ],
-  socialHistory: {
-    occupation: "Teacher",
-    smokingStatus: "Never",
-    alcoholUse: "Social",
-  },
-};
 
 // ---------------------------------------------------------------------------
 // Color maps
@@ -104,9 +55,26 @@ const triageColors = {
 // Sub-components
 // ---------------------------------------------------------------------------
 
-function TriagePanel() {
-  const triage = MOCK_TRIAGE;
-  const color = triageColors[triage.category];
+function TriagePanel({ triage, vitals, isLoading }: { triage: any; vitals: any; isLoading: boolean }) {
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12 text-gray-400">
+        <Loader2 className="h-6 w-6 animate-spin mr-2" />
+        <span className="text-sm">Loading triage data...</span>
+      </div>
+    );
+  }
+
+  if (!triage) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 text-gray-400">
+        <AlertTriangle className="h-6 w-6 mb-2" />
+        <p className="text-sm">No triage data available for this encounter</p>
+      </div>
+    );
+  }
+
+  const color = triageColors[triage.category as keyof typeof triageColors] || triageColors.green;
   const triageTime = new Date(triage.triageTime).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
   const arrivalTime = new Date(triage.arrivalTime).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
 
@@ -156,7 +124,7 @@ function TriagePanel() {
         </div>
         <div className="p-4">
           <div className="grid grid-cols-2 gap-2">
-            {triage.dangerSigns.map((sign) => (
+            {(triage.dangerSigns ?? []).map((sign: any) => (
               <div
                 key={sign.id}
                 className={`flex items-center gap-2 p-2 rounded-lg ${
@@ -185,11 +153,11 @@ function TriagePanel() {
         <div className="p-4">
           <div className="grid grid-cols-3 gap-4">
             {[
-              { icon: Heart, value: MOCK_VITALS.heartRate, unit: "HR (bpm)" },
-              { icon: Activity, value: `${MOCK_VITALS.bpSystolic}/${MOCK_VITALS.bpDiastolic}`, unit: "BP (mmHg)" },
-              { icon: Wind, value: `${MOCK_VITALS.spo2}%`, unit: "SpO2" },
-              { icon: Thermometer, value: `${MOCK_VITALS.temperature}C`, unit: "Temp" },
-              { icon: Wind, value: MOCK_VITALS.respRate, unit: "RR (/min)" },
+              { icon: Heart, value: vitals?.heartRate ?? vitals?.attributes?.heartRate ?? "--", unit: "HR (bpm)" },
+              { icon: Activity, value: vitals ? `${vitals.bpSystolic ?? vitals.attributes?.systolic ?? "--"}/${vitals.bpDiastolic ?? vitals.attributes?.diastolic ?? "--"}` : "--/--", unit: "BP (mmHg)" },
+              { icon: Wind, value: vitals ? `${vitals.spo2 ?? vitals.attributes?.oxygenSaturation ?? "--"}%` : "--%", unit: "SpO2" },
+              { icon: Thermometer, value: vitals ? `${vitals.temperature ?? vitals.attributes?.temperature ?? "--"}C` : "--C", unit: "Temp" },
+              { icon: Wind, value: vitals?.respRate ?? vitals?.attributes?.respiratoryRate ?? "--", unit: "RR (/min)" },
             ].map((v, i) => {
               const Icon = v.icon;
               return (
@@ -207,8 +175,24 @@ function TriagePanel() {
   );
 }
 
-function HistoryPanel() {
-  const history = MOCK_HISTORY;
+function HistoryPanel({ history, isLoading }: { history: any; isLoading: boolean }) {
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12 text-gray-400">
+        <Loader2 className="h-6 w-6 animate-spin mr-2" />
+        <span className="text-sm">Loading history...</span>
+      </div>
+    );
+  }
+
+  if (!history) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 text-gray-400">
+        <FileText className="h-6 w-6 mb-2" />
+        <p className="text-sm">No history data available for this encounter</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -274,7 +258,7 @@ function HistoryPanel() {
           </span>
         </div>
         <div className="p-4 space-y-2">
-          {history.pastMedicalHistory.map((condition) => (
+          {(history.pastMedicalHistory ?? []).map((condition: any) => (
             <div
               key={condition.id}
               className="flex items-center justify-between p-2.5 bg-gray-50 rounded-lg"
@@ -308,7 +292,7 @@ function HistoryPanel() {
           <h3 className="text-base font-semibold">Past Surgical History</h3>
         </div>
         <div className="p-4 space-y-2">
-          {history.pastSurgicalHistory.map((surgery) => (
+          {(history.pastSurgicalHistory ?? []).map((surgery: any) => (
             <div
               key={surgery.id}
               className="flex items-center justify-between p-2.5 bg-gray-50 rounded-lg"
@@ -332,7 +316,7 @@ function HistoryPanel() {
           </span>
         </div>
         <div className="p-4 space-y-2">
-          {history.medications.map((drug) => (
+          {(history.medications ?? []).map((drug: any) => (
             <div
               key={drug.id}
               className="flex items-center justify-between p-2.5 bg-gray-50 rounded-lg"
@@ -356,7 +340,7 @@ function HistoryPanel() {
           </h3>
         </div>
         <div className="p-4 space-y-2">
-          {history.allergies.map((allergy) => (
+          {(history.allergies ?? []).map((allergy: any) => (
             <div
               key={allergy.id}
               className={`p-3 rounded-lg ${
@@ -394,9 +378,9 @@ function HistoryPanel() {
         <div className="p-4">
           <div className="grid grid-cols-3 gap-4">
             {[
-              { label: "Occupation", value: history.socialHistory.occupation },
-              { label: "Smoking", value: history.socialHistory.smokingStatus },
-              { label: "Alcohol", value: history.socialHistory.alcoholUse },
+              { label: "Occupation", value: history.socialHistory?.occupation ?? "--" },
+              { label: "Smoking", value: history.socialHistory?.smokingStatus ?? "--" },
+              { label: "Alcohol", value: history.socialHistory?.alcoholUse ?? "--" },
             ].map((item) => (
               <div key={item.label} className="p-3 bg-gray-50 rounded-lg">
                 <div className="text-xs text-gray-500 mb-1">{item.label}</div>
@@ -693,11 +677,20 @@ type AssessmentTab = "triage" | "vitals" | "clerking" | "cadre-history" | "cadre
 
 export function AssessmentSection() {
   const params = useParams<{ encounterId?: string }>();
-  const encounterId = params.encounterId;
+  const encounterId = params.encounterId ?? "";
   const cadreConfig = useCadreFormConfig();
   const isSimplified = cadreConfig.complexity === "simplified";
   const isComprehensive = cadreConfig.complexity === "comprehensive";
   const [selectedTemplate, setSelectedTemplate] = useState<ClerkingTemplate | null>(null);
+
+  // Fetch triage, vitals, and history from BFF
+  const { data: triageData, isLoading: triageLoading } = useTriage(encounterId);
+  const { data: vitalsData, isLoading: vitalsLoading } = useEncounterVitals(encounterId);
+  const { data: historyData, isLoading: historyLoading } = useEncounterHistory(encounterId);
+
+  const triage = triageData?.data ?? null;
+  const latestVitals = vitalsData?.data?.[0]?.attributes ?? vitalsData?.data?.[0] ?? null;
+  const history = historyData?.data ?? null;
 
   const [activeTab, setActiveTab] = useState<AssessmentTab>(isSimplified ? "cadre-history" : "triage");
 
@@ -748,7 +741,7 @@ export function AssessmentSection() {
       </div>
 
       {/* Tab content */}
-      {activeTab === "triage" && <TriagePanel />}
+      {activeTab === "triage" && <TriagePanel triage={triage} vitals={latestVitals} isLoading={triageLoading || vitalsLoading} />}
       {activeTab === "vitals" && encounterId && <VitalsRecorder encounterId={encounterId} />}
       {activeTab === "clerking" && (
         selectedTemplate
@@ -757,7 +750,7 @@ export function AssessmentSection() {
       )}
       {activeTab === "cadre-history" && <CadreHistoryForm config={cadreConfig} />}
       {activeTab === "cadre-exam" && <CadreExamForm config={cadreConfig} />}
-      {activeTab === "history" && <HistoryPanel />}
+      {activeTab === "history" && <HistoryPanel history={history} isLoading={historyLoading} />}
       {activeTab === "examination" && <ExaminationPanel />}
       {activeTab === "labs" && <LabResultsSystem />}
       {activeTab === "timeline" && <PatientTimeline />}

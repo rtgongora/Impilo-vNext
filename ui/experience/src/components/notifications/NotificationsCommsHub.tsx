@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Bell, BellOff, MessageSquare, ClipboardList, Megaphone,
   AlertTriangle, CheckCircle, Clock, ArrowRight, Send, X,
-  Volume2, VolumeX, Shield, ArrowRightLeft, Phone,
+  Volume2, VolumeX, Shield, ArrowRightLeft, Phone, Loader2,
 } from 'lucide-react';
+import { useNotifications, useMarkNotificationRead } from '@/hooks/queries/useNotifications';
 
 // ─── Types ───
 
@@ -28,22 +29,7 @@ interface Notification {
   requiresAck?: boolean;
 }
 
-// ─── Mock Data ───
-
-const MOCK_NOTIFICATIONS: Notification[] = [
-  { id: '1', category: 'alert', priority: 'critical', title: 'Critical Lab Result', body: 'Patient MRN-1042: Potassium 6.8 mEq/L - requires immediate attention', timestamp: '2 min ago', read: false, actionUrl: '/ehr/pt-1042/results', actionLabel: 'View Results' },
-  { id: '2', category: 'handoff', priority: 'high', title: 'Shift Handoff - ICU', body: '3 critical patients, 1 pending intubation. Dr. Sibanda handing to Dr. Moyo.', timestamp: '15 min ago', read: false, sender: 'Dr. Sibanda', workspaceScoped: true, actionUrl: '/handoff', actionLabel: 'Review' },
-  { id: '3', category: 'message', priority: 'normal', title: 'Lab Results Ready', body: 'FBC and U&E results for Patient Ndlovu are now available in the EHR.', timestamp: '30 min ago', read: false, sender: 'Lab' },
-  { id: '4', category: 'announcement', priority: 'normal', title: 'System Maintenance', body: 'Scheduled downtime tonight 22:00-02:00 for database migration. Please save work.', timestamp: '1 hr ago', read: true, sender: 'IT Department' },
-  { id: '5', category: 'system', priority: 'low', title: 'Backup Complete', body: 'Daily backup completed successfully at 03:00. All systems nominal.', timestamp: '3 hrs ago', read: true },
-  { id: '6', category: 'alert', priority: 'high', title: 'Drug Interaction Warning', body: 'Patient MRN-1015: Rifampicin + DTG interaction flagged by CDS engine.', timestamp: '45 min ago', read: false, actionUrl: '/ehr/pt-1015/medications', actionLabel: 'Review Meds' },
-  { id: '7', category: 'handoff', priority: 'normal', title: 'Ward Round Summary', body: 'Medical Ward: 18 patients reviewed, 3 for discharge, 1 escalation to ICU.', timestamp: '2 hrs ago', read: true, sender: 'Sr. Ndlovu', workspaceScoped: true },
-  { id: '8', category: 'message', priority: 'normal', title: 'Referral Accepted', body: 'Cardiology accepted referral for Patient Chirwa. Appointment scheduled Monday 09:00.', timestamp: '4 hrs ago', read: true, sender: 'Cardiology' },
-  { id: '9', category: 'announcement', priority: 'high', title: 'New ART Guidelines', body: 'Updated ART guidelines effective immediately. All clinicians must review protocol changes.', timestamp: '5 hrs ago', read: false, sender: 'Clinical Governance', requiresAck: true },
-  { id: '10', category: 'system', priority: 'low', title: 'Session Expiring', body: 'Your session will expire in 15 minutes. Please save any unsaved work.', timestamp: '12 min ago', read: false },
-  { id: '11', category: 'alert', priority: 'critical', title: 'Blood Bank Alert', body: 'O-negative blood stock critical: 2 units remaining. Notify blood bank coordinator.', timestamp: '20 min ago', read: false },
-  { id: '12', category: 'message', priority: 'normal', title: 'Pharmacy Query', body: 'Please clarify dosage for Patient Moyo - Metformin 850mg vs 500mg prescribed.', timestamp: '1 hr ago', read: false, sender: 'T. Ncube (Pharmacy)' },
-];
+// ─── Data fetched via useNotifications hook ───
 
 // ─── Helpers ───
 
@@ -83,10 +69,19 @@ const FILTER_TABS: { id: FilterCategory; label: string; icon?: React.ComponentTy
 type PanelView = 'list' | 'compose' | 'page';
 
 export function NotificationsCommsHub() {
+  const { data: notificationsData, isLoading, isError } = useNotifications();
+  const markReadMutation = useMarkNotificationRead();
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState<FilterCategory>('all');
-  const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isMuted, setIsMuted] = useState(false);
+
+  // Sync remote data into local state for optimistic UI updates
+  useEffect(() => {
+    if (notificationsData?.data) {
+      setNotifications(notificationsData.data as Notification[]);
+    }
+  }, [notificationsData]);
   const [replyTo, setReplyTo] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
   const [panelView, setPanelView] = useState<PanelView>('list');
@@ -137,6 +132,7 @@ export function NotificationsCommsHub() {
 
   const markRead = (id: string) => {
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+    markReadMutation.mutate(id);
   };
 
   const markAllRead = () => {
@@ -276,7 +272,18 @@ export function NotificationsCommsHub() {
 
             {/* Notification list */}
             <div className="max-h-[380px] overflow-y-auto divide-y divide-gray-100">
-              {filtered.length === 0 ? (
+              {isLoading ? (
+                <div className="flex flex-col items-center justify-center py-10 text-gray-400">
+                  <Loader2 className="h-6 w-6 animate-spin mb-2" />
+                  <p className="text-sm">Loading notifications...</p>
+                </div>
+              ) : isError ? (
+                <div className="flex flex-col items-center justify-center py-10 text-gray-400">
+                  <AlertTriangle className="h-6 w-6 mb-2 text-amber-400" />
+                  <p className="text-sm">Failed to load notifications</p>
+                  <p className="text-xs">Please try again later</p>
+                </div>
+              ) : filtered.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-10 text-gray-400">
                   <CheckCircle className="h-8 w-8 mb-2 opacity-40" />
                   <p className="text-sm">All caught up</p>

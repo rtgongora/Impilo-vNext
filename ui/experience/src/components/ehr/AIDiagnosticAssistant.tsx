@@ -78,16 +78,21 @@ export function AIDiagnosticAssistant({ open, onClose }: AIDiagnosticAssistantPr
   const [diagnosticResult, setDiagnosticResult] = useState<DiagnosticResult | null>(null);
   const [drugResult, setDrugResult] = useState<DrugInteractionResult | null>(null);
   const [labResult, setLabResult] = useState<LabInterpretationResult | null>(null);
+  const [usingFallback, setUsingFallback] = useState(false);
 
   const analyzePatient = async (type: string) => {
     setIsLoading(true);
+    setUsingFallback(false);
     try {
-      const response = await apiClient.post<{ result?: DiagnosticResult | DrugInteractionResult | LabInterpretationResult }>("/api/v1/ai/diagnostic", { type, symptoms, medications, labResults });
+      const response = await apiClient.post<{ result?: DiagnosticResult | DrugInteractionResult | LabInterpretationResult }>("/internal/v1/ai/diagnostic", { type, symptoms, medications, labResults });
       if (type === "diagnostic") setDiagnosticResult((response.result as DiagnosticResult) || MOCK_DIAGNOSTIC);
       if (type === "drug-interaction") setDrugResult((response.result as DrugInteractionResult) || MOCK_DRUG_RESULT);
       if (type === "lab-interpretation") setLabResult((response.result as LabInterpretationResult) || MOCK_LAB_RESULT);
+      // If response had no result, we fell back to mock
+      if (!response.result) setUsingFallback(true);
     } catch {
-      // Fallback to mock results
+      // Fallback to example data when AI service is unavailable
+      setUsingFallback(true);
       if (type === "diagnostic") setDiagnosticResult(MOCK_DIAGNOSTIC);
       if (type === "drug-interaction") setDrugResult(MOCK_DRUG_RESULT);
       if (type === "lab-interpretation") setLabResult(MOCK_LAB_RESULT);
@@ -133,6 +138,12 @@ export function AIDiagnosticAssistant({ open, onClose }: AIDiagnosticAssistantPr
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          {/* Fallback indicator */}
+          {usingFallback && (
+            <div className="rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-700 mb-3">
+              AI service unavailable — showing example data
+            </div>
+          )}
           {/* Diagnostic Tab */}
           {activeTab === "diagnostic" && (
             <>

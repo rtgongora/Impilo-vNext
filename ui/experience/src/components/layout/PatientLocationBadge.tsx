@@ -20,20 +20,6 @@ import {
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 
 // ---------------------------------------------------------------------------
-// Mock encounter data (replace with real encounter context in production)
-// ---------------------------------------------------------------------------
-const MOCK_ENCOUNTER = {
-  type: "inpatient" as "outpatient" | "inpatient" | "emergency" | "community" | "virtual",
-  source: "queue" as "queue" | "referral" | "walk-in",
-  patient: {
-    ward: "Medical Ward 2",
-    bed: "Bed 14A",
-  },
-};
-
-const MOCK_QUEUE_NAME = "OPD Morning Queue";
-
-// ---------------------------------------------------------------------------
 // Variant styles
 // ---------------------------------------------------------------------------
 const VARIANT_STYLES = {
@@ -62,12 +48,28 @@ export function PatientLocationBadge() {
   const patientId = params?.patientId as string | undefined;
   const { facility } = useFacilityStore();
 
+  // Only show location when there is an active patient context
   if (!patientId) return null;
 
-  const encounterType = MOCK_ENCOUNTER.type;
-  const source = MOCK_ENCOUNTER.source;
-  const patient = MOCK_ENCOUNTER.patient;
+  const encounterType = searchParams.get("encounterType") as
+    | "outpatient"
+    | "inpatient"
+    | "emergency"
+    | "community"
+    | "virtual"
+    | null;
+  const source = searchParams.get("source") as
+    | "queue"
+    | "referral"
+    | "walk-in"
+    | null;
+  const ward = searchParams.get("ward");
+  const bed = searchParams.get("bed");
   const queueId = searchParams.get("queueId");
+  const queueName = searchParams.get("queueName");
+
+  // If no encounter context is available, show nothing rather than fake data
+  if (!encounterType && !queueId && !facility) return null;
 
   const getLocationInfo = (): LocationInfo => {
     if (encounterType === "outpatient" && source === "referral") {
@@ -79,19 +81,19 @@ export function PatientLocationBadge() {
       };
     }
 
-    if (encounterType === "inpatient" && patient.ward) {
+    if (encounterType === "inpatient" && ward) {
       return {
         icon: <Bed className="h-3.5 w-3.5" />,
-        label: patient.ward,
-        detail: patient.bed ?? undefined,
+        label: ward,
+        detail: bed ?? undefined,
         variant: "default",
       };
     }
 
-    if (source === "queue" && (queueId || MOCK_QUEUE_NAME)) {
+    if (source === "queue" && (queueId || queueName)) {
       return {
         icon: <Users className="h-3.5 w-3.5" />,
-        label: MOCK_QUEUE_NAME,
+        label: queueName || "Queue",
         detail: facility?.name,
         variant: "default",
       };

@@ -21,6 +21,7 @@ import { PatientLocationBadge } from "@/components/layout/PatientLocationBadge";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useWorkspaceStore } from "@/hooks/useWorkspaceStore";
+import { useCDSAlerts } from "@/hooks/queries/useCDSAlerts";
 
 // ---------------------------------------------------------------------------
 // Component
@@ -31,8 +32,8 @@ export function UtilityStrip() {
   const { facility } = useFacilityStore();
   const { workspace } = useWorkspaceStore();
 
-  // Mock CDS alerts count
-  const activeCDSAlerts = 3;
+  const { data: cdsData } = useCDSAlerts();
+  const activeCDSAlerts = cdsData?.data?.count ?? 0;
 
   return (
     <div className="h-9 min-h-[2.25rem] shrink-0 bg-white border-b border-gray-200 flex items-center justify-between px-3 z-50">
