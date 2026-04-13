@@ -8,7 +8,7 @@ import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { useEncounters } from "@/hooks/queries/useEncounters";
 import type { PatientGoalUi } from "@/hooks/queries/useCareContinuity";
-import { usePatientGoalsFromCarePlans } from "@/hooks/queries/useCareContinuity";
+import { usePatientGoalsFromCarePlans, useCreateGoal } from "@/hooks/queries/useCareContinuity";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 
 type PatientGoal = PatientGoalUi;
@@ -41,6 +41,7 @@ export default function GoalsPage() {
   const { data: encountersData } = useEncounters(patientId);
 
   const { data, isLoading, isError, refetch } = usePatientGoalsFromCarePlans(patientId);
+  const createGoal = useCreateGoal();
   const goals: PatientGoal[] = data?.data ?? [];
   const activeEncounter = (encountersData?.data ?? []).find(
     (encounter) =>
@@ -196,8 +197,32 @@ export default function GoalsPage() {
                     </div>
                   </div>
                 </div>
+                {createGoal.isError && (
+                  <p className="text-xs text-red-600 pt-1">Failed to create goal. Please try again.</p>
+                )}
                 <div className="flex items-center gap-3 pt-4">
-                  <button className="rounded-lg bg-impilo-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-impilo-600">Create Goal</button>
+                  <button
+                    type="button"
+                    disabled={createGoal.isPending || !newTitle}
+                    onClick={() => {
+                      createGoal.mutate(
+                        { patientId, title: newTitle, description: newDescription, priority: newPriority, targetDate: newTarget },
+                        {
+                          onSuccess: () => {
+                            setNewTitle("");
+                            setNewDescription("");
+                            setNewPriority("Medium");
+                            setNewTarget("");
+                            setShowForm(false);
+                          },
+                        },
+                      );
+                    }}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-impilo-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-impilo-600 disabled:opacity-50"
+                  >
+                    {createGoal.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                    Create Goal
+                  </button>
                   <button onClick={() => setShowForm(false)} className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50">Cancel</button>
                 </div>
               </div>

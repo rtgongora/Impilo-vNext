@@ -28,8 +28,9 @@ import {
 } from "../../services/marketplaceService";
 // re-import the frontend types (not the service fn return types)
 import type { MarketplaceService as MktService, ServiceRequest as SvcReq } from "../../types";
+import { CartScreen } from "./CartScreen";
 
-type MarketplaceTab = "browse" | "requests";
+type MarketplaceTab = "browse" | "requests" | "cart";
 
 const CATEGORIES = [
   { label: "All", value: "" },
@@ -143,6 +144,12 @@ export function MarketplaceScreen() {
             variant={tab === "requests" ? "primary" : "ghost"}
             onPress={() => setTab("requests")}
             testID="marketplace-tab-requests"
+          />
+          <Button
+            title="Cart"
+            variant={tab === "cart" ? "primary" : "ghost"}
+            onPress={() => setTab("cart")}
+            testID="marketplace-tab-cart"
           />
         </View>
 
@@ -317,6 +324,9 @@ export function MarketplaceScreen() {
             )}
           </>
         ) : null}
+
+        {/* Cart tab */}
+        {tab === "cart" ? <CartScreen /> : null}
       </ScrollView>
     </Screen>
   );

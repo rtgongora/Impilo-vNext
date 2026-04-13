@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import { Activity, Mail, Loader2, Phone, Plus, Star, Trash2, Users, X, FileText, ClipboardList, CheckCircle2, AlertCircle } from "lucide-react";
+import { Activity, Loader2, Plus, Trash2, Users, X, FileText, ClipboardList, CheckCircle2, AlertCircle } from "lucide-react";
 import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
@@ -253,24 +253,25 @@ export default function CareTeamPage() {
                       <th className="px-4 py-3 text-left font-medium text-gray-600">Name</th>
                       <th className="px-4 py-3 text-left font-medium text-gray-600">Role</th>
                       <th className="px-4 py-3 text-left font-medium text-gray-600">Specialty</th>
-                      <th className="px-4 py-3 text-left font-medium text-gray-600">Facility</th>
-                      <th className="px-4 py-3 text-left font-medium text-gray-600">Contact</th>
+                      <th className="px-4 py-3 text-left font-medium text-gray-600">Assigned</th>
                       <th className="px-4 py-3 text-left font-medium text-gray-600">Status</th>
+                      <th className="px-4 py-3 text-left font-medium text-gray-600"></th>
                     </tr>
                   </thead>
                   <tbody>
                     {members.map((member) => (
                       <tr key={member.id} className="border-b border-gray-100 transition-colors hover:bg-gray-50">
-                        <td className="flex items-center gap-1 px-4 py-3 text-gray-900">
-                          {member.name}
-                          {member.isPrimary && <Star className="h-3 w-3 fill-amber-500 text-amber-500" />}
-                        </td>
+                        <td className="px-4 py-3 text-gray-900">{member.name}</td>
                         <td className="px-4 py-3 text-gray-700">{member.role}</td>
                         <td className="px-4 py-3 text-gray-700">{member.specialty}</td>
-                        <td className="px-4 py-3 text-gray-500">{member.facility}</td>
-                        <td className="px-4 py-3 text-xs text-gray-500">{member.phone}</td>
+                        <td className="px-4 py-3 text-xs text-gray-500">{member.assignedAt ? new Date(member.assignedAt).toLocaleDateString() : "—"}</td>
                         <td className="px-4 py-3">
-                          <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${member.status === "Active" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"}`}>{member.status}</span>
+                          <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${member.status === "active" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"}`}>{member.status}</span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <button type="button" onClick={() => removeMember.mutate({ memberId: member.id, patientId })} disabled={removeMember.isPending} className="p-1 text-gray-400 hover:text-red-500 disabled:opacity-50">
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
                         </td>
                       </tr>
                     ))}

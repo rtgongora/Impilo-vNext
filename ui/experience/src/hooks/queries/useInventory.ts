@@ -560,17 +560,19 @@ export interface PatchRequisitionPayload {
   facilityId: string;
   requisitionId: string;
   status: string;
+  notes?: string;
 }
 
-/** Status transitions require approve/fulfill APIs with structured bodies — stub until UI is aligned. */
 export function usePatchRequisitionStatus() {
   const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (_payload: PatchRequisitionPayload) => {
-      /* no-op */
-    },
-    onSuccess: (_d, payload) => {
-      qc.invalidateQueries({ queryKey: ["inventory-requisitions", payload.facilityId] });
+  return useMutation<unknown, unknown, PatchRequisitionPayload>({
+    mutationFn: (payload: PatchRequisitionPayload) =>
+      apiClient.patch(`/internal/v1/inventory/requisitions/${payload.requisitionId}/status`, {
+        status: payload.status,
+        notes: payload.notes,
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["inv"] });
     },
   });
 }

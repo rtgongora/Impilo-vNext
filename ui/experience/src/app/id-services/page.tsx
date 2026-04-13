@@ -103,6 +103,21 @@ function IdGenerationCard({ type, label, format, icon: Icon, color }: {
   const [province, setProvince] = useState("HA");
   const [email, setEmail] = useState("");
   const [generatedIds, setGeneratedIds] = useState<Record<string, string> | null>(null);
+  const [sendSuccess, setSendSuccess] = useState(false);
+
+  const sendIds = useMutation({
+    mutationFn: (payload: { email: string; ids: Record<string, string> }) =>
+      apiClient.post("/internal/v1/notifications/send", {
+        channel: "EMAIL",
+        recipient: payload.email,
+        subject: "Your Impilo Health IDs",
+        body: Object.entries(payload.ids).map(([k, v]) => `${k}: ${v}`).join("\n"),
+      }),
+    onSuccess: () => {
+      setSendSuccess(true);
+      setTimeout(() => setSendSuccess(false), 4000);
+    },
+  });
 
   const register = useMutation({
     mutationFn: (body: Record<string, unknown>) => {
@@ -218,14 +233,24 @@ function IdGenerationCard({ type, label, format, icon: Icon, color }: {
       )}
 
       {generatedIds && (
-        <div className="flex gap-1">
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-            placeholder="Email to send" className="flex-1 px-2 py-1 text-[10px] border border-gray-300 rounded" />
-          <button onClick={() => { if (email && generatedIds) { navigator.clipboard.writeText(Object.entries(generatedIds).map(([k,v]) => `${k}: ${v}`).join("\n")); alert(`IDs copied. Send to ${email} via your email client.`); } }}
-            className="px-2 py-1 text-[10px] bg-gray-100 text-gray-600 rounded hover:bg-gray-200" title="Copy IDs for email">
-            <Mail className="w-3 h-3" />
-          </button>
-        </div>
+        <>
+          <div className="flex gap-1">
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+              placeholder="Email to send" className="flex-1 px-2 py-1 text-[10px] border border-gray-300 rounded" />
+            <button
+              onClick={() => { if (email && generatedIds) sendIds.mutate({ email, ids: generatedIds }); }}
+              disabled={sendIds.isPending || !email}
+              className="px-2 py-1 text-[10px] bg-gray-100 text-gray-600 rounded hover:bg-gray-200 disabled:opacity-50 flex items-center gap-0.5" title="Send IDs via email">
+              {sendIds.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Mail className="w-3 h-3" />}
+            </button>
+          </div>
+          {sendSuccess && (
+            <p className="text-[10px] text-green-700">IDs sent to {email} successfully.</p>
+          )}
+          {sendIds.isError && (
+            <p className="text-[10px] text-red-600">Failed to send IDs. Please try again.</p>
+          )}
+        </>
       )}
 
       <p className="text-[9px] text-center text-gray-400">Cryptographically secure · Biometric linking available</p>
