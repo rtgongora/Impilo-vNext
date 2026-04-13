@@ -5,7 +5,6 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.TshepoConsentServiceClient;
@@ -23,6 +22,7 @@ public class CitizenConsentController {
 
     private final TshepoConsentServiceClient consentClient;
 
+    public CitizenConsentController(TshepoConsentServiceClient consentClient) {
         this.consentClient = consentClient;
     }
 
@@ -58,7 +58,6 @@ public class CitizenConsentController {
     }
 
     @PutMapping
-    @Transactional
     public ResponseEntity<Map<String, Object>> updateConsent(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.POD_ID) String podId,

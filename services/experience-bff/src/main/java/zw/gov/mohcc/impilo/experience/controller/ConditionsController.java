@@ -12,8 +12,9 @@ import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Condition management endpoints.
@@ -54,30 +55,22 @@ public class ConditionsController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false, name = "patient_id") String patientId) {
-        if (patientId != null) {
-            try {
-                JsonNode pctData = pctClient.listConditions(patientId, page, size);
-                if (pctData != null) {
-                    Map<String, Object> response = new LinkedHashMap<>();
-                    response.put("data", pctData);
-                    response.put("meta", Map.of(
-                            "request_id", requestId,
-                            "correlation_id", correlationId
-                    ));
-                    return ResponseEntity.ok(response);
-                }
-            } catch (Exception e) {
-                log.warn("PCT listConditions failed: {}", e.getMessage());
-            }
+        if (patientId == null || patientId.isBlank()) {
+            return ResponseEntity.ok(Map.of(
+                    "data", List.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", List.of());
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId
-        ));
-        return ResponseEntity.ok(response);
+        try {
+            JsonNode pctData = pctClient.listConditions(patientId, page, size);
+            return ResponseEntity.ok(Map.of(
+                    "data", pctData != null ? pctData : List.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            log.warn("PCT listConditions failed: {}", e.getMessage());
+            return ResponseEntity.ok(Map.of(
+                    "data", List.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
     }
 
     @PostMapping
@@ -89,54 +82,25 @@ public class ConditionsController {
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @Valid @RequestBody CreateConditionRequest request) {
 
-        UUID conditionId = UUID.randomUUID();
-        OffsetDateTime now = OffsetDateTime.now();
         String clinicalStatus = request.clinical_status() != null ? request.clinical_status() : "ACTIVE";
 
-        try {
-            Map<String, Object> pctBody = new LinkedHashMap<>();
-            pctBody.put("patient_id", request.patient_id());
-            pctBody.put("encounter_id", request.encounter_id());
-            pctBody.put("condition_name", request.condition_name());
-            pctBody.put("icd_code", request.icd_code());
-            pctBody.put("category", request.category());
-            pctBody.put("clinical_status", clinicalStatus);
-            pctBody.put("severity", request.severity());
-            pctBody.put("onset_date", request.onset_date());
-            pctBody.put("recorded_by", request.recorded_by());
-            pctBody.put("notes", request.notes());
-            pctClient.createCondition(pctBody);
-            log.info("PCT condition created successfully for patient={}", request.patient_id());
-        } catch (Exception e) {
-            log.warn("PCT createCondition failed (non-blocking): {}", e.getMessage());
-        }
+        Map<String, Object> pctBody = new LinkedHashMap<>();
+        pctBody.put("patient_id", request.patient_id());
+        pctBody.put("encounter_id", request.encounter_id());
+        pctBody.put("condition_name", request.condition_name());
+        pctBody.put("icd_code", request.icd_code());
+        pctBody.put("category", request.category());
+        pctBody.put("clinical_status", clinicalStatus);
+        pctBody.put("severity", request.severity());
+        pctBody.put("onset_date", request.onset_date());
+        pctBody.put("recorded_by", request.recorded_by());
+        pctBody.put("notes", request.notes());
 
-        Map<String, Object> attributes = new LinkedHashMap<>();
-        attributes.put("patient_id", request.patient_id());
-        attributes.put("encounter_id", request.encounter_id());
-        attributes.put("condition_name", request.condition_name());
-        attributes.put("icd_code", request.icd_code());
-        attributes.put("category", request.category());
-        attributes.put("clinical_status", clinicalStatus);
-        attributes.put("severity", request.severity());
-        attributes.put("onset_date", request.onset_date());
-        attributes.put("recorded_by", request.recorded_by());
-        attributes.put("notes", request.notes());
-        attributes.put("created_at", now);
-        attributes.put("updated_at", now);
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", Map.of(
-                "id", conditionId.toString(),
-                "type", "Condition",
-                "attributes", attributes
-        ));
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId
-        ));
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        JsonNode created = pctClient.createCondition(pctBody);
+        log.info("PCT condition created for patient={}", request.patient_id());
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                "data", created != null ? created : Map.of(),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 
     @PostMapping("/{id}/resolve")
@@ -151,13 +115,8 @@ public class ConditionsController {
         JsonNode result = pctClient.resolveCondition(id.toString());
         log.info("PCT condition resolved: {}", id);
 
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", result != null ? result : Map.of("id", id.toString(), "clinical_status", "RESOLVED"));
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId
-        ));
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(Map.of(
+                "data", result != null ? result : Map.of(),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 }

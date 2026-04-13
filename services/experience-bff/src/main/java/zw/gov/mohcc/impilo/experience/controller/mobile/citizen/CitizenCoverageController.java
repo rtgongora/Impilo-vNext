@@ -20,6 +20,7 @@ public class CitizenCoverageController {
 
     private final CoverageServiceClient coverageClient;
 
+    public CitizenCoverageController(CoverageServiceClient coverageClient) {
         this.coverageClient = coverageClient;
     }
 

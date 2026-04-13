@@ -5,7 +5,6 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.MsikaFlowServiceClient;
@@ -28,6 +27,7 @@ public class CitizenMarketplaceController {
 
     private final MsikaFlowServiceClient msikaFlowClient;
 
+    public CitizenMarketplaceController(MsikaFlowServiceClient msikaFlowClient) {
         this.msikaFlowClient = msikaFlowClient;
     }
 
@@ -81,7 +81,6 @@ public class CitizenMarketplaceController {
     }
 
     @PostMapping("/requests")
-    @Transactional
     public ResponseEntity<Map<String, Object>> createRequest(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.POD_ID) String podId,
@@ -150,7 +149,6 @@ public class CitizenMarketplaceController {
     }
 
     @PostMapping("/requests/{id}/cancel")
-    @Transactional
     public ResponseEntity<Map<String, Object>> cancelRequest(
             @PathVariable UUID id,
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,

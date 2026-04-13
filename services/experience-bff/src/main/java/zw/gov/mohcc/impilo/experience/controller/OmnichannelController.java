@@ -19,6 +19,7 @@ public class OmnichannelController {
 
     private final CommunityServiceClient communityClient;
 
+    public OmnichannelController(CommunityServiceClient communityClient) {
         this.communityClient = communityClient;
     }
 

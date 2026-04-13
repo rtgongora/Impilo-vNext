@@ -3,7 +3,6 @@ package zw.gov.mohcc.impilo.experience.controller.mobile.citizen;
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.VitoServiceClient;
@@ -27,6 +26,7 @@ public class CitizenProfileController {
     private final VitoServiceClient vitoClient;
     private final TshepoConsentServiceClient consentClient;
 
+    public CitizenProfileController(VitoServiceClient vitoClient, TshepoConsentServiceClient consentClient) {
         this.vitoClient = vitoClient;
         this.consentClient = consentClient;
     }
@@ -53,7 +53,6 @@ public class CitizenProfileController {
     }
 
     @PatchMapping
-    @Transactional
     public ResponseEntity<Map<String, Object>> updateProfile(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.POD_ID) String podId,
@@ -96,7 +95,6 @@ public class CitizenProfileController {
     }
 
     @PatchMapping("/consents/{id}")
-    @Transactional
     public ResponseEntity<Map<String, Object>> updateConsent(
             @PathVariable UUID id,
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
@@ -125,7 +123,6 @@ public class CitizenProfileController {
     }
 
     @DeleteMapping("/account")
-    @Transactional
     public ResponseEntity<Void> deleteAccount(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.POD_ID) String podId,

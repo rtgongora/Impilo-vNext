@@ -19,6 +19,7 @@ public class CitizenTimelineController {
 
     private final PctServiceClient pctClient;
 
+    public CitizenTimelineController(PctServiceClient pctClient) {
         this.pctClient = pctClient;
     }
 

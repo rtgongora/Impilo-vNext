@@ -12,8 +12,9 @@ import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Immunization management endpoints.
@@ -55,30 +56,22 @@ public class ImmunizationsController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false, name = "patient_id") String patientId) {
-        if (patientId != null) {
-            try {
-                JsonNode pctData = pctClient.listImmunizations(patientId, page, size);
-                if (pctData != null) {
-                    Map<String, Object> response = new LinkedHashMap<>();
-                    response.put("data", pctData);
-                    response.put("meta", Map.of(
-                            "request_id", requestId,
-                            "correlation_id", correlationId
-                    ));
-                    return ResponseEntity.ok(response);
-                }
-            } catch (Exception e) {
-                log.warn("PCT listImmunizations failed: {}", e.getMessage());
-            }
+        if (patientId == null || patientId.isBlank()) {
+            return ResponseEntity.ok(Map.of(
+                    "data", List.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", List.of());
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId
-        ));
-        return ResponseEntity.ok(response);
+        try {
+            JsonNode pctData = pctClient.listImmunizations(patientId, page, size);
+            return ResponseEntity.ok(Map.of(
+                    "data", pctData != null ? pctData : List.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            log.warn("PCT listImmunizations failed: {}", e.getMessage());
+            return ResponseEntity.ok(Map.of(
+                    "data", List.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
     }
 
     @PostMapping
@@ -90,58 +83,24 @@ public class ImmunizationsController {
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @Valid @RequestBody CreateImmunizationRequest request) {
 
-        UUID immunizationId = UUID.randomUUID();
-        OffsetDateTime now = OffsetDateTime.now();
+        Map<String, Object> pctBody = new LinkedHashMap<>();
+        pctBody.put("patient_id", request.patient_id());
+        pctBody.put("encounter_id", request.encounter_id());
+        pctBody.put("vaccine_name", request.vaccine_name());
+        pctBody.put("vaccine_code", request.vaccine_code());
+        pctBody.put("dose_number", request.dose_number());
+        pctBody.put("dose_sequence", request.dose_sequence());
+        pctBody.put("lot_number", request.lot_number());
+        pctBody.put("site", request.site());
+        pctBody.put("route", request.route());
+        pctBody.put("administered_by", request.administered_by());
+        pctBody.put("expiration_date", request.expiration_date());
+        pctBody.put("notes", request.notes());
 
-        try {
-            Map<String, Object> pctBody = new LinkedHashMap<>();
-            pctBody.put("patient_id", request.patient_id());
-            pctBody.put("encounter_id", request.encounter_id());
-            pctBody.put("vaccine_name", request.vaccine_name());
-            pctBody.put("vaccine_code", request.vaccine_code());
-            pctBody.put("dose_number", request.dose_number());
-            pctBody.put("dose_sequence", request.dose_sequence());
-            pctBody.put("lot_number", request.lot_number());
-            pctBody.put("site", request.site());
-            pctBody.put("route", request.route());
-            pctBody.put("administered_by", request.administered_by());
-            pctBody.put("expiration_date", request.expiration_date());
-            pctBody.put("notes", request.notes());
-            pctClient.createImmunization(pctBody);
-            log.info("PCT immunization created successfully for patient={}", request.patient_id());
-        } catch (Exception e) {
-            log.warn("PCT createImmunization failed (non-blocking): {}", e.getMessage());
-        }
-
-        Map<String, Object> attributes = new LinkedHashMap<>();
-        attributes.put("patient_id", request.patient_id());
-        attributes.put("encounter_id", request.encounter_id());
-        attributes.put("vaccine_name", request.vaccine_name());
-        attributes.put("vaccine_code", request.vaccine_code());
-        attributes.put("dose_number", request.dose_number());
-        attributes.put("dose_sequence", request.dose_sequence());
-        attributes.put("lot_number", request.lot_number());
-        attributes.put("site", request.site());
-        attributes.put("route", request.route());
-        attributes.put("status", "COMPLETED");
-        attributes.put("administered_by", request.administered_by());
-        attributes.put("administered_at", now);
-        attributes.put("expiration_date", request.expiration_date());
-        attributes.put("notes", request.notes());
-        attributes.put("created_at", now);
-        attributes.put("updated_at", now);
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", Map.of(
-                "id", immunizationId.toString(),
-                "type", "Immunization",
-                "attributes", attributes
-        ));
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId
-        ));
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        JsonNode created = pctClient.createImmunization(pctBody);
+        log.info("PCT immunization created for patient={}", request.patient_id());
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                "data", created != null ? created : Map.of(),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 }

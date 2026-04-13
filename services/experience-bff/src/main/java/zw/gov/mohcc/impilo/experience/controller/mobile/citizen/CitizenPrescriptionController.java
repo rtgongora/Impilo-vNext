@@ -3,7 +3,6 @@ package zw.gov.mohcc.impilo.experience.controller.mobile.citizen;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.PharmacyServiceClient;
@@ -23,6 +22,7 @@ public class CitizenPrescriptionController {
 
     private final PharmacyServiceClient pharmacyClient;
 
+    public CitizenPrescriptionController(PharmacyServiceClient pharmacyClient) {
         this.pharmacyClient = pharmacyClient;
     }
 
@@ -67,7 +67,6 @@ public class CitizenPrescriptionController {
     }
 
     @PostMapping("/{id}/refill")
-    @Transactional
     public ResponseEntity<Map<String, Object>> refill(
             @PathVariable UUID id,
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,

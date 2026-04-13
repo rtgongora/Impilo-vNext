@@ -37,10 +37,11 @@
             <artifactId>spring-boot-starter-data-redis</artifactId>
         </dependency>
 
-        <!-- Resilience4j -->
+        <!-- Resilience4j (version not managed by Spring Boot parent BOM) -->
         <dependency>
             <groupId>io.github.resilience4j</groupId>
             <artifactId>resilience4j-spring-boot3</artifactId>
+            <version>2.2.0</version>
         </dependency>
 
         <!-- Spring Boot Actuator -->

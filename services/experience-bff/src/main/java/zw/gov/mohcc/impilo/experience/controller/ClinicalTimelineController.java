@@ -8,7 +8,11 @@ import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 
-import java.util.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * Clinical timeline endpoints.
@@ -36,29 +40,37 @@ public class ClinicalTimelineController {
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false, name = "patient_id") String patientId,
             @RequestParam(required = false, name = "encounter_id") String encounterId) {
-        if (patientId != null) {
+        String cpid = patientId;
+        if ((cpid == null || cpid.isBlank()) && encounterId != null && !encounterId.isBlank()) {
             try {
-                JsonNode pctData = pctClient.getPatientTimeline(patientId);
-                if (pctData != null) {
-                    Map<String, Object> response = new LinkedHashMap<>();
-                    response.put("data", pctData);
-                    response.put("meta", Map.of(
-                            "request_id", requestId,
-                            "correlation_id", correlationId
-                    ));
-                    return ResponseEntity.ok(response);
+                long enc = Long.parseLong(encounterId.trim());
+                JsonNode encNode = pctClient.getEncounter(enc);
+                if (encNode != null && encNode.has("subjectCpid")) {
+                    cpid = encNode.get("subjectCpid").asText();
                 }
+            } catch (NumberFormatException e) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "encounter_id must be a numeric PCT encounter id when patient_id is omitted");
             } catch (Exception e) {
-                log.warn("PCT getPatientTimeline failed: {}", e.getMessage());
+                log.warn("PCT getEncounter for timeline failed: {}", e.getMessage());
             }
         }
 
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", List.of());
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId
-        ));
-        return ResponseEntity.ok(response);
+        if (cpid == null || cpid.isBlank()) {
+            return ResponseEntity.ok(Map.of(
+                    "data", List.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
+        try {
+            JsonNode pctData = pctClient.getPatientTimeline(cpid);
+            return ResponseEntity.ok(Map.of(
+                    "data", pctData != null ? pctData : List.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            log.warn("PCT getPatientTimeline failed: {}", e.getMessage());
+            return ResponseEntity.ok(Map.of(
+                    "data", List.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
     }
 }

@@ -8,7 +8,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.TusoServiceClient;
@@ -26,6 +25,7 @@ public class AdminWardController {
 
     private final TusoServiceClient tusoClient;
 
+    public AdminWardController(TusoServiceClient tusoClient) {
         this.tusoClient = tusoClient;
     }
 
@@ -37,7 +37,6 @@ public class AdminWardController {
     ) {}
 
     @PostMapping
-    @Transactional
     public ResponseEntity<Map<String, Object>> createWard(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,

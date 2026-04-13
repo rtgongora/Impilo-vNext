@@ -6,7 +6,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.CommunityServiceClient;
@@ -28,6 +27,7 @@ public class CitizenRemindersController {
 
     private final CommunityServiceClient communityClient;
 
+    public CitizenRemindersController(CommunityServiceClient communityClient) {
         this.communityClient = communityClient;
     }
 
@@ -62,7 +62,6 @@ public class CitizenRemindersController {
     }
 
     @PostMapping
-    @Transactional
     public ResponseEntity<Map<String, Object>> create(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.POD_ID) String podId,
@@ -94,7 +93,6 @@ public class CitizenRemindersController {
     }
 
     @PatchMapping("/{id}")
-    @Transactional
     public ResponseEntity<Map<String, Object>> update(
             @PathVariable UUID id,
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
@@ -118,7 +116,6 @@ public class CitizenRemindersController {
     }
 
     @DeleteMapping("/{id}")
-    @Transactional
     public ResponseEntity<Void> delete(
             @PathVariable UUID id,
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,

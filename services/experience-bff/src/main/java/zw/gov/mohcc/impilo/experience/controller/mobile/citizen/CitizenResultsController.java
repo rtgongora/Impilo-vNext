@@ -21,6 +21,7 @@ public class CitizenResultsController {
 
     private final OrosServiceClient orosClient;
 
+    public CitizenResultsController(OrosServiceClient orosClient) {
         this.orosClient = orosClient;
     }
 

@@ -5,7 +5,6 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.CommunityServiceClient;
@@ -27,6 +26,7 @@ public class CitizenSupportController {
 
     private final CommunityServiceClient communityClient;
 
+    public CitizenSupportController(CommunityServiceClient communityClient) {
         this.communityClient = communityClient;
     }
 
@@ -59,7 +59,6 @@ public class CitizenSupportController {
     }
 
     @PostMapping("/tickets")
-    @Transactional
     public ResponseEntity<Map<String, Object>> createTicket(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.POD_ID) String podId,

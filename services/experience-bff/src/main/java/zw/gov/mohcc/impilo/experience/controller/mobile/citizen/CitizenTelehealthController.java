@@ -5,7 +5,6 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
@@ -27,6 +26,7 @@ public class CitizenTelehealthController {
 
     private final PctServiceClient pctClient;
 
+    public CitizenTelehealthController(PctServiceClient pctClient) {
         this.pctClient = pctClient;
     }
 
@@ -79,7 +79,6 @@ public class CitizenTelehealthController {
     }
 
     @PostMapping("/sessions")
-    @Transactional
     public ResponseEntity<Map<String, Object>> requestTeleconsult(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.POD_ID) String podId,
@@ -111,7 +110,6 @@ public class CitizenTelehealthController {
     }
 
     @PostMapping("/sessions/{id}/join")
-    @Transactional
     public ResponseEntity<Map<String, Object>> joinSession(
             @PathVariable UUID id,
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
@@ -134,7 +132,6 @@ public class CitizenTelehealthController {
     }
 
     @PostMapping("/sessions/{id}/end")
-    @Transactional
     public ResponseEntity<Map<String, Object>> endSession(
             @PathVariable UUID id,
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,

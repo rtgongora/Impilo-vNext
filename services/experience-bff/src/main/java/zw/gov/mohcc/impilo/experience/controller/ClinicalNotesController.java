@@ -11,8 +11,10 @@ import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 
-import java.time.OffsetDateTime;
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * Clinical notes management endpoints.
@@ -54,30 +56,22 @@ public class ClinicalNotesController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false, name = "patient_id") String patientId) {
-        if (patientId != null) {
-            try {
-                JsonNode pctData = pctClient.listClinicalNotes(patientId, page, size);
-                if (pctData != null) {
-                    Map<String, Object> response = new LinkedHashMap<>();
-                    response.put("data", pctData);
-                    response.put("meta", Map.of(
-                            "request_id", requestId,
-                            "correlation_id", correlationId
-                    ));
-                    return ResponseEntity.ok(response);
-                }
-            } catch (Exception e) {
-                log.warn("PCT listClinicalNotes failed: {}", e.getMessage());
-            }
+        if (patientId == null || patientId.isBlank()) {
+            return ResponseEntity.ok(Map.of(
+                    "data", List.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", List.of());
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId
-        ));
-        return ResponseEntity.ok(response);
+        try {
+            JsonNode pctData = pctClient.listClinicalNotes(patientId, page, size);
+            return ResponseEntity.ok(Map.of(
+                    "data", pctData != null ? pctData : List.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            log.warn("PCT listClinicalNotes failed: {}", e.getMessage());
+            return ResponseEntity.ok(Map.of(
+                    "data", List.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
     }
 
     @GetMapping("/{id}")
@@ -89,14 +83,9 @@ public class ClinicalNotesController {
 
         JsonNode noteData = pctClient.getClinicalNote(id.toString());
 
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", noteData != null ? noteData : Map.of());
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId
-        ));
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(Map.of(
+                "data", noteData != null ? noteData : Map.of(),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 
     @PostMapping
@@ -108,54 +97,23 @@ public class ClinicalNotesController {
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @Valid @RequestBody CreateNoteRequest request) {
 
-        UUID noteId = UUID.randomUUID();
-        OffsetDateTime now = OffsetDateTime.now();
+        Map<String, Object> pctBody = new LinkedHashMap<>();
+        pctBody.put("patient_id", request.patient_id());
+        pctBody.put("encounter_id", request.encounter_id());
+        pctBody.put("note_type", request.note_type());
+        pctBody.put("subjective", request.subjective());
+        pctBody.put("objective", request.objective());
+        pctBody.put("assessment", request.assessment());
+        pctBody.put("plan", request.plan());
+        pctBody.put("body", request.body());
+        pctBody.put("author_id", request.author_id());
+        pctBody.put("author_name", request.author_name());
 
-        try {
-            Map<String, Object> pctBody = new LinkedHashMap<>();
-            pctBody.put("patient_id", request.patient_id());
-            pctBody.put("encounter_id", request.encounter_id());
-            pctBody.put("note_type", request.note_type());
-            pctBody.put("subjective", request.subjective());
-            pctBody.put("objective", request.objective());
-            pctBody.put("assessment", request.assessment());
-            pctBody.put("plan", request.plan());
-            pctBody.put("body", request.body());
-            pctBody.put("author_id", request.author_id());
-            pctBody.put("author_name", request.author_name());
-            pctClient.createClinicalNote(pctBody);
-            log.info("PCT clinical note created successfully for patient={}", request.patient_id());
-        } catch (Exception e) {
-            log.warn("PCT createClinicalNote failed (non-blocking): {}", e.getMessage());
-        }
-
-        Map<String, Object> attributes = new LinkedHashMap<>();
-        attributes.put("patient_id", request.patient_id());
-        attributes.put("encounter_id", request.encounter_id());
-        attributes.put("note_type", request.note_type());
-        attributes.put("subjective", request.subjective());
-        attributes.put("objective", request.objective());
-        attributes.put("assessment", request.assessment());
-        attributes.put("plan", request.plan());
-        attributes.put("body", request.body());
-        attributes.put("author_id", request.author_id());
-        attributes.put("author_name", request.author_name());
-        attributes.put("status", "DRAFT");
-        attributes.put("created_at", now);
-        attributes.put("updated_at", now);
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", Map.of(
-                "id", noteId.toString(),
-                "type", "ClinicalNote",
-                "attributes", attributes
-        ));
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId
-        ));
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        JsonNode created = pctClient.createClinicalNote(pctBody);
+        log.info("PCT clinical note created for patient={}", request.patient_id());
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                "data", created != null ? created : Map.of(),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 
     @PostMapping("/{id}/sign")
@@ -170,13 +128,8 @@ public class ClinicalNotesController {
         JsonNode result = pctClient.signClinicalNote(id.toString());
         log.info("PCT clinical note signed: {}", id);
 
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", result != null ? result : Map.of("id", id.toString(), "status", "SIGNED"));
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId
-        ));
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(Map.of(
+                "data", result != null ? result : Map.of(),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 }

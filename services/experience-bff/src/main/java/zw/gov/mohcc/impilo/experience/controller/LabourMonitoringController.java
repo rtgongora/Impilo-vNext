@@ -6,16 +6,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 
 import java.math.BigDecimal;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/internal/v1/labour-monitoring")
@@ -31,24 +29,30 @@ public class LabourMonitoringController {
 
     @GetMapping
     public ResponseEntity<Map<String, Object>> listLabourMonitoring(
-            @RequestHeader("X-Tenant-ID") String tenantId,
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam String patientId,
             @RequestParam(required = false) String encounterId
     ) {
         try {
             JsonNode pctData = pctClient.listLabourMonitoring(patientId, encounterId);
-            if (pctData != null) {
-                return ResponseEntity.ok(Map.of("data", pctData));
-            }
+            return ResponseEntity.ok(Map.of(
+                    "data", pctData != null ? pctData : List.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
             log.warn("PCT listLabourMonitoring failed: {}", e.getMessage());
+            return ResponseEntity.ok(Map.of(
+                    "data", List.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
-        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     @PostMapping
     public ResponseEntity<Map<String, Object>> recordLabourMonitoring(
-            @RequestHeader("X-Tenant-ID") String tenantId,
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestBody RecordLabourMonitoringRequest request
     ) {
         if (request.patientId() == null || request.patientId().isBlank()) {
@@ -58,31 +62,46 @@ public class LabourMonitoringController {
             return ResponseEntity.badRequest().body(Map.of("error", "At least one labour monitoring measurement is required"));
         }
 
-        try {
-            Map<String, Object> pctBody = new LinkedHashMap<>();
-            pctBody.put("patientId", request.patientId());
-            pctBody.put("encounterId", request.encounterId());
-            pctBody.put("phase", request.phase());
-            pctBody.put("recordedAt", request.recordedAt());
-            pctBody.put("recordedBy", request.recordedBy());
-            pctBody.put("fetalHeartRateBpm", request.fetalHeartRateBpm());
-            pctBody.put("cervicalDilationCm", request.cervicalDilationCm());
-            pctClient.recordLabourMonitoring(pctBody);
-            log.info("PCT labour monitoring recorded for patient={}", request.patientId());
-        } catch (Exception e) {
-            log.warn("PCT recordLabourMonitoring failed (non-blocking): {}", e.getMessage());
-        }
+        Map<String, Object> pctBody = new LinkedHashMap<>();
+        pctBody.put("patientId", request.patientId());
+        pctBody.put("encounterId", request.encounterId());
+        pctBody.put("phase", request.phase());
+        pctBody.put("recordedAt", request.recordedAt());
+        pctBody.put("recordedBy", request.recordedBy());
+        pctBody.put("fetalHeartRateBpm", request.fetalHeartRateBpm());
+        pctBody.put("cervicalDilationCm", request.cervicalDilationCm());
+        pctBody.put("contractionFrequency10Min", request.contractionFrequency10Min());
+        pctBody.put("contractionDurationSec", request.contractionDurationSec());
+        pctBody.put("fetalDescentFifths", request.fetalDescentFifths());
+        pctBody.put("maternalPulseBpm", request.maternalPulseBpm());
+        pctBody.put("systolicBp", request.systolicBp());
+        pctBody.put("diastolicBp", request.diastolicBp());
+        pctBody.put("temperatureC", request.temperatureC());
+        pctBody.put("liquor", request.liquor());
+        pctBody.put("moulding", request.moulding());
+        pctBody.put("caput", request.caput());
+        pctBody.put("oxytocinRateMiuMin", request.oxytocinRateMiuMin());
+        pctBody.put("urineVolumeMl", request.urineVolumeMl());
+        pctBody.put("urineProtein", request.urineProtein());
+        pctBody.put("urineAcetone", request.urineAcetone());
+        pctBody.put("maternalCondition", request.maternalCondition());
+        pctBody.put("notes", request.notes());
 
-        UUID id = UUID.randomUUID();
-        OffsetDateTime recordedAt = parseRecordedAt(request.recordedAt());
+        JsonNode created = pctClient.recordLabourMonitoring(pctBody);
+        log.info("PCT labour monitoring recorded for patient={}", request.patientId());
 
+        Map<String, Object> meta = new LinkedHashMap<>(Map.of(
+                "request_id", requestId,
+                "correlation_id", correlationId));
+        meta.put("labour_derived", enrichRow(requestToDerivedRow(request)));
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                "data", created != null ? created : Map.of(),
+                "meta", meta));
+    }
+
+    private static Map<String, Object> requestToDerivedRow(RecordLabourMonitoringRequest request) {
         Map<String, Object> row = new LinkedHashMap<>();
-        row.put("id", id);
-        row.put("patient_id", request.patientId());
-        row.put("encounter_id", request.encounterId());
-        row.put("phase", defaultString(request.phase(), "ACTIVE_LABOUR"));
-        row.put("recorded_at", recordedAt);
-        row.put("recorded_by", defaultString(request.recordedBy(), ""));
         row.put("fetal_heart_rate_bpm", request.fetalHeartRateBpm());
         row.put("contraction_frequency_10min", request.contractionFrequency10Min());
         row.put("contraction_duration_sec", request.contractionDurationSec());
@@ -101,8 +120,7 @@ public class LabourMonitoringController {
         row.put("urine_acetone", request.urineAcetone());
         row.put("maternal_condition", request.maternalCondition());
         row.put("notes", request.notes());
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", enrichRow(row)));
+        return row;
     }
 
     record RecordLabourMonitoringRequest(
@@ -165,17 +183,6 @@ public class LabourMonitoringController {
 
         enriched.put("alert_flags", alertFlags);
         return enriched;
-    }
-
-    private static String defaultString(String value, String fallback) {
-        return value == null || value.isBlank() ? fallback : value;
-    }
-
-    private static OffsetDateTime parseRecordedAt(String value) {
-        if (value == null || value.isBlank()) {
-            return OffsetDateTime.now(ZoneOffset.UTC);
-        }
-        return OffsetDateTime.parse(value);
     }
 
     private static boolean hasClinicalValue(RecordLabourMonitoringRequest request) {

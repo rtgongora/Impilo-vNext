@@ -3,7 +3,6 @@ package zw.gov.mohcc.impilo.experience.controller;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.CommunityServiceClient;
@@ -25,6 +24,7 @@ public class CommunityController {
 
     private final CommunityServiceClient communityClient;
 
+    public CommunityController(CommunityServiceClient communityClient) {
         this.communityClient = communityClient;
     }
 
@@ -48,7 +48,6 @@ public class CommunityController {
     }
 
     @PostMapping("/groups")
-    @Transactional
     public ResponseEntity<Map<String, Object>> createGroup(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
@@ -66,7 +65,6 @@ public class CommunityController {
     }
 
     @PostMapping("/groups/{groupId}/join")
-    @Transactional
     public ResponseEntity<Map<String, Object>> joinGroup(
             @PathVariable UUID groupId,
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
@@ -102,7 +100,6 @@ public class CommunityController {
     }
 
     @PostMapping("/groups/{groupId}/posts")
-    @Transactional
     public ResponseEntity<Map<String, Object>> createPost(
             @PathVariable UUID groupId,
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,

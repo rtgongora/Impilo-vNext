@@ -12,7 +12,10 @@ import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * Allergy management endpoints.
@@ -49,31 +52,22 @@ public class AllergiesController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(required = false, name = "patient_id") String patientId) {
 
-        if (patientId != null) {
-            try {
-                JsonNode pctData = pctClient.listAllergies(patientId);
-                if (pctData != null) {
-                    Map<String, Object> response = new LinkedHashMap<>();
-                    response.put("data", pctData);
-                    response.put("meta", Map.of(
-                            "request_id", requestId,
-                            "correlation_id", correlationId
-                    ));
-                    return ResponseEntity.ok(response);
-                }
-            } catch (Exception e) {
-                log.warn("PCT listAllergies failed: {}", e.getMessage());
-            }
+        if (patientId == null || patientId.isBlank()) {
+            return ResponseEntity.ok(Map.of(
+                    "data", List.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", List.of());
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId
-        ));
-
-        return ResponseEntity.ok(response);
+        try {
+            JsonNode pctData = pctClient.listAllergies(patientId);
+            return ResponseEntity.ok(Map.of(
+                    "data", pctData != null ? pctData : List.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            log.warn("PCT listAllergies failed: {}", e.getMessage());
+            return ResponseEntity.ok(Map.of(
+                    "data", List.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
     }
 
     @PostMapping
@@ -94,15 +88,9 @@ public class AllergiesController {
         pctBody.put("recorded_by", request.recorded_by());
 
         JsonNode result = pctClient.createAllergy(pctBody);
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", result != null ? result : Map.of());
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId
-        ));
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                "data", result != null ? result : Map.of(),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 
     @DeleteMapping("/{id}")
@@ -114,14 +102,8 @@ public class AllergiesController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey) {
         JsonNode result = pctClient.deactivateAllergy(id.toString());
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", result != null ? result : Map.of("id", id.toString(), "status", "INACTIVE"));
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId
-        ));
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(Map.of(
+                "data", result != null ? result : Map.of(),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 }

@@ -7,7 +7,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -26,8 +25,10 @@ import java.time.OffsetDateTime;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
+/**
+ * Growth measurements — PCT is source of truth; optional WHO-derived z-scores in {@code meta.growth_standards}.
+ */
 @RestController
 @RequestMapping("/internal/v1/growth")
 public class GrowthController {
@@ -37,6 +38,7 @@ public class GrowthController {
     private final GrowthStandardsService growthStandardsService;
     private final PctServiceClient pctClient;
 
+    public GrowthController(GrowthStandardsService growthStandardsService, PctServiceClient pctClient) {
         this.growthStandardsService = growthStandardsService;
         this.pctClient = pctClient;
     }
@@ -61,146 +63,116 @@ public class GrowthController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(name = "patient_id") String patientId) {
+        if (patientId == null || patientId.isBlank()) {
+            return ResponseEntity.ok(Map.of(
+                    "data", List.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
         try {
             JsonNode pctData = pctClient.listGrowthMeasurements(patientId);
-            if (pctData != null) {
-                Map<String, Object> response = new LinkedHashMap<>();
-                response.put("data", pctData);
-                response.put("meta", Map.of(
-                        "request_id", requestId,
-                        "correlation_id", correlationId
-                ));
-                return ResponseEntity.ok(response);
-            }
+            return ResponseEntity.ok(Map.of(
+                    "data", pctData != null ? pctData : List.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
             log.warn("PCT listGrowthMeasurements failed: {}", e.getMessage());
+            return ResponseEntity.ok(Map.of(
+                    "data", List.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", List.of());
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId
-        ));
-        return ResponseEntity.ok(response);
     }
 
     @PostMapping
-    @Transactional
     public ResponseEntity<Map<String, Object>> recordGrowth(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @Valid @RequestBody RecordGrowthRequest request) {
 
-        try {
-            Map<String, Object> pctBody = new LinkedHashMap<>();
-            pctBody.put("patient_id", request.patient_id());
-            pctBody.put("encounter_id", request.encounter_id());
-            pctBody.put("recorded_by", request.recorded_by());
-            pctBody.put("measured_at", request.measured_at());
-            pctBody.put("weight_kg", request.weight_kg());
-            pctBody.put("length_cm", request.length_cm());
-            pctBody.put("height_cm", request.height_cm());
-            pctBody.put("head_circumference_cm", request.head_circumference_cm());
-            pctBody.put("muac_cm", request.muac_cm());
-            pctBody.put("measurement_mode", request.measurement_mode());
-            pctBody.put("notes", request.notes());
-            pctClient.recordGrowthMeasurement(pctBody);
-            log.info("PCT growth measurement recorded for patient={}", request.patient_id());
-        } catch (Exception e) {
-            log.warn("PCT recordGrowthMeasurement failed (non-blocking): {}", e.getMessage());
+        Map<String, Object> pctBody = new LinkedHashMap<>();
+        pctBody.put("patient_id", request.patient_id());
+        pctBody.put("encounter_id", request.encounter_id());
+        pctBody.put("recorded_by", request.recorded_by());
+        pctBody.put("measured_at", request.measured_at());
+        pctBody.put("weight_kg", request.weight_kg());
+        pctBody.put("length_cm", request.length_cm());
+        pctBody.put("height_cm", request.height_cm());
+        pctBody.put("head_circumference_cm", request.head_circumference_cm());
+        pctBody.put("muac_cm", request.muac_cm());
+        pctBody.put("measurement_mode", request.measurement_mode());
+        pctBody.put("notes", request.notes());
+
+        JsonNode created = pctClient.recordGrowthMeasurement(pctBody);
+
+        Map<String, Object> meta = new LinkedHashMap<>(Map.of(
+                "request_id", requestId,
+                "correlation_id", correlationId));
+
+        if (request.measured_at() != null && !request.measured_at().isBlank()) {
+            try {
+                OffsetDateTime measuredAt = OffsetDateTime.parse(request.measured_at());
+                GrowthStandardsService.PatientContext patient = loadPatientContext(request.patient_id());
+                BigDecimal bmi = deriveBmi(request.weight_kg(), request.length_cm(), request.height_cm());
+                GrowthStandardsService.GrowthMeasurement measurement = new GrowthStandardsService.GrowthMeasurement(
+                        measuredAt,
+                        request.weight_kg(),
+                        request.length_cm(),
+                        request.height_cm(),
+                        request.head_circumference_cm(),
+                        bmi,
+                        request.measurement_mode() != null ? request.measurement_mode() : "AUTO");
+                GrowthStandardsService.GrowthAssessment assessment = growthStandardsService.assess(patient, measurement);
+                meta.put("growth_standards", assessmentToMap(assessment));
+            } catch (Exception e) {
+                log.debug("WHO growth enrichment skipped: {}", e.getMessage());
+            }
         }
 
-        OffsetDateTime measuredAt = request.measured_at() != null && !request.measured_at().isBlank()
-                ? OffsetDateTime.parse(request.measured_at())
-                : OffsetDateTime.now();
-        BigDecimal bmi = deriveBmi(request.weight_kg(), request.length_cm(), request.height_cm());
-        UUID id = UUID.randomUUID();
-
-        GrowthStandardsService.PatientContext patient = loadPatientContext(tenantId, request.patient_id());
-
-        Map<String, Object> inserted = new LinkedHashMap<>();
-        inserted.put("id", id);
-        inserted.put("patient_id", request.patient_id());
-        inserted.put("encounter_id", request.encounter_id());
-        inserted.put("measured_at", measuredAt);
-        inserted.put("recorded_by", request.recorded_by());
-        inserted.put("weight_kg", request.weight_kg());
-        inserted.put("length_cm", request.length_cm());
-        inserted.put("height_cm", request.height_cm());
-        inserted.put("head_circumference_cm", request.head_circumference_cm());
-        inserted.put("muac_cm", request.muac_cm());
-        inserted.put("bmi", bmi);
-        inserted.put("measurement_mode", request.measurement_mode() != null ? request.measurement_mode() : "AUTO");
-        inserted.put("notes", request.notes());
-        inserted.put("created_at", measuredAt);
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", toResource(inserted, patient));
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId
-        ));
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                "data", created != null ? created : Map.of(),
+                "meta", meta));
     }
 
-    private Map<String, Object> toResource(Map<String, Object> row, GrowthStandardsService.PatientContext patient) {
-        OffsetDateTime measuredAt = row.get("measured_at") instanceof OffsetDateTime measured
-                ? measured
-                : OffsetDateTime.parse(row.get("measured_at").toString());
-        GrowthStandardsService.GrowthMeasurement measurement = new GrowthStandardsService.GrowthMeasurement(
-                measuredAt,
-                asDecimal(row.get("weight_kg")),
-                asDecimal(row.get("length_cm")),
-                asDecimal(row.get("height_cm")),
-                asDecimal(row.get("head_circumference_cm")),
-                asDecimal(row.get("bmi")),
-                stringValue(row.get("measurement_mode"))
-        );
-        GrowthStandardsService.GrowthAssessment assessment = growthStandardsService.assess(patient, measurement);
-
-        Map<String, Object> derived = new LinkedHashMap<>();
-        derived.put("age_days", assessment.ageDays());
-        derived.put("standard", assessment.standard());
-        derived.put("normalized_stature_cm", assessment.normalizedStatureCm());
-        derived.put("normalized_stature_mode", assessment.normalizedStatureMode());
-        derived.put("stature_adjustment_cm", assessment.statureAdjustmentCm());
-        derived.put("body_mass_index", assessment.bmi());
-        derived.put("weight_for_age", scoreToMap(assessment.weightForAge()));
-        derived.put("length_height_for_age", scoreToMap(assessment.lengthHeightForAge()));
-        derived.put("body_mass_index_for_age", scoreToMap(assessment.bodyMassIndexForAge()));
-        derived.put("head_circumference_for_age", scoreToMap(assessment.headCircumferenceForAge()));
-
-        Map<String, Object> attributes = new LinkedHashMap<>();
-        attributes.put("patient_id", stringValue(row.get("patient_id")));
-        attributes.put("encounter_id", stringValue(row.get("encounter_id")));
-        attributes.put("measured_at", measuredAt);
-        attributes.put("recorded_by", stringValue(row.get("recorded_by")));
-        attributes.put("weight_kg", asDecimal(row.get("weight_kg")));
-        attributes.put("length_cm", asDecimal(row.get("length_cm")));
-        attributes.put("height_cm", asDecimal(row.get("height_cm")));
-        attributes.put("head_circumference_cm", asDecimal(row.get("head_circumference_cm")));
-        attributes.put("muac_cm", asDecimal(row.get("muac_cm")));
-        attributes.put("bmi", asDecimal(row.get("bmi")));
-        attributes.put("measurement_mode", stringValue(row.get("measurement_mode")));
-        attributes.put("notes", stringValue(row.get("notes")));
-        attributes.put("created_at", row.get("created_at"));
-        attributes.put("derived", derived);
-
-        Map<String, Object> resource = new LinkedHashMap<>();
-        resource.put("id", row.get("id").toString());
-        resource.put("type", "GrowthMeasurement");
-        resource.put("attributes", attributes);
-        return resource;
+    private GrowthStandardsService.PatientContext loadPatientContext(String patientId) {
+        try {
+            JsonNode summary = pctClient.getPatientHealthSummary(patientId);
+            if (summary == null || summary.isNull()) {
+                return new GrowthStandardsService.PatientContext(null, null);
+            }
+            LocalDate dob = null;
+            JsonNode dobNode = summary.get("dateOfBirth");
+            if (dobNode == null || dobNode.isNull()) {
+                dobNode = summary.get("birthDate");
+            }
+            if (dobNode != null && !dobNode.isNull() && dobNode.isTextual()) {
+                String t = dobNode.asText();
+                if (t.length() >= 10) {
+                    dob = LocalDate.parse(t.substring(0, 10));
+                }
+            }
+            String sex = summary.path("sex").asText(null);
+            if (sex == null || sex.isBlank()) {
+                sex = summary.path("gender").asText(null);
+            }
+            return new GrowthStandardsService.PatientContext(dob, sex);
+        } catch (Exception e) {
+            log.debug("Could not load patient context from PCT summary: {}", e.getMessage());
+            return new GrowthStandardsService.PatientContext(null, null);
+        }
     }
 
-    private GrowthStandardsService.PatientContext loadPatientContext(String tenantId, String patientId) {
-
-        LocalDate dateOfBirth = patient.get("date_of_birth") instanceof LocalDate value
-                ? value
-                : patient.get("date_of_birth") != null ? LocalDate.parse(patient.get("date_of_birth").toString()) : null;
-        return new GrowthStandardsService.PatientContext(dateOfBirth, stringValue(patient.get("sex")));
+    private Map<String, Object> assessmentToMap(GrowthStandardsService.GrowthAssessment assessment) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("age_days", assessment.ageDays());
+        m.put("standard", assessment.standard());
+        m.put("normalized_stature_cm", assessment.normalizedStatureCm());
+        m.put("normalized_stature_mode", assessment.normalizedStatureMode());
+        m.put("stature_adjustment_cm", assessment.statureAdjustmentCm());
+        m.put("body_mass_index", assessment.bmi());
+        m.put("weight_for_age", scoreToMap(assessment.weightForAge()));
+        m.put("length_height_for_age", scoreToMap(assessment.lengthHeightForAge()));
+        m.put("body_mass_index_for_age", scoreToMap(assessment.bodyMassIndexForAge()));
+        m.put("head_circumference_for_age", scoreToMap(assessment.headCircumferenceForAge()));
+        return m;
     }
 
     private Map<String, Object> scoreToMap(GrowthStandardsService.Score score) {
@@ -209,8 +181,7 @@ public class GrowthController {
         }
         return Map.of(
                 "z_score", score.zScore(),
-                "percentile", score.percentile()
-        );
+                "percentile", score.percentile());
     }
 
     private BigDecimal deriveBmi(BigDecimal weightKg, BigDecimal lengthCm, BigDecimal heightCm) {
@@ -220,19 +191,5 @@ public class GrowthController {
         }
         BigDecimal heightM = stature.divide(BigDecimal.valueOf(100), 8, RoundingMode.HALF_UP);
         return weightKg.divide(heightM.multiply(heightM), 3, RoundingMode.HALF_UP);
-    }
-
-    private BigDecimal asDecimal(Object value) {
-        if (value == null) {
-            return null;
-        }
-        if (value instanceof BigDecimal decimal) {
-            return decimal;
-        }
-        return new BigDecimal(value.toString()).setScale(3, RoundingMode.HALF_UP);
-    }
-
-    private String stringValue(Object value) {
-        return value != null ? value.toString() : null;
     }
 }

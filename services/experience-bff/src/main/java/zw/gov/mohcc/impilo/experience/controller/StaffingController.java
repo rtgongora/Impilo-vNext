@@ -5,7 +5,6 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
@@ -23,6 +22,7 @@ public class StaffingController {
 
     private final TusoServiceClient tusoClient;
 
+    public StaffingController(TusoServiceClient tusoClient) {
         this.tusoClient = tusoClient;
     }
 
@@ -94,7 +94,6 @@ public class StaffingController {
     }
 
     @PostMapping("/on-call/swaps")
-    @Transactional
     public ResponseEntity<Map<String, Object>> createSwap(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
@@ -123,7 +122,6 @@ public class StaffingController {
     }
 
     @PatchMapping("/on-call/swaps/{id}")
-    @Transactional
     public ResponseEntity<Map<String, Object>> patchSwap(
             @PathVariable UUID id,
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,

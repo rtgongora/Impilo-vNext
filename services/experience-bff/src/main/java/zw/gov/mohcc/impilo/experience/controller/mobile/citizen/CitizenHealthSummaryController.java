@@ -24,6 +24,7 @@ public class CitizenHealthSummaryController {
     private final ButanoServiceClient butanoClient;
     private final PctServiceClient pctClient;
 
+    public CitizenHealthSummaryController(ButanoServiceClient butanoClient, PctServiceClient pctClient) {
         this.butanoClient = butanoClient;
         this.pctClient = pctClient;
     }

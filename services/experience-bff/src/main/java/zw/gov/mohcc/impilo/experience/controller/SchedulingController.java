@@ -7,7 +7,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.TusoServiceClient;
@@ -27,6 +26,7 @@ public class SchedulingController {
 
     private final TusoServiceClient tusoClient;
 
+    public SchedulingController(TusoServiceClient tusoClient) {
         this.tusoClient = tusoClient;
     }
 
@@ -67,7 +67,6 @@ public class SchedulingController {
     }
 
     @PostMapping
-    @Transactional
     public ResponseEntity<Map<String, Object>> createAppointment(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.POD_ID) String podId,
@@ -102,7 +101,6 @@ public class SchedulingController {
     }
 
     @PostMapping("/{id}/confirm")
-    @Transactional
     public ResponseEntity<Map<String, Object>> confirmAppointment(
             @PathVariable UUID id,
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
@@ -120,7 +118,6 @@ public class SchedulingController {
     }
 
     @PostMapping("/{id}/cancel")
-    @Transactional
     public ResponseEntity<Map<String, Object>> cancelAppointment(
             @PathVariable UUID id,
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,

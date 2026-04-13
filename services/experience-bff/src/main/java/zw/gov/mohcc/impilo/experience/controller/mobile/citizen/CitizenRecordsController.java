@@ -21,6 +21,7 @@ public class CitizenRecordsController {
 
     private final PctServiceClient pctClient;
 
+    public CitizenRecordsController(PctServiceClient pctClient) {
         this.pctClient = pctClient;
     }
 

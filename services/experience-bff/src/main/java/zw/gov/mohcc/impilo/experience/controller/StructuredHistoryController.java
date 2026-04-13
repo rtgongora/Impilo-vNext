@@ -36,6 +36,7 @@ public class StructuredHistoryController {
     private final ObjectMapper objectMapper;
     private final PctServiceClient pctClient;
 
+    public StructuredHistoryController(ObjectMapper objectMapper, PctServiceClient pctClient) {
         this.objectMapper = objectMapper;
         this.pctClient = pctClient;
     }

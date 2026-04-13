@@ -5,7 +5,6 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.CommunityServiceClient;
@@ -31,6 +30,7 @@ public class CitizenMessagingController {
 
     private final CommunityServiceClient communityClient;
 
+    public CitizenMessagingController(CommunityServiceClient communityClient) {
         this.communityClient = communityClient;
     }
 
@@ -84,7 +84,6 @@ public class CitizenMessagingController {
     }
 
     @PostMapping("/conversations")
-    @Transactional
     public ResponseEntity<Map<String, Object>> createConversation(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.POD_ID) String podId,
@@ -133,7 +132,6 @@ public class CitizenMessagingController {
     }
 
     @PostMapping("/conversations/{id}/messages")
-    @Transactional
     public ResponseEntity<Map<String, Object>> sendMessage(
             @PathVariable UUID id,
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
@@ -163,7 +161,6 @@ public class CitizenMessagingController {
     }
 
     @PostMapping("/conversations/{id}/read")
-    @Transactional
     public ResponseEntity<Map<String, Object>> markRead(
             @PathVariable UUID id,
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
