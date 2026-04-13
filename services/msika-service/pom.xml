@@ -111,6 +111,13 @@
             <version>${project.version}</version>
         </dependency>
 
+        <!-- Shared Kernel (outbox publisher, event topology) -->
+        <dependency>
+            <groupId>zw.gov.mohcc.impilo</groupId>
+            <artifactId>shared-kernel-java</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- Federation Connector (pod identity verification) -->
         <dependency>
             <groupId>zw.gov.mohcc.impilo</groupId>

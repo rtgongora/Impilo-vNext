@@ -183,8 +183,14 @@ public class LicenseService {
             throw new IllegalArgumentException("License does not belong to provider: " + providerPublicId);
         }
 
-        // Currently this endpoint returns an empty placeholder; update with real PDF generation when available.
-        return new byte[0];
+        // PDF generation not yet available — return a minimal placeholder PDF header
+        // so callers receive a valid (though empty) PDF rather than zero bytes.
+        // TODO: Replace with real PDF generation via a reporting/template service.
+        byte[] pdfPlaceholder = ("%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n"
+                + "2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n"
+                + "3 0 obj<</Type/Page/MediaBox[0 0 612 792]/Parent 2 0 R>>endobj\n"
+                + "xref\n0 4\ntrailer<</Size 4/Root 1 0 R>>\nstartxref\n0\n%%EOF").getBytes();
+        return pdfPlaceholder;
     }
 
     private void publishEvent(String aggregateType, String aggregateId,

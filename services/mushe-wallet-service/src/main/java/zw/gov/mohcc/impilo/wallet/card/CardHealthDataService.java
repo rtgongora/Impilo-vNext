@@ -246,8 +246,27 @@ public class CardHealthDataService {
      * real encryption. For now, it returns the input unchanged.
      */
     static byte[] simulateEncrypt(byte[] data, String keyRef) {
-        // TODO: Replace with real AES-256-GCM encryption via tshepo-keys-service
-        // Key reference is stored in card_health_data.encryption_key_ref for decryption
-        return data;
+        // AES-256-GCM encryption using Java standard library.
+        // Key reference is stored in card_health_data.encryption_key_ref for decryption.
+        // TODO: Fetch real key material from tshepo-keys-service. Currently derives a
+        // deterministic key from the keyRef so data is encrypted at rest.
+        try {
+            byte[] keyBytes = java.util.Arrays.copyOf(
+                    java.security.MessageDigest.getInstance("SHA-256").digest(keyRef.getBytes(java.nio.charset.StandardCharsets.UTF_8)),
+                    32);
+            javax.crypto.SecretKey secretKey = new javax.crypto.spec.SecretKeySpec(keyBytes, "AES");
+            javax.crypto.Cipher cipher = javax.crypto.Cipher.getInstance("AES/GCM/NoPadding");
+            byte[] iv = new byte[12];
+            new java.security.SecureRandom().nextBytes(iv);
+            cipher.init(javax.crypto.Cipher.ENCRYPT_MODE, secretKey, new javax.crypto.spec.GCMParameterSpec(128, iv));
+            byte[] encrypted = cipher.doFinal(data);
+            // Prepend IV to ciphertext so decrypt can extract it
+            byte[] result = new byte[iv.length + encrypted.length];
+            System.arraycopy(iv, 0, result, 0, iv.length);
+            System.arraycopy(encrypted, 0, result, iv.length, encrypted.length);
+            return result;
+        } catch (Exception e) {
+            throw new RuntimeException("Health data encryption failed", e);
+        }
     }
 }
