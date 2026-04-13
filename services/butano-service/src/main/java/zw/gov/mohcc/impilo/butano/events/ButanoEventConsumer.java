@@ -353,11 +353,10 @@ public class ButanoEventConsumer {
         study.addIdentifier().setSystem(ACCESSION_IDENTIFIER_SYSTEM).setValue(accessionNumber);
 
         study.getModality().clear();
-        study.addModality(new CodeableConcept().addCoding(
-                new Coding("http://dicom.nema.org/resources/ontology/DCM", modality, null)));
+        study.addModality(new Coding("http://dicom.nema.org/resources/ontology/DCM", modality, null));
 
         if (studyInstanceUid != null && !studyInstanceUid.isBlank()) {
-            study.setUid(studyInstanceUid);
+            study.addIdentifier().setSystem("urn:dicom:uid").setValue(studyInstanceUid);
         }
 
         study.setDescription(firstNonBlank(
@@ -372,8 +371,7 @@ public class ButanoEventConsumer {
                 : accessionNumber;
         ImagingStudy.ImagingStudySeriesComponent series = study.addSeries();
         series.setUid(seriesBase + ".series1");
-        series.setModality(new CodeableConcept().addCoding(
-                new Coding("http://dicom.nema.org/resources/ontology/DCM", modality, null)));
+        series.setModality(new Coding("http://dicom.nema.org/resources/ontology/DCM", modality, null));
         ImagingStudy.ImagingStudySeriesInstanceComponent inst = series.addInstance();
         inst.setUid(seriesBase + ".1");
 
