@@ -85,7 +85,7 @@ function CarePlansPanel() {
       <Text style={s.title}>Care Plans</Text>
       <TextInput style={s.input} placeholder="Plan title" value={title} onChangeText={setTitle} />
       <TextInput style={s.input} placeholder="Primary goal" value={goalDesc} onChangeText={setGoalDesc} />
-      <Button label="Create Care Plan" onPress={() => mutation.mutate()} disabled={!title || mutation.isPending} />
+      <Button title="Create Care Plan" onPress={() => mutation.mutate()} disabled={!title || mutation.isPending} />
       {(plans as Array<Record<string, unknown>>).map((p) => (
         <View key={String(p.id)} style={s.card}>
           <Text style={s.cardTitle}>{String(p.title)}</Text>
@@ -157,7 +157,7 @@ function FluidBalancePanel() {
 
       {/* Record entry */}
       <View style={s.row}>
-        {["INTAKE", "OUTPUT"].map((t) => <Button key={t} label={t} size="small" variant={form.entryType === t ? "default" : "outline"} onPress={() => setForm({ ...form, entryType: t })} />)}
+        {["INTAKE", "OUTPUT"].map((t) => <Button key={t} title={t} size="sm" variant={form.entryType === t ? "default" : "outline"} onPress={() => setForm({ ...form, entryType: t })} />)}
       </View>
       <View style={s.row}>
         {(form.entryType === "INTAKE" ? ["ORAL", "IV", "FEEDS"] : ["URINE", "STOOL", "VOMIT", "DRAIN"]).map((c) =>
@@ -170,7 +170,7 @@ function FluidBalancePanel() {
         <TextInput style={[s.input, { flex: 2 }]} placeholder="Volume (ml)" value={form.volumeMl} onChangeText={(v) => setForm({ ...form, volumeMl: v })} keyboardType="numeric" />
         <TextInput style={[s.input, { flex: 3 }]} placeholder="Description (optional)" value={form.description} onChangeText={(v) => setForm({ ...form, description: v })} />
       </View>
-      <Button label="Record Entry" onPress={() => mutation.mutate()} disabled={!form.volumeMl || mutation.isPending} />
+      <Button title="Record Entry" onPress={() => mutation.mutate()} disabled={!form.volumeMl || mutation.isPending} />
     </View>
   );
 }
@@ -225,7 +225,7 @@ function EWSPanel() {
     <View style={s.section}>
       <Text style={s.title}>Early Warning Score (NEWS2)</Text>
       <TextInput style={s.input} placeholder="Total score (0-20)" value={total} onChangeText={setTotal} keyboardType="numeric" />
-      <Button label="Record EWS" onPress={() => mutation.mutate()} disabled={!total || mutation.isPending} />
+      <Button title="Record EWS" onPress={() => mutation.mutate()} disabled={!total || mutation.isPending} />
       {(scores as Array<Record<string, unknown>>).map((sc) => (
         <View key={String(sc.id)} style={[s.card, { borderLeftColor: riskColors[String(sc.risk_level)] ?? "#6B7280", borderLeftWidth: 4 }]}>
           <Text style={s.cardTitle}>Score: {String(sc.total_score)} — {String(sc.risk_level)}</Text>
@@ -251,9 +251,9 @@ function AdmissionsPanel() {
       <TextInput style={s.input} placeholder="Patient ID" value={form.patientId} onChangeText={(v) => setForm({ ...form, patientId: v })} />
       <TextInput style={s.input} placeholder="Admitting diagnosis" value={form.admittingDiagnosis} onChangeText={(v) => setForm({ ...form, admittingDiagnosis: v })} />
       <View style={s.row}>
-        {["EMERGENCY", "ELECTIVE", "TRANSFER"].map((t) => <Button key={t} label={t} size="small" variant={form.admissionType === t ? "default" : "outline"} onPress={() => setForm({ ...form, admissionType: t })} />)}
+        {["EMERGENCY", "ELECTIVE", "TRANSFER"].map((t) => <Button key={t} title={t} size="sm" variant={form.admissionType === t ? "default" : "outline"} onPress={() => setForm({ ...form, admissionType: t })} />)}
       </View>
-      <Button label="Admit Patient" onPress={() => mutation.mutate()} disabled={!form.patientId || mutation.isPending} />
+      <Button title="Admit Patient" onPress={() => mutation.mutate()} disabled={!form.patientId || mutation.isPending} />
       <Text style={[s.title, { marginTop: 12 }]}>Active Admissions ({(admissions as unknown[]).length})</Text>
       {(admissions as Array<Record<string, unknown>>).map((a) => (
         <View key={String(a.id)} style={s.card}>
@@ -274,7 +274,7 @@ function WardRoundsPanel() {
     <View style={s.section}>
       <Text style={s.title}>Ward Rounds</Text>
       <TextInput style={s.input} placeholder="Ward ID" value={wardId} onChangeText={setWardId} />
-      <Button label="Start Ward Round" onPress={() => mutation.mutate()} disabled={!wardId || mutation.isPending} />
+      <Button title="Start Ward Round" onPress={() => mutation.mutate()} disabled={!wardId || mutation.isPending} />
       {(rounds as Array<Record<string, unknown>>).map((r) => (
         <View key={String(r.id)} style={s.card}>
           <Text style={s.cardTitle}>{String(r.round_type)} Round</Text>
@@ -300,7 +300,7 @@ function ObservationsPanel() {
     <View style={s.section}>
       <Text style={s.title}>Observation Charts</Text>
       <TextInput style={[s.input, { minHeight: 60 }]} placeholder='Parameters JSON: {"hr": 80, "bp": "120/80"}' value={params} onChangeText={setParams} multiline />
-      <Button label="Record Observation" onPress={() => mutation.mutate()} disabled={!params || mutation.isPending} />
+      <Button title="Record Observation" onPress={() => mutation.mutate()} disabled={!params || mutation.isPending} />
       {(obs as Array<Record<string, unknown>>).map((o) => (
         <View key={String(o.id)} style={s.card}>
           <Text style={s.cardTitle}>{String(o.chart_type)}</Text>
@@ -323,10 +323,10 @@ function TransfersPanel() {
       <TextInput style={s.input} placeholder="Patient ID" value={form.patientId} onChangeText={(v) => setForm({ ...form, patientId: v })} />
       <TextInput style={s.input} placeholder="To Ward ID" value={form.toWardId} onChangeText={(v) => setForm({ ...form, toWardId: v })} />
       <View style={s.row}>
-        {["CLINICAL", "ADMINISTRATIVE", "CAPACITY"].map((r) => <Button key={r} label={r} size="small" variant={form.reason === r ? "default" : "outline"} onPress={() => setForm({ ...form, reason: r })} />)}
+        {["CLINICAL", "ADMINISTRATIVE", "CAPACITY"].map((r) => <Button key={r} title={r} size="sm" variant={form.reason === r ? "default" : "outline"} onPress={() => setForm({ ...form, reason: r })} />)}
       </View>
       <TextInput style={s.input} placeholder="Clinical notes" value={form.clinicalNotes} onChangeText={(v) => setForm({ ...form, clinicalNotes: v })} />
-      <Button label="Request Transfer" onPress={() => mutation.mutate()} disabled={!form.patientId || !form.toWardId || mutation.isPending} />
+      <Button title="Request Transfer" onPress={() => mutation.mutate()} disabled={!form.patientId || !form.toWardId || mutation.isPending} />
       {(transfers as Array<Record<string, unknown>>).map((t) => (
         <View key={String(t.id)} style={s.card}>
           <Badge label={String(t.status)} variant={t.status === "COMPLETED" ? "success" : "warning"} />

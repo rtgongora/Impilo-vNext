@@ -83,7 +83,7 @@ export function TraumaScreen() {
                 <TextInput style={st.roleInput} placeholder="Name" value={team[tr.role] ?? ""} onChangeText={(v) => setTeam({ ...team, [tr.role]: v })} />
               </View>
             ))}
-            <Button label="Begin Primary Survey" onPress={() => setPhase("PRIMARY")} />
+            <Button title="Begin Primary Survey" onPress={() => setPhase("PRIMARY")} />
           </View>
         )}
 
@@ -117,7 +117,7 @@ export function TraumaScreen() {
                 })}
               </View>
             ))}
-            <Button label="Proceed to Interventions" onPress={() => setPhase("INTERVENTIONS")} />
+            <Button title="Proceed to Interventions" onPress={() => setPhase("INTERVENTIONS")} />
           </View>
         )}
 
@@ -125,7 +125,7 @@ export function TraumaScreen() {
           <View style={st.section}>
             <Text style={st.title}>Interventions</Text>
             <Text style={st.hint}>Document interventions performed during primary survey</Text>
-            <Button label="Proceed to Secondary Survey" onPress={() => setPhase("SECONDARY")} />
+            <Button title="Proceed to Secondary Survey" onPress={() => setPhase("SECONDARY")} />
           </View>
         )}
 
@@ -147,7 +147,7 @@ export function TraumaScreen() {
                 </TouchableOpacity>
               ))}
             </View>
-            <Button label="Complete & View Summary" onPress={() => setPhase("SUMMARY")} />
+            <Button title="Complete & View Summary" onPress={() => setPhase("SUMMARY")} />
           </View>
         )}
 

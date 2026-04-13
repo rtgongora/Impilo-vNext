@@ -52,7 +52,7 @@ export function MonitoringSection() {
           </View>
           <TextInput style={styles.input} placeholder="Manufacturer" value={form.manufacturer} onChangeText={(v) => setForm({ ...form, manufacturer: v })} />
           <TextInput style={styles.input} placeholder="Model" value={form.model} onChangeText={(v) => setForm({ ...form, model: v })} />
-          <Button label="Pair" onPress={() => pairMutation.mutate()} disabled={!form.deviceName || pairMutation.isPending} />
+          <Button title="Pair" onPress={() => pairMutation.mutate()} disabled={!form.deviceName || pairMutation.isPending} />
         </View>
       )}
 

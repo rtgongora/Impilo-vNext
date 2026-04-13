@@ -28,7 +28,7 @@ export function QueueManagementScreen() {
             <View style={styles.statCard}><Text style={styles.statNum}>{stats.completedToday}</Text><Text style={styles.statLabel}>Today</Text></View>
           </View>
         )}
-        <Button label="Call Next Patient" onPress={() => callMutation.mutate()} disabled={callMutation.isPending} />
+        <Button title="Call Next Patient" onPress={() => callMutation.mutate()} disabled={callMutation.isPending} />
         {isLoading ? <LoadingSpinner /> : (
           <FlatList
             data={queue as Array<Record<string, unknown>>}

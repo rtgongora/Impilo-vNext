@@ -56,7 +56,7 @@ export function EmergencySOSSection() {
           <TextInput style={styles.input} placeholder="Name" value={form.name} onChangeText={(v) => setForm({ ...form, name: v })} />
           <TextInput style={styles.input} placeholder="Relationship" value={form.relationship} onChangeText={(v) => setForm({ ...form, relationship: v })} />
           <TextInput style={styles.input} placeholder="Phone" value={form.phone} onChangeText={(v) => setForm({ ...form, phone: v })} keyboardType="phone-pad" />
-          <Button label="Save Contact" onPress={() => addMutation.mutate()} disabled={!form.name || !form.phone || addMutation.isPending} />
+          <Button title="Save Contact" onPress={() => addMutation.mutate()} disabled={!form.name || !form.phone || addMutation.isPending} />
         </View>
       )}
 

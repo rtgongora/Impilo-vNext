@@ -93,7 +93,7 @@ export function NEWS2ScoringScreen() {
           </View>
         ))}
 
-        <Button label={mutation.isPending ? "Recording..." : "Record NEWS2"} onPress={() => mutation.mutate()} disabled={Object.keys(scores).length < 5 || mutation.isPending} />
+        <Button title={mutation.isPending ? "Recording..." : "Record NEWS2"} onPress={() => mutation.mutate()} disabled={Object.keys(scores).length < 5 || mutation.isPending} />
         <Text style={styles.hint}>Score at least 5 of 7 parameters to record</Text>
       </ScrollView>
     </Screen>

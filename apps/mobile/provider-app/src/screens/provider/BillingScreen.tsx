@@ -29,7 +29,7 @@ export function BillingScreen() {
           <TextInput style={[styles.input, { flex: 1 }]} placeholder="Unit price" value={form.unitPrice} onChangeText={(v) => setForm({ ...form, unitPrice: v, total: String(parseFloat(v || "0") * parseInt(form.quantity || "1")) })} keyboardType="numeric" />
           <TextInput style={[styles.input, { flex: 1 }]} placeholder="Total" value={form.total} editable={false} />
         </View>
-        <Button label="Capture Charge" onPress={() => mutation.mutate()} disabled={!form.encounterId || mutation.isPending} />
+        <Button title="Capture Charge" onPress={() => mutation.mutate()} disabled={!form.encounterId || mutation.isPending} />
         <Text style={[styles.title, { marginTop: 16 }]}>Recent Charges ({(charges as unknown[]).length})</Text>
         {isLoading ? <LoadingSpinner /> : <FlatList data={charges as Array<Record<string, unknown>>} keyExtractor={(item) => String(item.id)}
           scrollEnabled={false} renderItem={({ item }) => (

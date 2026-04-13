@@ -80,7 +80,7 @@ export function CarePlanDetailScreen() {
       <View style={s.section}>
         <View style={s.headerRow}>
           <Text style={s.title}>Care Plans</Text>
-          <Button label="+ New" size="small" onPress={() => setShowCreate(true)} />
+          <Button title="+ New" size="sm" onPress={() => setShowCreate(true)} />
         </View>
         {showCreate && (
           <View style={s.form}>
@@ -92,7 +92,7 @@ export function CarePlanDetailScreen() {
                 </TouchableOpacity>
               ))}
             </View>
-            <Button label="Create" onPress={() => createMut.mutate()} disabled={!createForm.title || createMut.isPending} />
+            <Button title="Create" onPress={() => createMut.mutate()} disabled={!createForm.title || createMut.isPending} />
           </View>
         )}
         {typedPlans.map((p) => (
@@ -175,7 +175,7 @@ export function CarePlanDetailScreen() {
             </View>
           </ScrollView>
 
-          <Button label="+ Add Goal" size="small" onPress={() => setShowAddGoal(!showAddGoal)} />
+          <Button title="+ Add Goal" size="sm" onPress={() => setShowAddGoal(!showAddGoal)} />
           {showAddGoal && (
             <View style={s.form}>
               <TextInput style={s.input} placeholder="Goal description" value={goalForm.description} onChangeText={(v) => setGoalForm({ ...goalForm, description: v })} />
@@ -197,7 +197,7 @@ export function CarePlanDetailScreen() {
                   </TouchableOpacity>
                 ))}
               </View>
-              <Button label="Add Goal" onPress={() => addGoalMut.mutate()} disabled={!goalForm.description || addGoalMut.isPending} />
+              <Button title="Add Goal" onPress={() => addGoalMut.mutate()} disabled={!goalForm.description || addGoalMut.isPending} />
             </View>
           )}
 
@@ -220,7 +220,7 @@ export function CarePlanDetailScreen() {
               {g.target_date ? <Text style={s.goalDate}>Due: {String(g.target_date)}</Text> : null}
               <View style={s.goalActions}>
                 {g.status !== "ACHIEVED" && (
-                  <Button label="Mark Achieved" size="small" onPress={() => updateGoalMut.mutate({ goalId: String(g.id), status: "ACHIEVED" })} />
+                  <Button title="Mark Achieved" size="sm" onPress={() => updateGoalMut.mutate({ goalId: String(g.id), status: "ACHIEVED" })} />
                 )}
                 <View style={s.reorderBtns}>
                   <TouchableOpacity style={s.reorderBtn} onPress={() => { LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut); Alert.alert("Reordered", "Goal moved up"); }}>
@@ -246,7 +246,7 @@ export function CarePlanDetailScreen() {
             <View style={s.statCard}><Text style={s.statNum}>{new Set(interventions.map((i) => i.category)).size}</Text><Text style={s.statLabel}>Categories</Text></View>
           </View>
 
-          <Button label="+ Add Intervention" size="small" onPress={() => setShowAddInt(!showAddInt)} />
+          <Button title="+ Add Intervention" size="sm" onPress={() => setShowAddInt(!showAddInt)} />
           {showAddInt && (
             <View style={s.form}>
               <TextInput style={s.input} placeholder="Intervention description" value={intForm.description} onChangeText={(v) => setIntForm({ ...intForm, description: v })} />
@@ -263,7 +263,7 @@ export function CarePlanDetailScreen() {
                 <TextInput style={[s.input, { flex: 1 }]} placeholder="Frequency (e.g., Q4H)" value={intForm.frequency} onChangeText={(v) => setIntForm({ ...intForm, frequency: v })} />
                 <TextInput style={[s.input, { flex: 1 }]} placeholder="Responsible role" value={intForm.responsibleRole} onChangeText={(v) => setIntForm({ ...intForm, responsibleRole: v })} />
               </View>
-              <Button label="Add Intervention" onPress={() => addIntMut.mutate()} disabled={!intForm.description || addIntMut.isPending} />
+              <Button title="Add Intervention" onPress={() => addIntMut.mutate()} disabled={!intForm.description || addIntMut.isPending} />
             </View>
           )}
 
@@ -286,7 +286,7 @@ export function CarePlanDetailScreen() {
                       </Text>
                     ) : null}
                   </View>
-                  <Button label="Document Performance" size="small" onPress={() => performIntMut.mutate(String(int.id))} />
+                  <Button title="Document Performance" size="sm" onPress={() => performIntMut.mutate(String(int.id))} />
                 </View>
               ))}
             </View>

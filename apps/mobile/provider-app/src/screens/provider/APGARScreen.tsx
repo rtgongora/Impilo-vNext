@@ -121,7 +121,7 @@ export function APGARScreen() {
           </View>
         ))}
 
-        <Button label={mutation.isPending ? "Recording..." : `Record ${selectedMinute}-Minute APGAR`}
+        <Button title={mutation.isPending ? "Recording..." : `Record ${selectedMinute}-Minute APGAR`}
           onPress={() => mutation.mutate()} disabled={Object.keys(scores).length < 5 || mutation.isPending} />
 
         {/* Previous scores */}

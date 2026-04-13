@@ -49,7 +49,7 @@ export function CrowdfundingScreen() {
                 <TextInput style={styles.input} placeholder={`Amount (${c.currency})`} value={amount} onChangeText={setAmount} keyboardType="numeric" />
                 <View style={styles.donateActions}>
                   <TouchableOpacity onPress={() => setDonating(null)}><Text style={styles.cancelText}>Cancel</Text></TouchableOpacity>
-                  <Button label={donateMutation.isPending ? "Processing..." : "Donate"} onPress={() => donateMutation.mutate(c.id)} disabled={!amount || Number(amount) <= 0 || donateMutation.isPending} size="small" />
+                  <Button title={donateMutation.isPending ? "Processing..." : "Donate"} onPress={() => donateMutation.mutate(c.id)} disabled={!amount || Number(amount) <= 0 || donateMutation.isPending} size="sm" />
                 </View>
               </View>
             ) : (

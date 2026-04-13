@@ -40,7 +40,7 @@ export function TriageScreen() {
               <Text style={styles.levelLabel}>{t.label} (Level {t.level})</Text>
               <Text style={styles.levelDesc}>{t.description}</Text>
             </View>
-            <Button label="Select" size="small" onPress={() => setSelectedLevel(t.level)} />
+            <Button title="Select" size="sm" onPress={() => setSelectedLevel(t.level)} />
           </View>
         ))}
         <Text style={styles.sectionTitle}>Chief Complaint</Text>
@@ -52,7 +52,7 @@ export function TriageScreen() {
           multiline
           numberOfLines={3}
         />
-        <Button label={mutation.isPending ? "Saving..." : "Record Triage"} onPress={() => mutation.mutate()} disabled={!chiefComplaint || mutation.isPending} />
+        <Button title={mutation.isPending ? "Saving..." : "Record Triage"} onPress={() => mutation.mutate()} disabled={!chiefComplaint || mutation.isPending} />
       </View>
     </Screen>
   );

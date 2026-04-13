@@ -178,9 +178,9 @@ export function ShiftHandoffScreen() {
 
         {/* Actions */}
         <View style={st.actions}>
-          <Button label="Save Draft" variant="outline" onPress={() => Alert.alert("Saved", "Draft saved")} />
-          <Button label="Share" variant="outline" onPress={handleShare} />
-          <Button label="Complete Handoff" onPress={handleComplete} disabled={selectedPatients.size === 0} />
+          <Button title="Save Draft" variant="outline" onPress={() => Alert.alert("Saved", "Draft saved")} />
+          <Button title="Share" variant="outline" onPress={handleShare} />
+          <Button title="Complete Handoff" onPress={handleComplete} disabled={selectedPatients.size === 0} />
         </View>
       </ScrollView>
     </Screen>

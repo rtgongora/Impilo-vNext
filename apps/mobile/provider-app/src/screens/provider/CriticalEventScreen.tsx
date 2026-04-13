@@ -184,7 +184,7 @@ export function CriticalEventScreen() {
             </TouchableOpacity>
           ))}
         </View>
-        <Button label={`End Event — ${outcome}`} onPress={() => endMut.mutate()} variant="outline" />
+        <Button title={`End Event — ${outcome}`} onPress={() => endMut.mutate()} variant="outline" />
       </ScrollView>
     </Screen>
   );

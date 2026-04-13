@@ -29,7 +29,7 @@ export function PatientRegistrationScreen() {
         <Text style={styles.label}>Sex</Text>
         <View style={styles.row}>
           {["MALE", "FEMALE", "OTHER"].map((s) => (
-            <Button key={s} label={s} size="small" variant={form.sex === s ? "default" : "outline"} onPress={() => update("sex", s)} />
+            <Button key={s} title={s} size="sm" variant={form.sex === s ? "default" : "outline"} onPress={() => update("sex", s)} />
           ))}
         </View>
         <Text style={styles.label}>National ID</Text>
@@ -38,7 +38,7 @@ export function PatientRegistrationScreen() {
         <TextInput style={styles.input} value={form.phone} onChangeText={(v) => update("phone", v)} placeholder="+263..." keyboardType="phone-pad" />
         <Text style={styles.label}>Email</Text>
         <TextInput style={styles.input} value={form.email} onChangeText={(v) => update("email", v)} placeholder="email@example.com" keyboardType="email-address" />
-        <Button label={mutation.isPending ? "Registering..." : "Register Patient"} onPress={() => mutation.mutate()} disabled={!form.givenName || !form.familyName || mutation.isPending} />
+        <Button title={mutation.isPending ? "Registering..." : "Register Patient"} onPress={() => mutation.mutate()} disabled={!form.givenName || !form.familyName || mutation.isPending} />
       </ScrollView>
     </Screen>
   );

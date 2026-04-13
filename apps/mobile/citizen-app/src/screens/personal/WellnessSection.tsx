@@ -71,7 +71,7 @@ function ActivityTab({ patientId }: { patientId: string }) {
         <TextInput style={styles.smallInput} placeholder="Sleep (hrs)" value={form.sleepHours} onChangeText={(v) => setForm({ ...form, sleepHours: v })} keyboardType="numeric" />
         <TextInput style={styles.smallInput} placeholder="Active min" value={form.activeMinutes} onChangeText={(v) => setForm({ ...form, activeMinutes: v })} keyboardType="numeric" />
       </View>
-      <Button label="Save" onPress={() => mutation.mutate()} disabled={mutation.isPending} />
+      <Button title="Save" onPress={() => mutation.mutate()} disabled={mutation.isPending} />
     </View>
   );
 }
@@ -107,7 +107,7 @@ function VitalsTab({ patientId }: { patientId: string }) {
         <TextInput style={[styles.smallInput, { flex: 2 }]} placeholder="Value" value={form.value} onChangeText={(v) => setForm({ ...form, value: v })} keyboardType="numeric" />
         <Text style={styles.unitLabel}>{form.unit}</Text>
       </View>
-      <Button label="Log Vital" onPress={() => mutation.mutate()} disabled={!form.value || mutation.isPending} />
+      <Button title="Log Vital" onPress={() => mutation.mutate()} disabled={!form.value || mutation.isPending} />
       <Text style={[styles.sectionTitle, { marginTop: 16 }]}>Recent Readings</Text>
       {vitals.slice(0, 10).map((v) => (
         <View key={v.id} style={styles.listItem}>
@@ -148,7 +148,7 @@ function MoodTab({ patientId }: { patientId: string }) {
         ))}
       </View>
       <TextInput style={styles.input} placeholder="Notes (optional)" value={notes} onChangeText={setNotes} multiline />
-      <Button label="Log Mood" onPress={() => mutation.mutate()} disabled={mutation.isPending} />
+      <Button title="Log Mood" onPress={() => mutation.mutate()} disabled={mutation.isPending} />
       <Text style={[styles.sectionTitle, { marginTop: 16 }]}>Recent Entries</Text>
       {moods.slice(0, 7).map((m) => (
         <View key={m.id} style={styles.listItem}>
@@ -189,7 +189,7 @@ function ChallengesTab({ patientId }: { patientId: string }) {
           {c.description ? <Text style={styles.challengeDesc}>{c.description}</Text> : null}
           <Text style={styles.challengeMeta}>Goal: {c.targetValue.toLocaleString()} {c.targetUnit} · {c.participantCount} joined</Text>
           <Text style={styles.challengeMeta}>{new Date(c.startDate).toLocaleDateString()} — {new Date(c.endDate).toLocaleDateString()}</Text>
-          <Button label="Join Challenge" onPress={() => joinMutation.mutate(c.id)} size="small" />
+          <Button title="Join Challenge" onPress={() => joinMutation.mutate(c.id)} size="sm" />
         </View>
       ))}
     </View>

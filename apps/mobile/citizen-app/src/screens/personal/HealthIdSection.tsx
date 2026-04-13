@@ -66,7 +66,7 @@ export function HealthIdSection() {
         <TextInput style={styles.input} placeholder="Known Allergies" value={form.allergiesSummary} onChangeText={(v) => setForm({ ...form, allergiesSummary: v })} />
         <TextInput style={styles.input} placeholder="Emergency Contact Name" value={form.emergencyContactName} onChangeText={(v) => setForm({ ...form, emergencyContactName: v })} />
         <TextInput style={styles.input} placeholder="Emergency Contact Phone" value={form.emergencyContactPhone} onChangeText={(v) => setForm({ ...form, emergencyContactPhone: v })} keyboardType="phone-pad" />
-        <Button label={createMutation.isPending ? "Creating..." : "Create Health ID"} onPress={() => createMutation.mutate()} disabled={createMutation.isPending} />
+        <Button title={createMutation.isPending ? "Creating..." : "Create Health ID"} onPress={() => createMutation.mutate()} disabled={createMutation.isPending} />
         <TouchableOpacity onPress={() => setShowCreate(false)} style={styles.cancelButton}>
           <Text style={styles.cancelText}>Cancel</Text>
         </TouchableOpacity>
@@ -79,7 +79,7 @@ export function HealthIdSection() {
       <View style={styles.emptyState}>
         <Text style={styles.emptyTitle}>No Health ID Yet</Text>
         <Text style={styles.emptyText}>Create your digital health card to access services faster.</Text>
-        <Button label="Create Health ID" onPress={() => setShowCreate(true)} />
+        <Button title="Create Health ID" onPress={() => setShowCreate(true)} />
       </View>
     </View>
   );

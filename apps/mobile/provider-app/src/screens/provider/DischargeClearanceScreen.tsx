@@ -65,7 +65,7 @@ export function DischargeClearanceScreen() {
         <View style={styles.center}>
           <Text style={styles.emptyTitle}>No Clearance Initiated</Text>
           <Text style={styles.emptyText}>Initialize the 9-stage discharge clearance workflow for this encounter.</Text>
-          <Button label="Initialize Clearances" onPress={() => initMut.mutate()} disabled={initMut.isPending} />
+          <Button title="Initialize Clearances" onPress={() => initMut.mutate()} disabled={initMut.isPending} />
         </View>
       </Screen>
     );
@@ -165,7 +165,7 @@ function ClearanceItem({ id, type, icon, description, status, clearedBy, cleared
       {showWaive && status === "PENDING" && (
         <View style={styles.waiveForm}>
           <TextInput style={styles.waiveInput} placeholder="Waiver reason (required)" value={reason} onChangeText={setReason} />
-          <Button label="Confirm Waiver" size="small" onPress={() => { if (reason) { onWaive(reason); setShowWaive(false); } }} disabled={!reason} />
+          <Button title="Confirm Waiver" size="sm" onPress={() => { if (reason) { onWaive(reason); setShowWaive(false); } }} disabled={!reason} />
         </View>
       )}
     </View>

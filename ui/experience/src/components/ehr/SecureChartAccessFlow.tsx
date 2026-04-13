@@ -51,7 +51,7 @@ export function useSecureChartAccess() {
     if (!pendingAccess) return;
     setIsAuthorizing(true);
     try {
-      await apiClient.post("/api/v1/audit/chart-access", {
+      await apiClient.post("/internal/v1/audit/chart-access", {
         entityType: "patient_chart",
         entityId: pendingAccess.encounterId,
         action: "chart_access_authorized",
@@ -77,7 +77,7 @@ export function useSecureChartAccess() {
 
   const quickAccessFromQueue = useCallback(async (encounterId: string, patientId: string) => {
     try {
-      await apiClient.post("/api/v1/audit/chart-access", {
+      await apiClient.post("/internal/v1/audit/chart-access", {
         entityType: "patient_chart", entityId: encounterId, action: "chart_access_queue",
         performedBy: user?.id || "unknown",
         metadata: { patientId, accessReason: "queue_assignment", source: "queue", authorizedAt: new Date().toISOString() },

@@ -167,7 +167,7 @@ export function ResuscitationScreen() {
                 </TouchableOpacity>
               ))}
             </View>
-            <Button label="Begin Resuscitation" onPress={() => startResusMut.mutate()} />
+            <Button title="Begin Resuscitation" onPress={() => startResusMut.mutate()} />
           </View>
         )}
 
@@ -181,9 +181,9 @@ export function ResuscitationScreen() {
               <Text style={styles.cprHint}>{cprRunning ? "2-min cycle — vibrates on completion" : "Start a cycle"}</Text>
               <View style={styles.cprActions}>
                 {!cprRunning ? (
-                  <Button label={`Start Cycle ${cprCycleCount + 1}`} onPress={startCPRCycle} />
+                  <Button title={`Start Cycle ${cprCycleCount + 1}`} onPress={startCPRCycle} />
                 ) : (
-                  <Button label="Stop CPR" variant="outline" onPress={stopCPR} />
+                  <Button title="Stop CPR" variant="outline" onPress={stopCPR} />
                 )}
               </View>
             </View>
@@ -199,7 +199,7 @@ export function ResuscitationScreen() {
             </View>
 
             {/* Defibrillation */}
-            <Button label={`Defibrillation (${defibCount})`} onPress={() => { setDefibCount((d) => d + 1); Alert.alert("Shock Delivered", `Defibrillation #${defibCount + 1}`); }} />
+            <Button title={`Defibrillation (${defibCount})`} onPress={() => { setDefibCount((d) => d + 1); Alert.alert("Shock Delivered", `Defibrillation #${defibCount + 1}`); }} />
 
             {/* Medications */}
             <Text style={styles.sectionTitle}>Medications</Text>
@@ -227,7 +227,7 @@ export function ResuscitationScreen() {
                   </TouchableOpacity>
                 ))}
               </View>
-              <Button label="End Protocol" onPress={() => endMut.mutate()} variant="outline" />
+              <Button title="End Protocol" onPress={() => endMut.mutate()} variant="outline" />
             </View>
           </View>
         )}
@@ -236,7 +236,7 @@ export function ResuscitationScreen() {
         {(phase === "POST_ROSC" || phase === "TERMINATED") && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Post-Resuscitation</Text>
-            <Button label="Complete & View Summary" onPress={() => endMut.mutate()} />
+            <Button title="Complete & View Summary" onPress={() => endMut.mutate()} />
           </View>
         )}
       </ScrollView>

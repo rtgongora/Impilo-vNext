@@ -36,8 +36,8 @@ export function BedManagementScreen() {
           <View style={styles.assignForm}>
             <TextInput style={styles.input} placeholder="Patient ID" value={patientId} onChangeText={setPatientId} />
             <View style={styles.assignActions}>
-              <Button label="Cancel" variant="outline" onPress={() => setAssigningBed(null)} size="small" />
-              <Button label="Assign" onPress={() => assignMutation.mutate()} disabled={!patientId} size="small" />
+              <Button title="Cancel" variant="outline" onPress={() => setAssigningBed(null)} size="sm" />
+              <Button title="Assign" onPress={() => assignMutation.mutate()} disabled={!patientId} size="sm" />
             </View>
           </View>
         )}
