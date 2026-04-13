@@ -3,7 +3,7 @@
  */
 
 import { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
 
 /** UI shape for care-plans page */
@@ -180,4 +180,63 @@ export function usePatientGoalsFromCarePlans(patientId: string) {
       ? { ...carePlansQuery.data, data: derived }
       : undefined,
   };
+}
+
+// --- Care Team ---
+
+export interface CareTeamMember {
+  id: string;
+  name: string;
+  role: string;
+  specialty: string;
+  assignedAt: string;
+  status: "active" | "inactive";
+}
+
+export function useCareTeam(patientId: string) {
+  return useQuery<{ data: CareTeamMember[] }>({
+    queryKey: ["care-team", patientId],
+    queryFn: () => apiClient.get(`/internal/v1/care-team?patientId=${encodeURIComponent(patientId)}`),
+    enabled: !!patientId,
+  });
+}
+
+export function useAddCareTeamMember() {
+  const qc = useQueryClient();
+  return useMutation<unknown, unknown, { patientId: string; name: string; role: string; specialty: string }>({
+    mutationFn: (payload) => apiClient.post("/internal/v1/care-team", payload),
+    onSuccess: (_d, vars) => { qc.invalidateQueries({ queryKey: ["care-team", vars.patientId] }); },
+  });
+}
+
+export function useRemoveCareTeamMember() {
+  const qc = useQueryClient();
+  return useMutation<unknown, unknown, { memberId: string; patientId: string }>({
+    mutationFn: ({ memberId }) => apiClient.delete(`/internal/v1/care-team/${memberId}`),
+    onSuccess: (_d, vars) => { qc.invalidateQueries({ queryKey: ["care-team", vars.patientId] }); },
+  });
+}
+
+// --- Create Goal ---
+
+export function useCreateGoal() {
+  const qc = useQueryClient();
+  return useMutation<unknown, unknown, { patientId: string; title: string; description: string; priority: string; targetDate: string; carePlanId?: string }>({
+    mutationFn: (payload) => apiClient.post("/internal/v1/goals", payload),
+    onSuccess: (_d, vars) => {
+      qc.invalidateQueries({ queryKey: ["care-plans", vars.patientId] });
+    },
+  });
+}
+
+// --- Create Care Plan ---
+
+export function useCreateCarePlan() {
+  const qc = useQueryClient();
+  return useMutation<unknown, unknown, { patientId: string; title: string; category: string; targetDate: string; goals?: string[] }>({
+    mutationFn: (payload) => apiClient.post("/internal/v1/care-plans", payload),
+    onSuccess: (_d, vars) => {
+      qc.invalidateQueries({ queryKey: ["care-plans", vars.patientId] });
+    },
+  });
 }
