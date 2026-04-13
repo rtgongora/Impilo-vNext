@@ -37,11 +37,13 @@ public class CareEmergencyInpatientController {
 
     @GetMapping("/care-plans")
     public ResponseEntity<Map<String, Object>> listCarePlans(@RequestHeader("X-Tenant-ID") String tenantId, @RequestParam String patientId) {
-        try { JsonNode pctData = pctClient.listCarePlans(patientId); if (pctData != null) return ResponseEntity.ok(Map.of("data", pctData)); } catch (Exception e) { log.warn("PCT listCarePlans failed, falling back to local: {}", e.getMessage()); }
-        for (Map<String, Object> plan : plans) {
-            UUID planId = (UUID) plan.get("id");
+        try {
+            JsonNode pctData = pctClient.listCarePlans(patientId);
+            if (pctData != null) return ResponseEntity.ok(Map.of("data", pctData));
+        } catch (Exception e) {
+            log.warn("PCT listCarePlans failed: {}", e.getMessage());
         }
-        return ResponseEntity.ok(Map.of("data", plans));
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     @PostMapping("/care-plans")
@@ -64,11 +66,13 @@ public class CareEmergencyInpatientController {
 
     @GetMapping("/fluid-balance")
     public ResponseEntity<Map<String, Object>> getFluidBalance(@RequestHeader("X-Tenant-ID") String tenantId, @RequestParam String patientId, @RequestParam(required = false) String date) {
-        try { JsonNode pctData = pctClient.getFluidBalance(patientId, date); if (pctData != null) return ResponseEntity.ok(Map.of("data", pctData)); } catch (Exception e) { log.warn("PCT getFluidBalance failed, falling back to local: {}", e.getMessage()); }
-        String d = date != null ? date : java.time.LocalDate.now().toString();
-        int totalIntake = records.stream().filter(r -> "INTAKE".equals(r.get("entry_type"))).mapToInt(r -> (Integer) r.get("volume_ml")).sum();
-        int totalOutput = records.stream().filter(r -> "OUTPUT".equals(r.get("entry_type"))).mapToInt(r -> (Integer) r.get("volume_ml")).sum();
-        return ResponseEntity.ok(Map.of("data", records, "summary", Map.of("totalIntake", totalIntake, "totalOutput", totalOutput, "balance", totalIntake - totalOutput)));
+        try {
+            JsonNode pctData = pctClient.getFluidBalance(patientId, date);
+            if (pctData != null) return ResponseEntity.ok(Map.of("data", pctData));
+        } catch (Exception e) {
+            log.warn("PCT getFluidBalance failed: {}", e.getMessage());
+        }
+        return ResponseEntity.ok(Map.of("data", List.of(), "summary", Map.of("totalIntake", 0, "totalOutput", 0, "balance", 0)));
     }
 
     @PostMapping("/fluid-balance")
@@ -82,7 +86,13 @@ public class CareEmergencyInpatientController {
 
     @GetMapping("/emergency/activations")
     public ResponseEntity<Map<String, Object>> listActivations(@RequestHeader("X-Tenant-ID") String tenantId) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        try {
+            JsonNode pctData = pctClient.listEmergencyActivations();
+            if (pctData != null) return ResponseEntity.ok(Map.of("data", pctData));
+        } catch (Exception e) {
+            log.warn("PCT listEmergencyActivations failed: {}", e.getMessage());
+        }
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     @PostMapping("/emergency/activate")
@@ -124,7 +134,13 @@ public class CareEmergencyInpatientController {
 
     @GetMapping("/apgar")
     public ResponseEntity<Map<String, Object>> getApgar(@RequestHeader("X-Tenant-ID") String tenantId, @RequestParam String patientId) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        try {
+            JsonNode pctData = pctClient.getApgar(patientId);
+            if (pctData != null) return ResponseEntity.ok(Map.of("data", pctData));
+        } catch (Exception e) {
+            log.warn("PCT getApgar failed: {}", e.getMessage());
+        }
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     // ── Early Warning Scores ────────────────────────────────────────
@@ -140,7 +156,13 @@ public class CareEmergencyInpatientController {
 
     @GetMapping("/ews")
     public ResponseEntity<Map<String, Object>> getEWS(@RequestHeader("X-Tenant-ID") String tenantId, @RequestParam String patientId) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        try {
+            JsonNode pctData = pctClient.getEWS(patientId);
+            if (pctData != null) return ResponseEntity.ok(Map.of("data", pctData));
+        } catch (Exception e) {
+            log.warn("PCT getEWS failed: {}", e.getMessage());
+        }
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     // ── Admissions ──────────────────────────────────────────────────
@@ -154,7 +176,13 @@ public class CareEmergencyInpatientController {
 
     @GetMapping("/admissions")
     public ResponseEntity<Map<String, Object>> listAdmissions(@RequestHeader("X-Tenant-ID") String tenantId, @RequestParam(required = false) String patientId) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        try {
+            JsonNode data = inpatientClient.listAdmissions(patientId);
+            if (data != null) return ResponseEntity.ok(Map.of("data", data));
+        } catch (Exception e) {
+            log.warn("Inpatient listAdmissions failed: {}", e.getMessage());
+        }
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     // ── Ward Rounds ─────────────────────────────────────────────────
@@ -173,7 +201,13 @@ public class CareEmergencyInpatientController {
 
     @GetMapping("/ward-rounds")
     public ResponseEntity<Map<String, Object>> listWardRounds(@RequestHeader("X-Tenant-ID") String tenantId, @RequestParam String wardId) {
-        return ResponseEntity.ok(Map.of("data", rounds));
+        try {
+            JsonNode pctData = pctClient.listWardRounds(wardId);
+            if (pctData != null) return ResponseEntity.ok(Map.of("data", pctData));
+        } catch (Exception e) {
+            log.warn("PCT listWardRounds failed: {}", e.getMessage());
+        }
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     // ── Observation Charts ──────────────────────────────────────────

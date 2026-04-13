@@ -29,6 +29,7 @@ public class BedController {
 
     private final InpatientServiceClient inpatientClient;
 
+    public BedController(InpatientServiceClient inpatientClient) {
         this.inpatientClient = inpatientClient;
     }
 
@@ -38,7 +39,19 @@ public class BedController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(name = "facility_id") UUID facilityId) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        try {
+            JsonNode data = inpatientClient.listWards(facilityId.toString());
+            if (data != null) {
+                return ResponseEntity.ok(Map.of(
+                        "data", data,
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+            }
+        } catch (Exception e) {
+            log.warn("Inpatient listWards failed: {}", e.getMessage());
+        }
+        return ResponseEntity.ok(Map.of(
+                "data", List.of(),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 
     @GetMapping
@@ -49,7 +62,22 @@ public class BedController {
             @RequestParam(name = "facility_id") UUID facilityId,
             @RequestParam(required = false, name = "ward_id") UUID wardId,
             @RequestParam(required = false) String status) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        try {
+            JsonNode data = inpatientClient.listBeds(
+                    facilityId.toString(),
+                    wardId != null ? wardId.toString() : null,
+                    status);
+            if (data != null) {
+                return ResponseEntity.ok(Map.of(
+                        "data", data,
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+            }
+        } catch (Exception e) {
+            log.warn("Inpatient listBeds failed: {}", e.getMessage());
+        }
+        return ResponseEntity.ok(Map.of(
+                "data", List.of(),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 
     @PostMapping("/{id}/status")

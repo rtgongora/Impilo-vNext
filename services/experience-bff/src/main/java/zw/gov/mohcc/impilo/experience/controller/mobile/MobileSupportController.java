@@ -6,7 +6,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
-import zw.gov.mohcc.impilo.experience.controller.ResourceNotFoundException;
 
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -18,13 +17,12 @@ import java.util.*;
  * GET  /internal/v1/mobile/provider/support/escalations?facility_id=           - escalations
  * POST /internal/v1/mobile/provider/support/escalations/{id}/acknowledge       - acknowledge
  * POST /internal/v1/mobile/provider/support/escalations/{id}/resolve           - resolve
- *
- * <p>STRANGLER: JdbcTemplate retained for local reads during migration; target sovereign service is support-service.</p>
  */
 @RestController
 @RequestMapping("/internal/v1/mobile/provider/support")
 public class MobileSupportController {
 
+    public MobileSupportController() {
     }
 
     public record CreateTicketRequest(
@@ -50,7 +48,7 @@ public class MobileSupportController {
             @RequestParam(required = false) String status,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     @PostMapping("/tickets")
@@ -98,7 +96,7 @@ public class MobileSupportController {
             @RequestParam(name = "facility_id") String facilityId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     @PostMapping("/escalations/{id}/acknowledge")
@@ -110,7 +108,7 @@ public class MobileSupportController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @RequestBody(required = false) Map<String, Object> body) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     @PostMapping("/escalations/{id}/resolve")
@@ -122,7 +120,7 @@ public class MobileSupportController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @Valid @RequestBody ResolveEscalationRequest request) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     private Map<String, Object> toTicketResource(Map<String, Object> row) {

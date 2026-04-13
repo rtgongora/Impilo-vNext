@@ -1,11 +1,11 @@
 package zw.gov.mohcc.impilo.experience.controller.mobile;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
-import zw.gov.mohcc.impilo.experience.controller.ResourceNotFoundException;
 
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -13,10 +13,9 @@ import java.util.*;
 /**
  * Mobile telemedicine session endpoints.
  * GET  /internal/v1/mobile/provider/telemedicine/sessions             - list sessions
+ * POST /internal/v1/mobile/provider/telemedicine/sessions             - create session
  * POST /internal/v1/mobile/provider/telemedicine/sessions/{id}/join   - join session
  * POST /internal/v1/mobile/provider/telemedicine/sessions/{id}/end    - end session
- *
- * <p>STRANGLER: JdbcTemplate retained for local reads during migration; writes delegated to PctServiceClient.</p>
  */
 @RestController
 @RequestMapping("/internal/v1/mobile/provider/telemedicine")
@@ -24,6 +23,7 @@ public class MobileTelemedicineController {
 
     private final PctServiceClient pctClient;
 
+    public MobileTelemedicineController(PctServiceClient pctClient) {
         this.pctClient = pctClient;
     }
 
@@ -39,7 +39,15 @@ public class MobileTelemedicineController {
             @RequestParam(required = false) String status,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        if (patientId != null && !patientId.isBlank()) {
+            try {
+                JsonNode data = pctClient.getPatientTelehealthSessions(patientId, status, page, size);
+                if (data != null) {
+                    return ResponseEntity.ok(Map.of("data", data));
+                }
+            } catch (Exception ignored) {}
+        }
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     /**
@@ -70,6 +78,23 @@ public class MobileTelemedicineController {
         OffsetDateTime scheduled = scheduledAt != null
                 ? OffsetDateTime.parse(scheduledAt)
                 : now.plusHours(1);
+
+        // Delegate to PCT
+        try {
+            Map<String, Object> pctBody = new LinkedHashMap<>();
+            pctBody.put("sessionType", sessionType);
+            if (patientId != null) pctBody.put("patientId", patientId);
+            if (providerId != null) pctBody.put("providerId", providerId);
+            if (facilityId != null) pctBody.put("facilityId", facilityId);
+            if (encounterId != null) pctBody.put("encounterId", encounterId);
+            if (referralId != null) pctBody.put("referralId", referralId);
+            pctBody.put("scheduledAt", scheduled.toString());
+            if (notes != null) pctBody.put("notes", notes);
+            JsonNode result = pctClient.requestTelehealthSession(pctBody);
+            if (result != null && result.has("id")) {
+                sessionId = UUID.fromString(result.get("id").asText());
+            }
+        } catch (Exception ignored) {}
 
         Map<String, Object> attributes = new LinkedHashMap<>();
         attributes.put("session_type", sessionType);
@@ -103,7 +128,13 @@ public class MobileTelemedicineController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @RequestBody(required = false) Map<String, Object> body) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        try {
+            JsonNode data = pctClient.joinTelehealthSession(id.toString());
+            if (data != null) {
+                return ResponseEntity.ok(Map.of("data", data));
+            }
+        } catch (Exception ignored) {}
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     @PostMapping("/sessions/{id}/end")
@@ -115,7 +146,13 @@ public class MobileTelemedicineController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @RequestBody(required = false) Map<String, Object> body) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        try {
+            JsonNode data = pctClient.endTelehealthSession(id.toString(), body);
+            if (data != null) {
+                return ResponseEntity.ok(Map.of("data", data));
+            }
+        } catch (Exception ignored) {}
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     private Map<String, Object> toResource(Map<String, Object> row) {

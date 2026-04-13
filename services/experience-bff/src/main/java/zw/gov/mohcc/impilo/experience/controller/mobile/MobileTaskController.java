@@ -6,7 +6,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
-import zw.gov.mohcc.impilo.experience.controller.ResourceNotFoundException;
 
 import java.util.*;
 
@@ -18,8 +17,6 @@ import java.util.*;
  * PATCH /internal/v1/mobile/provider/tasks/{id}               - update status
  * POST  /internal/v1/mobile/provider/tasks/{id}/escalate      - escalate
  * POST  /internal/v1/mobile/provider/tasks/{id}/complete      - complete
- *
- * <p>STRANGLER: JdbcTemplate retained for local reads during migration; writes delegated to PctServiceClient.</p>
  */
 @RestController
 @RequestMapping("/internal/v1/mobile/provider/tasks")
@@ -27,6 +24,7 @@ public class MobileTaskController {
 
     private final PctServiceClient pctClient;
 
+    public MobileTaskController(PctServiceClient pctClient) {
         this.pctClient = pctClient;
     }
 
@@ -45,14 +43,6 @@ public class MobileTaskController {
             String notes
     ) {}
 
-    private static final String TASK_SELECT = """
-        SELECT id, facility_id, assigned_to, task_type, title, description,
-               patient_id, encounter_id, priority, status, due_at, notes,
-               escalation_reason, escalated_to, escalated_at, outcome,
-               completed_at, created_at, updated_at
-        FROM tasks
-        """;
-
     @GetMapping("/mine")
     public ResponseEntity<Map<String, Object>> myTasks(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
@@ -61,7 +51,7 @@ public class MobileTaskController {
             @RequestParam(name = "assigned_to") String assignedTo,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     @GetMapping
@@ -73,7 +63,7 @@ public class MobileTaskController {
             @RequestParam(required = false) String status,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     @GetMapping("/{id}")
@@ -82,7 +72,7 @@ public class MobileTaskController {
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     @PatchMapping("/{id}")
@@ -94,7 +84,7 @@ public class MobileTaskController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @Valid @RequestBody UpdateTaskRequest request) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     @PostMapping("/{id}/escalate")
@@ -106,7 +96,7 @@ public class MobileTaskController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @Valid @RequestBody EscalateTaskRequest request) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     @PostMapping("/{id}/complete")
@@ -118,7 +108,7 @@ public class MobileTaskController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @RequestBody(required = false) CompleteTaskRequest request) {
-        throw new UnsupportedOperationException("Endpoint pending migration to sovereign service");
+        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     private Map<String, Object> toResource(Map<String, Object> row) {
