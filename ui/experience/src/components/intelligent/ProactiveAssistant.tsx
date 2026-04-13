@@ -20,11 +20,10 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import {
-  Bell, AlertTriangle, CheckCircle2, Info, Heart, Pill, Calendar,
-  TrendingUp, Shield, Stethoscope, X, ChevronRight, Sparkles,
-  MessageCircle, Lightbulb, Clock, Activity,
+  AlertTriangle, CheckCircle2, Info, Heart, Calendar,
+  Stethoscope, X, ChevronRight, Sparkles,
+  MessageCircle, Lightbulb, Activity,
 } from "lucide-react";
-import { useAuthStore } from "@/hooks/useAuthStore";
 import { useWorkModeStore } from "@/hooks/useWorkModeStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useShiftStore } from "@/hooks/useShiftStore";
@@ -82,7 +81,6 @@ export function ProactiveAssistant() {
   const [chatInput, setChatInput] = useState("");
   const [chatMessages, setChatMessages] = useState<Array<{ role: "user" | "assistant"; text: string }>>([]);
 
-  const auth = useAuthStore();
   const workMode = useWorkModeStore();
   const facility = useFacilityStore();
   const shift = useShiftStore();
@@ -92,8 +90,8 @@ export function ProactiveAssistant() {
     try {
       const params = new URLSearchParams();
       if (workMode.mode) params.set("work_mode", workMode.mode);
-      if (facility.facilityId) params.set("facility_id", facility.facilityId);
-      if (shift.shiftId) params.set("shift_id", shift.shiftId);
+      if (facility.facility?.id) params.set("facility_id", facility.facility.id);
+      if (shift.shift?.id) params.set("shift_id", shift.shift.id);
 
       const response = await apiClient.get<{ data: AssistantNotification[] }>(
         `/internal/v1/assistant/notifications?${params.toString()}`
@@ -107,7 +105,7 @@ export function ProactiveAssistant() {
     } catch {
       // Silent fail — assistant is non-blocking
     }
-  }, [workMode.mode, facility.facilityId, shift.shiftId]);
+  }, [workMode.mode, facility.facility?.id, shift.shift?.id]);
 
   // Poll for notifications every 30 seconds
   useEffect(() => {
@@ -133,13 +131,13 @@ export function ProactiveAssistant() {
     try {
       const response = await apiClient.post<{ data: { reply: string } }>(
         "/internal/v1/assistant/chat",
-        { message: userMessage, context: { work_mode: workMode.mode, facility_id: facility.facilityId } }
+        { message: userMessage, context: { work_mode: workMode.mode, facility_id: facility.facility?.id } }
       );
       setChatMessages(prev => [...prev, { role: "assistant", text: response?.data?.reply ?? "I'm here to help. Could you rephrase that?" }]);
     } catch {
       setChatMessages(prev => [...prev, { role: "assistant", text: "I'm having trouble connecting. Please try again." }]);
     }
-  }, [chatInput, workMode.mode, facility.facilityId]);
+  }, [chatInput, workMode.mode, facility.facility?.id]);
 
   const criticalNotifications = useMemo(
     () => state.notifications.filter(n => n.severity === "CRITICAL"),
@@ -251,7 +249,6 @@ export function ProactiveAssistant() {
                 state.notifications.map(notification => {
                   const style = SEVERITY_STYLES[notification.severity] ?? SEVERITY_STYLES.INFO;
                   const TypeIcon = TYPE_ICONS[notification.type] ?? Info;
-                  const SeverityIcon = style.icon;
 
                   return (
                     <div key={notification.id} className={`p-3 ${style.bg} border-l-4 ${style.border} flex gap-3`}>

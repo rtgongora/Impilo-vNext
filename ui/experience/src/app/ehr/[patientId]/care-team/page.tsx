@@ -10,8 +10,6 @@ import { useEncounters } from "@/hooks/queries/useEncounters";
 import { useCareTeam, useAddCareTeamMember, useRemoveCareTeamMember } from "@/hooks/queries/useCareContinuity";
 import type { CareTeamMember } from "@/hooks/queries/useCareContinuity";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
-import { usePrivacyDisplayStore } from "@/hooks/usePrivacyDisplayStore";
-import { maskPhone, maskEmail } from "@/lib/pii-mask";
 
 export default function CareTeamPage() {
   const params = useParams<{ patientId: string }>();
@@ -31,7 +29,7 @@ export default function CareTeamPage() {
   const activeMembers = members.filter((member) => member.status === "active");
   const inactiveMembers = members.filter((member) => member.status === "inactive");
   const primaryMembers = activeMembers.length > 0 ? 1 : 0;
-  const externalMembers = 0;
+  const externalMembers: number = 0;
 
   const [showForm, setShowForm] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -222,17 +220,7 @@ export default function CareTeamPage() {
                         </button>
                       </div>
                       <p className="mb-2 text-xs text-gray-500">{member.specialty}</p>
-                      <p className="text-xs text-gray-400">{member.facility}</p>
-                      <div className="mt-3 border-t border-gray-100 pt-3">
-                        <a href={`tel:${member.phone}`} className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-blue-600">
-                          <Phone className="h-3 w-3" /> {maskPhone(member.phone, usePrivacyDisplayStore.getState().level)}
-                        </a>
-                      </div>
-                      <div className="mt-1">
-                        <a href={`mailto:${member.email}`} className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-blue-600">
-                          <Mail className="h-3 w-3" /> {maskEmail(member.email, usePrivacyDisplayStore.getState().level)}
-                        </a>
-                      </div>
+                      <p className="text-xs text-gray-400">Assigned {member.assignedAt ? member.assignedAt.slice(0, 10) : "—"}</p>
                     </div>
                   ))}
                 </div>
@@ -276,8 +264,8 @@ export default function CareTeamPage() {
                         <td className="px-4 py-3 text-gray-900">{member.name}</td>
                         <td className="px-4 py-3 text-gray-700">{member.role}</td>
                         <td className="px-4 py-3 text-gray-700">{member.specialty}</td>
-                        <td className="px-4 py-3 text-gray-500">{member.facility}</td>
-                        <td className="px-4 py-3 text-xs text-gray-500">{maskPhone(member.phone, usePrivacyDisplayStore.getState().level)}</td>
+                        <td className="px-4 py-3 text-gray-500">{member.assignedAt ? member.assignedAt.slice(0, 10) : "—"}</td>
+                        <td className="px-4 py-3 text-xs text-gray-500">—</td>
                         <td className="px-4 py-3">
                           <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${member.status === "active" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"}`}>{member.status}</span>
                         </td>

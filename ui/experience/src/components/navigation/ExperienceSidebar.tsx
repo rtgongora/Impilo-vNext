@@ -14,7 +14,6 @@ import {
   Calendar,
   ClipboardList,
   Code2,
-  Compass,
   CreditCard,
   FileBarChart2,
   FileText,

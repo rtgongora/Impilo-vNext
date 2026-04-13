@@ -25,7 +25,6 @@ import {
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
-import { useAuthStore } from "@/hooks/useAuthStore";
 import { useConsentStore, CURRENT_CONSENT_VERSION } from "@/hooks/useConsentStore";
 import {
   usePolicyConsentStatus,
@@ -34,11 +33,9 @@ import {
   useRequestAccountDeletion,
   useCancelAccountDeletion,
   type PolicyConsentResource,
-  type DeletionRequestResource,
 } from "@/hooks/queries/usePolicyConsent";
 
 export default function PrivacySettingsPage() {
-  const { user, clearAuth } = useAuthStore();
   const { revokeConsent: revokeClientConsent } = useConsentStore();
   const { data: consentData, isLoading: consentLoading } = usePolicyConsentStatus();
   const { data: deletionData, isLoading: deletionLoading } = useDeletionRequestStatus();

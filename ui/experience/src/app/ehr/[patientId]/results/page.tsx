@@ -149,7 +149,7 @@ export default function ResultsPage() {
         ) : (
           <div className="space-y-6">
             <ClinicalReviewHeader
-              badge="Diagnostics review"
+              badge="Diagnostics Review"
               badgeIcon={TestTube2}
               title="Review incoming results, acknowledge what is ready, and carry the next decision back into the encounter"
               description="This workspace now keeps result review in the same clinical loop: see what needs attention, acknowledge completed studies in place, and branch back to orders, medications, or notes without losing facility or encounter context."
@@ -240,7 +240,7 @@ export default function ResultsPage() {
                               <div>
                                 <p className="text-sm font-medium text-gray-900">{order.attributes.testName}</p>
                                 <p className="text-xs text-gray-500">
-                                  #{order.attributes.orderNumber} · {order.attributes.category}
+                                  #{order.attributes.orderNumber} Â· {order.attributes.category}
                                 </p>
                               </div>
                             </div>

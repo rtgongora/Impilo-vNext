@@ -179,7 +179,7 @@ export function WardChartGrid({ chart }: WardChartGridProps) {
       {/* Data table */}
       <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
         {rows.length === 0 ? (
-          <div className="p-8 text-center text-sm text-slate-500">No entries recorded yet. Click "Add Entry" to begin charting.</div>
+          <div className="p-8 text-center text-sm text-slate-500">No entries recorded yet. Click &quot;Add Entry&quot; to begin charting.</div>
         ) : (
           <table className="w-full text-sm">
             <thead className="bg-slate-50 text-left text-slate-600">

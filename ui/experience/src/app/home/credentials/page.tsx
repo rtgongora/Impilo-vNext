@@ -54,7 +54,7 @@ export default function CredentialsPage() {
 
   return (
     <AppLayout>
-      <PageShell title="Credentials & CPD" subtitle="Professional licenses, certifications, continuing education, and digital credentials">
+      <PageShell title="Credentials & CPD" subtitle="Professional licenses, certifications, continuing education, and digital credentials.">
         <div className="mb-4">
           <Link href="/home" className="inline-flex items-center gap-1 text-sm text-gray-500 transition-colors hover:text-gray-700">
             <ArrowLeft className="h-4 w-4" /> Back to Home
@@ -73,7 +73,7 @@ export default function CredentialsPage() {
                 </h2>
                 <p className="text-sm text-gray-600">
                   {licenses.length} license{licenses.length !== 1 ? "s" : ""} on record
-                  {activeLicenses.length > 0 && ` · ${activeLicenses.length} active`}
+                  {activeLicenses.length > 0 && ` Â· ${activeLicenses.length} active`}
                 </p>
               </div>
             </div>
@@ -136,7 +136,7 @@ export default function CredentialsPage() {
                     </div>
                     <p className="mt-1 text-xs text-gray-500">
                       {Math.max(0, cpd.currentCycle.requiredPoints - cpd.currentCycle.earnedPoints)} points needed
-                      {cpd.currentCycle.endDate && ` · Deadline: ${cpd.currentCycle.endDate}`}
+                      {cpd.currentCycle.endDate && ` Â· Deadline: ${cpd.currentCycle.endDate}`}
                     </p>
                   </>
                 ) : (

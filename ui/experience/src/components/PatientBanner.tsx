@@ -72,6 +72,7 @@ export function PatientBanner() {
   });
   const { facility } = useFacilityStore();
   const { shift } = useShiftStore();
+  const privacyLevel = usePrivacyDisplayStore((s) => s.level);
 
   if (!patientId) return null;
 
@@ -101,7 +102,6 @@ export function PatientBanner() {
       e.attributes.status === "IN_PROGRESS" || e.attributes.status === "ACTIVE"
   );
 
-  const privacyLevel = usePrivacyDisplayStore((s) => s.level);
   const attrs = patient.attributes;
   const age = safeAge(attrs.dateOfBirth);
   const genderBadge =

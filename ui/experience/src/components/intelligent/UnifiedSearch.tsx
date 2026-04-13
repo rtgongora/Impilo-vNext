@@ -24,7 +24,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Search, X, User, Building2, Pill, FileText, Stethoscope,
+  Search, User, Building2, Pill, FileText, Stethoscope,
   FlaskConical, ShieldCheck, CreditCard, BookOpen, Loader2,
   ArrowRight, Hash,
 } from "lucide-react";

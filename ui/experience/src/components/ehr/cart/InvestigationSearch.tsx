@@ -218,7 +218,7 @@ export function InvestigationSearch({
 
           {showDropdown && query.length >= 2 && searchResults.length === 0 && (
             <div className="absolute z-50 mt-1 w-full rounded-xl border border-gray-200 bg-white shadow-xl p-4 text-center text-sm text-gray-500">
-              No investigations match "{query}"
+              No investigations match &quot;{query}&quot;
             </div>
           )}
         </div>

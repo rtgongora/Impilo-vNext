@@ -12,7 +12,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ShieldAlert, ArrowUpRight, CheckCircle2, Loader2 } from "lucide-react";
+import { ShieldAlert, ArrowUpRight, CheckCircle2 } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
 
 interface AssuranceStatus {

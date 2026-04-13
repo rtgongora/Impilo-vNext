@@ -19,10 +19,9 @@ import { useState, useCallback, useMemo } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import {
   Stethoscope, Award, Heart, ChevronDown, Check, Shield,
-  Building2, Users, Sparkles, Lock, Unlock,
+  Building2, Users, Lock, Unlock,
 } from "lucide-react";
 import { useAuthStore } from "@/hooks/useAuthStore";
-import { useWorkModeStore, type WorkMode } from "@/hooks/useWorkModeStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useShiftStore } from "@/hooks/useShiftStore";
 import { useRoleGroup } from "@/hooks/useRoleGroup";
@@ -108,29 +107,31 @@ export function WorkspaceContextSwitcher() {
   const currentZoneId = useMemo(() => detectCurrentZone(pathname), [pathname]);
   const currentZone = useMemo(() => ZONES.find(z => z.id === currentZoneId) ?? ZONES[0], [currentZoneId]);
 
+  const hasActiveProvider = useMemo(() => auth.hasActiveProvider?.() ?? false, [auth]);
+
   const availableZones = useMemo(() => {
     return ZONES.filter(zone => {
       // MY LIFE is always available
       if (zone.id === "MY_LIFE") return true;
       // WORK and MY PROFESSIONAL require provider role
       if (zone.requiredRole === "PROVIDER") {
-        return roleGroup.isProvider || roleGroup.isAdmin;
+        return hasActiveProvider || roleGroup.isAdmin;
       }
       return true;
     });
-  }, [roleGroup]);
+  }, [hasActiveProvider, roleGroup.isAdmin]);
 
   const switchZone = useCallback((zone: Zone) => {
     setIsOpen(false);
 
     // WORK zone requires facility + shift context
-    if (zone.id === "WORK" && !shift.shiftId) {
+    if (zone.id === "WORK" && !shift.shift?.id) {
       router.push("/facility"); // Redirect to facility selection first
       return;
     }
 
     router.push(zone.entryPath);
-  }, [router, shift.shiftId]);
+  }, [router, shift.shift?.id]);
 
   const ZoneIcon = currentZone.icon;
 
@@ -147,11 +148,11 @@ export function WorkspaceContextSwitcher() {
       </button>
 
       {/* Context info bar */}
-      {currentZone.id === "WORK" && facility.facilityName && (
+      {currentZone.id === "WORK" && facility.facility?.name && (
         <div className="absolute top-full left-0 mt-1 flex items-center gap-1.5 text-[10px] text-gray-500 whitespace-nowrap">
           <Building2 className="h-3 w-3" />
-          <span>{facility.facilityName}</span>
-          {shift.shiftId && (
+          <span>{facility.facility.name}</span>
+          {shift.shift?.id && (
             <>
               <span>·</span>
               <Shield className="h-3 w-3" />
@@ -177,7 +178,7 @@ export function WorkspaceContextSwitcher() {
               {availableZones.map(zone => {
                 const Icon = zone.icon;
                 const isActive = zone.id === currentZoneId;
-                const needsShift = zone.id === "WORK" && !shift.shiftId;
+                const needsShift = zone.id === "WORK" && !shift.shift?.id;
 
                 return (
                   <button
@@ -232,7 +233,7 @@ export function WorkspaceContextSwitcher() {
                 <Users className="h-3 w-3" />
                 <span>
                   Signed in as {auth.user?.displayName ?? "User"} ·{" "}
-                  {roleGroup.isProvider ? "Provider" : "Citizen"}
+                  {hasActiveProvider ? "Provider" : "Citizen"}
                 </span>
               </div>
             </div>

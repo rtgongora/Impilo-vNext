@@ -24,10 +24,10 @@ import {
 import {
   INVESTIGATION_CATALOG,
   getCommonInvestigations,
-  getInvestigationCategories,
-  getInvestigationsByCategory,
+  getClinicalDomains,
+  getInvestigationsByDomain,
 } from "@/data/investigationCatalog";
-import type { Investigation } from "@/data/investigationCatalog";
+import type { ClinicalDomain, Investigation } from "@/data/investigationCatalog";
 import type { OrderSetItem } from "@/data/orderSets";
 import { CartItem } from "./CartItem";
 import type { CartItemData, CartItemType, CartPriority } from "./CartItem";
@@ -98,7 +98,7 @@ export function EncounterCart({ open, onClose, onSubmit }: EncounterCartProps) {
   const [activeTab, setActiveTab] = useState<TabId>("investigations");
   const [cartItems, setCartItems] = useState<CartItemData[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState<Investigation["category"] | "ALL">("ALL");
+  const [categoryFilter, setCategoryFilter] = useState<ClinicalDomain | "ALL">("ALL");
   const [isReviewing, setIsReviewing] = useState(false);
 
   // ── Cart operations ──────────────────────────────────────────────
@@ -148,18 +148,18 @@ export function EncounterCart({ open, onClose, onSubmit }: EncounterCartProps) {
 
   // ── Filtered investigations ──────────────────────────────────────
 
-  const categories = useMemo(() => getInvestigationCategories(), []);
+  const categories = useMemo(() => getClinicalDomains(), []);
   const commonInvestigations = useMemo(() => getCommonInvestigations(), []);
 
   const filteredInvestigations = useMemo(() => {
     let list =
       categoryFilter === "ALL"
         ? INVESTIGATION_CATALOG
-        : getInvestigationsByCategory(categoryFilter);
+        : getInvestigationsByDomain(categoryFilter);
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       list = list.filter(
-        (inv) =>
+        (inv: Investigation) =>
           inv.name.toLowerCase().includes(q) ||
           inv.code.toLowerCase().includes(q) ||
           inv.shortName.toLowerCase().includes(q)
@@ -371,7 +371,7 @@ export function EncounterCart({ open, onClose, onSubmit }: EncounterCartProps) {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-900 truncate">{inv.name}</p>
                     <p className="text-[11px] text-gray-400">
-                      {inv.code} &middot; {inv.category.toLowerCase()} &middot; ~{inv.turnaroundHours}h TAT
+                      {inv.code} &middot; {inv.domain.toLowerCase()} &middot; ~{inv.turnaroundHours}h TAT
                       {inv.isPanel && " · panel"}
                     </p>
                   </div>

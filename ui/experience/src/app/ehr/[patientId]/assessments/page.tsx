@@ -63,7 +63,7 @@ export default function AssessmentsPage() {
   const facility = useFacilityStore((state) => state.facility);
   const { data: encountersData } = useEncounters(patientId);
 
-  /** Structured screening tools (PHQ-9, GAD-7, etc.) ù no BFF longitudinal store yet; ADL/IADL lives under Functional Status. */
+  /** Structured screening tools (PHQ-9, GAD-7, etc.) ? no BFF longitudinal store yet; ADL/IADL lives under Functional Status. */
   const tools: AssessmentTool[] = [];
   const isLoading = false;
   const activeEncounter = (encountersData?.data ?? []).find(
@@ -217,7 +217,7 @@ export default function AssessmentsPage() {
                       {isExpanded && result && (
                         <div className="space-y-4 border-t border-gray-200 px-5 py-4">
                           <p className="text-sm text-gray-700">{result.interpretation}</p>
-                          <p className="text-xs text-gray-400">{result.date} ù {result.assessor}</p>
+                          <p className="text-xs text-gray-400">{result.date} ? {result.assessor}</p>
 
                           <div className="space-y-2">
                             {result.items.map((item, index) => (
