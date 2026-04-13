@@ -54,9 +54,15 @@ public class MobileFormController {
             @RequestParam(defaultValue = "50") int size) {
         JsonNode schemas = formsClient.listSchemas();
         if (schemas != null) {
-            return ResponseEntity.ok(Map.of("data", schemas));
+            return ResponseEntity.ok(Map.of(
+                    "data", schemas,
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+            ));
         }
-        return ResponseEntity.ok(Map.of("data", List.of()));
+        return ResponseEntity.ok(Map.of(
+                "data", List.of(),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+        ));
     }
 
     @GetMapping("/{id}")
@@ -67,9 +73,15 @@ public class MobileFormController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
         JsonNode schema = formsClient.getSchema(id.toString());
         if (schema != null) {
-            return ResponseEntity.ok(Map.of("data", schema));
+            return ResponseEntity.ok(Map.of(
+                    "data", schema,
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+            ));
         }
-        return ResponseEntity.ok(Map.of("data", List.of()));
+        return ResponseEntity.ok(Map.of(
+                "data", Map.of(),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+        ));
     }
 
     public record SubmitFormByIdRequest(
@@ -174,7 +186,11 @@ public class MobileFormController {
             @RequestParam(name = "encounter_id") String encounterId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return ResponseEntity.ok(Map.of("data", List.of()));
+        // TODO: Wire to forms-service submissions store when available.
+        return ResponseEntity.ok(Map.of(
+                "data", List.of(),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+        ));
     }
 
     private Map<String, Object> toFormResource(Map<String, Object> row) {

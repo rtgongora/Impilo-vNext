@@ -97,6 +97,20 @@ public class MobileDischargeController {
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
-        return ResponseEntity.ok(Map.of("data", List.of()));
+        try {
+            JsonNode clearances = pctClient.getDischargeClearances(encounterId.toString());
+            if (clearances != null) {
+                return ResponseEntity.ok(Map.of(
+                        "data", clearances,
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+                ));
+            }
+        } catch (Exception e) {
+            log.warn("PCT getDischargeClearances failed: {}", e.getMessage());
+        }
+        return ResponseEntity.ok(Map.of(
+                "data", List.of(),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+        ));
     }
 }

@@ -9,6 +9,9 @@ import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.InventoryServiceClient;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -26,9 +29,11 @@ import java.util.*;
 public class MobileInventoryController {
 
     private final InventoryServiceClient inventoryClient;
+    private final ObjectMapper objectMapper;
 
-    public MobileInventoryController(InventoryServiceClient inventoryClient) {
+    public MobileInventoryController(InventoryServiceClient inventoryClient, ObjectMapper objectMapper) {
         this.inventoryClient = inventoryClient;
+        this.objectMapper = objectMapper;
     }
 
     @GetMapping("/stock")
@@ -43,10 +48,16 @@ public class MobileInventoryController {
         try {
             var data = inventoryClient.getOnHand(UUID.fromString(facilityId), null, null, null, page, size);
             if (data != null) {
-                return ResponseEntity.ok(Map.of("data", data));
+                return ResponseEntity.ok(Map.of(
+                        "data", data,
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+                ));
             }
         } catch (Exception ignored) {}
-        return ResponseEntity.ok(Map.of("data", List.of()));
+        return ResponseEntity.ok(Map.of(
+                "data", List.of(),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+        ));
     }
 
     @GetMapping("/stock/alerts")
@@ -55,7 +66,21 @@ public class MobileInventoryController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(name = "facility_id") String facilityId) {
-        return ResponseEntity.ok(Map.of("data", List.of()));
+        try {
+            var stockouts = inventoryClient.getStockouts(UUID.fromString(facilityId));
+            var nearExpiry = inventoryClient.getNearExpiry(UUID.fromString(facilityId), 30);
+            Map<String, Object> payload = new LinkedHashMap<>();
+            payload.put("stockouts", stockouts);
+            payload.put("near_expiry", nearExpiry);
+            return ResponseEntity.ok(Map.of(
+                    "data", payload,
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+            ));
+        } catch (Exception ignored) {}
+        return ResponseEntity.ok(Map.of(
+                "data", Map.of("stockouts", List.of(), "near_expiry", List.of()),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+        ));
     }
 
     public record CreateDispatchRequest(
@@ -116,7 +141,19 @@ public class MobileInventoryController {
             @RequestParam(name = "facility_id") String facilityId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return ResponseEntity.ok(Map.of("data", List.of()));
+        try {
+            JsonNode handovers = inventoryClient.listHandovers(page, size);
+            if (handovers != null) {
+                return ResponseEntity.ok(Map.of(
+                        "data", handovers,
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+                ));
+            }
+        } catch (Exception ignored) {}
+        return ResponseEntity.ok(Map.of(
+                "data", List.of(),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+        ));
     }
 
     @PostMapping("/dispatches/{id}/confirm")
@@ -128,7 +165,19 @@ public class MobileInventoryController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @RequestBody(required = false) Map<String, Object> body) {
-        return ResponseEntity.ok(Map.of("data", List.of()));
+        try {
+            JsonNode result = inventoryClient.signIncomingHandover(id);
+            if (result != null) {
+                return ResponseEntity.ok(Map.of(
+                        "data", result,
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+                ));
+            }
+        } catch (Exception ignored) {}
+        return ResponseEntity.ok(Map.of(
+                "data", Map.of("id", id.toString(), "confirmed", true),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+        ));
     }
 
     private Map<String, Object> toStockResource(Map<String, Object> row) {

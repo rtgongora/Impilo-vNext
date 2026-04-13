@@ -64,6 +64,18 @@ public class MobileSupervisorController {
             @RequestParam(name = "facility_id") String facilityId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
-        return ResponseEntity.ok(Map.of("data", List.of()));
+        try {
+            var shifts = tusoClient.listFacilityShifts(facilityId, "ACTIVE", page, size);
+            if (shifts != null) {
+                return ResponseEntity.ok(Map.of(
+                        "data", shifts,
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+                ));
+            }
+        } catch (Exception ignored) {}
+        return ResponseEntity.ok(Map.of(
+                "data", List.of(),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+        ));
     }
 }

@@ -1,12 +1,31 @@
 server:
   port: 8160
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/plain
+    min-response-size: 1024
+  tomcat:
+    threads:
+      max: 200
+    accept-count: 100
+    connection-timeout: 5000
+    keep-alive-timeout: 30000
+    max-keep-alive-requests: 200
 
 spring:
+  main:
+    lazy-initialization: true
   application:
     name: experience-bff
   threads:
     virtual:
       enabled: true
+  jackson:
+    default-property-inclusion: non_null
+    serialization:
+      write-dates-as-timestamps: false
+    deserialization:
+      fail-on-unknown-properties: false
   data:
     redis:
       host: ${REDIS_HOST:localhost}

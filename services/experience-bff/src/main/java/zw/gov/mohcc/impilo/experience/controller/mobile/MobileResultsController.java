@@ -34,10 +34,16 @@ public class MobileResultsController {
         try {
             JsonNode data = orosClient.getPatientResults(actorId, page, size);
             if (data != null) {
-                return ResponseEntity.ok(Map.of("data", data));
+                return ResponseEntity.ok(Map.of(
+                        "data", data,
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+                ));
             }
         } catch (Exception ignored) {}
-        return ResponseEntity.ok(Map.of("data", List.of()));
+        return ResponseEntity.ok(Map.of(
+                "data", List.of(),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+        ));
     }
 
     @PostMapping("/{id}/acknowledge")
@@ -52,9 +58,15 @@ public class MobileResultsController {
         try {
             JsonNode data = orosClient.acknowledgeOrder(id.toString(), "CLINICIAN", null);
             if (data != null) {
-                return ResponseEntity.ok(Map.of("data", data));
+                return ResponseEntity.ok(Map.of(
+                        "data", data,
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+                ));
             }
         } catch (Exception ignored) {}
-        return ResponseEntity.ok(Map.of("data", List.of()));
+        return ResponseEntity.ok(Map.of(
+                "data", Map.of("id", id.toString(), "acknowledged", true),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+        ));
     }
 }

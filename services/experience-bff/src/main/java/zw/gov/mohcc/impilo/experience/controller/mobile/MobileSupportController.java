@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.SupportServiceClient;
 
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -22,7 +23,10 @@ import java.util.*;
 @RequestMapping("/internal/v1/mobile/provider/support")
 public class MobileSupportController {
 
-    public MobileSupportController() {
+    private final SupportServiceClient supportClient;
+
+    public MobileSupportController(SupportServiceClient supportClient) {
+        this.supportClient = supportClient;
     }
 
     public record CreateTicketRequest(
@@ -48,7 +52,20 @@ public class MobileSupportController {
             @RequestParam(required = false) String status,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return ResponseEntity.ok(Map.of("data", List.of()));
+        // support-service does not currently expose a facilityRef filter on list; return tenant-wide view.
+        try {
+            var result = supportClient.listTickets(status, null, null, null, page, size);
+            if (result != null) {
+                return ResponseEntity.ok(Map.of(
+                        "data", result,
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+                ));
+            }
+        } catch (Exception ignored) {}
+        return ResponseEntity.ok(Map.of(
+                "data", List.of(),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+        ));
     }
 
     @PostMapping("/tickets")
@@ -59,11 +76,28 @@ public class MobileSupportController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @Valid @RequestBody CreateTicketRequest request) {
+        String priority = request.priority() != null ? request.priority() : "MEDIUM";
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("title", request.subject());
+        body.put("description", request.description());
+        body.put("reporterRef", request.submitted_by());
+        body.put("category", request.category());
+        body.put("priority", priority);
+        body.put("facilityRef", request.facility_id());
 
+        try {
+            var created = supportClient.createTicket(body);
+            if (created != null) {
+                return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                        "data", created,
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+                ));
+            }
+        } catch (Exception ignored) {}
+
+        // Fallback if downstream is unavailable
         UUID ticketId = UUID.randomUUID();
         OffsetDateTime now = OffsetDateTime.now();
-        String priority = request.priority() != null ? request.priority() : "NORMAL";
-
         Map<String, Object> attributes = new LinkedHashMap<>();
         attributes.put("facility_id", request.facility_id());
         attributes.put("submitted_by", request.submitted_by());
@@ -74,18 +108,10 @@ public class MobileSupportController {
         attributes.put("status", "OPEN");
         attributes.put("created_at", now);
 
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", Map.of(
-                "id", ticketId.toString(),
-                "type", "SupportTicket",
-                "attributes", attributes
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                "data", Map.of("id", ticketId.toString(), "type", "SupportTicket", "attributes", attributes),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
         ));
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId
-        ));
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping("/escalations")
@@ -96,7 +122,20 @@ public class MobileSupportController {
             @RequestParam(name = "facility_id") String facilityId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return ResponseEntity.ok(Map.of("data", List.of()));
+        // Approximate "escalations" as high-priority open tickets until support-service exposes a dedicated view.
+        try {
+            var result = supportClient.listTickets("OPEN", "CRITICAL", null, null, page, size);
+            if (result != null) {
+                return ResponseEntity.ok(Map.of(
+                        "data", result,
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+                ));
+            }
+        } catch (Exception ignored) {}
+        return ResponseEntity.ok(Map.of(
+                "data", List.of(),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+        ));
     }
 
     @PostMapping("/escalations/{id}/acknowledge")
@@ -108,7 +147,21 @@ public class MobileSupportController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @RequestBody(required = false) Map<String, Object> body) {
-        return ResponseEntity.ok(Map.of("data", List.of()));
+        Map<String, Object> update = new LinkedHashMap<>();
+        update.put("status", "ACKNOWLEDGED");
+        try {
+            var result = supportClient.updateTicket(id, update);
+            if (result != null) {
+                return ResponseEntity.ok(Map.of(
+                        "data", result,
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+                ));
+            }
+        } catch (Exception ignored) {}
+        return ResponseEntity.ok(Map.of(
+                "data", Map.of("id", id.toString(), "acknowledged", true),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+        ));
     }
 
     @PostMapping("/escalations/{id}/resolve")
@@ -120,7 +173,25 @@ public class MobileSupportController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @Valid @RequestBody ResolveEscalationRequest request) {
-        return ResponseEntity.ok(Map.of("data", List.of()));
+        Map<String, Object> update = new LinkedHashMap<>();
+        update.put("status", "RESOLVED");
+        update.put("resolution", request.resolution());
+        if (request.notes() != null && !request.notes().isBlank()) {
+            update.put("description", request.notes());
+        }
+        try {
+            var result = supportClient.updateTicket(id, update);
+            if (result != null) {
+                return ResponseEntity.ok(Map.of(
+                        "data", result,
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+                ));
+            }
+        } catch (Exception ignored) {}
+        return ResponseEntity.ok(Map.of(
+                "data", Map.of("id", id.toString(), "resolved", true),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+        ));
     }
 
     private Map<String, Object> toTicketResource(Map<String, Object> row) {

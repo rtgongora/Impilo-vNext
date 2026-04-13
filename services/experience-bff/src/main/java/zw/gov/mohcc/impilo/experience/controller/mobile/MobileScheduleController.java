@@ -33,9 +33,15 @@ public class MobileScheduleController {
         try {
             JsonNode data = tusoClient.getCurrentShift(actorId);
             if (data != null) {
-                return ResponseEntity.ok(Map.of("data", data));
+                return ResponseEntity.ok(Map.of(
+                        "data", data,
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+                ));
             }
         } catch (Exception ignored) {}
-        return ResponseEntity.ok(Map.of("data", List.of()));
+        return ResponseEntity.ok(Map.of(
+                "data", Map.of(),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+        ));
     }
 }

@@ -43,11 +43,17 @@ public class MobileTelemedicineController {
             try {
                 JsonNode data = pctClient.getPatientTelehealthSessions(patientId, status, page, size);
                 if (data != null) {
-                    return ResponseEntity.ok(Map.of("data", data));
+                    return ResponseEntity.ok(Map.of(
+                            "data", data,
+                            "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+                    ));
                 }
             } catch (Exception ignored) {}
         }
-        return ResponseEntity.ok(Map.of("data", List.of()));
+        return ResponseEntity.ok(Map.of(
+                "data", List.of(),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+        ));
     }
 
     /**
@@ -131,10 +137,16 @@ public class MobileTelemedicineController {
         try {
             JsonNode data = pctClient.joinTelehealthSession(id.toString());
             if (data != null) {
-                return ResponseEntity.ok(Map.of("data", data));
+                return ResponseEntity.ok(Map.of(
+                        "data", data,
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+                ));
             }
         } catch (Exception ignored) {}
-        return ResponseEntity.ok(Map.of("data", List.of()));
+        return ResponseEntity.ok(Map.of(
+                "data", Map.of("id", id.toString(), "joined", true),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+        ));
     }
 
     @PostMapping("/sessions/{id}/end")
@@ -149,9 +161,15 @@ public class MobileTelemedicineController {
         try {
             JsonNode data = pctClient.endTelehealthSession(id.toString(), body);
             if (data != null) {
-                return ResponseEntity.ok(Map.of("data", data));
+                return ResponseEntity.ok(Map.of(
+                        "data", data,
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+                ));
             }
         } catch (Exception ignored) {}
-        return ResponseEntity.ok(Map.of("data", List.of()));
+        return ResponseEntity.ok(Map.of(
+                "data", Map.of("id", id.toString(), "ended", true),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+        ));
     }
 }

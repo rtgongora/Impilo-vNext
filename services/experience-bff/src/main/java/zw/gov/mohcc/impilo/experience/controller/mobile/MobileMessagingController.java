@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.ChannelsServiceClient;
 
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -23,7 +24,10 @@ import java.util.*;
 @RequestMapping("/internal/v1/mobile/provider/messaging")
 public class MobileMessagingController {
 
-    public MobileMessagingController() {
+    private final ChannelsServiceClient channelsClient;
+
+    public MobileMessagingController(ChannelsServiceClient channelsClient) {
+        this.channelsClient = channelsClient;
     }
 
     public record CreateConversationRequest(
@@ -51,7 +55,20 @@ public class MobileMessagingController {
             @RequestParam(name = "participant_id") String participantId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return ResponseEntity.ok(Map.of("data", List.of()));
+        // Map "conversations" to channels-service sessions.
+        try {
+            var sessions = channelsClient.listSessions();
+            if (sessions != null) {
+                return ResponseEntity.ok(Map.of(
+                        "data", sessions,
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+                ));
+            }
+        } catch (Exception ignored) {}
+        return ResponseEntity.ok(Map.of(
+                "data", List.of(),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+        ));
     }
 
     @GetMapping("/conversations/{id}/messages")
@@ -62,7 +79,19 @@ public class MobileMessagingController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
-        return ResponseEntity.ok(Map.of("data", List.of()));
+        try {
+            var messages = channelsClient.listMessagesForSession(id);
+            if (messages != null) {
+                return ResponseEntity.ok(Map.of(
+                        "data", messages,
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+                ));
+            }
+        } catch (Exception ignored) {}
+        return ResponseEntity.ok(Map.of(
+                "data", List.of(),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+        ));
     }
 
     @PostMapping("/conversations/{id}/messages")
@@ -78,6 +107,21 @@ public class MobileMessagingController {
         UUID messageId = UUID.randomUUID();
         OffsetDateTime now = OffsetDateTime.now();
         String messageType = request.message_type() != null ? request.message_type() : "TEXT";
+
+        try {
+            Map<String, Object> body = new LinkedHashMap<>();
+            body.put("sessionId", id.toString());
+            body.put("senderRef", request.sender_id());
+            body.put("body", request.content());
+            body.put("kind", messageType);
+            var sent = channelsClient.sendOutboundMessage(body);
+            if (sent != null) {
+                return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                        "data", sent,
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+                ));
+            }
+        } catch (Exception ignored) {}
 
         Map<String, Object> attributes = new LinkedHashMap<>();
         attributes.put("conversation_id", id.toString());
@@ -113,6 +157,21 @@ public class MobileMessagingController {
         UUID conversationId = UUID.randomUUID();
         OffsetDateTime now = OffsetDateTime.now();
         String conversationType = request.conversation_type() != null ? request.conversation_type() : "DIRECT";
+
+        try {
+            Map<String, Object> body = new LinkedHashMap<>();
+            body.put("subject", request.subject());
+            body.put("sessionType", conversationType);
+            body.put("participantRefs", request.participant_ids());
+            if (request.facility_id() != null) body.put("facilityRef", request.facility_id());
+            var created = channelsClient.createSession(body);
+            if (created != null) {
+                return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                        "data", created,
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+                ));
+            }
+        } catch (Exception ignored) {}
 
         Map<String, Object> attributes = new LinkedHashMap<>();
         attributes.put("subject", request.subject());

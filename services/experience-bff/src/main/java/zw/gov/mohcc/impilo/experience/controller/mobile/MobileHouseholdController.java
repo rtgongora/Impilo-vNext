@@ -1,5 +1,6 @@
 package zw.gov.mohcc.impilo.experience.controller.mobile;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -84,7 +85,20 @@ public class MobileHouseholdController {
             @RequestParam(name = "facility_id") String facilityId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return ResponseEntity.ok(Map.of("data", List.of()));
+        // Map households to community "units" for now.
+        try {
+            var units = communityClient.listUnits();
+            if (units != null) {
+                return ResponseEntity.ok(Map.of(
+                        "data", units,
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+                ));
+            }
+        } catch (Exception ignored) {}
+        return ResponseEntity.ok(Map.of(
+                "data", List.of(),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+        ));
     }
 
     @GetMapping("/households/{id}")
@@ -93,7 +107,19 @@ public class MobileHouseholdController {
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
-        return ResponseEntity.ok(Map.of("data", List.of()));
+        try {
+            var unit = communityClient.getUnit(id.toString());
+            if (unit != null) {
+                return ResponseEntity.ok(Map.of(
+                        "data", unit,
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+                ));
+            }
+        } catch (Exception ignored) {}
+        return ResponseEntity.ok(Map.of(
+                "data", Map.of(),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+        ));
     }
 
     @PostMapping("/households")
@@ -107,6 +133,25 @@ public class MobileHouseholdController {
 
         UUID householdId = UUID.randomUUID();
         OffsetDateTime now = OffsetDateTime.now();
+
+        try {
+            Map<String, Object> unitRequest = new LinkedHashMap<>();
+            unitRequest.put("facility_id", request.facility_id());
+            unitRequest.put("head_of_household", request.head_of_household());
+            unitRequest.put("address", request.address());
+            unitRequest.put("gps_latitude", request.gps_latitude());
+            unitRequest.put("gps_longitude", request.gps_longitude());
+            unitRequest.put("member_count", request.member_count());
+            unitRequest.put("ward", request.ward());
+            unitRequest.put("village", request.village());
+            JsonNode created = communityClient.createUnit(unitRequest);
+            if (created != null) {
+                return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                        "data", created,
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+                ));
+            }
+        } catch (Exception ignored) {}
 
         Map<String, Object> attributes = new LinkedHashMap<>();
         attributes.put("facility_id", request.facility_id());
@@ -146,6 +191,24 @@ public class MobileHouseholdController {
         UUID visitId = UUID.randomUUID();
         OffsetDateTime now = OffsetDateTime.now();
 
+        try {
+            Map<String, Object> visitRequest = new LinkedHashMap<>();
+            visitRequest.put("unitId", request.household_id());
+            visitRequest.put("visitedBy", request.visited_by());
+            visitRequest.put("visitType", request.visit_type());
+            visitRequest.put("findings", request.findings());
+            visitRequest.put("actionsTaken", request.actions_taken());
+            visitRequest.put("followUpRequired", request.follow_up_required());
+            visitRequest.put("followUpDate", request.follow_up_date());
+            JsonNode created = communityClient.createVisit(visitRequest);
+            if (created != null) {
+                return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                        "data", created,
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+                ));
+            }
+        } catch (Exception ignored) {}
+
         Map<String, Object> attributes = new LinkedHashMap<>();
         attributes.put("household_id", request.household_id());
         attributes.put("visited_by", request.visited_by());
@@ -179,7 +242,19 @@ public class MobileHouseholdController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return ResponseEntity.ok(Map.of("data", List.of()));
+        try {
+            var visits = communityClient.listVisits(id.toString());
+            if (visits != null) {
+                return ResponseEntity.ok(Map.of(
+                        "data", visits,
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+                ));
+            }
+        } catch (Exception ignored) {}
+        return ResponseEntity.ok(Map.of(
+                "data", List.of(),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+        ));
     }
 
     @PostMapping("/screenings")

@@ -35,10 +35,16 @@ public class MobileProfileController {
         try {
             JsonNode provider = varapiClient.getProvider(actorId);
             if (provider != null) {
-                return ResponseEntity.ok(Map.of("data", provider));
+                return ResponseEntity.ok(Map.of(
+                        "data", provider,
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+                ));
             }
         } catch (Exception ignored) {}
-        return ResponseEntity.ok(Map.of("data", List.of()));
+        return ResponseEntity.ok(Map.of(
+                "data", Map.of(),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+        ));
     }
 
     @PatchMapping

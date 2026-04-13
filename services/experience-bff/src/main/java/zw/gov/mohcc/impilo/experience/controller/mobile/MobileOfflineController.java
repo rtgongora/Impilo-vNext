@@ -171,10 +171,16 @@ public class MobileOfflineController {
         try {
             JsonNode pack = tshepoOfflineClient.getLatestOfflinePackForFacility(UUID.fromString(facilityId));
             if (pack != null) {
-                return ResponseEntity.ok(Map.of("data", pack));
+                return ResponseEntity.ok(Map.of(
+                        "data", pack,
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+                ));
             }
         } catch (Exception ignored) {}
-        return ResponseEntity.ok(Map.of("data", List.of()));
+        return ResponseEntity.ok(Map.of(
+                "data", List.of(),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+        ));
     }
 
     @PostMapping("/sync/reconcile")

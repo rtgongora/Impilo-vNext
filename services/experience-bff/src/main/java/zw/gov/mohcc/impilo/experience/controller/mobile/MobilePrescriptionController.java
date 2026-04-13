@@ -107,11 +107,17 @@ public class MobilePrescriptionController {
             try {
                 JsonNode data = pharmacyClient.getPatientPrescriptions(patientId, null, page, size);
                 if (data != null) {
-                    return ResponseEntity.ok(Map.of("data", data));
+                    return ResponseEntity.ok(Map.of(
+                            "data", data,
+                            "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+                    ));
                 }
             } catch (Exception ignored) {}
         }
-        return ResponseEntity.ok(Map.of("data", List.of()));
+        return ResponseEntity.ok(Map.of(
+                "data", List.of(),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+        ));
     }
 
     @PostMapping("/{id}/cancel")
@@ -123,6 +129,20 @@ public class MobilePrescriptionController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @RequestBody(required = false) CancelPrescriptionRequest request) {
-        return ResponseEntity.ok(Map.of("data", List.of()));
+        // TODO: Wire to pharmacy-service cancellation endpoint when available.
+        String reason = request != null && request.reason() != null ? request.reason() : "Cancelled from mobile";
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("status", "CANCELLED");
+        attributes.put("cancel_reason", reason);
+        attributes.put("cancelled_at", OffsetDateTime.now());
+
+        return ResponseEntity.ok(Map.of(
+                "data", Map.of(
+                        "id", id.toString(),
+                        "type", "Prescription",
+                        "attributes", attributes
+                ),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+        ));
     }
 }

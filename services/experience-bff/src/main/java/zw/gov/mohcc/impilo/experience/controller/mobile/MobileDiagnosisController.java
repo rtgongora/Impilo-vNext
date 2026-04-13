@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
+import zw.gov.mohcc.impilo.experience.client.SearchServiceClient;
 
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -23,9 +24,11 @@ import java.util.*;
 public class MobileDiagnosisController {
 
     private final PctServiceClient pctClient;
+    private final SearchServiceClient searchClient;
 
-    public MobileDiagnosisController(PctServiceClient pctClient) {
+    public MobileDiagnosisController(PctServiceClient pctClient, SearchServiceClient searchClient) {
         this.pctClient = pctClient;
+        this.searchClient = searchClient;
     }
 
     public record RecordDiagnosisRequest(
@@ -45,7 +48,20 @@ public class MobileDiagnosisController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(name = "q") String query,
             @RequestParam(defaultValue = "20") int limit) {
-        return ResponseEntity.ok(Map.of("data", List.of()));
+        // Proxy to search-service; consumers can set entityType=ICD11.
+        try {
+            var result = searchClient.search(query, "ICD11", 0, limit);
+            if (result != null) {
+                return ResponseEntity.ok(Map.of(
+                        "data", result,
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+                ));
+            }
+        } catch (Exception ignored) {}
+        return ResponseEntity.ok(Map.of(
+                "data", List.of(),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+        ));
     }
 
     @PostMapping
@@ -96,7 +112,11 @@ public class MobileDiagnosisController {
             @RequestParam(name = "encounter_id") String encounterId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
-        return ResponseEntity.ok(Map.of("data", List.of()));
+        // TODO: Wire to PCT diagnosis endpoint when available (distinct from conditions).
+        return ResponseEntity.ok(Map.of(
+                "data", List.of(),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+        ));
     }
 
     @DeleteMapping("/{id}")

@@ -157,6 +157,24 @@ public class InventoryServiceClient {
         return exchangeJson(HttpMethod.POST, baseUrl + "/v1/requisitions/" + id + "/fulfill", body);
     }
 
+    // ── Handover (used by mobile dispatch surfaces) ─────────────────
+
+    public JsonNode listHandovers(int page, int size) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/handover")
+                .queryParam("page", page)
+                .queryParam("size", size)
+                .toUriString();
+        return getJson(url);
+    }
+
+    public JsonNode startHandover(JsonNode body) {
+        return exchangeJson(HttpMethod.POST, baseUrl + "/v1/handover/start", body);
+    }
+
+    public JsonNode signIncomingHandover(UUID id) {
+        return exchangeJson(HttpMethod.POST, baseUrl + "/v1/handover/" + id + "/sign-incoming", null);
+    }
+
     private JsonNode getJson(String url) {
         log.debug("Inventory GET {}", url);
         ResponseEntity<JsonNode> r = restTemplate.exchange(url, HttpMethod.GET, emptyEntity(), JsonNode.class);

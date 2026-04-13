@@ -75,7 +75,11 @@ public class MobileTriageController {
             }
         }
 
-        return ResponseEntity.ok(Map.of("data", List.of()));
+        // TODO: Align mobile triage write + read with PCT journey model (journeyId vs encounter_id).
+        return ResponseEntity.ok(Map.of(
+                "data", List.of(),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+        ));
     }
 
     @GetMapping
@@ -85,6 +89,10 @@ public class MobileTriageController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(required = false, name = "encounter_id") String encounterId,
             @RequestParam(required = false, name = "patient_id") String patientId) {
-        return ResponseEntity.ok(Map.of("data", List.of()));
+        // TODO: Wire to PCT list journey triage endpoint when available.
+        return ResponseEntity.ok(Map.of(
+                "data", List.of(),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+        ));
     }
 }

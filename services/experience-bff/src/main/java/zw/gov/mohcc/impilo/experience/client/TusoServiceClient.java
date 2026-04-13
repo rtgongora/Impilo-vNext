@@ -124,6 +124,20 @@ public class TusoServiceClient {
         return extractData(response);
     }
 
+    /** List shifts for a facility (used by supervisor surfaces). */
+    public JsonNode listFacilityShifts(String facilityId, String status, int page, int size) {
+        UriComponentsBuilder b = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/internal/facilities/" + facilityId + "/shifts")
+                .queryParam("page", page)
+                .queryParam("size", size);
+        if (status != null && !status.isBlank()) {
+            b.queryParam("status", status);
+        }
+        String url = b.toUriString();
+        log.info("TUSO: Listing shifts facilityId={} status={}", facilityId, status);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
     // ── Staffing ──────────────────────────────────────────────────────
 
     /** Get roster for a week. */
