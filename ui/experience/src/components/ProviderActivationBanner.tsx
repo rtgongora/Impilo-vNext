@@ -1,0 +1,54 @@
+"use client";
+
+/**
+ * Provider Activation Banner — Health OS §6
+ *
+ * Shown when the user has a linked Provider ID but has not yet
+ * opted into professional mode. This is a helpful notification,
+ * not a gate — the user can dismiss it and stay in citizen mode.
+ */
+
+import { ShieldCheck } from "lucide-react";
+import { useAuthStore } from "@/hooks/useAuthStore";
+import { useLinkedIds } from "@/hooks/queries/useLinkedIds";
+
+export function ProviderActivationBanner() {
+  const { user, activateProvider } = useAuthStore();
+  const { data } = useLinkedIds();
+
+  const linkedIds = data?.data?.attributes;
+  const hasProviderId = !!linkedIds?.providerId;
+  const isActivated = user?.providerActivated;
+
+  if (!hasProviderId || isActivated) return null;
+
+  return (
+    <div className="border-b border-white/10 px-4 py-3">
+      <div className="rounded-2xl border border-impilo-400/30 bg-impilo-500/10 p-4">
+        <div className="flex items-start gap-3">
+          <ShieldCheck className="h-5 w-5 text-impilo-400 shrink-0 mt-0.5" />
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-white">
+              Your Provider ID has been linked to your account
+            </p>
+            <p className="text-xs text-slate-300 mt-1 leading-relaxed">
+              Activate your professional profile to access clinical tools,
+              prescribing, and patient records.
+            </p>
+            {linkedIds?.licenceValid === false && (
+              <p className="text-xs text-amber-300 mt-1">
+                Note: Your licence status may need updating before clinical access is granted.
+              </p>
+            )}
+            <button
+              onClick={() => activateProvider(linkedIds?.providerId)}
+              className="mt-3 px-4 py-2 text-xs font-medium text-white bg-impilo-500 rounded-lg hover:bg-impilo-600 transition-colors"
+            >
+              Activate Professional Profile
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

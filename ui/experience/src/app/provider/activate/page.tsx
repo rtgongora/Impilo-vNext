@@ -63,7 +63,7 @@ export default function ProviderActivatePage() {
     setActivating(true);
 
     // Persist the activated Provider ID to auth store and sessionStorage
-    const updatedUser = { ...user, providerId: provider.providerId };
+    const updatedUser = { ...user, providerId: provider.providerId, providerActivated: true, actorType: "PROVIDER" as const };
     setAuth(updatedUser, token, refreshToken, expiresAt);
 
     // Also persist provider context for the sidebar/header display

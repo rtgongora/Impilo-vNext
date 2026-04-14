@@ -94,6 +94,24 @@ public class VarapiServiceClient {
         return extractData(response);
     }
 
+    /**
+     * Look up a provider registration by the person's Health ID (actor ID).
+     *
+     * <p>Used by the post-login identity resolution flow to discover whether
+     * the person has a linked Provider ID in the canonical registry.</p>
+     */
+    public JsonNode getProviderByHealthId(String healthId) {
+        String url = baseUrl + "/v1/internal/providers/by-health-id/" + healthId;
+        log.info("VARAPI: Looking up provider by healthId={}", healthId);
+        try {
+            ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+            return extractData(response);
+        } catch (Exception e) {
+            log.debug("VARAPI: No provider found for healthId={}: {}", healthId, e.getMessage());
+            return null;
+        }
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) {
             return response.getBody().get("data");

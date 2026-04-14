@@ -56,6 +56,8 @@ export default function ProviderIdLoginPage() {
                 | "OPERATOR"
                 | "CITIZEN"
                 | "SYSTEM",
+              assuranceLevel: "VERIFIED",
+              providerActivated: false,
             },
             token,
           );

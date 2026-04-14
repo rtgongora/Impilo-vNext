@@ -77,6 +77,8 @@ export default function LoginPage() {
                 | "OPERATOR"
                 | "CITIZEN"
                 | "SYSTEM",
+              assuranceLevel: "VERIFIED",
+              providerActivated: false,
             },
             token,
             refreshToken,
@@ -209,7 +211,7 @@ export default function LoginPage() {
             className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-700 hover:border-impilo-200 hover:bg-impilo-50 transition-colors"
           >
             <BadgeCheck className="w-4 h-4 text-impilo-500" />
-            Provider ID
+            Health ID
           </Link>
           <Link
             href="/auth/login/biometric"

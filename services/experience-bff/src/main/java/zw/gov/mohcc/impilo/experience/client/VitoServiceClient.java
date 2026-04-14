@@ -126,6 +126,24 @@ public class VitoServiceClient {
         return extractData(response);
     }
 
+    /**
+     * Get staff assignments for a person by their Health ID (actor ID).
+     *
+     * <p>Used by the post-login identity resolution flow to discover whether
+     * the person has a Staff ID / facility assignment in VITO.</p>
+     */
+    public JsonNode getStaffAssignments(String healthId) {
+        String url = baseUrl + "/v1/identity/" + healthId + "/staff-assignments";
+        log.info("VITO: Getting staff assignments for healthId={}", healthId);
+        try {
+            ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+            return extractData(response);
+        } catch (Exception e) {
+            log.debug("VITO: No staff assignments for healthId={}: {}", healthId, e.getMessage());
+            return null;
+        }
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) {
             return response.getBody().get("data");

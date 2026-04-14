@@ -1,11 +1,11 @@
 "use client";
 
 /**
- * Register — New user registration with role selection.
- * Route: /auth/register | pageTitle: "Create Account"
+ * Register — Person-first sign-up (Health OS Identity Doctrine).
+ * Route: /auth/register | pageTitle: "Sign up for Impilo"
  *
- * Supports self-registration for: Citizen, Clinician, Nurse, Pharmacist.
- * Admin roles require admin-created accounts.
+ * Everyone registers as a person. No role picker. Professional capacity
+ * (Provider ID, Staff ID) is discovered post-login via linked IDs.
  * On success: auto-login and redirect to /home.
  */
 
@@ -20,10 +20,7 @@ import {
   Loader2,
   Eye,
   EyeOff,
-  Heart,
-  Stethoscope,
-  Syringe,
-  Pill,
+  IdCard,
 } from "lucide-react";
 import { AuthLayout } from "@/components/AuthLayout";
 import { useAuthStore } from "@/hooks/useAuthStore";
@@ -32,47 +29,34 @@ import { useAcceptPolicyConsent } from "@/hooks/queries/usePolicyConsent";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
 import { CURRENT_CONSENT_VERSION } from "@/hooks/useConsentStore";
 
-const ROLES = [
-  { value: "CITIZEN", label: "Citizen / Patient", icon: Heart, description: "Access your health records" },
-  { value: "CLINICIAN", label: "Clinician / Doctor", icon: Stethoscope, description: "Clinical provider account" },
-  { value: "NURSE", label: "Nurse", icon: Syringe, description: "Nursing provider account" },
-  { value: "PHARMACIST", label: "Pharmacist", icon: Pill, description: "Pharmacy provider account" },
-];
-
 export default function RegisterPage() {
   const router = useRouter();
   const { setAuth } = useAuthStore();
   const { acceptConsent } = useConsentStore();
   const acceptPolicyConsent = useAcceptPolicyConsent();
 
-  const [step, setStep] = useState<"role" | "details">("role");
-  const [selectedRole, setSelectedRole] = useState("");
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [email, setEmail] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [hasHealthId, setHasHealthId] = useState<boolean | null>(null);
+  const [healthId, setHealthId] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  function handleRoleSelect(role: string) {
-    setSelectedRole(role);
-    setStep("details");
-  }
-
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
 
-    if (!firstName.trim() || !lastName.trim()) {
+    if (!fullName.trim()) {
       setError("Please enter your full name.");
       return;
     }
-    if (!email.trim()) {
-      setError("Please enter your email address.");
+    if (!identifier.trim()) {
+      setError("Please enter your email or phone number.");
       return;
     }
     if (password.length < 8) {
@@ -90,6 +74,11 @@ export default function RegisterPage() {
 
     setSubmitting(true);
     try {
+      // Split full name into first/last for the BFF (Keycloak requires both)
+      const nameParts = fullName.trim().split(/\s+/);
+      const firstName = nameParts[0];
+      const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : nameParts[0];
+
       const res = await apiClient.post<ApiResponse<{
         id: string;
         type: string;
@@ -102,11 +91,13 @@ export default function RegisterPage() {
           message?: string;
         };
       }>>("/internal/v1/auth/register", {
-        email: email.trim(),
+        fullName: fullName.trim(),
+        identifier: identifier.trim(),
+        email: identifier.trim(),
         password,
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
-        role: selectedRole,
+        firstName,
+        lastName,
+        healthId: hasHealthId && healthId.trim() ? healthId.trim() : undefined,
       });
 
       const attrs = res.data.attributes;
@@ -120,6 +111,8 @@ export default function RegisterPage() {
             displayName: attrs.user.displayName,
             roles: attrs.user.roles,
             actorType: attrs.user.actorType as "PROVIDER" | "OPERATOR" | "CITIZEN" | "SYSTEM",
+            assuranceLevel: "UNVERIFIED",
+            providerActivated: false,
           },
           attrs.token,
           attrs.refreshToken,
@@ -152,159 +145,194 @@ export default function RegisterPage() {
 
   return (
     <AuthLayout>
-      {step === "role" ? (
-        <div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-1">Create Account</h2>
-          <p className="text-sm text-gray-500 mb-6">Choose your account type</p>
+      <div>
+        <h2 className="text-xl font-semibold text-gray-900 mb-1">Sign up for Impilo</h2>
+        <p className="text-sm text-gray-500 mb-6">
+          Create your personal Impilo account
+        </p>
 
-          <div className="space-y-3">
-            {ROLES.map((role) => {
-              const Icon = role.icon;
-              return (
-                <button
-                  key={role.value}
-                  onClick={() => handleRoleSelect(role.value)}
-                  className="w-full flex items-center gap-4 p-4 border border-gray-200 rounded-lg text-left hover:border-impilo-200 hover:bg-impilo-50 transition-colors"
-                >
-                  <div className="w-11 h-11 rounded-lg bg-impilo-50 flex items-center justify-center shrink-0">
-                    <Icon className="w-5 h-5 text-impilo-500" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">{role.label}</p>
-                    <p className="text-xs text-gray-500">{role.description}</p>
-                  </div>
-                </button>
-              );
-            })}
+        {error && (
+          <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Full name</label>
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                required
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="Your full name"
+                autoComplete="name"
+                className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
+              />
+            </div>
           </div>
 
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-500">
-              Already have an account?{" "}
-              <Link href="/auth/login" className="text-impilo-500 hover:text-impilo-700 font-medium">
-                Sign in
-              </Link>
-            </p>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Email or phone</label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                required
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
+                placeholder="you@example.com or +263..."
+                autoComplete="email"
+                className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
+              />
+            </div>
           </div>
-        </div>
-      ) : (
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <button onClick={() => setStep("role")} className="text-gray-400 hover:text-gray-600 transition-colors">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
-            </button>
-            <h2 className="text-xl font-semibold text-gray-900">Create Account</h2>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type={showPassword ? "text" : "password"}
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="At least 8 characters"
+                autoComplete="new-password"
+                minLength={8}
+                className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
           </div>
-          <p className="text-sm text-gray-500 mb-6">
-            Registering as {ROLES.find((r) => r.value === selectedRole)?.label}
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Confirm password</label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type={showPassword ? "text" : "password"}
+                required
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Repeat password"
+                autoComplete="new-password"
+                className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
+              />
+            </div>
+          </div>
+
+          {/* Health ID — optional link */}
+          <div className="rounded-lg border border-gray-200 p-4 space-y-3">
+            <p className="text-sm font-medium text-gray-700">Do you have a Health ID?</p>
+            <div className="flex gap-4">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="healthIdChoice"
+                  checked={hasHealthId === true}
+                  onChange={() => setHasHealthId(true)}
+                  className="w-4 h-4 text-impilo-500 border-gray-300 focus:ring-impilo-400"
+                />
+                <span className="text-sm text-gray-700">I have a Health ID</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="healthIdChoice"
+                  checked={hasHealthId === false}
+                  onChange={() => setHasHealthId(false)}
+                  className="w-4 h-4 text-impilo-500 border-gray-300 focus:ring-impilo-400"
+                />
+                <span className="text-sm text-gray-700">I don&apos;t have one yet</span>
+              </label>
+            </div>
+
+            {hasHealthId === true && (
+              <div className="relative">
+                <IdCard className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  value={healthId}
+                  onChange={(e) => setHealthId(e.target.value)}
+                  placeholder="Enter your Health ID"
+                  className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
+                />
+              </div>
+            )}
+
+            {hasHealthId === false && (
+              <p className="text-xs text-gray-500">
+                No problem. You can request or link a Health ID at any time from your profile.
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-2 pt-1">
+            <label className="flex items-start gap-2.5 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={acceptedPrivacy}
+                onChange={(e) => setAcceptedPrivacy(e.target.checked)}
+                className="mt-0.5 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="text-xs text-gray-600">
+                I have read and accept the{" "}
+                <Link href="/privacy" target="_blank" className="text-blue-600 hover:text-blue-800 underline">
+                  Privacy Policy
+                </Link>
+              </span>
+            </label>
+            <label className="flex items-start gap-2.5 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={acceptedTerms}
+                onChange={(e) => setAcceptedTerms(e.target.checked)}
+                className="mt-0.5 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="text-xs text-gray-600">
+                I have read and accept the{" "}
+                <Link href="/terms" target="_blank" className="text-blue-600 hover:text-blue-800 underline">
+                  Terms of Use
+                </Link>
+              </span>
+            </label>
+          </div>
+
+          <button
+            type="submit"
+            disabled={submitting || !acceptedTerms || !acceptedPrivacy}
+            className="w-full py-3 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors"
+          >
+            {submitting ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" /> Creating account...
+              </>
+            ) : (
+              <>
+                <UserPlus className="w-4 h-4" /> Create Account
+              </>
+            )}
+          </button>
+        </form>
+
+        <div className="mt-4 text-center">
+          <p className="text-sm text-gray-500">
+            Already have an account?{" "}
+            <Link href="/auth/login" className="text-impilo-500 hover:text-impilo-700 font-medium">
+              Sign in
+            </Link>
           </p>
-
-          {error && (
-            <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700">
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <input type="text" required value={firstName} onChange={(e) => setFirstName(e.target.value)}
-                    placeholder="First name" autoComplete="given-name"
-                    className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
-                <input type="text" required value={lastName} onChange={(e) => setLastName(e.target.value)}
-                  placeholder="Last name" autoComplete="family-name"
-                  className="w-full px-3 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com" autoComplete="email"
-                  className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input type={showPassword ? "text" : "password"} required value={password} onChange={(e) => setPassword(e.target.value)}
-                  placeholder="At least 8 characters" autoComplete="new-password" minLength={8}
-                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" />
-                <button type="button" onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input type={showPassword ? "text" : "password"} required value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Repeat password" autoComplete="new-password"
-                  className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" />
-              </div>
-            </div>
-
-            <div className="space-y-2 pt-1">
-              <label className="flex items-start gap-2.5 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={acceptedPrivacy}
-                  onChange={(e) => setAcceptedPrivacy(e.target.checked)}
-                  className="mt-0.5 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="text-xs text-gray-600">
-                  I have read and accept the{" "}
-                  <Link href="/privacy" target="_blank" className="text-blue-600 hover:text-blue-800 underline">
-                    Privacy Policy
-                  </Link>
-                </span>
-              </label>
-              <label className="flex items-start gap-2.5 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={acceptedTerms}
-                  onChange={(e) => setAcceptedTerms(e.target.checked)}
-                  className="mt-0.5 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="text-xs text-gray-600">
-                  I have read and accept the{" "}
-                  <Link href="/terms" target="_blank" className="text-blue-600 hover:text-blue-800 underline">
-                    Terms of Use
-                  </Link>
-                </span>
-              </label>
-            </div>
-
-            <button type="submit" disabled={submitting || !acceptedTerms || !acceptedPrivacy}
-              className="w-full py-3 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors">
-              {submitting ? <><Loader2 className="w-4 h-4 animate-spin" /> Creating account...</> : <><UserPlus className="w-4 h-4" /> Create Account</>}
-            </button>
-          </form>
-
-          <div className="mt-4 text-center">
-            <p className="text-sm text-gray-500">
-              Already have an account?{" "}
-              <Link href="/auth/login" className="text-impilo-500 hover:text-impilo-700 font-medium">
-                Sign in
-              </Link>
-            </p>
-          </div>
         </div>
-      )}
+      </div>
     </AuthLayout>
   );
 }

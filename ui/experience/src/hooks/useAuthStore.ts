@@ -32,6 +32,18 @@ export interface AuthUser {
   providerId?: string;
   /** Staff / employee ID within the current organization. */
   staffId?: string;
+  /** Health ID explicitly linked to this account (may differ from `id` during migration). */
+  healthId?: string;
+  /** Identity assurance level for this session. */
+  assuranceLevel: "UNVERIFIED" | "TEMPORARY" | "VERIFIED";
+  /** Linked IDs discovered post-login from the BFF identity endpoint. */
+  linkedIds?: {
+    providerId?: string;
+    staffId?: string;
+    caregiverId?: string;
+  };
+  /** True when the user has opted into professional mode for this session. */
+  providerActivated: boolean;
 }
 
 interface AuthState {
@@ -46,10 +58,12 @@ interface AuthState {
   hasRole: (role: string) => boolean;
   /** Health OS §6: true when Provider ID is activated for this session. */
   hasActiveProvider: () => boolean;
-  /** Health OS §6: activate a Provider ID for regulated professional work. */
-  activateProvider: (providerId: string) => void;
-  /** Health OS §6: deactivate Provider ID (return to person-only context). */
+  /** Health OS §6: activate Provider ID for regulated professional work. Sets providerActivated + actorType. */
+  activateProvider: (providerId?: string) => void;
+  /** Health OS §6: deactivate Provider ID (return to person-only/citizen context). */
   deactivateProvider: () => void;
+  /** Update linked IDs after post-login identity resolution. */
+  setLinkedIds: (linkedIds: { providerId?: string; staffId?: string; caregiverId?: string }) => void;
   isTokenExpired: () => boolean;
   getRefreshToken: () => string | null;
 }
@@ -129,19 +143,27 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   hasActiveProvider: () => {
     const { user } = get();
-    if (user?.providerId) return true;
+    if (user?.providerActivated && user?.providerId) return true;
     if (typeof window !== "undefined") {
       return !!sessionStorage.getItem("exp:provider_id");
     }
     return false;
   },
 
-  activateProvider: (providerId: string) => {
-    const { user, token, refreshToken, expiresAt } = get();
+  activateProvider: (providerId?: string) => {
+    const { user, token } = get();
     if (!user || !token) return;
-    const updated = { ...user, providerId };
+    // Use the passed providerId, or fall back to linkedIds.providerId, or existing providerId
+    const resolvedProviderId = providerId ?? user.linkedIds?.providerId ?? user.providerId;
+    if (!resolvedProviderId) return;
+    const updated: AuthUser = {
+      ...user,
+      providerId: resolvedProviderId,
+      providerActivated: true,
+      actorType: "PROVIDER",
+    };
     if (typeof window !== "undefined") {
-      sessionStorage.setItem("exp:provider_id", providerId);
+      sessionStorage.setItem("exp:provider_id", resolvedProviderId);
       sessionStorage.setItem("exp:auth_user", JSON.stringify(updated));
     }
     set({ user: updated });
@@ -150,11 +172,26 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   deactivateProvider: () => {
     const { user } = get();
     if (!user) return;
-    const updated = { ...user, providerId: undefined };
+    const updated: AuthUser = {
+      ...user,
+      providerId: undefined,
+      providerActivated: false,
+      actorType: "CITIZEN",
+    };
     if (typeof window !== "undefined") {
       sessionStorage.removeItem("exp:provider_id");
       sessionStorage.removeItem("exp:provider_display");
       sessionStorage.removeItem("exp:provider_cadre");
+      sessionStorage.setItem("exp:auth_user", JSON.stringify(updated));
+    }
+    set({ user: updated });
+  },
+
+  setLinkedIds: (linkedIds) => {
+    const { user } = get();
+    if (!user) return;
+    const updated: AuthUser = { ...user, linkedIds };
+    if (typeof window !== "undefined") {
       sessionStorage.setItem("exp:auth_user", JSON.stringify(updated));
     }
     set({ user: updated });

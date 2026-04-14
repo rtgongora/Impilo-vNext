@@ -106,6 +106,8 @@ export default function MfaPage() {
           displayName: user.displayName,
           roles: user.roles,
           actorType: user.actorType as AuthUser["actorType"],
+          assuranceLevel: "VERIFIED",
+          providerActivated: false,
         },
         token,
       );

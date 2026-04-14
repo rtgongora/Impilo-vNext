@@ -28,6 +28,8 @@ const testUser: AuthUser = {
   displayName: "Dr. Jones",
   roles: ["PROVIDER", "ADMIN"],
   actorType: "PROVIDER",
+  assuranceLevel: "VERIFIED",
+  providerActivated: false,
 };
 
 describe("useAuthStore", () => {

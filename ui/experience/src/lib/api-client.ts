@@ -258,9 +258,19 @@ async function attemptRefresh(): Promise<boolean> {
       if (!attrs?.token) return false;
 
       if (attrs.user) {
+        // Preserve person-first identity fields from the current session
+        const currentUser = useAuthStore.getState().user;
+        const mergedUser = {
+          ...attrs.user,
+          assuranceLevel: attrs.user.assuranceLevel ?? currentUser?.assuranceLevel ?? "VERIFIED",
+          providerActivated: attrs.user.providerActivated ?? currentUser?.providerActivated ?? false,
+          linkedIds: attrs.user.linkedIds ?? currentUser?.linkedIds,
+          healthId: attrs.user.healthId ?? currentUser?.healthId,
+          providerId: currentUser?.providerId,
+        };
         useAuthStore
           .getState()
-          .setAuth(attrs.user, attrs.token, attrs.refreshToken ?? refreshToken, attrs.expiresAt ?? null);
+          .setAuth(mergedUser, attrs.token, attrs.refreshToken ?? refreshToken, attrs.expiresAt ?? null);
       } else {
         useAuthStore.getState().setTokens(attrs.token, attrs.refreshToken ?? refreshToken, attrs.expiresAt ?? null);
       }

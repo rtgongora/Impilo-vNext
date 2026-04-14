@@ -10,6 +10,8 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.VarapiServiceClient;
+import zw.gov.mohcc.impilo.experience.client.VitoServiceClient;
 
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -26,9 +28,12 @@ import java.util.Set;
  * <p>When Keycloak is not reachable, falls back to a local session
  * token with a warning log. This ensures the platform remains usable
  * during development without a running Keycloak instance.</p>
+ *
+ * <p>Health OS Identity Doctrine: everyone starts as CITIZEN. Professional
+ * capacity is discovered post-login via the /linked-ids endpoint.</p>
  */
 @RestController
-@RequestMapping("/internal/v1/auth")
+@RequestMapping("/internal/v1")
 public class AuthSessionController {
 
     private static final Logger log = LoggerFactory.getLogger(AuthSessionController.class);
@@ -51,20 +56,26 @@ public class AuthSessionController {
     private boolean fallbackEnabled;
 
     private final RestTemplate restTemplate;
+    private final VarapiServiceClient varapiClient;
+    private final VitoServiceClient vitoClient;
 
-    public AuthSessionController(RestTemplate serviceRestTemplate) {
+    public AuthSessionController(RestTemplate serviceRestTemplate,
+                                 VarapiServiceClient varapiClient,
+                                 VitoServiceClient vitoClient) {
         this.restTemplate = serviceRestTemplate;
+        this.varapiClient = varapiClient;
+        this.vitoClient = vitoClient;
     }
 
     /**
-     * Login via email/password → Keycloak ROPC grant.
+     * Login via email/password -> Keycloak ROPC grant.
      *
      * <p>Exchanges credentials with Keycloak's token endpoint. On success,
      * decodes the JWT access token to extract user claims (sub, email,
      * name, realm_access.roles) and returns them in the AuthTokenResource
      * shape expected by the UI's useLogin hook.</p>
      */
-    @PostMapping("/login")
+    @PostMapping("/auth/login")
     public ResponseEntity<Map<String, Object>> login(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.POD_ID) String podId,
@@ -158,36 +169,13 @@ public class AuthSessionController {
         String fallbackToken = UUID.randomUUID().toString();
         String fallbackUserId = UUID.nameUUIDFromBytes(email.getBytes()).toString();
 
-        // Derive role from the request body (set during registration) or default by email domain
-        String requestedRole = body.getOrDefault("role", "").toString();
-        List<String> fallbackRoles;
-        String fallbackActorType;
-
-        if ("CITIZEN".equalsIgnoreCase(requestedRole) || email.contains("@example.com") || email.contains("citizen")) {
-            fallbackRoles = List.of("CITIZEN");
-            fallbackActorType = "CITIZEN";
-        } else if ("NURSE".equalsIgnoreCase(requestedRole)) {
-            fallbackRoles = List.of("NURSE");
-            fallbackActorType = "PROVIDER";
-        } else if ("PHARMACIST".equalsIgnoreCase(requestedRole)) {
-            fallbackRoles = List.of("PHARMACIST");
-            fallbackActorType = "PROVIDER";
-        } else if ("SYSTEM_ADMIN".equalsIgnoreCase(requestedRole) || email.contains("admin")) {
-            fallbackRoles = List.of("SYSTEM_ADMIN", "FACILITY_ADMIN");
-            fallbackActorType = "OPERATOR";
-        } else if ("FINANCE".equalsIgnoreCase(requestedRole) || email.contains("finance")) {
-            fallbackRoles = List.of("FINANCE");
-            fallbackActorType = "OPERATOR";
-        } else {
-            fallbackRoles = List.of("CLINICIAN");
-            fallbackActorType = "PROVIDER";
-        }
-
+        // Health OS Identity Doctrine: everyone starts as CITIZEN.
+        // Professional capacity is discovered post-login via /linked-ids.
         return buildLoginResponse(fallbackToken, null, 28800, fallbackUserId, email, email,
-                fallbackRoles, fallbackActorType, requestId, correlationId);
+                List.of("CITIZEN"), "CITIZEN", requestId, correlationId);
     }
 
-    @PostMapping("/logout")
+    @PostMapping("/auth/logout")
     public ResponseEntity<Map<String, Object>> logout(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
@@ -207,7 +195,7 @@ public class AuthSessionController {
     /**
      * Refresh session token using Keycloak refresh_token grant.
      */
-    @PostMapping("/refresh")
+    @PostMapping("/auth/refresh")
     public ResponseEntity<Map<String, Object>> refresh(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
@@ -279,7 +267,7 @@ public class AuthSessionController {
                 "error", Map.of("code", "REFRESH_FAILED", "message", "Unable to refresh session")));
     }
 
-    @GetMapping("/session")
+    @GetMapping("/auth/session")
     public ResponseEntity<Map<String, Object>> getSession(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
@@ -296,38 +284,52 @@ public class AuthSessionController {
         return ResponseEntity.ok(response);
     }
 
-    // ── Helpers ──────────────────────────────────────────────────
+    // ── Linked IDs — Post-login Identity Resolution ─────────────────
 
-    private ResponseEntity<Map<String, Object>> buildLoginResponse(
-            String token, String refreshToken, int expiresIn, String userId, String email,
-            String displayName, List<String> roles, String actorType,
-            String requestId, String correlationId) {
+    /**
+     * Discover linked IDs (Provider ID, Staff ID) for the authenticated person.
+     *
+     * <p>Health OS Identity Doctrine §5–§6: after login the UI queries this
+     * endpoint to discover what professional/staff identifiers are linked
+     * to the person's Health ID. This drives the provider activation banner
+     * and shell adaptation.</p>
+     */
+    @GetMapping("/identity/linked-ids")
+    public ResponseEntity<Map<String, Object>> getLinkedIds(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(CompanionHeaders.ACTOR_ID) String actorId) {
+        try {
+            // Query VARAPI for provider registration
+            JsonNode providerData = varapiClient.getProviderByHealthId(actorId);
+            // Query VITO for staff assignments
+            JsonNode staffData = vitoClient.getStaffAssignments(actorId);
 
-        OffsetDateTime expiresAt = OffsetDateTime.now().plusSeconds(expiresIn);
+            Map<String, Object> linkedIds = new LinkedHashMap<>();
+            if (providerData != null && !providerData.isNull()) {
+                linkedIds.put("providerId", providerData.has("providerId") ? providerData.get("providerId").asText() : null);
+                linkedIds.put("providerStatus", providerData.has("status") ? providerData.get("status").asText() : null);
+                linkedIds.put("licenceValid", providerData.has("licenceValid") ? providerData.get("licenceValid").asBoolean() : false);
+            }
+            if (staffData != null && !staffData.isNull()) {
+                linkedIds.put("staffId", staffData.has("staffId") ? staffData.get("staffId").asText() : null);
+                linkedIds.put("facilityId", staffData.has("facilityId") ? staffData.get("facilityId").asText() : null);
+            }
 
-        Map<String, Object> user = new LinkedHashMap<>();
-        user.put("id", userId);
-        user.put("email", email);
-        user.put("displayName", displayName);
-        user.put("roles", roles);
-        user.put("actorType", actorType);
-
-        Map<String, Object> attributes = new LinkedHashMap<>();
-        attributes.put("token", token);
-        if (refreshToken != null) attributes.put("refreshToken", refreshToken);
-        attributes.put("expiresAt", expiresAt.toString());
-        attributes.put("expiresIn", expiresIn);
-        attributes.put("user", user);
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", Map.of(
-                "id", userId,
-                "type", "auth_token",
-                "attributes", attributes
-        ));
-        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
-        return ResponseEntity.ok(response);
+            return ResponseEntity.ok(Map.of(
+                    "data", Map.of("id", actorId, "type", "linked-ids", "attributes", linkedIds),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+            ));
+        } catch (Exception e) {
+            log.warn("Failed to resolve linked IDs for actor={}: {}", actorId, e.getMessage());
+            return ResponseEntity.ok(Map.of(
+                    "data", Map.of("id", actorId, "type", "linked-ids", "attributes", Map.of()),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+            ));
+        }
     }
+
+    // ── Registration ────────────────────────────────────────────────
 
     @Value("${KEYCLOAK_BACKEND_CLIENT_ID:impilo-backend}")
     private String backendClientId;
@@ -339,9 +341,12 @@ public class AuthSessionController {
      * Register a new user via Keycloak Admin REST API.
      *
      * <p>Uses the impilo-backend service account to obtain an admin token,
-     * then creates the user and assigns the requested realm role.</p>
+     * then creates the user and assigns the CITIZEN realm role.</p>
+     *
+     * <p>Health OS Identity Doctrine: everyone registers as a person (CITIZEN).
+     * Professional capacity is discovered post-login, not during registration.</p>
      */
-    @PostMapping("/register")
+    @PostMapping("/auth/register")
     public ResponseEntity<Map<String, Object>> register(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.POD_ID) String podId,
@@ -349,11 +354,22 @@ public class AuthSessionController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestBody Map<String, Object> body) {
 
-        String email = body.getOrDefault("email", "").toString().trim();
+        String email = body.getOrDefault("email", body.getOrDefault("identifier", "")).toString().trim();
         String password = body.getOrDefault("password", "").toString();
         String firstName = body.getOrDefault("firstName", "").toString().trim();
         String lastName = body.getOrDefault("lastName", "").toString().trim();
-        String role = body.getOrDefault("role", "CITIZEN").toString().toUpperCase();
+        String fullName = body.getOrDefault("fullName", "").toString().trim();
+        String healthId = body.getOrDefault("healthId", "").toString().trim();
+
+        // Support fullName field: split into first/last if firstName/lastName not provided
+        if (firstName.isEmpty() && !fullName.isEmpty()) {
+            String[] parts = fullName.split("\\s+", 2);
+            firstName = parts[0];
+            lastName = parts.length > 1 ? parts[1] : parts[0];
+        }
+
+        // Health OS Identity Doctrine: everyone registers as CITIZEN
+        String role = "CITIZEN";
 
         // Validation
         if (email.isBlank() || password.isBlank() || firstName.isBlank() || lastName.isBlank()) {
@@ -365,13 +381,6 @@ public class AuthSessionController {
             return ResponseEntity.badRequest().body(Map.of(
                     "error", Map.of("code", "VALIDATION", "message",
                             "Password must be at least 8 characters")));
-        }
-
-        Set<String> allowedRoles = Set.of("CITIZEN", "CLINICIAN", "NURSE", "PHARMACIST");
-        if (!allowedRoles.contains(role)) {
-            return ResponseEntity.badRequest().body(Map.of(
-                    "error", Map.of("code", "VALIDATION", "message",
-                            "Self-registration is only available for: " + allowedRoles)));
         }
 
         try {
@@ -393,6 +402,10 @@ public class AuthSessionController {
             userRep.put("lastName", lastName);
             userRep.put("enabled", true);
             userRep.put("emailVerified", false);
+            // Store Health ID as a user attribute if provided
+            if (!healthId.isEmpty()) {
+                userRep.put("attributes", Map.of("healthId", List.of(healthId)));
+            }
             userRep.put("credentials", List.of(Map.of(
                     "type", "password",
                     "value", password,
@@ -427,10 +440,9 @@ public class AuthSessionController {
                     ? locationHeader.substring(locationHeader.lastIndexOf("/") + 1)
                     : null;
 
-            // 4. Assign realm role if we have the user ID
-            if (userId != null && !role.equals("default")) {
+            // 4. Assign CITIZEN realm role
+            if (userId != null) {
                 try {
-                    // Get the role representation
                     String rolesUrl = keycloakUrl + "/admin/realms/" + realm + "/roles/" + role;
                     ResponseEntity<JsonNode> roleResponse = restTemplate.exchange(
                             rolesUrl, HttpMethod.GET,
@@ -438,7 +450,6 @@ public class AuthSessionController {
                             JsonNode.class);
 
                     if (roleResponse.getStatusCode().is2xxSuccessful() && roleResponse.getBody() != null) {
-                        // Assign role to user
                         String assignUrl = keycloakUrl + "/admin/realms/" + realm + "/users/" + userId + "/role-mappings/realm";
                         restTemplate.exchange(
                                 assignUrl, HttpMethod.POST,
@@ -451,7 +462,7 @@ public class AuthSessionController {
                 }
             }
 
-            log.info("User registered: email={}, role={}, keycloakId={}", email, role, userId);
+            log.info("User registered: email={}, role={}, keycloakId={}, healthId={}", email, role, userId, healthId.isEmpty() ? "none" : healthId);
 
             // 5. Auto-login the new user
             try {
@@ -479,14 +490,14 @@ public class AuthSessionController {
                     return buildLoginResponse(accessToken, refreshToken, expiresIn,
                             userId != null ? userId : UUID.randomUUID().toString(),
                             email, firstName + " " + lastName,
-                            List.of(role), determineActorType(List.of(role)),
+                            List.of(role), "CITIZEN",
                             requestId, correlationId);
                 }
             } catch (Exception e) {
                 log.warn("Auto-login after registration failed: {}", e.getMessage());
             }
 
-            // Registration succeeded but auto-login failed — return success without token
+            // Registration succeeded but auto-login failed -- return success without token
             Map<String, Object> response = new LinkedHashMap<>();
             response.put("data", Map.of(
                     "id", userId != null ? userId : "registered",
@@ -494,7 +505,6 @@ public class AuthSessionController {
                     "attributes", Map.of(
                             "status", "REGISTERED",
                             "email", email,
-                            "role", role,
                             "message", "Account created. Please sign in."
                     )
             ));
@@ -516,6 +526,8 @@ public class AuthSessionController {
                     "error", Map.of("code", "REGISTRATION_FAILED", "message", "Registration failed")));
         }
     }
+
+    // ── Helpers ──────────────────────────────────────────────────
 
     /**
      * Get a service account access token for Keycloak admin operations.
@@ -544,6 +556,37 @@ public class AuthSessionController {
             log.error("Failed to get service account token: {}", e.getMessage());
         }
         return null;
+    }
+
+    private ResponseEntity<Map<String, Object>> buildLoginResponse(
+            String token, String refreshToken, int expiresIn, String userId, String email,
+            String displayName, List<String> roles, String actorType,
+            String requestId, String correlationId) {
+
+        OffsetDateTime expiresAt = OffsetDateTime.now().plusSeconds(expiresIn);
+
+        Map<String, Object> user = new LinkedHashMap<>();
+        user.put("id", userId);
+        user.put("email", email);
+        user.put("displayName", displayName);
+        user.put("roles", roles);
+        user.put("actorType", actorType);
+
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("token", token);
+        if (refreshToken != null) attributes.put("refreshToken", refreshToken);
+        attributes.put("expiresAt", expiresAt.toString());
+        attributes.put("expiresIn", expiresIn);
+        attributes.put("user", user);
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", Map.of(
+                "id", userId,
+                "type", "auth_token",
+                "attributes", attributes
+        ));
+        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
+        return ResponseEntity.ok(response);
     }
 
     private String determineActorType(List<String> roles) {

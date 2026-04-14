@@ -41,7 +41,8 @@ import {
   X,
 } from "lucide-react";
 import { ImpiloLogo } from "@/components/brand/ImpiloLogo";
-import { useAuthStore } from "@/hooks/useAuthStore";
+import { ProviderActivationBanner } from "@/components/ProviderActivationBanner";
+import { useAuthStore, type AuthUser } from "@/hooks/useAuthStore";
 import { WORK_MODE_LABELS } from "@/hooks/useWorkModeStore";
 import { useExperienceEntry } from "@/providers/ExperienceEntryProvider";
 
@@ -75,19 +76,19 @@ const CLINICAL_ROLES = ["CLINICIAN", "NURSE", "FACILITY_ADMIN", "SYSTEM_ADMIN", 
 const QUEUE_ROLES = ["CLINICIAN", "NURSE", "SUPPORT_AGENT", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"];
 const DISPENSER_ROLES = ["PHARMACIST", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"];
 
-const CITIZEN_ONLY_ROLES = ["CITIZEN"];
-
 /**
- * Returns true if the user has ONLY citizen/consumer roles — no professional roles.
- * These users see only the "My Life" zone with no facility/workspace/shift flow.
+ * Returns true when the user should see citizen-only experience.
+ *
+ * Health OS Identity Doctrine: everyone starts in citizen mode.
+ * Professional zones (Work, My Professional) only appear when
+ * the user has explicitly activated their Provider ID.
  */
-function isCitizenOnly(hasRole: (r: string) => boolean): boolean {
-  const professionalRoles = [
-    "CLINICIAN", "NURSE", "PHARMACIST", "SUPPORT_AGENT",
-    "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER", "FINANCE",
-    "HIE_ADMIN", "PUBLIC_HEALTH_OFFICER", "ENV_HEALTH", "CHW",
-  ];
-  return !professionalRoles.some((r) => hasRole(r));
+function isCitizenOnly(user: AuthUser | null): boolean {
+  if (!user) return true;
+  // If provider is activated, show professional shell
+  if (user.providerActivated) return false;
+  // Otherwise, citizen-only experience regardless of token roles
+  return true;
 }
 
 const ZONES: SidebarZone[] = [
@@ -304,7 +305,7 @@ export function ExperienceSidebar() {
     sessionStorage.setItem("exp:sidebar-collapsed", String(next));
   }
 
-  const citizenOnly = isCitizenOnly(hasRole);
+  const citizenOnly = isCitizenOnly(user);
 
   const orderedZones = [...ZONES]
     .filter((zone) => {
@@ -393,6 +394,9 @@ export function ExperienceSidebar() {
             </button>
           </div>
         </div>
+
+        {/* Health OS §6: Provider activation banner — shown when linked Provider ID exists but not activated */}
+        {!collapsed && <ProviderActivationBanner />}
 
         {!collapsed && !citizenOnly && (
           <div className="border-b border-white/10 px-4 py-4">
@@ -605,6 +609,7 @@ export function ExperienceSidebar() {
           ) : (
             <div className="flex flex-col items-center gap-3">
               {!citizenOnly && (
+              <>
               <Link href="/facility" title={facility?.name ?? "Facility"} className="rounded-2xl border border-white/10 p-3 text-slate-200 transition hover:bg-white/10">
                 <Building2 className="h-4 w-4" />
               </Link>
@@ -614,6 +619,7 @@ export function ExperienceSidebar() {
               <div className={shiftActive ? "rounded-full bg-emerald-400 p-1" : "rounded-full bg-amber-400 p-1"}>
                 <Activity className="h-3 w-3 text-slate-950" />
               </div>
+              </>
               )}
             </div>
           )}

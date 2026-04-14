@@ -56,6 +56,8 @@ export default function BiometricLoginPage() {
                   | "OPERATOR"
                   | "CITIZEN"
                   | "SYSTEM",
+                assuranceLevel: "VERIFIED",
+                providerActivated: false,
               },
               token,
             );
