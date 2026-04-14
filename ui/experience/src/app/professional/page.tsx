@@ -16,6 +16,7 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
 import {
   ArrowRight,
   BadgeCheck,
@@ -34,33 +35,42 @@ import {
 import { AppLayout } from "@/components/AppLayout";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useLinkedIds } from "@/hooks/queries/useLinkedIds";
+import { apiClient, type ApiResponse } from "@/lib/api-client";
 
-/** Mock facility affiliations — in production these come from the BFF. */
-const MOCK_AFFILIATIONS = [
-  { id: "fac-001", name: "Harare Central Hospital", role: "Clinician" },
-  { id: "fac-002", name: "Parirenyatwa Hospital", role: "Locum" },
-];
+/** Facility affiliation shape from the BFF. */
+interface Affiliation {
+  id: string;
+  attributes: { facilityName: string; role: string };
+}
 
-/** Mock professional notices. */
-const MOCK_NOTICES = [
-  {
-    id: "n-1",
-    icon: Bell,
-    text: "Licence renewal due in 30 days",
-    severity: "warning" as const,
-  },
-  {
-    id: "n-2",
-    icon: ClipboardList,
-    text: "CPD submission pending",
-    severity: "info" as const,
-  },
-];
+/** Professional notice shape from the BFF. */
+interface ProfessionalNotice {
+  id: string;
+  attributes: { text: string; severity: "warning" | "info"; category: string };
+}
+
+function useAffiliations() {
+  return useQuery<ApiResponse<Affiliation[]>>({
+    queryKey: ["affiliations"],
+    queryFn: () => apiClient.get("/internal/v1/identity/affiliations"),
+  });
+}
+
+function useProviderNotices() {
+  return useQuery<ApiResponse<ProfessionalNotice[]>>({
+    queryKey: ["provider-notices"],
+    queryFn: () => apiClient.get("/internal/v1/identity/notices"),
+  });
+}
 
 export default function ProfessionalProfilePage() {
   const { user } = useAuthStore();
   const { data, isLoading } = useLinkedIds();
 
+  const { data: affData, isLoading: affLoading } = useAffiliations();
+  const { data: noticeData, isLoading: noticeLoading } = useProviderNotices();
+  const affiliations = (affData?.data ?? []).map((a) => ({ id: a.id, name: a.attributes.facilityName, role: a.attributes.role }));
+  const notices = (noticeData?.data ?? []).map((n) => ({ id: n.id, text: n.attributes.text, severity: n.attributes.severity, category: n.attributes.category }));
   const linkedAttrs = data?.data?.attributes;
   const providerId = linkedAttrs?.providerId ?? user?.providerId;
   const providerStatus = linkedAttrs?.providerStatus ?? "Active";
@@ -186,7 +196,16 @@ export default function ProfessionalProfilePage() {
             </h2>
           </div>
           <div className="divide-y divide-gray-100">
-            {MOCK_AFFILIATIONS.map((aff) => (
+            {affLoading ? (
+              <div className="px-6 py-6 animate-pulse space-y-3">
+                <div className="h-4 bg-gray-100 rounded w-3/4" />
+                <div className="h-4 bg-gray-100 rounded w-1/2" />
+              </div>
+            ) : affiliations.length === 0 ? (
+              <div className="px-6 py-6 text-sm text-gray-400 text-center">
+                No facility affiliations yet. Your employer&apos;s HR department can link you to a facility.
+              </div>
+            ) : affiliations.map((aff) => (
               <div
                 key={aff.id}
                 className="px-6 py-3 flex items-center justify-between"
@@ -226,8 +245,17 @@ export default function ProfessionalProfilePage() {
             </h2>
           </div>
           <div className="divide-y divide-gray-100">
-            {MOCK_NOTICES.map((notice) => {
-              const NoticeIcon = notice.icon;
+            {noticeLoading ? (
+              <div className="px-6 py-6 animate-pulse space-y-3">
+                <div className="h-4 bg-gray-100 rounded w-3/4" />
+                <div className="h-4 bg-gray-100 rounded w-1/2" />
+              </div>
+            ) : notices.length === 0 ? (
+              <div className="px-6 py-6 text-sm text-gray-400 text-center">
+                No professional notices at this time.
+              </div>
+            ) : notices.map((notice) => {
+              const NoticeIcon = notice.severity === "warning" ? Bell : ClipboardList;
               return (
                 <div
                   key={notice.id}
@@ -238,7 +266,7 @@ export default function ProfessionalProfilePage() {
                       "h-8 w-8 rounded-lg flex items-center justify-center",
                       notice.severity === "warning"
                         ? "bg-amber-50"
-                        : "bg-blue-50",
+                        : "bg-impilo-50",
                     ].join(" ")}
                   >
                     <NoticeIcon
@@ -246,7 +274,7 @@ export default function ProfessionalProfilePage() {
                         "h-4 w-4",
                         notice.severity === "warning"
                           ? "text-amber-600"
-                          : "text-blue-600",
+                          : "text-impilo-600",
                       ].join(" ")}
                     />
                   </div>
