@@ -46,16 +46,19 @@ export default function ShiftPage() {
   return (
     <AppLayout>
       <PageShell
-        title="Start Shift"
-        subtitle="Review your session details and begin your shift"
+        title="Confirm Session"
+        subtitle="You are about to start a work session"
       >
         <div className="max-w-lg mx-auto">
           <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
             <h3 className="font-medium text-gray-900">Session Details</h3>
+            <p className="text-sm text-gray-500">
+              Review your work session details below and confirm to begin.
+            </p>
 
             <div className="space-y-3">
               <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                <Building2 className="w-5 h-5 text-gray-400 shrink-0" />
+                <Building2 className="w-5 h-5 text-impilo-500 shrink-0" />
                 <div>
                   <p className="text-xs text-gray-500">Facility</p>
                   <p className="text-sm font-medium text-gray-900">
@@ -65,7 +68,7 @@ export default function ShiftPage() {
               </div>
 
               <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                <LayoutGrid className="w-5 h-5 text-gray-400 shrink-0" />
+                <LayoutGrid className="w-5 h-5 text-impilo-500 shrink-0" />
                 <div>
                   <p className="text-xs text-gray-500">Workspace</p>
                   <p className="text-sm font-medium text-gray-900">
@@ -75,9 +78,9 @@ export default function ShiftPage() {
               </div>
 
               <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                <Clock className="w-5 h-5 text-gray-400 shrink-0" />
+                <Clock className="w-5 h-5 text-impilo-500 shrink-0" />
                 <div>
-                  <p className="text-xs text-gray-500">Shift Start</p>
+                  <p className="text-xs text-gray-500">Session Start</p>
                   <p className="text-sm font-medium text-gray-900">
                     {new Date().toLocaleString()}
                   </p>
@@ -102,12 +105,12 @@ export default function ShiftPage() {
               {startShiftMutation.isPending ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Starting Shift...
+                  Starting Session...
                 </>
               ) : (
                 <>
                   <Clock className="w-4 h-4" />
-                  Start Shift
+                  Start Session
                 </>
               )}
             </button>

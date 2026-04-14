@@ -39,8 +39,8 @@ export default function FacilityPage() {
   return (
     <AppLayout>
       <PageShell
-        title="Select Facility"
-        subtitle="Complete the first step in experience entry by choosing the facility that anchors your current work context."
+        title="Start Work Session"
+        subtitle="Where are you working today?"
       >
         <WorkplaceSelectionHub
           facilities={facilities}

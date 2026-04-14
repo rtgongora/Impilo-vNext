@@ -66,7 +66,7 @@ export default function WorkspacePage() {
     <AppLayout>
       <PageShell
         title="Select Workspace"
-        subtitle={facility ? `Choose the workspace for this session at ${facility.name}.` : "Choose your workspace for this session."}
+        subtitle={facility ? `Choose your department or service area at ${facility.name}.` : "Choose your department or service area."}
       >
         <div className="space-y-6">
           <section className="overflow-hidden rounded-[28px] border border-slate-200 bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.16),_transparent_32%),linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] shadow-sm">
