@@ -101,9 +101,9 @@ static_resources:
                         - match: { prefix: "/v1/orders" }
                           route: { cluster: oros_service }
 
-                        # ── v1.1 internal/external enforcement paths ──
+                        # ── v1.1 internal paths → Experience BFF ──
                         - match: { prefix: "/internal/v1/" }
-                          route: { cluster: tshepo_service }
+                          route: { cluster: experience_bff }
                         - match: { prefix: "/external/v1/" }
                           route: { cluster: tshepo_service }
 
@@ -135,60 +135,16 @@ static_resources:
 
                         # ── Experience BFF ──
                         - match: { prefix: "/bff/" }
-                          route: { cluster: experience_bff }
+                          route: { cluster: experience_bff, prefix_rewrite: "/" }
+                        # (duplicate removed — /internal/v1/ above covers this)
 
                         # ── Health check passthrough ──
                         - match: { prefix: "/actuator/health" }
                           route: { cluster: tshepo_service }
 
                 http_filters:
-                  # ── OPA ext_authz (Health OS v1.2 header enforcement) ──
-                  - name: envoy.filters.http.ext_authz
-                    typed_config:
-                      "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthz
-                      transport_api_version: V3
-                      http_service:
-                        server_uri:
-                          uri: http://opa:8181
-                          cluster: opa_sidecar
-                          timeout: 0.5s
-                        path_prefix: "/v1/data/impilo/gateway/headers"
-                        authorization_request:
-                          allowed_headers:
-                            patterns:
-                              # ── Mandatory v1.2 ──
-                              - exact: "x-tenant-id"
-                              - exact: "x-pod-id"
-                              - exact: "x-request-id"
-                              - exact: "x-correlation-id"
-                              - exact: "idempotency-key"
-                              - exact: "authorization"
-                              # ── Actor identity (Health OS §5–§6) ──
-                              - exact: "x-actor-id"
-                              - exact: "x-actor-type"
-                              - exact: "x-provider-id"
-                              # ── Operational context (Health OS §7) ──
-                              - exact: "x-facility-id"
-                              - exact: "x-department-id"
-                              - exact: "x-ward-id"
-                              - exact: "x-workspace-id"
-                              - exact: "x-programme-id"
-                              - exact: "x-shift-id"
-                              # ── Governance (Health OS §11) ──
-                              - exact: "x-purpose-of-use"
-                              - exact: "x-assurance-level"
-                              - exact: "x-subject-id"
-                              - exact: "x-access-mode"
-                              - exact: "x-workflow-state"
-                              - exact: "x-device-fingerprint"
-                              - exact: "x-client-timeout-ms"
-                        authorization_response:
-                          allowed_upstream_headers:
-                            patterns:
-                              - exact: "x-policy-decision"
-                              - exact: "x-policy-version"
-                              - exact: "x-decision-reason"
-                      failure_mode_allow: false
+                  # OPA ext_authz disabled in dev — BFF V11HeaderFilter enforces
+                  # the same v1.1 headers. Re-enable with gRPC ext_authz in production.
                   - name: envoy.filters.http.router
                     typed_config:
                       "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
@@ -336,4 +292,5 @@ static_resources:
           - lb_endpoints:
               - endpoint:
                   address:
-                    socket_address: { address: experience-bff, port_value: 8160 }
+                    # host.docker.internal resolves to the Docker host where the BFF runs
+                    socket_address: { address: host.docker.internal, port_value: 8160 }
