@@ -19,6 +19,7 @@ import {
   ChevronRight, Video, ShoppingCart, Database, AlertTriangle,
   Briefcase, Heart, Globe, Siren, Award, User, ShieldCheck, UserCog,
   MessageSquare, Radio, TestTube2, Scan, Phone, Send, ThumbsUp, MessageCircle, Image,
+  Wifi, Wrench, Layers,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
@@ -428,7 +429,13 @@ export default function HomePage() {
                   {greeting}, {user?.displayName ?? "User"}
                 </h2>
                 <p className="text-sm text-gray-500 mt-1">
-                  {user?.roles?.length ? user.roles.join(" · ") : "Welcome to Impilo vNext"}
+                  {user?.actorType === "CITIZEN"
+                    ? "Personal Health Account"
+                    : user?.actorType === "PROVIDER"
+                      ? "Healthcare Professional"
+                      : user?.actorType === "OPERATOR"
+                        ? "System Administrator"
+                        : "Welcome to Impilo"}
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -877,30 +884,57 @@ export default function HomePage() {
                 )}
               </div>
 
-              {/* License-Based Work Modes */}
+              {/* Work Modes — all ways a professional can work */}
               {isClinical && (
                 <div className="bg-white rounded-lg border border-gray-200 p-6">
                   <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2 mb-4">
-                    <Globe className="w-5 h-5 text-teal-600" /> Independent & Field Work
+                    <Globe className="w-5 h-5 text-teal-600" /> Other Ways to Work
                   </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <p className="text-sm text-gray-500 mb-4">
+                    Not at a facility? Choose how you are working today.
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {/* Telemedicine & Virtual */}
+                    <button onClick={() => enterFacilityFreeMode("clinical", "/telemedicine")}
+                      className="text-left bg-green-50 rounded-lg border border-green-200 p-4 hover:border-green-400 transition-all group">
+                      <Video className="w-5 h-5 text-green-600 mb-2" />
+                      <p className="text-sm font-medium text-gray-900 group-hover:text-green-700">Telemedicine & Virtual</p>
+                      <p className="text-xs text-gray-500 mt-0.5">Video/voice consultations, remote patient monitoring, e-prescribing</p>
+                    </button>
+                    {/* Independent Practice */}
                     <button onClick={() => enterIndependentMode("independent_practice")}
                       className="text-left bg-amber-50 rounded-lg border border-amber-200 p-4 hover:border-amber-400 transition-all group">
                       <Briefcase className="w-5 h-5 text-amber-600 mb-2" />
                       <p className="text-sm font-medium text-gray-900 group-hover:text-amber-700">Independent Practice</p>
-                      <p className="text-xs text-gray-500 mt-0.5">Work under your own license without facility context</p>
+                      <p className="text-xs text-gray-500 mt-0.5">Work under your own licence without facility context</p>
                     </button>
+                    {/* Field Work */}
+                    <button onClick={() => enterIndependentMode("community_outreach")}
+                      className="text-left bg-teal-50 rounded-lg border border-teal-200 p-4 hover:border-teal-400 transition-all group">
+                      <MapPin className="w-5 h-5 text-teal-600 mb-2" />
+                      <p className="text-sm font-medium text-gray-900 group-hover:text-teal-700">Field & Community Work</p>
+                      <p className="text-xs text-gray-500 mt-0.5">Community outreach, home visits, mobile clinics, school health</p>
+                    </button>
+                    {/* Emergency Response */}
                     <button onClick={() => enterIndependentMode("emergency_response")}
                       className="text-left bg-red-50 rounded-lg border border-red-200 p-4 hover:border-red-400 transition-all group">
                       <Siren className="w-5 h-5 text-red-600 mb-2" />
                       <p className="text-sm font-medium text-gray-900 group-hover:text-red-700">Emergency Response</p>
-                      <p className="text-xs text-gray-500 mt-0.5">Emergency work under license authority</p>
+                      <p className="text-xs text-gray-500 mt-0.5">Disaster, outbreak, mass casualty — elevated trust, break-glass access</p>
                     </button>
-                    <button onClick={() => enterIndependentMode("community_outreach")}
-                      className="text-left bg-teal-50 rounded-lg border border-teal-200 p-4 hover:border-teal-400 transition-all group">
-                      <Heart className="w-5 h-5 text-teal-600 mb-2" />
-                      <p className="text-sm font-medium text-gray-900 group-hover:text-teal-700">Community Outreach</p>
-                      <p className="text-xs text-gray-500 mt-0.5">Community health program work</p>
+                    {/* Above Site */}
+                    <button onClick={() => enterFacilityFreeMode("admin", "/reports")}
+                      className="text-left bg-indigo-50 rounded-lg border border-indigo-200 p-4 hover:border-indigo-400 transition-all group">
+                      <Layers className="w-5 h-5 text-indigo-600 mb-2" />
+                      <p className="text-sm font-medium text-gray-900 group-hover:text-indigo-700">Above-Site & Programme</p>
+                      <p className="text-xs text-gray-500 mt-0.5">District/provincial oversight, programme management, surveillance, reporting</p>
+                    </button>
+                    {/* Maintenance & Configuration */}
+                    <button onClick={() => enterFacilityFreeMode("admin", "/admin")}
+                      className="text-left bg-gray-50 rounded-lg border border-gray-200 p-4 hover:border-gray-400 transition-all group">
+                      <Wrench className="w-5 h-5 text-gray-600 mb-2" />
+                      <p className="text-sm font-medium text-gray-900 group-hover:text-gray-700">Maintenance & Configuration</p>
+                      <p className="text-xs text-gray-500 mt-0.5">System setup, master data, user management, integrations, troubleshooting</p>
                     </button>
                   </div>
                 </div>
