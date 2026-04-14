@@ -185,10 +185,81 @@ function getMidwifeFlow(): WizardPhase[] {
   ];
 }
 
+function getTherapistFlow(title: string): WizardPhase[] {
+  return [
+    { title: "1. Assess", steps: [
+      { label: "Summary", segment: "summary", icon: LayoutDashboard, hint: "Patient overview" },
+      { label: "Conditions", segment: "conditions", icon: Stethoscope, hint: "Active problems" },
+      { label: "Encounter", segment: "encounter", icon: ClipboardList, hint: `${title} assessment` },
+    ]},
+    { title: "2. Treat", steps: [
+      { label: "Care Plans", segment: "care-plans", icon: Target, hint: "Goals & interventions" },
+      { label: "Orders", segment: "orders", icon: ClipboardList, hint: "Requests" },
+      { label: "Medications", segment: "medications", icon: Pill, hint: "Current meds" },
+    ]},
+    { title: "3. Close", steps: [
+      { label: "Notes", segment: "notes", icon: StickyNote, hint: "Session notes" },
+      { label: "Referrals", segment: "consults", icon: ArrowRightLeft, hint: "Refer if needed" },
+      { label: "Discharge", segment: "discharge", icon: DoorOpen, hint: "Discharge / follow-up" },
+    ]},
+  ];
+}
+
+function getDiagnosticFlow(title: string): WizardPhase[] {
+  return [
+    { title: "1. Verify", steps: [
+      { label: "Orders", segment: "orders", icon: ClipboardList, hint: "Incoming requests" },
+      { label: "Allergies", segment: "allergies", icon: ShieldAlert, hint: "Safety check" },
+      { label: "Encounter", segment: "encounter", icon: ClipboardList, hint: `${title} checklist` },
+    ]},
+    { title: "2. Process", steps: [
+      { label: "Results", segment: "results", icon: FlaskConical, hint: "Enter results" },
+      { label: "Documents", segment: "documents", icon: FileText, hint: "Attach reports" },
+    ]},
+    { title: "3. Close", steps: [
+      { label: "Notes", segment: "notes", icon: StickyNote, hint: "Tech notes" },
+    ]},
+  ];
+}
+
+function getCommunityFlow(): WizardPhase[] {
+  return [
+    { title: "1. Visit", steps: [
+      { label: "Encounter", segment: "encounter", icon: ClipboardList, hint: "Visit checklist" },
+      { label: "Vitals", segment: "vitals", icon: HeartPulse, hint: "Basic obs" },
+      { label: "Immunizations", segment: "immunizations", icon: Syringe, hint: "Vaccine status" },
+    ]},
+    { title: "2. Act", steps: [
+      { label: "Medications", segment: "medications", icon: Pill, hint: "Drugs given" },
+      { label: "Referrals", segment: "consults", icon: ArrowRightLeft, hint: "Facility referral" },
+    ]},
+    { title: "3. Record", steps: [
+      { label: "Notes", segment: "notes", icon: StickyNote, hint: "Visit notes" },
+    ]},
+  ];
+}
+
 function getFlowForRole(roles: string[]): WizardPhase[] {
   if (roles.includes("PHARMACIST")) return getPharmacistFlow();
   if (roles.includes("NURSE")) return getNurseFlow();
   if (roles.includes("MIDWIFE")) return getMidwifeFlow();
+  if (roles.includes("PHYSIOTHERAPIST")) return getTherapistFlow("Physio");
+  if (roles.includes("OCCUPATIONAL_THERAPIST")) return getTherapistFlow("OT");
+  if (roles.includes("PSYCHOLOGIST") || roles.includes("COUNSELLOR")) return getTherapistFlow("Psychology");
+  if (roles.includes("NUTRITIONIST") || roles.includes("DIETITIAN")) return getTherapistFlow("Nutrition");
+  if (roles.includes("SOCIAL_WORKER")) return getTherapistFlow("Social work");
+  if (roles.includes("SPEECH_THERAPIST") || roles.includes("SLT")) return getTherapistFlow("SLT");
+  if (roles.includes("RESPIRATORY_THERAPIST")) return getTherapistFlow("Respiratory");
+  if (roles.includes("AUDIOLOGIST")) return getTherapistFlow("Audiology");
+  if (roles.includes("PODIATRIST")) return getTherapistFlow("Podiatry");
+  if (roles.includes("RADIOGRAPHER") || roles.includes("IMAGING_TECH")) return getDiagnosticFlow("Imaging");
+  if (roles.includes("LAB_TECHNOLOGIST") || roles.includes("LAB_TECH")) return getDiagnosticFlow("Lab");
+  if (roles.includes("OPTOMETRIST")) return getTherapistFlow("Optometry");
+  if (roles.includes("DENTIST") || roles.includes("ORAL_HYGIENIST")) return getTherapistFlow("Dental");
+  if (roles.includes("EMT") || roles.includes("PARAMEDIC")) return getDoctorFlow();
+  if (roles.includes("RADIOTHERAPIST") || roles.includes("RADIATION_THERAPIST")) return getDiagnosticFlow("Radiotherapy");
+  if (roles.includes("CHW") || roles.includes("COMMUNITY_HEALTH_WORKER")) return getCommunityFlow();
+  if (roles.includes("EHO") || roles.includes("ENVIRONMENTAL_HEALTH")) return getCommunityFlow();
   return getDoctorFlow();
 }
 

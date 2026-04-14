@@ -46,10 +46,29 @@ export default function EncounterPage() {
   const { isClinical, isPrescriber, isDispenser } = useRoleGroup();
   const facility = useFacilityStore((state) => state.facility);
 
-  // Determine role-specific form variant
-  const activeRole = isDispenser ? "PHARMACIST"
-    : user?.roles?.includes("NURSE") ? "NURSE"
-    : user?.roles?.includes("MIDWIFE") ? "MIDWIFE"
+  // Determine role-specific form variant — check most specific role first
+  const roles = user?.roles ?? [];
+  const activeRole =
+    roles.includes("PHYSIOTHERAPIST") ? "PHYSIOTHERAPIST"
+    : roles.includes("OCCUPATIONAL_THERAPIST") ? "OCCUPATIONAL_THERAPIST"
+    : roles.includes("PSYCHOLOGIST") || roles.includes("COUNSELLOR") ? "PSYCHOLOGIST"
+    : roles.includes("NUTRITIONIST") || roles.includes("DIETITIAN") ? "NUTRITIONIST"
+    : roles.includes("SOCIAL_WORKER") ? "SOCIAL_WORKER"
+    : roles.includes("SPEECH_THERAPIST") || roles.includes("SLT") ? "SPEECH_THERAPIST"
+    : roles.includes("RADIOGRAPHER") || roles.includes("IMAGING_TECH") ? "RADIOGRAPHER"
+    : roles.includes("LAB_TECHNOLOGIST") || roles.includes("LAB_TECH") ? "LAB_TECHNOLOGIST"
+    : roles.includes("OPTOMETRIST") ? "OPTOMETRIST"
+    : roles.includes("DENTIST") || roles.includes("ORAL_HYGIENIST") ? "DENTIST"
+    : roles.includes("AUDIOLOGIST") ? "AUDIOLOGIST"
+    : roles.includes("PODIATRIST") ? "PODIATRIST"
+    : roles.includes("RESPIRATORY_THERAPIST") ? "RESPIRATORY_THERAPIST"
+    : roles.includes("RADIOTHERAPIST") || roles.includes("RADIATION_THERAPIST") ? "RADIOTHERAPIST"
+    : roles.includes("EMT") || roles.includes("PARAMEDIC") ? "EMT"
+    : roles.includes("CHW") || roles.includes("COMMUNITY_HEALTH_WORKER") ? "CHW"
+    : roles.includes("EHO") || roles.includes("ENVIRONMENTAL_HEALTH") ? "EHO"
+    : roles.includes("MIDWIFE") ? "MIDWIFE"
+    : isDispenser ? "PHARMACIST"
+    : roles.includes("NURSE") ? "NURSE"
     : "CLINICIAN";
 
   const { data: encounterData, isLoading: isLoadingEncounter } = useEncounter(encounterId);

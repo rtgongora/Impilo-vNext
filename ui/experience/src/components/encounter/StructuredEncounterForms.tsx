@@ -413,12 +413,82 @@ export function MidwifeEncounterForm({ onDataChange }: { onDataChange: (data: Re
 
 // ── Role selector ─────────────────────────────────────────────────
 
+// ── Allied & Specialist Forms (imported from sub-module) ─────────
+import {
+  PhysiotherapyForm, OccupationalTherapyForm, PsychologyForm,
+  NutritionForm, SocialWorkerForm, SpeechTherapyForm,
+  RadiographerForm, LabTechForm, OptometristForm, DentalForm,
+  EMTForm, CHWForm, EHOForm, RespiratoryTherapistForm,
+  AudiologistForm, PodiatristForm, RadiotherapyForm,
+} from "./forms/AlliedHealthForms";
+
+const ROLE_FORM_MAP: Record<string, React.ComponentType> = {
+  CLINICIAN: () => <DoctorEncounterForm onDataChange={() => {}} />,
+  DOCTOR: () => <DoctorEncounterForm onDataChange={() => {}} />,
+  NURSE: () => <NurseEncounterForm onDataChange={() => {}} />,
+  PHARMACIST: () => <PharmacistEncounterForm onDataChange={() => {}} />,
+  MIDWIFE: () => <MidwifeEncounterForm onDataChange={() => {}} />,
+  ANC: () => <MidwifeEncounterForm onDataChange={() => {}} />,
+  PHYSIOTHERAPIST: PhysiotherapyForm,
+  OCCUPATIONAL_THERAPIST: OccupationalTherapyForm,
+  PSYCHOLOGIST: PsychologyForm,
+  COUNSELLOR: PsychologyForm,
+  NUTRITIONIST: NutritionForm,
+  DIETITIAN: NutritionForm,
+  SOCIAL_WORKER: SocialWorkerForm,
+  SPEECH_THERAPIST: SpeechTherapyForm,
+  SLT: SpeechTherapyForm,
+  RADIOGRAPHER: RadiographerForm,
+  IMAGING_TECH: RadiographerForm,
+  LAB_TECHNOLOGIST: LabTechForm,
+  LAB_TECH: LabTechForm,
+  OPTOMETRIST: OptometristForm,
+  DENTIST: DentalForm,
+  ORAL_HYGIENIST: DentalForm,
+  EMT: EMTForm,
+  PARAMEDIC: EMTForm,
+  CHW: CHWForm,
+  COMMUNITY_HEALTH_WORKER: CHWForm,
+  EHO: EHOForm,
+  ENVIRONMENTAL_HEALTH: EHOForm,
+  RESPIRATORY_THERAPIST: RespiratoryTherapistForm,
+  AUDIOLOGIST: AudiologistForm,
+  PODIATRIST: PodiatristForm,
+  RADIOTHERAPIST: RadiotherapyForm,
+  RADIATION_THERAPIST: RadiotherapyForm,
+};
+
 export function RoleSpecificEncounterForm({ role, onDataChange }: {
   role: string;
   onDataChange: (data: Record<string, unknown>) => void;
 }) {
-  if (role === "PHARMACIST") return <PharmacistEncounterForm onDataChange={onDataChange} />;
-  if (role === "NURSE") return <NurseEncounterForm onDataChange={onDataChange} />;
-  if (role === "MIDWIFE" || role === "ANC") return <MidwifeEncounterForm onDataChange={onDataChange} />;
+  const FormComponent = ROLE_FORM_MAP[role];
+  if (FormComponent) return <FormComponent />;
+  // Default to doctor form for unrecognised roles
   return <DoctorEncounterForm onDataChange={onDataChange} />;
 }
+
+/** All supported clinical roles for UI display */
+export const CLINICAL_ROLE_LABELS: Record<string, string> = {
+  CLINICIAN: "Clinician / Doctor",
+  NURSE: "Nurse",
+  PHARMACIST: "Pharmacist",
+  MIDWIFE: "Midwife",
+  PHYSIOTHERAPIST: "Physiotherapist",
+  OCCUPATIONAL_THERAPIST: "Occupational Therapist",
+  PSYCHOLOGIST: "Psychologist / Counsellor",
+  NUTRITIONIST: "Nutritionist / Dietitian",
+  SOCIAL_WORKER: "Social Worker",
+  SPEECH_THERAPIST: "Speech & Language Therapist",
+  RADIOGRAPHER: "Radiographer / Imaging Tech",
+  LAB_TECHNOLOGIST: "Lab Technologist",
+  OPTOMETRIST: "Optometrist",
+  DENTIST: "Dentist / Oral Hygienist",
+  EMT: "EMT / Paramedic",
+  CHW: "Community Health Worker",
+  EHO: "Environmental Health Officer",
+  RESPIRATORY_THERAPIST: "Respiratory Therapist",
+  AUDIOLOGIST: "Audiologist",
+  PODIATRIST: "Podiatrist",
+  RADIOTHERAPIST: "Radiotherapist / Radiation Therapist",
+};
