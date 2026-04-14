@@ -10,6 +10,8 @@
 
 import { type ReactNode } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, Home } from "lucide-react";
 import { ExperienceSidebar } from "./navigation/ExperienceSidebar";
 import { OperationalContextStrip } from "./experience/OperationalContextStrip";
 import { ProactiveAssistant } from "./intelligent/ProactiveAssistant";
@@ -19,13 +21,29 @@ import { useExperienceEntry } from "@/providers/ExperienceEntryProvider";
 export function AppLayout({ children }: { children: ReactNode }) {
   const { user, isAuthenticated } = useAuthStore();
   const { facility, workspace, shiftActive } = useExperienceEntry();
+  const router = useRouter();
 
   return (
     <div className="flex h-screen bg-gray-50">
       <ExperienceSidebar />
       <div className="flex-1 flex flex-col min-w-0">
         <header className="h-14 border-b bg-white px-6 flex items-center justify-between shrink-0">
-          <div className="ml-12 flex items-center gap-3 text-sm text-gray-500 md:ml-0">
+          <div className="ml-12 flex items-center gap-2 text-sm text-gray-500 md:ml-0">
+            <button
+              onClick={() => router.back()}
+              className="p-1.5 rounded-md hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+              title="Go back"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </button>
+            <Link
+              href="/home"
+              className="p-1.5 rounded-md hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+              title="Home"
+            >
+              <Home className="w-4 h-4" />
+            </Link>
+            <div className="w-px h-5 bg-gray-200 mx-1" />
             {facility && (
               <Link
                 href="/facility"
