@@ -10,6 +10,7 @@ import {
   ArrowUpRight,
   Ambulance,
   Bell,
+  BookMarked,
   BriefcaseBusiness,
   Building2,
   Calendar,
@@ -103,6 +104,7 @@ const ZONES: SidebarZone[] = [
     label: "Work",
     items: [
       { href: "/clinical", label: "Clinical Hub", icon: Stethoscope, requiredRoles: CLINICAL_ROLES },
+      { href: "/clinical-tools/references", label: "Clinical References", icon: BookMarked, requiredRoles: CLINICAL_ROLES },
       { href: "/clinical/emergency", label: "ED / Casualty", icon: Ambulance, requiredRoles: QUEUE_ROLES },
       { href: "/queue", label: "Queue", icon: Users, requiredRoles: QUEUE_ROLES },
       { href: "/scheduling", label: "Scheduling", icon: Calendar, requiredRoles: CLINICAL_ROLES },

@@ -37,6 +37,10 @@ export default function ClinicalToolsPage() {
     <AppLayout>
       <PageShell title="Clinical Tools" subtitle="Voice dictation, offline sync, documents, and clinical decision support">
         <div className="mb-4 flex flex-wrap gap-3 text-sm">
+          <Link href="/clinical-tools/references" className="text-blue-700 hover:underline font-medium">
+            Clinical References
+          </Link>
+          <span className="text-gray-300">·</span>
           <Link href="/clinical-tools/rules" className="text-pink-700 hover:underline font-medium">
             Rules engine
           </Link>
