@@ -10,6 +10,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useRoleGroup } from "@/hooks/useRoleGroup";
+import { RoleSpecificEncounterForm } from "@/components/encounter/StructuredEncounterForms";
 import {
   Loader2,
   Activity,
@@ -42,8 +43,14 @@ export default function EncounterPage() {
   const router = useRouter();
   const { patientId, encounterId } = params;
   const { user } = useAuthStore();
-  const { isClinical, isPrescriber } = useRoleGroup();
+  const { isClinical, isPrescriber, isDispenser } = useRoleGroup();
   const facility = useFacilityStore((state) => state.facility);
+
+  // Determine role-specific form variant
+  const activeRole = isDispenser ? "PHARMACIST"
+    : user?.roles?.includes("NURSE") ? "NURSE"
+    : user?.roles?.includes("MIDWIFE") ? "MIDWIFE"
+    : "CLINICIAN";
 
   const { data: encounterData, isLoading: isLoadingEncounter } = useEncounter(encounterId);
   const { data: referralsData } = useReferrals(patientId);
@@ -739,31 +746,14 @@ export default function EncounterPage() {
                       <option value="CONSULTATION">Consultation</option>
                     </select>
                   </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Subjective</label>
-                    <textarea value={subjective} onChange={(e) => setSubjective(e.target.value)} disabled={!isActive} rows={2} placeholder="Patient's reported symptoms..."
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 resize-none disabled:bg-gray-50" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Objective</label>
-                    <textarea value={objective} onChange={(e) => setObjective(e.target.value)} disabled={!isActive} rows={2} placeholder="Clinical findings..."
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 resize-none disabled:bg-gray-50" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Assessment</label>
-                    <textarea value={assessment} onChange={(e) => setAssessment(e.target.value)} disabled={!isActive} rows={2} placeholder="Clinical assessment..."
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 resize-none disabled:bg-gray-50" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Plan</label>
-                    <textarea value={plan} onChange={(e) => setPlan(e.target.value)} disabled={!isActive} rows={2} placeholder="Treatment plan..."
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 resize-none disabled:bg-gray-50" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Additional Notes</label>
-                    <textarea value={noteBody} onChange={(e) => setNoteBody(e.target.value)} disabled={!isActive} rows={3} placeholder="Any additional notes..."
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 resize-none disabled:bg-gray-50" />
-                  </div>
+                  {/* Role-specific structured form */}
+                  <RoleSpecificEncounterForm
+                    role={activeRole}
+                    onDataChange={(data) => {
+                      // Merge structured data into note body for persistence
+                      setNoteBody(JSON.stringify(data));
+                    }}
+                  />
                 </div>
                 {noteError && <p className="mt-2 text-xs text-red-600">{noteError}</p>}
                 {isActive && (
