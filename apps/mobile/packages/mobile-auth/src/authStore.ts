@@ -300,10 +300,9 @@ export const authStore = createStore<AuthState>((set, get) => ({
 
 function resolveActorType(userInfo: UserInfo): ActorType {
   const roles = userInfo.realm_access?.roles ?? [];
-  if (roles.includes("provider") || roles.includes("clinician")) return "PROVIDER";
-  if (roles.includes("operator") || roles.includes("admin")) return "OPERATOR";
-  if (roles.includes("citizen") || roles.includes("patient")) return "CITIZEN";
-  return "SYSTEM";
+  if (roles.includes("CLINICIAN") || roles.includes("NURSE") || roles.includes("PHARMACIST")) return "PROVIDER";
+  if (roles.includes("SYSTEM_ADMIN") || roles.includes("FACILITY_ADMIN") || roles.includes("FINANCE")) return "OPERATOR";
+  return "CITIZEN";
 }
 
 async function persistSessionData(session: SessionContext): Promise<void> {

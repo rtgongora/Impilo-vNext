@@ -591,8 +591,7 @@ public class AuthSessionController {
 
     private String determineActorType(List<String> roles) {
         if (roles.contains("SYSTEM_ADMIN") || roles.contains("SUPPORT_AGENT") || roles.contains("FINANCE")) return "OPERATOR";
-        if (roles.contains("CITIZEN")) return "CITIZEN";
         if (roles.contains("CLINICIAN") || roles.contains("NURSE") || roles.contains("FACILITY_ADMIN")) return "PROVIDER";
-        return "PROVIDER";
+        return "CITIZEN";
     }
 }

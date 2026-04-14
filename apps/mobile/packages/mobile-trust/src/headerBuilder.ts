@@ -73,6 +73,9 @@ export function buildTrustHeaders(
   if (session.deviceFingerprint) {
     headers[TRUST_HEADERS.DEVICE_FINGERPRINT] = session.deviceFingerprint;
   }
+  if (session.assuranceLevel) {
+    headers["x-assurance-level"] = session.assuranceLevel;
+  }
   if (options?.clientTimeoutMs) {
     headers[TRUST_HEADERS.CLIENT_TIMEOUT_MS] = String(options.clientTimeoutMs);
   }

@@ -71,6 +71,8 @@ export function AuthGuardProvider({ children }: { children: ReactNode }) {
   const { hasWorkspace } = useWorkspaceStore();
   const { hasShift } = useShiftStore();
 
+  const user = useAuthStore((s) => s.user);
+
   useEffect(() => {
     // Consent gate: redirect authenticated users who haven't consented,
     // unless they're on a consent-exempt path.
@@ -80,6 +82,21 @@ export function AuthGuardProvider({ children }: { children: ReactNode }) {
       !CONSENT_EXEMPT_PREFIXES.some((p) => pathname.startsWith(p))
     ) {
       router.replace(`/consent?returnTo=${encodeURIComponent(pathname)}`);
+      return;
+    }
+
+    // Assurance tier gate: restrict UNVERIFIED users from health pages
+    const HEALTH_RESTRICTED_PREFIXES = [
+      "/ehr", "/clinical", "/pharmacy", "/lab", "/queue",
+      "/scheduling", "/shift", "/telemedicine",
+    ];
+
+    if (
+      isAuthenticated &&
+      user?.assuranceLevel === "UNVERIFIED" &&
+      HEALTH_RESTRICTED_PREFIXES.some((p) => pathname.startsWith(p))
+    ) {
+      router.replace("/auth/register/assurance");
       return;
     }
 
@@ -131,7 +148,7 @@ export function AuthGuardProvider({ children }: { children: ReactNode }) {
         if (requiredRole && !matchesRequiredRole(hasRole, requiredRole)) { router.replace("/home"); return; }
         break;
     }
-  }, [pathname, isAuthenticated, hasConsented, hasFacility, hasWorkspace, hasShift, hasRole, hasActiveProvider, router]);
+  }, [pathname, isAuthenticated, hasConsented, hasFacility, hasWorkspace, hasShift, hasRole, hasActiveProvider, user, router]);
 
   return <>{children}</>;
 }

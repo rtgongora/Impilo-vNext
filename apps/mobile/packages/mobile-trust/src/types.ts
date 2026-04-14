@@ -56,6 +56,8 @@ export interface SessionContext {
   shiftId?: string;
   purposeOfUse: PurposeOfUse;
   deviceFingerprint?: string;
+  /** Identity assurance level for this session. */
+  assuranceLevel?: "UNVERIFIED" | "TEMPORARY" | "VERIFIED";
 }
 
 export interface AuthzVerdict {

@@ -9,6 +9,8 @@
 export interface OperationalAuthPrincipal {
   roles: string[];
   actorType: "PROVIDER" | "OPERATOR" | "CITIZEN" | "SYSTEM" | "CAREGIVER";
+  /** True when the user has explicitly activated their Provider ID for this session. */
+  providerActivated?: boolean;
 }
 
 /** Primary post-login operational modes shown in the experience shell. */
@@ -187,12 +189,12 @@ export function buildAvailableOperationalModes(user: OperationalAuthPrincipal | 
 
   const hasClinicalFacilityRole = roles.some((r) => CLINICAL_FACILITY_ROLES.has(r));
 
-  if (user.actorType === "PROVIDER" || hasClinicalFacilityRole) {
+  // Only show professional zones if provider is ACTIVATED
+  if (user.providerActivated) {
     allowed.add("my_professional");
-  }
-
-  if (hasClinicalFacilityRole) {
-    allowed.add("facility_work");
+    if (hasClinicalFacilityRole) {
+      allowed.add("facility_work");
+    }
   }
 
   if (principalHasRegistryAdminPlane(user)) {
