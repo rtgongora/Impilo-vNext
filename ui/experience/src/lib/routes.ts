@@ -274,8 +274,9 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/settings/display", zone: "settings", layout: "app", sidebar: "settings", guard: "auth", pageTitle: "Display Settings", navLabel: "Display", navZone: "professional" },
   { path: "/settings/integrations", zone: "settings", layout: "app", sidebar: "settings", guard: "auth", pageTitle: "Integrations", navLabel: "Integrations", navZone: "professional" },
   { path: "/settings/privacy", zone: "settings", layout: "app", sidebar: "settings", guard: "auth", pageTitle: "Privacy & Data", navLabel: "Privacy & Data", navZone: "professional" },
-  { path: "/telemedicine", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Telemedicine Hub", navLabel: "Telemedicine", navZone: "work" },
-  { path: "/telemedicine/session/[sessionId]", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Telemedicine Session", navLabel: "Session", navZone: "work" },
+  { path: "/telemedicine", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Telemedicine Hub", navLabel: "Telemedicine", navZone: "work" },
+  { path: "/telemedicine/new", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "New Teleconsultation", navLabel: "New Teleconsult", navZone: "work" },
+  { path: "/telemedicine/session/[sessionId]", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Teleconsult Session", navLabel: "Session", navZone: "work" },
 
   // ── Zone: Provider Activation (Health OS §6) ───────────────────────
   { path: "/provider/activate", zone: "auth", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Activate Provider Role", navLabel: "Provider Activation" },
