@@ -23,6 +23,7 @@ import {
   IdCard,
 } from "lucide-react";
 import { AuthLayout } from "@/components/AuthLayout";
+import { NompiloHint } from "@/components/intelligent/NompiloHint";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useConsentStore } from "@/hooks/useConsentStore";
 import { useAcceptPolicyConsent } from "@/hooks/queries/usePolicyConsent";
@@ -333,6 +334,11 @@ export default function RegisterPage() {
           </p>
         </div>
       </div>
+
+      <NompiloHint
+        message="Everyone starts as a person on Impilo. You don't need to choose a role — professional access is activated later if you qualify."
+        suggestions={["If you have a Health ID, enter it to link your records", "No Health ID? You can request one after signing up"]}
+      />
     </AuthLayout>
   );
 }

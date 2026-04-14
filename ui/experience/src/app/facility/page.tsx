@@ -7,6 +7,7 @@
 
 import { BarChart3, Receipt, Shield } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
+import { NompiloHint } from "@/components/intelligent/NompiloHint";
 import { WorkplaceSelectionHub } from "@/components/home/WorkplaceSelectionHub";
 import { PageShell } from "@/components/PageShell";
 import { useAuthStore } from "@/hooks/useAuthStore";
@@ -75,6 +76,10 @@ export default function FacilityPage() {
           ]}
         />
       </PageShell>
+
+      <NompiloHint
+        message="Select the facility where you'll be working today. You can only see facilities your employer's HR has linked to your profile."
+      />
     </AppLayout>
   );
 }

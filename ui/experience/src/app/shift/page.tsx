@@ -8,6 +8,7 @@
 import { useRouter } from "next/navigation";
 import { Clock, Building2, LayoutGrid, Loader2, AlertCircle } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
+import { NompiloHint } from "@/components/intelligent/NompiloHint";
 import { PageShell } from "@/components/PageShell";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useWorkspaceStore } from "@/hooks/useWorkspaceStore";
@@ -117,6 +118,10 @@ export default function ShiftPage() {
           </div>
         </div>
       </PageShell>
+
+      <NompiloHint
+        message="Review your session details before starting. Once you start, your actions will be audited under this facility, workspace, and role."
+      />
     </AppLayout>
   );
 }

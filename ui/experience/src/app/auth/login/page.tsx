@@ -29,6 +29,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { AuthLayout } from "@/components/AuthLayout";
+import { NompiloHint } from "@/components/intelligent/NompiloHint";
 import { useLogin } from "@/hooks/queries/useAuth";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useConsentStore, CURRENT_CONSENT_VERSION } from "@/hooks/useConsentStore";
@@ -279,6 +280,11 @@ export default function LoginPage() {
         </Link>
         .
       </p>
+
+      <NompiloHint
+        message="Welcome to Impilo. Sign in with your email, phone number, or Health ID. If you don't have an account yet, you can create one below."
+        suggestions={["Forgot your password? Use the link below the form", "New here? Tap 'Create an account' to get started"]}
+      />
     </AuthLayout>
   );
 }

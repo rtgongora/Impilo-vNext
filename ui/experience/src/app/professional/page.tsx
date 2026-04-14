@@ -33,6 +33,7 @@ import {
   User,
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
+import { NompiloHint } from "@/components/intelligent/NompiloHint";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useLinkedIds } from "@/hooks/queries/useLinkedIds";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
@@ -369,6 +370,10 @@ export default function ProfessionalProfilePage() {
           </div>
         </section>
       </div>
+
+      <NompiloHint
+        message="This is your professional control panel. Review your registration, licences, and facility affiliations here. To start seeing patients, tap 'Start Work Session'."
+      />
     </AppLayout>
   );
 }

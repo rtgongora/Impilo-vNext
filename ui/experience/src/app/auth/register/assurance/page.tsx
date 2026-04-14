@@ -16,6 +16,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Shield, Clock, CheckCircle2, ChevronRight, Loader2, Calendar, IdCard } from "lucide-react";
 import { AuthLayout } from "@/components/AuthLayout";
+import { NompiloHint } from "@/components/intelligent/NompiloHint";
 import { useAuthStore } from "@/hooks/useAuthStore";
 
 type AssuranceTier = "BASIC" | "TEMPORARY" | "FULL";
@@ -218,6 +219,11 @@ export default function AssuranceChoicePage() {
           </>
         )}
       </button>
+
+      <NompiloHint
+        message="Choose how much access you need right now. You can always upgrade later by visiting a health facility or completing verification online."
+        suggestions={["Basic access is fine for wellness, communities, and marketplace", "Temporary access lets you start using health services immediately"]}
+      />
     </AuthLayout>
   );
 }

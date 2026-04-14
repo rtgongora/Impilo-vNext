@@ -19,6 +19,7 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, Loader2, Stethoscope } from "lucide-react";
 import { ImpiloLogo } from "@/components/brand/ImpiloLogo";
+import { NompiloHint } from "@/components/intelligent/NompiloHint";
 import { useLinkedIds } from "@/hooks/queries/useLinkedIds";
 import { useAuthStore } from "@/hooks/useAuthStore";
 
@@ -172,6 +173,10 @@ export default function ResolvingPage() {
           </p>
         )}
       </div>
+
+      <NompiloHint
+        message="I'm checking if you have any linked professional identities, staff roles, or facility affiliations. This only takes a moment."
+      />
     </div>
   );
 }

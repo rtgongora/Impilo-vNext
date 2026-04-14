@@ -12,3 +12,4 @@ export { ProactiveAssistant } from "./ProactiveAssistant";
 export { WorkspaceContextSwitcher } from "./WorkspaceContextSwitcher";
 export { UnifiedSearch, useSearchShortcut } from "./UnifiedSearch";
 export { SmartEncounterFlow } from "./SmartEncounterFlow";
+export { NompiloHint } from "./NompiloHint";
