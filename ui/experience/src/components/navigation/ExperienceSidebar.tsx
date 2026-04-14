@@ -75,6 +75,21 @@ const CLINICAL_ROLES = ["CLINICIAN", "NURSE", "FACILITY_ADMIN", "SYSTEM_ADMIN", 
 const QUEUE_ROLES = ["CLINICIAN", "NURSE", "SUPPORT_AGENT", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"];
 const DISPENSER_ROLES = ["PHARMACIST", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"];
 
+const CITIZEN_ONLY_ROLES = ["CITIZEN"];
+
+/**
+ * Returns true if the user has ONLY citizen/consumer roles — no professional roles.
+ * These users see only the "My Life" zone with no facility/workspace/shift flow.
+ */
+function isCitizenOnly(hasRole: (r: string) => boolean): boolean {
+  const professionalRoles = [
+    "CLINICIAN", "NURSE", "PHARMACIST", "SUPPORT_AGENT",
+    "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER", "FINANCE",
+    "HIE_ADMIN", "PUBLIC_HEALTH_OFFICER", "ENV_HEALTH", "CHW",
+  ];
+  return !professionalRoles.some((r) => hasRole(r));
+}
+
 const ZONES: SidebarZone[] = [
   {
     id: "work",
@@ -289,13 +304,21 @@ export function ExperienceSidebar() {
     sessionStorage.setItem("exp:sidebar-collapsed", String(next));
   }
 
-  const orderedZones = [...ZONES].sort((left, right) => {
-    const activeZone = currentRoute?.navZone;
-    if (!activeZone) return 0;
-    if (left.id === activeZone) return -1;
-    if (right.id === activeZone) return 1;
-    return 0;
-  });
+  const citizenOnly = isCitizenOnly(hasRole);
+
+  const orderedZones = [...ZONES]
+    .filter((zone) => {
+      // Citizens only see the "life" zone — no work, no professional
+      if (citizenOnly && zone.id !== "life") return false;
+      return true;
+    })
+    .sort((left, right) => {
+      const activeZone = currentRoute?.navZone;
+      if (!activeZone) return 0;
+      if (left.id === activeZone) return -1;
+      if (right.id === activeZone) return 1;
+      return 0;
+    });
 
   const visibleZones = orderedZones.map((zone) => ({
     ...zone,
@@ -371,7 +394,7 @@ export function ExperienceSidebar() {
           </div>
         </div>
 
-        {!collapsed && (
+        {!collapsed && !citizenOnly && (
           <div className="border-b border-white/10 px-4 py-4">
             <div className="rounded-3xl border border-white/10 bg-white/5 p-4">
               <div className="flex items-center justify-between">
@@ -417,8 +440,8 @@ export function ExperienceSidebar() {
           </div>
         )}
 
-        {/* Health OS §4: Role context switching — switch roles in-session */}
-        {!collapsed && user && (
+        {/* Health OS §4: Role context switching — switch roles in-session (hidden for citizen-only) */}
+        {!collapsed && user && !citizenOnly && (
           <div className="border-b border-white/10 px-4 py-3">
             <p className="text-[10px] uppercase tracking-widest text-slate-500 mb-2">Active Role</p>
             <div className="flex items-center gap-2 mb-2">
@@ -449,7 +472,7 @@ export function ExperienceSidebar() {
           </div>
         )}
 
-        {!collapsed && (
+        {!collapsed && !citizenOnly && (
           <div className="border-b border-white/10 px-4 py-4">
             <div className={`rounded-3xl border p-4 ${spotlight.tone}`}>
               <p className="text-[11px] uppercase tracking-[0.24em] text-slate-400">
@@ -528,12 +551,29 @@ export function ExperienceSidebar() {
             <div className="space-y-2 rounded-3xl border border-white/10 bg-white/5 p-4">
               <div>
                 <p className="text-[11px] uppercase tracking-[0.24em] text-slate-500">
-                  Active Context
+                  {citizenOnly ? "My Account" : "Active Context"}
                 </p>
                 <p className="mt-2 truncate text-sm font-medium text-white">
                   {user?.displayName ?? user?.email ?? "Impilo user"}
                 </p>
               </div>
+              {citizenOnly ? (
+                <div className="flex gap-2 pt-1">
+                  <Link
+                    href="/home/profile"
+                    className="inline-flex rounded-xl border border-white/10 px-3 py-2 text-xs text-slate-200 transition hover:bg-white/10"
+                  >
+                    Profile
+                  </Link>
+                  <Link
+                    href="/settings"
+                    className="inline-flex rounded-xl border border-white/10 px-3 py-2 text-xs text-slate-200 transition hover:bg-white/10"
+                  >
+                    Settings
+                  </Link>
+                </div>
+              ) : (
+              <>
               <div className="space-y-1 text-xs text-slate-300">
                 <p className="truncate">
                   Facility: {facility?.name ?? "Not selected"}
@@ -559,9 +599,12 @@ export function ExperienceSidebar() {
                   Workspace
                 </Link>
               </div>
+              </>
+              )}
             </div>
           ) : (
             <div className="flex flex-col items-center gap-3">
+              {!citizenOnly && (
               <Link href="/facility" title={facility?.name ?? "Facility"} className="rounded-2xl border border-white/10 p-3 text-slate-200 transition hover:bg-white/10">
                 <Building2 className="h-4 w-4" />
               </Link>
@@ -571,6 +614,7 @@ export function ExperienceSidebar() {
               <div className={shiftActive ? "rounded-full bg-emerald-400 p-1" : "rounded-full bg-amber-400 p-1"}>
                 <Activity className="h-3 w-3 text-slate-950" />
               </div>
+              )}
             </div>
           )}
         </div>

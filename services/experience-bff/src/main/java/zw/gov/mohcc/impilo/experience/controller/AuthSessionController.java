@@ -157,8 +157,34 @@ public class AuthSessionController {
                 + "This mode is intended for development only.", email);
         String fallbackToken = UUID.randomUUID().toString();
         String fallbackUserId = UUID.nameUUIDFromBytes(email.getBytes()).toString();
+
+        // Derive role from the request body (set during registration) or default by email domain
+        String requestedRole = body.getOrDefault("role", "").toString();
+        List<String> fallbackRoles;
+        String fallbackActorType;
+
+        if ("CITIZEN".equalsIgnoreCase(requestedRole) || email.contains("@example.com") || email.contains("citizen")) {
+            fallbackRoles = List.of("CITIZEN");
+            fallbackActorType = "CITIZEN";
+        } else if ("NURSE".equalsIgnoreCase(requestedRole)) {
+            fallbackRoles = List.of("NURSE");
+            fallbackActorType = "PROVIDER";
+        } else if ("PHARMACIST".equalsIgnoreCase(requestedRole)) {
+            fallbackRoles = List.of("PHARMACIST");
+            fallbackActorType = "PROVIDER";
+        } else if ("SYSTEM_ADMIN".equalsIgnoreCase(requestedRole) || email.contains("admin")) {
+            fallbackRoles = List.of("SYSTEM_ADMIN", "FACILITY_ADMIN");
+            fallbackActorType = "OPERATOR";
+        } else if ("FINANCE".equalsIgnoreCase(requestedRole) || email.contains("finance")) {
+            fallbackRoles = List.of("FINANCE");
+            fallbackActorType = "OPERATOR";
+        } else {
+            fallbackRoles = List.of("CLINICIAN");
+            fallbackActorType = "PROVIDER";
+        }
+
         return buildLoginResponse(fallbackToken, null, 28800, fallbackUserId, email, email,
-                List.of("CLINICIAN"), "PROVIDER", requestId, correlationId);
+                fallbackRoles, fallbackActorType, requestId, correlationId);
     }
 
     @PostMapping("/logout")
