@@ -12,7 +12,7 @@ class ConsentControllerTest {
 
     @Test
     void acceptConsent_returnsAcceptedPolicies() {
-        PolicyConsentController controller = new PolicyConsentController();
+        PolicyConsentController controller = new PolicyConsentController(null);
         ResponseEntity<Map<String, Object>> response =
                 controller.acceptConsent("t1", "pod-1", "req-1", "corr-1",
                         "actor-1", null, null,
@@ -29,7 +29,7 @@ class ConsentControllerTest {
 
     @Test
     void getConsentStatus_requiresActorId() {
-        PolicyConsentController controller = new PolicyConsentController();
+        PolicyConsentController controller = new PolicyConsentController(null);
         ResponseEntity<Map<String, Object>> response =
                 controller.getConsentStatus("t1", "req-2", "corr-2", null, null);
         assertEquals(400, response.getStatusCode().value());
@@ -37,7 +37,7 @@ class ConsentControllerTest {
 
     @Test
     void revokeConsent_returnsRevocationRecord() {
-        PolicyConsentController controller = new PolicyConsentController();
+        PolicyConsentController controller = new PolicyConsentController(null);
         ResponseEntity<Map<String, Object>> response =
                 controller.revokeConsent("t1", "pod-1", "req-3", "corr-3",
                         "actor-1",
