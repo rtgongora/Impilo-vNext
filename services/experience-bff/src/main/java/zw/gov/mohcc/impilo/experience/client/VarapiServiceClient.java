@@ -112,6 +112,37 @@ public class VarapiServiceClient {
         }
     }
 
+    /**
+     * List facility affiliations for a provider identified by Health ID.
+     */
+    public JsonNode getProviderAffiliations(String healthId) {
+        String url = baseUrl + "/v1/internal/providers/by-health-id/" + healthId + "/affiliations";
+        log.info("VARAPI: Listing affiliations for healthId={}", healthId);
+        try {
+            ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+            return extractData(response);
+        } catch (Exception e) {
+            log.debug("VARAPI: No affiliations for healthId={}: {}", healthId, e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * List professional notices (licence renewals, CPD, compliance alerts)
+     * for a provider identified by Health ID.
+     */
+    public JsonNode getProviderNotices(String healthId) {
+        String url = baseUrl + "/v1/internal/providers/by-health-id/" + healthId + "/notices";
+        log.info("VARAPI: Listing notices for healthId={}", healthId);
+        try {
+            ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+            return extractData(response);
+        } catch (Exception e) {
+            log.debug("VARAPI: No notices for healthId={}: {}", healthId, e.getMessage());
+            return null;
+        }
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) {
             return response.getBody().get("data");

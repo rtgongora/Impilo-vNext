@@ -589,6 +589,70 @@ public class AuthSessionController {
         return ResponseEntity.ok(response);
     }
 
+    // ── Facility Affiliations ──────────────────────────────────────────
+
+    /**
+     * List facility affiliations for the authenticated person.
+     * Queries VARAPI for provider-facility linkages.
+     */
+    @GetMapping("/identity/affiliations")
+    public ResponseEntity<Map<String, Object>> getAffiliations(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(CompanionHeaders.ACTOR_ID) String actorId) {
+        try {
+            JsonNode affiliations = varapiClient.getProviderAffiliations(actorId);
+            return ResponseEntity.ok(Map.of(
+                    "data", affiliations != null ? affiliations : new Object[0],
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            log.debug("No affiliations found for actor {}: {}", actorId, e.getMessage());
+            return ResponseEntity.ok(Map.of(
+                    "data", new Object[0],
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
+    }
+
+    // ── Professional Notices ─────────────────────────────────────────
+
+    /**
+     * List professional notices (licence renewals, CPD, compliance) for the person.
+     */
+    @GetMapping("/identity/notices")
+    public ResponseEntity<Map<String, Object>> getNotices(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(CompanionHeaders.ACTOR_ID) String actorId) {
+        try {
+            JsonNode notices = varapiClient.getProviderNotices(actorId);
+            return ResponseEntity.ok(Map.of(
+                    "data", notices != null ? notices : new Object[0],
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            log.debug("No notices for actor {}: {}", actorId, e.getMessage());
+            return ResponseEntity.ok(Map.of(
+                    "data", new Object[0],
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
+    }
+
+    // ── CDS Alerts Count ─────────────────────────────────────────────
+
+    /**
+     * Return the count of active Clinical Decision Support alerts.
+     * Proxies to the rules-service or clinical-knowledge-platform.
+     */
+    @GetMapping("/cds/alerts/count")
+    public ResponseEntity<Map<String, Object>> getCdsAlertCount(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        // TODO: proxy to rules-service when CDS alert aggregation is implemented.
+        // For now return 0 (no false positives) rather than a hardcoded number.
+        return ResponseEntity.ok(Map.of(
+                "data", Map.of("count", 0),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+
     private String determineActorType(List<String> roles) {
         if (roles.contains("SYSTEM_ADMIN") || roles.contains("SUPPORT_AGENT") || roles.contains("FINANCE")) return "OPERATOR";
         if (roles.contains("CLINICIAN") || roles.contains("NURSE") || roles.contains("FACILITY_ADMIN")) return "PROVIDER";

@@ -98,6 +98,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       } else {
         sessionStorage.removeItem("exp:provider_id");
       }
+      // Health OS §5: persist assurance level for header injection (api-client.ts reads exp:assurance_level)
+      if (user.assuranceLevel) {
+        sessionStorage.setItem("exp:assurance_level", user.assuranceLevel);
+      }
     }
     if (typeof document !== "undefined") {
       document.cookie = "exp_has_session=1;path=/;SameSite=Lax";

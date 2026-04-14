@@ -51,7 +51,11 @@ public class PolicyConsentController {
     private static final Set<String> VALID_CHANNELS = Set.of(
             "WEB", "APP", "SMS", "USSD", "KIOSK", "VOICE", "PAPER", "OPERATOR");
 
-    public PolicyConsentController() {}
+    private final zw.gov.mohcc.impilo.experience.client.TshepoConsentServiceClient consentClient;
+
+    public PolicyConsentController(zw.gov.mohcc.impilo.experience.client.TshepoConsentServiceClient consentClient) {
+        this.consentClient = consentClient;
+    }
 
     // ── Accept consent (primary — all channels) ─────────────────────
 
@@ -373,6 +377,50 @@ public class PolicyConsentController {
                 "attributes", Map.of("policyType", policyType, "revokedAt", now.toString())));
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * List the authenticated person's own consent directives.
+     * Alias for /history scoped to the current actor.
+     */
+    @GetMapping("/mine")
+    public ResponseEntity<Map<String, Object>> myConsents(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId) {
+        try {
+            JsonNode consents = consentClient.listConsents(actorId != null ? actorId : "", null, 0, 100);
+            return ResponseEntity.ok(Map.of(
+                    "data", consents != null ? consents : new Object[0],
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            return ResponseEntity.ok(Map.of(
+                    "data", new Object[0],
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
+    }
+
+    /**
+     * Create a new consent directive for the authenticated person.
+     */
+    @PostMapping("/create")
+    public ResponseEntity<Map<String, Object>> createConsent(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @RequestBody Map<String, Object> body) {
+        try {
+            if (actorId != null && !actorId.isBlank()) {
+                body.putIfAbsent("subjectId", actorId);
+            }
+            JsonNode result = consentClient.createConsent(body);
+            return ResponseEntity.status(201).body(Map.of(
+                    "data", result != null ? result : Map.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            return ResponseEntity.status(400).body(Map.of(
+                    "error", Map.of("code", "CONSENT_FAILED", "message", e.getMessage())));
+        }
     }
 
     private String normalizeChannel(String channel) {
