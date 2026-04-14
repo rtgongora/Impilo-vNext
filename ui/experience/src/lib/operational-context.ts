@@ -189,8 +189,9 @@ export function buildAvailableOperationalModes(user: OperationalAuthPrincipal | 
 
   const hasClinicalFacilityRole = roles.some((r) => CLINICAL_FACILITY_ROLES.has(r));
 
-  // Only show professional zones if provider is ACTIVATED
-  if (user.providerActivated) {
+  // Professional modes are available based on roles; activation controls the
+  // default suggestion and sidebar visibility, not the mode's existence.
+  if (hasClinicalFacilityRole || user.actorType === "PROVIDER") {
     allowed.add("my_professional");
     if (hasClinicalFacilityRole) {
       allowed.add("facility_work");

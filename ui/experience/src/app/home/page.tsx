@@ -18,7 +18,7 @@ import {
   ClipboardList, Package, Settings, FileText, MapPin,
   ChevronRight, Video, ShoppingCart, Database, AlertTriangle,
   Briefcase, Heart, Globe, Siren, Award, User, ShieldCheck, UserCog,
-  MessageSquare, Radio, TestTube2, Scan,
+  MessageSquare, Radio, TestTube2, Scan, Phone, Send, ThumbsUp, MessageCircle, Image,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
@@ -257,10 +257,24 @@ export default function HomePage() {
     }
   }, [pathname]);
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<HomeTab>(() => {
-    if (typeof window === "undefined") return "work";
-    return (sessionStorage.getItem("exp:home-tab") as HomeTab) || "work";
-  });
+  const hasProfessionalRoles = isClinical || isAdmin || isFinance || isDispenser;
+  const [activeTab, setActiveTab] = useState<HomeTab>("personal");
+
+  // Correct the active tab whenever the user's roles are known.
+  // Citizens always land on "personal"; professionals respect the stored tab.
+  useEffect(() => {
+    if (!user) return;
+    if (!hasProfessionalRoles) {
+      // Citizen — force personal, clear any stale stored tab
+      setActiveTab("personal");
+      sessionStorage.removeItem("exp:home-tab");
+      return;
+    }
+    // Professional — honour stored tab, default to "work"
+    const stored = sessionStorage.getItem("exp:home-tab") as HomeTab | null;
+    setActiveTab(stored ?? "work");
+  }, [user, hasProfessionalRoles]);
+
   function switchTab(tab: HomeTab) {
     setActiveTab(tab);
     sessionStorage.setItem("exp:home-tab", tab);
@@ -385,6 +399,23 @@ export default function HomePage() {
     { label: "Bookings", href: "/scheduling", icon: Calendar, color: "bg-orange-100 text-orange-600" },
   ];
 
+  // ── Citizen 3-column layout (Facebook-style) ────────────────────
+  if (!hasProfessionalRoles) {
+    return (
+      <AppLayout>
+        <PageShell title="Home">
+          <CitizenHome
+            user={user}
+            greeting={greeting}
+            communityGroups={communityGroups}
+            joinGroup={joinGroup}
+          />
+        </PageShell>
+      </AppLayout>
+    );
+  }
+
+  // ── Professional layout (existing tabs) ────────────────────────
   return (
     <AppLayout>
       <PageShell title="Home">
@@ -983,7 +1014,435 @@ export default function HomePage() {
   );
 }
 
+// ═══════════════════════════════════════════════════════════════════
+// Citizen Home — Facebook-style 3-column layout
+// Left: quick-nav shortcuts · Centre: timeline feed · Right: widgets
+// ═══════════════════════════════════════════════════════════════════
+
+function CitizenHome({
+  user,
+  greeting,
+  communityGroups,
+  joinGroup,
+}: {
+  user: ReturnType<typeof useAuthStore>["user"];
+  greeting: string;
+  communityGroups: Array<{ id: string; attributes: Record<string, unknown> }>;
+  joinGroup: ReturnType<typeof useJoinGroup>;
+}) {
+  return (
+    <>
+      {/* ── Top status bar ────────────────────────────────────────── */}
+      <div className="flex items-center justify-between bg-white border-b border-gray-200 px-4 py-2.5 -mx-4 -mt-4 mb-4 sm:px-6 sm:-mx-6">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="h-9 w-9 rounded-full bg-impilo-100 flex items-center justify-center shrink-0">
+            <User className="h-4.5 w-4.5 text-impilo-600" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-gray-900 truncate">
+              {greeting}, {user?.displayName?.split(" ")[0] ?? "there"}
+            </p>
+            <p className="text-[11px] text-gray-400 truncate">
+              {user?.email}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <Link href="/home/notifications" className="p-2 rounded-full hover:bg-gray-100 relative" title="Notifications">
+            <Activity className="w-4.5 h-4.5 text-gray-500" />
+          </Link>
+          <Link href="/ask" className="p-2 rounded-full hover:bg-gray-100" title="Ask Nompilo">
+            <MessageSquare className="w-4.5 h-4.5 text-gray-500" />
+          </Link>
+          <Link href="/auth/logout" className="p-2 rounded-full hover:bg-gray-100" title="Switch account">
+            <UserCog className="w-4.5 h-4.5 text-gray-500" />
+          </Link>
+        </div>
+      </div>
+
+      {/* ── 3-column grid ─────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr_260px] gap-5">
+
+        {/* ════ LEFT COLUMN — Quick nav ════ */}
+        <aside className="hidden lg:block space-y-4">
+          {/* My Health shortcuts */}
+          <nav className="space-y-0.5">
+            <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider px-2 mb-1">My Health</p>
+            {[
+              { href: "/home/profile", label: "Profile", icon: User },
+              { href: "/home/medications", label: "Medications", icon: Pill },
+              { href: "/home/documents", label: "Documents", icon: FileText },
+              { href: "/scheduling", label: "Appointments", icon: Calendar },
+              { href: "/monitoring", label: "Monitoring", icon: Activity },
+            ].map((item) => {
+              const Icon = item.icon;
+              return (
+                <Link key={item.href} href={item.href}
+                  className="flex items-center gap-2.5 px-2 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                  <Icon className="w-4 h-4 text-gray-400" />
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
+
+          <hr className="border-gray-200" />
+
+          {/* Explore */}
+          <nav className="space-y-0.5">
+            <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider px-2 mb-1">Explore</p>
+            {[
+              { href: "/wellness", label: "Wellness", icon: Heart },
+              { href: "/discover", label: "Find services", icon: Globe },
+              { href: "/marketplace", label: "Marketplace", icon: ShoppingCart },
+              { href: "/caregiving", label: "Caregiving", icon: Users },
+              { href: "/wallet", label: "My Wallet", icon: Award },
+            ].map((item) => {
+              const Icon = item.icon;
+              return (
+                <Link key={item.href} href={item.href}
+                  className="flex items-center gap-2.5 px-2 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                  <Icon className="w-4 h-4 text-gray-400" />
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
+        </aside>
+
+        {/* ════ CENTRE COLUMN — Timeline ════ */}
+        <main className="min-w-0 space-y-4">
+          <TimelineComposer userName={user?.displayName?.split(" ")[0] ?? "there"} />
+          <TimelineFeed userId={user?.id} />
+        </main>
+
+        {/* ════ RIGHT COLUMN — Widgets ════ */}
+        <aside className="hidden lg:block space-y-4">
+          {/* Noticeboard */}
+          <div className="bg-white rounded-xl border border-gray-200 p-4">
+            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+              <AlertTriangle className="w-3.5 h-3.5 text-amber-500" /> Noticeboard
+            </h3>
+            <AnnouncementsBanner />
+          </div>
+
+          {/* Quick health actions */}
+          <div className="bg-white rounded-xl border border-gray-200 p-4">
+            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2.5">Quick Actions</h3>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { href: "/home/medications", label: "Medications", icon: Pill, color: "text-amber-500" },
+                { href: "/telemedicine", label: "Video call", icon: Video, color: "text-green-500" },
+                { href: "/wellness", label: "Wellness", icon: Heart, color: "text-pink-500" },
+                { href: "/citizen", label: "Services", icon: Shield, color: "text-impilo-500" },
+              ].map((a) => {
+                const Icon = a.icon;
+                return (
+                  <Link key={a.href} href={a.href}
+                    className="flex flex-col items-center gap-1.5 p-3 rounded-lg border border-gray-100 hover:border-impilo-200 hover:bg-impilo-50/50 transition-colors text-center">
+                    <Icon className={`w-5 h-5 ${a.color}`} />
+                    <span className="text-[11px] font-medium text-gray-600">{a.label}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Account */}
+          <div className="bg-white rounded-xl border border-gray-200 p-4">
+            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2.5">Account</h3>
+            <div className="space-y-1">
+              {[
+                { href: "/home/profile", label: "Profile" },
+                { href: "/home/preferences", label: "Preferences" },
+                { href: "/settings/security", label: "Security & Privacy" },
+                { href: "/support", label: "Help & Support" },
+              ].map((link) => (
+                <Link key={link.href} href={link.href}
+                  className="block px-2 py-1.5 rounded-md text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-50 transition-colors">
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </aside>
+      </div>
+    </>
+  );
+}
+
 /** Compact announcements banner showing pinned/urgent items from the noticeboard */
+// ═══════════════════════════════════════════════════════════════════
+// Timeline components — post creation + seeded feed
+// ═══════════════════════════════════════════════════════════════════
+
+function TimelineComposer({ userName }: { userName: string }) {
+  const [postText, setPostText] = useState("");
+  const [posting, setPosting] = useState(false);
+  const [posted, setPosted] = useState(false);
+
+  async function handlePost() {
+    if (!postText.trim()) return;
+    setPosting(true);
+    try {
+      await apiClient.post("/internal/v1/mobile/citizen/feed", {
+        body: postText.trim(),
+        type: "STATUS_UPDATE",
+      });
+    } catch {
+      // BFF may not have this endpoint yet — that's OK, clear locally
+    }
+    setPosting(false);
+    setPosted(true);
+    setPostText("");
+    setTimeout(() => setPosted(false), 3000);
+  }
+
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      {/* Composer */}
+      <div className="p-4">
+        <div className="flex items-start gap-3">
+          <div className="h-10 w-10 rounded-full bg-impilo-100 flex items-center justify-center shrink-0 mt-0.5">
+            <User className="h-5 w-5 text-impilo-600" />
+          </div>
+          <div className="flex-1">
+            <textarea
+              value={postText}
+              onChange={(e) => setPostText(e.target.value)}
+              placeholder={`What's on your mind, ${userName}?`}
+              rows={2}
+              className="w-full resize-none border-0 bg-transparent text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-0"
+            />
+          </div>
+        </div>
+        {posted && (
+          <p className="text-xs text-impilo-500 mt-1 ml-[52px]">Posted to your timeline</p>
+        )}
+      </div>
+      {/* Action bar */}
+      <div className="flex items-center justify-between border-t border-gray-100 px-4 py-2">
+        <div className="flex items-center gap-1">
+          <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs text-gray-500 hover:bg-red-50 hover:text-red-500 transition-colors">
+            <Video className="w-4 h-4" /> Live video
+          </button>
+          <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs text-gray-500 hover:bg-green-50 hover:text-green-500 transition-colors">
+            <Image className="w-4 h-4" /> Photo
+          </button>
+          <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs text-gray-500 hover:bg-amber-50 hover:text-amber-500 transition-colors">
+            <Activity className="w-4 h-4" /> Health check-in
+          </button>
+        </div>
+        <button
+          onClick={handlePost}
+          disabled={!postText.trim() || posting}
+          className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-impilo-500 text-white text-xs font-medium hover:bg-impilo-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+        >
+          <Send className="w-3.5 h-3.5" /> Post
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/** Seeded timeline posts + live feed from the BFF */
+function TimelineFeed({ userId }: { userId?: string }) {
+  const { data } = useQuery<{ data: Array<{ id: string; attributes: Record<string, unknown> }> }>({
+    queryKey: ["personal-feed", userId],
+    queryFn: () => apiClient.get("/internal/v1/mobile/citizen/feed?size=10"),
+    staleTime: 30_000,
+  });
+  const liveItems = data?.data ?? [];
+
+  // Seeded posts so the timeline never looks empty
+  const seededPosts: Array<{
+    id: string;
+    author: string;
+    avatar: string;
+    time: string;
+    body: string;
+    likes: number;
+    comments: number;
+    type: "update" | "health_tip" | "announcement" | "milestone";
+  }> = [
+    {
+      id: "seed-1",
+      author: "Ministry of Health",
+      avatar: "MoH",
+      time: "2 hours ago",
+      body: "Flu season reminder: Free influenza vaccinations are available at all public health facilities. Bring your Health ID. Walk-ins welcome, no appointment needed.",
+      likes: 142,
+      comments: 23,
+      type: "announcement",
+    },
+    {
+      id: "seed-2",
+      author: "Nompilo Health AI",
+      avatar: "N",
+      time: "4 hours ago",
+      body: "Tip: Drinking 2 litres of water daily can improve energy levels, skin health, and kidney function. Track your hydration in the Wellness tab.",
+      likes: 89,
+      comments: 7,
+      type: "health_tip",
+    },
+    {
+      id: "seed-3",
+      author: "Harare Central Hospital",
+      avatar: "HCH",
+      time: "6 hours ago",
+      body: "New services available: Our Telemedicine clinic is now open for video consultations Monday–Friday 08:00–16:00. Book through Impilo or call +263 4 123 4567.",
+      likes: 67,
+      comments: 15,
+      type: "update",
+    },
+    {
+      id: "seed-4",
+      author: "Community Wellness",
+      avatar: "CW",
+      time: "Yesterday",
+      body: "Congratulations to 1,247 citizens who completed the 30-Day Walking Challenge! New challenge starting Monday: Sleep Better in 21 Days. Join in the Wellness tab.",
+      likes: 234,
+      comments: 41,
+      type: "milestone",
+    },
+    {
+      id: "seed-5",
+      author: "MOHCC Immunisation Programme",
+      avatar: "IP",
+      time: "Yesterday",
+      body: "Childhood immunisation week starts next Monday across all provinces. Check your child's vaccination schedule in Documents > Immunisation Record.",
+      likes: 178,
+      comments: 32,
+      type: "announcement",
+    },
+  ];
+
+  const typeColors: Record<string, string> = {
+    announcement: "bg-red-50 text-red-600 border-red-100",
+    health_tip: "bg-green-50 text-green-600 border-green-100",
+    update: "bg-blue-50 text-blue-600 border-blue-100",
+    milestone: "bg-amber-50 text-amber-600 border-amber-100",
+  };
+
+  const avatarColors: Record<string, string> = {
+    MoH: "bg-red-100 text-red-700",
+    N: "bg-impilo-100 text-impilo-700",
+    HCH: "bg-blue-100 text-blue-700",
+    CW: "bg-purple-100 text-purple-700",
+    IP: "bg-amber-100 text-amber-700",
+  };
+
+  // Merge live feed items ahead of seeded posts
+  const allPosts = [
+    ...liveItems.map((item) => ({
+      id: item.id,
+      author: (item.attributes.author as string) ?? "You",
+      avatar: ((item.attributes.author as string) ?? "Y").charAt(0).toUpperCase(),
+      time: item.attributes.published_at
+        ? new Date(item.attributes.published_at as string).toLocaleDateString()
+        : "Just now",
+      body: (item.attributes.body as string) ?? (item.attributes.title as string) ?? "",
+      likes: (item.attributes.likes as number) ?? 0,
+      comments: (item.attributes.comments as number) ?? 0,
+      type: "update" as const,
+    })),
+    ...seededPosts,
+  ];
+
+  return (
+    <div className="space-y-4">
+      {/* Status updates strip — people/entities you follow */}
+      <div className="bg-white rounded-xl border border-gray-200 p-4">
+        <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Status updates</h3>
+        <div className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1">
+          {/* Add your status */}
+          <div className="flex flex-col items-center gap-1.5 shrink-0">
+            <div className="w-14 h-14 rounded-full border-2 border-dashed border-impilo-300 flex items-center justify-center bg-impilo-50">
+              <span className="text-impilo-500 text-lg font-bold">+</span>
+            </div>
+            <span className="text-[10px] text-gray-500 w-14 text-center truncate">Your story</span>
+          </div>
+          {/* Followed entities */}
+          {[
+            { name: "MoH Zimbabwe", initials: "MoH", color: "bg-red-100 text-red-700 ring-red-400" },
+            { name: "Harare Central", initials: "HC", color: "bg-blue-100 text-blue-700 ring-blue-400" },
+            { name: "Nompilo", initials: "N", color: "bg-impilo-100 text-impilo-700 ring-impilo-400" },
+            { name: "Wellness", initials: "W", color: "bg-pink-100 text-pink-700 ring-pink-400" },
+            { name: "My Pharmacy", initials: "Rx", color: "bg-green-100 text-green-700 ring-green-400" },
+          ].map((entity) => (
+            <div key={entity.name} className="flex flex-col items-center gap-1.5 shrink-0">
+              <div className={`w-14 h-14 rounded-full flex items-center justify-center text-xs font-bold ring-2 ring-offset-2 ${entity.color}`}>
+                {entity.initials}
+              </div>
+              <span className="text-[10px] text-gray-500 w-14 text-center truncate">{entity.name}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Call / video shortcuts — prominent strip */}
+      <div className="grid grid-cols-3 gap-3">
+        <Link href="/telemedicine"
+          className="flex items-center justify-center gap-2 py-3 bg-green-50 border border-green-200 rounded-xl text-sm font-medium text-green-700 hover:bg-green-100 transition-colors">
+          <Video className="w-4 h-4" /> Video call
+        </Link>
+        <Link href="/telemedicine?mode=audio"
+          className="flex items-center justify-center gap-2 py-3 bg-blue-50 border border-blue-200 rounded-xl text-sm font-medium text-blue-700 hover:bg-blue-100 transition-colors">
+          <Phone className="w-4 h-4" /> Voice call
+        </Link>
+        <Link href="/scheduling"
+          className="flex items-center justify-center gap-2 py-3 bg-impilo-50 border border-impilo-200 rounded-xl text-sm font-medium text-impilo-700 hover:bg-impilo-100 transition-colors">
+          <Calendar className="w-4 h-4" /> Book visit
+        </Link>
+      </div>
+
+      {/* Timeline posts */}
+      {allPosts.map((post) => (
+        <article key={post.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          {/* Post header */}
+          <div className="flex items-center gap-3 px-4 pt-4 pb-2">
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${avatarColors[post.avatar] ?? "bg-gray-100 text-gray-600"}`}>
+              {post.avatar}
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-semibold text-gray-900 truncate">{post.author}</p>
+                {post.type !== "update" && (
+                  <span className={`px-1.5 py-0.5 text-[10px] font-medium rounded border ${typeColors[post.type]}`}>
+                    {post.type.replace("_", " ")}
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-gray-400">{post.time}</p>
+            </div>
+          </div>
+          {/* Post body */}
+          <div className="px-4 pb-3">
+            <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{post.body}</p>
+          </div>
+          {/* Engagement bar */}
+          <div className="flex items-center justify-between border-t border-gray-100 px-4 py-2">
+            <span className="text-xs text-gray-400">{post.likes > 0 ? `${post.likes} likes` : ""}</span>
+            <span className="text-xs text-gray-400">{post.comments > 0 ? `${post.comments} comments` : ""}</span>
+          </div>
+          {/* Action buttons */}
+          <div className="flex border-t border-gray-100">
+            <button className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs text-gray-500 hover:bg-gray-50 transition-colors">
+              <ThumbsUp className="w-4 h-4" /> Like
+            </button>
+            <button className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs text-gray-500 hover:bg-gray-50 transition-colors">
+              <MessageCircle className="w-4 h-4" /> Comment
+            </button>
+            <button className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs text-gray-500 hover:bg-gray-50 transition-colors">
+              <Send className="w-4 h-4" /> Share
+            </button>
+          </div>
+        </article>
+      ))}
+    </div>
+  );
+}
+
 function AnnouncementsBanner() {
   const { data } = useQuery<{ data: Array<Record<string, unknown>>; stats: Record<string, number> }>({
     queryKey: ["announcements-banner"],

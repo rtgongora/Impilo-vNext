@@ -24,10 +24,10 @@
 
 import { useAuthStore } from "@/hooks/useAuthStore";
 
-// When running in the browser, use relative URLs so requests are proxied through
-// the Next.js dev server (see next.config.mjs rewrites). This avoids CORS.
-// When NEXT_PUBLIC_BFF_URL is set to a full URL (e.g. in Docker), use that directly.
-const BFF_BASE_URL = typeof window !== "undefined" ? "" : (process.env.NEXT_PUBLIC_BFF_URL || "http://localhost:8160");
+// Use NEXT_PUBLIC_BFF_URL when explicitly set (Docker, tests, SSR).
+// In the browser without an explicit URL, use relative paths so requests proxy
+// through the Next.js dev server (see next.config.mjs rewrites), avoiding CORS.
+const BFF_BASE_URL = process.env.NEXT_PUBLIC_BFF_URL || (typeof window !== "undefined" ? "" : "http://localhost:8160");
 
 export interface ApiResponse<T> {
   data: T;

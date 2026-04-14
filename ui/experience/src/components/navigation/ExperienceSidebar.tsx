@@ -89,7 +89,11 @@ function isCitizenOnly(user: AuthUser | null): boolean {
   if (!user) return true;
   // If provider is activated, show professional shell
   if (user.providerActivated) return false;
-  // Otherwise, citizen-only experience regardless of token roles
+  // If user has clinical/admin roles, show professional shell (backward compat
+  // for sessions where providerActivated hasn't been set yet)
+  const professionalRoles = [...CLINICAL_ROLES, ...FINANCE_ROLES, ...ADMIN_ROLES, "PHARMACIST"];
+  if (user.roles?.some((r: string) => professionalRoles.includes(r))) return false;
+  // Otherwise, citizen-only experience
   return true;
 }
 
