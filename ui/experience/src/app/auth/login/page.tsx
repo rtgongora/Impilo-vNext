@@ -1,12 +1,17 @@
 "use client";
 
 /**
- * Sign In — Lovable-aligned primary login page.
+ * Sign In — Person-centred primary login page.
  * Route: /auth/login | pageTitle: "Sign In"
  *
- * Features: email/password with show/hide toggle, validation,
- * auth redirect for already-authenticated users, method selection
- * links (Provider ID, Biometric), forgot password link.
+ * Health OS Identity Doctrine: everyone signs in as a person.
+ * The Health ID IS the person's ID — providers use the same identity.
+ * After successful login, navigates to /auth/resolving for identity
+ * resolution before reaching /home.
+ *
+ * Features: email-or-phone + password, show/hide toggle, validation,
+ * auth redirect, method selection (Health ID, Biometric), forgot password,
+ * guest/browse mode, Health ID request link.
  */
 
 import { useState, useEffect, type FormEvent } from "react";
@@ -20,6 +25,8 @@ import {
   Fingerprint,
   Eye,
   EyeOff,
+  IdCard,
+  ArrowRight,
 } from "lucide-react";
 import { AuthLayout } from "@/components/AuthLayout";
 import { useLogin } from "@/hooks/queries/useAuth";
@@ -33,7 +40,7 @@ export default function LoginPage() {
   const login = useLogin();
   const { isAuthenticated, setAuth } = useAuthStore();
 
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -41,7 +48,7 @@ export default function LoginPage() {
   // Redirect already-authenticated users
   useEffect(() => {
     if (isAuthenticated) {
-      router.push("/home");
+      router.push("/auth/resolving");
     }
   }, [isAuthenticated, router]);
 
@@ -49,8 +56,8 @@ export default function LoginPage() {
     e.preventDefault();
     setError(null);
 
-    if (!email.trim()) {
-      setError("Please enter your email address.");
+    if (!identifier.trim()) {
+      setError("Please enter your email or phone number.");
       return;
     }
     if (!password.trim()) {
@@ -59,7 +66,7 @@ export default function LoginPage() {
     }
 
     login.mutate(
-      { email: email.trim(), password },
+      { email: identifier.trim(), password },
       {
         onSuccess: (res) => {
           const attrs = res.data.attributes;
@@ -104,7 +111,8 @@ export default function LoginPage() {
               // If consent check fails, the consent gate will catch it on redirect
             });
 
-          router.push("/home");
+          // Navigate to resolving screen for identity resolution
+          router.push("/auth/resolving");
         },
         onError: (err: unknown) => {
           const status = (err as { status?: number })?.status;
@@ -133,19 +141,19 @@ export default function LoginPage() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-            Email address
+          <label htmlFor="identifier" className="block text-sm font-medium text-gray-700 mb-1">
+            Email or phone
           </label>
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
-              id="email"
-              type="email"
+              id="identifier"
+              type="text"
               autoComplete="email"
               required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
+              placeholder="you@example.com or +263..."
               className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
             />
           </div>
@@ -201,6 +209,7 @@ export default function LoginPage() {
         </button>
       </form>
 
+      {/* Alternative sign-in methods */}
       <div className="mt-6 pt-6 border-t border-gray-200">
         <p className="text-xs text-gray-500 text-center mb-3">
           Other sign-in methods
@@ -223,13 +232,40 @@ export default function LoginPage() {
         </div>
       </div>
 
-      <div className="mt-4 text-center">
-        <p className="text-sm text-gray-500">
-          Don&apos;t have an account?{" "}
-          <Link href="/auth/register" className="text-impilo-500 hover:text-impilo-700 font-medium">
-            Create account
-          </Link>
+      {/* New to Impilo */}
+      <div className="mt-6 pt-6 border-t border-gray-200">
+        <p className="text-xs text-gray-500 text-center mb-3">
+          New to Impilo?
         </p>
+        <Link
+          href="/auth/register"
+          className="w-full flex items-center justify-center gap-2 py-2.5 border-2 border-impilo-500 text-impilo-600 text-sm font-medium rounded-lg hover:bg-impilo-50 transition-colors"
+        >
+          Create an account
+        </Link>
+      </div>
+
+      {/* Other ways to access */}
+      <div className="mt-4 pt-4 border-t border-gray-200">
+        <p className="text-xs text-gray-500 text-center mb-3">
+          Other ways to access
+        </p>
+        <div className="space-y-2">
+          <Link
+            href="/citizen/health-id/request"
+            className="w-full flex items-center justify-center gap-2 px-3 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-700 hover:border-impilo-200 hover:bg-impilo-50 transition-colors"
+          >
+            <IdCard className="w-4 h-4 text-impilo-500" />
+            Request a Health ID
+          </Link>
+          <Link
+            href="/home"
+            className="w-full flex items-center justify-center gap-2 px-3 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-600 hover:border-gray-300 hover:bg-gray-50 transition-colors"
+          >
+            Continue without an account
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
       </div>
 
       <p className="mt-4 text-center text-xs text-gray-400">

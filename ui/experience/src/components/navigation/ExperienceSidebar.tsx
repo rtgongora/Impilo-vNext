@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
 import {
   Activity,
+  ArrowLeftRight,
   ArrowUpRight,
   Ambulance,
   Bell,
@@ -42,6 +43,7 @@ import {
 } from "lucide-react";
 import { ImpiloLogo } from "@/components/brand/ImpiloLogo";
 import { ProviderActivationBanner } from "@/components/ProviderActivationBanner";
+import { WorkspaceSwitcher } from "@/components/WorkspaceSwitcher";
 import { useAuthStore, type AuthUser } from "@/hooks/useAuthStore";
 import { WORK_MODE_LABELS } from "@/hooks/useWorkModeStore";
 import { useExperienceEntry } from "@/providers/ExperienceEntryProvider";
@@ -112,6 +114,7 @@ const ZONES: SidebarZone[] = [
     id: "professional",
     label: "My Professional",
     items: [
+      { href: "/professional", label: "Professional Profile", icon: Stethoscope },
       { href: "/home/credentials", label: "Credentials", icon: ClipboardList },
       { href: "/registry-admin", label: "Registry plane", icon: ShieldCheck, requiredRoles: ["SYSTEM_ADMIN", "HIE_ADMIN"] },
       { href: "/registry", label: "Registry", icon: Building2 },
@@ -293,6 +296,7 @@ export function ExperienceSidebar() {
   const { currentRoute, facility, workspace, stage, shiftActive, workMode } = useExperienceEntry();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [switcherOpen, setSwitcherOpen] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -377,6 +381,15 @@ export function ExperienceSidebar() {
             </Link>
           )}
           <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setSwitcherOpen(true)}
+              className="inline-flex rounded-xl border border-white/10 p-2 text-slate-300 transition hover:bg-impilo-500/20 hover:text-impilo-300"
+              aria-label="Switch context"
+              title="Switch context"
+            >
+              <ArrowLeftRight className="h-4 w-4" />
+            </button>
             <button
               type="button"
               onClick={toggleCollapsed}
@@ -625,6 +638,9 @@ export function ExperienceSidebar() {
           )}
         </div>
       </aside>
+
+      {/* Workspace Switcher — slide-out panel (Screen 15) */}
+      <WorkspaceSwitcher open={switcherOpen} onClose={() => setSwitcherOpen(false)} />
     </>
   );
 }
