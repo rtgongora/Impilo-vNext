@@ -28,12 +28,10 @@ export function useWallet(walletId?: string | null) {
 }
 
 export function useWalletByOwner(ownerType?: string | null, ownerRef?: string | null) {
+  // Route through BFF wallet controller which has local fallbacks
   return useQuery<WalletResponse>({
     queryKey: ["mushe-wallet-by-owner", ownerType, ownerRef],
-    queryFn: () =>
-      apiClient.get<WalletResponse>(
-        `/internal/v1/wallets/by-owner?owner_type=${ownerType}&owner_ref=${ownerRef}`,
-      ),
+    queryFn: () => apiClient.get<WalletResponse>(`/internal/v1/wallet/me`),
     enabled: !!ownerType && !!ownerRef,
   });
 }
@@ -41,25 +39,53 @@ export function useWalletByOwner(ownerType?: string | null, ownerRef?: string | 
 export function useBalance(walletId?: string | null) {
   return useQuery<WalletResponse>({
     queryKey: ["mushe-wallet-balance", walletId],
-    queryFn: () =>
-      apiClient.get<WalletResponse>(`/internal/v1/wallets/${walletId}/balance`),
+    queryFn: () => apiClient.get<WalletResponse>(`/internal/v1/wallet/me/balance`),
     enabled: !!walletId,
   });
 }
 
 export function useTransactions(walletId?: string | null, page?: number, size?: number) {
-  const params = new URLSearchParams();
-  if (page != null) params.set("page", String(page));
-  if (size != null) params.set("size", String(size));
-  const qs = params.toString();
-
   return useQuery<TransactionResponse>({
     queryKey: ["mushe-wallet-transactions", walletId, page ?? 0, size ?? 20],
-    queryFn: () =>
-      apiClient.get<TransactionResponse>(
-        `/internal/v1/wallets/${walletId}/transactions${qs ? `?${qs}` : ""}`,
-      ),
+    queryFn: () => apiClient.get<TransactionResponse>(`/internal/v1/wallet/me/transactions`),
     enabled: !!walletId,
+  });
+}
+
+export function useFundingSources(walletId?: string | null) {
+  return useQuery<FundingSourceResponse>({
+    queryKey: ["mushe-funding-sources", walletId],
+    queryFn: () => apiClient.get<FundingSourceResponse>(`/internal/v1/wallet/me/funding-sources`),
+    enabled: !!walletId,
+  });
+}
+
+export function useCards(walletId?: string | null) {
+  return useQuery<CardResponse>({
+    queryKey: ["mushe-cards", walletId],
+    queryFn: () => apiClient.get<CardResponse>(`/internal/v1/wallet/me/cards`),
+    enabled: !!walletId,
+  });
+}
+
+/** Universal payment — calls BFF wallet/pay with method selection */
+export function useWalletPay() {
+  const queryClient = useQueryClient();
+  return useMutation<WalletResponse, unknown, { method: string; amount: number; reference?: string; description?: string; currency?: string }>({
+    mutationFn: (body) => apiClient.post<WalletResponse>(`/internal/v1/wallet/pay`, body),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["mushe-wallet-balance"] });
+      void queryClient.invalidateQueries({ queryKey: ["mushe-wallet-transactions"] });
+    },
+  });
+}
+
+/** Payment methods reference */
+export function usePaymentMethods() {
+  return useQuery<ApiResponse<Array<{ id: string; label: string; icon: string; description: string; enabled: boolean }>>>({
+    queryKey: ["payment-methods"],
+    queryFn: () => apiClient.get(`/internal/v1/wallet/payment-methods`),
+    staleTime: 5 * 60 * 1000,
   });
 }
 
@@ -86,15 +112,7 @@ export function useMerchantByProvider(providerNumber?: string | null) {
 }
 
 // ── Card Queries ───────────────────────────────────────────────────
-
-export function useCards(walletId?: string | null) {
-  return useQuery<CardResponse>({
-    queryKey: ["mushe-cards", walletId],
-    queryFn: () =>
-      apiClient.get<CardResponse>(`/internal/v1/cards/by-wallet/${walletId}`),
-    enabled: !!walletId,
-  });
-}
+// useCards is defined above with BFF fallback routing
 
 export function useCard(cardId?: string | null) {
   return useQuery<CardResponse>({
@@ -115,15 +133,7 @@ export function useCardHealthData(cardId?: string | null) {
 }
 
 // ── Funding Source Queries ─────────────────────────────────────────
-
-export function useFundingSources(walletId?: string | null) {
-  return useQuery<FundingSourceResponse>({
-    queryKey: ["mushe-funding-sources", walletId],
-    queryFn: () =>
-      apiClient.get<FundingSourceResponse>(`/internal/v1/funding/${walletId}/sources`),
-    enabled: !!walletId,
-  });
-}
+// useFundingSources is defined above with BFF fallback routing
 
 // ── Wallet Mutations ───────────────────────────────────────────────
 
