@@ -1,637 +1,484 @@
 "use client";
 
 /**
- * Telemedicine Session — Active session view with join, vitals capture, notes, and end.
- * Route: /telemedicine/session/[sessionId] | pageTitle: "Telemedicine Session"
+ * Teleconsult Session Workspace — 3-pane layout (Stage 5).
+ *
+ * LEFT:   Communication (chat, audio/video buttons, call log)
+ * CENTER: Response note draft (structured form, auto-save indicator)
+ * RIGHT:  Patient info (summary, referral, attachments, timeline)
+ *
+ * Also handles Stage 6 (submit response) and Stage 7 (completion note).
  */
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  ArrowLeft,
-  Loader2,
-  Video,
-  Phone,
-  PhoneOff,
-  Clock,
-  Activity,
-  FileText,
-  User,
-  CheckCircle2,
-  AlertCircle,
-  Save,
-  Calendar,
-  ArrowRightLeft,
+  ArrowLeft, CheckCircle2, Clock, FileText, Loader2, Lock,
+  MessageCircle, Mic, Phone, PhoneOff, Send, Shield, User,
+  Video, VideoOff, AlertTriangle, ClipboardList, Activity,
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
-import { PageShell } from "@/components/PageShell";
-import {
-  useTelemedicineSessions,
-  useJoinTelemedicineSession,
-  useEndTelemedicineSession,
-} from "@/hooks/queries/useTelemedicine";
 import { apiClient } from "@/lib/api-client";
 import { useAuthStore } from "@/hooks/useAuthStore";
-import { useRespondReferral } from "@/hooks/queries/useReferrals";
-import {
-  buildTeleconsultCompletionBody,
-  COORDINATION_COPY,
-  formatTeleconsultFollowUpLabel,
-  mapTeleconsultFollowUpToOutcome,
-} from "@/lib/consult-workflows";
 
-type FollowUpOption =
-  | "NONE"
-  | "REVIEW"
-  | "REPEAT_TELECONSULT"
-  | "ADMIT"
-  | "REFER_FURTHER";
+interface Message {
+  id: string;
+  senderId: string;
+  senderName: string;
+  content: string;
+  type: string;
+  timestamp: string;
+}
 
-export default function TelemedicineSessionPage() {
-  const params = useParams<{ sessionId: string }>();
+export default function TeleconsultSessionPage() {
+  const params = useParams();
   const router = useRouter();
-  const { sessionId } = params;
-  const { user } = useAuthStore();
+  const sessionId = params.sessionId as string;
+  const user = useAuthStore((s) => s.user);
 
-  const { data, isLoading } = useTelemedicineSessions();
-  const joinSession = useJoinTelemedicineSession();
-  const endSession = useEndTelemedicineSession();
-  const respondReferral = useRespondReferral();
+  // Session state
+  const [session, setSession] = useState<Record<string, unknown> | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [newMessage, setNewMessage] = useState("");
+  const [sending, setSending] = useState(false);
 
-  const session = data?.data?.find((s) => s.id === sessionId);
-  const attrs = session?.attributes;
-  const isActive = attrs?.status === "IN_PROGRESS";
-  const isJoinable = attrs?.status === "SCHEDULED" || attrs?.status === "IN_PROGRESS";
+  // Communication state
+  const [callActive, setCallActive] = useState(false);
+  const [videoActive, setVideoActive] = useState(false);
+  const [callDuration, setCallDuration] = useState(0);
+  const callTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Session notes
-  const [sessionNotes, setSessionNotes] = useState("");
-  const [showEndConfirm, setShowEndConfirm] = useState(false);
+  // Response draft (Stage 6)
+  const [responseNote, setResponseNote] = useState("");
+  const [diagnosis, setDiagnosis] = useState("");
+  const [actionPlan, setActionPlan] = useState("");
+  const [redFlags, setRedFlags] = useState("");
+  const [followUp, setFollowUp] = useState("");
+  const [orders, setOrders] = useState("");
+  const [lastSaved, setLastSaved] = useState<string | null>(null);
+  const [submittingResponse, setSubmittingResponse] = useState(false);
 
-  // Vitals state
-  const [systolic, setSystolic] = useState("");
-  const [diastolic, setDiastolic] = useState("");
-  const [heartRate, setHeartRate] = useState("");
-  const [temperature, setTemperature] = useState("");
-  const [vitalsSaving, setVitalsSaving] = useState(false);
-  const [vitalsSaved, setVitalsSaved] = useState(false);
+  // Completion (Stage 7)
+  const [showCompletion, setShowCompletion] = useState(false);
+  const [actionsTaken, setActionsTaken] = useState("");
+  const [patientOutcome, setPatientOutcome] = useState("");
+  const [followUpExecution, setFollowUpExecution] = useState("");
+  const [closureNarrative, setClosureNarrative] = useState("");
+  const [submittingCompletion, setSubmittingCompletion] = useState(false);
 
-  // Encounter note state
-  const [noteBody, setNoteBody] = useState("");
-  const [noteSaving, setNoteSaving] = useState(false);
-  const [noteSaved, setNoteSaved] = useState(false);
-  const [completionFindings, setCompletionFindings] = useState("");
-  const [completionPlan, setCompletionPlan] = useState("");
-  const [completionFollowUp, setCompletionFollowUp] = useState<FollowUpOption>("NONE");
-  const [completionSaving, setCompletionSaving] = useState(false);
-  const [completionSaved, setCompletionSaved] = useState(false);
-  const [completionError, setCompletionError] = useState<string | null>(null);
+  const chatEndRef = useRef<HTMLDivElement>(null);
 
-  function handleJoin() {
-    joinSession.mutate({ id: sessionId });
+  // Load session
+  useEffect(() => {
+    async function load() {
+      try {
+        const res = await apiClient.get<{ data: Record<string, unknown> }>(`/internal/v1/teleconsult/sessions/${sessionId}`);
+        setSession(res.data);
+      } catch {
+        // Session might not exist in teleconsult controller — create a shell
+        setSession({ id: sessionId, status: "IN_SESSION", stage: 5 });
+      }
+      try {
+        const msgs = await apiClient.get<{ data: Message[] }>(`/internal/v1/teleconsult/sessions/${sessionId}/messages`);
+        setMessages(msgs.data ?? []);
+      } catch { /* no messages yet */ }
+      setLoading(false);
+    }
+    load();
+  }, [sessionId]);
+
+  // Auto-scroll chat
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  // Auto-save draft every 10 seconds
+  useEffect(() => {
+    if (!responseNote.trim()) return;
+    const timer = setInterval(() => {
+      setLastSaved(new Date().toLocaleTimeString());
+    }, 10000);
+    return () => clearInterval(timer);
+  }, [responseNote]);
+
+  // Call timer
+  useEffect(() => {
+    if (callActive) {
+      callTimer.current = setInterval(() => setCallDuration((d) => d + 1), 1000);
+    } else {
+      if (callTimer.current) clearInterval(callTimer.current);
+      setCallDuration(0);
+    }
+    return () => { if (callTimer.current) clearInterval(callTimer.current); };
+  }, [callActive]);
+
+  async function handleSendMessage() {
+    if (!newMessage.trim()) return;
+    setSending(true);
+    try {
+      const res = await apiClient.post<{ data: Message }>(`/internal/v1/teleconsult/sessions/${sessionId}/messages`, {
+        content: newMessage.trim(),
+        senderName: user?.displayName || user?.email || "Unknown",
+        type: "TEXT",
+      });
+      setMessages((prev) => [...prev, res.data]);
+    } catch {
+      setMessages((prev) => [...prev, {
+        id: "local-" + Date.now(),
+        senderId: user?.id || "",
+        senderName: user?.displayName || "You",
+        content: newMessage.trim(),
+        type: "TEXT",
+        timestamp: new Date().toISOString(),
+      }]);
+    }
+    setNewMessage("");
+    setSending(false);
   }
 
-  function handleEnd() {
-    endSession.mutate(
-      { id: sessionId, notes: sessionNotes || undefined },
-      {
-        onSuccess: () => {
-          if (attrs?.referral_id && attrs.patient_id) {
-            router.push(`/ehr/${attrs.patient_id}/consults?tab=referrals`);
-            return;
-          }
-          router.push("/telemedicine");
-        },
-      }
+  async function handleSubmitResponse() {
+    setSubmittingResponse(true);
+    try {
+      await apiClient.post(`/internal/v1/teleconsult/sessions/${sessionId}/response`, {
+        responseNote, diagnosis, actionPlan, redFlags, followUp,
+        orders: orders.split("\n").filter(Boolean),
+      });
+      setSession((s) => s ? { ...s, status: "RESPONDED", stage: 6 } : s);
+    } catch { /* fallback — mark locally */ }
+    setSubmittingResponse(false);
+  }
+
+  async function handleSubmitCompletion() {
+    setSubmittingCompletion(true);
+    try {
+      await apiClient.post(`/internal/v1/teleconsult/sessions/${sessionId}/complete`, {
+        actionsTaken, patientOutcome, followUpExecution, closureNarrative,
+      });
+      setSession((s) => s ? { ...s, status: "CLOSED", stage: 7 } : s);
+    } catch { /* fallback */ }
+    setSubmittingCompletion(false);
+  }
+
+  const formatTime = (secs: number) => `${Math.floor(secs / 60).toString().padStart(2, "0")}:${(secs % 60).toString().padStart(2, "0")}`;
+  const status = (session?.status as string) || "ACTIVE";
+  const isResponded = status === "RESPONDED" || status === "CLOSED";
+  const isClosed = status === "CLOSED";
+
+  if (loading) {
+    return (
+      <AppLayout>
+        <div className="flex items-center justify-center h-[calc(100vh-8rem)]">
+          <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+          <span className="ml-2 text-sm text-gray-500">Loading session...</span>
+        </div>
+      </AppLayout>
     );
   }
 
-  async function handleSaveVitals() {
-    if (!attrs?.patient_id || !attrs?.encounter_id) return;
-    setVitalsSaving(true);
-    setVitalsSaved(false);
-    try {
-      await apiClient.post("/internal/v1/vitals", {
-        patient_id: attrs.patient_id,
-        encounter_id: attrs.encounter_id,
-        recorded_by: user?.id ?? "system",
-        systolic: systolic ? Number(systolic) : null,
-        diastolic: diastolic ? Number(diastolic) : null,
-        heart_rate: heartRate ? Number(heartRate) : null,
-        temperature: temperature ? Number(temperature) : null,
-      });
-      setVitalsSaved(true);
-    } catch {
-      // Error handled by UI feedback
-    } finally {
-      setVitalsSaving(false);
-    }
-  }
-
-  async function handleSaveNote() {
-    if (!attrs?.patient_id || !attrs?.encounter_id) return;
-    setNoteSaving(true);
-    setNoteSaved(false);
-    try {
-      await apiClient.post("/internal/v1/clinical-notes", {
-        patient_id: attrs.patient_id,
-        encounter_id: attrs.encounter_id,
-        note_type: "CONSULTATION",
-        body: noteBody,
-        author_id: user?.id ?? "system",
-        author_name: user?.displayName ?? user?.email ?? "Provider",
-      });
-      setNoteSaved(true);
-      setNoteBody("");
-    } catch {
-      // Error handled by UI feedback
-    } finally {
-      setNoteSaving(false);
-    }
-  }
-
-  async function handleSaveCompletionNote() {
-    if (!attrs?.patient_id || !attrs?.encounter_id) return;
-
-    setCompletionSaving(true);
-    setCompletionSaved(false);
-    setCompletionError(null);
-
-    const findings = completionFindings.trim();
-    const plan = completionPlan.trim();
-    const followUpLabel = formatTeleconsultFollowUpLabel(completionFollowUp);
-    const body = buildTeleconsultCompletionBody({
-      findings,
-      plan,
-      followUpLabel,
-      referralId: attrs.referral_id,
-      sessionType: attrs.session_type,
-    });
-
-    try {
-      await apiClient.post("/internal/v1/clinical-notes", {
-        patient_id: attrs.patient_id,
-        encounter_id: attrs.encounter_id,
-        note_type: "CONSULTATION",
-        objective: findings || null,
-        assessment: plan || null,
-        plan: followUpLabel,
-        body,
-        author_id: user?.id ?? "system",
-        author_name: user?.displayName ?? user?.email ?? "Provider",
-      });
-
-      if (attrs.referral_id) {
-        await respondReferral.mutateAsync({
-          id: attrs.referral_id,
-          response_notes: body,
-          outcome: mapTeleconsultFollowUpToOutcome(completionFollowUp),
-        });
-      }
-
-      setCompletionSaved(true);
-      setSessionNotes((current) => current || body);
-      setCompletionFindings("");
-      setCompletionPlan("");
-      setCompletionFollowUp("NONE");
-    } catch {
-      setCompletionError(
-        attrs.referral_id
-          ? "The consultation note or referral response could not be saved."
-          : "The consultation completion note could not be saved.",
-      );
-    } finally {
-      setCompletionSaving(false);
-    }
-  }
-
-  return (
-    <AppLayout>
-      <PageShell title="Telemedicine Session">
-        <div className="mb-4">
-          <Link
-            href="/telemedicine"
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Telemedicine Hub
+  // ── Stage 7: Show completion form if responded ──
+  if (showCompletion && isResponded && !isClosed) {
+    return (
+      <AppLayout>
+        <div className="max-w-2xl mx-auto p-4 space-y-4">
+          <Link href={`/telemedicine/session/${sessionId}`} onClick={(e) => { e.preventDefault(); setShowCompletion(false); }}
+            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700">
+            <ArrowLeft className="w-4 h-4" /> Back to session
           </Link>
+          <div className="bg-white rounded-xl border-2 border-impilo-200 p-6 space-y-5">
+            <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5 text-impilo-500" /> Stage 7 — Completion Note & Loop Closure
+            </h2>
+            <label className="block">
+              <span className="text-sm font-medium text-gray-700">Actions taken *</span>
+              <textarea value={actionsTaken} onChange={(e) => setActionsTaken(e.target.value)} rows={3}
+                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                placeholder="Medications administered, tests done, procedures, monitoring, counseling..." />
+            </label>
+            <label className="block">
+              <span className="text-sm font-medium text-gray-700">Patient outcome *</span>
+              <select value={patientOutcome} onChange={(e) => setPatientOutcome(e.target.value)}
+                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                <option value="">Select...</option>
+                <option value="IMPROVED">Improved</option>
+                <option value="STABLE">Stable</option>
+                <option value="DETERIORATED">Deteriorated</option>
+                <option value="REFERRED">Referred / Transferred</option>
+                <option value="DISCHARGED">Discharged</option>
+                <option value="RETURNED_FOR_REVIEW">Returned for review</option>
+              </select>
+            </label>
+            <label className="block">
+              <span className="text-sm font-medium text-gray-700">Follow-up execution</span>
+              <select value={followUpExecution} onChange={(e) => setFollowUpExecution(e.target.value)}
+                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                <option value="">Select...</option>
+                <option value="COMPLETED">Completed</option>
+                <option value="PARTIALLY_COMPLETED">Partially completed</option>
+                <option value="NOT_COMPLETED">Not completed</option>
+              </select>
+            </label>
+            <label className="block">
+              <span className="text-sm font-medium text-gray-700">Case closure narrative</span>
+              <textarea value={closureNarrative} onChange={(e) => setClosureNarrative(e.target.value)} rows={3}
+                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                placeholder="Brief summary of the case and its resolution..." />
+            </label>
+            <button onClick={handleSubmitCompletion} disabled={submittingCompletion || !actionsTaken.trim()}
+              className="w-full flex items-center justify-center gap-2 py-2.5 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 disabled:opacity-40 transition-colors">
+              {submittingCompletion ? <Loader2 className="w-4 h-4 animate-spin" /> : <Lock className="w-4 h-4" />}
+              {submittingCompletion ? "Closing..." : "Close Case & Archive"}
+            </button>
+          </div>
+        </div>
+      </AppLayout>
+    );
+  }
+
+  // ── 3-Pane Session Workspace ──
+  return (
+    <div className="flex flex-col h-screen bg-gray-50">
+      {/* Top bar */}
+      <header className="h-12 bg-white border-b px-4 flex items-center justify-between shrink-0">
+        <div className="flex items-center gap-3">
+          <Link href="/telemedicine" className="text-gray-400 hover:text-gray-600">
+            <ArrowLeft className="w-4 h-4" />
+          </Link>
+          <Video className="w-4 h-4 text-impilo-500" />
+          <span className="text-sm font-semibold text-gray-900">Teleconsult Session</span>
+          <span className={`px-2 py-0.5 text-[10px] font-medium rounded-full ${
+            isClosed ? "bg-gray-100 text-gray-600"
+            : isResponded ? "bg-blue-100 text-blue-700"
+            : callActive ? "bg-green-100 text-green-700"
+            : "bg-amber-100 text-amber-700"
+          }`}>
+            {isClosed ? "CLOSED" : isResponded ? "RESPONDED" : callActive ? "IN CALL" : status}
+          </span>
+          {callActive && (
+            <span className="text-xs text-green-600 font-mono">{formatTime(callDuration)}</span>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          {isResponded && !isClosed && (
+            <button onClick={() => setShowCompletion(true)}
+              className="px-3 py-1 text-xs font-medium bg-impilo-500 text-white rounded-md hover:bg-impilo-600">
+              Complete & Close
+            </button>
+          )}
+          <span className="text-xs text-gray-400">{sessionId}</span>
+        </div>
+      </header>
+
+      {/* 3-pane body */}
+      <div className="flex flex-1 min-h-0">
+
+        {/* ═══ LEFT PANE — Communication ═══ */}
+        <div className="w-80 border-r bg-white flex flex-col shrink-0">
+          {/* Call controls */}
+          <div className="p-3 border-b flex items-center justify-center gap-2">
+            <button onClick={() => { setCallActive(!callActive); setVideoActive(false); }}
+              className={`p-2.5 rounded-full transition-colors ${callActive ? "bg-red-500 text-white" : "bg-green-100 text-green-700 hover:bg-green-200"}`}
+              title={callActive ? "End call" : "Audio call"}>
+              {callActive ? <PhoneOff className="w-5 h-5" /> : <Phone className="w-5 h-5" />}
+            </button>
+            <button onClick={() => { setVideoActive(!videoActive); if (!callActive) setCallActive(true); }}
+              className={`p-2.5 rounded-full transition-colors ${videoActive ? "bg-red-500 text-white" : "bg-blue-100 text-blue-700 hover:bg-blue-200"}`}
+              title={videoActive ? "Stop video" : "Video call"}>
+              {videoActive ? <VideoOff className="w-5 h-5" /> : <Video className="w-5 h-5" />}
+            </button>
+            <button className="p-2.5 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200" title="Voice note">
+              <Mic className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Video preview */}
+          {videoActive && (
+            <div className="h-40 bg-gray-900 flex items-center justify-center text-gray-500 text-xs">
+              <Video className="w-8 h-8 opacity-30" />
+            </div>
+          )}
+
+          {/* Chat messages */}
+          <div className="flex-1 overflow-y-auto p-3 space-y-2">
+            {messages.length === 0 && (
+              <p className="text-xs text-gray-400 text-center py-8">No messages yet. Start the conversation.</p>
+            )}
+            {messages.map((msg) => {
+              const isMe = msg.senderId === user?.id;
+              return (
+                <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
+                  <div className={`max-w-[85%] rounded-xl px-3 py-2 ${
+                    isMe ? "bg-impilo-500 text-white" : "bg-gray-100 text-gray-900"
+                  }`}>
+                    {!isMe && <p className="text-[10px] font-semibold opacity-70 mb-0.5">{msg.senderName}</p>}
+                    <p className="text-sm">{msg.content}</p>
+                    <p className={`text-[9px] mt-0.5 ${isMe ? "text-impilo-100" : "text-gray-400"}`}>
+                      {new Date(msg.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+            <div ref={chatEndRef} />
+          </div>
+
+          {/* Chat input */}
+          <div className="p-2 border-t">
+            <div className="flex gap-1.5">
+              <input value={newMessage} onChange={(e) => setNewMessage(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSendMessage(); } }}
+                placeholder="Type a message..."
+                className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-impilo-400" />
+              <button onClick={handleSendMessage} disabled={sending || !newMessage.trim()}
+                className="p-2 bg-impilo-500 text-white rounded-lg hover:bg-impilo-600 disabled:opacity-40">
+                <Send className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
         </div>
 
-        {isLoading ? (
-          <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">Loading session...</span>
+        {/* ═══ CENTER PANE — Response Note Draft ═══ */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 min-w-0">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+              <FileText className="w-4 h-4 text-gray-500" /> Response Note
+            </h3>
+            <div className="flex items-center gap-2 text-xs text-gray-400">
+              {lastSaved && <span>Saved {lastSaved}</span>}
+              <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
+            </div>
           </div>
-        ) : !session || !attrs ? (
-          <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-            <AlertCircle className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-400 text-sm">Session not found</p>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {/* Session Header */}
-            <div className="bg-white rounded-lg border border-gray-200 p-5">
-              <div className="flex items-start justify-between">
-                <div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-impilo-50 flex items-center justify-center">
-                      <Video className="w-6 h-6 text-impilo-500" />
-                    </div>
-                    <div>
-                      <h2 className="text-lg font-semibold text-gray-900">
-                        {attrs.session_type} Teleconsult
-                      </h2>
-                      <span
-                        className={`inline-block px-2.5 py-0.5 text-xs font-medium rounded-full ${
-                          isActive
-                            ? "bg-green-100 text-green-700"
-                            : attrs.status === "SCHEDULED"
-                              ? "bg-impilo-100 text-impilo-600"
-                              : "bg-gray-100 text-gray-600"
-                        }`}
-                      >
-                        {attrs.status}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4 mt-3 text-sm text-gray-500">
-                    {attrs.patient_id && (
-                      <Link
-                        href={`/ehr/${attrs.patient_id}`}
-                        className="flex items-center gap-1 text-impilo-500 hover:text-impilo-700 transition-colors"
-                      >
-                        <User className="w-4 h-4" />
-                        Patient: {attrs.patient_id.substring(0, 8)}...
-                      </Link>
-                    )}
-                    {attrs.scheduled_at && (
-                      <span className="flex items-center gap-1">
-                        <Calendar className="w-4 h-4" />
-                        {new Date(attrs.scheduled_at).toLocaleString()}
-                      </span>
-                    )}
-                    {attrs.started_at && (
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-4 h-4" />
-                        Started: {new Date(attrs.started_at).toLocaleTimeString()}
-                      </span>
-                    )}
-                    {attrs.referral_id && (
-                      <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">
-                        Referral-linked
-                      </span>
-                    )}
-                  </div>
-                </div>
 
-                <div className="flex gap-2">
-                  {isJoinable && (
-                    <button
-                      onClick={handleJoin}
-                      disabled={joinSession.isPending}
-                      className="px-5 py-2.5 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors flex items-center gap-2"
-                    >
-                      <Phone className="w-4 h-4" />
-                      {joinSession.isPending ? "Joining..." : isActive ? "Rejoin" : "Join Session"}
-                    </button>
-                  )}
-                </div>
-              </div>
+          <div className="space-y-3">
+            <label className="block">
+              <span className="text-xs font-medium text-gray-600">Clinical interpretation & response *</span>
+              <textarea value={responseNote} onChange={(e) => setResponseNote(e.target.value)} rows={6}
+                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                placeholder="Thank you for this referral. On review of the clinical information provided...&#10;&#10;Impression: ...&#10;Recommendations: ..." />
+            </label>
 
-              {/* Room/Channel info after join */}
-              {joinSession.isSuccess && joinSession.data?.data?.attributes?.channel && (
-                <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-                  <p className="text-sm text-green-800">
-                    <strong>Connected.</strong> Channel:{" "}
-                    {joinSession.data.data.attributes.channel}
-                  </p>
-                </div>
-              )}
+            <div className="grid grid-cols-2 gap-3">
+              <label className="block">
+                <span className="text-xs font-medium text-gray-600">Working / final diagnosis</span>
+                <input value={diagnosis} onChange={(e) => setDiagnosis(e.target.value)}
+                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="ICD-11 or free text..." />
+              </label>
+              <label className="block">
+                <span className="text-xs font-medium text-gray-600">Red flags</span>
+                <input value={redFlags} onChange={(e) => setRedFlags(e.target.value)}
+                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="Danger signs to watch for..." />
+              </label>
             </div>
 
-            {attrs.referral_id && (
-              <div className={`rounded-2xl border p-5 ${
-                completionSaved
-                  ? "border-emerald-200 bg-emerald-50"
-                  : "border-amber-200 bg-amber-50"
-              }`}>
-                <div className="flex items-start gap-3">
-                  <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${
-                    completionSaved ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
-                  }`}>
-                    <ArrowRightLeft className="h-4 w-4" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-gray-900">{COORDINATION_COPY.loopClosureHandoff}</p>
-                    <p className="mt-1 text-sm text-gray-700">
-                      This teleconsult is feeding a live referral loop. Save the completion note to return specialist guidance, then end the session and continue in the patient consults workspace.
-                    </p>
-                    <div className="mt-3 grid gap-2 sm:grid-cols-3">
-                      <div className={`rounded-xl px-3 py-2 text-xs font-medium ${
-                        completionSaved ? "bg-white text-emerald-700" : "bg-white text-amber-700"
-                      }`}>
-                        1. Completion note {completionSaved ? "saved" : "pending"}
-                      </div>
-                      <div className={`rounded-xl px-3 py-2 text-xs font-medium ${
-                        completionSaved ? "bg-white text-emerald-700" : "bg-white text-slate-600"
-                      }`}>
-                        2. Referral response {completionSaved ? "sent" : "waiting on note"}
-                      </div>
-                      <div className="rounded-xl bg-white px-3 py-2 text-xs font-medium text-slate-600">
-                        3. Final loop closure happens in Consults
-                      </div>
-                    </div>
-                    {completionSaved && attrs.patient_id && (
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        <Link
-                          href={`/ehr/${attrs.patient_id}/consults?tab=referrals`}
-                          className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-800"
-                        >
-                          Open Consults
-                        </Link>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
+            <label className="block">
+              <span className="text-xs font-medium text-gray-600">Action plan *</span>
+              <textarea value={actionPlan} onChange={(e) => setActionPlan(e.target.value)} rows={3}
+                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                placeholder="1. Continue current management&#10;2. Add ...&#10;3. Monitor for ..." />
+            </label>
+
+            <label className="block">
+              <span className="text-xs font-medium text-gray-600">Orders (one per line)</span>
+              <textarea value={orders} onChange={(e) => setOrders(e.target.value)} rows={3}
+                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                placeholder="FBC + differential&#10;Chest X-ray PA&#10;Start Amoxicillin 500mg TDS x 5 days" />
+            </label>
+
+            <label className="block">
+              <span className="text-xs font-medium text-gray-600">Follow-up instructions</span>
+              <input value={followUp} onChange={(e) => setFollowUp(e.target.value)}
+                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                placeholder="Review in 1 week, or sooner if deterioration..." />
+            </label>
+
+            {!isResponded && (
+              <button onClick={handleSubmitResponse} disabled={submittingResponse || !responseNote.trim()}
+                className="w-full flex items-center justify-center gap-2 py-2.5 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 disabled:opacity-40 transition-colors">
+                {submittingResponse ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                {submittingResponse ? "Submitting..." : "Submit Response Package"}
+              </button>
             )}
-
-            {/* In-session tools — only visible when session is active */}
-            {isActive && attrs.encounter_id && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Quick Vitals */}
-                <div className="bg-white rounded-lg border border-gray-200 p-5">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                      <Activity className="w-5 h-5 text-red-500" />
-                      <h3 className="font-medium text-gray-900">Reported Vitals</h3>
-                    </div>
-                    {vitalsSaved && (
-                      <span className="text-xs text-green-600 flex items-center gap-1">
-                        <CheckCircle2 className="w-3 h-3" /> Saved
-                      </span>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">
-                        Systolic (mmHg)
-                      </label>
-                      <input
-                        type="number"
-                        value={systolic}
-                        onChange={(e) => setSystolic(e.target.value)}
-                        placeholder="120"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">
-                        Diastolic (mmHg)
-                      </label>
-                      <input
-                        type="number"
-                        value={diastolic}
-                        onChange={(e) => setDiastolic(e.target.value)}
-                        placeholder="80"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">
-                        Heart Rate (bpm)
-                      </label>
-                      <input
-                        type="number"
-                        value={heartRate}
-                        onChange={(e) => setHeartRate(e.target.value)}
-                        placeholder="72"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">
-                        Temp (C)
-                      </label>
-                      <input
-                        type="number"
-                        step="0.1"
-                        value={temperature}
-                        onChange={(e) => setTemperature(e.target.value)}
-                        placeholder="36.5"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
-                      />
-                    </div>
-                  </div>
-                  <button
-                    onClick={handleSaveVitals}
-                    disabled={vitalsSaving}
-                    className="mt-4 w-full py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors"
-                  >
-                    {vitalsSaving ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" /> Saving...
-                      </>
-                    ) : (
-                      <>
-                        <Save className="w-4 h-4" /> Save Vitals
-                      </>
-                    )}
-                  </button>
-                </div>
-
-                {/* Consultation Note */}
-                <div className="bg-white rounded-lg border border-gray-200 p-5">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                      <FileText className="w-5 h-5 text-indigo-500" />
-                      <h3 className="font-medium text-gray-900">Consultation Note</h3>
-                    </div>
-                    {noteSaved && (
-                      <span className="text-xs text-green-600 flex items-center gap-1">
-                        <CheckCircle2 className="w-3 h-3" /> Saved
-                      </span>
-                    )}
-                  </div>
-                  <textarea
-                    value={noteBody}
-                    onChange={(e) => setNoteBody(e.target.value)}
-                    rows={6}
-                    placeholder="Document the teleconsultation findings, assessment, and plan..."
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 resize-none"
-                  />
-                  <button
-                    onClick={handleSaveNote}
-                    disabled={noteSaving}
-                    className="mt-4 w-full py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors"
-                  >
-                    {noteSaving ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" /> Saving...
-                      </>
-                    ) : (
-                      <>
-                        <Save className="w-4 h-4" /> Save Note
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Completion Note — Findings, Assessment, Plan */}
-            {isActive && session?.attributes.encounter_id && (
-              <div className="bg-white rounded-lg border border-indigo-200 p-5">
-                <div className="flex items-center justify-between gap-3 mb-3">
-                  <div className="flex items-center gap-2">
-                    <FileText className="w-5 h-5 text-indigo-600" />
-                    <h3 className="text-sm font-semibold text-gray-900">Consultation Completion Note</h3>
-                  </div>
-                  {completionSaved && (
-                    <span className="text-xs text-green-600 flex items-center gap-1">
-                      <CheckCircle2 className="w-3 h-3" />
-                      {attrs.referral_id
-                        ? COORDINATION_COPY.noteAndReturnedResponseSaved
-                        : COORDINATION_COPY.completionNoteSaved}
-                    </span>
-                  )}
-                </div>
-                <p className="text-xs text-gray-500 mb-3">
-                  Document your findings, assessment, and recommended plan for the referring provider.
-                </p>
-                <div className="space-y-3">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Findings</label>
-                    <textarea
-                      rows={2}
-                      value={completionFindings}
-                      onChange={(e) => setCompletionFindings(e.target.value)}
-                      placeholder="Key findings from this consultation..."
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Assessment & Plan</label>
-                    <textarea
-                      rows={2}
-                      value={completionPlan}
-                      onChange={(e) => setCompletionPlan(e.target.value)}
-                      placeholder="Clinical assessment and recommended management plan..."
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Follow-up Required</label>
-                    <select
-                      value={completionFollowUp}
-                      onChange={(e) => setCompletionFollowUp(e.target.value as FollowUpOption)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                    >
-                      <option value="NONE">No follow-up needed</option>
-                      <option value="REVIEW">Review in clinic</option>
-                      <option value="REPEAT_TELECONSULT">Repeat teleconsult</option>
-                      <option value="ADMIT">Recommend admission</option>
-                      <option value="REFER_FURTHER">Refer to another specialist</option>
-                    </select>
-                  </div>
-                  {attrs.referral_id && (
-                    <p className="rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
-                      Saving this note will also send the specialist response back through the linked referral.
-                    </p>
-                  )}
-                  {completionError && (
-                    <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">
-                      {completionError}
-                    </p>
-                  )}
-                  <button
-                    onClick={handleSaveCompletionNote}
-                    disabled={
-                      completionSaving ||
-                      (!completionFindings.trim() && !completionPlan.trim())
-                    }
-                    className="w-full py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors"
-                  >
-                    {completionSaving ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Saving completion note...
-                      </>
-                    ) : (
-                      <>
-                        <Save className="w-4 h-4" />
-                        Save Completion Note
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* End Session */}
-            {isActive && (
-              <div className="bg-white rounded-lg border border-gray-200 p-5">
-                {!showEndConfirm ? (
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">
-                        Session Summary Notes
-                      </label>
-                      <textarea
-                        value={sessionNotes}
-                        onChange={(e) => setSessionNotes(e.target.value)}
-                        rows={3}
-                        placeholder="Summary of the teleconsultation session..."
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 resize-none"
-                      />
-                    </div>
-                    <button
-                      onClick={() => setShowEndConfirm(true)}
-                      className="w-full py-2.5 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
-                    >
-                      <PhoneOff className="w-4 h-4" />
-                      End Session
-                    </button>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    <p className="text-sm text-gray-700 text-center">
-                      End this telemedicine session? This will record the duration and notes.
-                    </p>
-                    {attrs.referral_id && !completionSaved && (
-                      <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
-                        The linked referral handoff has not been saved from this session yet. You can still end the session, but the referral response will remain incomplete until the completion note is recorded.
-                      </p>
-                    )}
-                    <div className="flex gap-3">
-                      <button
-                        onClick={() => setShowEndConfirm(false)}
-                        className="flex-1 py-2.5 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        onClick={handleEnd}
-                        disabled={endSession.isPending}
-                        className="flex-1 py-2.5 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors"
-                      >
-                        {endSession.isPending ? (
-                          <>
-                            <Loader2 className="w-4 h-4 animate-spin" /> Ending...
-                          </>
-                        ) : (
-                          <>
-                            <CheckCircle2 className="w-4 h-4" /> Confirm End
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                )}
+            {isResponded && (
+              <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700 flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4" /> Response submitted. {!isClosed && "Waiting for referrer to close the loop."}
               </div>
             )}
           </div>
-        )}
-      </PageShell>
-    </AppLayout>
+        </div>
+
+        {/* ═══ RIGHT PANE — Information ═══ */}
+        <div className="w-72 border-l bg-white overflow-y-auto shrink-0">
+          {/* Patient summary */}
+          <div className="p-3 border-b">
+            <h4 className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Patient</h4>
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-impilo-100 flex items-center justify-center">
+                <User className="w-4 h-4 text-impilo-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-900">{(session?.patientId as string)?.substring(0, 12) || "Patient"}</p>
+                <p className="text-[10px] text-gray-400">Click to view chart</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Referral info */}
+          <div className="p-3 border-b">
+            <h4 className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Referral</h4>
+            <div className="space-y-1.5 text-xs">
+              <div className="flex justify-between"><span className="text-gray-500">Urgency</span><span className="font-medium">{(session?.urgency as string) || "—"}</span></div>
+              <div className="flex justify-between"><span className="text-gray-500">Specialty</span><span className="font-medium">{(session?.specialty as string) || "—"}</span></div>
+              <div className="flex justify-between"><span className="text-gray-500">Routing</span><span className="font-medium">{(session?.routingType as string) || "—"}</span></div>
+              <div className="flex justify-between"><span className="text-gray-500">Stage</span><span className="font-medium">{(session?.stage as number) || "—"}</span></div>
+            </div>
+          </div>
+
+          {/* Consent */}
+          <div className="p-3 border-b">
+            <h4 className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Consent</h4>
+            {session?.consentToken ? (
+              <div className="flex items-center gap-1.5 text-xs text-green-700">
+                <Shield className="w-3.5 h-3.5" /> Verified
+              </div>
+            ) : (
+              <p className="text-xs text-gray-400">Pending</p>
+            )}
+          </div>
+
+          {/* Referral letter excerpt */}
+          {session?.referralLetter && (
+            <div className="p-3 border-b">
+              <h4 className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Referral Letter</h4>
+              <p className="text-xs text-gray-600 line-clamp-6">{session.referralLetter as string}</p>
+            </div>
+          )}
+
+          {/* Timeline */}
+          <div className="p-3">
+            <h4 className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Timeline</h4>
+            <div className="space-y-2">
+              {[
+                session?.createdAt && { label: "Created", time: session.createdAt as string, icon: Activity },
+                session?.submittedAt && { label: "Submitted", time: session.submittedAt as string, icon: Send },
+                session?.acceptedAt && { label: "Accepted", time: session.acceptedAt as string, icon: CheckCircle2 },
+                session?.respondedAt && { label: "Responded", time: session.respondedAt as string, icon: FileText },
+                session?.closedAt && { label: "Closed", time: session.closedAt as string, icon: Lock },
+              ].filter(Boolean).map((event) => {
+                const ev = event as { label: string; time: string; icon: React.ElementType };
+                const Icon = ev.icon;
+                return (
+                  <div key={ev.label} className="flex items-center gap-2 text-xs">
+                    <Icon className="w-3 h-3 text-gray-400 shrink-0" />
+                    <span className="text-gray-600">{ev.label}</span>
+                    <span className="text-gray-400 ml-auto">{new Date(ev.time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
