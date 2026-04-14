@@ -1,132 +1,112 @@
 "use client";
 
 /**
- * EncounterMenu — Persistent clinical navigation sidebar for EHR views.
- * Provides grouped navigation sections:
- *   - Overview (Summary, Timeline)
- *   - Assessment (Vitals, Conditions, History)
- *   - Problems & Diagnoses (Allergies, Immunizations)
- *   - Care & Management (Medications, Orders, Results)
- *   - Consults & Referrals (Referrals, Documents)
- *   - Discharge (Notes, Discharge)
+ * EncounterMenu — Compact collapsible clinical navigation sidebar.
+ *
+ * Section headers are always visible. Sub-items expand on click/hover.
+ * Active section auto-expands. Much less vertical space consumed.
  */
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useParams, usePathname } from "next/navigation";
 import {
-  LayoutDashboard,
-  Clock,
-  HeartPulse,
-  Stethoscope,
-  History,
-  ShieldAlert,
-  Syringe,
-  Pill,
-  ClipboardList,
-  FlaskConical,
-  ArrowRightLeft,
-  FileText,
-  StickyNote,
-  DoorOpen,
-  Activity,
-  User,
-  MonitorDot,
-  Target,
-  Users,
-  Scissors,
-  TrendingUp,
-  Heart,
-  Home,
-  Shield,
-  Brain,
-  ChevronRight,
-  Globe2,
+  LayoutDashboard, Clock, HeartPulse, Stethoscope, History,
+  ShieldAlert, Syringe, Pill, ClipboardList, FlaskConical,
+  ArrowRightLeft, FileText, StickyNote, DoorOpen, Activity,
+  User, MonitorDot, Target, Users, Scissors, TrendingUp,
+  Heart, Home, Shield, Brain, ChevronDown, Globe2,
 } from "lucide-react";
-import { useClinicalNotes } from "@/hooks/queries/useClinicalNotes";
 import { useEncounters } from "@/hooks/queries/useEncounters";
 import { usePatient } from "@/hooks/queries/usePatients";
-import { useVitals } from "@/hooks/queries/useVitals";
 import { usePrivacyDisplayStore } from "@/hooks/usePrivacyDisplayStore";
 import { maskName, displayCpid } from "@/lib/pii-mask";
 
 interface MenuItem {
   label: string;
-  description: string;
   segment: string;
   icon: React.ElementType;
 }
 
 interface MenuSection {
   title: string;
+  icon: React.ElementType;
   items: MenuItem[];
 }
 
 const MENU_SECTIONS: MenuSection[] = [
   {
     title: "Overview",
+    icon: LayoutDashboard,
     items: [
-      { label: "Summary", description: "Patient summary and status", segment: "summary", icon: LayoutDashboard },
-      { label: "Timeline", description: "Clinical event timeline", segment: "timeline", icon: Clock },
-      { label: "IPS", description: "International patient summary bundle", segment: "ips", icon: Globe2 },
+      { label: "Summary", segment: "summary", icon: LayoutDashboard },
+      { label: "Timeline", segment: "timeline", icon: Clock },
+      { label: "IPS", segment: "ips", icon: Globe2 },
     ],
   },
   {
     title: "Assessment",
+    icon: HeartPulse,
     items: [
-      { label: "Vitals", description: "Record and review vital signs", segment: "vitals", icon: HeartPulse },
-      { label: "Conditions", description: "Active problems and diagnoses", segment: "conditions", icon: Stethoscope },
-      { label: "History", description: "Past medical history", segment: "history", icon: History },
+      { label: "Vitals", segment: "vitals", icon: HeartPulse },
+      { label: "Conditions", segment: "conditions", icon: Stethoscope },
+      { label: "History", segment: "history", icon: History },
     ],
   },
   {
-    title: "Problems & Diagnoses",
+    title: "Problems",
+    icon: ShieldAlert,
     items: [
-      { label: "Allergies", description: "Allergy and adverse reactions", segment: "allergies", icon: ShieldAlert },
-      { label: "Immunizations", description: "Vaccination history", segment: "immunizations", icon: Syringe },
+      { label: "Allergies", segment: "allergies", icon: ShieldAlert },
+      { label: "Immunizations", segment: "immunizations", icon: Syringe },
     ],
   },
   {
-    title: "Care & Management",
+    title: "Care",
+    icon: Pill,
     items: [
-      { label: "Medications", description: "Prescriptions and formulary", segment: "medications", icon: Pill },
-      { label: "Orders", description: "Lab orders and imaging", segment: "orders", icon: ClipboardList },
-      { label: "Results", description: "Lab and diagnostic results", segment: "results", icon: FlaskConical },
-      { label: "Imaging", description: "DICOM viewer and PACS", segment: "imaging", icon: MonitorDot },
-      { label: "Care Plans", description: "Goals and interventions", segment: "care-plans", icon: Target },
-      { label: "Care Team", description: "Assigned providers", segment: "care-team", icon: Users },
-      { label: "Goals", description: "Patient health goals", segment: "goals", icon: Target },
+      { label: "Medications", segment: "medications", icon: Pill },
+      { label: "Orders", segment: "orders", icon: ClipboardList },
+      { label: "Results", segment: "results", icon: FlaskConical },
+      { label: "Imaging", segment: "imaging", icon: MonitorDot },
+      { label: "Care Plans", segment: "care-plans", icon: Target },
+      { label: "Care Team", segment: "care-team", icon: Users },
+      { label: "Goals", segment: "goals", icon: Target },
     ],
   },
   {
-    title: "History & Context",
+    title: "Background",
+    icon: Heart,
     items: [
-      { label: "Family History", description: "Hereditary risk factors", segment: "family-history", icon: Heart },
-      { label: "Social History", description: "Social determinants of health", segment: "social-history", icon: Home },
-      { label: "Functional Status", description: "ADL and IADL assessments", segment: "functional-status", icon: Activity },
-      { label: "Advance Directives", description: "DNR, living will, POA", segment: "advance-directives", icon: Shield },
+      { label: "Family History", segment: "family-history", icon: Heart },
+      { label: "Social History", segment: "social-history", icon: Home },
+      { label: "Functional", segment: "functional-status", icon: Activity },
+      { label: "Directives", segment: "advance-directives", icon: Shield },
     ],
   },
   {
-    title: "Clinical Depth",
+    title: "Depth",
+    icon: Brain,
     items: [
-      { label: "Procedures", description: "Past and scheduled procedures", segment: "procedures", icon: Scissors },
-      { label: "Growth Chart", description: "Paediatric growth tracking", segment: "growth-chart", icon: TrendingUp },
-      { label: "Assessments", description: "Standardized scoring tools", segment: "assessments", icon: Brain },
+      { label: "Procedures", segment: "procedures", icon: Scissors },
+      { label: "Growth", segment: "growth-chart", icon: TrendingUp },
+      { label: "Assessments", segment: "assessments", icon: Brain },
     ],
   },
   {
-    title: "Consults & Referrals",
+    title: "Consults",
+    icon: ArrowRightLeft,
     items: [
-      { label: "Consults", description: "Consultations, referrals, and teleconsults", segment: "consults", icon: ArrowRightLeft },
-      { label: "Documents", description: "Clinical documents and attachments", segment: "documents", icon: FileText },
+      { label: "Referrals", segment: "consults", icon: ArrowRightLeft },
+      { label: "Documents", segment: "documents", icon: FileText },
     ],
   },
   {
-    title: "Visit Outcome",
+    title: "Outcome",
+    icon: DoorOpen,
     items: [
-      { label: "Notes", description: "Clinical notes and documentation", segment: "notes", icon: StickyNote },
-      { label: "Discharge", description: "Encounter disposition", segment: "discharge", icon: DoorOpen },
+      { label: "Notes", segment: "notes", icon: StickyNote },
+      { label: "Discharge", segment: "discharge", icon: DoorOpen },
     ],
   },
 ];
@@ -135,164 +115,129 @@ export function EncounterMenu() {
   const params = useParams();
   const pathname = usePathname();
   const patientId = params?.patientId as string | undefined;
-  const patientIdOrEmpty = patientId ?? "";
 
-  const { data: patientData } = usePatient(patientIdOrEmpty);
-  const { data: encountersData } = useEncounters(patientIdOrEmpty);
-  const { data: notesData } = useClinicalNotes(patientIdOrEmpty);
-  const { data: vitalsData } = useVitals(patientIdOrEmpty);
+  const { data: patientData } = usePatient(patientId ?? "");
+  const { data: encountersData } = useEncounters(patientId ?? "");
 
-  const activeSegment = getActiveSegment(pathname, patientIdOrEmpty);
+  const activeSegment = getActiveSegment(pathname, patientId ?? "");
   const patient = patientData?.data;
   const activeEncounter = (encountersData?.data ?? []).find(
-    (encounter) =>
-      encounter.attributes.status === "ACTIVE" || encounter.attributes.status === "IN_PROGRESS",
+    (e) => e.attributes.status === "ACTIVE" || e.attributes.status === "IN_PROGRESS",
   );
-  const latestSavedAt = useMemo(() => {
-    const noteTimes = (notesData?.data ?? [])
-      .map((note) => note.attributes.signedAt ?? note.attributes.createdAt)
-      .filter(Boolean);
-    const vitalTimes = (vitalsData?.data ?? []).map((vital) => vital.attributes.recordedAt);
-    const encounterTimes = activeEncounter
-      ? [String(activeEncounter.attributes.closedAt ?? activeEncounter.attributes.startedAt)]
-      : [];
-    const timestamps = [...noteTimes, ...vitalTimes, ...encounterTimes]
-      .map((value) => new Date(String(value)).getTime())
-      .filter((value) => Number.isFinite(value));
 
-    if (timestamps.length === 0) return null;
-
-    return new Date(Math.max(...timestamps)).toISOString();
-  }, [activeEncounter, notesData?.data, vitalsData?.data]);
-  const activeItem = useMemo(() => {
-    for (const section of MENU_SECTIONS) {
-      const item = section.items.find((entry) => entry.segment === activeSegment);
-      if (item) return item;
+  // Which section contains the active segment?
+  const activeSectionTitle = useMemo(() => {
+    for (const s of MENU_SECTIONS) {
+      if (s.items.some((i) => i.segment === activeSegment)) return s.title;
     }
     return null;
   }, [activeSegment]);
 
+  // Expanded sections — active section is always open
+  const [expanded, setExpanded] = useState<Set<string>>(new Set(activeSectionTitle ? [activeSectionTitle] : ["Overview"]));
+
+  function toggleSection(title: string) {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(title)) next.delete(title);
+      else next.add(title);
+      return next;
+    });
+  }
+
   if (!patientId) return null;
 
   return (
-    <aside className="w-64 bg-white border-r overflow-y-auto shrink-0">
-      {/* Header */}
-      <div className="px-3 py-3 border-b bg-gradient-to-br from-slate-50 via-white to-blue-50/60">
-        <h2 className="text-xs font-semibold text-gray-900 uppercase tracking-wide">
-          Encounter Record
-        </h2>
-        <p className="text-[10px] text-gray-400 mt-0.5">Clinical Documentation</p>
-        <div className="mt-3 rounded-xl border border-white/80 bg-white/90 p-3 shadow-sm">
-          <div className="flex items-start justify-between gap-2">
-            <div>
-              <p className="text-sm font-semibold text-slate-900">
-                {maskName(String(patient?.attributes.displayName ?? ""), usePrivacyDisplayStore.getState().level) || "Patient workspace"}
-              </p>
-              <p className="mt-0.5 text-[11px] text-slate-500">
-                {displayCpid(String(patient?.attributes.cpid ?? patientId))}
-              </p>
-            </div>
-            {activeEncounter ? (
-              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-medium text-emerald-700">
-                Live
-              </span>
-            ) : (
-              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600">
-                Chart
-              </span>
-            )}
+    <aside className="w-52 bg-white border-r overflow-y-auto shrink-0 flex flex-col">
+      {/* Compact patient header */}
+      <div className="px-3 py-2.5 border-b bg-slate-50">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-full bg-impilo-100 flex items-center justify-center shrink-0">
+            <User className="w-3.5 h-3.5 text-impilo-600" />
           </div>
-          <div className="mt-2 flex flex-wrap gap-2">
-            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-medium text-slate-600">
-              {activeItem?.label ?? "Workspace"}
-            </span>
-            {activeEncounter && (
-              <span className="rounded-full bg-impilo-50 px-2.5 py-1 text-[10px] font-medium text-impilo-600">
-                {String(activeEncounter.attributes.encounterType)}
-              </span>
-            )}
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-semibold text-gray-900 truncate">
+              {maskName(String(patient?.attributes.displayName ?? ""), usePrivacyDisplayStore.getState().level) || "Patient"}
+            </p>
+            <p className="text-[10px] text-gray-400 truncate">
+              {displayCpid(String(patient?.attributes.cpid ?? patientId))}
+            </p>
           </div>
-          {activeItem?.description && (
-            <p className="mt-2 text-[11px] leading-4 text-slate-500">{activeItem.description}</p>
+          {activeEncounter ? (
+            <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" title="Live encounter" />
+          ) : (
+            <span className="w-2 h-2 rounded-full bg-gray-300 shrink-0" title="Chart view" />
           )}
         </div>
       </div>
 
-      {/* Patient File Button */}
-      <div className="px-2 py-2 border-b">
-        <Link
-          href={`/ehr/${patientId}`}
-          className="flex items-center gap-2 w-full px-3 py-2 text-sm font-medium text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-        >
-          <User className="w-4 h-4 text-gray-500" />
-          Patient Chart
-        </Link>
-        <Link
-          href={`/ehr/${patientId}/encounters`}
-          className="flex items-center gap-1.5 mt-1.5 px-3 text-xs text-gray-500 hover:text-impilo-500 transition-colors"
-        >
-          <Activity className="w-3 h-3" />
-          Encounters
-        </Link>
-      </div>
+      {/* Chart link */}
+      <Link
+        href={`/ehr/${patientId}`}
+        className="flex items-center gap-2 mx-2 mt-2 px-2 py-1.5 text-xs text-gray-500 hover:text-impilo-600 hover:bg-impilo-50 rounded-md transition-colors"
+      >
+        <LayoutDashboard className="w-3.5 h-3.5" />
+        Patient Chart
+      </Link>
 
-      {/* Menu Items */}
-      <nav className="py-2">
-        {MENU_SECTIONS.map((section) => (
-          <div key={section.title} className="mb-1">
-            <div className="px-3 py-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
-              {section.title}
+      {/* Collapsible sections */}
+      <nav className="flex-1 py-1 px-1">
+        {MENU_SECTIONS.map((section) => {
+          const SectionIcon = section.icon;
+          const isExpanded = expanded.has(section.title) || section.title === activeSectionTitle;
+          const hasActiveChild = section.items.some((i) => i.segment === activeSegment);
+
+          return (
+            <div key={section.title} className="mb-0.5">
+              {/* Section header — always visible */}
+              <button
+                onClick={() => toggleSection(section.title)}
+                className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-left transition-colors ${
+                  hasActiveChild
+                    ? "bg-impilo-50 text-impilo-700"
+                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                }`}
+              >
+                <SectionIcon className={`w-3.5 h-3.5 shrink-0 ${hasActiveChild ? "text-impilo-500" : "text-gray-400"}`} />
+                <span className="text-[11px] font-semibold flex-1">{section.title}</span>
+                <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+              </button>
+
+              {/* Sub-items — collapsed by default */}
+              {isExpanded && (
+                <div className="ml-3 border-l border-gray-100 pl-1.5 py-0.5">
+                  {section.items.map((item) => {
+                    const href = `/ehr/${patientId}/${item.segment}`;
+                    const isActive = activeSegment === item.segment;
+                    const Icon = item.icon;
+
+                    return (
+                      <Link
+                        key={item.segment}
+                        href={href}
+                        className={`flex items-center gap-2 px-2 py-1 rounded-md text-[11px] transition-colors ${
+                          isActive
+                            ? "bg-impilo-100 text-impilo-700 font-medium"
+                            : "text-gray-500 hover:bg-gray-50 hover:text-gray-700"
+                        }`}
+                      >
+                        <Icon className={`w-3 h-3 ${isActive ? "text-impilo-500" : "text-gray-400"}`} />
+                        {item.label}
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
             </div>
-            {section.items.map((item) => {
-              const href = `/ehr/${patientId}/${item.segment}`;
-              const isActive = activeSegment === item.segment;
-              const Icon = item.icon;
-
-              return (
-                <Link
-                  key={item.segment}
-                  href={href}
-                  className={`flex items-center gap-3 px-3 py-2 mx-1 rounded-lg text-left transition-all ${
-                    isActive
-                      ? "bg-impilo-50 text-impilo-600"
-                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                  }`}
-                >
-                  <div className={`w-8 h-8 rounded-md flex items-center justify-center transition-colors ${
-                    isActive
-                      ? "bg-impilo-500 text-white"
-                      : "bg-gray-100 text-gray-400 group-hover:bg-impilo-100 group-hover:text-impilo-500"
-                  }`}>
-                    <Icon className="w-4 h-4" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className={`text-sm truncate ${isActive ? "font-medium" : ""}`}>{item.label}</div>
-                    <div className={`text-[10px] truncate ${
-                      isActive ? "text-impilo-500/70" : "text-gray-400"
-                    }`}>{item.description}</div>
-                  </div>
-                  <ChevronRight className={`w-3.5 h-3.5 shrink-0 ${
-                    isActive ? "text-impilo-500" : "text-gray-300"
-                  }`} />
-                </Link>
-              );
-            })}
-          </div>
-        ))}
+          );
+        })}
       </nav>
 
-      {/* Last Saved Indicator */}
-      <div className="mt-auto border-t px-3 py-2">
-        <div className="flex items-center justify-between gap-2 text-[10px]">
-          <div className="flex items-center gap-1.5 text-gray-400">
-            <div className={`w-1.5 h-1.5 rounded-full ${
-              activeEncounter ? "bg-emerald-400" : "bg-slate-300"
-            }`} />
-            <span>{activeEncounter ? "Workspace live" : "Chart view"}</span>
-          </div>
-          <span className="text-gray-400">
-            {latestSavedAt ? `Last saved ${formatRelativeTime(latestSavedAt)}` : "No saves yet"}
-          </span>
+      {/* Status footer */}
+      <div className="border-t px-3 py-1.5">
+        <div className="flex items-center gap-1.5 text-[10px] text-gray-400">
+          <div className={`w-1.5 h-1.5 rounded-full ${activeEncounter ? "bg-emerald-400" : "bg-gray-300"}`} />
+          {activeEncounter ? "Live" : "Chart"}
         </div>
       </div>
     </aside>
@@ -303,21 +248,5 @@ function getActiveSegment(pathname: string, patientId: string): string | null {
   const prefix = `/ehr/${patientId}/`;
   if (!pathname.startsWith(prefix)) return null;
   const rest = pathname.slice(prefix.length);
-  const segment = rest.split("/")[0];
-  return segment || null;
-}
-
-function formatRelativeTime(value: string): string {
-  const deltaMs = Date.now() - new Date(value).getTime();
-
-  if (!Number.isFinite(deltaMs) || deltaMs < 60_000) return "just now";
-
-  const minutes = Math.round(deltaMs / 60_000);
-  if (minutes < 60) return `${minutes}m ago`;
-
-  const hours = Math.round(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-
-  const days = Math.round(hours / 24);
-  return `${days}d ago`;
+  return rest.split("/")[0] || null;
 }
