@@ -94,23 +94,9 @@ export default function LoginPage() {
           );
           useWorkModeStore.getState().deriveFromRoles(user.roles);
 
-          // Check server-side consent status — if already accepted, hydrate client store
-          // so the consent gate is skipped for returning users
-          apiClient
-            .get<{ data: Array<{ attributes: { policyType: string; accepted: boolean } }> }>(
-              `/internal/v1/consent/status?version=${CURRENT_CONSENT_VERSION}`
-            )
-            .then((res) => {
-              const records = res?.data ?? [];
-              const hasPrivacy = records.some((r) => r.attributes.policyType === "PRIVACY_POLICY" && r.attributes.accepted);
-              const hasTerms = records.some((r) => r.attributes.policyType === "TERMS_OF_USE" && r.attributes.accepted);
-              if (hasPrivacy && hasTerms) {
-                useConsentStore.getState().acceptConsent(user.id);
-              }
-            })
-            .catch(() => {
-              // If consent check fails, the consent gate will catch it on redirect
-            });
+          // Hydrate consent from localStorage immediately — if the user
+          // already accepted, this prevents the consent gate from firing.
+          useConsentStore.getState().hydrate(user.id);
 
           // Navigate to resolving screen for identity resolution
           router.push("/auth/resolving");
@@ -327,6 +313,7 @@ export default function LoginPage() {
                           (attrs as Record<string, unknown>).expiresAt as string | undefined,
                         );
                         useWorkModeStore.getState().deriveFromRoles(u.roles);
+                        useConsentStore.getState().hydrate(u.id);
                         router.push("/auth/resolving");
                       },
                       onError: () => {
