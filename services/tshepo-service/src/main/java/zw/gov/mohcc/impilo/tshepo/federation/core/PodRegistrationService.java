@@ -85,6 +85,9 @@ public class PodRegistrationService {
         pod.setExpiresAt(now.plus(DEFAULT_REGISTRATION_VALIDITY));
 
         pod = podRepo.save(pod);
+        if (pod.getRegistrationId() == null) {
+            pod.setRegistrationId(java.util.UUID.randomUUID());
+        }
 
         publishOutboxEvent("POD_REGISTRATION", pod.getPodId().toString(),
                 "impilo.federation.pod.registered.v1", Map.of(
