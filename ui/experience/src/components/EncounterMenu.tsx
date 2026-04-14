@@ -1,10 +1,12 @@
 "use client";
 
 /**
- * EncounterMenu — Compact collapsible clinical navigation sidebar.
+ * EncounterMenu — Intelligent wizard sidebar for clinical encounters.
  *
- * Section headers are always visible. Sub-items expand on click/hover.
- * Active section auto-expands. Much less vertical space consumed.
+ * Role-aware: shows a recommended step sequence based on the logged-in
+ * clinician type. Steps are ordered by clinical workflow, with progress
+ * indicators and "Next step" guidance. Irrelevant sections are hidden
+ * or deprioritised.
  */
 
 import Link from "next/link";
@@ -15,106 +17,188 @@ import {
   ShieldAlert, Syringe, Pill, ClipboardList, FlaskConical,
   ArrowRightLeft, FileText, StickyNote, DoorOpen, Activity,
   User, MonitorDot, Target, Users, Scissors, TrendingUp,
-  Heart, Home, Shield, Brain, ChevronDown, Globe2,
+  Heart, Home, Shield, Brain, ChevronRight, Globe2,
+  ArrowRight, CheckCircle2, Circle, Baby,
 } from "lucide-react";
 import { useEncounters } from "@/hooks/queries/useEncounters";
 import { usePatient } from "@/hooks/queries/usePatients";
+import { useAuthStore } from "@/hooks/useAuthStore";
 import { usePrivacyDisplayStore } from "@/hooks/usePrivacyDisplayStore";
 import { maskName, displayCpid } from "@/lib/pii-mask";
 
-interface MenuItem {
+interface WizardStep {
   label: string;
   segment: string;
   icon: React.ElementType;
+  /** hint shown below the step label */
+  hint?: string;
 }
 
-interface MenuSection {
+interface WizardPhase {
   title: string;
-  icon: React.ElementType;
-  items: MenuItem[];
+  steps: WizardStep[];
 }
 
-const MENU_SECTIONS: MenuSection[] = [
-  {
-    title: "Overview",
-    icon: LayoutDashboard,
-    items: [
-      { label: "Summary", segment: "summary", icon: LayoutDashboard },
-      { label: "Timeline", segment: "timeline", icon: Clock },
-      { label: "IPS", segment: "ips", icon: Globe2 },
-    ],
-  },
-  {
-    title: "Assessment",
-    icon: HeartPulse,
-    items: [
-      { label: "Vitals", segment: "vitals", icon: HeartPulse },
-      { label: "Conditions", segment: "conditions", icon: Stethoscope },
-      { label: "History", segment: "history", icon: History },
-    ],
-  },
-  {
-    title: "Problems",
-    icon: ShieldAlert,
-    items: [
-      { label: "Allergies", segment: "allergies", icon: ShieldAlert },
-      { label: "Immunizations", segment: "immunizations", icon: Syringe },
-    ],
-  },
-  {
-    title: "Care",
-    icon: Pill,
-    items: [
-      { label: "Medications", segment: "medications", icon: Pill },
-      { label: "Orders", segment: "orders", icon: ClipboardList },
-      { label: "Results", segment: "results", icon: FlaskConical },
-      { label: "Imaging", segment: "imaging", icon: MonitorDot },
-      { label: "Care Plans", segment: "care-plans", icon: Target },
-      { label: "Care Team", segment: "care-team", icon: Users },
-      { label: "Goals", segment: "goals", icon: Target },
-    ],
-  },
-  {
-    title: "Background",
-    icon: Heart,
-    items: [
-      { label: "Family History", segment: "family-history", icon: Heart },
-      { label: "Social History", segment: "social-history", icon: Home },
-      { label: "Functional", segment: "functional-status", icon: Activity },
-      { label: "Directives", segment: "advance-directives", icon: Shield },
-    ],
-  },
-  {
-    title: "Depth",
-    icon: Brain,
-    items: [
-      { label: "Procedures", segment: "procedures", icon: Scissors },
-      { label: "Growth", segment: "growth-chart", icon: TrendingUp },
-      { label: "Assessments", segment: "assessments", icon: Brain },
-    ],
-  },
-  {
-    title: "Consults",
-    icon: ArrowRightLeft,
-    items: [
-      { label: "Referrals", segment: "consults", icon: ArrowRightLeft },
-      { label: "Documents", segment: "documents", icon: FileText },
-    ],
-  },
-  {
-    title: "Outcome",
-    icon: DoorOpen,
-    items: [
-      { label: "Notes", segment: "notes", icon: StickyNote },
-      { label: "Discharge", segment: "discharge", icon: DoorOpen },
-    ],
-  },
-];
+// ── Role-specific wizard flows ───────────────────────────────────
+
+function getDoctorFlow(): WizardPhase[] {
+  return [
+    {
+      title: "1. Assess",
+      steps: [
+        { label: "Vitals", segment: "vitals", icon: HeartPulse, hint: "Record vital signs" },
+        { label: "History", segment: "history", icon: History, hint: "Review/update history" },
+        { label: "Conditions", segment: "conditions", icon: Stethoscope, hint: "Active problems" },
+        { label: "Allergies", segment: "allergies", icon: ShieldAlert, hint: "Verify allergies" },
+      ],
+    },
+    {
+      title: "2. Diagnose",
+      steps: [
+        { label: "Encounter", segment: "encounter", icon: ClipboardList, hint: "Structured assessment" },
+        { label: "Results", segment: "results", icon: FlaskConical, hint: "Labs & diagnostics" },
+        { label: "Imaging", segment: "imaging", icon: MonitorDot, hint: "PACS / X-ray" },
+      ],
+    },
+    {
+      title: "3. Treat",
+      steps: [
+        { label: "Medications", segment: "medications", icon: Pill, hint: "Prescribe" },
+        { label: "Orders", segment: "orders", icon: ClipboardList, hint: "Lab & procedure orders" },
+        { label: "Procedures", segment: "procedures", icon: Scissors, hint: "Procedures done" },
+        { label: "Care Plans", segment: "care-plans", icon: Target, hint: "Goals & interventions" },
+      ],
+    },
+    {
+      title: "4. Coordinate",
+      steps: [
+        { label: "Referrals", segment: "consults", icon: ArrowRightLeft, hint: "Consults & teleconsults" },
+        { label: "Documents", segment: "documents", icon: FileText, hint: "Attach documents" },
+      ],
+    },
+    {
+      title: "5. Close",
+      steps: [
+        { label: "Notes", segment: "notes", icon: StickyNote, hint: "Clinical notes" },
+        { label: "Discharge", segment: "discharge", icon: DoorOpen, hint: "Disposition & discharge" },
+      ],
+    },
+  ];
+}
+
+function getNurseFlow(): WizardPhase[] {
+  return [
+    {
+      title: "1. Triage & Assess",
+      steps: [
+        { label: "Vitals", segment: "vitals", icon: HeartPulse, hint: "Obs & vital signs" },
+        { label: "Allergies", segment: "allergies", icon: ShieldAlert, hint: "Allergy check" },
+        { label: "Encounter", segment: "encounter", icon: ClipboardList, hint: "Nursing assessment" },
+      ],
+    },
+    {
+      title: "2. Care Delivery",
+      steps: [
+        { label: "Medications", segment: "medications", icon: Pill, hint: "Medication round" },
+        { label: "Orders", segment: "orders", icon: ClipboardList, hint: "Pending orders" },
+        { label: "Care Plans", segment: "care-plans", icon: Target, hint: "Nursing care plan" },
+      ],
+    },
+    {
+      title: "3. Document",
+      steps: [
+        { label: "Notes", segment: "notes", icon: StickyNote, hint: "Nursing notes" },
+        { label: "Results", segment: "results", icon: FlaskConical, hint: "Specimen results" },
+        { label: "Documents", segment: "documents", icon: FileText, hint: "Uploaded docs" },
+      ],
+    },
+    {
+      title: "4. Handover",
+      steps: [
+        { label: "Summary", segment: "summary", icon: LayoutDashboard, hint: "Patient summary" },
+        { label: "Discharge", segment: "discharge", icon: DoorOpen, hint: "Discharge checklist" },
+      ],
+    },
+  ];
+}
+
+function getPharmacistFlow(): WizardPhase[] {
+  return [
+    {
+      title: "1. Verify",
+      steps: [
+        { label: "Medications", segment: "medications", icon: Pill, hint: "Active prescriptions" },
+        { label: "Allergies", segment: "allergies", icon: ShieldAlert, hint: "Allergy check" },
+        { label: "Conditions", segment: "conditions", icon: Stethoscope, hint: "Active conditions" },
+        { label: "Encounter", segment: "encounter", icon: ClipboardList, hint: "Dispensing checks" },
+      ],
+    },
+    {
+      title: "2. Review",
+      steps: [
+        { label: "Results", segment: "results", icon: FlaskConical, hint: "Renal/hepatic function" },
+        { label: "Orders", segment: "orders", icon: ClipboardList, hint: "Pending orders" },
+      ],
+    },
+    {
+      title: "3. Document",
+      steps: [
+        { label: "Notes", segment: "notes", icon: StickyNote, hint: "Intervention notes" },
+        { label: "Documents", segment: "documents", icon: FileText, hint: "Documentation" },
+      ],
+    },
+  ];
+}
+
+function getMidwifeFlow(): WizardPhase[] {
+  return [
+    {
+      title: "1. ANC Assessment",
+      steps: [
+        { label: "Vitals", segment: "vitals", icon: HeartPulse, hint: "BP, weight, urine" },
+        { label: "Encounter", segment: "encounter", icon: Baby, hint: "ANC checklist" },
+        { label: "Conditions", segment: "conditions", icon: Stethoscope, hint: "Risk factors" },
+      ],
+    },
+    {
+      title: "2. Investigations",
+      steps: [
+        { label: "Results", segment: "results", icon: FlaskConical, hint: "Hb, HIV, syphilis" },
+        { label: "Immunizations", segment: "immunizations", icon: Syringe, hint: "Tetanus, others" },
+      ],
+    },
+    {
+      title: "3. Care & Counsel",
+      steps: [
+        { label: "Medications", segment: "medications", icon: Pill, hint: "Iron/folate, ARVs" },
+        { label: "Care Plans", segment: "care-plans", icon: Target, hint: "Birth plan" },
+        { label: "Referrals", segment: "consults", icon: ArrowRightLeft, hint: "If high risk" },
+      ],
+    },
+    {
+      title: "4. Document",
+      steps: [
+        { label: "Notes", segment: "notes", icon: StickyNote, hint: "Visit notes" },
+        { label: "Growth", segment: "growth-chart", icon: TrendingUp, hint: "Fundal height" },
+      ],
+    },
+  ];
+}
+
+function getFlowForRole(roles: string[]): WizardPhase[] {
+  if (roles.includes("PHARMACIST")) return getPharmacistFlow();
+  if (roles.includes("NURSE")) return getNurseFlow();
+  if (roles.includes("MIDWIFE")) return getMidwifeFlow();
+  return getDoctorFlow();
+}
+
+// ── Component ─────────────────────────────────────────────────────
 
 export function EncounterMenu() {
   const params = useParams();
   const pathname = usePathname();
   const patientId = params?.patientId as string | undefined;
+  const user = useAuthStore((s) => s.user);
 
   const { data: patientData } = usePatient(patientId ?? "");
   const { data: encountersData } = useEncounters(patientId ?? "");
@@ -125,32 +209,40 @@ export function EncounterMenu() {
     (e) => e.attributes.status === "ACTIVE" || e.attributes.status === "IN_PROGRESS",
   );
 
-  // Which section contains the active segment?
-  const activeSectionTitle = useMemo(() => {
-    for (const s of MENU_SECTIONS) {
-      if (s.items.some((i) => i.segment === activeSegment)) return s.title;
+  const phases = useMemo(() => getFlowForRole(user?.roles ?? []), [user?.roles]);
+
+  // Track visited steps
+  const [visited, setVisited] = useState<Set<string>>(new Set(activeSegment ? [activeSegment] : []));
+
+  // Mark current segment as visited
+  if (activeSegment && !visited.has(activeSegment)) {
+    setVisited((prev) => new Set(prev).add(activeSegment));
+  }
+
+  // Find next recommended step
+  const nextStep = useMemo(() => {
+    for (const phase of phases) {
+      for (const step of phase.steps) {
+        if (!visited.has(step.segment)) return step;
+      }
     }
     return null;
-  }, [activeSegment]);
+  }, [phases, visited]);
 
-  // Expanded sections — active section is always open
-  const [expanded, setExpanded] = useState<Set<string>>(new Set(activeSectionTitle ? [activeSectionTitle] : ["Overview"]));
-
-  function toggleSection(title: string) {
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      if (next.has(title)) next.delete(title);
-      else next.add(title);
-      return next;
-    });
-  }
+  // All steps flat for encounter path building
+  const allSteps = useMemo(() => phases.flatMap((p) => p.steps), [phases]);
+  const currentIdx = allSteps.findIndex((s) => s.segment === activeSegment);
+  const prevStep = currentIdx > 0 ? allSteps[currentIdx - 1] : null;
+  const nextSeqStep = currentIdx >= 0 && currentIdx < allSteps.length - 1 ? allSteps[currentIdx + 1] : null;
 
   if (!patientId) return null;
 
+  const encBase = activeEncounter ? `/ehr/${patientId}/encounter/${activeEncounter.id}` : null;
+
   return (
     <aside className="w-52 bg-white border-r overflow-y-auto shrink-0 flex flex-col">
-      {/* Compact patient header */}
-      <div className="px-3 py-2.5 border-b bg-slate-50">
+      {/* Patient header */}
+      <div className="px-3 py-2 border-b bg-slate-50">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-full bg-impilo-100 flex items-center justify-center shrink-0">
             <User className="w-3.5 h-3.5 text-impilo-600" />
@@ -171,74 +263,131 @@ export function EncounterMenu() {
         </div>
       </div>
 
+      {/* Progress bar */}
+      <div className="px-3 py-2 border-b">
+        <div className="flex items-center justify-between text-[10px] text-gray-400 mb-1">
+          <span>Progress</span>
+          <span>{visited.size}/{allSteps.length} steps</span>
+        </div>
+        <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+          <div className="h-full bg-impilo-500 rounded-full transition-all"
+            style={{ width: `${(visited.size / allSteps.length) * 100}%` }} />
+        </div>
+      </div>
+
+      {/* Next step suggestion */}
+      {nextStep && (
+        <Link href={`/ehr/${patientId}/${nextStep.segment}`}
+          className="mx-2 mt-2 flex items-center gap-2 px-2.5 py-2 bg-impilo-50 border border-impilo-200 rounded-lg text-xs hover:bg-impilo-100 transition-colors">
+          <ArrowRight className="w-3.5 h-3.5 text-impilo-500 shrink-0" />
+          <div className="min-w-0">
+            <p className="font-semibold text-impilo-700 truncate">Next: {nextStep.label}</p>
+            {nextStep.hint && <p className="text-impilo-500 truncate">{nextStep.hint}</p>}
+          </div>
+        </Link>
+      )}
+
       {/* Chart link */}
-      <Link
-        href={`/ehr/${patientId}`}
-        className="flex items-center gap-2 mx-2 mt-2 px-2 py-1.5 text-xs text-gray-500 hover:text-impilo-600 hover:bg-impilo-50 rounded-md transition-colors"
-      >
-        <LayoutDashboard className="w-3.5 h-3.5" />
-        Patient Chart
+      <Link href={`/ehr/${patientId}`}
+        className="flex items-center gap-2 mx-2 mt-2 px-2 py-1.5 text-xs text-gray-500 hover:text-impilo-600 hover:bg-impilo-50 rounded-md transition-colors">
+        <LayoutDashboard className="w-3.5 h-3.5" /> Patient Chart
       </Link>
 
-      {/* Collapsible sections */}
+      {/* Wizard phases */}
       <nav className="flex-1 py-1 px-1">
-        {MENU_SECTIONS.map((section) => {
-          const SectionIcon = section.icon;
-          const isExpanded = expanded.has(section.title) || section.title === activeSectionTitle;
-          const hasActiveChild = section.items.some((i) => i.segment === activeSegment);
-
-          return (
-            <div key={section.title} className="mb-0.5">
-              {/* Section header — always visible */}
-              <button
-                onClick={() => toggleSection(section.title)}
-                className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-left transition-colors ${
-                  hasActiveChild
-                    ? "bg-impilo-50 text-impilo-700"
-                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                }`}
-              >
-                <SectionIcon className={`w-3.5 h-3.5 shrink-0 ${hasActiveChild ? "text-impilo-500" : "text-gray-400"}`} />
-                <span className="text-[11px] font-semibold flex-1">{section.title}</span>
-                <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
-              </button>
-
-              {/* Sub-items — collapsed by default */}
-              {isExpanded && (
-                <div className="ml-3 border-l border-gray-100 pl-1.5 py-0.5">
-                  {section.items.map((item) => {
-                    const href = `/ehr/${patientId}/${item.segment}`;
-                    const isActive = activeSegment === item.segment;
-                    const Icon = item.icon;
-
-                    return (
-                      <Link
-                        key={item.segment}
-                        href={href}
-                        className={`flex items-center gap-2 px-2 py-1 rounded-md text-[11px] transition-colors ${
-                          isActive
-                            ? "bg-impilo-100 text-impilo-700 font-medium"
-                            : "text-gray-500 hover:bg-gray-50 hover:text-gray-700"
-                        }`}
-                      >
-                        <Icon className={`w-3 h-3 ${isActive ? "text-impilo-500" : "text-gray-400"}`} />
-                        {item.label}
-                      </Link>
-                    );
-                  })}
-                </div>
-              )}
+        {phases.map((phase) => (
+          <div key={phase.title} className="mb-1">
+            <div className="px-2 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+              {phase.title}
             </div>
-          );
-        })}
+            <div className="space-y-0.5">
+              {phase.steps.map((step) => {
+                const href = `/ehr/${patientId}/${step.segment}`;
+                const isActive = activeSegment === step.segment;
+                const isVisited = visited.has(step.segment);
+                const Icon = step.icon;
+
+                return (
+                  <Link key={step.segment} href={href}
+                    className={`flex items-center gap-2 px-2 py-1.5 rounded-md transition-colors ${
+                      isActive
+                        ? "bg-impilo-100 text-impilo-700"
+                        : isVisited
+                          ? "text-gray-700 hover:bg-gray-50"
+                          : "text-gray-400 hover:bg-gray-50 hover:text-gray-600"
+                    }`}>
+                    {/* Step indicator */}
+                    <div className="w-4 h-4 flex items-center justify-center shrink-0">
+                      {isVisited && !isActive ? (
+                        <CheckCircle2 className="w-3.5 h-3.5 text-impilo-500" />
+                      ) : isActive ? (
+                        <div className="w-2.5 h-2.5 rounded-full bg-impilo-500" />
+                      ) : (
+                        <Circle className="w-3 h-3 text-gray-300" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-[11px] truncate ${isActive ? "font-semibold" : isVisited ? "font-medium" : ""}`}>
+                        {step.label}
+                      </p>
+                      {isActive && step.hint && (
+                        <p className="text-[9px] text-impilo-500 truncate">{step.hint}</p>
+                      )}
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+
+        {/* More sections (collapsed) */}
+        <details className="mt-1">
+          <summary className="px-2 py-1 text-[10px] font-bold text-gray-300 uppercase tracking-wider cursor-pointer hover:text-gray-500">
+            More...
+          </summary>
+          <div className="space-y-0.5 mt-0.5">
+            {[
+              { label: "Timeline", segment: "timeline", icon: Clock },
+              { label: "IPS", segment: "ips", icon: Globe2 },
+              { label: "Family Hx", segment: "family-history", icon: Heart },
+              { label: "Social Hx", segment: "social-history", icon: Home },
+              { label: "Functional", segment: "functional-status", icon: Activity },
+              { label: "Directives", segment: "advance-directives", icon: Shield },
+              { label: "Growth", segment: "growth-chart", icon: TrendingUp },
+              { label: "Assessments", segment: "assessments", icon: Brain },
+              { label: "Care Team", segment: "care-team", icon: Users },
+              { label: "Goals", segment: "goals", icon: Target },
+            ].map((item) => {
+              const isActive = activeSegment === item.segment;
+              const Icon = item.icon;
+              return (
+                <Link key={item.segment} href={`/ehr/${patientId}/${item.segment}`}
+                  className={`flex items-center gap-2 px-2 py-1 rounded-md text-[11px] transition-colors ${
+                    isActive ? "bg-impilo-100 text-impilo-700 font-medium" : "text-gray-400 hover:bg-gray-50 hover:text-gray-600"
+                  }`}>
+                  <Icon className="w-3 h-3" /> {item.label}
+                </Link>
+              );
+            })}
+          </div>
+        </details>
       </nav>
 
-      {/* Status footer */}
-      <div className="border-t px-3 py-1.5">
-        <div className="flex items-center gap-1.5 text-[10px] text-gray-400">
-          <div className={`w-1.5 h-1.5 rounded-full ${activeEncounter ? "bg-emerald-400" : "bg-gray-300"}`} />
-          {activeEncounter ? "Live" : "Chart"}
-        </div>
+      {/* Prev/Next navigation */}
+      <div className="border-t px-2 py-2 flex items-center gap-1">
+        {prevStep ? (
+          <Link href={`/ehr/${patientId}/${prevStep.segment}`}
+            className="flex-1 text-center text-[10px] text-gray-400 hover:text-gray-600 py-1 rounded hover:bg-gray-50">
+            ← {prevStep.label}
+          </Link>
+        ) : <div className="flex-1" />}
+        {nextSeqStep ? (
+          <Link href={`/ehr/${patientId}/${nextSeqStep.segment}`}
+            className="flex-1 text-center text-[10px] font-medium text-impilo-600 hover:text-impilo-700 py-1 rounded hover:bg-impilo-50">
+            {nextSeqStep.label} →
+          </Link>
+        ) : <div className="flex-1" />}
       </div>
     </aside>
   );
