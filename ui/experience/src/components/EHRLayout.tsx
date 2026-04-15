@@ -57,7 +57,7 @@ export function EHRLayout({ children }: { children: ReactNode }) {
               {menuRight ? <PanelLeft className="w-3.5 h-3.5" /> : <PanelRight className="w-3.5 h-3.5" />}
             </button>
           </div>
-          <main className="relative flex-1 overflow-auto p-4">
+          <main className="relative flex-1 overflow-auto p-3">
             {children}
             <ClinicalKnowledgeDock />
           </main>

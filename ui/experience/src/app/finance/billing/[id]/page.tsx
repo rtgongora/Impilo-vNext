@@ -164,6 +164,7 @@ export default function BillingDetailPage() {
   const [approvalNote, setApprovalNote] = useState("");
   const [paymentAmount, setPaymentAmount] = useState("");
   const [paymentType, setPaymentType] = useState("FULL");
+  const [paymentMethod, setPaymentMethod] = useState("CASH");
   const [refundAmount, setRefundAmount] = useState("");
   const [refundReason, setRefundReason] = useState("");
 
@@ -439,47 +440,76 @@ export default function BillingDetailPage() {
                       </button>
                     </div>
                     <div className="pt-3 border-t border-gray-200">
-                      <p className="text-xs font-medium text-gray-600 mb-2">Create Payment Intent</p>
-                      <div className="flex items-center gap-2">
-                        <select
-                          value={paymentType}
-                          onChange={(e) => {
-                            setPaymentType(e.target.value);
-                            if (e.target.value === "FULL" && bill) {
-                              setPaymentAmount(bill.attributes.amount.toFixed(2));
-                            }
-                          }}
-                          className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-impilo-400"
-                        >
-                          <option value="FULL">Full Payment</option>
-                          <option value="DEPOSIT">Deposit</option>
-                          <option value="REMAINDER">Remainder</option>
-                          <option value="THIRD_PARTY">Third Party</option>
-                          <option value="REMITTANCE">Remittance</option>
-                        </select>
-                        <input
-                          type="number"
-                          step="0.01"
-                          min="0.01"
-                          placeholder="Amount"
-                          value={paymentAmount}
-                          onChange={(e) => setPaymentAmount(e.target.value)}
-                          className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-impilo-400 w-36"
-                        />
+                      <p className="text-xs font-medium text-gray-600 mb-2">Collect Payment</p>
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <select
+                            value={paymentType}
+                            onChange={(e) => {
+                              setPaymentType(e.target.value);
+                              if (e.target.value === "FULL" && bill) {
+                                setPaymentAmount(bill.attributes.amount.toFixed(2));
+                              }
+                            }}
+                            className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-impilo-400"
+                          >
+                            <option value="FULL">Full Payment</option>
+                            <option value="DEPOSIT">Deposit</option>
+                            <option value="REMAINDER">Remainder</option>
+                            <option value="THIRD_PARTY">Third Party</option>
+                            <option value="REMITTANCE">Remittance</option>
+                          </select>
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0.01"
+                            placeholder="Amount"
+                            value={paymentAmount}
+                            onChange={(e) => setPaymentAmount(e.target.value)}
+                            className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-impilo-400 w-36"
+                          />
+                        </div>
+                        {/* Payment method selector — Mushe + all channels */}
+                        <div>
+                          <p className="text-[11px] font-medium text-gray-500 mb-1.5">Payment Method</p>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-1.5">
+                            {[
+                              { id: "MUSHE_WALLET", label: "Mushe Wallet", color: "bg-impilo-50 border-impilo-300 text-impilo-700" },
+                              { id: "CASH", label: "Cash", color: "bg-green-50 border-green-300 text-green-700" },
+                              { id: "ECOCASH", label: "EcoCash", color: "bg-red-50 border-red-300 text-red-700" },
+                              { id: "INNBUCKS", label: "InnBucks", color: "bg-blue-50 border-blue-300 text-blue-700" },
+                              { id: "ONE_MONEY", label: "OneMoney", color: "bg-yellow-50 border-yellow-300 text-yellow-700" },
+                              { id: "BANK_TRANSFER", label: "Bank / ZIPIT", color: "bg-slate-50 border-slate-300 text-slate-700" },
+                              { id: "VISA", label: "Visa", color: "bg-indigo-50 border-indigo-300 text-indigo-700" },
+                              { id: "MASTERCARD", label: "Mastercard", color: "bg-orange-50 border-orange-300 text-orange-700" },
+                              { id: "INSURANCE", label: "Medical Aid", color: "bg-purple-50 border-purple-300 text-purple-700" },
+                              { id: "GOVERNMENT_SUBSIDY", label: "Govt Subsidy", color: "bg-emerald-50 border-emerald-300 text-emerald-700" },
+                            ].map((m) => (
+                              <button
+                                key={m.id}
+                                type="button"
+                                onClick={() => setPaymentMethod(m.id)}
+                                className={`px-2 py-1.5 text-[11px] font-medium rounded-md border transition-all ${m.color} ${paymentMethod === m.id ? "ring-2 ring-offset-1 ring-gray-400 shadow-sm" : "opacity-60 hover:opacity-100"}`}
+                              >
+                                {m.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
                         <button
-                          onClick={() => createPayment.mutate({ paymentType, amount: paymentAmount })}
+                          onClick={() => createPayment.mutate({ paymentType, amount: paymentAmount, method: paymentMethod } as { paymentType: string; amount: string; method?: string })}
                           disabled={createPayment.isPending || !paymentAmount}
-                          className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 disabled:opacity-50 transition-colors"
+                          className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 disabled:opacity-50 transition-colors"
                         >
                           {createPayment.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
-                          Create Payment
+                          Collect Payment via {paymentMethod.replace(/_/g, " ")}
                         </button>
                       </div>
                       {createPayment.isError && (
-                        <p className="mt-2 text-xs text-red-600">Failed to create payment intent.</p>
+                        <p className="mt-2 text-xs text-red-600">Failed to create payment.</p>
                       )}
                       {createPayment.isSuccess && (
-                        <p className="mt-2 text-xs text-green-600">Payment intent created successfully.</p>
+                        <p className="mt-2 text-xs text-green-600">Payment recorded successfully.</p>
                       )}
                     </div>
                   </div>

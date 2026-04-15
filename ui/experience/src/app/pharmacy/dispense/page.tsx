@@ -8,11 +8,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Pill, Loader2, CheckCircle2, ArrowLeft, ShieldAlert, ClipboardList, FileText, Package, User } from "lucide-react";
+import { Pill, Loader2, CheckCircle2, ArrowLeft, ShieldAlert, ClipboardList, FileText, Package, User, CreditCard } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { WorkflowHeader } from "@/components/workflow/WorkflowHeader";
+import { PaymentMethodPicker } from "@/components/payment/PaymentMethodPicker";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
@@ -99,6 +100,8 @@ export default function PharmacyDispensePage() {
     { href: withHandoff("/pharmacy/stock"), label: "Stock", icon: Package, tone: "secondary" as const },
   ].filter((value): value is NonNullable<typeof value> => Boolean(value));
 
+  const [paymentMethod, setPaymentMethod] = useState("CASH");
+
   async function handleDispense(prescriptionId: string) {
     setDispensingId(prescriptionId);
     setDispenseError(null);
@@ -107,6 +110,7 @@ export default function PharmacyDispensePage() {
       await apiClient.post("/internal/v1/pharmacy/dispense", {
         prescription_id: prescriptionId,
         dispensed_by: user?.id ?? "system",
+        payment_method: paymentMethod,
       });
 
       setDispensedIds((prev) => new Set(prev).add(prescriptionId));
@@ -210,6 +214,17 @@ export default function PharmacyDispensePage() {
                 Pending Prescriptions ({prescriptions.length})
               </h2>
             </div>
+
+            {/* Payment collection at dispense */}
+            {prescriptions.length > 0 && (
+              <div className="bg-white rounded-lg border border-gray-200 p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <CreditCard className="w-4 h-4 text-gray-500" />
+                  <p className="text-sm font-medium text-gray-700">Collect payment at dispense</p>
+                </div>
+                <PaymentMethodPicker value={paymentMethod} onChange={setPaymentMethod} compact />
+              </div>
+            )}
 
             {/* Prescription Cards */}
             {prescriptions.length === 0 ? (

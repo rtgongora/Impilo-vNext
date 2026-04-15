@@ -3,7 +3,7 @@
  *
  * Tracks whether the authenticated user has accepted the current
  * Privacy Policy and Terms of Use. Consent state is persisted to
- * sessionStorage and, when the backend is available, recorded
+ * localStorage and, when the backend is available, recorded
  * server-side for audit.
  *
  * Consent version follows the policy effective date (e.g. "2026-04-11").
@@ -37,7 +37,7 @@ interface ConsentState {
   acceptConsent: (userId: string) => void;
   /** Withdraw consent (used during account deletion flow). */
   revokeConsent: () => void;
-  /** Hydrate from sessionStorage. Called by StoreHydrator. */
+  /** Hydrate from localStorage. Called by StoreHydrator. */
   hydrate: (userId: string) => void;
 }
 
@@ -53,8 +53,8 @@ export const useConsentStore = create<ConsentState>((set, get) => ({
     };
 
     if (typeof window !== "undefined") {
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(record));
-      sessionStorage.setItem(STORAGE_VERSION_KEY, CURRENT_CONSENT_VERSION);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(record));
+      localStorage.setItem(STORAGE_VERSION_KEY, CURRENT_CONSENT_VERSION);
     }
 
     set({ hasConsented: true, record });
@@ -62,8 +62,8 @@ export const useConsentStore = create<ConsentState>((set, get) => ({
 
   revokeConsent: () => {
     if (typeof window !== "undefined") {
-      sessionStorage.removeItem(STORAGE_KEY);
-      sessionStorage.removeItem(STORAGE_VERSION_KEY);
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(STORAGE_VERSION_KEY);
     }
     set({ hasConsented: false, record: null });
   },
@@ -72,7 +72,7 @@ export const useConsentStore = create<ConsentState>((set, get) => ({
     if (typeof window === "undefined") return;
 
     try {
-      const stored = sessionStorage.getItem(STORAGE_KEY);
+      const stored = localStorage.getItem(STORAGE_KEY);
       if (!stored) {
         set({ hasConsented: false, record: null });
         return;
@@ -88,8 +88,8 @@ export const useConsentStore = create<ConsentState>((set, get) => ({
         set({ hasConsented: true, record });
       } else {
         // Stale consent — clear and require re-acceptance
-        sessionStorage.removeItem(STORAGE_KEY);
-        sessionStorage.removeItem(STORAGE_VERSION_KEY);
+        localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(STORAGE_VERSION_KEY);
         set({ hasConsented: false, record: null });
       }
     } catch {

@@ -10,9 +10,10 @@
 
 import { ShieldCheck } from "lucide-react";
 import { useAuthStore } from "@/hooks/useAuthStore";
+import { useQueryClient } from "@tanstack/react-query";
 import { useLinkedIds } from "@/hooks/queries/useLinkedIds";
 
-export function ProviderActivationBanner() {
+function ProviderActivationBannerInner() {
   const { user, activateProvider } = useAuthStore();
   const { data } = useLinkedIds();
 
@@ -51,4 +52,14 @@ export function ProviderActivationBanner() {
       </div>
     </div>
   );
+}
+
+export function ProviderActivationBanner() {
+  // Guard: only render if QueryClientProvider is available
+  try {
+    useQueryClient();
+  } catch {
+    return null;
+  }
+  return <ProviderActivationBannerInner />;
 }

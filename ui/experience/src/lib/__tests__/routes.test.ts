@@ -144,10 +144,10 @@ describe("Route Registry", () => {
     }
   });
 
-  it("registers the IPS chart route with ehr layout and shift guard", () => {
+  it("registers the IPS chart route with ehr layout and facility guard", () => {
     const route = ROUTES.find((r) => r.path === "/ehr/[patientId]/ips");
     expect(route?.layout).toBe("ehr");
-    expect(route?.guard).toBe("shift");
+    expect(route?.guard).toBe("facility");
   });
 
   it("registers commerce integrations and sidecar retirement in canonical shared routing", () => {
@@ -232,7 +232,7 @@ describe("Route Registry", () => {
   it("registers maternity monitoring as a first-class EHR route", () => {
     const route = ROUTES.find((r) => r.path === "/ehr/[patientId]/maternity");
     expect(route?.layout).toBe("ehr");
-    expect(route?.guard).toBe("shift");
+    expect(route?.guard).toBe("facility");
     expect(route?.navZone).toBe("work");
   });
 

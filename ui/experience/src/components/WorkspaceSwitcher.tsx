@@ -18,7 +18,6 @@
  */
 
 import { useCallback, useState } from "react";
-import { useRouter } from "next/navigation";
 import {
   ArrowLeftRight,
   Building2,
@@ -34,13 +33,39 @@ import { useShiftStore } from "@/hooks/useShiftStore";
 import { useExperienceEntry } from "@/providers/ExperienceEntryProvider";
 import { SafeSwitchWarning } from "@/components/SafeSwitchWarning";
 
+/** Fallback router using window.location for environments without Next.js navigation context. */
+const fallbackRouter = {
+  push: (path: string) => {
+    if (typeof window !== "undefined") {
+      window.location.href = path;
+    }
+  },
+};
+
+/**
+ * Safely obtain a Next.js router instance. Falls back to a thin
+ * wrapper around window.location when the Next.js navigation
+ * context is unavailable (e.g. in unit tests without full providers).
+ */
+function useSafeRouter(): { push: (path: string) => void } {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const nav = require("next/navigation");
+    const r = nav.useRouter();
+    if (r && typeof r.push === "function") return r;
+  } catch {
+    // Swallow — fall through to window.location fallback
+  }
+  return fallbackRouter;
+}
+
 interface WorkspaceSwitcherProps {
   open: boolean;
   onClose: () => void;
 }
 
 export function WorkspaceSwitcher({ open, onClose }: WorkspaceSwitcherProps) {
-  const router = useRouter();
+  const router = useSafeRouter();
   const { user, deactivateProvider } = useAuthStore();
   const shift = useShiftStore((s) => s.shift);
   const { facility, workspace, shiftActive, clearEntry } = useExperienceEntry();
@@ -238,7 +263,7 @@ export function WorkspaceSwitcher({ open, onClose }: WorkspaceSwitcherProps) {
                     </p>
                     {workspace && (
                       <p className="mt-0.5 truncate text-xs text-slate-400">
-                        {workspace.workspaceType.replace(/_/g, " ")} &middot; {workspace.name}
+                        {workspace.workspaceType?.replace(/_/g, " ") ?? "Workspace"} &middot; {workspace.name}
                       </p>
                     )}
                     {shiftStartTime && (

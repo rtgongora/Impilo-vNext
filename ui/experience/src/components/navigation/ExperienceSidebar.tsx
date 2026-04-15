@@ -10,6 +10,7 @@ import {
   ArrowUpRight,
   Ambulance,
   Bell,
+  BookMarked,
   BriefcaseBusiness,
   Building2,
   Calendar,
@@ -89,7 +90,11 @@ function isCitizenOnly(user: AuthUser | null): boolean {
   if (!user) return true;
   // If provider is activated, show professional shell
   if (user.providerActivated) return false;
-  // Otherwise, citizen-only experience regardless of token roles
+  // If user has clinical/admin roles, show professional shell (backward compat
+  // for sessions where providerActivated hasn't been set yet)
+  const professionalRoles = [...CLINICAL_ROLES, ...FINANCE_ROLES, ...ADMIN_ROLES, "PHARMACIST"];
+  if (user.roles?.some((r: string) => professionalRoles.includes(r))) return false;
+  // Otherwise, citizen-only experience
   return true;
 }
 
@@ -99,6 +104,7 @@ const ZONES: SidebarZone[] = [
     label: "Work",
     items: [
       { href: "/clinical", label: "Clinical Hub", icon: Stethoscope, requiredRoles: CLINICAL_ROLES },
+      { href: "/clinical-tools", label: "Clinical References", icon: BookMarked, requiredRoles: CLINICAL_ROLES },
       { href: "/clinical/emergency", label: "ED / Casualty", icon: Ambulance, requiredRoles: QUEUE_ROLES },
       { href: "/queue", label: "Queue", icon: Users, requiredRoles: QUEUE_ROLES },
       { href: "/scheduling", label: "Scheduling", icon: Calendar, requiredRoles: CLINICAL_ROLES },

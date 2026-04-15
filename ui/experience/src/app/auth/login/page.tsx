@@ -94,23 +94,9 @@ export default function LoginPage() {
           );
           useWorkModeStore.getState().deriveFromRoles(user.roles);
 
-          // Check server-side consent status — if already accepted, hydrate client store
-          // so the consent gate is skipped for returning users
-          apiClient
-            .get<{ data: Array<{ attributes: { policyType: string; accepted: boolean } }> }>(
-              `/internal/v1/consent/status?version=${CURRENT_CONSENT_VERSION}`
-            )
-            .then((res) => {
-              const records = res?.data ?? [];
-              const hasPrivacy = records.some((r) => r.attributes.policyType === "PRIVACY_POLICY" && r.attributes.accepted);
-              const hasTerms = records.some((r) => r.attributes.policyType === "TERMS_OF_USE" && r.attributes.accepted);
-              if (hasPrivacy && hasTerms) {
-                useConsentStore.getState().acceptConsent(user.id);
-              }
-            })
-            .catch(() => {
-              // If consent check fails, the consent gate will catch it on redirect
-            });
+          // Hydrate consent from localStorage immediately — if the user
+          // already accepted, this prevents the consent gate from firing.
+          useConsentStore.getState().hydrate(user.id);
 
           // Navigate to resolving screen for identity resolution
           router.push("/auth/resolving");
@@ -280,6 +266,74 @@ export default function LoginPage() {
         </Link>
         .
       </p>
+
+      {/* ── Dev/test quick-login panel ─────────────────────────── */}
+      {process.env.NODE_ENV === "development" && (
+        <div className="mt-6 pt-4 border-t-2 border-dashed border-amber-300">
+          <p className="text-xs font-semibold text-amber-600 text-center mb-3">
+            DEV — Quick sign-in as:
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              { email: "super@mohcc.gov.zw", label: "Super Admin", desc: "All roles", color: "bg-red-50 border-red-200 text-red-700" },
+              { email: "mapfumo@mohcc.gov.zw", label: "Dr Mapfumo", desc: "Clinician + Facility Admin", color: "bg-blue-50 border-blue-200 text-blue-700" },
+              { email: "chienda@mohcc.gov.zw", label: "Sr Chienda", desc: "Nurse", color: "bg-green-50 border-green-200 text-green-700" },
+              { email: "zenda@mohcc.gov.zw", label: "Pharmacist", desc: "Pharmacist", color: "bg-purple-50 border-purple-200 text-purple-700" },
+              { email: "finance.ndlovu@mohcc.gov.zw", label: "Finance", desc: "Finance", color: "bg-amber-50 border-amber-200 text-amber-700" },
+              { email: "tatenda.moyo@example.com", label: "Citizen", desc: "Citizen only", color: "bg-impilo-50 border-impilo-200 text-impilo-700" },
+              { email: "admin@mohcc.gov.zw", label: "Sys Admin", desc: "System Admin", color: "bg-gray-50 border-gray-200 text-gray-700" },
+              { email: "support@mohcc.gov.zw", label: "Support", desc: "Support Agent", color: "bg-teal-50 border-teal-200 text-teal-700" },
+            ].map((acct) => (
+              <button
+                key={acct.email}
+                type="button"
+                disabled={login.isPending}
+                onClick={() => {
+                  setError(null);
+                  setIdentifier(acct.email);
+                  setPassword("test123");
+                  login.mutate(
+                    { email: acct.email, password: "test123" },
+                    {
+                      onSuccess: (res) => {
+                        const attrs = res.data.attributes;
+                        const { token, user: u } = attrs;
+                        setAuth(
+                          {
+                            id: u.id,
+                            email: u.email,
+                            displayName: u.displayName,
+                            roles: u.roles,
+                            actorType: u.actorType as "PROVIDER" | "OPERATOR" | "CITIZEN" | "SYSTEM",
+                            assuranceLevel: "VERIFIED",
+                            providerActivated: false,
+                          },
+                          token,
+                          (attrs as Record<string, unknown>).refreshToken as string | undefined,
+                          (attrs as Record<string, unknown>).expiresAt as string | undefined,
+                        );
+                        useWorkModeStore.getState().deriveFromRoles(u.roles);
+                        useConsentStore.getState().hydrate(u.id);
+                        router.push("/auth/resolving");
+                      },
+                      onError: () => {
+                        setError(`Login failed for ${acct.email}. Check Keycloak is running.`);
+                      },
+                    },
+                  );
+                }}
+                className={`text-left px-3 py-2 rounded-lg border text-xs transition-colors hover:shadow-sm ${acct.color} ${login.isPending ? "opacity-50" : ""}`}
+              >
+                <p className="font-semibold">{acct.label}</p>
+                <p className="opacity-70">{acct.desc}</p>
+              </button>
+            ))}
+          </div>
+          <p className="text-[10px] text-amber-400 text-center mt-2">
+            All test accounts use password: test123
+          </p>
+        </div>
+      )}
 
       <NompiloHint
         message="Welcome to Impilo. Sign in with your email, phone number, or Health ID. If you don't have an account yet, you can create one below."

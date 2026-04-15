@@ -58,15 +58,15 @@ export const ROUTES: RouteDefinition[] = [
 
   // ── Zone: Home ──────────────────────────────────────────────────
   // ── Zone: Clinical Hub ──────────────────────────────────────────
-  { path: "/clinical", zone: "queue", layout: "app", sidebar: "queue", guard: "shift", pageTitle: "Clinical Care", navLabel: "Clinical Hub", navZone: "work" },
+  { path: "/clinical", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Clinical Care", navLabel: "Clinical Hub", navZone: "work" },
 
   // ── Zone: Clinical Tools ────────────────────────────────────────
-  { path: "/clinical-tools", zone: "queue", layout: "app", sidebar: "queue", guard: "shift", pageTitle: "Clinical Tools", navLabel: "Tools", navZone: "work" },
-  { path: "/clinical-tools/rules", zone: "queue", layout: "app", sidebar: "queue", guard: "shift", pageTitle: "Rules Engine", navLabel: "Rules Engine", navZone: "work" },
-  { path: "/clinical-tools/forms", zone: "queue", layout: "app", sidebar: "queue", guard: "shift", pageTitle: "Form Builder", navLabel: "Form Builder", navZone: "work" },
-  { path: "/clinical/control-tower", zone: "queue", layout: "app", sidebar: "queue", guard: "shift", pageTitle: "Control Tower", navLabel: "Control Tower", navZone: "work" },
-  { path: "/clinical/dictation", zone: "queue", layout: "app", sidebar: "queue", guard: "shift", pageTitle: "Voice Dictation", navLabel: "Dictation", navZone: "work" },
-  { path: "/clinical/emergency", zone: "queue", layout: "app", sidebar: "queue", guard: "shift", pageTitle: "ED / Casualty", navLabel: "ED / Casualty", navZone: "work" },
+  { path: "/clinical-tools", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Clinical Tools", navLabel: "Tools", navZone: "work" },
+  { path: "/clinical-tools/rules", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Rules Engine", navLabel: "Rules Engine", navZone: "work" },
+  { path: "/clinical-tools/forms", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Form Builder", navLabel: "Form Builder", navZone: "work" },
+  { path: "/clinical/control-tower", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Control Tower", navLabel: "Control Tower", navZone: "work" },
+  { path: "/clinical/dictation", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Voice Dictation", navLabel: "Dictation", navZone: "work" },
+  { path: "/clinical/emergency", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "ED / Casualty", navLabel: "ED / Casualty", navZone: "work" },
 
   // ── Zone: Public Health ─────────────────────────────────────────
   { path: "/public-health", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "PUBLIC_HEALTH", pageTitle: "Public Health", navLabel: "Public Health", navZone: "professional" },
@@ -114,8 +114,8 @@ export const ROUTES: RouteDefinition[] = [
 
   // ── Zone: Shift ─────────────────────────────────────────────────
   { path: "/shift", zone: "shift", layout: "app", sidebar: "shift", guard: "workspace", pageTitle: "Start Shift", navLabel: "Shift" },
-  { path: "/shift/active", zone: "shift", layout: "app", sidebar: "shift", guard: "shift", pageTitle: "Active Shift", navLabel: "Active Shift" },
-  { path: "/shift/handover", zone: "shift", layout: "app", sidebar: "shift", guard: "shift", pageTitle: "Shift Handover", navLabel: "Handover" },
+  { path: "/shift/active", zone: "shift", layout: "app", sidebar: "shift", guard: "facility", pageTitle: "Active Shift", navLabel: "Active Shift" },
+  { path: "/shift/handover", zone: "shift", layout: "app", sidebar: "shift", guard: "facility", pageTitle: "Shift Handover", navLabel: "Handover" },
 
   // ── Zone: Scheduling (workspace guard; ORGANIZATION_ADMIN may pass with facility only — AuthGuardProvider)
   { path: "/scheduling", zone: "queue", layout: "app", sidebar: "queue", guard: "workspace", pageTitle: "Scheduling", navLabel: "Scheduling", navZone: "work" },
@@ -127,47 +127,47 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/communication/secure-messaging", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Secure Messaging", navLabel: "Messaging", navZone: "work" },
 
   // ── Zone: Queue (Clinical) ──────────────────────────────────────
-  { path: "/queue", zone: "queue", layout: "app", sidebar: "queue", guard: "shift", pageTitle: "Patient Queue", navLabel: "Queue", navZone: "work" },
-  { path: "/queue/triage", zone: "queue", layout: "app", sidebar: "queue", guard: "shift", pageTitle: "Triage Queue", navLabel: "Triage", navZone: "work" },
-  { path: "/queue/waiting", zone: "queue", layout: "app", sidebar: "queue", guard: "shift", pageTitle: "Waiting Room", navLabel: "Waiting", navZone: "work" },
-  { path: "/queue/search", zone: "queue", layout: "app", sidebar: "queue", guard: "shift", pageTitle: "Patient Search", navLabel: "Search", navZone: "work" },
-  { path: "/queue/walk-in", zone: "queue", layout: "app", sidebar: "queue", guard: "shift", pageTitle: "Walk-in Registration", navLabel: "Walk-in", navZone: "work" },
-  { path: "/queue/scheduled", zone: "queue", layout: "app", sidebar: "queue", guard: "shift", pageTitle: "Scheduled Visits", navLabel: "Scheduled", navZone: "work" },
-  { path: "/queue/incoming-referrals", zone: "queue", layout: "app", sidebar: "queue", guard: "shift", pageTitle: "Incoming Referrals", navLabel: "Incoming Referrals", navZone: "work" },
+  { path: "/queue", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Patient Queue", navLabel: "Queue", navZone: "work" },
+  { path: "/queue/triage", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Triage Queue", navLabel: "Triage", navZone: "work" },
+  { path: "/queue/waiting", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Waiting Room", navLabel: "Waiting", navZone: "work" },
+  { path: "/queue/search", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Patient Search", navLabel: "Search", navZone: "work" },
+  { path: "/queue/walk-in", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Walk-in Registration", navLabel: "Walk-in", navZone: "work" },
+  { path: "/queue/scheduled", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Scheduled Visits", navLabel: "Scheduled", navZone: "work" },
+  { path: "/queue/incoming-referrals", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Incoming Referrals", navLabel: "Incoming Referrals", navZone: "work" },
 
   // ── Zone: EHR (Clinical) ────────────────────────────────────────
-  { path: "/ehr/[patientId]", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Patient Chart", navLabel: "Chart", navZone: "work" },
-  { path: "/ehr/[patientId]/summary", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Patient Summary", navLabel: "Summary", navZone: "work" },
-  { path: "/ehr/[patientId]/ips", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "International Patient Summary", navLabel: "IPS", navZone: "work" },
-  { path: "/ehr/[patientId]/vitals", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Vitals", navLabel: "Vitals", navZone: "work" },
-  { path: "/ehr/[patientId]/maternity", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Maternity Monitoring", navLabel: "Maternity", navZone: "work" },
-  { path: "/ehr/[patientId]/history", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Medical History", navLabel: "History", navZone: "work" },
-  { path: "/ehr/[patientId]/conditions", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Conditions", navLabel: "Conditions", navZone: "work" },
-  { path: "/ehr/[patientId]/medications", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Medications", navLabel: "Medications", navZone: "work" },
-  { path: "/ehr/[patientId]/allergies", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Allergies", navLabel: "Allergies", navZone: "work" },
-  { path: "/ehr/[patientId]/orders", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Orders", navLabel: "Orders", navZone: "work" },
-  { path: "/ehr/[patientId]/results", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Results", navLabel: "Results", navZone: "work" },
-  { path: "/ehr/[patientId]/notes", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Clinical Notes", navLabel: "Notes", navZone: "work" },
-  { path: "/ehr/[patientId]/documents", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Documents", navLabel: "Documents", navZone: "work" },
-  { path: "/ehr/[patientId]/encounters", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Encounters", navLabel: "Encounters", navZone: "work" },
-  { path: "/ehr/[patientId]/encounter/[encounterId]", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Encounter", navLabel: "Encounter", navZone: "work" },
-  { path: "/ehr/[patientId]/immunizations", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Immunizations", navLabel: "Immunizations", navZone: "work" },
-  { path: "/ehr/[patientId]/consults", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Consults & Referrals", navLabel: "Consults", navZone: "work" },
-  { path: "/ehr/[patientId]/referrals", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Referrals", navLabel: "Referrals", navZone: "work" },
-  { path: "/ehr/[patientId]/teleconsults", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Teleconsults", navLabel: "Teleconsults", navZone: "work" },
-  { path: "/ehr/[patientId]/timeline", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Timeline", navLabel: "Timeline", navZone: "work" },
-  { path: "/ehr/[patientId]/discharge", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Discharge", navLabel: "Discharge", navZone: "work" },
-  { path: "/ehr/[patientId]/care-plans", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Care Plans", navLabel: "Care Plans", navZone: "work" },
-  { path: "/ehr/[patientId]/procedures", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Procedures", navLabel: "Procedures", navZone: "work" },
-  { path: "/ehr/[patientId]/growth-chart", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Growth Chart", navLabel: "Growth Chart", navZone: "work" },
-  { path: "/ehr/[patientId]/family-history", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Family History", navLabel: "Family History", navZone: "work" },
-  { path: "/ehr/[patientId]/social-history", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Social History", navLabel: "Social History", navZone: "work" },
-  { path: "/ehr/[patientId]/functional-status", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Functional Status", navLabel: "Functional Status", navZone: "work" },
-  { path: "/ehr/[patientId]/advance-directives", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Advance Directives", navLabel: "Advance Directives", navZone: "work" },
-  { path: "/ehr/[patientId]/care-team", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Care Team", navLabel: "Care Team", navZone: "work" },
-  { path: "/ehr/[patientId]/goals", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Goals", navLabel: "Goals", navZone: "work" },
-  { path: "/ehr/[patientId]/assessments", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Assessments", navLabel: "Assessments", navZone: "work" },
-  { path: "/ehr/[patientId]/charts", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "shift", pageTitle: "Ward Charts", navLabel: "Charts", navZone: "work" },
+  { path: "/ehr/[patientId]", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Patient Chart", navLabel: "Chart", navZone: "work" },
+  { path: "/ehr/[patientId]/summary", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Patient Summary", navLabel: "Summary", navZone: "work" },
+  { path: "/ehr/[patientId]/ips", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "International Patient Summary", navLabel: "IPS", navZone: "work" },
+  { path: "/ehr/[patientId]/vitals", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Vitals", navLabel: "Vitals", navZone: "work" },
+  { path: "/ehr/[patientId]/maternity", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Maternity Monitoring", navLabel: "Maternity", navZone: "work" },
+  { path: "/ehr/[patientId]/history", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Medical History", navLabel: "History", navZone: "work" },
+  { path: "/ehr/[patientId]/conditions", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Conditions", navLabel: "Conditions", navZone: "work" },
+  { path: "/ehr/[patientId]/medications", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Medications", navLabel: "Medications", navZone: "work" },
+  { path: "/ehr/[patientId]/allergies", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Allergies", navLabel: "Allergies", navZone: "work" },
+  { path: "/ehr/[patientId]/orders", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Orders", navLabel: "Orders", navZone: "work" },
+  { path: "/ehr/[patientId]/results", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Results", navLabel: "Results", navZone: "work" },
+  { path: "/ehr/[patientId]/notes", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Clinical Notes", navLabel: "Notes", navZone: "work" },
+  { path: "/ehr/[patientId]/documents", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Documents", navLabel: "Documents", navZone: "work" },
+  { path: "/ehr/[patientId]/encounters", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Encounters", navLabel: "Encounters", navZone: "work" },
+  { path: "/ehr/[patientId]/encounter/[encounterId]", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Encounter", navLabel: "Encounter", navZone: "work" },
+  { path: "/ehr/[patientId]/immunizations", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Immunizations", navLabel: "Immunizations", navZone: "work" },
+  { path: "/ehr/[patientId]/consults", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Consults & Referrals", navLabel: "Consults", navZone: "work" },
+  { path: "/ehr/[patientId]/referrals", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Referrals", navLabel: "Referrals", navZone: "work" },
+  { path: "/ehr/[patientId]/teleconsults", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Teleconsults", navLabel: "Teleconsults", navZone: "work" },
+  { path: "/ehr/[patientId]/timeline", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Timeline", navLabel: "Timeline", navZone: "work" },
+  { path: "/ehr/[patientId]/discharge", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Discharge", navLabel: "Discharge", navZone: "work" },
+  { path: "/ehr/[patientId]/care-plans", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Care Plans", navLabel: "Care Plans", navZone: "work" },
+  { path: "/ehr/[patientId]/procedures", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Procedures", navLabel: "Procedures", navZone: "work" },
+  { path: "/ehr/[patientId]/growth-chart", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Growth Chart", navLabel: "Growth Chart", navZone: "work" },
+  { path: "/ehr/[patientId]/family-history", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Family History", navLabel: "Family History", navZone: "work" },
+  { path: "/ehr/[patientId]/social-history", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Social History", navLabel: "Social History", navZone: "work" },
+  { path: "/ehr/[patientId]/functional-status", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Functional Status", navLabel: "Functional Status", navZone: "work" },
+  { path: "/ehr/[patientId]/advance-directives", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Advance Directives", navLabel: "Advance Directives", navZone: "work" },
+  { path: "/ehr/[patientId]/care-team", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Care Team", navLabel: "Care Team", navZone: "work" },
+  { path: "/ehr/[patientId]/goals", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Goals", navLabel: "Goals", navZone: "work" },
+  { path: "/ehr/[patientId]/assessments", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Assessments", navLabel: "Assessments", navZone: "work" },
+  { path: "/ehr/[patientId]/charts", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Ward Charts", navLabel: "Charts", navZone: "work" },
 
   // ── Zone: Admin / TSHEPO Governance ─────────────────────────────
   { path: "/admin", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Administration", navLabel: "Admin", navZone: "professional" },
@@ -243,13 +243,13 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/finance/my-account", zone: "finance", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Healthcare Account", navLabel: "My healthcare costs", navZone: "life" },
 
   // ── Zone: Beds & Wards ──────────────────────────────────────────
-  { path: "/beds", zone: "queue", layout: "app", sidebar: "queue", guard: "shift", pageTitle: "Bed Management", navLabel: "Beds", navZone: "work" },
+  { path: "/beds", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Bed Management", navLabel: "Beds", navZone: "work" },
 
   // ── Zone: Pharmacy ──────────────────────────────────────────────
-  { path: "/pharmacy", zone: "pharmacy", layout: "app", sidebar: "queue", guard: "shift", pageTitle: "Pharmacy Dashboard", navLabel: "Pharmacy", navZone: "work" },
-  { path: "/pharmacy/dispense", zone: "pharmacy", layout: "app", sidebar: "queue", guard: "shift", pageTitle: "Dispensing", navLabel: "Dispense", navZone: "work" },
-  { path: "/pharmacy/stock", zone: "pharmacy", layout: "app", sidebar: "queue", guard: "shift", pageTitle: "Stock Management", navLabel: "Stock", navZone: "work" },
-  { path: "/pharmacy/prescriptions", zone: "pharmacy", layout: "app", sidebar: "queue", guard: "shift", pageTitle: "Prescriptions", navLabel: "Prescriptions", navZone: "work" },
+  { path: "/pharmacy", zone: "pharmacy", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Pharmacy Dashboard", navLabel: "Pharmacy", navZone: "work" },
+  { path: "/pharmacy/dispense", zone: "pharmacy", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Dispensing", navLabel: "Dispense", navZone: "work" },
+  { path: "/pharmacy/stock", zone: "pharmacy", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Stock Management", navLabel: "Stock", navZone: "work" },
+  { path: "/pharmacy/prescriptions", zone: "pharmacy", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Prescriptions", navLabel: "Prescriptions", navZone: "work" },
 
   // ── Zone: Inventory ─────────────────────────────────────────────
   { path: "/inventory", zone: "inventory", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Inventory Dashboard", navLabel: "Inventory", navZone: "work" },
@@ -274,8 +274,9 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/settings/display", zone: "settings", layout: "app", sidebar: "settings", guard: "auth", pageTitle: "Display Settings", navLabel: "Display", navZone: "professional" },
   { path: "/settings/integrations", zone: "settings", layout: "app", sidebar: "settings", guard: "auth", pageTitle: "Integrations", navLabel: "Integrations", navZone: "professional" },
   { path: "/settings/privacy", zone: "settings", layout: "app", sidebar: "settings", guard: "auth", pageTitle: "Privacy & Data", navLabel: "Privacy & Data", navZone: "professional" },
-  { path: "/telemedicine", zone: "queue", layout: "app", sidebar: "queue", guard: "shift", pageTitle: "Telemedicine Hub", navLabel: "Telemedicine", navZone: "work" },
-  { path: "/telemedicine/session/[sessionId]", zone: "queue", layout: "app", sidebar: "queue", guard: "shift", pageTitle: "Telemedicine Session", navLabel: "Session", navZone: "work" },
+  { path: "/telemedicine", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Telemedicine Hub", navLabel: "Telemedicine", navZone: "work" },
+  { path: "/telemedicine/new", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "New Teleconsultation", navLabel: "New Teleconsult", navZone: "work" },
+  { path: "/telemedicine/session/[sessionId]", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Teleconsult Session", navLabel: "Session", navZone: "work" },
 
   // ── Zone: Provider Activation (Health OS §6) ───────────────────────
   { path: "/provider/activate", zone: "auth", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Activate Provider Role", navLabel: "Provider Activation" },
@@ -308,7 +309,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/monitoring/readings", zone: "monitoring", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Readings & Trends", navLabel: "Readings", navZone: "life" },
   { path: "/monitoring/alerts", zone: "monitoring", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Monitoring Alerts", navLabel: "Alerts", navZone: "life" },
   { path: "/monitoring/care-plans", zone: "monitoring", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Chronic Care Plans", navLabel: "Care Plans", navZone: "life" },
-  { path: "/monitoring/provider-dashboard", zone: "monitoring", layout: "app", sidebar: "queue", guard: "shift", pageTitle: "Patient Monitoring Dashboard", navLabel: "Monitoring Dashboard", navZone: "work" },
+  { path: "/monitoring/provider-dashboard", zone: "monitoring", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Patient Monitoring Dashboard", navLabel: "Monitoring Dashboard", navZone: "work" },
 
   // ── Zone: Service Discovery (Health OS §2 — find providers, facilities, services) ─
   { path: "/discover", zone: "discovery", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Find Services", navLabel: "Discover", navZone: "life" },
@@ -317,11 +318,11 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/discover/services", zone: "discovery", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Browse Services", navLabel: "Services", navZone: "life" },
 
   // ── Zone: Laboratory (absorbs oros-web sidecar) ────────────────────
-  { path: "/lab", zone: "lab", layout: "app", sidebar: "queue", guard: "shift", pageTitle: "Laboratory", navLabel: "Lab", navZone: "work" },
-  { path: "/lab/worklist", zone: "lab", layout: "app", sidebar: "queue", guard: "shift", pageTitle: "Lab Worklist", navLabel: "Worklist", navZone: "work" },
-  { path: "/lab/results", zone: "lab", layout: "app", sidebar: "queue", guard: "shift", pageTitle: "Results Review", navLabel: "Results", navZone: "work" },
-  { path: "/lab/catalog", zone: "lab", layout: "app", sidebar: "queue", guard: "shift", pageTitle: "Test Catalog", navLabel: "Catalog", navZone: "work" },
-  { path: "/lab/reconciliation", zone: "lab", layout: "app", sidebar: "queue", guard: "shift", pageTitle: "Lab Reconciliation", navLabel: "Reconciliation", navZone: "work" },
+  { path: "/lab", zone: "lab", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Laboratory", navLabel: "Lab", navZone: "work" },
+  { path: "/lab/worklist", zone: "lab", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Lab Worklist", navLabel: "Worklist", navZone: "work" },
+  { path: "/lab/results", zone: "lab", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Results Review", navLabel: "Results", navZone: "work" },
+  { path: "/lab/catalog", zone: "lab", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Test Catalog", navLabel: "Catalog", navZone: "work" },
+  { path: "/lab/reconciliation", zone: "lab", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Lab Reconciliation", navLabel: "Reconciliation", navZone: "work" },
 
   // ── Zone: Operations (absorbs ops-console sidecar) ─────────────────
   { path: "/operations", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Operations", navLabel: "Operations", navZone: "professional" },

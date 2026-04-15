@@ -10,6 +10,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useRoleGroup } from "@/hooks/useRoleGroup";
+import { RoleSpecificEncounterForm } from "@/components/encounter/StructuredEncounterForms";
 import {
   Loader2,
   Activity,
@@ -42,8 +43,33 @@ export default function EncounterPage() {
   const router = useRouter();
   const { patientId, encounterId } = params;
   const { user } = useAuthStore();
-  const { isClinical, isPrescriber } = useRoleGroup();
+  const { isClinical, isPrescriber, isDispenser } = useRoleGroup();
   const facility = useFacilityStore((state) => state.facility);
+
+  // Determine role-specific form variant — check most specific role first
+  const roles = user?.roles ?? [];
+  const activeRole =
+    roles.includes("PHYSIOTHERAPIST") ? "PHYSIOTHERAPIST"
+    : roles.includes("OCCUPATIONAL_THERAPIST") ? "OCCUPATIONAL_THERAPIST"
+    : roles.includes("PSYCHOLOGIST") || roles.includes("COUNSELLOR") ? "PSYCHOLOGIST"
+    : roles.includes("NUTRITIONIST") || roles.includes("DIETITIAN") ? "NUTRITIONIST"
+    : roles.includes("SOCIAL_WORKER") ? "SOCIAL_WORKER"
+    : roles.includes("SPEECH_THERAPIST") || roles.includes("SLT") ? "SPEECH_THERAPIST"
+    : roles.includes("RADIOGRAPHER") || roles.includes("IMAGING_TECH") ? "RADIOGRAPHER"
+    : roles.includes("LAB_TECHNOLOGIST") || roles.includes("LAB_TECH") ? "LAB_TECHNOLOGIST"
+    : roles.includes("OPTOMETRIST") ? "OPTOMETRIST"
+    : roles.includes("DENTIST") || roles.includes("ORAL_HYGIENIST") ? "DENTIST"
+    : roles.includes("AUDIOLOGIST") ? "AUDIOLOGIST"
+    : roles.includes("PODIATRIST") ? "PODIATRIST"
+    : roles.includes("RESPIRATORY_THERAPIST") ? "RESPIRATORY_THERAPIST"
+    : roles.includes("RADIOTHERAPIST") || roles.includes("RADIATION_THERAPIST") ? "RADIOTHERAPIST"
+    : roles.includes("EMT") || roles.includes("PARAMEDIC") ? "EMT"
+    : roles.includes("CHW") || roles.includes("COMMUNITY_HEALTH_WORKER") ? "CHW"
+    : roles.includes("EHO") || roles.includes("ENVIRONMENTAL_HEALTH") ? "EHO"
+    : roles.includes("MIDWIFE") ? "MIDWIFE"
+    : isDispenser ? "PHARMACIST"
+    : roles.includes("NURSE") ? "NURSE"
+    : "CLINICIAN";
 
   const { data: encounterData, isLoading: isLoadingEncounter } = useEncounter(encounterId);
   const { data: referralsData } = useReferrals(patientId);
@@ -739,31 +765,14 @@ export default function EncounterPage() {
                       <option value="CONSULTATION">Consultation</option>
                     </select>
                   </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Subjective</label>
-                    <textarea value={subjective} onChange={(e) => setSubjective(e.target.value)} disabled={!isActive} rows={2} placeholder="Patient's reported symptoms..."
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 resize-none disabled:bg-gray-50" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Objective</label>
-                    <textarea value={objective} onChange={(e) => setObjective(e.target.value)} disabled={!isActive} rows={2} placeholder="Clinical findings..."
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 resize-none disabled:bg-gray-50" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Assessment</label>
-                    <textarea value={assessment} onChange={(e) => setAssessment(e.target.value)} disabled={!isActive} rows={2} placeholder="Clinical assessment..."
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 resize-none disabled:bg-gray-50" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Plan</label>
-                    <textarea value={plan} onChange={(e) => setPlan(e.target.value)} disabled={!isActive} rows={2} placeholder="Treatment plan..."
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 resize-none disabled:bg-gray-50" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Additional Notes</label>
-                    <textarea value={noteBody} onChange={(e) => setNoteBody(e.target.value)} disabled={!isActive} rows={3} placeholder="Any additional notes..."
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 resize-none disabled:bg-gray-50" />
-                  </div>
+                  {/* Role-specific structured form */}
+                  <RoleSpecificEncounterForm
+                    role={activeRole}
+                    onDataChange={(data) => {
+                      // Merge structured data into note body for persistence
+                      setNoteBody(JSON.stringify(data));
+                    }}
+                  />
                 </div>
                 {noteError && <p className="mt-2 text-xs text-red-600">{noteError}</p>}
                 {isActive && (

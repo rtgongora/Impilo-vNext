@@ -213,19 +213,14 @@ export default function ConsultsPage() {
   const [referralResponseNotes, setReferralResponseNotes] = useState("");
   const [referralOutcome, setReferralOutcome] = useState<ReferralOutcome>("");
 
+  // Sync tab from URL on mount only
   useEffect(() => {
     const next = searchParams.get("tab") as ActiveTab | null;
     if (next && next !== activeTab) {
       setActiveTab(next);
     }
-  }, [activeTab, searchParams]);
-
-  useEffect(() => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (params.get("tab") === activeTab) return;
-    params.set("tab", activeTab);
-    router.replace(`/ehr/${patientId}/consults?${params.toString()}`);
-  }, [activeTab, patientId, router, searchParams]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (activeTab !== "referrals") {
