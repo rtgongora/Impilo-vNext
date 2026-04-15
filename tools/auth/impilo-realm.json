@@ -338,6 +338,21 @@
             "multivalued": "false",
             "aggregate.attrs": "false"
           }
+        },
+        {
+          "name": "realm-management-roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-client-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "usermodel.clientRoleMapping.clientId": "realm-management",
+            "claim.name": "resource_access.realm-management.roles",
+            "jsonType.label": "String",
+            "multivalued": "true",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "userinfo.token.claim": "false"
+          }
         }
       ]
     },
@@ -506,6 +521,19 @@
       "realmRoles": [
         "FINANCE"
       ]
+    },
+    {
+      "username": "service-account-impilo-backend",
+      "enabled": true,
+      "serviceAccountClientId": "impilo-backend",
+      "clientRoles": {
+        "realm-management": [
+          "manage-users",
+          "view-users",
+          "query-users",
+          "manage-realm"
+        ]
+      }
     }
   ]
 }

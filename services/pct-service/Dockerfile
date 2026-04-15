@@ -1,6 +1,6 @@
-FROM eclipse-temurin:21-jre-alpine AS runtime
+FROM eclipse-temurin:21-jre-jammy
 
-RUN addgroup -S impilo && adduser -S impilo -G impilo
+RUN groupadd -r impilo && useradd -r -g impilo impilo
 
 WORKDIR /app
 COPY target/pct-service-*.jar app.jar

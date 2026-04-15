@@ -87,6 +87,13 @@
             <artifactId>nimbus-jose-jwt</artifactId>
         </dependency>
 
+        <!-- Google Tink (required by Nimbus for EdDSA/Ed25519 OKP signing) -->
+        <dependency>
+            <groupId>com.google.crypto.tink</groupId>
+            <artifactId>tink</artifactId>
+            <version>1.14.1</version>
+        </dependency>
+
         <!-- Apache PDFBox (Apache 2.0 — Emergency Capsule + Pickup Slip PDFs) -->
         <dependency>
             <groupId>org.apache.pdfbox</groupId>
@@ -164,6 +171,11 @@
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-test</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

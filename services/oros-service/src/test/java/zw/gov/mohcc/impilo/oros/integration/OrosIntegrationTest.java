@@ -89,9 +89,9 @@ class OrosIntegrationTest {
                 resultRepository, stateMachine, outboxRepository, objectMapper);
 
         ackService = new AcknowledgementService(
-                ackRepository, stateMachine, outboxRepository, objectMapper);
+                ackRepository, orderRepository, stateMachine, outboxRepository, properties, objectMapper);
 
-        slaService = new SlaService(slaTimerRepository, properties);
+        slaService = new SlaService(slaTimerRepository, orderRepository, outboxRepository, properties, objectMapper);
     }
 
     private TrustContext createTrustContext() {
@@ -185,7 +185,7 @@ class OrosIntegrationTest {
             assertThat(worksteps.get(1).getStatus()).isEqualTo(WorkstepStatus.PENDING);
 
             // ======== Step 4: Start SLA Timer ========
-            SlaTimerEntity timer = slaService.startTimer(order);
+            SlaTimerEntity timer = slaService.startTimer(order.getOrderId(), "ORDER_PLACED", 0);
             assertThat(timer.getOrderId()).isEqualTo(orderId);
             assertThat(timer.getTargetAt()).isNotNull();
             assertThat(timer.isBreached()).isFalse();

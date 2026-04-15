@@ -14,6 +14,7 @@ import zw.gov.mohcc.impilo.devportal.domain.ApiKeyEntity;
 import zw.gov.mohcc.impilo.devportal.domain.ClientEntity;
 import zw.gov.mohcc.impilo.devportal.domain.OutboxEventEntity;
 import zw.gov.mohcc.impilo.devportal.repository.ApiKeyRepository;
+import zw.gov.mohcc.impilo.devportal.repository.CertificationRepository;
 import zw.gov.mohcc.impilo.devportal.repository.ClientRepository;
 import zw.gov.mohcc.impilo.devportal.repository.OutboxEventRepository;
 
@@ -29,6 +30,7 @@ class DeveloperPortalServiceTest {
 
     private ClientRepository clientRepo;
     private ApiKeyRepository keyRepo;
+    private CertificationRepository certRepo;
     private OutboxEventRepository outboxRepo;
     private DeveloperPortalService service;
 
@@ -36,13 +38,14 @@ class DeveloperPortalServiceTest {
     void setUp() {
         clientRepo = mock(ClientRepository.class);
         keyRepo = mock(ApiKeyRepository.class);
+        certRepo = mock(CertificationRepository.class);
         outboxRepo = mock(OutboxEventRepository.class);
 
         when(clientRepo.save(any(ClientEntity.class))).thenAnswer(inv -> inv.getArgument(0));
         when(keyRepo.save(any(ApiKeyEntity.class))).thenAnswer(inv -> inv.getArgument(0));
         when(outboxRepo.save(any(OutboxEventEntity.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        service = new DeveloperPortalService(clientRepo, keyRepo, outboxRepo, new ObjectMapper());
+        service = new DeveloperPortalService(clientRepo, keyRepo, certRepo, outboxRepo, new ObjectMapper());
     }
 
     @Nested

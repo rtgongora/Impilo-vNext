@@ -21,6 +21,7 @@ public class ClientEntity {
     @Column(name = "updated_at", nullable = false) private OffsetDateTime updatedAt = OffsetDateTime.now();
 
     public UUID getId() { return id; }
+    public void setId(UUID v) { this.id = v; }
     public UUID getTenantId() { return tenantId; }
     public void setTenantId(UUID v) { this.tenantId = v; }
     public String getClientName() { return clientName; }
@@ -38,6 +39,7 @@ public class ClientEntity {
     public String getDeprecationPosture() { return deprecationPosture; }
     public void setDeprecationPosture(String v) { this.deprecationPosture = v; }
     public OffsetDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(OffsetDateTime v) { this.createdAt = v; }
     public OffsetDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(OffsetDateTime v) { this.updatedAt = v; }
 }

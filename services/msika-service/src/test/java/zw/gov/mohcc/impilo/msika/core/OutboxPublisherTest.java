@@ -1,36 +1,49 @@
 package zw.gov.mohcc.impilo.msika.core;
 
 import org.junit.jupiter.api.Test;
+import zw.gov.mohcc.impilo.sharedkernel.events.CompanionOutboxPublisher;
+
+import java.time.OffsetDateTime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class OutboxPublisherTest {
 
+    private final OutboxPublisher publisher = new OutboxPublisher(null, null, null);
+
+    private CompanionOutboxPublisher.OutboxRow rowWithEventType(String eventType) {
+        return new CompanionOutboxPublisher.OutboxRow() {
+            public Long id() { return 1L; }
+            public String aggregateType() { return "TEST"; }
+            public String aggregateId() { return "agg-1"; }
+            public String eventType() { return eventType; }
+            public String payloadJson() { return "{}"; }
+            public OffsetDateTime occurredAt() { return OffsetDateTime.now(); }
+            public OffsetDateTime publishedAt() { return null; }
+        };
+    }
+
     @Test
     void resolveTopic_catalogPublished() {
-        OutboxPublisher publisher = new OutboxPublisher(null, null);
-        assertEquals("msika.core.catalog.published", publisher.resolveTopic("CATALOG_PUBLISHED"));
-        assertEquals("msika.core.catalog.published", publisher.resolveTopic("CATALOG_APPROVED"));
+        assertEquals("msika.core.catalog.published", publisher.resolveLegacyTopic(rowWithEventType("CATALOG_PUBLISHED")));
+        assertEquals("msika.core.catalog.published", publisher.resolveLegacyTopic(rowWithEventType("CATALOG_APPROVED")));
     }
 
     @Test
     void resolveTopic_itemChanged() {
-        OutboxPublisher publisher = new OutboxPublisher(null, null);
-        assertEquals("msika.core.item.changed", publisher.resolveTopic("ITEM_CREATED"));
-        assertEquals("msika.core.item.changed", publisher.resolveTopic("ITEM_UPDATED"));
-        assertEquals("msika.core.item.changed", publisher.resolveTopic("ITEM_DELETED"));
+        assertEquals("msika.core.item.changed", publisher.resolveLegacyTopic(rowWithEventType("ITEM_CREATED")));
+        assertEquals("msika.core.item.changed", publisher.resolveLegacyTopic(rowWithEventType("ITEM_UPDATED")));
+        assertEquals("msika.core.item.changed", publisher.resolveLegacyTopic(rowWithEventType("ITEM_DELETED")));
     }
 
     @Test
     void resolveTopic_mappingApproved() {
-        OutboxPublisher publisher = new OutboxPublisher(null, null);
-        assertEquals("msika.core.mapping.approved", publisher.resolveTopic("MAPPING_APPROVED"));
+        assertEquals("msika.core.mapping.approved", publisher.resolveLegacyTopic(rowWithEventType("MAPPING_APPROVED")));
     }
 
     @Test
     void resolveTopic_default() {
-        OutboxPublisher publisher = new OutboxPublisher(null, null);
-        assertEquals("msika.core.events", publisher.resolveTopic("UNKNOWN_EVENT"));
-        assertEquals("msika.core.events", publisher.resolveTopic(null));
+        assertEquals("msika.core.events", publisher.resolveLegacyTopic(rowWithEventType("UNKNOWN_EVENT")));
+        assertEquals("msika.core.events", publisher.resolveLegacyTopic(rowWithEventType(null)));
     }
 }

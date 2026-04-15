@@ -55,5 +55,6 @@
   "devDependencies": {
     "turbo": "^2.1.0",
     "typescript": "~5.5.4"
-  }
+  },
+  "packageManager": "npm@10.8.2"
 }

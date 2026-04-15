@@ -2,6 +2,7 @@ package zw.gov.mohcc.impilo.zibo.integration;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -30,6 +31,7 @@ public class TusoIntegration {
     private final RestTemplate restTemplate;
     private final String tusoBaseUrl;
 
+    @Autowired
     public TusoIntegration(
             @Value("${zibo.integration.tuso-base-url:http://localhost:8084}") String tusoBaseUrl) {
         this.restTemplate = new RestTemplate();

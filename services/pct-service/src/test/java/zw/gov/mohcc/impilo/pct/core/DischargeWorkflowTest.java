@@ -50,6 +50,12 @@ class DischargeWorkflowTest {
     @Mock
     private EventOutboxRepository outboxRepository;
 
+    @Mock
+    private AdmissionWorkflow admissionWorkflow;
+
+    @Mock
+    private TransferService transferService;
+
     private DischargeWorkflow dischargeWorkflow;
 
     private static final UUID TENANT_ID = UUID.randomUUID();
@@ -63,7 +69,8 @@ class DischargeWorkflowTest {
         objectMapper = new ObjectMapper();
         dischargeWorkflow = new DischargeWorkflow(
                 dischargeCaseRepository, journeyRepository,
-                journeyStateMachine, outboxRepository, objectMapper);
+                journeyStateMachine, admissionWorkflow, transferService,
+                outboxRepository, objectMapper);
     }
 
     private TrustContext createTrustContext() {

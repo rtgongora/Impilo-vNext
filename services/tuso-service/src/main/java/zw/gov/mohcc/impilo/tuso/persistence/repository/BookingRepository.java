@@ -26,12 +26,15 @@ public interface BookingRepository extends JpaRepository<BookingEntity, UUID> {
     Page<BookingEntity> findByFacilityIdAndStartTimeBetweenOrderByStartTimeAsc(
             Long facilityId, Instant from, Instant to, Pageable pageable);
 
+    @Query("SELECT b FROM BookingEntity b WHERE b.resource.id = :resourceId AND b.status <> :excludedStatus ORDER BY b.startTime ASC")
     Page<BookingEntity> findByResourceIdAndStatusNotOrderByStartTimeAsc(
-            UUID resourceId, String excludedStatus, Pageable pageable);
+            @Param("resourceId") UUID resourceId, @Param("excludedStatus") String excludedStatus, Pageable pageable);
 
+    @Query("SELECT b FROM BookingEntity b WHERE b.resource.id = :resourceId AND b.startTime < :endTime AND b.endTime > :startTime")
     List<BookingEntity> findByResourceIdAndStartTimeLessThanAndEndTimeGreaterThan(
-            UUID resourceId, Instant endTime, Instant startTime);
+            @Param("resourceId") UUID resourceId, @Param("endTime") Instant endTime, @Param("startTime") Instant startTime);
 
+    @Query("SELECT b FROM BookingEntity b WHERE b.resource.id = :resourceId AND b.startTime < :endTime AND b.endTime > :startTime AND b.status <> :excludedStatus")
     List<BookingEntity> findByResourceIdAndStartTimeLessThanAndEndTimeGreaterThanAndStatusNot(
-            UUID resourceId, Instant endTime, Instant startTime, String excludedStatus);
+            @Param("resourceId") UUID resourceId, @Param("endTime") Instant endTime, @Param("startTime") Instant startTime, @Param("excludedStatus") String excludedStatus);
 }

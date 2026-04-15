@@ -15,6 +15,7 @@ import zw.gov.mohcc.impilo.mushex.domain.enums.SourceType;
 import zw.gov.mohcc.impilo.mushex.domain.repository.EventOutboxRepository;
 import zw.gov.mohcc.impilo.mushex.domain.repository.PaymentIntentRepository;
 import zw.gov.mohcc.impilo.mushex.integration.CredentialVerificationClient;
+import zw.gov.mohcc.impilo.mushex.integration.MusheWalletAdapter;
 import zw.gov.mohcc.impilo.mushex.integration.ProviderContractClient;
 import zw.gov.mohcc.impilo.mushex.service.PaymentIntentService;
 import zw.gov.mohcc.impilo.mushex.service.ReceiptService;
@@ -45,6 +46,7 @@ class PaymentIntentServiceTest {
     @Mock private ReceiptService receiptService;
     @Mock private ObjectMapper objectMapper;
     @Mock private ProviderContractClient providerContractClient;
+    @Mock private MusheWalletAdapter walletAdapter;
 
     private PaymentIntentService service;
 
@@ -60,7 +62,7 @@ class PaymentIntentServiceTest {
     void setUp() {
         lenient().when(providerContractClient.hasActiveContract(any(), any(), any())).thenReturn(true);
         service = new PaymentIntentService(intentRepository, outboxRepository, receiptService, objectMapper,
-                NOOP_CREDENTIALS, providerContractClient);
+                NOOP_CREDENTIALS, providerContractClient, walletAdapter);
         TrustContextHolder.set(new TrustContext(
             tenantId, "actor-1", "FACILITY_FINANCE", "BILLING",
             "device-1", correlationId, facilityId, null, null, AccessMode.INTERNAL

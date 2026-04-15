@@ -1,5 +1,6 @@
 package zw.gov.mohcc.impilo.varapi.config;
 
+import ca.uhn.fhir.context.FhirContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;
@@ -26,5 +27,10 @@ public class VarapiServiceConfig {
     @Bean
     public RestTemplate restTemplate() {
         return new RestTemplate();
+    }
+
+    @Bean
+    public FhirContext fhirContext() {
+        return FhirContext.forR4();
     }
 }

@@ -425,7 +425,7 @@ class ClaimServiceTest {
             super(paymentIntentRepository, outboxRepository, new ReceiptService(receiptRepository, paymentIntentRepository, objectMapper), objectMapper,
                     (tenantId, providerId) -> new CredentialVerificationClient.CredentialVerificationResult(
                             true, "VALID", "test-verification-ref", null),
-                    (t, p, pay) -> true);
+                    (t, p, pay) -> true, null);
         }
 
         @Override

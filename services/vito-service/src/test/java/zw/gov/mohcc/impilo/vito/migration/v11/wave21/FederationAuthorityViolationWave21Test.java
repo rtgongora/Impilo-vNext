@@ -73,8 +73,8 @@ class FederationAuthorityViolationWave21Test {
         @DisplayName("Exception contains pod ID for audit")
         void exceptionContainsPodId() {
             FederationNotAuthorizedException ex = catchThrowableOfType(
-                    FederationNotAuthorizedException.class,
-                    () -> guard.requireNationalPodForMerge("rogue-pod"));
+                    () -> guard.requireNationalPodForMerge("rogue-pod"),
+                    FederationNotAuthorizedException.class);
             assertThat(ex.getPodId()).isEqualTo("rogue-pod");
         }
     }
@@ -99,8 +99,8 @@ class FederationAuthorityViolationWave21Test {
         @DisplayName("FederationNotAuthorizedException message is the error code")
         void exceptionMessageIsErrorCode() {
             FederationNotAuthorizedException ex = catchThrowableOfType(
-                    FederationNotAuthorizedException.class,
-                    () -> guard.requireNationalPodForMerge("pod-x"));
+                    () -> guard.requireNationalPodForMerge("pod-x"),
+                    FederationNotAuthorizedException.class);
             assertThat(ex.getMessage()).isEqualTo("FEDERATION_AUTHORITY_VIOLATION");
         }
     }

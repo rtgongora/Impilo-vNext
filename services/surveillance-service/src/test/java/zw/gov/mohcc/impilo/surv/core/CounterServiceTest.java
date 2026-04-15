@@ -31,6 +31,7 @@ class CounterServiceTest {
     @Mock private DailyCounterRepository counterRepository;
     @Mock private AlertDefinitionRepository alertDefRepository;
     @Mock private AlertEventRepository alertEventRepository;
+    @Mock private EventOutboxRepository outboxRepository;
 
     private CounterService service;
     private final UUID tenantId = UUID.randomUUID();

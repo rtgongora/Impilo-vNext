@@ -8,6 +8,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import zw.gov.mohcc.impilo.reporting.dto.RunReportRequest;
 import zw.gov.mohcc.impilo.reporting.persistence.entity.EventOutboxEntity;
 import zw.gov.mohcc.impilo.reporting.persistence.entity.ReportDefinitionEntity;
@@ -36,6 +37,9 @@ class ReportRunServiceTest {
     @Mock
     private EventOutboxRepository outboxRepository;
 
+    @Mock
+    private NamedParameterJdbcTemplate jdbcTemplate;
+
     private ReportRunService runService;
     private ReportDefinitionService definitionService;
 
@@ -48,7 +52,7 @@ class ReportRunServiceTest {
         definitionService = new ReportDefinitionService(
                 definitionRepository, outboxRepository, objectMapper);
         runService = new ReportRunService(
-                runRepository, definitionService, outboxRepository, objectMapper);
+                runRepository, definitionService, outboxRepository, jdbcTemplate, objectMapper);
     }
 
     // ---------------------------------------------------------------
@@ -178,31 +182,6 @@ class ReportRunServiceTest {
                 tenantId, "param-report", actorId, request);
 
         assertThat(result.getParameters()).isEqualTo("{\"limit\":50}");
-    }
-
-    // ---------------------------------------------------------------
-    // executeStub
-    // ---------------------------------------------------------------
-
-    @Test
-    @DisplayName("executeStub generates valid JSON stub data")
-    void executeStubJson() {
-        ReportDefinitionEntity definition = buildDefinition("test", ExportFormat.JSON);
-        String result = runService.executeStub(definition, "{}", ExportFormat.JSON);
-
-        assertThat(result).contains("\"reportKey\":\"test\"");
-        assertThat(result).contains("\"rowCount\":0");
-        assertThat(result).contains("\"rows\":[]");
-    }
-
-    @Test
-    @DisplayName("executeStub generates valid CSV stub data")
-    void executeStubCsv() {
-        ReportDefinitionEntity definition = buildDefinition("test", ExportFormat.CSV);
-        String result = runService.executeStub(definition, "{}", ExportFormat.CSV);
-
-        assertThat(result).startsWith("report_key,name,generated_at,row_count\n");
-        assertThat(result).contains("test,");
     }
 
     // ---------------------------------------------------------------

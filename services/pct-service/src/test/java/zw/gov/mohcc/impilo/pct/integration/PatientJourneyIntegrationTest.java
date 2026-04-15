@@ -49,6 +49,7 @@ class PatientJourneyIntegrationTest {
     @Mock private DischargeCaseRepository dischargeCaseRepository;
     @Mock private WorkspaceSessionRepository sessionRepository;
     @Mock private TelemetryEventRepository telemetryRepository;
+    @Mock private TransferRepository transferRepository;
 
     private WorkspaceSessionService workspaceSessionService;
     private JourneyStateMachine journeyStateMachine;
@@ -57,6 +58,7 @@ class PatientJourneyIntegrationTest {
     private RoutingEngine routingEngine;
     private EncounterService encounterService;
     private AdmissionWorkflow admissionWorkflow;
+    private TransferService transferService;
     private DischargeWorkflow dischargeWorkflow;
     private TelemetryService telemetryService;
 
@@ -101,9 +103,13 @@ class PatientJourneyIntegrationTest {
                 admissionRepository, journeyRepository, journeyStateMachine,
                 outboxRepository, telemetryService, objectMapper);
 
+        transferService = new TransferService(
+                transferRepository, admissionRepository, journeyRepository,
+                journeyStateMachine, outboxRepository, telemetryService, objectMapper);
+
         dischargeWorkflow = new DischargeWorkflow(
                 dischargeCaseRepository, journeyRepository, journeyStateMachine,
-                outboxRepository, objectMapper);
+                admissionWorkflow, transferService, outboxRepository, objectMapper);
     }
 
     private TrustContext createTrustContext() {

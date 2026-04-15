@@ -44,7 +44,7 @@ class BookingConflictDetectorTest {
     @Test
     void detectConflicts_noExistingBookings_returnsEmpty() {
         when(bookingRepository.findByResourceIdAndStartTimeLessThanAndEndTimeGreaterThanAndStatusNot(
-                eq(RESOURCE_ID), eq(BASE.plusHours(1)), eq(BASE), eq("CANCELLED")))
+                eq(RESOURCE_ID), eq(BASE.plusHours(1).toInstant()), eq(BASE.toInstant()), eq("CANCELLED")))
                 .thenReturn(Collections.emptyList());
 
         List<BookingEntity> conflicts = detector.detectConflicts(RESOURCE_ID, BASE, BASE.plusHours(1), null);
@@ -62,7 +62,7 @@ class BookingConflictDetectorTest {
                 BASE, BASE.plusHours(1), "CONFIRMED");
 
         when(bookingRepository.findByResourceIdAndStartTimeLessThanAndEndTimeGreaterThanAndStatusNot(
-                eq(RESOURCE_ID), eq(newEnd), eq(newStart), eq("CANCELLED")))
+                eq(RESOURCE_ID), eq(newEnd.toInstant()), eq(newStart.toInstant()), eq("CANCELLED")))
                 .thenReturn(List.of(existing));
 
         List<BookingEntity> conflicts = detector.detectConflicts(RESOURCE_ID, newStart, newEnd, null);
@@ -82,7 +82,7 @@ class BookingConflictDetectorTest {
         BookingEntity existing = createBooking(BOOKING_ID_1, RESOURCE_ID, existStart, existEnd, "CONFIRMED");
 
         when(bookingRepository.findByResourceIdAndStartTimeLessThanAndEndTimeGreaterThanAndStatusNot(
-                eq(RESOURCE_ID), eq(newEnd), eq(newStart), eq("CANCELLED")))
+                eq(RESOURCE_ID), eq(newEnd.toInstant()), eq(newStart.toInstant()), eq("CANCELLED")))
                 .thenReturn(List.of(existing));
 
         List<BookingEntity> conflicts = detector.detectConflicts(RESOURCE_ID, newStart, newEnd, null);
@@ -102,7 +102,7 @@ class BookingConflictDetectorTest {
         BookingEntity existing = createBooking(BOOKING_ID_1, RESOURCE_ID, existStart, existEnd, "CONFIRMED");
 
         when(bookingRepository.findByResourceIdAndStartTimeLessThanAndEndTimeGreaterThanAndStatusNot(
-                eq(RESOURCE_ID), eq(newEnd), eq(newStart), eq("CANCELLED")))
+                eq(RESOURCE_ID), eq(newEnd.toInstant()), eq(newStart.toInstant()), eq("CANCELLED")))
                 .thenReturn(List.of(existing));
 
         List<BookingEntity> conflicts = detector.detectConflicts(RESOURCE_ID, newStart, newEnd, null);
@@ -121,7 +121,7 @@ class BookingConflictDetectorTest {
         BookingEntity existing = createBooking(BOOKING_ID_1, RESOURCE_ID, existStart, existEnd, "CONFIRMED");
 
         when(bookingRepository.findByResourceIdAndStartTimeLessThanAndEndTimeGreaterThanAndStatusNot(
-                eq(RESOURCE_ID), eq(newEnd), eq(newStart), eq("CANCELLED")))
+                eq(RESOURCE_ID), eq(newEnd.toInstant()), eq(newStart.toInstant()), eq("CANCELLED")))
                 .thenReturn(List.of(existing));
 
         List<BookingEntity> conflicts = detector.detectConflicts(RESOURCE_ID, newStart, newEnd, null);
@@ -137,7 +137,7 @@ class BookingConflictDetectorTest {
         OffsetDateTime newEnd = BASE.plusHours(2);
 
         when(bookingRepository.findByResourceIdAndStartTimeLessThanAndEndTimeGreaterThanAndStatusNot(
-                eq(RESOURCE_ID), eq(newEnd), eq(newStart), eq("CANCELLED")))
+                eq(RESOURCE_ID), eq(newEnd.toInstant()), eq(newStart.toInstant()), eq("CANCELLED")))
                 .thenReturn(Collections.emptyList());
 
         List<BookingEntity> conflicts = detector.detectConflicts(RESOURCE_ID, newStart, newEnd, null);
@@ -153,7 +153,7 @@ class BookingConflictDetectorTest {
         OffsetDateTime newEnd = BASE.plusHours(1);
 
         when(bookingRepository.findByResourceIdAndStartTimeLessThanAndEndTimeGreaterThanAndStatusNot(
-                eq(RESOURCE_ID), eq(newEnd), eq(newStart), eq("CANCELLED")))
+                eq(RESOURCE_ID), eq(newEnd.toInstant()), eq(newStart.toInstant()), eq("CANCELLED")))
                 .thenReturn(Collections.emptyList());
 
         List<BookingEntity> conflicts = detector.detectConflicts(RESOURCE_ID, newStart, newEnd, null);
@@ -168,7 +168,7 @@ class BookingConflictDetectorTest {
         OffsetDateTime newEnd = BASE.plusHours(1);
 
         when(bookingRepository.findByResourceIdAndStartTimeLessThanAndEndTimeGreaterThanAndStatusNot(
-                eq(RESOURCE_ID), eq(newEnd), eq(newStart), eq("CANCELLED")))
+                eq(RESOURCE_ID), eq(newEnd.toInstant()), eq(newStart.toInstant()), eq("CANCELLED")))
                 .thenReturn(Collections.emptyList());
 
         List<BookingEntity> conflicts = detector.detectConflicts(RESOURCE_ID, newStart, newEnd, null);
@@ -187,7 +187,7 @@ class BookingConflictDetectorTest {
                 BASE.plusMinutes(30), BASE.plusMinutes(90), "CONFIRMED");
 
         when(bookingRepository.findByResourceIdAndStartTimeLessThanAndEndTimeGreaterThanAndStatusNot(
-                eq(RESOURCE_ID), eq(newEnd), eq(newStart), eq("CANCELLED")))
+                eq(RESOURCE_ID), eq(newEnd.toInstant()), eq(newStart.toInstant()), eq("CANCELLED")))
                 .thenReturn(List.of(self, other));
 
         List<BookingEntity> conflicts = detector.detectConflicts(RESOURCE_ID, newStart, newEnd, BOOKING_ID_1);

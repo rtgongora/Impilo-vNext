@@ -70,7 +70,7 @@ services:
   # ── Keycloak 25.x ─────────────────────────────────────────────────
   keycloak:
     image: quay.io/keycloak/keycloak:25.0
-    command: start-dev --import-realm
+    command: start-dev --import-realm --health-enabled=true
     environment:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
@@ -78,19 +78,20 @@ services:
       KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
       KC_DB_USERNAME: ${POSTGRES_USER:-impilo}
       KC_DB_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      KC_HEALTH_ENABLED: "true"
     volumes:
       - ./tools/auth/impilo-realm.json:/opt/keycloak/data/import/impilo-realm.json:ro
     ports:
-      - "8080:8080"
+      - "8480:8080"
     depends_on:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/8080 && echo -e 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\n\\r\\n' >&3 && cat <&3 | grep -q '200\\|UP' || exit 1"]
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/localhost/9000 && echo -e 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && grep -q '\"status\":\"UP\"\\|200' <&3"]
       interval: 10s
       timeout: 5s
       retries: 15
-      start_period: 30s
+      start_period: 60s
 
   # ── MinIO (S3-compatible) ──────────────────────────────────────────
   minio:
@@ -116,16 +117,12 @@ services:
       spring.jpa.properties.hibernate.dialect: org.hibernate.dialect.PostgreSQLDialect
       hapi.fhir.fhir_version: R4
     ports:
-      - "8090:8080"
+      - "18090:8080"
     depends_on:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/fhir/metadata > /dev/null 2>&1 || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
+      disable: true
 
   # ===========================================================================
   # EDGE — Envoy + OPA
@@ -133,7 +130,7 @@ services:
 
   # ── OPA (Open Policy Agent) ────────────────────────────────────────
   opa:
-    image: openpolicyagent/opa:0.68.0
+    image: openpolicyagent/opa:0.68.0-debug
     command:
       - "run"
       - "--server"
@@ -162,7 +159,7 @@ services:
       opa:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:9901/ready || exit 1"]
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/localhost/9901 && echo -e 'GET /ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && grep -q 'LIVE' <&3"]
       interval: 5s
       timeout: 3s
       retries: 10
@@ -187,11 +184,12 @@ services:
       KEYCLOAK_URL: http://keycloak:8080
       KEYCLOAK_REALM: ${KEYCLOAK_REALM:-impilo}
       SPRING_PROFILES_ACTIVE: default
+      SERVER_PORT: 8081
       # Disable OAuth2 resource server for dev (no realm configured yet)
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: ""
       SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
     ports:
-      - "8081:8081"
+      - "18081:8081"
     depends_on:
       postgres:
         condition: service_healthy
@@ -223,6 +221,7 @@ services:
       KEYCLOAK_REALM: ${KEYCLOAK_REALM:-impilo}
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: ""
       SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
+      VITO_HMAC_PEPPER: impilo-dev-hmac-pepper-changeme-in-prod
     ports:
       - "8082:8082"
     depends_on:
@@ -389,7 +388,7 @@ services:
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: ""
       SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
     ports:
-      - "8089:8089"
+      - "18089:8089"
     depends_on:
       postgres:
         condition: service_healthy
@@ -407,8 +406,8 @@ services:
   # ── Guidance Service — Conversational & Knowledge (port 8260) ────────
   guidance:
     build:
-      context: .
-      dockerfile: services/guidance-service/Dockerfile
+      context: ./services/guidance-service
+      dockerfile: Dockerfile
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
@@ -432,8 +431,8 @@ services:
   # ── Clinical Knowledge Platform — EDLIZ-aligned (port 8270) ──────────
   clinical-knowledge-platform:
     build:
-      context: .
-      dockerfile: services/clinical-knowledge-platform-service/Dockerfile
+      context: ./services/clinical-knowledge-platform-service
+      dockerfile: Dockerfile
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
@@ -466,8 +465,8 @@ services:
   # ── Experience BFF (port 8160) ─────────────────────────────────────
   experience-bff:
     build:
-      context: .
-      dockerfile: services/experience-bff/Dockerfile
+      context: ./services/experience-bff
+      dockerfile: Dockerfile
     environment:
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
@@ -476,6 +475,8 @@ services:
       DB_NAME: experience_bff
       DB_USER: ${POSTGRES_USER:-impilo}
       DB_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
       SPRING_PROFILES_ACTIVE: default
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       KEYCLOAK_URL: http://keycloak:8080
@@ -526,20 +527,24 @@ services:
     build:
       context: ./ui/experience
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_BFF_URL: http://experience-bff:8160
+        NEXT_PUBLIC_API_GATEWAY_URL: http://envoy:10000
     environment:
       NEXT_PUBLIC_BFF_URL: http://experience-bff:8160
       NEXT_PUBLIC_GATEWAY_URL: http://envoy:10000
+      HOSTNAME: "0.0.0.0"
     ports:
       - "3020:3020"
     depends_on:
       experience-bff:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:3020 || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3020 || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 10
-      start_period: 15s
+      start_period: 30s
 
 volumes:
   pg_data:

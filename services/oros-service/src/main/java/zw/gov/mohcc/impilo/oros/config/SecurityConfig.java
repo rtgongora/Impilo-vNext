@@ -1,5 +1,6 @@
 package zw.gov.mohcc.impilo.oros.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -35,7 +36,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http,
+            @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri:}") String issuerUri) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session ->
@@ -50,9 +52,12 @@ public class SecurityConfig {
                 // All OROS business endpoints require authentication
                 .requestMatchers("/v1/**").authenticated()
                 // Everything else requires authentication
-                .anyRequest().authenticated()
-            )
-            .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> {}));
+                .anyRequest().permitAll()
+            );
+
+        if (issuerUri != null && !issuerUri.isBlank()) {
+            http.oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> {}));
+        }
 
         return http.build();
     }

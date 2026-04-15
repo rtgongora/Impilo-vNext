@@ -8,7 +8,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import zw.gov.mohcc.impilo.reporting.dto.CreateScheduleRequest;
+import zw.gov.mohcc.impilo.reporting.persistence.repository.ReportRunRepository;
 import zw.gov.mohcc.impilo.reporting.dto.ScheduleResponse;
 import zw.gov.mohcc.impilo.reporting.persistence.entity.EventOutboxEntity;
 import zw.gov.mohcc.impilo.reporting.persistence.entity.ReportDefinitionEntity;
@@ -38,7 +40,14 @@ class ScheduleServiceTest {
     @Mock
     private EventOutboxRepository outboxRepository;
 
+    @Mock
+    private ReportRunRepository runRepository;
+
+    @Mock
+    private NamedParameterJdbcTemplate jdbcTemplate;
+
     private ScheduleService scheduleService;
+    private ReportRunService runService;
     private ReportDefinitionService definitionService;
 
     private final UUID tenantId = UUID.fromString("00000000-0000-0000-0000-000000000001");
@@ -49,8 +58,10 @@ class ScheduleServiceTest {
         ObjectMapper objectMapper = new ObjectMapper();
         definitionService = new ReportDefinitionService(
                 definitionRepository, outboxRepository, objectMapper);
+        runService = new ReportRunService(
+                runRepository, definitionService, outboxRepository, jdbcTemplate, objectMapper);
         scheduleService = new ScheduleService(
-                scheduleRepository, definitionService, outboxRepository, objectMapper);
+                scheduleRepository, definitionService, runService, outboxRepository, objectMapper);
     }
 
     // ---------------------------------------------------------------

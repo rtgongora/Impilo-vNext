@@ -8,6 +8,8 @@
 --           telemetry, and event outbox.
 -- =============================================
 
+CREATE SCHEMA IF NOT EXISTS pct;
+
 -- ─── 1. pct_journeys ────────────────────────────────────────────────────────────
 
 CREATE TABLE pct_journeys (

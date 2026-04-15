@@ -18,10 +18,13 @@ public interface AlertRepository extends JpaRepository<AlertEntity, UUID> {
            "AND a.status = 'OPEN' ORDER BY a.createdAt DESC")
     Page<AlertEntity> findOpenAlerts(@Param("tenantId") UUID tenantId, Pageable pageable);
 
+    @Query("SELECT a FROM AlertEntity a WHERE a.facility.id = :facilityId AND a.status = :status ORDER BY a.createdAt DESC")
     Page<AlertEntity> findByFacilityIdAndStatusOrderByCreatedAtDesc(
-            Long facilityId, String status, Pageable pageable);
+            @Param("facilityId") Long facilityId, @Param("status") String status, Pageable pageable);
 
     Page<AlertEntity> findByTenantIdOrderByCreatedAtDesc(UUID tenantId, Pageable pageable);
 
-    Optional<AlertEntity> findByFacilityIdAndAlertTypeAndStatus(Long facilityId, String alertType, String status);
+    @Query("SELECT a FROM AlertEntity a WHERE a.facility.id = :facilityId AND a.alertType = :alertType AND a.status = :status")
+    Optional<AlertEntity> findByFacilityIdAndAlertTypeAndStatus(
+            @Param("facilityId") Long facilityId, @Param("alertType") String alertType, @Param("status") String status);
 }

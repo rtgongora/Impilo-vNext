@@ -1,4 +1,5 @@
 -- Wave 8: Control channel watermark table for idempotent event processing
+CREATE SCHEMA IF NOT EXISTS pct;
 CREATE TABLE IF NOT EXISTS pct.control_channel_watermark (
     id              BIGSERIAL PRIMARY KEY,
     event_id        VARCHAR(64) NOT NULL UNIQUE,
