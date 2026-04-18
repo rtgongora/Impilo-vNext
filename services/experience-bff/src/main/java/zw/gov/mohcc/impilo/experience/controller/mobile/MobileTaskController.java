@@ -33,7 +33,7 @@ public class MobileTaskController {
 
     public record EscalateTaskRequest(
             @NotBlank String escalation_reason,
-            String escalated_to
+            String escalatedTo
     ) {}
 
     public record CompleteTaskRequest(
@@ -78,9 +78,9 @@ public class MobileTaskController {
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
-        // TODO: wire to PctServiceClient when PCT exposes GET /v1/tasks/{taskId}
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(Map.of(
-                "data", List.of(),
+        JsonNode data = pctClient.getTask(id);
+        return ResponseEntity.ok(Map.of(
+                "data", data != null ? data : Map.of(),
                 "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 
@@ -93,9 +93,11 @@ public class MobileTaskController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @Valid @RequestBody UpdateTaskRequest request) {
-        // TODO: wire to PctServiceClient when PCT exposes PATCH /v1/tasks/{taskId}
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(Map.of(
-                "data", List.of(),
+        JsonNode data = pctClient.updateTask(id, Map.of(
+                "status", request.status(),
+                "notes", request.notes() != null ? request.notes() : ""));
+        return ResponseEntity.ok(Map.of(
+                "data", data != null ? data : Map.of(),
                 "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 
@@ -108,9 +110,11 @@ public class MobileTaskController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @Valid @RequestBody EscalateTaskRequest request) {
-        // TODO: wire to PctServiceClient when PCT exposes task escalation
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(Map.of(
-                "data", List.of(),
+        JsonNode data = pctClient.escalateTask(id, Map.of(
+                "escalation_reason", request.escalation_reason(),
+                "escalated_to", request.escalatedTo() != null ? request.escalatedTo() : ""));
+        return ResponseEntity.ok(Map.of(
+                "data", data != null ? data : Map.of(),
                 "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 

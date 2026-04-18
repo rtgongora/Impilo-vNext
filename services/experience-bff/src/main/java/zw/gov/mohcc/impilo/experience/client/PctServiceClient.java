@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -233,6 +234,20 @@ public class PctServiceClient {
      */
     public JsonNode getJourney(String journeyId) {
         String url = baseUrl + "/v1/journeys/" + journeyId;
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode listJourneys(String patientId, int page, int size) {
+        String url = baseUrl + "/v1/journeys?patient_id=" + patientId + "&page=" + page + "&size=" + size;
+        log.debug("PCT: listing journeys for patient={}", patientId);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode listConditions(String patientId, int page, int size) {
+        String url = baseUrl + "/v1/conditions?patient_id=" + patientId + "&page=" + page + "&size=" + size;
+        log.debug("PCT: listing conditions for patient={}", patientId);
         ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
         return extractData(response);
     }
@@ -495,6 +510,13 @@ public class PctServiceClient {
 
     // ── Vitals (strangler migration) ────────────────────────────
 
+    public JsonNode deleteVital(String vitalId) {
+        String url = baseUrl + "/v1/vitals/" + vitalId;
+        log.info("PCT: Deleting vital={}", vitalId);
+        restTemplate.exchange(url, HttpMethod.DELETE, null, JsonNode.class);
+        return new ObjectMapper().createObjectNode();
+    }
+
     public JsonNode listVitals(String patientCpid, int page, int size) {
         String url = baseUrl + "/v1/vitals?patient_id=" + patientCpid + "&page=" + page + "&size=" + size;
         log.debug("PCT: Listing vitals for patient={}...",
@@ -538,6 +560,24 @@ public class PctServiceClient {
 
     public JsonNode createTask(Map<String, Object> body) {
         String url = baseUrl + "/v1/tasks";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode getTask(UUID taskId) {
+        String url = baseUrl + "/v1/tasks/" + taskId;
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode updateTask(UUID taskId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/tasks/" + taskId;
+        ResponseEntity<JsonNode> response = restTemplate.exchange(url, HttpMethod.PATCH, new org.springframework.http.HttpEntity<>(body), JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode escalateTask(UUID taskId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/tasks/" + taskId + "/escalate";
         ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
         return extractData(response);
     }

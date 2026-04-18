@@ -79,4 +79,11 @@ public class RulesServiceClient {
         ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, requestBody, JsonNode.class);
         return response.getBody();
     }
+
+    public JsonNode getActiveAlerts() {
+        String url = baseUrl + "/internal/v1/rules/alerts/active";
+        log.debug("Rules: fetching active CDS alerts");
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return response.getBody();
+    }
 }

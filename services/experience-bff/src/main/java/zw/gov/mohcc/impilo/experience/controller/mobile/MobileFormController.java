@@ -186,7 +186,21 @@ public class MobileFormController {
             @RequestParam(name = "encounter_id") String encounterId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        // TODO: Wire to forms-service submissions store when available.
+        try {
+            JsonNode submissions = formsClient.listSubmissions(encounterId, page, size);
+            if (submissions != null) {
+                return ResponseEntity.ok(Map.of(
+                        "data", submissions,
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+                ));
+            }
+        } catch (Exception e) {
+            // Forms-service submissions may not be available
+            return ResponseEntity.ok(Map.of(
+                    "data", List.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+            ));
+        }
         return ResponseEntity.ok(Map.of(
                 "data", List.of(),
                 "meta", Map.of("request_id", requestId, "correlation_id", correlationId)

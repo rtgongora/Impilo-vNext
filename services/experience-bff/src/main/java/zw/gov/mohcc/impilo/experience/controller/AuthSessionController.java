@@ -10,6 +10,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.RulesServiceClient;
 import zw.gov.mohcc.impilo.experience.client.VarapiServiceClient;
 import zw.gov.mohcc.impilo.experience.client.VitoServiceClient;
 
@@ -58,13 +59,16 @@ public class AuthSessionController {
     private final RestTemplate restTemplate;
     private final VarapiServiceClient varapiClient;
     private final VitoServiceClient vitoClient;
+    private final RulesServiceClient rulesClient;
 
     public AuthSessionController(RestTemplate serviceRestTemplate,
                                  VarapiServiceClient varapiClient,
-                                 VitoServiceClient vitoClient) {
+                                 VitoServiceClient vitoClient,
+                                 RulesServiceClient rulesClient) {
         this.restTemplate = serviceRestTemplate;
         this.varapiClient = varapiClient;
         this.vitoClient = vitoClient;
+        this.rulesClient = rulesClient;
     }
 
     /**
@@ -646,11 +650,18 @@ public class AuthSessionController {
     public ResponseEntity<Map<String, Object>> getCdsAlertCount(
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
-        // TODO: proxy to rules-service when CDS alert aggregation is implemented.
-        // For now return 0 (no false positives) rather than a hardcoded number.
-        return ResponseEntity.ok(Map.of(
-                "data", Map.of("count", 0),
-                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        try {
+            JsonNode alerts = rulesClient.getActiveAlerts();
+            int count = (alerts != null && alerts.isArray()) ? alerts.size() : 0;
+            return ResponseEntity.ok(Map.of(
+                    "data", Map.of("count", count),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            log.warn("CDS alerts fetch failed: {}", e.getMessage());
+            return ResponseEntity.ok(Map.of(
+                    "data", Map.of("count", 0),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
     }
 
     private String determineActorType(List<String> roles) {

@@ -25,33 +25,23 @@ import { QueueStatusSection } from "./QueueStatusSection";
 import { FinanceSection } from "./FinanceSection";
 import { ChallengesScreen } from "./ChallengesScreen";
 import { ProgramsScreen } from "./ProgramsScreen";
-
-type PersonalTab = "profile" | "health-id" | "appointments" | "prescriptions" | "results" | "records" | "reminders" | "timeline" | "wellness" | "finance" | "challenges" | "programs" | "wallet" | "monitoring" | "queue" | "sos" | "coverage" | "settings";
-
-const PERSONAL_TABS: TabItem[] = [
-  { id: "profile", label: "Profile", icon: "user" },
-  { id: "health-id", label: "Health ID", icon: "credit-card" },
-  { id: "appointments", label: "Appointments", icon: "calendar" },
-  { id: "prescriptions", label: "Rx", icon: "pill" },
-  { id: "results", label: "Results", icon: "clipboard" },
-  { id: "records", label: "Records", icon: "file-text" },
-  { id: "timeline", label: "Timeline", icon: "clock" },
-  { id: "wellness", label: "Wellness", icon: "activity" },
-  { id: "finance", label: "Finance", icon: "dollar-sign" },
-  { id: "challenges", label: "Challenges", icon: "trophy" },
-  { id: "programs", label: "Programs", icon: "book-open" },
-  { id: "wallet", label: "Wallet", icon: "credit-card" },
-  { id: "monitoring", label: "Devices", icon: "bluetooth" },
-  { id: "queue", label: "Queue", icon: "list" },
-  { id: "sos", label: "SOS", icon: "alert-circle" },
-  { id: "reminders", label: "Reminders", icon: "bell" },
-  { id: "coverage", label: "Coverage", icon: "shield" },
-  { id: "settings", label: "Settings", icon: "settings" },
-];
+import { AllergiesSection } from "./AllergiesSection";
+import { ConditionsSection } from "./ConditionsSection";
+import { ImmunizationsSection } from "./ImmunizationsSection";
+import { ReferralsSection } from "./ReferralsSection";
+import { CarePlansSection } from "./CarePlansSection";
+import { IdRecoverySection } from "./IdRecoverySection";
+import { AssessmentsSection } from "./AssessmentsSection";
+import { CareTeamSection } from "./CareTeamSection";
 
 const SECTIONS: Record<PersonalTab, React.FC> = {
   profile: ProfileSection,
   "health-id": HealthIdSection,
+  allergies: AllergiesSection,
+  conditions: ConditionsSection,
+  immunizations: ImmunizationsSection,
+  referrals: ReferralsSection,
+  "care-plans": CarePlansSection,
   appointments: AppointmentsSection,
   prescriptions: PrescriptionsSection,
   results: ResultsSection,
@@ -68,6 +58,9 @@ const SECTIONS: Record<PersonalTab, React.FC> = {
   sos: EmergencySOSSection,
   coverage: CoverageSection,
   settings: SettingsSection,
+  assessments: AssessmentsSection,
+  "care-team": CareTeamSection,
+  "id-recovery": IdRecoverySection,
 };
 
 export function PersonalScreen() {

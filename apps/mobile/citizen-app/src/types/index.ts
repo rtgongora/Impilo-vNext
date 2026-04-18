@@ -488,3 +488,292 @@ export interface Cart {
   totalAmount: number;
   currency: string;
 }
+
+/* ── Allergies ── */
+
+export interface Allergy {
+  id: string;
+  allergen: string;
+  reaction: string;
+  severity: AllergySeverity;
+  onsetDate?: string;
+  recordedAt: string;
+  recordedBy?: string;
+  facilityName?: string;
+}
+
+export type AllergySeverity = "MILD" | "MODERATE" | "SEVERE" | "LIFE_THREATENING";
+
+/* ── Conditions ── */
+
+export interface Condition {
+  id: string;
+  name: string;
+  code?: string;
+  status: ConditionStatus;
+  onsetDate?: string;
+  recordedAt: string;
+  resolvedAt?: string;
+  recordedBy?: string;
+  facilityName?: string;
+  notes?: string;
+}
+
+export type ConditionStatus = "ACTIVE" | "RESOLVED" | "INACTIVE" | "REMISSION";
+
+/* ── Immunizations ── */
+
+export interface Immunization {
+  id: string;
+  vaccineName: string;
+  vaccineCode?: string;
+  doseNumber: number;
+  totalDoses?: number;
+  administeredAt: string;
+  administeredBy?: string;
+  facilityName?: string;
+  lotNumber?: string;
+  expirationDate?: string;
+  nextDoseDate?: string;
+  notes?: string;
+}
+
+/* ── Referrals ── */
+
+export interface Referral {
+  id: string;
+  fromFacilityId: string;
+  fromFacilityName: string;
+  toFacilityId?: string;
+  toFacilityName?: string;
+  toProviderId?: string;
+  toProviderName?: string;
+  specialty?: string;
+  reason: string;
+  status: ReferralStatus;
+  requestedAt: string;
+  acceptedAt?: string;
+  completedAt?: string;
+  cancelledAt?: string;
+  notes?: string;
+}
+
+export type ReferralStatus = "PENDING" | "ACCEPTED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
+
+/* ── Care Plans ── */
+
+export interface CarePlan {
+  id: string;
+  name: string;
+  description?: string;
+  status: CarePlanStatus;
+  startDate: string;
+  endDate?: string;
+  createdAt: string;
+  updatedAt?: string;
+  createdBy?: string;
+  goals: CarePlanGoal[];
+  interventions: CarePlanIntervention[];
+}
+
+export type CarePlanStatus = "DRAFT" | "ACTIVE" | "ON_HOLD" | "COMPLETED" | "CANCELLED";
+
+export interface CarePlanGoal {
+  id: string;
+  description: string;
+  targetDate?: string;
+  achievedAt?: string;
+  status: "PENDING" | "IN_PROGRESS" | "ACHIEVED" | "NOT_ACHIEVED";
+}
+
+export interface CarePlanIntervention {
+  id: string;
+  description: string;
+  type: string;
+  frequency?: string;
+  startDate?: string;
+  endDate?: string;
+  status: "PENDING" | "ACTIVE" | "COMPLETED" | "SKIPPED";
+}
+
+/* ── Provider Discovery ── */
+
+export interface Provider {
+  id: string;
+  displayName: string;
+  title?: string;
+  specialty?: string;
+  facilityId?: string;
+  facilityName?: string;
+  photoUrl?: string;
+  rating?: number;
+  reviewCount: number;
+  yearsExperience?: number;
+  isAccepting: boolean;
+  consultationFee?: number;
+  currency?: string;
+  languages?: string[];
+  nextAvailable?: string;
+}
+
+/* ── Care Team ── */
+
+export interface CareTeamMember {
+  id: string;
+  role: string;
+  name: string;
+  specialty?: string;
+  facilityName?: string;
+  phone?: string;
+  email?: string;
+  photoUrl?: string;
+  isPrimary: boolean;
+}
+
+/* ── ID Recovery ── */
+
+export interface IdRecoveryRequest {
+  id: string;
+  status: "PENDING" | "VERIFIED" | "COMPLETED" | "EXPIRED" | "FAILED";
+  method: "SMS" | "EMAIL" | "VIDEO_CALL" | "IN_PERSON";
+  requestedAt: string;
+  verifiedAt?: string;
+  completedAt?: string;
+  expiresAt: string;
+  deliveryChannel?: string;
+}
+
+/* ── Delegation ── */
+
+export interface Delegate {
+  id: string;
+  delegateId: string;
+  delegateName: string;
+  delegateRelationship?: string;
+  permissions: DelegatePermission[];
+  grantedAt: string;
+  expiresAt?: string;
+  status: "ACTIVE" | "REVOKED" | "EXPIRED";
+}
+
+export type DelegatePermission =
+  | "VIEW_RECORDS"
+  | "VIEW_APPOINTMENTS"
+  | "MANAGE_APPOINTMENTS"
+  | "VIEW_PRESCRIPTIONS"
+  | "RECEIVE_NOTIFICATIONS"
+  | "ACCESS_TELEHEALTH";
+
+/* ── Assessments ── */
+
+export interface Assessment {
+  id: string;
+  name: string;
+  description?: string;
+  category: string;
+  status: "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED";
+  startedAt?: string;
+  completedAt?: string;
+  score?: number;
+  maxScore?: number;
+  resultSummary?: string;
+}
+
+export interface AssessmentResponse {
+  id: string;
+  assessmentId: string;
+  questionId: string;
+  answer: string;
+  responseAt: string;
+}
+
+/* ── Growth Charts ── */
+
+export interface GrowthMeasurement {
+  id: string;
+  date: string;
+  ageMonths: number;
+  weightKg?: number;
+  heightCm?: number;
+  headCircumferenceCm?: number;
+  bmi?: number;
+  percentile?: number;
+  growthChartType: "WEIGHT_FOR_AGE" | "HEIGHT_FOR_AGE" | "BMI_FOR_AGE" | "HEAD_CIRCUMFERENCE";
+}
+
+export interface GrowthChart {
+  id: string;
+  childId: string;
+  chartType: GrowthMeasurement["growthChartType"];
+  measurements: GrowthMeasurement[];
+  standardDeviations: number[];
+}
+
+/* ── Maternity ── */
+
+export interface MaternityRecord {
+  id: string;
+  status: "PREGNANT" | "POSTPARTUM";
+  dueDate?: string;
+  calculatedDueDate?: string;
+  conceptionDate?: string;
+  lastMenstrualPeriod?: string;
+  riskLevel?: "LOW" | "MODERATE" | "HIGH";
+  prenatalVisits: number;
+  currentWeek?: number;
+  currentTrimester?: number;
+  createdAt: string;
+}
+
+export interface PrenatalVisit {
+  id: string;
+  maternityRecordId: string;
+  visitDate: string;
+  gestationalWeek: number;
+  providerName?: string;
+  facilityName?: string;
+  systolicBp?: number;
+  diastolicBp?: number;
+  weightKg?: number;
+  fundalHeightCm?: number;
+  fetalHeartRate?: number;
+  notes?: string;
+}
+
+/* ── Wellness Coaching ── */
+
+export interface WellnessCoach {
+  id: string;
+  displayName: string;
+  specialty: string;
+  bio?: string;
+  photoUrl?: string;
+  rating?: number;
+  sessionCount: number;
+  languages?: string[];
+  availableSlots?: string[];
+}
+
+export interface CoachingSession {
+  id: string;
+  coachId: string;
+  coachName: string;
+  patientId: string;
+  scheduledAt: string;
+  durationMinutes: number;
+  status: "SCHEDULED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
+  topic?: string;
+  notes?: string;
+}
+
+export interface CoachingGoal {
+  id: string;
+  coachId: string;
+  patientId: string;
+  title: string;
+  description?: string;
+  targetDate: string;
+  progress: number;
+  status: "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED" | "ABANDONED";
+  createdAt: string;
+}

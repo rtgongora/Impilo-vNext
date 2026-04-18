@@ -19,7 +19,7 @@ import {
   ChevronRight, Video, ShoppingCart, Database, AlertTriangle,
   Briefcase, Heart, Globe, Siren, Award, User, ShieldCheck, UserCog,
   MessageSquare, Radio, TestTube2, Scan, Phone, Send, ThumbsUp, MessageCircle, Image,
-  Wifi, Wrench, Layers,
+  Wifi, Wrench, Layers, QrCode, Bell, FlaskConical, FileCheck, Clipboard, Play,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
@@ -391,13 +391,21 @@ export default function HomePage() {
 
   // Module categories
   const categories = getModuleCategories({ isClinical, isAdmin, isFinance, isDispenser });
+
+  // Organized by clinical workflow for easy access
   const workQuickActions = [
-    { label: "EHR", href: "/queue/search", icon: Stethoscope, color: "bg-red-100 text-red-600" },
-    { label: "Dashboard", href: "/queue", icon: ClipboardList, color: "bg-impilo-100 text-impilo-500" },
-    { label: "Prescribe", href: "/pharmacy", icon: Pill, color: "bg-emerald-100 text-emerald-600" },
-    { label: "LIMS", href: "/queue/search?workflow=lims", icon: TestTube2, color: "bg-violet-100 text-violet-700" },
-    { label: "PACS", href: "/queue/search?workflow=pacs", icon: Scan, color: "bg-rose-100 text-rose-700" },
-    { label: "Bookings", href: "/scheduling", icon: Calendar, color: "bg-orange-100 text-orange-600" },
+    { label: "EHR", href: "/queue/search", icon: Stethoscope, color: "bg-red-100 text-red-600", workflow: "ambulatory" },
+    { label: "Queue", href: "/queue", icon: ClipboardList, color: "bg-impilo-100 text-impilo-500", workflow: "ambulatory" },
+    { label: "Prescribe", href: "/pharmacy", icon: Pill, color: "bg-emerald-100 text-emerald-600", workflow: "pharmacy" },
+    { label: "LIMS", href: "/queue/search?workflow=lims", icon: TestTube2, color: "bg-violet-100 text-violet-700", workflow: "lab" },
+    { label: "PACS", href: "/queue/search?workflow=pacs", icon: Scan, color: "bg-rose-100 text-rose-700", workflow: "imaging" },
+    { label: "Bookings", href: "/scheduling", icon: Calendar, color: "bg-orange-100 text-orange-600", workflow: "ambulatory" },
+  ];
+
+  // Group quick actions by workflow for organized access
+  const workflowGroups = [
+    { id: "clinical", label: "Clinical", actions: workQuickActions.filter(a => ["ambulatory", "pharmacy"].includes(a.workflow)) },
+    { id: "diagnostics", label: "Diagnostics", actions: workQuickActions.filter(a => ["lab", "imaging"].includes(a.workflow)) },
   ];
 
   // ── Citizen 3-column layout (Facebook-style) ────────────────────
@@ -537,30 +545,62 @@ export default function HomePage() {
           )}
 
           {hasWorkContext && (isClinical || isDispenser) && (
-            <div className="bg-white rounded-lg border border-gray-200 p-4">
-              <div className="mb-3 flex items-center justify-between">
-                <h3 className="flex items-center gap-2 text-base font-semibold text-gray-900">
-                  <ClipboardList className="w-5 h-5 text-amber-500" />
-                  Quick Access
-                </h3>
-                <p className="text-xs text-gray-500">Use chart-aware shortcuts for the next clinical action</p>
+            <div className="space-y-4">
+              {/* Service Delivery Transition - Prominent entry point */}
+              <div className="bg-gradient-to-r from-impilo-600 to-impilo-700 rounded-xl p-4">
+                <div className="flex items-center justify-between">
+                  <div className="text-white">
+                    <h3 className="text-lg font-semibold">Ready to serve patients?</h3>
+                    <p className="text-impilo-100 text-sm">Enter your workspace to begin clinical workflows</p>
+                  </div>
+                  <Link
+                    href="/queue"
+                    className="inline-flex items-center gap-2 bg-white text-impilo-600 px-5 py-2.5 rounded-lg font-medium hover:bg-impilo-50 transition-colors"
+                  >
+                    <Play className="w-4 h-4" />
+                    Start Service Delivery
+                  </Link>
+                </div>
               </div>
-              <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-                {workQuickActions.map((action) => {
-                  const ActionIcon = action.icon;
-                  return (
-                    <Link
-                      key={action.label}
-                      href={action.href}
-                      className="flex flex-col items-center justify-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-4 py-4 text-center transition-colors hover:border-impilo-200 hover:bg-white"
-                    >
-                      <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${action.color}`}>
-                        <ActionIcon className="h-5 w-5" />
+
+              {/* Quick Access - Grouped by Workflow */}
+              <div className="bg-white rounded-lg border border-gray-200 p-4">
+                <div className="mb-4 flex items-center justify-between">
+                  <h3 className="flex items-center gap-2 text-base font-semibold text-gray-900">
+                    <ClipboardList className="w-5 h-5 text-amber-500" />
+                    Quick Access
+                  </h3>
+                  <p className="text-xs text-gray-500">Chart-aware shortcuts for your workflow</p>
+                </div>
+
+                {/* Workflow Groups */}
+                <div className="space-y-4">
+                  {workflowGroups.map((group) => (
+                    <div key={group.id}>
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-1 h-4 bg-impilo-500 rounded-full" />
+                        <span className="text-sm font-medium text-gray-700">{group.label}</span>
                       </div>
-                      <span className="text-sm font-medium text-gray-900">{action.label}</span>
-                    </Link>
-                  );
-                })}
+                      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+                        {group.actions.map((action) => {
+                          const ActionIcon = action.icon;
+                          return (
+                            <Link
+                              key={action.label}
+                              href={action.href}
+                              className="flex flex-col items-center justify-center gap-1.5 rounded-lg border border-gray-200 bg-gray-50 px-3 py-3 text-center transition-colors hover:border-impilo-200 hover:bg-white hover:shadow-sm"
+                            >
+                              <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${action.color}`}>
+                                <ActionIcon className="h-4.5 w-4.5" />
+                              </div>
+                              <span className="text-xs font-medium text-gray-900">{action.label}</span>
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}
@@ -790,51 +830,47 @@ export default function HomePage() {
                 </div>
               )}
 
-              {/* Credentials & License */}
-              <div className="bg-white rounded-lg border border-gray-200 p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2">
-                    <Award className="w-5 h-5 text-impilo-500" /> Credentials & License
-                  </h3>
-                  <Link href="/home/credentials" className="text-xs text-impilo-500 hover:text-impilo-700">
-                    Full Details →
+              {/* Credentials & License - Compact Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* License Card - Prominent */}
+                <div className={`rounded-xl border-2 p-4 ${licenseActive ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"}`}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Award className={`w-5 h-5 ${licenseActive ? "text-green-600" : "text-red-600"}`} />
+                    <span className={`text-sm font-semibold ${licenseActive ? "text-green-700" : "text-red-700"}`}>
+                      {licenseActive ? "Licensed" : "Action Required"}
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-600">
+                    {licenses.length > 0 ? `${licenses.length} license${licenses.length > 1 ? "s" : ""} on record` : "No license data"}
+                  </p>
+                  <Link href="/home/credentials" className="text-xs text-impilo-500 hover:text-impilo-700 mt-2 inline-block">
+                    Manage →
                   </Link>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {/* License Card */}
-                  <div className={`rounded-lg border p-4 ${licenseActive ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"}`}>
-                    <p className="text-xs text-gray-500 mb-1">Professional License</p>
-                    <p className={`text-sm font-semibold ${licenseActive ? "text-green-700" : "text-red-700"}`}>
-                      {licenseActive ? "Active" : "Requires Attention"}
-                    </p>
-                    {licenses.length > 0 && (
-                      <p className="text-xs text-gray-500 mt-1">
-                        {licenses.length} license{licenses.length > 1 ? "s" : ""} on record
-                      </p>
-                    )}
+                {/* CPD Progress */}
+                <div className="rounded-xl border border-gray-200 bg-white p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-gray-900">CPD Progress</span>
+                    <span className="text-xs text-impilo-500">18/25 pts</span>
                   </div>
-                  {/* CPD Card */}
-                  <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                    <p className="text-xs text-gray-500 mb-1">CPD Progress</p>
-                    <p className="text-sm font-semibold text-gray-900">Current Cycle</p>
-                    <div className="mt-2 bg-gray-200 rounded-full h-2">
-                      <div className="bg-impilo-500 rounded-full h-2" style={{ width: "72%" }} />
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">18/25 points earned</p>
+                  <div className="w-full bg-gray-100 rounded-full h-2">
+                    <div className="bg-impilo-500 rounded-full h-2" style={{ width: "72%" }} />
                   </div>
-                  {/* Certifications Card */}
-                  <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                    <p className="text-xs text-gray-500 mb-1">Certifications</p>
-                    <div className="space-y-1.5 mt-1">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-gray-700">BLS Provider</span>
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-100 text-green-700">Valid</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-gray-700">ACLS Provider</span>
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-700">Expiring</span>
-                      </div>
-                    </div>
+                  <p className="text-xs text-gray-500 mt-2">Current cycle</p>
+                </div>
+                {/* Quick Actions */}
+                <div className="rounded-xl border border-gray-200 bg-white p-4">
+                  <span className="text-sm font-medium text-gray-900 mb-3 block">Quick Actions</span>
+                  <div className="space-y-2">
+                    <Link href="/home/certifications" className="flex items-center gap-2 text-xs text-gray-600 hover:text-impilo-500">
+                      <Award className="w-3.5 h-3.5" /> Certifications
+                    </Link>
+                    <Link href="/professional" className="flex items-center gap-2 text-xs text-gray-600 hover:text-impilo-500">
+                      <User className="w-3.5 h-3.5" /> Full Profile
+                    </Link>
+                    <Link href="/home/transcripts" className="flex items-center gap-2 text-xs text-gray-600 hover:text-impilo-500">
+                      <FileText className="w-3.5 h-3.5" /> CPD Transcripts
+                    </Link>
                   </div>
                 </div>
               </div>
@@ -1099,22 +1135,69 @@ function CitizenHome({
 
         {/* ════ LEFT COLUMN — Quick nav ════ */}
         <aside className="hidden lg:block space-y-4">
-          {/* My Health shortcuts */}
+          {/* Health ID QR - always visible */}
+          <Link href="/citizen/health-id/qr"
+            className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-br from-impilo-50 to-impilo-100 border border-impilo-200 hover:border-impilo-300 transition-colors">
+            <div className="w-10 h-10 rounded-lg bg-impilo-500 flex items-center justify-center">
+              <QrCode className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-impilo-700">My Health ID</p>
+              <p className="text-[11px] text-impilo-500">Tap to show QR</p>
+            </div>
+          </Link>
+
+          {/* My Health shortcuts with badges */}
           <nav className="space-y-0.5">
             <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider px-2 mb-1">My Health</p>
             {[
-              { href: "/home/profile", label: "Profile", icon: User },
-              { href: "/home/medications", label: "Medications", icon: Pill },
-              { href: "/home/documents", label: "Documents", icon: FileText },
-              { href: "/scheduling", label: "Appointments", icon: Calendar },
-              { href: "/monitoring", label: "Monitoring", icon: Activity },
+              { href: "/home/profile", label: "Profile", icon: User, badge: null },
+              { href: "/home/medications", label: "Medications", icon: Pill, badge: 3 },
+              { href: "/home/documents", label: "Documents", icon: FileText, badge: null },
+              { href: "/scheduling", label: "Appointments", icon: Calendar, badge: 2 },
+              { href: "/monitoring", label: "Monitoring", icon: Activity, badge: null },
             ].map((item) => {
               const Icon = item.icon;
               return (
                 <Link key={item.href} href={item.href}
-                  className="flex items-center gap-2.5 px-2 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100 transition-colors">
-                  <Icon className="w-4 h-4 text-gray-400" />
-                  {item.label}
+                  className="flex items-center justify-between px-2 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                  <div className="flex items-center gap-2.5">
+                    <Icon className="w-4 h-4 text-gray-400" />
+                    {item.label}
+                  </div>
+                  {item.badge && (
+                    <span className="px-1.5 py-0.5 text-[10px] font-medium bg-amber-100 text-amber-700 rounded-full">
+                      {item.badge}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
+          </nav>
+
+          <hr className="border-gray-200" />
+
+          {/* My Care */}
+          <nav className="space-y-0.5">
+            <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider px-2 mb-1">My Care</p>
+            {[
+              { href: "/home/care-team", label: "Care Team", icon: Users, badge: null },
+              { href: "/coverage", label: "Coverage", icon: Shield, badge: null },
+              { href: "/home/referrals", label: "Referrals", icon: ArrowRight, badge: 1 },
+            ].map((item) => {
+              const Icon = item.icon;
+              return (
+                <Link key={item.href} href={item.href}
+                  className="flex items-center justify-between px-2 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                  <div className="flex items-center gap-2.5">
+                    <Icon className="w-4 h-4 text-gray-400" />
+                    {item.label}
+                  </div>
+                  {item.badge && (
+                    <span className="px-1.5 py-0.5 text-[10px] font-medium bg-amber-100 text-amber-700 rounded-full">
+                      {item.badge}
+                    </span>
+                  )}
                 </Link>
               );
             })}
@@ -1126,11 +1209,11 @@ function CitizenHome({
           <nav className="space-y-0.5">
             <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider px-2 mb-1">Explore</p>
             {[
-              { href: "/wellness", label: "Wellness", icon: Heart },
-              { href: "/discover", label: "Find services", icon: Globe },
-              { href: "/marketplace", label: "Marketplace", icon: ShoppingCart },
-              { href: "/caregiving", label: "Caregiving", icon: Users },
-              { href: "/wallet", label: "My Wallet", icon: Award },
+              { href: "/wellness", label: "Wellness", icon: Heart, badge: null },
+              { href: "/discover", label: "Find services", icon: Globe, badge: null },
+              { href: "/marketplace", label: "Marketplace", icon: ShoppingCart, badge: null },
+              { href: "/caregiving", label: "Caregiving", icon: Users, badge: null },
+              { href: "/wallet", label: "My Wallet", icon: Award, badge: null },
             ].map((item) => {
               const Icon = item.icon;
               return (
@@ -1152,12 +1235,50 @@ function CitizenHome({
 
         {/* ════ RIGHT COLUMN — Widgets ════ */}
         <aside className="hidden lg:block space-y-4">
-          {/* Noticeboard */}
+          {/* Health ID Widget - prominent at top */}
+          <Link href="/citizen/health-id/qr"
+            className="flex items-center gap-3 p-4 rounded-xl bg-gradient-to-br from-impilo-500 to-impilo-600 hover:from-impilo-600 hover:to-impilo-700 transition-colors text-white">
+            <QrCode className="w-8 h-8" />
+            <div>
+              <p className="text-sm font-semibold">Health ID</p>
+              <p className="text-xs opacity-80">Tap to show QR code</p>
+            </div>
+          </Link>
+
+          {/* Upcoming Appointments */}
           <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
-              <AlertTriangle className="w-3.5 h-3.5 text-amber-500" /> Noticeboard
+            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+              <Calendar className="w-3.5 h-3.5 text-impilo-500" /> Upcoming
             </h3>
-            <AnnouncementsBanner />
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-2 rounded-lg bg-impilo-50 border border-impilo-100">
+                <div className="flex items-center gap-2">
+                  <div className="text-center">
+                    <p className="text-xs font-semibold text-impilo-700">TOM</p>
+                    <p className="text-[10px] text-impilo-500">2pm</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-medium text-gray-900">Dr. Moyo</p>
+                  <p className="text-[10px] text-gray-500">Check-up</p>
+                </div>
+              </div>
+              <div className="flex items-center justify-between p-2 rounded-lg bg-gray-50 border border-gray-100">
+                <div className="flex items-center gap-2">
+                  <div className="text-center">
+                    <p className="text-xs font-semibold text-gray-600">FRI</p>
+                    <p className="text-[10px] text-gray-400">10am</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-medium text-gray-900">Lab Visit</p>
+                  <p className="text-[10px] text-gray-500">Blood work</p>
+                </div>
+              </div>
+            </div>
+            <Link href="/scheduling" className="block text-center text-xs text-impilo-500 mt-2 hover:underline">
+              View all appointments →
+            </Link>
           </div>
 
           {/* Quick health actions */}
@@ -1166,9 +1287,9 @@ function CitizenHome({
             <div className="grid grid-cols-2 gap-2">
               {[
                 { href: "/home/medications", label: "Medications", icon: Pill, color: "text-amber-500" },
-                { href: "/telemedicine", label: "Video call", icon: Video, color: "text-green-500" },
-                { href: "/wellness", label: "Wellness", icon: Heart, color: "text-pink-500" },
-                { href: "/citizen", label: "Services", icon: Shield, color: "text-impilo-500" },
+                { href: "/home/conditions", label: "Conditions", icon: FlaskConical, color: "text-purple-500" },
+                { href: "/home/documents", label: "Documents", icon: FileCheck, color: "text-blue-500" },
+                { href: "/home/results", label: "Lab Results", icon: Clipboard, color: "text-green-500" },
               ].map((a) => {
                 const Icon = a.icon;
                 return (

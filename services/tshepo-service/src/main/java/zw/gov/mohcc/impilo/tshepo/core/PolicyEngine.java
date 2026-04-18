@@ -46,18 +46,21 @@ public class PolicyEngine {
     private final AuditEventRepository auditEventRepo;
     private final AuditChainHeadRepository chainHeadRepo;
     private final ConsentDirectiveRepository consentRepo;
+    private final WorkspaceValidationService workspaceValidationService;
 
     public PolicyEngine(
             RiskScoring riskScoring,
             PolicyDecisionLogRepository decisionLogRepo,
             AuditEventRepository auditEventRepo,
             AuditChainHeadRepository chainHeadRepo,
-            ConsentDirectiveRepository consentRepo) {
+            ConsentDirectiveRepository consentRepo,
+            WorkspaceValidationService workspaceValidationService) {
         this.riskScoring = riskScoring;
         this.decisionLogRepo = decisionLogRepo;
         this.auditEventRepo = auditEventRepo;
         this.chainHeadRepo = chainHeadRepo;
         this.consentRepo = consentRepo;
+        this.workspaceValidationService = workspaceValidationService;
     }
 
     /**
@@ -304,10 +307,7 @@ public class PolicyEngine {
         }
 
         // Check if the actor has an active workspace or shift at the requested facility
-        // by querying the TUSO workspace/shift tables via the shared database schema.
-        // TUSO tracks facility assignments via workspace membership and active shifts.
         if (request.workspaceId() != null) {
-            // Actor provided a workspace claim — verify it maps to the requested facility
             return workspaceMatchesFacility(request.tenantId(), request.workspaceId(), request.facilityId());
         }
 
@@ -325,19 +325,21 @@ public class PolicyEngine {
     }
 
     private boolean workspaceMatchesFacility(UUID tenantId, UUID workspaceId, UUID facilityId) {
-        // Workspaces in TUSO are scoped to facilities. Verify the workspace
-        // belongs to the requested facility by checking the workspace entity.
-        // If TUSO is unreachable or workspace validation fails, we allow
-        // with degraded trust (logged for audit).
-        try {
-            return true; // Cross-service DB join would go here; current deployment
-                         // shares the same Postgres instance, so this is valid.
-                         // Production: replace with REST call to TUSO /internal/v1/workspaces/{id}
-        } catch (Exception e) {
-            log.warn("Failed to validate workspace {} for facility {}: {}",
-                    workspaceId, facilityId, e.getMessage());
+        if (workspaceId == null) {
             return false;
         }
+
+        var result = workspaceValidationService.validate(tenantId, workspaceId);
+
+        if (result.degradedMode()) {
+            log.warn("Workspace validation degraded (TUSO unavailable), workspace={}", workspaceId);
+            return true;
+        }
+
+        log.debug("Workspace {} validation: valid={}, active={}, reason={}",
+                workspaceId, result.valid(), result.active(), result.reason());
+
+        return result.valid();
     }
 
     private boolean requiresConsent(String action, String resourceType) {

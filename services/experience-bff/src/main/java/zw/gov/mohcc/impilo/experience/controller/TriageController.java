@@ -95,7 +95,18 @@ public class TriageController {
                 log.warn("PCT getPatientTimeline for triage list failed: {}", e.getMessage());
             }
         }
-        // TODO: wire to PctServiceClient when PCT exposes dedicated triage history by encounter
+        if (encounterId != null && !encounterId.isBlank()) {
+            try {
+                JsonNode journey = pctClient.getJourney(encounterId);
+                if (journey != null && journey.has("triage")) {
+                    return ResponseEntity.ok(Map.of(
+                            "data", journey.get("triage"),
+                            "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+                }
+            } catch (Exception e) {
+                log.warn("PCT getJourney for triage list failed: {}", e.getMessage());
+            }
+        }
         return ResponseEntity.ok(Map.of(
                 "data", List.of(),
                 "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));

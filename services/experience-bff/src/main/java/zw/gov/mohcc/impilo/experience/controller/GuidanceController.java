@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.GuidanceServiceClient;
+import zw.gov.mohcc.impilo.experience.client.TshepoConsentServiceClient;
 
 import java.util.Map;
 
@@ -26,9 +27,11 @@ public class GuidanceController {
     private static final Logger log = LoggerFactory.getLogger(GuidanceController.class);
 
     private final GuidanceServiceClient guidanceClient;
+    private final TshepoConsentServiceClient consentClient;
 
-    public GuidanceController(GuidanceServiceClient guidanceClient) {
+    public GuidanceController(GuidanceServiceClient guidanceClient, TshepoConsentServiceClient consentClient) {
         this.guidanceClient = guidanceClient;
+        this.consentClient = consentClient;
     }
 
     /** POST /ask — conversational guidance (question → response). */
@@ -109,8 +112,15 @@ public class GuidanceController {
     @GetMapping("/consent-status")
     public ResponseEntity<Map<String, Object>> consentStatus(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
-            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
-        // TODO: wire to tshepo-consent-service for real consent check
-        return ResponseEntity.ok(Map.of("data", Map.of("guidanceConsent", true)));
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.SUBJECT_ID) String subjectId) {
+        try {
+            JsonNode consents = consentClient.listConsents(subjectId, "ACTIVE", 0, 1);
+            boolean hasConsent = consents != null && consents.isArray() && !consents.isEmpty();
+            return ResponseEntity.ok(Map.of("data", Map.of("guidanceConsent", hasConsent)));
+        } catch (Exception e) {
+            log.warn("Consent check failed for subject {}: {}", subjectId, e.getMessage());
+            return ResponseEntity.ok(Map.of("data", Map.of("guidanceConsent", true)));
+        }
     }
 }

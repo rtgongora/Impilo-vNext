@@ -89,7 +89,34 @@ public class MobileTriageController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(required = false, name = "encounter_id") String encounterId,
             @RequestParam(required = false, name = "patient_id") String patientId) {
-        // TODO: Wire to PCT list journey triage endpoint when available.
+        try {
+            if (encounterId != null && !encounterId.isBlank()) {
+                JsonNode result = pctClient.getJourney(encounterId);
+                if (result != null && result.has("triage")) {
+                    return ResponseEntity.ok(Map.of(
+                            "data", result.get("triage"),
+                            "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+                    ));
+                }
+            }
+            if (patientId != null && !patientId.isBlank()) {
+                JsonNode result = pctClient.listJourneys(patientId, 0, 10);
+                if (result != null && result.isArray()) {
+                    List<Object> triages = new ArrayList<>();
+                    for (JsonNode journey : result) {
+                        if (journey.has("triage")) {
+                            triages.add(journey.get("triage"));
+                        }
+                    }
+                    return ResponseEntity.ok(Map.of(
+                            "data", triages,
+                            "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+                    ));
+                }
+            }
+        } catch (Exception e) {
+            log.warn("PCT triage list failed: {}", e.getMessage());
+        }
         return ResponseEntity.ok(Map.of(
                 "data", List.of(),
                 "meta", Map.of("request_id", requestId, "correlation_id", correlationId)

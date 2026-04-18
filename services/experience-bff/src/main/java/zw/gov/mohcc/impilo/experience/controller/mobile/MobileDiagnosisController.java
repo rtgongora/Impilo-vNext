@@ -1,7 +1,10 @@
 package zw.gov.mohcc.impilo.experience.controller.mobile;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,6 +25,8 @@ import java.util.*;
 @RestController
 @RequestMapping("/internal/v1/mobile/provider/diagnosis")
 public class MobileDiagnosisController {
+
+    private static final Logger log = LoggerFactory.getLogger(MobileDiagnosisController.class);
 
     private final PctServiceClient pctClient;
     private final SearchServiceClient searchClient;
@@ -109,10 +114,22 @@ public class MobileDiagnosisController {
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
-            @RequestParam(name = "encounter_id") String encounterId,
+            @RequestParam(name = "patient_id") String patientId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
-        // TODO: Wire to PCT diagnosis endpoint when available (distinct from conditions).
+        try {
+            if (patientId != null && !patientId.isBlank()) {
+                JsonNode conditions = pctClient.listConditions(patientId, page, size);
+                if (conditions != null) {
+                    return ResponseEntity.ok(Map.of(
+                            "data", conditions,
+                            "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+                    ));
+                }
+            }
+        } catch (Exception e) {
+            log.warn("PCT conditions list failed: {}", e.getMessage());
+        }
         return ResponseEntity.ok(Map.of(
                 "data", List.of(),
                 "meta", Map.of("request_id", requestId, "correlation_id", correlationId)

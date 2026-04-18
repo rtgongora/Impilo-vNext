@@ -71,4 +71,18 @@ public class FormsServiceClient {
         ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
         return response.getBody();
     }
+
+    public JsonNode submitForm(String schemaId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/forms/" + schemaId + "/submissions";
+        log.debug("Forms: submit form for schema={}", schemaId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return response.getBody();
+    }
+
+    public JsonNode listSubmissions(String schemaId, int page, int size) {
+        String url = baseUrl + "/internal/v1/forms/" + schemaId + "/submissions?page=" + page + "&size=" + size;
+        log.debug("Forms: list submissions for schema={}", schemaId);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return response.getBody();
+    }
 }

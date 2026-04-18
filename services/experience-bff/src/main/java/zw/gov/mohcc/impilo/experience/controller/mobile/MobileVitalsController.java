@@ -129,8 +129,8 @@ public class MobileVitalsController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey) {
-        // TODO: wire to PctServiceClient when PCT exposes DELETE /v1/vitals/{id}
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(Map.of(
+        pctClient.deleteVital(id);
+        return ResponseEntity.ok(Map.of(
                 "data", Map.of(),
                 "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }

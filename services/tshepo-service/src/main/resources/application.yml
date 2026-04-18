@@ -13,6 +13,14 @@ spring:
     hikari:
       maximum-pool-size: 20
       minimum-idle: 5
+  datasource-tuso:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/tuso
+    username: ${POSTGRES_USER:impilo}
+    password: ${POSTGRES_PASSWORD:changeme}
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 1
+      pool-name: tuso-hikari
   jpa:
     hibernate:
       ddl-auto: update
@@ -52,6 +60,9 @@ impilo:
   ops:
     enabled: true
     outbox-table: tshepo.event_outbox
+  services:
+    tuso:
+      base-url: ${TUSO_SERVICE_URL:http://localhost:8084}
 
 management:
   endpoints:
