@@ -6,7 +6,9 @@
  * Provider tree order (from 05_state_and_storage.md):
  *   QueryClient > Auth > Facility > Workspace > Shift > Router
  *
- * Includes store hydration from sessionStorage on mount.
+ * Includes store hydration from session continuity on mount:
+ * user metadata + continuity state in sessionStorage, access token in memory,
+ * and session presence via cookie.
  */
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -26,7 +28,7 @@ import { useShiftStore } from "@/hooks/useShiftStore";
 
 function StoreHydrator({ children }: { children: ReactNode }) {
   const [hydrated, setHydrated] = useState(false);
-  const { setAuth } = useAuthStore();
+  const { setAuth, hydrateSession } = useAuthStore();
   const { setFacility } = useFacilityStore();
   const { setWorkspace } = useWorkspaceStore();
   const { startShift } = useShiftStore();
@@ -37,13 +39,18 @@ function StoreHydrator({ children }: { children: ReactNode }) {
     try {
       const token = sessionStorage.getItem("exp:auth_token");
       const userStr = sessionStorage.getItem("exp:auth_user");
-      const refreshToken = sessionStorage.getItem("exp:refresh_token");
       const expiresAt = sessionStorage.getItem("exp:expires_at");
       let hasAuthenticatedSession = false;
 
-      if (token && userStr) {
+      const hasSessionCookie = document.cookie.includes("exp_has_session=1");
+
+      if (userStr && (token || hasSessionCookie)) {
         const user = JSON.parse(userStr);
-        setAuth(user, token, refreshToken, expiresAt);
+        if (token) {
+          setAuth(user, token, null, expiresAt);
+        } else {
+          hydrateSession(user, null, expiresAt);
+        }
         useOperationalContextStore.getState().ensureDefaultFromUser(user);
         useConsentStore.getState().hydrate(user.id);
         usePrivacyDisplayStore.getState().hydrate();
@@ -69,7 +76,7 @@ function StoreHydrator({ children }: { children: ReactNode }) {
     }
 
     setHydrated(true);
-  }, [setAuth, setFacility, setWorkspace, startShift]);
+  }, [setAuth, hydrateSession, setFacility, setWorkspace, startShift]);
 
   if (!hydrated) {
     return (

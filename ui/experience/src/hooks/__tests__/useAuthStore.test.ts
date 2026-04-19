@@ -72,10 +72,21 @@ describe("useAuthStore", () => {
   it("setAuth persists to sessionStorage", () => {
     useAuthStore.getState().setAuth(testUser, "tok-123", "ref-456", "2026-12-31T00:00:00Z");
 
-    expect(sessionStorageMock.setItem).toHaveBeenCalledWith("exp:auth_token", "tok-123");
     expect(sessionStorageMock.setItem).toHaveBeenCalledWith("exp:auth_user", JSON.stringify(testUser));
-    expect(sessionStorageMock.setItem).toHaveBeenCalledWith("exp:refresh_token", "ref-456");
     expect(sessionStorageMock.setItem).toHaveBeenCalledWith("exp:expires_at", "2026-12-31T00:00:00Z");
+  });
+
+  it("hydrateSession restores an authenticated session without persisting the access token", () => {
+    useAuthStore.getState().hydrateSession(testUser, "ref-456", "2026-12-31T00:00:00Z");
+
+    const state = useAuthStore.getState();
+    expect(state.user).toEqual(testUser);
+    expect(state.token).toBeNull();
+    expect(state.refreshToken).toBe("ref-456");
+    expect(state.expiresAt).toBe("2026-12-31T00:00:00Z");
+    expect(state.isAuthenticated).toBe(true);
+    expect(sessionStorageMock.setItem).not.toHaveBeenCalledWith("exp:auth_token", expect.anything());
+    expect(sessionStorageMock.setItem).not.toHaveBeenCalledWith("exp:refresh_token", expect.anything());
   });
 
   it("setAuth handles optional refreshToken and expiresAt", () => {
@@ -119,7 +130,6 @@ describe("useAuthStore", () => {
 
     expect(sessionStorageMock.removeItem).toHaveBeenCalledWith("exp:auth_token");
     expect(sessionStorageMock.removeItem).toHaveBeenCalledWith("exp:auth_user");
-    expect(sessionStorageMock.removeItem).toHaveBeenCalledWith("exp:refresh_token");
     expect(sessionStorageMock.removeItem).toHaveBeenCalledWith("exp:expires_at");
     for (const key of EXPERIENCE_CONTINUITY_SESSION_KEYS) {
       expect(sessionStorageMock.removeItem).toHaveBeenCalledWith(key);
@@ -223,6 +233,17 @@ describe("useAuthStore", () => {
     expect(state.token).toBe("tok-new");
     expect(state.refreshToken).toBe("ref-new");
     expect(state.expiresAt).toBe("2027-01-01T00:00:00Z");
+  });
+
+  it("setTokens keeps access tokens in memory while refreshing persisted refresh state", () => {
+    useAuthStore.getState().setAuth(testUser, "tok-old", "ref-old");
+    vi.clearAllMocks();
+
+    useAuthStore.getState().setTokens("tok-new", "ref-new", "2027-01-01T00:00:00Z");
+
+    expect(sessionStorageMock.setItem).not.toHaveBeenCalledWith("exp:auth_token", expect.anything());
+    expect(sessionStorageMock.setItem).not.toHaveBeenCalledWith("exp:refresh_token", expect.anything());
+    expect(sessionStorageMock.setItem).toHaveBeenCalledWith("exp:expires_at", "2027-01-01T00:00:00Z");
   });
 
   it("isTokenExpired returns false when no expiresAt", () => {

@@ -47,7 +47,7 @@ public class WellnessSecurityConfig {
 
         if (jwtDecoder != null) {
             http.authorizeHttpRequests(auth -> auth
-                            .requestMatchers("/actuator/**").permitAll()
+                            .requestMatchers("/actuator/health", "/actuator/info", "/actuator/prometheus").permitAll()
                             .requestMatchers("/internal/v1/wellness/connect/**")
                             .authenticated()
                             .requestMatchers("/internal/v1/mobile/citizen/wellness/**")

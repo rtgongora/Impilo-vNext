@@ -42,6 +42,11 @@ const sessionStorageMock = (() => {
 })();
 
 Object.defineProperty(global, "sessionStorage", { value: sessionStorageMock });
+Object.defineProperty(document, "cookie", {
+  configurable: true,
+  get: vi.fn(() => "exp_has_session=1"),
+  set: vi.fn(),
+});
 
 const authUser = {
   id: "user-1",
@@ -97,8 +102,6 @@ describe("Providers", () => {
   });
 
   it("hydrates only valid facility, workspace, and shift continuity for an authenticated session", async () => {
-    sessionStorageMock.setItem("exp:auth_token", "token-123");
-    sessionStorageMock.setItem("exp:refresh_token", "refresh-123");
     sessionStorageMock.setItem("exp:expires_at", "2026-04-10T08:00:00Z");
     sessionStorageMock.setItem("exp:auth_user", JSON.stringify(authUser));
     sessionStorageMock.setItem("exp:facility", JSON.stringify({
@@ -132,7 +135,8 @@ describe("Providers", () => {
     await waitFor(() => {
       expect(useFacilityStore.getState().facility?.id).toBe("facility-1");
     });
-    expect(useAuthStore.getState().refreshToken).toBe("refresh-123");
+    expect(useAuthStore.getState().token).toBeNull();
+    expect(useAuthStore.getState().refreshToken).toBeNull();
     expect(useAuthStore.getState().expiresAt).toBe("2026-04-10T08:00:00Z");
     expect(useWorkspaceStore.getState().workspace).toBeNull();
     expect(useShiftStore.getState().shift).toBeNull();

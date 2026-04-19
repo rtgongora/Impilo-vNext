@@ -25,7 +25,7 @@ import { useQuery } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
 import { WorkplaceSelectionHub } from "@/components/home/WorkplaceSelectionHub";
 import { PageShell } from "@/components/PageShell";
-import { useAuthStore } from "@/hooks/useAuthStore";
+import { useAuthStore, type AuthUser } from "@/hooks/useAuthStore";
 import { useOperationalContextStore } from "@/hooks/useOperationalContextStore";
 import { useShiftStore } from "@/hooks/useShiftStore";
 import { useRoleGroup } from "@/hooks/useRoleGroup";
@@ -359,8 +359,10 @@ export default function HomePage() {
     );
   }
 
-  function enterFacilityFreeMode(mode: "admin" | "finance", nextPath: string) {
-    useOperationalContextStore.getState().setOperationalMode("organization_admin");
+  function enterFacilityFreeMode(mode: "clinical" | "admin" | "finance", nextPath: string) {
+    useOperationalContextStore.getState().setOperationalMode(
+      mode === "clinical" ? "facility_work" : "organization_admin"
+    );
     enterMode(mode, nextPath);
   }
 
@@ -1095,7 +1097,7 @@ function CitizenHome({
   communityGroups,
   joinGroup,
 }: {
-  user: ReturnType<typeof useAuthStore>["user"];
+  user: AuthUser | null;
   greeting: string;
   communityGroups: Array<{ id: string; attributes: Record<string, unknown> }>;
   joinGroup: ReturnType<typeof useJoinGroup>;

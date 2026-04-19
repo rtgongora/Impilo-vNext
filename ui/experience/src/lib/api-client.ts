@@ -18,7 +18,7 @@
  * Command requests (POST/PUT/PATCH) also carry Idempotency-Key.
  *
  * On 401 responses, attempts a single token refresh via the BFF /auth/refresh
- * endpoint before failing. If refresh succeeds, retries the original request
+ * endpoint using the HttpOnly refresh cookie before failing. If refresh succeeds, retries the original request
  * with the new token. If refresh fails, clears auth and redirects to login.
  */
 
@@ -149,6 +149,10 @@ function getStoredJson<T>(key: string): T | null {
 }
 
 function getStoredAuthUser(): { id?: string; actorType?: string } | null {
+  const liveUser = useAuthStore.getState().user;
+  if (liveUser) {
+    return { id: liveUser.id, actorType: liveUser.actorType };
+  }
   return getStoredJson<{ id?: string; actorType?: string }>("exp:auth_user");
 }
 
@@ -189,15 +193,12 @@ function getCorrelationId(): string {
 }
 
 function getAuthToken(): string | null {
+  const liveToken = useAuthStore.getState().token;
+  if (liveToken) {
+    return liveToken;
+  }
   if (typeof window !== "undefined") {
     return sessionStorage.getItem("exp:auth_token");
-  }
-  return null;
-}
-
-function getRefreshToken(): string | null {
-  if (typeof window !== "undefined") {
-    return sessionStorage.getItem("exp:refresh_token");
   }
   return null;
 }
@@ -232,8 +233,9 @@ function getPurposeOfUse(): string {
  * Uses a singleton promise to prevent concurrent refresh attempts.
  */
 async function attemptRefresh(): Promise<boolean> {
-  const refreshToken = getRefreshToken();
-  if (!refreshToken) return false;
+  if (typeof window === "undefined") return false;
+  const hasSessionCookie = document.cookie.includes("exp_has_session=1");
+  if (!hasSessionCookie) return false;
 
   // If a refresh is already in progress, wait for it
   if (refreshPromise) return refreshPromise;
@@ -248,7 +250,7 @@ async function attemptRefresh(): Promise<boolean> {
       const response = await fetch(`${BFF_BASE_URL}/internal/v1/auth/refresh`, {
         method: "POST",
         headers,
-        body: JSON.stringify({ refreshToken }),
+        credentials: "same-origin",
       });
 
       if (!response.ok) return false;
@@ -270,9 +272,9 @@ async function attemptRefresh(): Promise<boolean> {
         };
         useAuthStore
           .getState()
-          .setAuth(mergedUser, attrs.token, attrs.refreshToken ?? refreshToken, attrs.expiresAt ?? null);
+          .setAuth(mergedUser, attrs.token, null, attrs.expiresAt ?? null);
       } else {
-        useAuthStore.getState().setTokens(attrs.token, attrs.refreshToken ?? refreshToken, attrs.expiresAt ?? null);
+        useAuthStore.getState().setTokens(attrs.token, null, attrs.expiresAt ?? null);
       }
 
       return true;
@@ -320,6 +322,7 @@ async function request<T>(
   const response = await fetch(`${BFF_BASE_URL}${path}`, {
     method,
     headers,
+    credentials: "same-origin",
     body: body !== undefined && body !== null ? JSON.stringify(body) : undefined,
   });
 
@@ -335,6 +338,7 @@ async function request<T>(
       const retryResponse = await fetch(`${BFF_BASE_URL}${path}`, {
         method,
         headers: retryHeaders,
+        credentials: "same-origin",
         body: body !== undefined && body !== null ? JSON.stringify(body) : undefined,
       });
 
@@ -389,6 +393,7 @@ async function requestForm<T>(
   const response = await fetch(`${BFF_BASE_URL}${path}`, {
     method,
     headers,
+    credentials: "same-origin",
     body,
   });
 
@@ -404,6 +409,7 @@ async function requestForm<T>(
       const retryResponse = await fetch(`${BFF_BASE_URL}${path}`, {
         method,
         headers: retryHeaders,
+        credentials: "same-origin",
         body,
       });
 

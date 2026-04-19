@@ -4,11 +4,11 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import TelemedicineSessionPage from "./page";
 
-const { push, replace, post, mutateAsync } = vi.hoisted(() => ({
+const { push, replace, get, post } = vi.hoisted(() => ({
   push: vi.fn(),
   replace: vi.fn(),
+  get: vi.fn(),
   post: vi.fn(),
-  mutateAsync: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({
@@ -35,14 +35,9 @@ vi.mock("@/hooks/useAuthStore", () => ({
 
 vi.mock("@/lib/api-client", () => ({
   apiClient: {
+    get,
     post,
   },
-}));
-
-vi.mock("@/hooks/queries/useReferrals", () => ({
-  useRespondReferral: () => ({
-    mutateAsync,
-  }),
 }));
 
 vi.mock("@/hooks/queries/useTelemedicine", () => ({
@@ -57,7 +52,7 @@ vi.mock("@/hooks/queries/useTelemedicine", () => ({
             provider_id: "provider-1",
             facility_id: "facility-1",
             session_type: "VIDEO",
-            status: "IN_PROGRESS",
+            status: "RESPONDED",
             room_url: null,
             scheduled_at: "2026-04-08T08:30:00.000Z",
             started_at: "2026-04-08T09:00:00.000Z",
@@ -89,43 +84,61 @@ describe("TelemedicineSessionPage", () => {
   beforeEach(() => {
     push.mockReset();
     replace.mockReset();
+    get.mockReset();
     post.mockReset();
-    mutateAsync.mockReset();
+    get.mockImplementation((path: string) => {
+      if (path === "/internal/v1/teleconsult/sessions/session-1") {
+        return Promise.resolve({
+          data: {
+            id: "session-1",
+            patientId: "patient-1",
+            urgency: "High",
+            specialty: "Pulmonology",
+            routingType: "REFERRAL",
+            stage: 6,
+            status: "RESPONDED",
+            referralId: "ref-9",
+            consentToken: "consent-1",
+            createdAt: "2026-04-08T08:00:00.000Z",
+            respondedAt: "2026-04-08T09:15:00.000Z",
+          },
+        });
+      }
+      if (path === "/internal/v1/teleconsult/sessions/session-1/messages") {
+        return Promise.resolve({ data: [] });
+      }
+      return Promise.resolve({ data: [] });
+    });
     post.mockResolvedValue({});
-    mutateAsync.mockResolvedValue({});
   });
 
-  it("saves referral-linked completion notes with loop update metadata", async () => {
+  it("submits the stage 7 completion payload and closes the session", async () => {
     const user = userEvent.setup();
 
     render(<TelemedicineSessionPage />);
 
-    expect(screen.getByText("Loop-closure handoff")).toBeInTheDocument();
+    await user.click(await screen.findByRole("button", { name: "Complete & Close" }));
 
-    await user.type(screen.getByPlaceholderText("Key findings from this consultation..."), "Patient improved after nebulisers.");
-    await user.type(screen.getByPlaceholderText("Clinical assessment and recommended management plan..."), "Continue inhaled therapy and review tomorrow.");
-    await user.selectOptions(screen.getByRole("combobox"), "REVIEW");
-    await user.click(screen.getByRole("button", { name: "Save Completion Note" }));
+    expect(screen.getByText("Stage 7 — Completion Note & Loop Closure")).toBeInTheDocument();
+
+    await user.type(screen.getByPlaceholderText("Medications administered, tests done, procedures, monitoring, counseling..."), "Patient improved after nebulisers.");
+    await user.selectOptions(screen.getByLabelText("Patient outcome *"), "RETURNED_FOR_REVIEW");
+    await user.selectOptions(screen.getByLabelText("Follow-up execution"), "COMPLETED");
+    await user.type(screen.getByPlaceholderText("Brief summary of the case and its resolution..."), "Continue inhaled therapy and review tomorrow.");
+    await user.click(screen.getByRole("button", { name: "Close Case & Archive" }));
 
     await waitFor(() => expect(post).toHaveBeenCalled());
-    await waitFor(() => expect(mutateAsync).toHaveBeenCalled());
-
-    const clinicalNoteCall = post.mock.calls.find(
-      (call) => call[0] === "/internal/v1/clinical-notes",
+    const completionCall = post.mock.calls.find(
+      (call) => call[0] === "/internal/v1/teleconsult/sessions/session-1/complete",
     );
 
-    expect(clinicalNoteCall?.[1]?.body).toContain("Referral loop update:");
-    expect(clinicalNoteCall?.[1]?.body).toContain("Linked referral: ref-9");
-    expect(clinicalNoteCall?.[1]?.body).toContain("Next workspace action: Review response and close the loop in Consults");
+    expect(completionCall?.[1]).toEqual({
+      actionsTaken: "Patient improved after nebulisers.",
+      patientOutcome: "RETURNED_FOR_REVIEW",
+      followUpExecution: "COMPLETED",
+      closureNarrative: "Continue inhaled therapy and review tomorrow.",
+    });
 
-    expect(mutateAsync).toHaveBeenCalledWith(
-      expect.objectContaining({
-        id: "ref-9",
-        outcome: "FOLLOW_UP_REQUIRED",
-        response_notes: expect.stringContaining("Response sent from teleconsult: Yes"),
-      }),
-    );
-
-    expect(await screen.findByText("Note and returned response saved")).toBeInTheDocument();
+    expect(await screen.findByText("CLOSED")).toBeInTheDocument();
   }, 30000);
 });

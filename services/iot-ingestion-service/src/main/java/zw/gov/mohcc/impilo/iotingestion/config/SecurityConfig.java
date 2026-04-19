@@ -23,7 +23,8 @@ public class SecurityConfig {
             http.authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
         } else {
             http.authorizeHttpRequests(auth -> auth
-                            .requestMatchers("/actuator/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                            .requestMatchers("/actuator/health", "/actuator/info", "/actuator/prometheus").permitAll()
+                            .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                             .anyRequest().authenticated())
                     .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> {}));
         }

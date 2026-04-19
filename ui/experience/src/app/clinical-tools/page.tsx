@@ -276,7 +276,7 @@ function DrugsPanel() {
                 </div>
                 <span className="text-xs bg-blue-100 text-blue-700 rounded-full px-2 py-0.5">{String(drug.schedule ?? "OTC")}</span>
               </div>
-              {drug.indication && <p className="text-xs text-gray-600 mt-2">{String(drug.indication)}</p>}
+              {Boolean(drug.indication) && <p className="text-xs text-gray-600 mt-2">{String(drug.indication)}</p>}
             </div>
           ))}
         </div>
@@ -346,7 +346,7 @@ function ConditionsPanel() {
             <div key={i} className="bg-white rounded-lg border border-gray-200 p-4 hover:border-rose-300 transition">
               <p className="text-sm font-semibold text-gray-900">{String(cond.name ?? cond.title ?? "—")}</p>
               <p className="text-xs text-gray-500 mt-0.5">{String(cond.icd_code ?? "")} {cond.system ? `· ${String(cond.system)}` : ""}</p>
-              {cond.overview && <p className="text-xs text-gray-600 mt-2 line-clamp-2">{String(cond.overview)}</p>}
+              {Boolean(cond.overview) && <p className="text-xs text-gray-600 mt-2 line-clamp-2">{String(cond.overview)}</p>}
             </div>
           ))}
         </div>
@@ -607,7 +607,7 @@ function FormularyPanel() {
                   item.tier === 1 ? "bg-green-100 text-green-700" : item.tier === 2 ? "bg-blue-100 text-blue-700" : "bg-amber-100 text-amber-700"
                 }`}>Tier {String(item.tier ?? "—")}</span>
               </div>
-              {item.indication && <p className="text-xs text-gray-600 mt-1">{String(item.indication)}</p>}
+              {Boolean(item.indication) && <p className="text-xs text-gray-600 mt-1">{String(item.indication)}</p>}
             </div>
           ))}
         </div>
@@ -818,9 +818,9 @@ function GuidelinesPanel() {
                   <p className="text-sm font-semibold text-gray-900">{String(g.title ?? "—")}</p>
                   <p className="text-xs text-gray-500 mt-0.5">{String(g.source ?? "")} · {String(g.year ?? "")}</p>
                 </div>
-                {g.url && <ExternalLink className="w-4 h-4 text-gray-400 shrink-0" />}
+                {Boolean(g.url) && <ExternalLink className="w-4 h-4 text-gray-400 shrink-0" />}
               </div>
-              {g.summary && <p className="text-xs text-gray-600 mt-2 line-clamp-2">{String(g.summary)}</p>}
+              {Boolean(g.summary) && <p className="text-xs text-gray-600 mt-2 line-clamp-2">{String(g.summary)}</p>}
             </div>
           ))}
         </div>
@@ -874,7 +874,7 @@ function ProceduresPanel() {
             <div key={i} className="bg-white rounded-lg border border-gray-200 p-4 hover:border-orange-300 transition">
               <p className="text-sm font-semibold text-gray-900">{String(proc.name ?? proc.title ?? "—")}</p>
               <p className="text-xs text-gray-500 mt-0.5">{String(proc.specialty ?? "")} · {String(proc.complexity ?? "")}</p>
-              {proc.indications && <p className="text-xs text-gray-600 mt-2">{String(proc.indications)}</p>}
+              {Boolean(proc.indications) && <p className="text-xs text-gray-600 mt-2">{String(proc.indications)}</p>}
             </div>
           ))}
         </div>
@@ -1014,7 +1014,7 @@ function PodcastsPanel() {
                   <Clock className="w-3 h-3" /><span>{String(ep.duration ?? "30 min")}</span>
                 </div>
               </div>
-              {ep.summary && <p className="text-xs text-gray-600 mt-2 line-clamp-2">{String(ep.summary)}</p>}
+              {Boolean(ep.summary) && <p className="text-xs text-gray-600 mt-2 line-clamp-2">{String(ep.summary)}</p>}
             </div>
           ))}
         </div>

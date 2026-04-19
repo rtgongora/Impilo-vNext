@@ -121,9 +121,10 @@ vi.mock("@/hooks/queries/useInpatient", () => ({
 }));
 
 vi.mock("@/hooks/usePrivacyDisplayStore", () => {
-  const state = { masked: false, level: "none" };
-  const usePrivacyDisplayStore = (selector: (state: typeof state) => unknown) => selector(state);
-  usePrivacyDisplayStore.getState = () => state;
+  const privacyState: { masked: boolean; level: string } = { masked: false, level: "none" };
+  const usePrivacyDisplayStore = (selector: (state: { masked: boolean; level: string }) => unknown) =>
+    selector(privacyState);
+  usePrivacyDisplayStore.getState = () => privacyState;
   return { usePrivacyDisplayStore };
 });
 

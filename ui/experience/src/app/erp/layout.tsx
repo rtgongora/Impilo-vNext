@@ -18,8 +18,10 @@ export default function ErpLayout({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!isAuthenticated && typeof window !== "undefined") {
-      const token = sessionStorage.getItem("exp:auth_token");
-      if (!token) {
+      const hasSessionMarker =
+        !!sessionStorage.getItem("exp:auth_user") ||
+        document.cookie.includes("exp_has_session=1");
+      if (!hasSessionMarker) {
         router.push("/auth/login");
       }
     }

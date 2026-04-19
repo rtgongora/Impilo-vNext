@@ -23,9 +23,10 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   // Redirect unauthenticated users to login
   useEffect(() => {
     if (!isAuthenticated && typeof window !== "undefined") {
-      // Check sessionStorage as fallback (hydration may not have completed)
-      const token = sessionStorage.getItem("exp:auth_token");
-      if (!token) {
+      const hasSessionMarker =
+        !!sessionStorage.getItem("exp:auth_user") ||
+        document.cookie.includes("exp_has_session=1");
+      if (!hasSessionMarker) {
         router.push("/auth/login");
       }
     }

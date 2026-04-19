@@ -53,7 +53,7 @@ public class SecurityConfig {
                 // FHIR endpoints — secured by HAPI interceptor chain
                 .requestMatchers("/fhir/**").permitAll()
                 // Actuator — health probes and metrics
-                .requestMatchers("/actuator/**").permitAll()
+                .requestMatchers("/actuator/health", "/actuator/info", "/actuator/prometheus").permitAll()
                 // Public metadata endpoints
                 .requestMatchers("/v1/public/**").permitAll()
                 // API documentation

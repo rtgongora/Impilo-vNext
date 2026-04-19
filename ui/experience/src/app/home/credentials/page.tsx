@@ -16,7 +16,7 @@ import { usePersonalCredentials } from "@/hooks/queries/usePersonalCredentials";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 
-const BFF_BASE_URL = process.env.NEXT_PUBLIC_BFF_URL || "http://localhost:8160";
+const BFF_BASE_URL = process.env.NEXT_PUBLIC_BFF_URL || (typeof window !== "undefined" ? "" : "http://localhost:8160");
 
 function useCouncilAffiliations(providerId: string | undefined) {
   return useQuery<{ data: unknown[] }>({

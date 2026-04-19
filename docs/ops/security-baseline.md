@@ -59,9 +59,15 @@ Every service MUST:
 
 | Token Type | Lifetime | Refresh |
 |------------|----------|---------|
-| User access token | 5 minutes | Via refresh token (30 minutes) |
+| User access token | 5 minutes | Via `HttpOnly` refresh cookie (30 minutes) |
 | Service account token | 60 minutes | Re-issued by client credentials grant |
 | Federation sync token | 24 hours | Rotated daily by scheduled job |
+
+### Browser Session Handling
+
+- Experience keeps the short-lived access token in browser memory only.
+- Refresh credentials are issued by the Experience BFF as `HttpOnly`, `SameSite=Lax` cookies and are not readable by browser JavaScript.
+- Client-side route gating may use a non-secret session marker cookie (`exp_has_session`) plus hydrated user metadata, but protected API access still depends on BFF token refresh and JWT validation.
 
 ## 3. Rate Limiting & Abuse Controls
 

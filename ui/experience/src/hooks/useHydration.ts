@@ -1,12 +1,15 @@
 /**
  * Experience UI — Store Hydration Hook
  *
- * Runs once on mount to rehydrate all Zustand stores from sessionStorage.
+ * Runs once on mount to rehydrate all Zustand stores from session continuity.
  * This fixes the hydration gap where stores are empty after a page refresh
  * until the provider tree re-fetches data.
  *
+ * Auth continuity:
+ *   exp:auth_user, exp:expires_at and exp_has_session cookie -> useAuthStore auth hydration
+ *   access token remains memory-only and is refreshed through the HttpOnly cookie path
+ *
  * SessionStorage keys:
- *   exp:auth_token, exp:auth_user  -> useAuthStore.setAuth
  *   exp:facility                   -> useFacilityStore.setFacility
  *   exp:workspace                  -> useWorkspaceStore.setWorkspace
  *   exp:shift                      -> useShiftStore.startShift
@@ -30,12 +33,16 @@ export function useHydration(): void {
     // --- Auth ---
     const token = sessionStorage.getItem("exp:auth_token");
     const userJson = sessionStorage.getItem("exp:auth_user");
-    const refreshToken = sessionStorage.getItem("exp:refresh_token");
     const expiresAt = sessionStorage.getItem("exp:expires_at");
-    if (token && userJson) {
+    const hasSessionCookie = document.cookie.includes("exp_has_session=1");
+    if (userJson && (token || hasSessionCookie)) {
       try {
         const user = JSON.parse(userJson);
-        useAuthStore.getState().setAuth(user, token, refreshToken, expiresAt);
+        if (token) {
+          useAuthStore.getState().setAuth(user, token, null, expiresAt);
+        } else {
+          useAuthStore.getState().hydrateSession(user, null, expiresAt);
+        }
       } catch {
         // Corrupted data — skip auth hydration
       }

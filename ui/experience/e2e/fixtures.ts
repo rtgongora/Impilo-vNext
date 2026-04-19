@@ -17,7 +17,8 @@ const mockFacility = {
 };
 
 export const test = base.extend<{ authenticatedPage: typeof base }>({
-  // Inject auth state into localStorage/sessionStorage before each test
+  // Inject auth state into browser storage before each test.
+  // This is a test harness shortcut, not the production auth persistence model.
   page: async ({ page }, use) => {
     await page.addInitScript((data) => {
       // Seed Zustand persisted stores

@@ -5,8 +5,8 @@
  *   "Sign in as a person; practice as a provider only under activated Provider ID."
  *
  * Provider tree position: QueryClient > [AuthProvider] > Facility > Workspace > Shift > Router
- * Persistence keys: exp:auth_token, exp:auth_user, exp:refresh_token, exp:expires_at,
- *   exp:provider_id (sessionStorage)
+ * Persistence keys: exp:auth_user, exp:expires_at,
+ *   exp:provider_id (sessionStorage). Access tokens stay in memory.
  */
 
 import { create } from "zustand";
@@ -53,6 +53,7 @@ interface AuthState {
   expiresAt: string | null;
   isAuthenticated: boolean;
   setAuth: (user: AuthUser, token: string, refreshToken?: string | null, expiresAt?: string | null) => void;
+  hydrateSession: (user: AuthUser, refreshToken?: string | null, expiresAt?: string | null) => void;
   setTokens: (token: string, refreshToken?: string | null, expiresAt?: string | null) => void;
   clearAuth: () => void;
   hasRole: (role: string) => boolean;
@@ -65,7 +66,31 @@ interface AuthState {
   /** Update linked IDs after post-login identity resolution. */
   setLinkedIds: (linkedIds: { providerId?: string; staffId?: string; caregiverId?: string }) => void;
   isTokenExpired: () => boolean;
-  getRefreshToken: () => string | null;
+}
+
+function deriveDeactivatedActorType(user: AuthUser): AuthUser["actorType"] {
+  if (user.linkedIds?.caregiverId || user.roles.includes("CAREGIVER") || user.roles.includes("CARE_PARTNER")) {
+    return "CAREGIVER";
+  }
+
+  if (user.roles.includes("SYSTEM_ADMIN") || user.roles.includes("DEVELOPER")) {
+    return "SYSTEM";
+  }
+
+  const operatorRoles = [
+    "FACILITY_ADMIN",
+    "FINANCE",
+    "SUPPORT_AGENT",
+    "PUBLIC_HEALTH_OFFICER",
+    "ENV_HEALTH",
+    "CHW",
+    "PHARMACIST",
+  ];
+  if (user.staffId || user.linkedIds?.staffId || user.roles.some((role) => operatorRoles.includes(role))) {
+    return "OPERATOR";
+  }
+
+  return "CITIZEN";
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -88,10 +113,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
 
     if (typeof window !== "undefined") {
-      sessionStorage.setItem("exp:auth_token", token);
       sessionStorage.setItem("exp:auth_user", JSON.stringify(user));
-      if (refreshToken) sessionStorage.setItem("exp:refresh_token", refreshToken);
       if (expiresAt) sessionStorage.setItem("exp:expires_at", expiresAt);
+      else sessionStorage.removeItem("exp:expires_at");
       // Health OS §6: persist Provider ID for header injection (api-client.ts reads exp:provider_id)
       if (user.providerId) {
         sessionStorage.setItem("exp:provider_id", user.providerId);
@@ -109,11 +133,41 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ user, token, refreshToken: refreshToken ?? null, expiresAt: expiresAt ?? null, isAuthenticated: true });
   },
 
+  hydrateSession: (user, refreshToken, expiresAt) => {
+    const currentUser = get().user;
+    const shouldResetContinuity = currentUser
+      ? currentUser.id !== user.id
+      : typeof window !== "undefined" &&
+        !sessionStorage.getItem("exp:auth_user") &&
+        hasPersistedExperienceContinuity();
+
+    if (shouldResetContinuity) {
+      resetExperienceContinuity();
+    }
+
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("exp:auth_user", JSON.stringify(user));
+      if (expiresAt) sessionStorage.setItem("exp:expires_at", expiresAt);
+      else sessionStorage.removeItem("exp:expires_at");
+      if (user.providerId) {
+        sessionStorage.setItem("exp:provider_id", user.providerId);
+      } else {
+        sessionStorage.removeItem("exp:provider_id");
+      }
+      if (user.assuranceLevel) {
+        sessionStorage.setItem("exp:assurance_level", user.assuranceLevel);
+      }
+    }
+    if (typeof document !== "undefined") {
+      document.cookie = "exp_has_session=1;path=/;SameSite=Lax";
+    }
+    set({ user, token: null, refreshToken: refreshToken ?? null, expiresAt: expiresAt ?? null, isAuthenticated: true });
+  },
+
   setTokens: (token, refreshToken, expiresAt) => {
     if (typeof window !== "undefined") {
-      sessionStorage.setItem("exp:auth_token", token);
-      if (refreshToken) sessionStorage.setItem("exp:refresh_token", refreshToken);
       if (expiresAt) sessionStorage.setItem("exp:expires_at", expiresAt);
+      else sessionStorage.removeItem("exp:expires_at");
     }
     set({ token, refreshToken: refreshToken ?? get().refreshToken, expiresAt: expiresAt ?? get().expiresAt });
   },
@@ -122,7 +176,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (typeof window !== "undefined") {
       sessionStorage.removeItem("exp:auth_token");
       sessionStorage.removeItem("exp:auth_user");
-      sessionStorage.removeItem("exp:refresh_token");
       sessionStorage.removeItem("exp:expires_at");
       sessionStorage.removeItem("exp:consent_accepted");
       sessionStorage.removeItem("exp:consent_version");
@@ -183,7 +236,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       ...user,
       providerId: undefined,
       providerActivated: false,
-      actorType: "CITIZEN",
+      actorType: deriveDeactivatedActorType(user),
     };
     if (typeof window !== "undefined") {
       sessionStorage.removeItem("exp:provider_id");
@@ -202,14 +255,5 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       sessionStorage.setItem("exp:auth_user", JSON.stringify(updated));
     }
     set({ user: updated });
-  },
-
-  getRefreshToken: () => {
-    const { refreshToken } = get();
-    if (refreshToken) return refreshToken;
-    if (typeof window !== "undefined") {
-      return sessionStorage.getItem("exp:refresh_token");
-    }
-    return null;
   },
 }));

@@ -24,7 +24,7 @@ This document indexes the 6 golden path scripts for the Experience Platform. Gol
 |------|--------|-----------------|
 | 1 | Navigate to `/auth/login` | Login form renders with email/password fields |
 | 2 | Enter credentials, submit | POST `/internal/v1/auth/login` with `method: "email"` |
-| 3 | Receive session token | Redirect to `/home`, `exp:auth_token` set in sessionStorage |
+| 3 | Receive session token | Redirect to `/home`, access token kept in memory, session marker cookie set, refresh handled via `HttpOnly` cookie |
 | 4 | Verify trust headers | Subsequent API calls include all 4 v1.1 headers |
 
 ### Path B — Provider ID + Biometric

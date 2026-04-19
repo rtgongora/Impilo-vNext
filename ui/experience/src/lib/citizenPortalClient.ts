@@ -1,8 +1,11 @@
 /**
  * Citizen portal API — same contract as ui/portal `portalApi` (VITO `/v1/portal/*` via gateway).
  * Uses browser-relative `/api/v1/portal/...` with Next rewrites to the API gateway (see next.config.mjs).
- * Requires signed-in user with actor type CITIZEN and valid bearer token in sessionStorage.
+ * Requires signed-in user with actor type CITIZEN and a valid in-memory bearer token.
+ * A legacy sessionStorage token fallback remains only for compatibility during transition.
  */
+
+import { useAuthStore } from "@/hooks/useAuthStore";
 
 const PREFIX = '/api/v1/portal';
 
@@ -10,7 +13,7 @@ function readSessionHeaders(): Record<string, string> {
   if (typeof window === 'undefined') {
     return { 'Content-Type': 'application/json' };
   }
-  const token = sessionStorage.getItem('exp:auth_token');
+  const token = useAuthStore.getState().token ?? sessionStorage.getItem('exp:auth_token');
   const rawUser = sessionStorage.getItem('exp:auth_user');
   let actorId = '';
   if (rawUser) {

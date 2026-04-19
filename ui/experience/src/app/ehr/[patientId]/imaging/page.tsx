@@ -29,6 +29,8 @@ import { useImagingStudies } from "@/hooks/queries/useImaging";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { apiClient } from "@/lib/api-client";
 
+const BFF_BASE_URL = process.env.NEXT_PUBLIC_BFF_URL || (typeof window !== "undefined" ? "" : "http://localhost:8160");
+
 interface OrthancStudy {
   ID: string;
   MainDicomTags?: {
@@ -472,7 +474,7 @@ export default function ImagingPage() {
                     <div className="flex h-full items-center justify-center overflow-hidden">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
-                        src={`${process.env.NEXT_PUBLIC_BFF_URL || "http://localhost:8160"}/internal/v1/pacs/instances/${selectedInstance}/preview`}
+                        src={`${BFF_BASE_URL}/internal/v1/pacs/instances/${selectedInstance}/preview`}
                         alt="DICOM instance preview"
                         className="max-h-full max-w-full object-contain"
                         style={{

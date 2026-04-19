@@ -29,7 +29,7 @@ public class SecurityConfig {
                 // ext_authz endpoint — Envoy calls this unauthenticated
                 .requestMatchers("/v1/authorize", "/v1/authorize/**").permitAll()
                 // Actuator probes
-                .requestMatchers("/actuator/**").permitAll()
+                .requestMatchers("/actuator/health", "/actuator/info", "/actuator/prometheus").permitAll()
                 // OpenAPI / Swagger
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                 // Everything else requires JWT authentication

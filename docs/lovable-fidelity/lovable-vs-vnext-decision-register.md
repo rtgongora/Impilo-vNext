@@ -41,15 +41,15 @@ Each entry records:
 | Justification | BFF pattern provides: (1) Trust header enforcement at server layer, (2) v1.1 API convention compliance, (3) Outbox pattern for reliable eventing, (4) Idempotency enforcement, (5) Proper backend validation. Direct Supabase access would bypass the trust-first architecture that is core to Impilo vNext. |
 | Spec Conflict | #5 in SPEC_CONFLICTS.md |
 
-### D-003: 5 Session Storage Keys Instead of 2
+### D-003: Expanded Continuity State Instead of 2 Prototype Keys
 
 | Field | Value |
 |-------|-------|
 | Area | Session Persistence |
-| Lovable | 2 sessionStorage keys (names not specified) |
-| vNext | 5 keys: exp:auth_token, exp:auth_user, exp:facility, exp:workspace, exp:shift |
+| Lovable | 2 browser persistence keys (names not specified) |
+| vNext | Non-secret continuity in browser storage (`exp:auth_user`, `exp:expires_at`, facility/workspace/shift context) plus `exp_has_session` marker cookie and `HttpOnly` refresh cookie |
 | Verdict | **BETTER** |
-| Justification | The Auth→Facility→Workspace→Shift hierarchy requires persisting each level independently for page reload recovery. 2 keys would be insufficient to maintain the full context chain. |
+| Justification | The Auth→Facility→Workspace→Shift hierarchy requires continuity at each level, but bearer credentials should not stay readable in browser storage. The current model keeps access tokens in memory, uses browser storage only for non-secret continuity, and uses cookies for session refresh/presence. |
 | Spec Conflict | #3 in SPEC_CONFLICTS.md |
 
 ### D-004: Simplified Auth Instead of Full Keycloak OIDC

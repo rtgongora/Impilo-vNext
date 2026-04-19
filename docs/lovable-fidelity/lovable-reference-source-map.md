@@ -28,7 +28,7 @@ These 8 files form the **index and contract layer**. They describe *what should 
 | `02_page_by_page_spec.md` | INDEX → RECONSTRUCTED | Page architecture overview — points to `src/app/` | Original said "complete UI inventory" but had no page specs |
 | `03_component_inventory.md` | INDEX → RECONSTRUCTED | Component groups, layout variants, sidebar contexts | Original said "props interface, internal state" but had none |
 | `04_api_surface_map.md` | INDEX → RECONSTRUCTED | BFF controllers, endpoint list | Original said "60 Supabase tables, 30 RPC functions" — replaced by BFF |
-| `05_state_and_storage.md` | INDEX | 4 Zustand stores, 5 session keys, guard chain | Reasonably complete |
+| `05_state_and_storage.md` | INDEX | 4 Zustand stores, continuity storage model, guard chain | Reasonably complete |
 | `06_golden_paths.md` | INDEX | 6 golden paths with step-by-step tables | Adequate for verification |
 | `07_opus_execution_contract.md` | INDEX | 11 phases, quality gates | Original said "11 phases" with no details |
 
@@ -131,7 +131,7 @@ The `docs/prototype/final/` directory is an **index layer**, not a specification
 |---|---------|------------|
 | 1 | "98 routes" listed with no names | Routes reconstructed from zones + golden paths |
 | 2 | Route count discrepancy (96 explicit + 2 redirects = 98) | Accepted |
-| 3 | "2 sessionStorage keys" → 5 keys needed | Extended to 5 |
+| 3 | "2 browser persistence keys" → continuity now uses browser storage plus cookies | Updated to match current runtime model |
 | 4 | Full Keycloak/OIDC not specified | Deferred to Stage-2 |
 | 5 | "60 Supabase tables, 30 RPC functions" → BFF pattern | Replaced with Spring Boot BFF |
 | 6 | Component props/state not specified | Implemented from layout descriptions |

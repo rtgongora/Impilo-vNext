@@ -51,7 +51,7 @@
 - **Addition**: Added `encounter.discharged.v1` event for the new discharge flow
 
 ### 05_state_and_storage.md
-- **Contribution**: 4 Zustand stores (auth, facility, workspace, shift), 5 sessionStorage keys, route guard chain
+- **Contribution**: 4 Zustand stores (auth, facility, workspace, shift), continuity storage model, route guard chain
 - **Used for**: Verifying EHR pages enforce shift guard (which gates workspace → facility → auth), confirming walk-in registration uses facilityStore
 - **Match**: Walk-in page (`/queue/walk-in`) correctly accesses `useFacilityStore`; all EHR routes have `guard: "shift"`
 
@@ -78,7 +78,7 @@
 | Auth pathways | 4 (email, provider ID, biometric, SSO) | **MATCH** — 3 implemented, SSO deferred to Stage-2 |
 | Golden paths | 6 paths | **MATCH** — all 6 have automated tests |
 | Zustand stores | 4 stores (auth, facility, workspace, shift) | **MATCH** — all 4 implemented |
-| Session storage keys | 5 keys | **MATCH** — all 5 keys present |
+| Session continuity | Prototype implied browser persistence | **MATCH WITH SECURITY HARDENING** — continuity preserved via user/context storage, in-memory access token, session marker cookie, and HttpOnly refresh cookie |
 | BFF controllers | 13 controllers | **15 controllers** (added clinical domain controllers) |
 | Outbox events | 5 event types | **6 event types** (added encounter.discharged) |
 | EHR sub-pages | Vitals, notes, orders, results, referrals, conditions, allergies, medications, immunizations, encounters, documents, timeline, summary, history | **ALL IMPLEMENTED** + discharge page added |
@@ -90,7 +90,7 @@
 | 1 | Route count | 98 | 99 (added discharge) | Acceptable divergence — enhances clinical workflow |
 | 2 | SSO auth pathway | Listed as pathway 4 | Not implemented | Deferred to Stage-2 per Spec Conflict #4 |
 | 3 | React contexts | 6 contexts | 4 Zustand stores | Per Spec Conflict #7 — insufficient spec for 2 additional contexts |
-| 4 | Session storage keys | 2 keys | 5 keys | Per Spec Conflict #3 — implementation needs more state |
+| 4 | Browser persistence model | 2 keys | Continuity split across browser storage + cookies | Per Spec Conflict #3 — implementation needs more state and stronger token handling |
 | 5 | Supabase tables | ~60 tables | BFF + PostgreSQL | Per Spec Conflict #5 — architecture changed from Supabase to BFF |
 | 6 | Discharge workflow | Not explicitly specified in golden paths | Added as explicit EHR page | Enhancement based on clinical workflow analysis |
 

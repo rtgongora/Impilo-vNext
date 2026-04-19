@@ -102,7 +102,7 @@ describe("CredentialsPage", () => {
     expect(screen.getByText("Secure Health Summary")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Download PDF/i })).toHaveAttribute(
       "href",
-      "http://localhost:8160/internal/v1/credentials/cred-1/pdf",
+      "/internal/v1/credentials/cred-1/pdf",
     );
     expect(screen.getByRole("link", { name: /Verify/i })).toHaveAttribute("href", "https://verify.example/cred-1");
   });

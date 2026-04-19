@@ -72,7 +72,6 @@ export default function LoginPage() {
         onSuccess: (res) => {
           const attrs = res.data.attributes;
           const { token, user } = attrs;
-          const refreshToken = (attrs as Record<string, unknown>).refreshToken as string | undefined;
           const expiresAt = (attrs as Record<string, unknown>).expiresAt as string | undefined;
           setAuth(
             {
@@ -89,7 +88,7 @@ export default function LoginPage() {
               providerActivated: false,
             },
             token,
-            refreshToken,
+            null,
             expiresAt
           );
           useWorkModeStore.getState().deriveFromRoles(user.roles);
@@ -309,7 +308,7 @@ export default function LoginPage() {
                             providerActivated: false,
                           },
                           token,
-                          (attrs as Record<string, unknown>).refreshToken as string | undefined,
+                          null,
                           (attrs as Record<string, unknown>).expiresAt as string | undefined,
                         );
                         useWorkModeStore.getState().deriveFromRoles(u.roles);

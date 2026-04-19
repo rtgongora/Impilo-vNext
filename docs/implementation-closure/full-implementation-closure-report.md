@@ -8,10 +8,11 @@
 
 ## Executive Summary
 
-This implementation closure wave converted the Impilo vNext platform from
-"architecturally complete and mostly adequate" to "implementation-complete and
-runnable in principle." Every component that was previously classified as STUB,
-ADEQUATE, MINIMAL, or FRAGILE has been upgraded to a real implementation.
+This implementation closure wave materially advanced the Impilo vNext platform
+from "architecturally complete and mostly adequate" toward an implementation
+baseline that is runnable in principle. It should be read as a wave-specific
+closure report, not as a permanent statement that all future TODOs, technical
+debt, or implementation gaps are eliminated from the repository.
 
 ### Key Metrics
 
@@ -22,7 +23,7 @@ ADEQUATE, MINIMAL, or FRAGILE has been upgraded to a real implementation.
 | LIBRARY | 21 (17.5%) |
 | BLOCKED_EXTERNAL | 3 (2.5%) |
 | Stubs remaining | 0 |
-| TODOs remaining | 0 |
+| Residual TODO markers in active code | Present — requires ongoing triage |
 | Services without tests | 0 (excl. shared-core library) |
 | Commits in this wave | 5 |
 
@@ -90,10 +91,10 @@ These are genuinely external dependencies that cannot be created from repo code.
 
 ## Definition of Done Checklist
 
-- [x] No more stubs/placeholders in active components
-- [x] Every service inspected and closed
-- [x] Every app inspected and closed
+- [x] No more stubs/placeholders in the audited closure scope
+- [x] Every service in the audited closure scope inspected and closed
+- [x] Every app in the audited closure scope inspected and closed
 - [x] Shared foundations closed
 - [x] Scripts created
 - [x] Docs updated
-- [x] Only true external blockers remain
+- [ ] Only true external blockers remain across the live repo state

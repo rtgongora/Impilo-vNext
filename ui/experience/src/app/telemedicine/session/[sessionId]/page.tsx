@@ -91,7 +91,9 @@ export default function TeleconsultSessionPage() {
 
   // Auto-scroll chat
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (typeof chatEndRef.current?.scrollIntoView === "function") {
+      chatEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
   }, [messages]);
 
   // Auto-save draft every 10 seconds
@@ -437,7 +439,7 @@ export default function TeleconsultSessionPage() {
           {/* Consent */}
           <div className="p-3 border-b">
             <h4 className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Consent</h4>
-            {session?.consentToken ? (
+            {Boolean(session?.consentToken) ? (
               <div className="flex items-center gap-1.5 text-xs text-green-700">
                 <Shield className="w-3.5 h-3.5" /> Verified
               </div>
@@ -447,10 +449,10 @@ export default function TeleconsultSessionPage() {
           </div>
 
           {/* Referral letter excerpt */}
-          {session?.referralLetter && (
+          {Boolean(session?.referralLetter) && (
             <div className="p-3 border-b">
               <h4 className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Referral Letter</h4>
-              <p className="text-xs text-gray-600 line-clamp-6">{session.referralLetter as string}</p>
+              <p className="text-xs text-gray-600 line-clamp-6">{session?.referralLetter as string}</p>
             </div>
           )}
 

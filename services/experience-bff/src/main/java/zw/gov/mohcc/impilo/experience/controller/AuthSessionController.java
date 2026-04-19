@@ -5,8 +5,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
+import org.springframework.http.ResponseCookie;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.util.WebUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
@@ -15,8 +17,10 @@ import zw.gov.mohcc.impilo.experience.client.VarapiServiceClient;
 import zw.gov.mohcc.impilo.experience.client.VitoServiceClient;
 
 import java.time.OffsetDateTime;
+import java.time.Duration;
 import java.util.*;
 import java.util.Set;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * Auth session controller with real Keycloak credential exchange.
@@ -38,6 +42,7 @@ import java.util.Set;
 public class AuthSessionController {
 
     private static final Logger log = LoggerFactory.getLogger(AuthSessionController.class);
+    private static final String REFRESH_COOKIE_NAME = "exp_refresh_token";
 
     @Value("${KEYCLOAK_URL:http://localhost:8080}")
     private String keycloakUrl;
@@ -55,6 +60,9 @@ public class AuthSessionController {
      */
     @Value("${impilo.auth.fallback-enabled:false}")
     private boolean fallbackEnabled;
+
+    @Value("${impilo.auth.refresh-cookie-secure:false}")
+    private boolean refreshCookieSecure;
 
     private final RestTemplate restTemplate;
     private final VarapiServiceClient varapiClient;
@@ -193,7 +201,9 @@ public class AuthSessionController {
                 "attributes", Map.of("status", "logged_out")
         ));
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, clearRefreshCookie().toString())
+                .body(response);
     }
 
     /**
@@ -204,12 +214,24 @@ public class AuthSessionController {
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
-            @RequestBody Map<String, Object> body) {
+            @RequestBody(required = false) Map<String, Object> body,
+            HttpServletRequest request) {
 
-        String refreshToken = body.getOrDefault("refreshToken", "").toString();
+        String refreshToken = "";
+        if (body != null) {
+            refreshToken = body.getOrDefault("refreshToken", "").toString();
+        }
         if (refreshToken.isBlank()) {
-            return ResponseEntity.badRequest().body(Map.of(
-                    "error", Map.of("code", "VALIDATION", "message", "refreshToken is required")));
+            var cookie = WebUtils.getCookie(request, REFRESH_COOKIE_NAME);
+            if (cookie != null) {
+                refreshToken = cookie.getValue();
+            }
+        }
+        if (refreshToken.isBlank()) {
+            return ResponseEntity.badRequest()
+                    .header(HttpHeaders.SET_COOKIE, clearRefreshCookie().toString())
+                    .body(Map.of(
+                            "error", Map.of("code", "VALIDATION", "message", "refreshToken is required")));
         }
 
         try {
@@ -261,14 +283,18 @@ public class AuthSessionController {
             }
         } catch (org.springframework.web.client.HttpClientErrorException e) {
             log.info("Token refresh failed: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
-                    "error", Map.of("code", "REFRESH_FAILED", "message", "Session expired. Please log in again.")));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .header(HttpHeaders.SET_COOKIE, clearRefreshCookie().toString())
+                    .body(Map.of(
+                            "error", Map.of("code", "REFRESH_FAILED", "message", "Session expired. Please log in again.")));
         } catch (Exception e) {
             log.warn("Keycloak refresh failed: {}", e.getMessage());
         }
 
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
-                "error", Map.of("code", "REFRESH_FAILED", "message", "Unable to refresh session")));
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .header(HttpHeaders.SET_COOKIE, clearRefreshCookie().toString())
+                .body(Map.of(
+                        "error", Map.of("code", "REFRESH_FAILED", "message", "Unable to refresh session")));
     }
 
     @GetMapping("/auth/session")
@@ -578,7 +604,6 @@ public class AuthSessionController {
 
         Map<String, Object> attributes = new LinkedHashMap<>();
         attributes.put("token", token);
-        if (refreshToken != null) attributes.put("refreshToken", refreshToken);
         attributes.put("expiresAt", expiresAt.toString());
         attributes.put("expiresIn", expiresIn);
         attributes.put("user", user);
@@ -590,7 +615,33 @@ public class AuthSessionController {
                 "attributes", attributes
         ));
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
-        return ResponseEntity.ok(response);
+        ResponseEntity.BodyBuilder builder = ResponseEntity.ok();
+        if (refreshToken != null && !refreshToken.isBlank()) {
+            builder.header(HttpHeaders.SET_COOKIE, buildRefreshCookie(refreshToken, expiresIn).toString());
+        } else {
+            builder.header(HttpHeaders.SET_COOKIE, clearRefreshCookie().toString());
+        }
+        return builder.body(response);
+    }
+
+    private ResponseCookie buildRefreshCookie(String refreshToken, int expiresIn) {
+        return ResponseCookie.from(REFRESH_COOKIE_NAME, refreshToken)
+                .httpOnly(true)
+                .secure(refreshCookieSecure)
+                .sameSite("Lax")
+                .path("/")
+                .maxAge(Duration.ofSeconds(Math.max(expiresIn, 0)))
+                .build();
+    }
+
+    private ResponseCookie clearRefreshCookie() {
+        return ResponseCookie.from(REFRESH_COOKIE_NAME, "")
+                .httpOnly(true)
+                .secure(refreshCookieSecure)
+                .sameSite("Lax")
+                .path("/")
+                .maxAge(Duration.ZERO)
+                .build();
     }
 
     // ── Facility Affiliations ──────────────────────────────────────────

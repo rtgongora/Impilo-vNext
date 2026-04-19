@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useShiftStore } from "@/hooks/useShiftStore";
+import { useAuthStore } from "@/hooks/useAuthStore";
 import { useWorkModeStore } from "@/hooks/useWorkModeStore";
 import { useWorkspaceStore } from "@/hooks/useWorkspaceStore";
 import { apiClient } from "../api-client";
@@ -20,6 +21,15 @@ const sessionStorageMock = (() => {
 
 Object.defineProperty(global, "sessionStorage", { value: sessionStorageMock });
 
+let cookieStore = "exp_has_session=1";
+Object.defineProperty(document, "cookie", {
+  configurable: true,
+  get: () => cookieStore,
+  set: (value: string) => {
+    cookieStore = value;
+  },
+});
+
 // Mock crypto.randomUUID
 const MOCK_UUID = "test-uuid-1234-5678-abcd";
 vi.stubGlobal("crypto", {
@@ -38,6 +48,8 @@ describe("apiClient", () => {
     useWorkspaceStore.getState().clearWorkspace();
     useShiftStore.getState().endShift();
     useWorkModeStore.getState().reset();
+    useAuthStore.getState().clearAuth();
+    cookieStore = "exp_has_session=1";
     window.history.pushState({}, "", "/");
   });
 
@@ -55,7 +67,7 @@ describe("apiClient", () => {
     expect(typeof apiClient.delete).toBe("function");
   });
 
-  it("sends GET requests to the correct baseURL", async () => {
+  it("sends GET requests through the browser-relative BFF path", async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
       status: 200,
@@ -65,8 +77,9 @@ describe("apiClient", () => {
     await apiClient.get("/internal/v1/patients");
 
     expect(mockFetch).toHaveBeenCalledTimes(1);
-    const [url] = mockFetch.mock.calls[0];
-    expect(url).toBe("http://localhost:8160/internal/v1/patients");
+    const [url, options] = mockFetch.mock.calls[0];
+    expect(url).toBe("/internal/v1/patients");
+    expect(options.credentials).toBe("same-origin");
   });
 
   it("attaches X-Tenant-ID header with default value", async () => {
@@ -121,8 +134,14 @@ describe("apiClient", () => {
     expect(options.headers["X-Correlation-ID"]).toBe(MOCK_UUID);
   });
 
-  it("attaches Authorization header when auth token is in sessionStorage", async () => {
-    sessionStorageMock.setItem("exp:auth_token", "my-jwt-token");
+  it("attaches Authorization header from the live auth store token", async () => {
+    useAuthStore.setState({
+      user: null,
+      token: "my-jwt-token",
+      refreshToken: null,
+      expiresAt: null,
+      isAuthenticated: true,
+    });
 
     mockFetch.mockResolvedValueOnce({
       ok: true,
@@ -324,7 +343,7 @@ describe("apiClient", () => {
     await apiClient.delete("/internal/v1/test/123");
 
     const [url, options] = mockFetch.mock.calls[0];
-    expect(url).toBe("http://localhost:8160/internal/v1/test/123");
+    expect(url).toBe("/internal/v1/test/123");
     expect(options.method).toBe("DELETE");
   });
 
@@ -341,8 +360,6 @@ describe("apiClient", () => {
   });
 
   it("clears persisted experience continuity on auth failure after refresh fails", async () => {
-    sessionStorageMock.setItem("exp:auth_token", "expired-token");
-    sessionStorageMock.setItem("exp:refresh_token", "refresh-token");
     sessionStorageMock.setItem("exp:facility", JSON.stringify({ id: "facility-1" }));
     sessionStorageMock.setItem("exp:workspace", JSON.stringify({ id: "workspace-1" }));
     sessionStorageMock.setItem("exp:shift", JSON.stringify({ id: "shift-1" }));
@@ -371,6 +388,13 @@ describe("apiClient", () => {
       facilityId: "facility-1",
     });
     useWorkModeStore.getState().setMode("clinical", { licenseNumber: "LIC-123" });
+    useAuthStore.setState({
+      user: null,
+      token: "expired-token",
+      refreshToken: null,
+      expiresAt: null,
+      isAuthenticated: true,
+    });
 
     mockFetch
       .mockResolvedValueOnce({
@@ -389,6 +413,9 @@ describe("apiClient", () => {
       error: { code: "SESSION_EXPIRED", message: "Session expired" },
     });
 
+    expect(mockFetch.mock.calls[1]?.[0]).toBe("/internal/v1/auth/refresh");
+    expect(mockFetch.mock.calls[1]?.[1]?.body).toBeUndefined();
+    expect(mockFetch.mock.calls[1]?.[1]?.credentials).toBe("same-origin");
     expect(sessionStorageMock.getItem("exp:auth_token")).toBeNull();
     expect(sessionStorageMock.getItem("exp:facility")).toBeNull();
     expect(sessionStorageMock.getItem("exp:workspace")).toBeNull();

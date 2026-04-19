@@ -85,7 +85,6 @@ export default function RegisterPage() {
         type: string;
         attributes: {
           token?: string;
-          refreshToken?: string;
           expiresAt?: string;
           user?: { id: string; email: string; displayName: string; roles: string[]; actorType: string };
           status?: string;
@@ -116,7 +115,7 @@ export default function RegisterPage() {
             providerActivated: false,
           },
           attrs.token,
-          attrs.refreshToken,
+          null,
           attrs.expiresAt
         );
         // Record consent accepted during registration — both client and server

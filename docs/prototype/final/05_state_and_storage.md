@@ -14,7 +14,7 @@ This document indexes the state management and storage architecture for the Expe
 
 - Provider tree: QueryClient → Auth → Facility → Workspace → Shift → Router
 - 6 React contexts (original spec) → **4 Zustand stores** (implementation — see Conflict #7)
-- 2 sessionStorage keys (original spec) → **5 sessionStorage keys** (implementation — see Conflict #3)
+- 2 sessionStorage keys (original spec) → implementation now uses a small sessionStorage set plus an `HttpOnly` refresh cookie (see Conflict #3)
 - 10 role-checking database functions for authorization
 - Capability gating controls feature visibility
 
@@ -26,7 +26,7 @@ This document indexes the state management and storage architecture for the Expe
 
 | Store | Location | State Shape | Purpose |
 |-------|----------|------------|---------|
-| `authStore` | `ui/experience/src/stores/auth.ts` | `{ token, user, isAuthenticated }` | Authentication session |
+| `authStore` | `ui/experience/src/hooks/useAuthStore.ts` | `{ token, user, isAuthenticated }` | Authentication session |
 | `facilityStore` | `ui/experience/src/stores/facility.ts` | `{ facility, facilities }` | Selected facility context |
 | `workspaceStore` | `ui/experience/src/stores/workspace.ts` | `{ workspace, workspaces }` | Active workspace |
 | `shiftStore` | `ui/experience/src/stores/shift.ts` | `{ shift, isShiftOpen }` | Current shift state |
@@ -40,17 +40,19 @@ Hierarchy chain: Auth → Facility → Workspace → Shift (each level gates the
 - Mutations with optimistic updates for critical paths (encounter creation, queue updates)
 - API client: `ui/experience/src/lib/api-client.ts` — injects trust headers on every request
 
-### Session Storage Keys
+### Session Storage & Cookie Keys
 
-5 keys persist ephemeral state across page reloads:
+Experience now persists non-secret continuity in sessionStorage and keeps the refresh credential in an `HttpOnly` cookie:
 
 | Key | Purpose |
 |-----|---------|
-| `exp:auth_token` | JWT session token |
 | `exp:auth_user` | Authenticated user identity |
+| `exp:expires_at` | Access token expiry metadata |
 | `exp:facility` | Currently selected facility |
 | `exp:workspace` | Active workspace |
 | `exp:shift` | Current shift state |
+| `exp_has_session` cookie | Non-secret session presence marker for route gating |
+| `exp_refresh_token` cookie (`HttpOnly`) | Refresh credential, not readable by browser JavaScript |
 
 ### Route Guard Chain
 
@@ -58,7 +60,7 @@ Guards enforce the hierarchical context requirement:
 
 | Guard | Requires | Redirects To |
 |-------|----------|-------------|
-| `auth` | Valid session token | `/auth/login` |
+| `auth` | Valid session marker, then BFF-backed session recovery | `/auth/login` |
 | `facility` | Auth + selected facility | `/facility` |
 | `workspace` | Facility + active workspace | `/workspace` |
 | `shift` | Workspace + open shift | `/shift` |
@@ -92,7 +94,7 @@ Database migrations: `services/experience-bff/src/main/resources/db/migration/`
 
 ## Spec Conflicts
 
-- **Conflict #3** (from [compose/experience/SPEC_CONFLICTS.md](../../../compose/experience/SPEC_CONFLICTS.md)): Original spec mentioned "2 sessionStorage keys" without specifying names. Implementation uses 5 keys.
+- **Conflict #3** (from [compose/experience/SPEC_CONFLICTS.md](../../../compose/experience/SPEC_CONFLICTS.md)): Original spec mentioned "2 sessionStorage keys" without specifying names. Implementation now keeps non-secret continuity in sessionStorage and uses cookies for session markers / refresh.
 - **Conflict #7**: Original spec mentioned "6 React contexts." Implementation uses 4 Zustand stores covering the Auth→Facility→Workspace→Shift hierarchy. Two additional contexts (possibly notifications, theme) were not implemented due to insufficient specification.
 
 ## Contract Statement

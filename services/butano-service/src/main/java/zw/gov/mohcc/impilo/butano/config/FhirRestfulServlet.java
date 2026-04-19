@@ -94,7 +94,13 @@ public class FhirRestfulServlet {
 
                 // ── CORS interceptor ────────────────────────────────────
                 CorsConfiguration corsConfig = new CorsConfiguration();
-                corsConfig.addAllowedOriginPattern("*");
+                corsConfig.setAllowedOriginPatterns(List.of(
+                        "http://localhost:*",
+                        "https://*.impilo.health",
+                        "https://*.impilo.gov.zw",
+                        "capacitor://*",
+                        "ionic://*"
+                ));
                 corsConfig.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
                 corsConfig.setAllowedHeaders(List.of(
                         HttpHeaders.ACCEPT,
