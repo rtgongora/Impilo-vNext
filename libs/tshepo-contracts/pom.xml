@@ -91,6 +91,9 @@
                     <protocArtifact>com.google.protobuf:protoc:${protobuf.version}:exe:${os.detected.classifier}</protocArtifact>
                     <pluginId>grpc-java</pluginId>
                     <pluginArtifact>io.grpc:protoc-gen-grpc-java:${grpc.version}:exe:${os.detected.classifier}</pluginArtifact>
+                    <temporaryProtoFileDirectory>${java.io.tmpdir}/impilo-protoc-dependencies/${project.artifactId}</temporaryProtoFileDirectory>
+                    <clearOutputDirectory>false</clearOutputDirectory>
+                    <checkStaleness>true</checkStaleness>
                 </configuration>
                 <executions>
                     <execution>

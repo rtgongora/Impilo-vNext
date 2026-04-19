@@ -32,7 +32,7 @@
 **Severity**: ⚠️ MODERATE
 **Impact**: First build requires downloading ~500MB+ of Maven dependencies
 
-**Description**: The Maven build uses `eclipse-temurin:21-jdk-alpine` and downloads dependencies into `vendor/m2/repository`. If the target server has limited internet access, the first build will fail.
+**Description**: The Maven build uses `eclipse-temurin:21-jdk-alpine` and downloads dependencies into `vendor/m2/repository` for runtime/offline preparation. Normal connected local builds should use the standard user Maven cache (`~/.m2/repository`). If the target server has limited internet access, the first build will fail unless the vendored cache is pre-warmed.
 
 **Mitigation**:
 - Pre-warm the Maven cache: `cd services && mvn dependency:go-offline -Dmaven.repo.local=../vendor/m2/repository`

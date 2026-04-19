@@ -25,6 +25,9 @@ edge enforcement (Envoy + OPA).
 ### Pre-warm caches (first time, requires internet)
 
 ```bash
+# Local connected Maven builds should use the default user cache (~/.m2/repository).
+# Use the vendored cache path below when preparing an offline/runtime bundle.
+
 # Maven dependencies
 cd services
 mvn dependency:go-offline -Dmaven.repo.local=../vendor/m2/repository
@@ -168,7 +171,7 @@ This runs three test suites in sequence:
 
 | Failure Symptom | Likely Cause | Fix |
 |----------------|-------------|-----|
-| Maven build fails with dependency errors | Maven cache not pre-warmed | Run `cd services && mvn dependency:go-offline -Dmaven.repo.local=../vendor/m2/repository` on a connected machine |
+| Maven build fails with dependency errors | Maven cache not pre-warmed, or the build is using a fragile repo-local cache on a synced folder | For normal local builds use the default `~/.m2/repository`; for offline/runtime prep run `cd services && mvn dependency:go-offline -Dmaven.repo.local=../vendor/m2/repository` on a connected machine |
 | Service fails to start (Postgres connection) | Postgres not ready or database not created | Check `scripts/seed/init-databases.sql` includes the service's DB; check `docker compose logs postgres` |
 | Service fails with Flyway error | Migration conflict or missing migration | Check `services/<name>/src/main/resources/db/migration/` |
 | Envoy returns 503 | Backend service not running | Check `./scripts/dev-runtime.sh status`; service may still be starting |
@@ -204,6 +207,7 @@ This runs three test suites in sequence:
 
 ### Maven
 
+- **Default for local connected builds**: Maven's standard user cache (`~/.m2/repository`)
 - **Host path**: `./vendor/m2/repository`
 - **Container mount**: `/root/.m2/repository`
 - **Pre-warm**: `cd services && mvn dependency:go-offline -Dmaven.repo.local=../vendor/m2/repository`

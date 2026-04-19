@@ -12,7 +12,7 @@
 - **Impact**: Blocks Maven reactor build of all 68 Java services + 11 libs
 - **Evidence**: JVM resolves DNS directly (fails) while the container routes curl through an egress proxy (succeeds). Maven settings.xml with proxy auth gets 407 because the proxy uses JWT authentication that Maven's XML config cannot encode properly.
 - **Affects**: Phase 1 (fleet build — Java components)
-- **Next Action**: Build via `docker-compose.build.yml` which runs Maven in an eclipse-temurin:21 Docker container with its own network stack. Alternatively, pre-warm the local Maven cache on a machine with direct internet access: `cd services && mvn dependency:go-offline -Dmaven.repo.local=../vendor/m2/repository`
+- **Next Action**: Build via `docker-compose.build.yml` which runs Maven in an eclipse-temurin:21 Docker container with its own network stack. For normal connected local builds, use Maven's default user cache (`~/.m2/repository`) rather than a repo-local cache on synced folders. For offline/runtime preparation, pre-warm the vendored cache on a machine with direct internet access: `cd services && mvn dependency:go-offline -Dmaven.repo.local=../vendor/m2/repository`
 
 ## Blocker 3: No pnpm Workspace Configuration
 - **Severity**: MEDIUM
