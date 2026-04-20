@@ -121,7 +121,7 @@ synchronous_commit = on        # Ring 0: on (zero data loss)
 ### 2.4 Backup Schedule (K8s CronJob)
 
 ```yaml
-# Tier 1 + Tier 2: Daily at 02:00 UTC (off-peak for Zimbabwe = 04:00 CAT)
+# Tier 1 + Tier 2: Daily at 02:00 UTC (off-peak for the primary CAT deployment baseline = 04:00 CAT)
 schedule: "0 2 * * *"
 
 # Tier 3 + Tier 4: Daily at 03:00 UTC

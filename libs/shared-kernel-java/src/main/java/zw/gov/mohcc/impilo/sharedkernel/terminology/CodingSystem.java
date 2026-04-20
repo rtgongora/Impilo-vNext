@@ -81,7 +81,7 @@ public enum CodingSystem {
 
     // ── Impilo Local Extensions ─────────────────────────────────────
 
-    /** Impilo local coding namespace for Zimbabwe-specific extensions. */
+    /** Impilo local coding namespace for jurisdiction-specific extensions. */
     IMPILO_LOCAL("http://impilo.gov.zw/coding", "Impilo Local",
             "Zimbabwe-specific codes not covered by international standards"),
 

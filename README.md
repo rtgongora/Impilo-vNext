@@ -1,10 +1,16 @@
-# Impilo vNext — Health Operating System (HOS)
+# Impilo vNext - Health Operating System (HOS)
 
-A national-grade, security-first digital health platform for Zimbabwe.
+A sovereign-grade, security-first digital health platform designed for deployment across health systems in multiple jurisdictions.
+
+## Licensing Status
+
+This monorepo is proprietary by default. All rights are reserved by **Impilo Technologies Private Limited (a State Owned Enterprise), registered in the Republic of Zimbabwe** except where a specific artefact is explicitly relicensed.
+
+Certain future ecosystem-facing artefacts may later be extracted and separately licensed, but no reuse rights exist today except where they are expressly granted.
 
 ## Architecture
 
-Six architectural planes:
+Seven architectural planes:
 
 | Plane | Services |
 |-------|----------|
@@ -14,6 +20,13 @@ Six architectural planes:
 | **Finance** | Costing Engine, MUSheX (Payments/Claims) |
 | **Integration/Ops** | Integration Hub, Offline Sync, Document Service, Notification, Jobs, PACS Adapter |
 | **Experience** | One UI Shell (WORK/EHR/CONTROL/MY PROFESSIONAL/MY LIFE), Ops Console, EHR, Portal |
+| **Enterprise Resource Plane** | General Ledger, HR & Payroll, Procurement, enterprise reporting, and control surfaces |
+
+## Repository Segmentation Intent
+
+The strategic platform spine remains closed by default. Over time, selected ecosystem-facing artefacts such as contracts, schemas, public SDKs, and partner-safe integration materials may be extracted into separately licensed packages.
+
+That future extraction path does not change the current legal position of this repository as a whole: the monorepo remains proprietary unless a subproject is explicitly relicensed.
 
 ## Tech Stack
 

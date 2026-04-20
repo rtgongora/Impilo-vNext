@@ -14,7 +14,7 @@
     <artifactId>tuso-service</artifactId>
     <name>TUSO — Facility Registry Service</name>
     <description>
-        National Facility Registry for Zimbabwe. Manages facility register (GOFR-compatible),
+        National Facility Registry service. Manages facility registers (GOFR-compatible),
         workspaces, operational context, resources/calendars, facility configuration,
         and control tower telemetry. Dual-mode: standalone or GOFR-synced.
     </description>

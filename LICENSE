@@ -1,0 +1,20 @@
+Copyright (c) Impilo Technologies Private Limited (a State Owned Enterprise), registered in the Republic of Zimbabwe
+
+All rights reserved.
+
+This repository, including its source code, documentation, configuration, build assets,
+deployment artefacts, schemas, and related materials, is proprietary and confidential
+except where a specific subdirectory or extracted subproject expressly states otherwise.
+
+No licence is granted to use, copy, modify, merge, publish, distribute, sublicense,
+commercialise, host, or create derivative works from this repository or any part of it,
+except with the prior written permission of Impilo Technologies Private Limited
+(a State Owned Enterprise), registered in the Republic of Zimbabwe.
+
+No patent, trademark, trade dress, branding, or other intellectual property rights are
+granted by access to this repository.
+
+Any future open-source release, partner artefact release, or separately licensed
+subproject must be identified by an explicit licence file or equivalent licensing notice
+within that extracted artefact or subdirectory. Absent such an explicit grant, all rights
+remain reserved.

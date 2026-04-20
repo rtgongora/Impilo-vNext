@@ -26,7 +26,7 @@ import java.util.UUID;
  * This makes the DID a pure cryptographic identifier.
  *
  * W3C DID spec: https://www.w3.org/TR/did-core/
- * Method: did:impilo (custom method for Zimbabwe Health OS)
+ * Method: did:impilo (custom method for the Impilo Health OS)
  */
 @Component
 public class SovereignIdGenerator {
