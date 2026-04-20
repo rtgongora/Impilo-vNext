@@ -33,8 +33,17 @@ public class EncounterController {
         this.costaClient = costaClient;
     }
 
+    public record CreateEncounterRequest(
+            String patientId,
+            String facilityId,
+            String encounterType,
+            String chiefComplaint,
+            String journeyId,
+            String cpid) {}
+
     @GetMapping
     public ResponseEntity<Map<String, Object>> listEncounters(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(defaultValue = "0") int page,
@@ -109,14 +118,14 @@ public class EncounterController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
-            @RequestBody Map<String, Object> body) {
+            @RequestBody CreateEncounterRequest body) {
 
-        String patientId = strVal(body, "patient_id", "patientId");
-        String facilityId = strVal(body, "facility_id", "facilityId");
-        String encounterType = strVal(body, "encounter_type", "encounterType");
-        String chiefComplaint = strVal(body, "chief_complaint", "chiefComplaint");
-        String journeyId = strVal(body, "pct_journey_id", "pctJourneyId", "journeyId");
-        String cpid = strVal(body, "patient_cpid", "patientCpid");
+        String patientId = body.patientId();
+        String facilityId = body.facilityId();
+        String encounterType = body.encounterType();
+        String chiefComplaint = body.chiefComplaint();
+        String journeyId = body.journeyId();
+        String cpid = body.cpid();
 
         if (patientId == null || patientId.isBlank()) {
             return ResponseEntity.badRequest().body(Map.of(

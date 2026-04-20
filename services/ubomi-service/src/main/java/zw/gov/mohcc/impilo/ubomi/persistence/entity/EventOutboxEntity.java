@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.ubomi.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.OffsetDateTime;
 
@@ -20,6 +22,9 @@ public class EventOutboxEntity {
 
     @Column(name = "event_type", nullable = false)
     private String eventType;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "payload", nullable = false, columnDefinition = "jsonb")
     private String payload;

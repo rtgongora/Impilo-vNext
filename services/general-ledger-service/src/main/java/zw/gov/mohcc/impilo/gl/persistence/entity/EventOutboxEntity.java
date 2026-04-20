@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.gl.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import zw.gov.mohcc.impilo.sharedkernel.events.CompanionOutboxPublisher;
 
 import java.time.OffsetDateTime;
@@ -58,6 +60,9 @@ public class EventOutboxEntity {
 
     @Column(name = "occurred_at", nullable = false)
     private OffsetDateTime occurredAt;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "payload_json", nullable = false, columnDefinition = "jsonb")
     private String payloadJson;

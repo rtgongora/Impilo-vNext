@@ -37,6 +37,9 @@ public class AttestationEntity {
     @Column(name = "device_fingerprint")
     private String deviceFingerprint;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+
+
     @Column(name = "evidence", nullable = false, columnDefinition = "jsonb")
     private String evidence = "{}";
 

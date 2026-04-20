@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.reporting.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import zw.gov.mohcc.impilo.reporting.core.ExportFormat;
 import zw.gov.mohcc.impilo.reporting.core.RunStatus;
 
@@ -25,6 +27,9 @@ public class ReportRunEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "definition_id", nullable = false)
     private ReportDefinitionEntity definition;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "parameters", nullable = false, columnDefinition = "jsonb")
     private String parameters = "{}";

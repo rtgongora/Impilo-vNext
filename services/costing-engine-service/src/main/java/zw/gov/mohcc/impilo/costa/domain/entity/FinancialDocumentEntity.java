@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.costa.domain.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -37,6 +39,9 @@ public class FinancialDocumentEntity {
 
     @Column(name = "title", length = 255)
     private String title;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "content_json", nullable = false, columnDefinition = "jsonb")
     private String contentJson = "{}";

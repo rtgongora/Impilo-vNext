@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.ndr.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import zw.gov.mohcc.impilo.ndr.domain.VersionStatus;
 
 import java.time.OffsetDateTime;
@@ -22,6 +24,9 @@ public class DatasetVersionEntity {
 
     @Column(name = "version_number", nullable = false)
     private int versionNumber;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "schema_json", nullable = false, columnDefinition = "jsonb")
     private String schemaJson = "{}";

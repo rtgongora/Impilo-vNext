@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.msikaflow.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -53,8 +55,14 @@ public class OrderEntity {
     @Column(name = "currency", nullable = false)
     private String currency = "ZWG";
 
+    @JdbcTypeCode(SqlTypes.JSON)
+
+
     @Column(name = "price_snapshot", columnDefinition = "jsonb")
     private String priceSnapshot;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "restrictions_snapshot", columnDefinition = "jsonb")
     private String restrictionsSnapshot;

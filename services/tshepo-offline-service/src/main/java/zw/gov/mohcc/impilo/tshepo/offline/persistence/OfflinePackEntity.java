@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.tshepo.offline.persistence;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -21,11 +23,20 @@ public class OfflinePackEntity {
     @Column(name = "generated_for", nullable = false)
     private String generatedFor;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+
+
     @Column(name = "policy_snapshot", nullable = false, columnDefinition = "jsonb")
     private String policySnapshot;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+
+
     @Column(name = "consent_snapshot", columnDefinition = "jsonb")
     private String consentSnapshot;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "terminology_snapshot", columnDefinition = "jsonb")
     private String terminologySnapshot;

@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.costa.domain.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -50,6 +52,9 @@ public class InsurancePlanEntity {
 
     @Column(name = "excluded_codes", columnDefinition = "text[]")
     private String[] excludedCodes = {};
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "rules", nullable = false, columnDefinition = "jsonb")
     private String rules = "{}";

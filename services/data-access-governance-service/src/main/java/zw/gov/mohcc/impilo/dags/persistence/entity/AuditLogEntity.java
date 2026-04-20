@@ -33,6 +33,9 @@ public class AuditLogEntity {
     @Column(name = "resource_id")
     private String resourceId;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+
+
     @Column(name = "details", nullable = false, columnDefinition = "jsonb")
     private String details = "{}";
 

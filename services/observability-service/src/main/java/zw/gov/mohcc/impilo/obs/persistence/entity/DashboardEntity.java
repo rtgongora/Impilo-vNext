@@ -35,6 +35,9 @@ public class DashboardEntity {
     @Column(name = "dashboard_type", nullable = false)
     private DashboardType dashboardType = DashboardType.GRAFANA;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+
+
     @Column(name = "config", nullable = false, columnDefinition = "jsonb")
     private String config = "{}";
 

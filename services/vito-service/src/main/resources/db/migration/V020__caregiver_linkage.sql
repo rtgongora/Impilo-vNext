@@ -39,7 +39,6 @@ CREATE INDEX idx_caregiver_linkage_subject ON vito.caregiver_linkages (tenant_id
     WHERE status = 'ACTIVE';
 
 -- Outbox event for linkage changes
-INSERT INTO vito.event_outbox (event_type, schema_version, correlation_id, producer, tenant_id, subject_type, payload, meta)
-VALUES ('SCHEMA_MIGRATION', '1.0', gen_random_uuid(), 'flyway', 'system', 'caregiver_linkages',
-        '{"migration": "V020", "description": "Caregiver linkage model"}'::jsonb,
-        '{}'::jsonb);
+INSERT INTO vito.event_outbox (aggregate_type, aggregate_id, event_type, schema_version, correlation_id, producer, tenant_id, subject_type, payload)
+VALUES ('SCHEMA', 'V020', 'SCHEMA_MIGRATION', 1, gen_random_uuid()::text, 'flyway', 'system', 'caregiver_linkages',
+        '{"migration": "V020", "description": "Caregiver linkage model"}'::jsonb);

@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.inventory.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import zw.gov.mohcc.impilo.inventory.domain.CapabilityMode;
@@ -28,6 +30,9 @@ public class CapabilityEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "capability_mode", nullable = false, length = 10)
     private CapabilityMode capabilityMode = CapabilityMode.INTERNAL;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "config", columnDefinition = "jsonb")
     private String config;

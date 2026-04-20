@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.ubomi.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -30,6 +32,9 @@ public class VerificationLogEntity {
 
     @Column(name = "verification_result", nullable = false)
     private String verificationResult;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "response_summary", columnDefinition = "jsonb")
     private String responseSummary;

@@ -44,6 +44,9 @@ public class PaymentAttemptEntity {
     @Column(name = "completed_at")
     private OffsetDateTime completedAt;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+
+
     @Column(name = "raw_summary", columnDefinition = "jsonb")
     private String rawSummary;
 

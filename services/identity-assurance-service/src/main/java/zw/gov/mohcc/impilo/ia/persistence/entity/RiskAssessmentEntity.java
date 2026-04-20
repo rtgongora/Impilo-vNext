@@ -42,6 +42,9 @@ public class RiskAssessmentEntity {
     @Column(name = "risk_level", nullable = false)
     private RiskLevel riskLevel = RiskLevel.LOW;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+
+
     @Column(name = "factors", nullable = false, columnDefinition = "jsonb")
     private String factors = "[]";
 

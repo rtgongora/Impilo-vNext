@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.msika.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -20,6 +22,9 @@ public class ExternalSourceEntity {
 
     @Column(name = "mode", nullable = false, length = 10)
     private String mode;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "config_encrypted", columnDefinition = "jsonb")
     private String configEncrypted;

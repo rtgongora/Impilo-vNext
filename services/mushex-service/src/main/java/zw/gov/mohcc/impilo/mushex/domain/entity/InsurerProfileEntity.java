@@ -27,6 +27,9 @@ public class InsurerProfileEntity {
     @Column(name = "mode", nullable = false)
     private String mode;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+
+
     @Column(name = "config_encrypted", columnDefinition = "jsonb")
     private String configEncrypted;
 

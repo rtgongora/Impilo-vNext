@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.ubomi.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -71,6 +73,9 @@ public class DeathNotificationEntity {
 
     @Column(name = "registered_at")
     private OffsetDateTime registeredAt;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "metadata", columnDefinition = "jsonb")
     private String metadata;

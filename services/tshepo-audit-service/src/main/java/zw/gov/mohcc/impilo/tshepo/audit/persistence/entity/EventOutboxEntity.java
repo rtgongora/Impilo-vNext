@@ -71,6 +71,9 @@ public class EventOutboxEntity {
     @Column(name = "occurred_at", nullable = false, columnDefinition = "TIMESTAMPTZ")
     private OffsetDateTime occurredAt;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+
+
     @Column(name = "payload_json", nullable = false, columnDefinition = "jsonb")
     private String payloadJson;
 

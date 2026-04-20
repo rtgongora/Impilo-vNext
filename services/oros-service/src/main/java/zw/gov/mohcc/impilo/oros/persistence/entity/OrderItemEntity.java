@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.oros.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -37,6 +39,9 @@ public class OrderItemEntity {
 
     @Column(name = "body_site")
     private String bodySite;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "metadata", columnDefinition = "jsonb")
     private String metadata;

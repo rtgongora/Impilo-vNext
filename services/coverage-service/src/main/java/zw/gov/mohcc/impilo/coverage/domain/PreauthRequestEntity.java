@@ -61,6 +61,9 @@ public class PreauthRequestEntity {
     @Column(name = "annual_limit", precision = 10, scale = 2)
     private BigDecimal annualLimit;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+
+
     @Column(name = "approval_conditions", columnDefinition = "jsonb")
     private String approvalConditions = "{}";
 

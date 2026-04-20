@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.vito.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -30,6 +32,9 @@ public class DedupCaseEntity {
 
     @Column(name = "risk")
     private String risk;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "reasons", columnDefinition = "jsonb")
     private String reasons;

@@ -36,6 +36,9 @@ public class ScanResultEntity {
     @Column(name = "skipped", nullable = false)
     private int skipped;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+
+
     @Column(name = "details", nullable = false, columnDefinition = "jsonb")
     private String details = "[]";
 

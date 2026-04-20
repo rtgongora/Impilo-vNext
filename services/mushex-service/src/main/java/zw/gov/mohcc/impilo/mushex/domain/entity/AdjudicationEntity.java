@@ -20,6 +20,9 @@ public class AdjudicationEntity {
     @Column(name = "claim_id", nullable = false)
     private String claimId;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+
+
     @Column(name = "decision", columnDefinition = "jsonb")
     private String decision;
 

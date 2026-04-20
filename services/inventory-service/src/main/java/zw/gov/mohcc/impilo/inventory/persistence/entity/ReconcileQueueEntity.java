@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.inventory.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -46,6 +48,9 @@ public class ReconcileQueueEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
     private ReconcileStatus status = ReconcileStatus.PENDING;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "payload", columnDefinition = "jsonb")
     private String payload;

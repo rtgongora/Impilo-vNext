@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.msika.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.OffsetDateTime;
 
 @Entity
@@ -16,6 +18,9 @@ public class CapabilityLinkEntity {
 
     @Column(name = "capability_type", nullable = false, length = 20)
     private String capabilityType;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "applies_to_scope", columnDefinition = "jsonb")
     private String appliesToScope;

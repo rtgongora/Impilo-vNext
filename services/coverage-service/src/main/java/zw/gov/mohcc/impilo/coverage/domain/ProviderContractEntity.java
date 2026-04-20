@@ -48,8 +48,14 @@ public class ProviderContractEntity {
     @Column(name = "effective_to")
     private LocalDate effectiveTo;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+
+
     @Column(name = "rate_schedule_json", columnDefinition = "jsonb")
     private String rateScheduleJson = "{}";
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "terms_json", columnDefinition = "jsonb")
     private String termsJson = "{}";

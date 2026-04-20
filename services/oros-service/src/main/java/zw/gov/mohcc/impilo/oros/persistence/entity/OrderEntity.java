@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.oros.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import zw.gov.mohcc.impilo.oros.domain.OrderType;
@@ -55,8 +57,14 @@ public class OrderEntity {
     @Column(name = "zibo_order_code")
     private String ziboOrderCode;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+
+
     @Column(name = "external_refs", columnDefinition = "jsonb")
     private String externalRefs;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "butano_refs", columnDefinition = "jsonb")
     private String butanoRefs;

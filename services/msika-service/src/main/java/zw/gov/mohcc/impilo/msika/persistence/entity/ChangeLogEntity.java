@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.msika.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -26,6 +28,9 @@ public class ChangeLogEntity {
 
     @Column(name = "entity_id", nullable = false, length = 26)
     private String entityId;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "diff", columnDefinition = "jsonb")
     private String diff;

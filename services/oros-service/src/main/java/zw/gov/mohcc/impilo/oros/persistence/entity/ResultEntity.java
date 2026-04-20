@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.oros.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import zw.gov.mohcc.impilo.oros.domain.ResultKind;
@@ -26,11 +28,17 @@ public class ResultEntity {
     @Column(name = "kind", nullable = false, length = 20)
     private ResultKind kind;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+
+
     @Column(name = "summary", nullable = false, columnDefinition = "jsonb")
     private String summary;
 
     @Column(name = "zibo_result_codes", length = 500)
     private String ziboResultCodes;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "doc_ids", columnDefinition = "jsonb")
     private String docIds;

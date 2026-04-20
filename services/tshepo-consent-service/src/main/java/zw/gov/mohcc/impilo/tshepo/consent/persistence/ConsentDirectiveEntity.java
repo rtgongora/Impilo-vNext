@@ -51,6 +51,9 @@ public class ConsentDirectiveEntity {
     @Column(name = "provision", nullable = false, length = 8)
     private String provision;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+
+
     @Column(name = "fhir_consent_json", nullable = false, columnDefinition = "jsonb")
     private String fhirConsentJson;
 

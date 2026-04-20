@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.tshepo.persistence;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -44,6 +46,9 @@ public class ConsentDirectiveEntity {
 
     @Column(name = "revoked_at")
     private Instant revokedAt;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(columnDefinition = "jsonb")
     private String provenance;

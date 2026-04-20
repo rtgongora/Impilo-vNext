@@ -35,8 +35,14 @@ public class CampaignEntity {
     @Column(name = "campaign_type", nullable = false)
     private String campaignType = "OUTREACH";
 
+    @JdbcTypeCode(SqlTypes.JSON)
+
+
     @Column(name = "target_group", nullable = false, columnDefinition = "jsonb")
     private String targetGroup = "{}";
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "message_template", nullable = false, columnDefinition = "jsonb")
     private String messageTemplate = "{}";

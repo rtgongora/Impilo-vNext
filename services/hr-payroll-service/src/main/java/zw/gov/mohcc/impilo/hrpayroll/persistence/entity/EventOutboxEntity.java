@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.hrpayroll.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -42,6 +44,8 @@ public class EventOutboxEntity {
     private String subjectType;
     private String partitionKey;
     private OffsetDateTime occurredAt;
+    @JdbcTypeCode(SqlTypes.JSON)
+
     @Column(nullable = false, columnDefinition = "jsonb")
     private String payloadJson;
     @Column(columnDefinition = "TEXT")

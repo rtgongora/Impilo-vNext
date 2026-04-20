@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.costa.domain.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import zw.gov.mohcc.impilo.costa.domain.enums.PartyType;
 
 import java.math.BigDecimal;
@@ -29,6 +31,9 @@ public class BillPartyEntity {
 
     @Column(name = "reason_codes", columnDefinition = "text[]")
     private String[] reasonCodes = {};
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "trace", nullable = false, columnDefinition = "jsonb")
     private String trace = "{}";

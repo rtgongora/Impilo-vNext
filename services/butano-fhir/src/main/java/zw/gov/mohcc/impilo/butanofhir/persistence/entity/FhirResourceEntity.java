@@ -31,6 +31,9 @@ public class FhirResourceEntity {
     @Column(name = "fhir_version", nullable = false)
     private String fhirVersion;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+
+
     @Column(name = "payload", nullable = false, columnDefinition = "jsonb")
     private String payload;
 

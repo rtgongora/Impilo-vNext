@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.costa.domain.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import zw.gov.mohcc.impilo.costa.domain.enums.BillLineKind;
 
 import java.math.BigDecimal;
@@ -42,11 +44,20 @@ public class BillLineEntity {
     @Column(name = "cost_method_used", length = 20)
     private String costMethodUsed;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+
+
     @Column(name = "cost_trace", nullable = false, columnDefinition = "jsonb")
     private String costTrace = "{}";
 
+    @JdbcTypeCode(SqlTypes.JSON)
+
+
     @Column(name = "charge_trace", nullable = false, columnDefinition = "jsonb")
     private String chargeTrace = "{}";
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "restriction_snapshot", nullable = false, columnDefinition = "jsonb")
     private String restrictionSnapshot = "{}";

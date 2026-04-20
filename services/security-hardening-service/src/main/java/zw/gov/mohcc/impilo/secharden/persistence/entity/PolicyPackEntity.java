@@ -36,6 +36,9 @@ public class PolicyPackEntity {
     @Column(name = "pack_type", nullable = false)
     private PackType packType = PackType.BASELINE;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+
+
     @Column(name = "rules", nullable = false, columnDefinition = "jsonb")
     private String rules = "[]";
 

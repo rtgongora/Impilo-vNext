@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.docstore.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import zw.gov.mohcc.impilo.sharedkernel.events.CompanionOutboxPublisher;
@@ -27,6 +29,9 @@ public class EventOutboxEntity {
 
     @Column(name = "event_type", nullable = false, length = 100)
     private String eventType;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "payload", nullable = false, columnDefinition = "jsonb")
     private String payload;

@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.vito.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -27,6 +29,9 @@ public class DedupActionEntity {
 
     @Column(name = "action", nullable = false)
     private String action;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "payload", columnDefinition = "jsonb")
     private String payload;

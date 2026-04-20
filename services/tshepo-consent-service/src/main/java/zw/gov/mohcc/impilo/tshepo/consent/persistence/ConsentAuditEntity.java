@@ -37,6 +37,9 @@ public class ConsentAuditEntity {
     @Column(name = "actor_id", nullable = false)
     private String actorId;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+
+
     @Column(name = "detail", columnDefinition = "jsonb")
     private String detail;
 

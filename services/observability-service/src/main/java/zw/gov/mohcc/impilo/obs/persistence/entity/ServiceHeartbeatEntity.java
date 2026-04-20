@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.obs.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -27,6 +29,9 @@ public class ServiceHeartbeatEntity {
 
     @Column(name = "version_tag", length = 64)
     private String versionTag;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(nullable = false, columnDefinition = "jsonb")
     private String metadata = "{}";

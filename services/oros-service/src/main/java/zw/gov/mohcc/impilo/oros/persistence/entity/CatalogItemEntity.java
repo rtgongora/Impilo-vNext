@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.oros.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import zw.gov.mohcc.impilo.oros.domain.OrderType;
@@ -42,6 +44,9 @@ public class CatalogItemEntity {
 
     @Column(name = "active", nullable = false)
     private boolean active = true;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "metadata", columnDefinition = "jsonb")
     private String metadata;

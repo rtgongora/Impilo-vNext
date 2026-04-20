@@ -35,6 +35,9 @@ public class PolicyEntity {
     @Column(name = "resource_type", nullable = false)
     private String resourceType;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+
+
     @Column(name = "conditions", nullable = false, columnDefinition = "jsonb")
     private String conditions = "{}";
 

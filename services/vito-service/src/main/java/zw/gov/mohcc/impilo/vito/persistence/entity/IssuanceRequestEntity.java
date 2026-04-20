@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.vito.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import zw.gov.mohcc.impilo.vito.core.IssuanceChannel;
 import zw.gov.mohcc.impilo.vito.core.IssuanceState;
 import zw.gov.mohcc.impilo.vito.core.IssuanceType;
@@ -49,8 +51,14 @@ public class IssuanceRequestEntity {
     @Column(name = "card_id")
     private Long cardId;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+
+
     @Column(name = "proofing_checklist", columnDefinition = "jsonb")
     private String proofingChecklist;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "metadata", columnDefinition = "jsonb")
     private String metadata;

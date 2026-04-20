@@ -26,6 +26,9 @@ public class IdempotencyKeyEntity {
     @Column(name = "response_status", nullable = false)
     private int responseStatus;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+
+
     @Column(name = "response_body", columnDefinition = "jsonb")
     private String responseBody;
 

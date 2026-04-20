@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.inventory.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -25,6 +27,9 @@ public class FacilityEntity {
 
     @Column(name = "facility_code", nullable = false)
     private String facilityCode;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "config", columnDefinition = "jsonb")
     private String config;

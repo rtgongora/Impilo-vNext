@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.msika.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.OffsetDateTime;
 
 @Entity
@@ -32,11 +34,20 @@ public class CatalogItemEntity {
     @Column(name = "tags", columnDefinition = "TEXT[]")
     private String[] tags;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+
+
     @Column(name = "restrictions", columnDefinition = "jsonb")
     private String restrictions;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+
+
     @Column(name = "zibo_bindings", columnDefinition = "jsonb")
     private String ziboBindings;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "metadata", columnDefinition = "jsonb")
     private String metadata;

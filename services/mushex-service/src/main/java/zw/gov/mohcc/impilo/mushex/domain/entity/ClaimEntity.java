@@ -37,6 +37,9 @@ public class ClaimEntity {
     @Column(name = "status", nullable = false)
     private ClaimStatus status;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+
+
     @Column(name = "totals", columnDefinition = "jsonb")
     private String totals;
 

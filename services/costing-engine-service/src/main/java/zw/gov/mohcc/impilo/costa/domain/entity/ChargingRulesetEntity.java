@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.costa.domain.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import zw.gov.mohcc.impilo.costa.domain.enums.RulesetStatus;
 
 import java.time.LocalDate;
@@ -27,6 +29,9 @@ public class ChargingRulesetEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
     private RulesetStatus status = RulesetStatus.DRAFT;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "rules", nullable = false, columnDefinition = "jsonb")
     private String rules = "[]";

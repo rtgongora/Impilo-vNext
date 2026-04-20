@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.zibo.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import zw.gov.mohcc.impilo.zibo.domain.ArtifactStatus;
@@ -44,6 +46,9 @@ public class ArtifactEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private ArtifactStatus status = ArtifactStatus.DRAFT;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "content_json", nullable = false, columnDefinition = "jsonb")
     private String contentJson;

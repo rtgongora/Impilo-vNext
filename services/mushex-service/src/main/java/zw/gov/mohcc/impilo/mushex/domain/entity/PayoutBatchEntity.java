@@ -27,6 +27,9 @@ public class PayoutBatchEntity {
     @Column(name = "adapter_type", nullable = false)
     private AdapterType adapterType;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+
+
     @Column(name = "destination_ref", columnDefinition = "jsonb")
     private String destinationRef;
 

@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.experience.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,6 +24,8 @@ import java.util.*;
 @RequestMapping("/internal/v1/community")
 public class CommunityController {
 
+    private static final Logger log = LoggerFactory.getLogger(CommunityController.class);
+
     private final CommunityServiceClient communityClient;
 
     public CommunityController(CommunityServiceClient communityClient) {
@@ -38,13 +42,15 @@ public class CommunityController {
             @RequestParam(defaultValue = "20") int size) {
 
         int limit = Math.min(size, 100);
-
-        JsonNode groups = communityClient.listGroups(category, page, limit);
-
-        // List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql, ...);
-
-        return ResponseEntity.ok(Map.of("data", groups != null ? groups : List.of(),
-                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        try {
+            JsonNode groups = communityClient.listGroups(category, page, limit);
+            return ResponseEntity.ok(Map.of("data", groups != null ? groups : List.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            log.warn("Community groups list unavailable: {}", e.getMessage());
+            return ResponseEntity.ok(Map.of("data", List.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
     }
 
     @PostMapping("/groups")
@@ -55,13 +61,16 @@ public class CommunityController {
             @RequestBody Map<String, Object> body) {
 
         body.put("tenantId", tenantId);
-        JsonNode result = communityClient.createGroup(body);
-
-        // jdbcTemplate.update("INSERT INTO community_groups (...) VALUES (...)", ...);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
-                "data", result,
-                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        try {
+            JsonNode result = communityClient.createGroup(body);
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                    "data", result != null ? result : Map.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            log.error("Community group creation failed: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(Map.of(
+                    "error", Map.of("code", "SERVICE_UNAVAILABLE", "message", "Community service is unavailable")));
+        }
     }
 
     @PostMapping("/groups/{groupId}/join")
@@ -72,12 +81,15 @@ public class CommunityController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestBody Map<String, Object> body) {
 
-        JsonNode result = communityClient.joinGroup(groupId.toString(), body);
-
-        // jdbcTemplate.update("INSERT INTO community_group_members (...) VALUES (...)", ...);
-
-        return ResponseEntity.ok(Map.of("data", result != null ? result : Map.of("joined", true),
-                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        try {
+            JsonNode result = communityClient.joinGroup(groupId.toString(), body);
+            return ResponseEntity.ok(Map.of("data", result != null ? result : Map.of("joined", true),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            log.error("Community group join failed: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(Map.of(
+                    "error", Map.of("code", "SERVICE_UNAVAILABLE", "message", "Community service is unavailable")));
+        }
     }
 
     @GetMapping("/groups/{groupId}/posts")
@@ -90,13 +102,15 @@ public class CommunityController {
             @RequestParam(defaultValue = "20") int size) {
 
         int limit = Math.min(size, 100);
-
-        JsonNode posts = communityClient.listPosts(groupId.toString(), page, limit);
-
-        // List<Map<String, Object>> rows = jdbcTemplate.queryForList(..., groupId, tenantId, limit, offset);
-
-        return ResponseEntity.ok(Map.of("data", posts != null ? posts : List.of(),
-                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        try {
+            JsonNode posts = communityClient.listPosts(groupId.toString(), page, limit);
+            return ResponseEntity.ok(Map.of("data", posts != null ? posts : List.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            log.warn("Community posts list unavailable: {}", e.getMessage());
+            return ResponseEntity.ok(Map.of("data", List.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
     }
 
     @PostMapping("/groups/{groupId}/posts")
@@ -108,12 +122,15 @@ public class CommunityController {
             @RequestBody Map<String, Object> body) {
 
         body.put("tenantId", tenantId);
-        JsonNode result = communityClient.createPost(groupId.toString(), body);
-
-        // jdbcTemplate.update("INSERT INTO discussion_posts (...) VALUES (...)", ...);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
-                "data", result,
-                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        try {
+            JsonNode result = communityClient.createPost(groupId.toString(), body);
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                    "data", result != null ? result : Map.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            log.error("Community post creation failed: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(Map.of(
+                    "error", Map.of("code", "SERVICE_UNAVAILABLE", "message", "Community service is unavailable")));
+        }
     }
 }

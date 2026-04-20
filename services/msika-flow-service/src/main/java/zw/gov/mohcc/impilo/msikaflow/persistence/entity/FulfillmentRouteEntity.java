@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.msikaflow.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.OffsetDateTime;
 import zw.gov.mohcc.impilo.msikaflow.domain.FulfillmentMode;
 import zw.gov.mohcc.impilo.msikaflow.domain.RouteStatus;
@@ -23,6 +25,9 @@ public class FulfillmentRouteEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "route_type", nullable = false)
     private FulfillmentMode routeType;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "target_ref", columnDefinition = "jsonb")
     private String targetRef;

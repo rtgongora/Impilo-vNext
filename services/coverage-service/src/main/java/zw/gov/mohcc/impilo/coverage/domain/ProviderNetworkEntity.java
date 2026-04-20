@@ -34,6 +34,9 @@ public class ProviderNetworkEntity {
     @Column(name = "network_type", nullable = false, length = 32)
     private String networkType = "PREFERRED";
 
+    @JdbcTypeCode(SqlTypes.JSON)
+
+
     @Column(name = "service_area", columnDefinition = "jsonb")
     private String serviceArea = "[]";
 

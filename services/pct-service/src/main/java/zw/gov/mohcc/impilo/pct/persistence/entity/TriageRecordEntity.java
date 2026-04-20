@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.pct.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -24,6 +26,9 @@ public class TriageRecordEntity {
 
     @Column(name = "acuity", nullable = false)
     private int acuity;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "vitals", columnDefinition = "jsonb")
     private String vitals;

@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.pharmacy.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import zw.gov.mohcc.impilo.pharmacy.domain.SubstitutionRuleType;
@@ -33,6 +35,9 @@ public class SubstitutionRuleEntity {
 
     @Column(name = "target_code", nullable = false)
     private String targetCode;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "rule_json", columnDefinition = "jsonb")
     private String ruleJson;

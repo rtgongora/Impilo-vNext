@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.tshepo.authz.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -37,6 +39,9 @@ public class DeviceProfileEntity {
 
     @Column(nullable = false)
     private boolean blocked = false;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(columnDefinition = "jsonb")
     private String metadata;

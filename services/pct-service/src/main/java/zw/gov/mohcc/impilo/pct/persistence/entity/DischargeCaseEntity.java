@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.pct.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -31,6 +33,9 @@ public class DischargeCaseEntity {
 
     @Column(name = "status", nullable = false)
     private String status = "INITIATED";
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "blockers", columnDefinition = "jsonb")
     private String blockers = "[]";

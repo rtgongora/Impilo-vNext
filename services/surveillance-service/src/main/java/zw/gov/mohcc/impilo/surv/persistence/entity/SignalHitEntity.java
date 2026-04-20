@@ -27,6 +27,9 @@ public class SignalHitEntity {
     @Column(name = "event_type", nullable = false)
     private String eventType;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+
+
     @Column(name = "event_payload", nullable = false, columnDefinition = "jsonb")
     private String eventPayload = "{}";
 

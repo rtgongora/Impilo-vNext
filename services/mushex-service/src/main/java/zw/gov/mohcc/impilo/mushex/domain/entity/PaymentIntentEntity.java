@@ -56,6 +56,9 @@ public class PaymentIntentEntity {
     @Column(name = "expires_at")
     private OffsetDateTime expiresAt;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+
+
     @Column(name = "metadata", columnDefinition = "jsonb")
     private String metadata;
 

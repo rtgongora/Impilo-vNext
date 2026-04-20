@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.tshepo.federation.persistence;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -31,14 +33,23 @@ public class PodRegistrationEntity {
     @Column(name = "pod_certificate", nullable = false, columnDefinition = "TEXT")
     private String podCertificate;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+
+
     @Column(name = "capabilities", nullable = false, columnDefinition = "jsonb")
     private String capabilities;
 
     @Column(name = "region")
     private String region;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+
+
     @Column(name = "facility_ids", columnDefinition = "jsonb")
     private String facilityIds;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "granted_data_classes", nullable = false, columnDefinition = "jsonb")
     private String grantedDataClasses;

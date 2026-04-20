@@ -38,6 +38,9 @@ public class FraudFlagEntity {
     @Column(name = "entity_id", nullable = false)
     private String entityId;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+
+
     @Column(name = "evidence", columnDefinition = "jsonb")
     private String evidence;
 

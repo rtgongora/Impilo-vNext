@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.tshepo.authz.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -58,6 +60,9 @@ public class PolicyRuleEntity {
 
     @Column(nullable = false)
     private int priority = 100;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(columnDefinition = "jsonb")
     private String conditions;

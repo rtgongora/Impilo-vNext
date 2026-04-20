@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.zibo.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import zw.gov.mohcc.impilo.zibo.domain.JobStatus;
@@ -21,12 +23,18 @@ public class ValidationJobEntity {
     @Column(name = "tenant_id", nullable = false)
     private UUID tenantId;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+
+
     @Column(name = "payload_json", columnDefinition = "jsonb")
     private String payloadJson;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private JobStatus status = JobStatus.PENDING;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "result_json", columnDefinition = "jsonb")
     private String resultJson;

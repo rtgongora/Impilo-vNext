@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.vito.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import zw.gov.mohcc.impilo.vito.core.ProofingMethod;
 
 import java.time.OffsetDateTime;
@@ -26,6 +28,9 @@ public class ProofingEventEntity {
 
     @Column(name = "assurance_level")
     private int assuranceLevel;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "artifact_refs", columnDefinition = "jsonb")
     private String artifactRefs;

@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.oros.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import zw.gov.mohcc.impilo.oros.domain.AdapterMode;
@@ -37,6 +39,9 @@ public class CapabilityEntity {
 
     @Column(name = "external_endpoint", length = 500)
     private String externalEndpoint;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "config", columnDefinition = "jsonb")
     private String config;

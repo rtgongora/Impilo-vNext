@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.vito.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import zw.gov.mohcc.impilo.vito.core.PickupStatus;
 
 import java.time.OffsetDateTime;
@@ -28,6 +30,9 @@ public class DelegatedPickupEntity {
 
     @Column(name = "delegate_name")
     private String delegateName;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "delegate_contact", columnDefinition = "jsonb")
     private String delegateContact;

@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.vito.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import zw.gov.mohcc.impilo.vito.core.IdentityStatus;
 
 import java.time.LocalDate;
@@ -42,11 +44,20 @@ public class ClientEntity {
     @Column(name = "impilo_id")
     private String impiloId;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+
+
     @Column(name = "demographics", columnDefinition = "jsonb")
     private String demographics;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+
+
     @Column(name = "contacts", columnDefinition = "jsonb")
     private String contacts;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "address", columnDefinition = "jsonb")
     private String address;

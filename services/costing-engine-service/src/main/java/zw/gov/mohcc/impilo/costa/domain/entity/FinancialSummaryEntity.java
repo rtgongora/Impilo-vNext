@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.costa.domain.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -58,6 +60,9 @@ public class FinancialSummaryEntity {
 
     @Column(name = "encounter_count")
     private Integer encounterCount = 0;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "metadata_json", columnDefinition = "jsonb")
     private String metadataJson = "{}";

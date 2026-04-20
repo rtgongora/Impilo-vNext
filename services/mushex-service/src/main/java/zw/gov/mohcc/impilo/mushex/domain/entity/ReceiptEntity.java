@@ -25,6 +25,9 @@ public class ReceiptEntity {
     @Column(name = "issued_at", nullable = false)
     private OffsetDateTime issuedAt;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+
+
     @Column(name = "summary", columnDefinition = "jsonb")
     private String summary;
 

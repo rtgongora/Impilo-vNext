@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.msika.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "msika_orderable_details")
@@ -27,6 +29,9 @@ public class OrderableDetailEntity {
 
     @Column(name = "instructions_template", columnDefinition = "TEXT")
     private String instructionsTemplate;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "critical_result_policy", columnDefinition = "jsonb")
     private String criticalResultPolicy;

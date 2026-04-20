@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.costa.domain.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import zw.gov.mohcc.impilo.costa.domain.enums.BillStatus;
 import zw.gov.mohcc.impilo.costa.domain.enums.BillType;
 
@@ -62,6 +64,9 @@ public class BillHeaderEntity {
 
     @Column(name = "write_off", nullable = false, precision = 14, scale = 2)
     private BigDecimal writeOff = BigDecimal.ZERO;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "trace_summary", nullable = false, columnDefinition = "jsonb")
     private String traceSummary = "{}";

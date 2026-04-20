@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.pct.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -30,6 +32,9 @@ public class QueueEntity {
 
     @Column(name = "queue_type", nullable = false)
     private String queueType = "FIFO";
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "rules", columnDefinition = "jsonb")
     private String rules;

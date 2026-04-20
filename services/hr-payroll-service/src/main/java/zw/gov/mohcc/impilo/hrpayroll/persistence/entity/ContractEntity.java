@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.hrpayroll.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -24,8 +26,12 @@ public class ContractEntity {
     private LocalDate endDate;
     private BigDecimal basicSalary;
     private String currency = "ZWL";
+    @JdbcTypeCode(SqlTypes.JSON)
+
     @Column(columnDefinition = "jsonb")
     private String allowancesJson;
+    @JdbcTypeCode(SqlTypes.JSON)
+
     @Column(columnDefinition = "jsonb")
     private String deductionsJson;
     private String status = "ACTIVE";

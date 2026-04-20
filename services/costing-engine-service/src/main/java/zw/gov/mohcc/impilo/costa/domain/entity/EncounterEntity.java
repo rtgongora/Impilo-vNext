@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.costa.domain.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import zw.gov.mohcc.impilo.costa.domain.enums.EncounterStatus;
 import zw.gov.mohcc.impilo.costa.domain.enums.EncounterType;
 
@@ -30,6 +32,9 @@ public class EncounterEntity {
 
     @Column(name = "pct_journey_id", length = 50)
     private String pctJourneyId;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "pct_ref", nullable = false, columnDefinition = "jsonb")
     private String pctRef = "{}";

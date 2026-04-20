@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.costa.domain.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import zw.gov.mohcc.impilo.costa.domain.enums.CostMethodType;
 
 import java.time.OffsetDateTime;
@@ -23,6 +25,9 @@ public class CostMethodEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "method_type", nullable = false, length = 20)
     private CostMethodType methodType;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "config", nullable = false, columnDefinition = "jsonb")
     private String config = "{}";

@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.simba.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -25,8 +27,14 @@ public class WellnessProfileEntity {
     @Column(name = "display_name", length = 128)
     private String displayName;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+
+
     @Column(name = "goals_json", columnDefinition = "jsonb")
     private String goalsJson;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "preferences_json", columnDefinition = "jsonb")
     private String preferencesJson;

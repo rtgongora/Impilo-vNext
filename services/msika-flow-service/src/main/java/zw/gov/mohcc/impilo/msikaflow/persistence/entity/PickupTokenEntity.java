@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.msikaflow.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.OffsetDateTime;
 import zw.gov.mohcc.impilo.msikaflow.domain.PickupTokenStatus;
 
@@ -40,6 +42,9 @@ public class PickupTokenEntity {
 
     @Column(name = "claimed_at")
     private OffsetDateTime claimedAt;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "claim_meta", columnDefinition = "jsonb")
     private String claimMeta;

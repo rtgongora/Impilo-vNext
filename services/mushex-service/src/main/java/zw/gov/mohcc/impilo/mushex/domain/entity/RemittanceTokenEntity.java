@@ -41,6 +41,9 @@ public class RemittanceTokenEntity {
     @Column(name = "claimed_at")
     private OffsetDateTime claimedAt;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+
+
     @Column(name = "claim_meta", columnDefinition = "jsonb")
     private String claimMeta;
 

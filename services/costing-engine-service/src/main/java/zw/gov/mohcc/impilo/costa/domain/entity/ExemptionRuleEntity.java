@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.costa.domain.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import zw.gov.mohcc.impilo.costa.domain.enums.ExemptionCategory;
 
 import java.math.BigDecimal;
@@ -28,6 +30,9 @@ public class ExemptionRuleEntity {
 
     @Column(name = "version", nullable = false)
     private int version = 1;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "rules", nullable = false, columnDefinition = "jsonb")
     private String rules = "{}";

@@ -60,6 +60,9 @@ public class AuditEventEntity {
     @Column(name = "correlation_id", nullable = false, updatable = false)
     private UUID correlationId;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+
+
     @Column(name = "detail", columnDefinition = "jsonb", updatable = false)
     private String detail;
 

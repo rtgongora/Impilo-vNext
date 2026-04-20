@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.tshepo.offline.persistence;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -32,6 +34,9 @@ public class OfflineActionLogEntity {
 
     @Column(name = "o_cpid")
     private UUID oCpid;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(columnDefinition = "jsonb")
     private String payload;

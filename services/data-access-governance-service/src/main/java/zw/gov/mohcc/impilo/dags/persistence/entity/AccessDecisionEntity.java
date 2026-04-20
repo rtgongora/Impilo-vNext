@@ -37,6 +37,9 @@ public class AccessDecisionEntity {
     @Column(name = "reason")
     private String reason;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+
+
     @Column(name = "policy_ids", columnDefinition = "jsonb")
     private String policyIds = "[]";
 

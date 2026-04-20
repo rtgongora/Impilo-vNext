@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.pharmacy.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -43,6 +45,9 @@ public class ReconcileQueueEntity {
 
     @Column(name = "confidence", precision = 5, scale = 4)
     private BigDecimal confidence;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "payload", columnDefinition = "jsonb")
     private String payload;

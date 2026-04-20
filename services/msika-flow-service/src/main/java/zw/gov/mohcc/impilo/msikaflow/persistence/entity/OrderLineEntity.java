@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.msikaflow.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import zw.gov.mohcc.impilo.msikaflow.domain.FulfillmentMode;
@@ -38,6 +40,9 @@ public class OrderLineEntity {
     @Column(name = "line_total", nullable = false, precision = 14, scale = 2)
     private BigDecimal lineTotal;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+
+
     @Column(name = "restrictions", columnDefinition = "jsonb")
     private String restrictions;
 
@@ -45,12 +50,18 @@ public class OrderLineEntity {
     @Column(name = "fulfillment_mode")
     private FulfillmentMode fulfillmentMode;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+
+
     @Column(name = "substitution_policy", columnDefinition = "jsonb")
     private String substitutionPolicy;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "state", nullable = false)
     private LineItemState state;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "metadata", columnDefinition = "jsonb")
     private String metadata;

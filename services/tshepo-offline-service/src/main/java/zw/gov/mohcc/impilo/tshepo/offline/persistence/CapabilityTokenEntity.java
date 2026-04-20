@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.tshepo.offline.persistence;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -23,6 +25,9 @@ public class CapabilityTokenEntity {
 
     @Column(name = "device_fingerprint", nullable = false)
     private String deviceFingerprint;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(nullable = false, columnDefinition = "jsonb")
     private String capabilities;

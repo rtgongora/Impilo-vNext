@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.landela.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -56,6 +58,9 @@ public class DocumentEntity {
 
     @Column(name = "retention_policy_id", length = 100)
     private String retentionPolicyId;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "tags", columnDefinition = "jsonb")
     private String tags = "{}";

@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.credential.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
@@ -60,6 +62,9 @@ public class CredentialEntity {
 
     @Column(name = "pdf_document_id")
     private UUID pdfDocumentId;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "metadata", columnDefinition = "jsonb")
     private String metadata;

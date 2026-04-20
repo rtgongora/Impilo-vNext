@@ -18,10 +18,7 @@ CREATE TABLE vito.biometric_template (
     status          VARCHAR(20)  NOT NULL DEFAULT 'ACTIVE', -- ACTIVE, SUPERSEDED, REVOKED
     captured_at     TIMESTAMPTZ  NOT NULL DEFAULT now(),
     superseded_at   TIMESTAMPTZ,
-    created_at      TIMESTAMPTZ  NOT NULL DEFAULT now(),
-
-    CONSTRAINT uq_biometric_position UNIQUE (tenant_id, health_id, modality, position)
-        WHERE (status = 'ACTIVE')
+    created_at      TIMESTAMPTZ  NOT NULL DEFAULT now()
 );
 
 -- Partial unique index: one active template per modality+position per client

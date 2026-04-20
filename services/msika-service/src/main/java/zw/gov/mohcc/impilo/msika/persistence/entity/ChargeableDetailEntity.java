@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.msika.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "msika_chargeable_details")
@@ -19,11 +21,17 @@ public class ChargeableDetailEntity {
     @Column(name = "tariff_code", length = 100)
     private String tariffCode;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+
+
     @Column(name = "pricing_refs", columnDefinition = "jsonb")
     private String pricingRefs;
 
     @Column(name = "cost_method_ref", length = 100)
     private String costMethodRef;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "billable_rules", columnDefinition = "jsonb")
     private String billableRules;

@@ -35,6 +35,9 @@ public class SettlementEntity {
     @Column(name = "status", nullable = false)
     private SettlementStatus status;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+
+
     @Column(name = "totals", columnDefinition = "jsonb")
     private String totals;
 

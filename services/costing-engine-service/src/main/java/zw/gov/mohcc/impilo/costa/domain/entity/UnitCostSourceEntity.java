@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.costa.domain.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import zw.gov.mohcc.impilo.costa.domain.enums.UnitCostSourceType;
 
 import java.math.BigDecimal;
@@ -25,6 +27,9 @@ public class UnitCostSourceEntity {
 
     @Column(name = "msika_code", length = 50)
     private String msikaCode;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "ref", nullable = false, columnDefinition = "jsonb")
     private String ref = "{}";

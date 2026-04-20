@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.shareslip.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -32,6 +34,9 @@ public class ShareAuditEntity {
 
     @Column(name = "ip_address", length = 50)
     private String ipAddress;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "details", columnDefinition = "jsonb")
     private String details = "{}";

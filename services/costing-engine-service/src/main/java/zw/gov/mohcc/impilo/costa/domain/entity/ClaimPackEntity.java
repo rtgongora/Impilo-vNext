@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.costa.domain.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import zw.gov.mohcc.impilo.costa.domain.enums.ClaimPackStatus;
 
 import java.time.OffsetDateTime;
@@ -22,6 +24,9 @@ public class ClaimPackEntity {
     @Column(name = "claim_type", nullable = false, length = 30)
     private String claimType = "INITIAL";
 
+    @JdbcTypeCode(SqlTypes.JSON)
+
+
     @Column(name = "payload", nullable = false, columnDefinition = "jsonb")
     private String payload = "{}";
 
@@ -31,6 +36,9 @@ public class ClaimPackEntity {
 
     @Column(name = "sent_at")
     private OffsetDateTime sentAt;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "response", columnDefinition = "jsonb")
     private String response;

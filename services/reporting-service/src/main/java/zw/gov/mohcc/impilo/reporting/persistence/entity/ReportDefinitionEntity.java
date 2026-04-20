@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.reporting.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import zw.gov.mohcc.impilo.reporting.core.ExportFormat;
 import zw.gov.mohcc.impilo.reporting.core.ReportStatus;
 
@@ -33,6 +35,9 @@ public class ReportDefinitionEntity {
 
     @Column(name = "query_template", nullable = false, columnDefinition = "TEXT")
     private String queryTemplate;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "parameters", nullable = false, columnDefinition = "jsonb")
     private String parameters = "{}";

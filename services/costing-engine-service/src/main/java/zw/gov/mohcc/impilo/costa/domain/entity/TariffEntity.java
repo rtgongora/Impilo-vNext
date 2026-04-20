@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.costa.domain.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -38,6 +40,9 @@ public class TariffEntity {
 
     @Column(name = "patient_category", length = 50)
     private String patientCategory;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "rules", nullable = false, columnDefinition = "jsonb")
     private String rules = "{}";

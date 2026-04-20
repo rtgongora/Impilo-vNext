@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.gl.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -21,6 +23,9 @@ public class TrialBalanceSnapshotEntity {
 
     @Column(name = "generated_at", nullable = false)
     private OffsetDateTime generatedAt;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "snapshot_json", nullable = false, columnDefinition = "jsonb")
     private String snapshotJson;

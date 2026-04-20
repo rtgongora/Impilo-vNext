@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.msikaflow.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.OffsetDateTime;
 import zw.gov.mohcc.impilo.msikaflow.domain.SettlementStatus;
 
@@ -21,6 +23,9 @@ public class SettlementEntity {
 
     @Column(name = "mushex_payment_intent_id", nullable = false, unique = true)
     private String mushexPaymentIntentId;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+
 
     @Column(name = "splits", columnDefinition = "jsonb")
     private String splits;
