@@ -19,9 +19,9 @@ import {
   ErrorState,
   Progress,
 } from "@impilo/mobile-design-system";
-import type { CarePlan } from "../types";
+import type { CarePlan } from "../../types";
 
-const STATUS_VARIANT: Record<string, "default" | "warning" | "success"> = {
+const STATUS_VARIANT: Record<string, "default" | "warning" | "success" | "destructive"> = {
   ACTIVE: "default",
   ON_HOLD: "warning",
   COMPLETED: "success",
@@ -101,10 +101,10 @@ export function CarePlansSection({ patientId }: CarePlansSectionProps) {
                             </Text>
                           </View>
                           <Progress 
-                            value={goal.currentValue / goal.targetValue} 
+                            value={(goal.currentValue ?? 0) / (goal.targetValue ?? 1)} 
                             max={1} 
                             size="sm"
-                            colorScheme={goal.status === "MET" ? "success" : "default"}
+                            colorScheme={goal.status === "ACHIEVED" ? "success" : "default"}
                           />
                         </View>
                       ))}

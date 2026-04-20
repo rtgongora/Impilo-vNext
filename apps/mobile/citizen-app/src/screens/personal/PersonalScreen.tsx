@@ -34,6 +34,63 @@ import { IdRecoverySection } from "./IdRecoverySection";
 import { AssessmentsSection } from "./AssessmentsSection";
 import { CareTeamSection } from "./CareTeamSection";
 
+type PersonalTab =
+  | "profile"
+  | "health-id"
+  | "allergies"
+  | "conditions"
+  | "immunizations"
+  | "referrals"
+  | "care-plans"
+  | "appointments"
+  | "prescriptions"
+  | "results"
+  | "records"
+  | "reminders"
+  | "timeline"
+  | "wellness"
+  | "finance"
+  | "challenges"
+  | "programs"
+  | "wallet"
+  | "monitoring"
+  | "queue"
+  | "sos"
+  | "coverage"
+  | "settings"
+  | "assessments"
+  | "care-team"
+  | "id-recovery";
+
+const PERSONAL_TABS: Array<{ id: PersonalTab; label: string }> = [
+  { id: "profile", label: "Profile" },
+  { id: "health-id", label: "Health ID" },
+  { id: "allergies", label: "Allergies" },
+  { id: "conditions", label: "Conditions" },
+  { id: "immunizations", label: "Immunizations" },
+  { id: "referrals", label: "Referrals" },
+  { id: "care-plans", label: "Care plans" },
+  { id: "appointments", label: "Appointments" },
+  { id: "prescriptions", label: "Prescriptions" },
+  { id: "results", label: "Results" },
+  { id: "records", label: "Records" },
+  { id: "reminders", label: "Reminders" },
+  { id: "timeline", label: "Timeline" },
+  { id: "wellness", label: "Wellness" },
+  { id: "finance", label: "Finance" },
+  { id: "challenges", label: "Challenges" },
+  { id: "programs", label: "Programs" },
+  { id: "wallet", label: "Wallet" },
+  { id: "monitoring", label: "Monitoring" },
+  { id: "queue", label: "Queue" },
+  { id: "sos", label: "Emergency" },
+  { id: "coverage", label: "Coverage" },
+  { id: "settings", label: "Settings" },
+  { id: "assessments", label: "Assessments" },
+  { id: "care-team", label: "Care team" },
+  { id: "id-recovery", label: "ID recovery" },
+];
+
 const SECTIONS: Record<PersonalTab, React.FC> = {
   profile: ProfileSection,
   "health-id": HealthIdSection,

@@ -3,13 +3,14 @@
  */
 
 import React from "react";
-import { View, Text, Pressable, StyleSheet } from "react-native";
+import { View, Text, Pressable, StyleSheet, type StyleProp, type ViewStyle } from "react-native";
 
 export interface CardProps {
   children: React.ReactNode;
   variant?: "elevated" | "outlined" | "filled";
   padding?: "none" | "sm" | "md" | "lg";
   onPress?: () => void;
+  style?: StyleProp<ViewStyle>;
   testID?: string;
   accessibilityLabel?: string;
 }
@@ -26,11 +27,12 @@ export function Card({
   variant = "elevated",
   padding = "md",
   onPress,
+  style,
   testID,
   accessibilityLabel,
 }: CardProps) {
   const content = (
-    <View style={[styles.card, { padding: PADDING_MAP[padding] }]}>
+    <View style={[styles.card, { padding: PADDING_MAP[padding] }, style]}>
       {children}
     </View>
   );
@@ -60,17 +62,22 @@ export interface CardHeaderProps {
   children?: React.ReactNode;
   subtitle?: string;
   action?: React.ReactNode;
+  /**
+   * Back-compat alias used by older screens.
+   */
+  rightElement?: React.ReactNode;
 }
 
-export function CardHeader({ title, children, subtitle, action }: CardHeaderProps) {
+export function CardHeader({ title, children, subtitle, action, rightElement }: CardHeaderProps) {
   const resolvedTitle = title ?? (typeof children === "string" ? children : "");
+  const resolvedAction = action ?? rightElement;
   return (
     <View style={styles.header}>
       <View>
         <Text style={styles.headerTitle}>{resolvedTitle}</Text>
         {subtitle ? <Text style={styles.headerSubtitle}>{subtitle}</Text> : null}
       </View>
-      {action ?? null}
+      {resolvedAction ?? null}
     </View>
   );
 }

@@ -110,6 +110,24 @@ vi.mock("@/hooks/queries/useProviderPrivileges", () => ({
   }),
 }));
 
+vi.mock("@/hooks/queries/useFacilityOperations", () => ({
+  useFacilityQueueStats: () => ({
+    data: {
+      data: {
+        waiting: 6,
+        called: 2,
+        inService: 3,
+        completed: 14,
+        noShow: 1,
+        avgWaitSeconds: 840,
+      },
+    },
+  }),
+  useFacilityActiveShiftCount: () => ({
+    activeShiftCount: 4,
+  }),
+}));
+
 vi.mock("@/hooks/queries/useCommunity", () => ({
   useCommunityGroups: () => ({
     data: {
@@ -220,9 +238,14 @@ describe("HomePage", () => {
 
     render(<HomePage />);
 
-    expect(screen.getByText("Quick Access")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "LIMS" })).toHaveAttribute("href", "/queue/search?workflow=lims");
-    expect(screen.getByRole("link", { name: "PACS" })).toHaveAttribute("href", "/queue/search?workflow=pacs");
+    expect(screen.getByText("Launch Client Experience")).toBeInTheDocument();
+    expect(screen.getByText("Patients waiting")).toBeInTheDocument();
+    expect(screen.getByText("6")).toBeInTheDocument();
+    expect(screen.getByText("Service Delivery Pathways")).toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: /Find Patient/i })[0]).toHaveAttribute("href", "/queue/search");
+    expect(screen.getByRole("link", { name: /Walk-in Registration/i })).toHaveAttribute("href", "/queue/walk-in");
+    expect(screen.getByRole("link", { name: /Waiting Room/i })).toHaveAttribute("href", "/queue/waiting");
+    expect(screen.getByRole("link", { name: /New Teleconsult/i })).toHaveAttribute("href", "/telemedicine/new");
     expect(screen.getByText("Communication & Access")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Omnichannel" })).toHaveAttribute("href", "/omnichannel");
 

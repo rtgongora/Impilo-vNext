@@ -18,9 +18,9 @@ import {
   EmptyState,
   ErrorState,
 } from "@impilo/mobile-design-system";
-import type { Immunization } from "../types";
+import type { Immunization } from "../../types";
 
-const STATUS_VARIANT: Record<string, "default" | "warning" | "success"> = {
+const STATUS_VARIANT: Record<string, "default" | "warning" | "success" | "destructive"> = {
   COMPLETED: "success",
   DUE: "warning",
   OVERDUE: "destructive",
@@ -108,8 +108,8 @@ export function ImmunizationsSection({ patientId }: ImmunizationsSectionProps) {
               <CardHeader
                 title={immunization.vaccineName}
                 rightElement={
-                  <Badge variant={STATUS_VARIANT[immunization.status] || "default"}>
-                    {immunization.status}
+                  <Badge variant={STATUS_VARIANT[immunization.status ?? "COMPLETED"] || "default"}>
+                    {immunization.status ?? "COMPLETED"}
                   </Badge>
                 }
               />

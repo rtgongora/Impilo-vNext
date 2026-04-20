@@ -7,7 +7,7 @@
  */
 
 import React from "react";
-import { Pressable, Text, View, StyleSheet } from "react-native";
+import { Pressable, Text, View, StyleSheet, type StyleProp, type ViewStyle } from "react-native";
 
 export type ButtonVariant =
   | "primary"
@@ -36,6 +36,7 @@ export interface ButtonProps {
   icon?: React.ReactNode;
   iconPosition?: "left" | "right";
   fullWidth?: boolean;
+  style?: StyleProp<ViewStyle>;
   accessibilityLabel?: string;
   testID?: string;
 }
@@ -51,6 +52,7 @@ export function Button({
   icon,
   iconPosition = "left",
   fullWidth = false,
+  style,
   accessibilityLabel,
   testID,
 }: ButtonProps) {
@@ -68,6 +70,7 @@ export function Button({
       style={[
         styles.base,
         fullWidth ? styles.fullWidth : undefined,
+        style,
         { opacity: isDisabled ? 0.5 : 1 },
       ]}
     >

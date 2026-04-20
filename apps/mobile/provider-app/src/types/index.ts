@@ -6,6 +6,14 @@
  */
 
 export type AppMode = "provider" | "outreach" | "supervisor" | "offline";
+export type ProviderTabKey =
+  | "dashboard"
+  | "patients"
+  | "encounter"
+  | "results"
+  | "queue"
+  | "tools"
+  | "professional";
 
 export type EncounterStatus = "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
 export type TaskStatus = "PENDING" | "IN_PROGRESS" | "COMPLETED" | "ESCALATED" | "OVERDUE";

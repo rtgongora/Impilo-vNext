@@ -26,7 +26,7 @@ import { useAppStore } from "../../stores/appStore";
 import type { Patient } from "../../types";
 
 export function PatientLookupScreen() {
-  const { facilityId } = useAppStore();
+  const { facilityId, setProviderTab } = useAppStore();
   const [query, setQuery] = useState("");
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(false);
@@ -59,12 +59,13 @@ export function PatientLookupScreen() {
       });
       encounterStore.getState().setActiveEncounter(encounter);
       setSelectedPatient(patient);
+      setProviderTab("encounter");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to start encounter");
     } finally {
       setStartingEncounter(false);
     }
-  }, [facilityId]);
+  }, [facilityId, setProviderTab]);
 
   return (
     <Screen>

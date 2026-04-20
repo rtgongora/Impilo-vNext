@@ -18,11 +18,26 @@ export interface EmptyStateProps {
     label: string;
     onPress: () => void;
   };
+  /**
+   * Back-compat aliases used by older screens.
+   */
+  actionLabel?: string;
+  onAction?: () => void;
   testID?: string;
 }
 
-export function EmptyState({ title, description, message, icon, action, testID }: EmptyStateProps) {
+export function EmptyState({
+  title,
+  description,
+  message,
+  icon,
+  action,
+  actionLabel,
+  onAction,
+  testID,
+}: EmptyStateProps) {
   const resolvedDescription = description ?? message;
+  const resolvedAction = action ?? (actionLabel && onAction ? { label: actionLabel, onPress: onAction } : undefined);
   return (
     <View
       testID={testID}
@@ -34,9 +49,9 @@ export function EmptyState({ title, description, message, icon, action, testID }
       {resolvedDescription ? (
         <Text style={styles.description}>{resolvedDescription}</Text>
       ) : null}
-      {action ? (
-        <Pressable onPress={action.onPress} style={styles.actionButton}>
-          <Text>{action.label}</Text>
+      {resolvedAction ? (
+        <Pressable onPress={resolvedAction.onPress} style={styles.actionButton}>
+          <Text>{resolvedAction.label}</Text>
         </Pressable>
       ) : null}
     </View>

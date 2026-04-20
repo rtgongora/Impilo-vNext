@@ -34,6 +34,7 @@ import { useFacilities, type FacilityResource } from "@/hooks/queries/useFacilit
 import { useProviderLicenses, hasActiveLicense } from "@/hooks/queries/useLicenses";
 import { useProviderPrivileges } from "@/hooks/queries/useProviderPrivileges";
 import { useCommunityGroups, useJoinGroup } from "@/hooks/queries/useCommunity";
+import { useFacilityActiveShiftCount, useFacilityQueueStats } from "@/hooks/queries/useFacilityOperations";
 import { apiClient } from "@/lib/api-client";
 import { useExperienceEntry } from "@/providers/ExperienceEntryProvider";
 
@@ -56,6 +57,22 @@ interface ModuleCategory {
   icon: React.ComponentType<{ className?: string }>;
   color: string;
   modules: ModuleItem[];
+}
+
+interface WorkerLaunchAction {
+  label: string;
+  description: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  color: string;
+  requiresWorkContext?: boolean;
+}
+
+interface WorkerSnapshotCard {
+  label: string;
+  value: string;
+  detail: string;
+  tone: "impilo" | "emerald" | "amber" | "rose" | "slate";
 }
 
 // ── Module categories (aligned to Lovable ExpandableCategoryCards) ──
@@ -240,6 +257,236 @@ function getModuleCategories(roles: {
   return cats;
 }
 
+function getWorkerLaunchActions(args: {
+  isClinical: boolean;
+  isAdmin: boolean;
+  isFinance: boolean;
+  isDispenser: boolean;
+}): WorkerLaunchAction[] {
+  const actions: WorkerLaunchAction[] = [];
+
+  if (args.isClinical || args.isDispenser) {
+    actions.push(
+      {
+        label: "Find Patient",
+        description: "Search by CPID, national ID, or name and launch straight into chart flow.",
+        href: "/queue/search",
+        icon: Users,
+        color: "bg-impilo-100 text-impilo-600",
+        requiresWorkContext: true,
+      },
+      {
+        label: "Walk-in Registration",
+        description: "Register a patient directly into today's service queue without losing facility context.",
+        href: "/queue/walk-in",
+        icon: ClipboardList,
+        color: "bg-amber-100 text-amber-700",
+        requiresWorkContext: true,
+      },
+      {
+        label: "Waiting Room",
+        description: "Pick up the next patient already waiting and move them into care.",
+        href: "/queue/waiting",
+        icon: Clock,
+        color: "bg-orange-100 text-orange-700",
+        requiresWorkContext: true,
+      },
+      {
+        label: "Triage",
+        description: "Start first-contact assessment and move urgent patients forward quickly.",
+        href: "/queue/triage",
+        icon: AlertTriangle,
+        color: "bg-rose-100 text-rose-700",
+        requiresWorkContext: true,
+      },
+      {
+        label: "New Teleconsult",
+        description: "Launch a virtual consult or referral escalation without leaving the work surface.",
+        href: "/telemedicine/new",
+        icon: Video,
+        color: "bg-teal-100 text-teal-700",
+      },
+      {
+        label: "Pharmacy Dispense",
+        description: "Move directly into dispensing and medication follow-through.",
+        href: "/pharmacy/dispense",
+        icon: Pill,
+        color: "bg-emerald-100 text-emerald-700",
+        requiresWorkContext: true,
+      },
+    );
+  }
+
+  if (args.isFinance) {
+    actions.push(
+      {
+        label: "Claims Review",
+        description: "Open claims and payer actions from the finance workbench.",
+        href: "/finance/claims",
+        icon: Receipt,
+        color: "bg-violet-100 text-violet-700",
+      },
+      {
+        label: "Billing",
+        description: "Go straight into billing, invoices, and revenue follow-through.",
+        href: "/finance/billing",
+        icon: FileText,
+        color: "bg-emerald-100 text-emerald-700",
+      },
+      {
+        label: "Settlements",
+        description: "Run settlement operations and release payouts without extra navigation hops.",
+        href: "/finance/settlements",
+        icon: BarChart3,
+        color: "bg-cyan-100 text-cyan-700",
+      },
+    );
+  }
+
+  if (args.isAdmin) {
+    actions.push(
+      {
+        label: "Control Tower",
+        description: "Start from live operational oversight when you are driving throughput or escalation.",
+        href: "/clinical/control-tower",
+        icon: Activity,
+        color: "bg-rose-100 text-rose-700",
+      },
+      {
+        label: "Staff & Roles",
+        description: "Jump into admin action on users, roles, and governance surfaces.",
+        href: "/admin/users",
+        icon: UserCog,
+        color: "bg-slate-100 text-slate-700",
+      },
+    );
+  }
+
+  const seen = new Set<string>();
+  return actions.filter((action) => {
+    if (seen.has(action.href)) return false;
+    seen.add(action.href);
+    return true;
+  });
+}
+
+function getWorkerSnapshotCards(args: {
+  isClinical: boolean;
+  isAdmin: boolean;
+  isFinance: boolean;
+  isDispenser: boolean;
+  queueWaiting: number;
+  queueInService: number;
+  appointmentsCount: number;
+  activeShifts: number;
+  hasWorkContext: boolean;
+  licenseActive: boolean;
+}): WorkerSnapshotCard[] {
+  if (args.isClinical || args.isDispenser) {
+    return [
+      {
+        label: "Patients waiting",
+        value: String(args.queueWaiting),
+        detail: args.hasWorkContext
+          ? "Current waiting-room demand in the selected facility."
+          : "Choose a workplace to start tracking waiting-room demand.",
+        tone: args.queueWaiting > 0 ? "amber" : "slate",
+      },
+      {
+        label: "In service",
+        value: String(args.queueInService),
+        detail: "Patients already called or actively in care right now.",
+        tone: args.queueInService > 0 ? "impilo" : "slate",
+      },
+      {
+        label: "Today's bookings",
+        value: String(args.appointmentsCount),
+        detail: "Planned arrivals and follow-ups that may convert into active encounters.",
+        tone: args.appointmentsCount > 0 ? "emerald" : "slate",
+      },
+      {
+        label: "Active shifts",
+        value: String(args.activeShifts),
+        detail: args.licenseActive
+          ? "Current workforce presence on the roster in this facility."
+          : "Resolve licence issues before starting regulated clinical work.",
+        tone: args.licenseActive ? "impilo" : "rose",
+      },
+    ];
+  }
+
+  if (args.isFinance) {
+    return [
+      {
+        label: "Claims lane",
+        value: "Ready",
+        detail: "Use the finance workspace to move straight into claims review and payer actions.",
+        tone: "impilo",
+      },
+      {
+        label: "Billing lane",
+        value: "Open",
+        detail: "Bills, invoices, and payment follow-through are one click away.",
+        tone: "emerald",
+      },
+      {
+        label: "Settlement lane",
+        value: "Live",
+        detail: "Settlement and reconciliation surfaces are available from the same workbench.",
+        tone: "impilo",
+      },
+      {
+        label: "Work context",
+        value: args.hasWorkContext ? "Bound" : "Flexible",
+        detail: args.hasWorkContext
+          ? "Finance can continue within the current facility context."
+          : "Finance work can start before choosing a facility-specific context.",
+        tone: "slate",
+      },
+    ];
+  }
+
+  if (args.isAdmin) {
+    return [
+      {
+        label: "Operational context",
+        value: args.hasWorkContext ? "Live" : "Select",
+        detail: args.hasWorkContext
+          ? "Facility context is available for queue, roster, and operational oversight."
+          : "Choose a workplace or admin plane to unlock work surfaces.",
+        tone: args.hasWorkContext ? "impilo" : "amber",
+      },
+      {
+        label: "Admin planes",
+        value: "2",
+        detail: "Registry administration and organization administration are available from home.",
+        tone: "slate",
+      },
+      {
+        label: "Throughput focus",
+        value: String(args.queueWaiting),
+        detail: "Waiting patients provide a quick signal for where operations may need intervention.",
+        tone: args.queueWaiting > 0 ? "amber" : "slate",
+      },
+      {
+        label: "Shift coverage",
+        value: String(args.activeShifts),
+        detail: "Use active shift coverage to gauge workforce pressure before entering queue ops.",
+        tone: args.activeShifts > 0 ? "emerald" : "slate",
+      },
+    ];
+  }
+
+  return [
+    {
+      label: "Ready to work",
+      value: args.hasWorkContext ? "Yes" : "Select",
+      detail: "Choose a workplace context and then start the next patient-facing or operational task.",
+      tone: args.hasWorkContext ? "impilo" : "amber",
+    },
+  ];
+}
+
 type HomeTab = "work" | "professional" | "personal";
 
 export default function HomePage() {
@@ -390,25 +637,29 @@ export default function HomePage() {
     enabled: isClinical,
   });
   const appointments = appointmentsData?.data ?? [];
+  const queueStatsQuery = useFacilityQueueStats(facility?.id);
+  const queueStats = queueStatsQuery.data?.data;
+  const { activeShiftCount } = useFacilityActiveShiftCount(facility?.id);
 
   // Module categories
   const categories = getModuleCategories({ isClinical, isAdmin, isFinance, isDispenser });
-
-  // Organized by clinical workflow for easy access
-  const workQuickActions = [
-    { label: "EHR", href: "/queue/search", icon: Stethoscope, color: "bg-red-100 text-red-600", workflow: "ambulatory" },
-    { label: "Queue", href: "/queue", icon: ClipboardList, color: "bg-impilo-100 text-impilo-500", workflow: "ambulatory" },
-    { label: "Prescribe", href: "/pharmacy", icon: Pill, color: "bg-emerald-100 text-emerald-600", workflow: "pharmacy" },
-    { label: "LIMS", href: "/queue/search?workflow=lims", icon: TestTube2, color: "bg-violet-100 text-violet-700", workflow: "lab" },
-    { label: "PACS", href: "/queue/search?workflow=pacs", icon: Scan, color: "bg-rose-100 text-rose-700", workflow: "imaging" },
-    { label: "Bookings", href: "/scheduling", icon: Calendar, color: "bg-orange-100 text-orange-600", workflow: "ambulatory" },
-  ];
-
-  // Group quick actions by workflow for organized access
-  const workflowGroups = [
-    { id: "clinical", label: "Clinical", actions: workQuickActions.filter(a => ["ambulatory", "pharmacy"].includes(a.workflow)) },
-    { id: "diagnostics", label: "Diagnostics", actions: workQuickActions.filter(a => ["lab", "imaging"].includes(a.workflow)) },
-  ];
+  const workerLaunchActions = getWorkerLaunchActions({ isClinical, isAdmin, isFinance, isDispenser });
+  const launchActions = workerLaunchActions.filter((action) => !action.requiresWorkContext || hasWorkContext);
+  const workerSnapshotCards = getWorkerSnapshotCards({
+    isClinical,
+    isAdmin,
+    isFinance,
+    isDispenser,
+    queueWaiting: queueStats?.waiting ?? 0,
+    queueInService: queueStats?.inService ?? encounters.filter((enc) => {
+      const status = String(enc.attributes.status ?? "");
+      return status === "IN_PROGRESS" || status === "ACTIVE";
+    }).length,
+    appointmentsCount: appointments.length,
+    activeShifts: activeShiftCount,
+    hasWorkContext,
+    licenseActive,
+  });
 
   // ── Citizen 3-column layout (Facebook-style) ────────────────────
   if (!hasProfessionalRoles) {
@@ -514,7 +765,8 @@ export default function HomePage() {
 
           {/* Workplace Selection Hub — when no facility */}
           {!hasWorkContext && (
-            <WorkplaceSelectionHub
+            <div id="workplace-selection">
+              <WorkplaceSelectionHub
               facilities={facilities}
               isLoading={facilitiesLoading}
               onSelectFacility={handleFacilitySelect}
@@ -543,66 +795,128 @@ export default function HomePage() {
                   href: "/reports",
                 },
               ]}
-            />
+              />
+            </div>
           )}
 
-          {hasWorkContext && (isClinical || isDispenser) && (
+          {(isClinical || isDispenser || isFinance || isAdmin) && (
             <div className="space-y-4">
-              {/* Service Delivery Transition - Prominent entry point */}
-              <div className="bg-gradient-to-r from-impilo-600 to-impilo-700 rounded-xl p-4">
-                <div className="flex items-center justify-between">
-                  <div className="text-white">
-                    <h3 className="text-lg font-semibold">Ready to serve patients?</h3>
-                    <p className="text-impilo-100 text-sm">Enter your workspace to begin clinical workflows</p>
+              <div className="grid gap-4 xl:grid-cols-[1.2fr,0.8fr]">
+                <div className="rounded-2xl bg-gradient-to-r from-impilo-700 via-impilo-600 to-cyan-600 p-6 text-white shadow-sm">
+                  <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+                    <div className="max-w-2xl">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-impilo-100">
+                        The Experience
+                      </p>
+                      <h3 className="mt-2 text-2xl font-semibold">
+                        Launch Client Experience
+                      </h3>
+                      <p className="mt-2 max-w-xl text-sm text-impilo-100">
+                        Start the next patient-facing or operational flow from one place. We are optimizing for both
+                        the client journey and the health worker’s shift launch.
+                      </p>
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        {hasWorkContext ? (
+                          <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-medium text-white">
+                            <Building2 className="h-3.5 w-3.5" />
+                            {facility?.name ?? "Work context selected"}
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-2 rounded-full bg-amber-300/25 px-3 py-1 text-xs font-medium text-white">
+                            <MapPin className="h-3.5 w-3.5" />
+                            Select a workplace to unlock client-facing actions
+                          </span>
+                        )}
+                        {shift && (
+                          <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-medium text-white">
+                            <Activity className="h-3.5 w-3.5" />
+                            Shift active
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {hasWorkContext ? (
+                      <Link
+                        href={launchActions[0]?.href ?? "/queue/search"}
+                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-impilo-700 transition-colors hover:bg-impilo-50"
+                      >
+                        <Play className="h-4 w-4" />
+                        {launchActions[0]?.label ?? "Start care"}
+                      </Link>
+                    ) : (
+                      <a
+                        href="#workplace-selection"
+                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-impilo-700 transition-colors hover:bg-impilo-50"
+                      >
+                        <MapPin className="h-4 w-4" />
+                        Choose workplace
+                      </a>
+                    )}
                   </div>
-                  <Link
-                    href="/queue"
-                    className="inline-flex items-center gap-2 bg-white text-impilo-600 px-5 py-2.5 rounded-lg font-medium hover:bg-impilo-50 transition-colors"
-                  >
-                    <Play className="w-4 h-4" />
-                    Start Service Delivery
-                  </Link>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  {workerSnapshotCards.map((card) => {
+                    const toneClasses = {
+                      impilo: "border-impilo-200 bg-impilo-50 text-impilo-700",
+                      emerald: "border-emerald-200 bg-emerald-50 text-emerald-700",
+                      amber: "border-amber-200 bg-amber-50 text-amber-800",
+                      rose: "border-rose-200 bg-rose-50 text-rose-700",
+                      slate: "border-slate-200 bg-white text-slate-700",
+                    } as const;
+
+                    return (
+                      <div
+                        key={card.label}
+                        className={`rounded-2xl border p-4 ${toneClasses[card.tone]}`}
+                      >
+                        <p className="text-xs font-semibold uppercase tracking-wide">{card.label}</p>
+                        <p className="mt-2 text-2xl font-semibold">{card.value}</p>
+                        <p className="mt-2 text-xs leading-5 opacity-90">{card.detail}</p>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
-              {/* Quick Access - Grouped by Workflow */}
               <div className="bg-white rounded-lg border border-gray-200 p-4">
                 <div className="mb-4 flex items-center justify-between">
                   <h3 className="flex items-center gap-2 text-base font-semibold text-gray-900">
-                    <ClipboardList className="w-5 h-5 text-amber-500" />
-                    Quick Access
+                    <Clipboard className="w-5 h-5 text-impilo-500" />
+                    Service Delivery Pathways
                   </h3>
-                  <p className="text-xs text-gray-500">Chart-aware shortcuts for your workflow</p>
+                  <p className="text-xs text-gray-500">Quick starts for the work that matters now</p>
                 </div>
-
-                {/* Workflow Groups */}
-                <div className="space-y-4">
-                  {workflowGroups.map((group) => (
-                    <div key={group.id}>
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-1 h-4 bg-impilo-500 rounded-full" />
-                        <span className="text-sm font-medium text-gray-700">{group.label}</span>
-                      </div>
-                      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
-                        {group.actions.map((action) => {
-                          const ActionIcon = action.icon;
-                          return (
-                            <Link
-                              key={action.label}
-                              href={action.href}
-                              className="flex flex-col items-center justify-center gap-1.5 rounded-lg border border-gray-200 bg-gray-50 px-3 py-3 text-center transition-colors hover:border-impilo-200 hover:bg-white hover:shadow-sm"
-                            >
-                              <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${action.color}`}>
-                                <ActionIcon className="h-4.5 w-4.5" />
-                              </div>
-                              <span className="text-xs font-medium text-gray-900">{action.label}</span>
-                            </Link>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                {launchActions.length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50 px-4 py-6 text-sm text-gray-500">
+                    Select a workplace or activate the right operational plane to unlock role-specific launch actions.
+                  </div>
+                ) : (
+                  <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                    {launchActions.map((action) => {
+                      const ActionIcon = action.icon;
+                      return (
+                        <Link
+                          key={action.href}
+                          href={action.href}
+                          className="group rounded-xl border border-gray-200 bg-gray-50 p-4 transition-colors hover:border-impilo-200 hover:bg-white hover:shadow-sm"
+                        >
+                          <div className={`mb-3 inline-flex h-11 w-11 items-center justify-center rounded-xl ${action.color}`}>
+                            <ActionIcon className="h-5 w-5" />
+                          </div>
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <p className="text-sm font-semibold text-gray-900 group-hover:text-impilo-600">{action.label}</p>
+                              <p className="mt-1 text-xs leading-5 text-gray-500">{action.description}</p>
+                            </div>
+                            <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-gray-400 group-hover:text-impilo-500" />
+                          </div>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
           )}
