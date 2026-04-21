@@ -50,6 +50,18 @@ public class FacilityEntity {
     @Column(name = "level", length = 50)
     private String level;
 
+    @Column(name = "facility_tier", length = 64)
+    private String facilityTier;
+
+    @Column(name = "deployment_mode", length = 32)
+    private String deploymentMode;
+
+    @Column(name = "continuity_class", length = 32)
+    private String continuityClass;
+
+    @Column(name = "workflow_archetype", length = 64)
+    private String workflowArchetype;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id")
     private FacilityEntity parent;
@@ -139,6 +151,18 @@ public class FacilityEntity {
 
     public String getLevel() { return level; }
     public void setLevel(String level) { this.level = level; }
+
+    public String getFacilityTier() { return facilityTier; }
+    public void setFacilityTier(String facilityTier) { this.facilityTier = facilityTier; }
+
+    public String getDeploymentMode() { return deploymentMode; }
+    public void setDeploymentMode(String deploymentMode) { this.deploymentMode = deploymentMode; }
+
+    public String getContinuityClass() { return continuityClass; }
+    public void setContinuityClass(String continuityClass) { this.continuityClass = continuityClass; }
+
+    public String getWorkflowArchetype() { return workflowArchetype; }
+    public void setWorkflowArchetype(String workflowArchetype) { this.workflowArchetype = workflowArchetype; }
 
     public FacilityEntity getParent() { return parent; }
     public void setParent(FacilityEntity parent) { this.parent = parent; }

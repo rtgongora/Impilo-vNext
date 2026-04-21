@@ -127,6 +127,30 @@ export default function FacilityDetailPage() {
                 <p className="text-sm text-gray-400">No capabilities listed</p>
               )}
             </div>
+
+            <div className="bg-white rounded-lg border border-gray-200 p-5">
+              <h3 className="font-medium text-gray-900 mb-3">Operating model</h3>
+              <dl className="grid grid-cols-1 gap-4 text-sm md:grid-cols-3">
+                <div>
+                  <dt className="text-gray-500">Facility tier</dt>
+                  <dd className="mt-0.5 font-medium text-gray-900">
+                    {(attrs?.operatingModel as { facilityTier?: string } | undefined)?.facilityTier?.replaceAll("_", " ") ?? "\u2014"}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-gray-500">Deployment mode</dt>
+                  <dd className="mt-0.5 font-medium text-gray-900">
+                    {(attrs?.operatingModel as { deploymentMode?: string } | undefined)?.deploymentMode?.replaceAll("_", " ") ?? "\u2014"}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-gray-500">Continuity class</dt>
+                  <dd className="mt-0.5 font-medium text-gray-900">
+                    {(attrs?.operatingModel as { continuityClass?: string } | undefined)?.continuityClass?.replaceAll("_", " ") ?? "\u2014"}
+                  </dd>
+                </div>
+              </dl>
+            </div>
           </div>
         )}
       </PageShell>

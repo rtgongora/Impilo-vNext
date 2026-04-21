@@ -22,6 +22,19 @@ Seven architectural planes:
 | **Experience** | One UI Shell (WORK/EHR/CONTROL/MY PROFESSIONAL/MY LIFE), Ops Console, EHR, Portal |
 | **Enterprise Resource Plane** | General Ledger, HR & Payroll, Procurement, enterprise reporting, and control surfaces |
 
+## Deployment Model
+
+Impilo is designed as a hybrid, federated platform: centrally governed where national truth is required, and locally executable where service continuity is required.
+
+The architecture distinguishes between:
+
+- `tenant`: legal and policy boundary
+- `pod`: deployment/runtime boundary
+- `facility`: care delivery site
+- `workspace`: operational unit inside a facility
+
+Facilities are not treated as one-size-fits-all. Zimbabwe facility tiers from Community through Quinary Hospital, plus Virtual Hospital, are intended to drive deployment posture, enabled services, continuity requirements, and user experience shape. See [docs/architecture/facility-operating-model.md](docs/architecture/facility-operating-model.md) and [contracts/facility-operating-model.ts](contracts/facility-operating-model.ts).
+
 ## Repository Segmentation Intent
 
 The strategic platform spine remains closed by default. Over time, selected ecosystem-facing artefacts such as contracts, schemas, public SDKs, and partner-safe integration materials may be extracted into separately licensed packages.

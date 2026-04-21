@@ -112,6 +112,7 @@ public class PublicFacilityController {
                 null, // operationalStatus — redacted
                 null, // ownership — redacted
                 entity.getLevel(),
+                toOperatingModel(entity),
                 null, // parentId — redacted
                 null, // parentName — redacted
                 null, // description — redacted
@@ -129,6 +130,22 @@ public class PublicFacilityController {
                 null, // updatedAt — redacted
                 null, // createdBy — redacted
                 null  // updatedBy — redacted
+        );
+    }
+
+    private FacilityResponse.OperatingModelDetail toOperatingModel(FacilityEntity entity) {
+        if (entity.getFacilityTier() == null
+                && entity.getDeploymentMode() == null
+                && entity.getContinuityClass() == null
+                && entity.getWorkflowArchetype() == null) {
+            return null;
+        }
+
+        return new FacilityResponse.OperatingModelDetail(
+                entity.getFacilityTier(),
+                entity.getDeploymentMode(),
+                entity.getContinuityClass(),
+                entity.getWorkflowArchetype()
         );
     }
 

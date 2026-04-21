@@ -177,6 +177,10 @@ public class FacilityController {
                 null, // operationalStatus — not in API DTO
                 api.ownership(),
                 api.level(),
+                api.facilityTier(),
+                api.deploymentMode(),
+                api.continuityClass(),
+                api.workflowArchetype(),
                 api.description(),
                 api.openedDate(),
                 api.parentId(),
@@ -199,6 +203,10 @@ public class FacilityController {
                 null, // operationalStatus — not in API DTO
                 api.ownership(),
                 api.level(),
+                api.facilityTier(),
+                api.deploymentMode(),
+                api.continuityClass(),
+                api.workflowArchetype(),
                 api.description()
         );
     }
@@ -219,6 +227,7 @@ public class FacilityController {
                 entity.getOperationalStatus(),
                 entity.getOwnership(),
                 entity.getLevel(),
+                toOperatingModel(entity),
                 entity.getParent() != null ? entity.getParent().getId() : null,
                 null, // parentName — would require lazy load
                 entity.getDescription(),
@@ -302,6 +311,7 @@ public class FacilityController {
                 entity.getOperationalStatus(),
                 entity.getOwnership(),
                 entity.getLevel(),
+                toOperatingModel(entity),
                 entity.getParent() != null ? entity.getParent().getId() : null,
                 null, // parentName
                 entity.getDescription(),
@@ -319,6 +329,22 @@ public class FacilityController {
                 entity.getUpdatedAt(),
                 entity.getCreatedBy(),
                 entity.getUpdatedBy()
+        );
+    }
+
+    private FacilityResponse.OperatingModelDetail toOperatingModel(FacilityEntity entity) {
+        if (entity.getFacilityTier() == null
+                && entity.getDeploymentMode() == null
+                && entity.getContinuityClass() == null
+                && entity.getWorkflowArchetype() == null) {
+            return null;
+        }
+
+        return new FacilityResponse.OperatingModelDetail(
+                entity.getFacilityTier(),
+                entity.getDeploymentMode(),
+                entity.getContinuityClass(),
+                entity.getWorkflowArchetype()
         );
     }
 

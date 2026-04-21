@@ -30,7 +30,11 @@ import { useOperationalContextStore } from "@/hooks/useOperationalContextStore";
 import { useShiftStore } from "@/hooks/useShiftStore";
 import { useRoleGroup } from "@/hooks/useRoleGroup";
 import { useWorkModeStore } from "@/hooks/useWorkModeStore";
-import { useFacilities, type FacilityResource } from "@/hooks/queries/useFacilities";
+import {
+  useFacilities,
+  type FacilityOperatingModel,
+  type FacilityResource,
+} from "@/hooks/queries/useFacilities";
 import { useProviderLicenses, hasActiveLicense } from "@/hooks/queries/useLicenses";
 import { useProviderPrivileges } from "@/hooks/queries/useProviderPrivileges";
 import { useCommunityGroups, useJoinGroup } from "@/hooks/queries/useCommunity";
@@ -73,6 +77,73 @@ interface WorkerSnapshotCard {
   value: string;
   detail: string;
   tone: "impilo" | "emerald" | "amber" | "rose" | "slate";
+}
+
+interface OperatingSignal {
+  label: string;
+  value: string;
+  detail: string;
+}
+
+function formatOperatingLabel(value?: string) {
+  if (!value) return null;
+  return value
+    .toLowerCase()
+    .split("_")
+    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
+    .join(" ");
+}
+
+function getOperatingNarrative(model?: FacilityOperatingModel) {
+  if (!model) {
+    return "Pick a workplace to load the facility-specific launch, continuity, and deployment cues for this shift.";
+  }
+
+  if (model.continuityClass === "EDGE_CRITICAL") {
+    return "This site is expected to keep service delivery moving even when connectivity is unstable, so launch flows should stay simple and resilient.";
+  }
+
+  if (model.continuityClass === "LOCAL_EXECUTION_REQUIRED") {
+    return "This site is expected to keep core service delivery running when the center is unavailable, so local execution continuity matters as much as throughput.";
+  }
+
+  if (model.workflowArchetype === "VIRTUAL_CARE_NETWORK") {
+    return "This operating profile is built for virtual intake, referral coordination, and distributed care rather than one physical front desk.";
+  }
+
+  return "This facility profile shapes which launch actions, dashboards, and escalation paths should appear first for the current team.";
+}
+
+function getOperatingSignals(model?: FacilityOperatingModel): OperatingSignal[] {
+  if (!model) return [];
+
+  const tier = formatOperatingLabel(model.facilityTier);
+  const deployment = formatOperatingLabel(model.deploymentMode);
+  const continuity = formatOperatingLabel(model.continuityClass);
+
+  return [
+    tier
+      ? {
+          label: "Facility tier",
+          value: tier,
+          detail: "Tier sets the baseline complexity and service expectations for this site.",
+        }
+      : null,
+    deployment
+      ? {
+          label: "Deployment mode",
+          value: deployment,
+          detail: "Deployment mode tells us whether this site runs on shared, dedicated, or edge-assisted execution.",
+        }
+      : null,
+    continuity
+      ? {
+          label: "Continuity class",
+          value: continuity,
+          detail: "Continuity class defines how strongly local execution must hold when central connectivity degrades.",
+        }
+      : null,
+  ].filter((signal): signal is OperatingSignal => signal !== null);
 }
 
 // ── Module categories (aligned to Lovable ExpandableCategoryCards) ──
@@ -262,7 +333,7 @@ function getWorkerLaunchActions(args: {
   isAdmin: boolean;
   isFinance: boolean;
   isDispenser: boolean;
-}): WorkerLaunchAction[] {
+}, operatingModel?: FacilityOperatingModel): WorkerLaunchAction[] {
   const actions: WorkerLaunchAction[] = [];
 
   if (args.isClinical || args.isDispenser) {
@@ -363,11 +434,21 @@ function getWorkerLaunchActions(args: {
   }
 
   const seen = new Set<string>();
-  return actions.filter((action) => {
+  const deduped = actions.filter((action) => {
     if (seen.has(action.href)) return false;
     seen.add(action.href);
     return true;
   });
+
+  if (operatingModel?.workflowArchetype === "VIRTUAL_CARE_NETWORK") {
+    return [...deduped].sort((a, b) => {
+      if (a.href === "/telemedicine/new") return -1;
+      if (b.href === "/telemedicine/new") return 1;
+      return 0;
+    });
+  }
+
+  return deduped;
 }
 
 function getWorkerSnapshotCards(args: {
@@ -570,6 +651,7 @@ export default function HomePage() {
   const greeting = getGreeting();
   const router = useRouter();
   const hasWorkContext = !!facility;
+  const selectedOperatingModel = facility?.operatingModel;
 
   // Fetch facilities for workplace selection hub
   const { data: facilitiesData, isLoading: facilitiesLoading } = useFacilities();
@@ -598,6 +680,7 @@ export default function HomePage() {
         code: facilityResource.attributes.code,
         facilityType: facilityResource.attributes.facilityType,
         capabilities: facilityResource.attributes.capabilities ?? [],
+        operatingModel: facilityResource.attributes.operatingModel,
       },
       {
         mode: "clinical",
@@ -643,8 +726,13 @@ export default function HomePage() {
 
   // Module categories
   const categories = getModuleCategories({ isClinical, isAdmin, isFinance, isDispenser });
-  const workerLaunchActions = getWorkerLaunchActions({ isClinical, isAdmin, isFinance, isDispenser });
+  const workerLaunchActions = getWorkerLaunchActions(
+    { isClinical, isAdmin, isFinance, isDispenser },
+    selectedOperatingModel,
+  );
   const launchActions = workerLaunchActions.filter((action) => !action.requiresWorkContext || hasWorkContext);
+  const operatingSignals = getOperatingSignals(selectedOperatingModel);
+  const operatingNarrative = getOperatingNarrative(selectedOperatingModel);
   const workerSnapshotCards = getWorkerSnapshotCards({
     isClinical,
     isAdmin,
@@ -812,8 +900,7 @@ export default function HomePage() {
                         Launch Client Experience
                       </h3>
                       <p className="mt-2 max-w-xl text-sm text-impilo-100">
-                        Start the next patient-facing or operational flow from one place. We are optimizing for both
-                        the client journey and the health worker’s shift launch.
+                        {operatingNarrative}
                       </p>
                       <div className="mt-4 flex flex-wrap gap-2">
                         {hasWorkContext ? (
@@ -831,6 +918,18 @@ export default function HomePage() {
                           <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-medium text-white">
                             <Activity className="h-3.5 w-3.5" />
                             Shift active
+                          </span>
+                        )}
+                        {selectedOperatingModel?.facilityTier && (
+                          <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-medium text-white">
+                            <Layers className="h-3.5 w-3.5" />
+                            {formatOperatingLabel(selectedOperatingModel.facilityTier)}
+                          </span>
+                        )}
+                        {selectedOperatingModel?.continuityClass && (
+                          <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-medium text-white">
+                            <Wifi className="h-3.5 w-3.5" />
+                            {formatOperatingLabel(selectedOperatingModel.continuityClass)}
                           </span>
                         )}
                       </div>
@@ -879,6 +978,33 @@ export default function HomePage() {
                   })}
                 </div>
               </div>
+
+              {hasWorkContext && operatingSignals.length > 0 && (
+                <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                  <div className="mb-4 flex items-start justify-between gap-4">
+                    <div>
+                      <h3 className="text-base font-semibold text-slate-900">Facility operating model</h3>
+                      <p className="mt-1 text-sm text-slate-500">
+                        This facility is configured as a distinct care-delivery environment, not just a location. The operating model below should shape launch flow and continuity expectations for this shift.
+                      </p>
+                    </div>
+                    <div className="rounded-xl bg-slate-100 px-3 py-2 text-xs font-medium uppercase tracking-[0.16em] text-slate-600">
+                      Operating profile
+                    </div>
+                  </div>
+                  <div className="grid gap-3 md:grid-cols-3">
+                    {operatingSignals.map((signal) => (
+                      <div key={signal.label} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                          {signal.label}
+                        </p>
+                        <p className="mt-2 text-lg font-semibold text-slate-900">{signal.value}</p>
+                        <p className="mt-2 text-xs leading-5 text-slate-500">{signal.detail}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="bg-white rounded-lg border border-gray-200 p-4">
                 <div className="mb-4 flex items-center justify-between">

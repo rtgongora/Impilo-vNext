@@ -29,6 +29,7 @@ export default function FacilityPage() {
         code: facilityResource.attributes.code,
         facilityType: facilityResource.attributes.facilityType,
         capabilities: facilityResource.attributes.capabilities ?? [],
+        operatingModel: facilityResource.attributes.operatingModel,
       },
       {
         mode: "clinical",

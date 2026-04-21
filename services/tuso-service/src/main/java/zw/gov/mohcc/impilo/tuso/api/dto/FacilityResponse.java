@@ -19,6 +19,7 @@ public record FacilityResponse(
         String operationalStatus,
         String ownership,
         String level,
+        OperatingModelDetail operatingModel,
         Long parentId,
         String parentName,
         String description,
@@ -37,6 +38,13 @@ public record FacilityResponse(
         String createdBy,
         String updatedBy
 ) {
+    public record OperatingModelDetail(
+            String facilityTier,
+            String deploymentMode,
+            String continuityClass,
+            String workflowArchetype
+    ) {}
+
     public record GeoDetail(
             String addressLine1,
             String addressLine2,
