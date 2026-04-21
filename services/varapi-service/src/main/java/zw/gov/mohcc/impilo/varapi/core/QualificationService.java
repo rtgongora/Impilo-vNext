@@ -1,0 +1,186 @@
+package zw.gov.mohcc.impilo.varapi.core;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import zw.gov.mohcc.impilo.shared.auth.TrustContext;
+import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
+import zw.gov.mohcc.impilo.varapi.persistence.entity.EventOutboxEntity;
+import zw.gov.mohcc.impilo.varapi.persistence.entity.ProviderQualificationEntity;
+import zw.gov.mohcc.impilo.varapi.persistence.entity.ProviderEntity;
+import zw.gov.mohcc.impilo.varapi.persistence.repository.EventOutboxRepository;
+import zw.gov.mohcc.impilo.varapi.persistence.repository.ProviderQualificationRepository;
+import zw.gov.mohcc.impilo.varapi.persistence.repository.ProviderRepository;
+
+import java.time.Instant;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.UUID;
+
+/**
+ * Service managing provider qualifications and their verification.
+ */
+@Service
+public class QualificationService {
+
+    private static final Logger log = LoggerFactory.getLogger(QualificationService.class);
+
+    private final ProviderQualificationRepository qualificationRepository;
+    private final ProviderRepository providerRepository;
+    private final EventOutboxRepository outboxRepository;
+
+    public QualificationService(
+            ProviderQualificationRepository qualificationRepository,
+            ProviderRepository providerRepository,
+            EventOutboxRepository outboxRepository) {
+        this.qualificationRepository = qualificationRepository;
+        this.providerRepository = providerRepository;
+        this.outboxRepository = outboxRepository;
+    }
+
+    /**
+     * Add a qualification to a provider.
+     */
+    @Transactional
+    public ProviderQualificationEntity addQualification(
+            Long providerId,
+            String qualificationType,
+            String title,
+            String institutionName,
+            String country,
+            LocalDate awardDate,
+            Long evidenceDocumentId,
+            String remarks) {
+        TrustContext ctx = TrustContextHolder.require();
+        log.info("Adding qualification: providerId={}, type={}, title={}, actor={}",
+                providerId, qualificationType, title, ctx.actorId());
+
+        ProviderEntity provider = providerRepository.findById(providerId)
+                .orElseThrow(() -> new IllegalArgumentException("Provider not found: " + providerId));
+
+        ProviderQualificationEntity qualification = new ProviderQualificationEntity();
+        qualification.setProvider(provider);
+        qualification.setTenantId(ctx.tenantId());
+        qualification.setQualificationType(qualificationType);
+        qualification.setTitle(title);
+        qualification.setInstitutionName(institutionName);
+        qualification.setCountry(country);
+        qualification.setAwardDate(awardDate);
+        qualification.setEvidenceDocumentId(evidenceDocumentId);
+        qualification.setVerificationStatus("PENDING");
+        qualification.setRemarks(remarks);
+
+        qualification = qualificationRepository.save(qualification);
+
+        log.info("Qualification added: id={}, providerId={}", qualification.getId(), providerId);
+        publishEvent("PROVIDER_QUALIFICATION", qualification.getId().toString(),
+                "varapi.qualification.created",
+                String.format("{\"qualificationId\":%d,\"providerId\":%d,\"type\":\"%s\",\"title\":\"%s\"}",
+                        qualification.getId(), providerId, qualificationType, title));
+
+        return qualification;
+    }
+
+    /**
+     * Verify a qualification.
+     */
+    @Transactional
+    public ProviderQualificationEntity verifyQualification(
+            Long qualificationId,
+            String verificationStatus,
+            String verifiedBy,
+            String remarks) {
+        TrustContext ctx = TrustContextHolder.require();
+        log.info("Verifying qualification: id={}, status={}, actor={}",
+                qualificationId, verificationStatus, ctx.actorId());
+
+        ProviderQualificationEntity qualification = qualificationRepository.findById(qualificationId)
+                .orElseThrow(() -> new IllegalArgumentException("Qualification not found: " + qualificationId));
+
+        if (!"PENDING".equals(qualification.getVerificationStatus())) {
+            throw new IllegalStateException("Can only verify pending qualifications");
+        }
+
+        if (!"VERIFIED".equals(verificationStatus) && !"FAILED".equals(verificationStatus) && !"NOT_REQUIRED".equals(verificationStatus)) {
+            throw new IllegalArgumentException("Invalid verification status: " + verificationStatus);
+        }
+
+        qualification.setVerificationStatus(verificationStatus);
+        qualification.setVerifiedBy(verifiedBy != null ? verifiedBy : ctx.actorId());
+        qualification.setVerifiedAt(Instant.now());
+        qualification.setRemarks(remarks != null ? remarks : qualification.getRemarks());
+
+        qualification = qualificationRepository.save(qualification);
+
+        log.info("Qualification verified: id={}, status={}", qualificationId, verificationStatus);
+        publishEvent("PROVIDER_QUALIFICATION", qualification.getId().toString(),
+                "varapi.qualification.verified",
+                String.format("{\"qualificationId\":%d,\"status\":\"%s\"}",
+                        qualificationId, verificationStatus));
+
+        return qualification;
+    }
+
+    /**
+     * Get qualification by ID.
+     */
+    @Transactional(readOnly = true)
+    public ProviderQualificationEntity getQualification(Long qualificationId) {
+        return qualificationRepository.findById(qualificationId)
+                .orElseThrow(() -> new IllegalArgumentException("Qualification not found: " + qualificationId));
+    }
+
+    /**
+     * Get all qualifications for a provider.
+     */
+    @Transactional(readOnly = true)
+    public List<ProviderQualificationEntity> getQualificationsByProvider(Long providerId) {
+        return qualificationRepository.findByProviderId(providerId);
+    }
+
+    /**
+     * Get verified qualifications for a provider.
+     */
+    @Transactional(readOnly = true)
+    public List<ProviderQualificationEntity> getVerifiedQualifications(Long providerId) {
+        return qualificationRepository.findByProviderIdAndVerificationStatus(providerId, "VERIFIED");
+    }
+
+    /**
+     * Get pending qualifications for verification.
+     */
+    @Transactional(readOnly = true)
+    public List<ProviderQualificationEntity> getPendingQualifications() {
+        TrustContext ctx = TrustContextHolder.require();
+        return qualificationRepository.findByTenantIdAndVerificationStatus(ctx.tenantId(), "PENDING");
+    }
+
+    /**
+     * Delete a qualification (only if not verified).
+     */
+    @Transactional
+    public void deleteQualification(Long qualificationId) {
+        TrustContext ctx = TrustContextHolder.require();
+        log.info("Deleting qualification: id={}, actor={}", qualificationId, ctx.actorId());
+
+        ProviderQualificationEntity qualification = qualificationRepository.findById(qualificationId)
+                .orElseThrow(() -> new IllegalArgumentException("Qualification not found: " + qualificationId));
+
+        if ("VERIFIED".equals(qualification.getVerificationStatus())) {
+            throw new IllegalStateException("Cannot delete verified qualifications");
+        }
+
+        qualificationRepository.delete(qualification);
+        log.info("Qualification deleted: id={}", qualificationId);
+    }
+
+    private void publishEvent(String aggregateType, String aggregateId, String eventType, String payload) {
+        EventOutboxEntity event = new EventOutboxEntity();
+        event.setAggregateType(aggregateType);
+        event.setAggregateId(aggregateId);
+        event.setEventType(eventType);
+        event.setPayload(payload);
+        outboxRepository.save(event);
+    }
+}
