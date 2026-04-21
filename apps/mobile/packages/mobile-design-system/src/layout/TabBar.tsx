@@ -57,7 +57,7 @@ export function TabBar({ tabs, activeTab, onTabPress, items, activeKey, onSelect
             <Text
               style={[
                 styles.tabLabel,
-                { color: isActive ? "#43A047" : "#757575" },
+                { color: isActive ? "#009739" : "#757575" },
                 isActive ? styles.tabLabelActive : undefined,
               ]}
             >

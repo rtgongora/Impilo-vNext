@@ -46,8 +46,8 @@ export function Switch({
         accessibilityLabel={accessibilityLabel ?? label ?? "Switch"}
         accessibilityRole="switch"
         accessibilityState={{ checked: resolvedValue, disabled }}
-        trackColor={{ false: "#E0E0E0", true: "#A5D6A7" }}
-        thumbColor={resolvedValue ? "#43A047" : "#FAFAFA"}
+        trackColor={{ false: "#E0E0E0", true: "#9DDBB6" }}
+        thumbColor={resolvedValue ? "#009739" : "#FAFAFA"}
       />
     </View>
   );

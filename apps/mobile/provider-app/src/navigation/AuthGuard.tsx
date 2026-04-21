@@ -23,7 +23,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
   if (auth.isLoading) {
     return (
       <View testID="auth-loading" style={styles.loading}>
-        <ActivityIndicator size="large" color="#1E40AF" />
+        <ActivityIndicator size="large" color="#009739" />
       </View>
     );
   }

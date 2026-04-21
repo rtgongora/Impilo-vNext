@@ -361,7 +361,7 @@ const styles = StyleSheet.create({
   },
   switchRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 },
   switchLabel: { flex: 1, fontSize: 13, color: "#374151" },
-  result: { fontSize: 14, fontWeight: "600", color: "#059669" },
+  result: { fontSize: 14, fontWeight: "600", color: "#009739" },
   primaryBtn: { backgroundColor: "#2563EB", borderRadius: 10, paddingVertical: 12, alignItems: "center", marginTop: 4 },
   primaryBtnText: { color: "#fff", fontWeight: "700", fontSize: 15 },
   secondaryBtn: { paddingVertical: 10, alignItems: "center" },

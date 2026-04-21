@@ -3,7 +3,7 @@
  */
 
 import React, { useState, useCallback } from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, Image } from "react-native";
 import * as WebBrowser from "expo-web-browser";
 import * as Linking from "expo-linking";
 import { useAuth } from "@impilo/mobile-auth";
@@ -38,6 +38,7 @@ export function LoginScreen() {
 
   return (
     <View testID="login-screen" style={styles.container}>
+      <Image source={require("../../assets/icon.png")} style={styles.logo} resizeMode="contain" />
       <Text style={styles.title}>Impilo Health</Text>
       <Text style={styles.subtitle}>Your health, in your hands</Text>
       <Card>
@@ -81,6 +82,11 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     marginBottom: 8,
     color: "#111827",
+  },
+  logo: {
+    width: 96,
+    height: 96,
+    marginBottom: 18,
   },
   subtitle: {
     fontSize: 16,

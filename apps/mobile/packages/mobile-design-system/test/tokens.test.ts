@@ -4,7 +4,7 @@ import { colors, spacing, typography, textStyles, borderRadius, shadows, tokens 
 describe("Design Tokens", () => {
   it("colors has primary palette with 10 shades", () => {
     expect(Object.keys(colors.primary)).toHaveLength(10);
-    expect(colors.primary[500]).toBe("#4CAF50");
+    expect(colors.primary[500]).toBe("#009739");
   });
 
   it("colors has semantic colors", () => {

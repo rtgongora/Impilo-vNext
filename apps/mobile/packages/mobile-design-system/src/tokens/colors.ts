@@ -8,30 +8,30 @@
 export const colors = {
   // Primary brand
   primary: {
-    50: "#E8F5E9",
-    100: "#C8E6C9",
-    200: "#A5D6A7",
-    300: "#81C784",
-    400: "#66BB6A",
-    500: "#4CAF50",
-    600: "#43A047",
-    700: "#388E3C",
-    800: "#2E7D32",
-    900: "#1B5E20",
+    50: "#E6F5EC",
+    100: "#CDEDD9",
+    200: "#9DDBB6",
+    300: "#6CC992",
+    400: "#33B56A",
+    500: "#009739",
+    600: "#008A34",
+    700: "#006F2A",
+    800: "#005420",
+    900: "#003A16",
   },
 
   // Secondary / accent
   secondary: {
-    50: "#E3F2FD",
-    100: "#BBDEFB",
-    200: "#90CAF9",
-    300: "#64B5F6",
-    400: "#42A5F5",
-    500: "#2196F3",
-    600: "#1E88E5",
-    700: "#1976D2",
-    800: "#1565C0",
-    900: "#0D47A1",
+    50: "#FDEAEC",
+    100: "#FAD0D5",
+    200: "#F5A6AE",
+    300: "#F07C88",
+    400: "#EB5262",
+    500: "#EF3340",
+    600: "#D62E39",
+    700: "#AB252D",
+    800: "#801C22",
+    900: "#551316",
   },
 
   // Neutral / gray
@@ -51,14 +51,14 @@ export const colors = {
   },
 
   // Semantic
-  success: { light: "#E8F5E9", main: "#4CAF50", dark: "#2E7D32", contrast: "#FFFFFF" },
-  warning: { light: "#FFF3E0", main: "#FF9800", dark: "#E65100", contrast: "#000000" },
+  success: { light: "#E6F5EC", main: "#009739", dark: "#005420", contrast: "#FFFFFF" },
+  warning: { light: "#FFFADB", main: "#FCE300", dark: "#D0B800", contrast: "#231F20" },
   error: { light: "#FFEBEE", main: "#F44336", dark: "#C62828", contrast: "#FFFFFF" },
   info: { light: "#E3F2FD", main: "#2196F3", dark: "#1565C0", contrast: "#FFFFFF" },
 
   // Clinical
   clinical: {
-    vitals: "#4CAF50",
+    vitals: "#009739",
     diagnosis: "#FF9800",
     prescription: "#2196F3",
     labResult: "#9C27B0",

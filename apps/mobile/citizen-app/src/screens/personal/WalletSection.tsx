@@ -55,7 +55,7 @@ export function WalletSection() {
 
 const styles = StyleSheet.create({
   container: { gap: 16 },
-  balanceCard: { backgroundColor: "#059669", borderRadius: 16, padding: 24, alignItems: "center", gap: 4 },
+  balanceCard: { backgroundColor: "#009739", borderRadius: 16, padding: 24, alignItems: "center", gap: 4 },
   balanceLabel: { color: "#A7F3D0", fontSize: 11, fontWeight: "700", letterSpacing: 2 },
   balanceAmount: { color: "#FFFFFF", fontSize: 32, fontWeight: "700" },
   balanceStatus: { color: "#6EE7B7", fontSize: 12 },

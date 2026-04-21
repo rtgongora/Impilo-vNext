@@ -87,7 +87,7 @@ export function HealthIdSection() {
 
 const styles = StyleSheet.create({
   container: { gap: 16 },
-  card: { backgroundColor: "#1E40AF", borderRadius: 16, padding: 20, gap: 8 },
+  card: { backgroundColor: "#231F20", borderRadius: 16, padding: 20, gap: 8 },
   cardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   cardTitle: { color: "#93C5FD", fontSize: 11, fontWeight: "700", letterSpacing: 2 },
   idNumber: { color: "#FFFFFF", fontSize: 22, fontWeight: "700", letterSpacing: 1 },

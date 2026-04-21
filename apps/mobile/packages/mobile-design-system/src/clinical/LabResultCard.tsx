@@ -21,7 +21,7 @@ export interface LabResultCardProps {
 }
 
 const STATUS_CONFIG: Record<LabResultStatus, { color: string; bg: string }> = {
-  NORMAL: { color: "#2E7D32", bg: "#E8F5E9" },
+  NORMAL: { color: "#005420", bg: "#E6F5EC" },
   ABNORMAL: { color: "#E65100", bg: "#FFF3E0" },
   CRITICAL: { color: "#C62828", bg: "#FFEBEE" },
   PENDING: { color: "#1565C0", bg: "#E3F2FD" },

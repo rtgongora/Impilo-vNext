@@ -67,8 +67,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   boxChecked: {
-    backgroundColor: "#43A047",
-    borderColor: "#43A047",
+    backgroundColor: "#009739",
+    borderColor: "#009739",
   },
   boxDisabled: {
     backgroundColor: "#F5F5F5",
