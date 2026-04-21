@@ -194,6 +194,31 @@
       ]
     },
     {
+      "name": "roles",
+      "description": "Adds realm roles to access token",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "false"
+      },
+      "protocolMappers": [
+        {
+          "name": "realm roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "claim.name": "realm_access.roles",
+            "jsonType.label": "String",
+            "multivalued": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
       "name": "impilo-tenant",
       "description": "Adds tenant_id claim to access tokens",
       "protocol": "openid-connect",
@@ -223,6 +248,7 @@
     "openid",
     "profile",
     "email",
+    "roles",
     "impilo-tenant"
   ],
   "clients": [
@@ -250,6 +276,7 @@
         "openid",
         "profile",
         "email",
+        "roles",
         "impilo-tenant"
       ]
     },
@@ -520,6 +547,36 @@
       ],
       "realmRoles": [
         "FINANCE"
+      ]
+    },
+    {
+      "username": "superadmin",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "System",
+      "lastName": "Admin",
+      "email": "superadmin@impilo.gov.zw",
+      "attributes": {
+        "health_id": ["b0000000-0000-4000-8000-000000000010"],
+        "provider_id": ["PROV-ZW-ADMIN-001"]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Impilo@2024!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "SYSTEM_ADMIN",
+        "FACILITY_ADMIN",
+        "CLINICIAN",
+        "NURSE",
+        "PHARMACIST",
+        "FINANCE",
+        "SUPPORT_AGENT",
+        "DEVELOPER",
+        "CITIZEN"
       ]
     },
     {

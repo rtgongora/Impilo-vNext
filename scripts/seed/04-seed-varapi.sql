@@ -82,7 +82,14 @@ VALUES
      'Tapiwa', 'Chigumba', 'MDPCZ-2020-112',
      'PROV-ZW-00006', 'Dr', '1992-09-18', 'MALE', 'ZW',
      'chigumba@mpilo.gov.zw', '+263771000006', 'MEDICAL_DOCTOR', 'GENERAL_PRACTITIONER',
-     (SELECT id FROM varapi.councils WHERE council_code = 'MDPCZ'), 'ACTIVE')
+     (SELECT id FROM varapi.councils WHERE council_code = 'MDPCZ'), 'ACTIVE'),
+
+    ('00000000-0000-4000-8000-000000000001',
+     'b0000000-0000-4000-8000-000000000010',
+     'System', 'Admin', 'MOHCC-ADMIN-001',
+     'PROV-ZW-ADMIN-001', 'Dr', '1985-01-01', 'MALE', 'ZW',
+     'superadmin@impilo.gov.zw', '+263771000010', 'SYSTEM_ADMINISTRATOR', 'PLATFORM_ADMIN',
+     (SELECT id FROM varapi.councils WHERE council_code = 'MOHCC_HQ'), 'ACTIVE')
 ON CONFLICT (provider_ref) DO NOTHING;
 
 INSERT INTO varapi.provider_specialties
@@ -101,7 +108,10 @@ VALUES
     ((SELECT id FROM varapi.provider WHERE provider_ref = 'c0000000-0000-4000-8000-000000000005'),
      '00000000-0000-4000-8000-000000000001', 'MHNS', 'Mental Health Nursing', true,  true),
     ((SELECT id FROM varapi.provider WHERE provider_ref = 'c0000000-0000-4000-8000-000000000006'),
-     '00000000-0000-4000-8000-000000000001', 'GP',   'General Practice',      true,  true)
+     '00000000-0000-4000-8000-000000000001', 'GP',   'General Practice',      true,  true),
+
+    ((SELECT id FROM varapi.provider WHERE provider_ref = 'b0000000-0000-4000-8000-000000000010'),
+     '00000000-0000-4000-8000-000000000001', 'ADMIN', 'Platform Administration', true, true)
 ON CONFLICT DO NOTHING;
 
 INSERT INTO varapi.provider_council_affiliations
@@ -129,7 +139,11 @@ VALUES
 
     ((SELECT id FROM varapi.provider WHERE provider_ref = 'c0000000-0000-4000-8000-000000000006'),
      (SELECT id FROM varapi.councils WHERE council_code = 'MDPCZ'),
-     '00000000-0000-4000-8000-000000000001', 'MDPCZ-2020-112', '2020-02-28', 'ACTIVE')
+     '00000000-0000-4000-8000-000000000001', 'MDPCZ-2020-112', '2020-02-28', 'ACTIVE'),
+
+    ((SELECT id FROM varapi.provider WHERE provider_ref = 'b0000000-0000-4000-8000-000000000010'),
+     (SELECT id FROM varapi.councils WHERE council_code = 'MOHCC_HQ'),
+     '00000000-0000-4000-8000-000000000001', 'MOHCC-ADMIN-001', '2020-01-01', 'ACTIVE')
 ON CONFLICT DO NOTHING;
 
 INSERT INTO varapi.licenses
@@ -176,7 +190,13 @@ VALUES
      (SELECT id FROM varapi.councils WHERE council_code = 'MDPCZ'),
      '00000000-0000-4000-8000-000000000001',
      'PRACTICE', 'LIC-MDPCZ-2024-112', 'ACTIVE', '2024-01-01', '2025-12-31',
-     'Medical and Dental Practitioners Council of Zimbabwe')
+     'Medical and Dental Practitioners Council of Zimbabwe'),
+
+    ((SELECT id FROM varapi.provider WHERE provider_ref = 'b0000000-0000-4000-8000-000000000010'),
+     (SELECT id FROM varapi.councils WHERE council_code = 'MOHCC_HQ'),
+     '00000000-0000-4000-8000-000000000001',
+     'PRACTICE', 'LIC-MOHCC-ADMIN-2024-001', 'ACTIVE', '2024-01-01', '2030-12-31',
+     'Ministry of Health and Child Care Zimbabwe')
 ON CONFLICT DO NOTHING;
 
 INSERT INTO varapi.privileges
@@ -201,5 +221,30 @@ VALUES
     ((SELECT id FROM varapi.provider WHERE provider_ref = 'c0000000-0000-4000-8000-000000000006'),
      '00000000-0000-4000-8000-000000000001',
      4, 'a0000000-0000-4000-8000-000000000008',
-     'CLINICAL', 'PRESCRIBING', 'admin.central', '2024-01-01', '2025-12-31', 'ACTIVE')
+     'CLINICAL', 'PRESCRIBING', 'admin.central', '2024-01-01', '2025-12-31', 'ACTIVE'),
+
+    ((SELECT id FROM varapi.provider WHERE provider_ref = 'b0000000-0000-4000-8000-000000000010'),
+     '00000000-0000-4000-8000-000000000001',
+     1, 'a0000000-0000-4000-8000-000000000001',
+     'ADMINISTRATIVE', 'SYSTEM_ADMIN', 'platform.bootstrap', '2024-01-01', '2030-12-31', 'APPROVED'),
+
+    ((SELECT id FROM varapi.provider WHERE provider_ref = 'b0000000-0000-4000-8000-000000000010'),
+     '00000000-0000-4000-8000-000000000001',
+     2, 'a0000000-0000-4000-8000-000000000005',
+     'ADMINISTRATIVE', 'SYSTEM_ADMIN', 'platform.bootstrap', '2024-01-01', '2030-12-31', 'APPROVED'),
+
+    ((SELECT id FROM varapi.provider WHERE provider_ref = 'b0000000-0000-4000-8000-000000000010'),
+     '00000000-0000-4000-8000-000000000001',
+     3, 'a0000000-0000-4000-8000-000000000006',
+     'ADMINISTRATIVE', 'SYSTEM_ADMIN', 'platform.bootstrap', '2024-01-01', '2030-12-31', 'APPROVED'),
+
+    ((SELECT id FROM varapi.provider WHERE provider_ref = 'b0000000-0000-4000-8000-000000000010'),
+     '00000000-0000-4000-8000-000000000001',
+     4, 'a0000000-0000-4000-8000-000000000008',
+     'ADMINISTRATIVE', 'SYSTEM_ADMIN', 'platform.bootstrap', '2024-01-01', '2030-12-31', 'APPROVED'),
+
+    ((SELECT id FROM varapi.provider WHERE provider_ref = 'b0000000-0000-4000-8000-000000000010'),
+     '00000000-0000-4000-8000-000000000001',
+     5, 'a0000000-0000-4000-8000-000000000009',
+     'ADMINISTRATIVE', 'SYSTEM_ADMIN', 'platform.bootstrap', '2024-01-01', '2030-12-31', 'APPROVED')
 ON CONFLICT DO NOTHING;

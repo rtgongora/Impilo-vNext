@@ -49,7 +49,12 @@ VALUES
     ('b0000000-0000-4000-8000-000000000008',
      '00000000-0000-4000-8000-000000000001',
      'Mavis', 'Choto', '1952-02-14', 'FEMALE',
-     'b9c82d6a2f7b8c0fde45a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7', 'ACTIVE');
+     'b9c82d6a2f7b8c0fde45a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7', 'ACTIVE'),
+
+    ('b0000000-0000-4000-8000-000000000010',
+     '00000000-0000-4000-8000-000000000001',
+     'System', 'Admin', '1985-01-01', 'MALE',
+     'c0d91e7b3f8a2b4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9', 'ACTIVE');
 
 INSERT INTO vito.identity_alias
     (tenant_id, health_id, alias_type, lookup_hash, verifier, status)
@@ -82,4 +87,10 @@ VALUES
      'b0000000-0000-4000-8000-000000000005',
      'IMPILO_ID',
      'hash_cpid_zw_00005_dev', '$argon2id$v=19$m=65536,t=3,p=4$dev_salt_5$dev_verifier_cpid_zw_00005',
+     'ACTIVE'),
+
+    ('00000000-0000-4000-8000-000000000001',
+     'b0000000-0000-4000-8000-000000000010',
+     'IMPILO_ID',
+     'hash_cpid_zw_admin_dev', '$argon2id$v=19$m=65536,t=3,p=4$dev_salt_admin$dev_verifier_cpid_zw_admin',
      'ACTIVE');

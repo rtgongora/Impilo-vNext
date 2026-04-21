@@ -233,6 +233,54 @@
         "clientRole": false
       },
       {
+        "name": "CLINICIAN",
+        "description": "Generic clinician — maps to CLINICAL_ROLES in BFF",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "FACILITY_ADMIN",
+        "description": "Facility-level administrator",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "DEVELOPER",
+        "description": "Platform developer — governed dev access across all role groups",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "CITIZEN",
+        "description": "Citizen / patient self-service role",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "SUPPORT_AGENT",
+        "description": "Support agent — queue and commerce access",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "CAREGIVER",
+        "description": "Delegated caregiver for a patient",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "CARE_PARTNER",
+        "description": "Family care partner",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "PUBLIC_HEALTH_OFFICER",
+        "description": "Public health and epidemiology officer",
+        "composite": false,
+        "clientRole": false
+      },
+      {
         "name": "CLINICAL_STAFF",
         "description": "Composite clinical frontline",
         "composite": true,
@@ -772,6 +820,43 @@
       ]
     },
     {
+      "clientId": "experience-ui",
+      "name": "Impilo Experience UI (Dev ROPC)",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "http://localhost:3020/*",
+        "http://localhost:3000/*",
+        "https://impilo.gov.zw/*"
+      ],
+      "webOrigins": [
+        "http://localhost:3020",
+        "http://localhost:3000",
+        "https://impilo.gov.zw"
+      ],
+      "protocol": "openid-connect",
+      "fullScopeAllowed": true,
+      "defaultClientScopes": [
+        "openid",
+        "profile",
+        "email",
+        "impilo-tenant"
+      ],
+      "optionalClientScopes": [
+        "address",
+        "phone",
+        "offline_access",
+        "microprofile-jwt",
+        "impilo-trust-headers",
+        "impilo-clinical",
+        "impilo-admin"
+      ]
+    },
+    {
       "clientId": "impilo-bff",
       "name": "Impilo Experience BFF",
       "enabled": true,
@@ -832,7 +917,46 @@
       ]
     }
   ],
-  "users": [],
+  "users": [
+    {
+      "username": "superadmin",
+      "email": "superadmin@impilo.gov.zw",
+      "firstName": "System",
+      "lastName": "Admin",
+      "enabled": true,
+      "emailVerified": true,
+      "attributes": {
+        "health_id": ["b0000000-0000-4000-8000-000000000010"],
+        "actor_id":  ["b0000000-0000-4000-8000-000000000010"],
+        "actor_type": ["SYSTEM"]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Impilo@2024!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "SYSTEM_ADMIN",
+        "SUPER_ADMIN",
+        "DEVELOPER",
+        "FACILITY_ADMIN",
+        "CLINICIAN",
+        "NURSE",
+        "PHARMACIST",
+        "FINANCE",
+        "CITIZEN",
+        "SUPPORT_AGENT",
+        "PUBLIC_HEALTH_OFFICER",
+        "ADMIN",
+        "CLINICAL",
+        "PRESCRIBER",
+        "DISPENSER",
+        "QUEUE_MANAGER"
+      ]
+    }
+  ],
   "accessTokenLifespanForImplicitFlow": 900,
   "offlineSessionIdleTimeout": 2592000,
   "permanentLockout": false,

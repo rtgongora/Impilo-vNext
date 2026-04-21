@@ -28,6 +28,13 @@ services:
     volumes:
       - pg_data:/var/lib/postgresql/data
       - ./scripts/seed/01-init-databases.sql:/docker-entrypoint-initdb.d/01-init-databases.sql
+      - ./scripts/seed/02-seed-tuso.sql:/docker-entrypoint-initdb.d/02-seed-tuso.sql
+      - ./scripts/seed/03-seed-vito.sql:/docker-entrypoint-initdb.d/03-seed-vito.sql
+      - ./scripts/seed/04-seed-varapi.sql:/docker-entrypoint-initdb.d/04-seed-varapi.sql
+      - ./scripts/seed/05-seed-tshepo.sql:/docker-entrypoint-initdb.d/05-seed-tshepo.sql
+      - ./scripts/seed/06-seed-zibo.sql:/docker-entrypoint-initdb.d/06-seed-zibo.sql
+      - ./scripts/seed/07-seed-pct.sql:/docker-entrypoint-initdb.d/07-seed-pct.sql
+      - ./scripts/seed/08-seed-oros.sql:/docker-entrypoint-initdb.d/08-seed-oros.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-impilo}"]
       interval: 5s
@@ -528,11 +535,11 @@ services:
       context: ./ui/experience
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_BFF_URL: http://experience-bff:8160
-        NEXT_PUBLIC_API_GATEWAY_URL: http://envoy:10000
+        NEXT_PUBLIC_BFF_URL: http://localhost:8160
+        NEXT_PUBLIC_API_GATEWAY_URL: http://localhost:10000
     environment:
-      NEXT_PUBLIC_BFF_URL: http://experience-bff:8160
-      NEXT_PUBLIC_GATEWAY_URL: http://envoy:10000
+      NEXT_PUBLIC_BFF_URL: http://localhost:8160
+      NEXT_PUBLIC_GATEWAY_URL: http://localhost:10000
       HOSTNAME: "0.0.0.0"
     ports:
       - "3020:3020"
