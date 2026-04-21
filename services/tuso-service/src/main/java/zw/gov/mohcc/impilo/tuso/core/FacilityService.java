@@ -16,6 +16,7 @@ import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityGeoEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityHistoryEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityIdentifierEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityReadinessEntity;
+import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityRegulatoryStatus;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.WorkspaceEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.EventOutboxRepository;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityCapabilityRepository;
@@ -108,6 +109,8 @@ public class FacilityService {
         facility.setWorkflowArchetype(dto.workflowArchetype());
         facility.setDescription(dto.description());
         facility.setOpenedDate(dto.openedDate());
+        facility.setRegulatoryStatus(FacilityRegulatoryStatus.REGISTERED_ACTIVE);
+        facility.setRegulatoryStatusUpdatedAt(Instant.now());
         facility.setVersion(1);
         facility.setCreatedBy(actorId);
         facility.setUpdatedBy(actorId);
@@ -341,17 +344,18 @@ public class FacilityService {
         String status = filters != null ? filters.status() : null;
         String district = filters != null ? filters.district() : null;
         String province = filters != null ? filters.province() : null;
+        FacilityRegulatoryStatus regulatoryStatus = null;
 
         if (query != null && !query.isBlank()) {
             log.debug("Searching facilities for tenant {} with query '{}', type={}, status={}, district={}, province={}",
                     tenantId, query, type, status, district, province);
             return facilityRepository.searchByNameAndFilters(tenantId, query.trim(), type, status,
-                    district, province, pageable);
+                    regulatoryStatus, district, province, pageable);
         }
 
         log.debug("Listing facilities for tenant {} with type={}, status={}, district={}, province={}",
                 tenantId, type, status, district, province);
-        return facilityRepository.findByFilters(tenantId, type, status, district, province, pageable);
+        return facilityRepository.findByFilters(tenantId, type, status, regulatoryStatus, district, province, pageable);
     }
 
     /**

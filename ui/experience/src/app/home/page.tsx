@@ -85,7 +85,7 @@ interface OperatingSignal {
   detail: string;
 }
 
-function formatOperatingLabel(value?: string) {
+function formatOperatingLabel(value?: string | null) {
   if (!value) return null;
   return value
     .toLowerCase()

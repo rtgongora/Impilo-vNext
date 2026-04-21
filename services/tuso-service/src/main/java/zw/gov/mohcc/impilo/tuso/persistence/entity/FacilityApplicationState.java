@@ -1,0 +1,18 @@
+package zw.gov.mohcc.impilo.tuso.persistence.entity;
+
+public enum FacilityApplicationState {
+    DRAFT,
+    SUBMITTED,
+    UNDER_ADMIN_REVIEW,
+    AWAITING_DOCUMENTS,
+    AWAITING_FEE,
+    READY_FOR_INSPECTION,
+    INSPECTION_SCHEDULED,
+    INSPECTED,
+    AWAITING_RECTIFICATION,
+    READY_FOR_COMMITTEE,
+    DECIDED_APPROVED,
+    DECIDED_REJECTED,
+    DECIDED_DEFERRED,
+    CLOSED_OUT
+}
