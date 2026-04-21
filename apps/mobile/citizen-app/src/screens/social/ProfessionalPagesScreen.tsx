@@ -49,6 +49,6 @@ const styles = StyleSheet.create({
   metaRow: { flexDirection: "row", gap: 12, flexWrap: "wrap" },
   rating: { fontSize: 12, color: "#F59E0B", fontWeight: "600" },
   exp: { fontSize: 12, color: "#6B7280" },
-  fee: { fontSize: 12, color: "#059669", fontWeight: "600" },
+  fee: { fontSize: 12, color: "#009739", fontWeight: "600" },
   bio: { fontSize: 12, color: "#4B5563", marginTop: 4 },
 });

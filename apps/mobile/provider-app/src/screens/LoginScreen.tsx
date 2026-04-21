@@ -72,6 +72,7 @@ export function LoginScreen() {
   }, [auth, pendingState]);
 
   return (
+<<<<<<< HEAD
     <View testID="login-screen" style={styles.root}>
       <View style={styles.heroSection}>
         <View style={styles.logoCircle}>

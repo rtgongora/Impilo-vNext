@@ -34,6 +34,7 @@ public interface FacilityRepository extends JpaRepository<FacilityEntity, Long> 
            "AND (:query IS NULL OR LOWER(f.name) LIKE LOWER(CONCAT('%', :query, '%'))) " +
            "AND (:type IS NULL OR f.facilityType = :type) " +
            "AND (:status IS NULL OR f.status = :status) " +
+           "AND (:regulatoryStatus IS NULL OR f.regulatoryStatus = :regulatoryStatus) " +
            "AND (:district IS NULL OR f.district = :district) " +
            "AND (:province IS NULL OR f.province = :province)")
     Page<FacilityEntity> searchByNameAndFilters(
@@ -41,6 +42,7 @@ public interface FacilityRepository extends JpaRepository<FacilityEntity, Long> 
             @Param("query") String query,
             @Param("type") String type,
             @Param("status") String status,
+            @Param("regulatoryStatus") zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityRegulatoryStatus regulatoryStatus,
             @Param("district") String district,
             @Param("province") String province,
             Pageable pageable);
@@ -48,17 +50,21 @@ public interface FacilityRepository extends JpaRepository<FacilityEntity, Long> 
     @Query("SELECT f FROM FacilityEntity f WHERE f.tenantId = :tenantId " +
            "AND (:type IS NULL OR f.facilityType = :type) " +
            "AND (:status IS NULL OR f.status = :status) " +
+           "AND (:regulatoryStatus IS NULL OR f.regulatoryStatus = :regulatoryStatus) " +
            "AND (:district IS NULL OR f.district = :district) " +
            "AND (:province IS NULL OR f.province = :province)")
     Page<FacilityEntity> findByFilters(
             @Param("tenantId") UUID tenantId,
             @Param("type") String type,
             @Param("status") String status,
+            @Param("regulatoryStatus") zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityRegulatoryStatus regulatoryStatus,
             @Param("district") String district,
             @Param("province") String province,
             Pageable pageable);
 
     Page<FacilityEntity> findByTenantId(UUID tenantId, Pageable pageable);
+
+    List<FacilityEntity> findByTenantId(UUID tenantId);
 
     boolean existsByTenantIdAndFacilityCode(UUID tenantId, String facilityCode);
 

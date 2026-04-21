@@ -268,10 +268,87 @@ public class TusoServiceClient {
         return extractData(response);
     }
 
+    // Regulatory facility lifecycle operations
+
+    public JsonNode listFacilityRegistryFacilities(String search, String regulatoryStatus, String facilityType,
+                                                   String province, String district, int page, int size) {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/internal/facility-registry/facilities")
+                .queryParam("page", page)
+                .queryParam("size", size);
+        if (search != null && !search.isBlank()) builder.queryParam("search", search);
+        if (regulatoryStatus != null && !regulatoryStatus.isBlank()) builder.queryParam("regulatoryStatus", regulatoryStatus);
+        if (facilityType != null && !facilityType.isBlank()) builder.queryParam("facilityType", facilityType);
+        if (province != null && !province.isBlank()) builder.queryParam("province", province);
+        if (district != null && !district.isBlank()) builder.queryParam("district", district);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(builder.toUriString(), JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode getFacilityRegulatoryProfile(String facilityId) {
+        String url = baseUrl + "/v1/internal/facility-registry/facilities/" + facilityId;
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode createFacilityApplication(Map<String, Object> body) {
+        return postJson(baseUrl + "/v1/internal/facility-registry/applications", body);
+    }
+
+    public JsonNode submitFacilityApplication(String applicationId) {
+        return postJson(baseUrl + "/v1/internal/facility-registry/applications/" + applicationId + "/submit", null);
+    }
+
+    public JsonNode markFacilityApplicationReadyForInspection(String applicationId) {
+        return postJson(baseUrl + "/v1/internal/facility-registry/applications/" + applicationId + "/ready-for-inspection", null);
+    }
+
+    public JsonNode uploadFacilityDocument(Map<String, Object> body) {
+        return postJson(baseUrl + "/v1/internal/facility-registry/documents", body);
+    }
+
+    public JsonNode listChecklistTemplates(String inspectionType, String facilityType) {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/internal/facility-registry/checklist-templates")
+                .queryParam("inspectionType", inspectionType);
+        if (facilityType != null && !facilityType.isBlank()) builder.queryParam("facilityType", facilityType);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(builder.toUriString(), JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode scheduleFacilityInspection(Map<String, Object> body) {
+        return postJson(baseUrl + "/v1/internal/facility-registry/inspections", body);
+    }
+
+    public JsonNode recordFacilityInspection(String inspectionId, Map<String, Object> body) {
+        return postJson(baseUrl + "/v1/internal/facility-registry/inspections/" + inspectionId + "/record", body);
+    }
+
+    public JsonNode updateComplianceAction(String actionId, Map<String, Object> body) {
+        return postJson(baseUrl + "/v1/internal/facility-registry/compliance-actions/" + actionId, body);
+    }
+
+    public JsonNode recordCommitteeDecision(Map<String, Object> body) {
+        return postJson(baseUrl + "/v1/internal/facility-registry/committee-reviews", body);
+    }
+
+    public JsonNode openEnforcementCase(Map<String, Object> body) {
+        return postJson(baseUrl + "/v1/internal/facility-registry/enforcement-cases", body);
+    }
+
+    public JsonNode getFacilityRegulatoryDashboard() {
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(
+                baseUrl + "/v1/internal/facility-registry/dashboard/summary", JsonNode.class);
+        return extractData(response);
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) {
             return response.getBody().get("data");
         }
         return response.getBody();
+    }
+
+    private JsonNode postJson(String url, Map<String, Object> body) {
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
     }
 }

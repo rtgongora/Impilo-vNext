@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
     color: "#212121",
   },
   optionTextSelected: {
-    color: "#2E7D32",
+    color: "#005420",
     fontWeight: "600",
   },
   optionTextDisabled: {

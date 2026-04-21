@@ -16,7 +16,7 @@ export interface VitalCardProps {
 }
 
 const STATUS_COLORS = {
-  normal: "#4CAF50",
+  normal: "#009739",
   warning: "#FF9800",
   critical: "#F44336",
 };

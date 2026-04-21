@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   savedText: {
-    color: "#059669",
+    color: "#009739",
     fontSize: 14,
   },
 });

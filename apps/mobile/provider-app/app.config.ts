@@ -12,7 +12,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   splash: {
     image: "./assets/splash.png",
     resizeMode: "contain",
-    backgroundColor: "#1E40AF",
+    backgroundColor: "#009739",
   },
   ios: {
     supportsTablet: true,
@@ -29,7 +29,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   android: {
     adaptiveIcon: {
       foregroundImage: "./assets/adaptive-icon.png",
-      backgroundColor: "#1E40AF",
+      backgroundColor: "#009739",
     },
     package: "zw.gov.impilo.provider",
     versionCode: 1,

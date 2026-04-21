@@ -47,7 +47,7 @@ export function App() {
   if (!initialized) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#059669" />
+        <ActivityIndicator size="large" color="#009739" />
         <Text style={styles.loadingText}>Initializing Impilo Health...</Text>
       </View>
     );

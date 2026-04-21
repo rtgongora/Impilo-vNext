@@ -1,9 +1,14 @@
 package zw.gov.mohcc.impilo.tuso.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Entity
@@ -46,6 +51,39 @@ public class FacilityEntity {
 
     @Column(name = "ownership", length = 50)
     private String ownership;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "alias_names", columnDefinition = "jsonb")
+    private List<String> aliasNames;
+
+    @Column(name = "operating_entity", length = 255)
+    private String operatingEntity;
+
+    @Column(name = "facility_class", length = 100)
+    private String facilityClass;
+
+    @Column(name = "facility_category", length = 100)
+    private String facilityCategory;
+
+    @Column(name = "legal_status", length = 100)
+    private String legalStatus;
+
+    @Column(name = "registration_pathway", length = 64)
+    private String registrationPathway;
+
+    @Column(name = "institution_file_number", length = 64)
+    private String institutionFileNumber;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "regulatory_status", length = 64)
+    private FacilityRegulatoryStatus regulatoryStatus = FacilityRegulatoryStatus.DRAFT;
+
+    @Column(name = "regulatory_status_updated_at")
+    private Instant regulatoryStatusUpdatedAt;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "metadata", columnDefinition = "jsonb")
+    private Map<String, Object> metadata;
 
     @Column(name = "level", length = 50)
     private String level;
@@ -148,6 +186,36 @@ public class FacilityEntity {
 
     public String getOwnership() { return ownership; }
     public void setOwnership(String ownership) { this.ownership = ownership; }
+
+    public List<String> getAliasNames() { return aliasNames; }
+    public void setAliasNames(List<String> aliasNames) { this.aliasNames = aliasNames; }
+
+    public String getOperatingEntity() { return operatingEntity; }
+    public void setOperatingEntity(String operatingEntity) { this.operatingEntity = operatingEntity; }
+
+    public String getFacilityClass() { return facilityClass; }
+    public void setFacilityClass(String facilityClass) { this.facilityClass = facilityClass; }
+
+    public String getFacilityCategory() { return facilityCategory; }
+    public void setFacilityCategory(String facilityCategory) { this.facilityCategory = facilityCategory; }
+
+    public String getLegalStatus() { return legalStatus; }
+    public void setLegalStatus(String legalStatus) { this.legalStatus = legalStatus; }
+
+    public String getRegistrationPathway() { return registrationPathway; }
+    public void setRegistrationPathway(String registrationPathway) { this.registrationPathway = registrationPathway; }
+
+    public String getInstitutionFileNumber() { return institutionFileNumber; }
+    public void setInstitutionFileNumber(String institutionFileNumber) { this.institutionFileNumber = institutionFileNumber; }
+
+    public FacilityRegulatoryStatus getRegulatoryStatus() { return regulatoryStatus; }
+    public void setRegulatoryStatus(FacilityRegulatoryStatus regulatoryStatus) { this.regulatoryStatus = regulatoryStatus; }
+
+    public Instant getRegulatoryStatusUpdatedAt() { return regulatoryStatusUpdatedAt; }
+    public void setRegulatoryStatusUpdatedAt(Instant regulatoryStatusUpdatedAt) { this.regulatoryStatusUpdatedAt = regulatoryStatusUpdatedAt; }
+
+    public Map<String, Object> getMetadata() { return metadata; }
+    public void setMetadata(Map<String, Object> metadata) { this.metadata = metadata; }
 
     public String getLevel() { return level; }
     public void setLevel(String level) { this.level = level; }

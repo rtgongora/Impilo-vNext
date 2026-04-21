@@ -51,6 +51,7 @@ export function LoginScreen() {
   }, [auth]);
 
   return (
+<<<<<<< HEAD
     <View testID="login-screen" style={styles.root}>
       <View style={styles.heroSection}>
         <View style={styles.logoCircle}>

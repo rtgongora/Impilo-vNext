@@ -12,7 +12,7 @@
 import { type ReactNode } from "react";
 import Link from "next/link";
 import { Heart, Shield, Activity } from "lucide-react";
-import { ImpiloLogo } from "@/components/brand/ImpiloLogo";
+import { ImpiloBrandLogo } from "@/components/brand/ImpiloBrandLogo";
 
 export function AuthLayout({ children }: { children: ReactNode }) {
   return (
@@ -27,7 +27,7 @@ export function AuthLayout({ children }: { children: ReactNode }) {
 
         <div className="relative z-10 flex flex-col justify-between p-12 text-white">
           <div>
-            <ImpiloLogo variant="full" size={36} className="[&_svg]:text-white [&_span]:!text-white" />
+            <ImpiloBrandLogo variant="full" tone="white" size={36} />
             <p className="text-sm text-impilo-100 mt-2">Health Operating System</p>
           </div>
 
@@ -78,7 +78,7 @@ export function AuthLayout({ children }: { children: ReactNode }) {
           {/* Mobile header */}
           <div className="lg:hidden text-center mb-8">
             <div className="flex justify-center">
-              <ImpiloLogo variant="full" size={28} />
+              <ImpiloBrandLogo variant="full" size={28} />
             </div>
             <p className="text-xs text-gray-500 mt-1">Health Operating System</p>
           </div>

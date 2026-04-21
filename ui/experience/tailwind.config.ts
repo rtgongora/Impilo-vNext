@@ -9,20 +9,20 @@ const config: Config = {
       colors: {
         /* Impilo brand palette — mirrors ui/shared-ui/tokens.css */
         impilo: {
-          50: "#E8F5EC",
-          100: "#C8E6CE",
-          200: "#A0D4A8",
-          300: "#6DBF7B",
-          400: "#43A854",
-          500: "#1F7A3A",   /* Brand Primary */
-          600: "#1A6831",
-          700: "#155628",
-          800: "#10441F",
-          900: "#0B3216",
+          50: "#E6F5EC",
+          100: "#CDEDD9",
+          200: "#9DDBB6",
+          300: "#6CC992",
+          400: "#33B56A",
+          500: "#009739",   /* Brand Primary */
+          600: "#008A34",
+          700: "#006F2A",
+          800: "#005420",
+          900: "#003A16",
         },
-        "brand-yellow": "#F2C300",
-        "brand-red": "#D62828",
-        "brand-black": "#111111",
+        "brand-yellow": "#FCE300",
+        "brand-red": "#EF3340",
+        "brand-black": "#231F20",
       },
       fontFamily: {
         sans: ['"Inter"', "system-ui", "sans-serif"],

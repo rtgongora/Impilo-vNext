@@ -38,7 +38,7 @@ function facilityCardTone(status: string) {
   return "border-slate-200 bg-slate-50";
 }
 
-function formatEnumLabel(value?: string) {
+function formatEnumLabel(value?: string | null) {
   if (!value) return null;
   return value
     .toLowerCase()

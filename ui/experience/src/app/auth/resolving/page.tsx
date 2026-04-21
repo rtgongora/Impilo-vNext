@@ -18,7 +18,7 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, Loader2, Stethoscope } from "lucide-react";
-import { ImpiloLogo } from "@/components/brand/ImpiloLogo";
+import { ImpiloBrandLogo } from "@/components/brand/ImpiloBrandLogo";
 import { NompiloHint } from "@/components/intelligent/NompiloHint";
 import { useLinkedIds } from "@/hooks/queries/useLinkedIds";
 import { useAuthStore } from "@/hooks/useAuthStore";
@@ -104,7 +104,7 @@ export default function ResolvingPage() {
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-gray-50 to-white px-6">
       <div className="flex flex-col items-center max-w-sm w-full">
         {/* Logo */}
-        <ImpiloLogo variant="full" size={40} />
+        <ImpiloBrandLogo variant="full" size={40} />
 
         {/* Heading */}
         <h1 className="mt-8 text-lg font-semibold text-gray-900">

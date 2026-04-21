@@ -7,10 +7,10 @@
 @layer base {
   :root {
     /* Brand */
-    --color-brand-primary: #1F7A3A;
-    --color-brand-accent-yellow: #F2C300;
-    --color-brand-accent-red: #D62828;
-    --color-brand-accent-black: #111111;
+    --color-brand-primary: #009739;
+    --color-brand-accent-yellow: #FCE300;
+    --color-brand-accent-red: #EF3340;
+    --color-brand-accent-black: #231F20;
 
     /* Semantic */
     --color-success: #16A34A;
