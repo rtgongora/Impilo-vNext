@@ -15,13 +15,13 @@
     "@impilo/mobile-api-client": "workspace:*"
   },
   "peerDependencies": {
-    "react": "^18.2.0"
+    "react": ">=18.2.0"
   },
   "devDependencies": {
     "typescript": "~5.5.4",
     "vitest": "^2.1.0",
-    "react": "^18.3.1",
-    "@types/react": "^18.3.11"
+    "react": "19.1.0",
+    "@types/react": "~19.1.10"
   },
   "engines": {
     "node": ">=20"

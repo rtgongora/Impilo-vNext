@@ -7,6 +7,7 @@
 
 import React from "react";
 import { View, StyleSheet } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { TabBar, type TabItem } from "@impilo/mobile-design-system";
 import { useAppStore } from "../stores/appStore";
 import type { CitizenTab } from "../types";
@@ -18,6 +19,8 @@ import { MarketplaceScreen } from "../screens/marketplace/MarketplaceScreen";
 import { MessagingInboxScreen } from "../screens/messaging/MessagingInboxScreen";
 import { TelehealthListScreen } from "../screens/telehealth/TelehealthListScreen";
 
+const ACCENT = "#059669";
+
 const TAB_SCREENS: Record<CitizenTab, React.FC> = {
   home: HomeScreen,
   personal: PersonalScreen,
@@ -27,18 +30,39 @@ const TAB_SCREENS: Record<CitizenTab, React.FC> = {
   telehealth: TelehealthListScreen,
 };
 
+function tabIcon(name: string, isActive: boolean): React.ReactNode {
+  const color = isActive ? ACCENT : "#9CA3AF";
+  return <Ionicons name={name as never} size={22} color={color} />;
+}
+
 export function CitizenTabs() {
   const { activeTab, setActiveTab, unreadMessages } = useAppStore();
 
   const tabs: TabItem[] = [
-    { id: "home", label: "Home", icon: "home" },
-    { id: "personal", label: "Health", icon: "heart" },
-    { id: "social", label: "Feed", icon: "globe" },
-    { id: "marketplace", label: "Services", icon: "shopping-bag" },
+    {
+      id: "home",
+      label: "Home",
+      icon: tabIcon(activeTab === "home" ? "home" : "home-outline", activeTab === "home"),
+    },
+    {
+      id: "personal",
+      label: "Health",
+      icon: tabIcon(activeTab === "personal" ? "heart" : "heart-outline", activeTab === "personal"),
+    },
+    {
+      id: "social",
+      label: "Feed",
+      icon: tabIcon(activeTab === "social" ? "earth" : "earth-outline", activeTab === "social"),
+    },
+    {
+      id: "marketplace",
+      label: "Services",
+      icon: tabIcon(activeTab === "marketplace" ? "storefront" : "storefront-outline", activeTab === "marketplace"),
+    },
     {
       id: "messaging",
       label: "Messages",
-      icon: "message-circle",
+      icon: tabIcon(activeTab === "messaging" ? "chatbubbles" : "chatbubbles-outline", activeTab === "messaging"),
       badge: unreadMessages > 0 ? unreadMessages : undefined,
     },
   ];
@@ -54,6 +78,7 @@ export function CitizenTabs() {
         tabs={tabs}
         activeTab={activeTab}
         onTabPress={(id: string) => setActiveTab(id as CitizenTab)}
+        accentColor={ACCENT}
       />
     </View>
   );
@@ -62,6 +87,7 @@ export function CitizenTabs() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "#F8FAFC",
   },
   content: {
     flex: 1,

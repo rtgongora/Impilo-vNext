@@ -1,15 +1,9 @@
-/**
- * ResultsSection — View lab results and diagnostic reports.
- */
-
 import React, { useState, useEffect, useCallback } from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, Pressable, StyleSheet } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import {
-  Card,
-  CardBody,
   Badge,
   LoadingSpinner,
-  EmptyState,
   ErrorState,
 } from "@impilo/mobile-design-system";
 import { fetchLabResults } from "../../services/labResultService";
@@ -51,77 +45,103 @@ export function ResultsSection() {
 
   if (results.length === 0) {
     return (
-      <EmptyState
-        title="No results"
-        message="Your lab results and reports will appear here"
-      />
+      <View style={styles.emptyContainer}>
+        <View style={styles.emptyIconCircle}>
+          <Ionicons name="flask-outline" size={32} color="#D1D5DB" />
+        </View>
+        <Text style={styles.emptyTitle}>No results</Text>
+        <Text style={styles.emptyMessage}>Your lab results and reports will appear here</Text>
+      </View>
     );
   }
 
   return (
     <View testID="results-section" style={styles.container}>
-      <Text style={styles.heading}>Lab Results & Reports</Text>
-      {results.map((lab) => (
-        <Card key={lab.id}>
-          <CardBody>
-            <TouchableOpacity
+      <Text style={styles.sectionLabel}>LAB RESULTS</Text>
+      {results.map((lab) => {
+        const isExpanded = expandedId === lab.id;
+        return (
+          <View key={lab.id} style={styles.resultCard}>
+            <Pressable
               testID={`result-${lab.id}`}
-              onPress={() => setExpandedId(expandedId === lab.id ? null : lab.id)}
-              activeOpacity={0.7}
+              onPress={() => setExpandedId(isExpanded ? null : lab.id)}
+              style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
             >
               <View style={styles.resultRow}>
-                <View>
-                  <View style={styles.badgeRow}>
-                    <Text style={styles.boldText}>{lab.testName}</Text>
+                <View style={styles.iconCircle}>
+                  <Ionicons name="flask" size={20} color="#D97706" />
+                </View>
+                <View style={styles.resultMeta}>
+                  <View style={styles.nameRow}>
+                    <Text style={styles.testName}>{lab.testName}</Text>
                     <Badge variant={STATUS_VARIANT[lab.status] ?? "outline"}>
                       {lab.status}
                     </Badge>
                   </View>
-                  <Text style={styles.categoryText}>
-                    {`${lab.category} \u2022 ${lab.facilityName}`}
-                  </Text>
-                  <Text style={styles.orderedByText}>
-                    {`Ordered by ${lab.orderedBy}`}
-                  </Text>
+                  <View style={styles.metaRow}>
+                    <Ionicons name="grid-outline" size={12} color="#9CA3AF" />
+                    <Text style={styles.metaText}>{lab.category}</Text>
+                  </View>
+                  <View style={styles.metaRow}>
+                    <Ionicons name="location-outline" size={12} color="#9CA3AF" />
+                    <Text style={styles.metaText}>{lab.facilityName}</Text>
+                  </View>
+                  <View style={styles.metaRow}>
+                    <Ionicons name="person-outline" size={12} color="#9CA3AF" />
+                    <Text style={styles.metaText}>{`Ordered by ${lab.orderedBy}`}</Text>
+                  </View>
                 </View>
-                <Text style={styles.chevronText}>
-                  {expandedId === lab.id ? "\u25B2" : "\u25BC"}
-                </Text>
+                <Ionicons
+                  name={isExpanded ? "chevron-up" : "chevron-down"}
+                  size={16}
+                  color="#9CA3AF"
+                  style={styles.chevron}
+                />
               </View>
 
-              {expandedId === lab.id ? (
-                <View style={styles.expandedContainer}>
+              {isExpanded ? (
+                <View style={styles.expandedBox}>
                   {lab.value ? (
-                    <Text style={styles.detailText}>
-                      {`Value: ${lab.value} ${lab.unit ?? ""}`}
-                    </Text>
+                    <View style={styles.expandedRow}>
+                      <Ionicons name="analytics-outline" size={14} color="#059669" />
+                      <Text style={styles.expandedLabel}>Value</Text>
+                      <Text style={styles.expandedValue}>{`${lab.value} ${lab.unit ?? ""}`}</Text>
+                    </View>
                   ) : null}
                   {lab.referenceRange ? (
-                    <Text style={styles.detailTextSecondary}>
-                      {`Reference Range: ${lab.referenceRange}`}
-                    </Text>
+                    <View style={styles.expandedRow}>
+                      <Ionicons name="swap-horizontal-outline" size={14} color="#6B7280" />
+                      <Text style={styles.expandedLabel}>Reference</Text>
+                      <Text style={styles.expandedValueSecondary}>{lab.referenceRange}</Text>
+                    </View>
                   ) : null}
                   {lab.interpretation ? (
-                    <Text style={styles.detailText}>
-                      {`Interpretation: ${lab.interpretation}`}
-                    </Text>
+                    <View style={styles.expandedRow}>
+                      <Ionicons name="document-text-outline" size={14} color="#6B7280" />
+                      <Text style={styles.expandedLabel}>Interpretation</Text>
+                      <Text style={styles.expandedValue}>{lab.interpretation}</Text>
+                    </View>
                   ) : null}
                   {lab.collectedAt ? (
-                    <Text style={styles.detailTextTertiary}>
-                      {`Collected: ${new Date(lab.collectedAt).toLocaleString()}`}
-                    </Text>
+                    <View style={styles.expandedRow}>
+                      <Ionicons name="time-outline" size={14} color="#9CA3AF" />
+                      <Text style={styles.expandedLabel}>Collected</Text>
+                      <Text style={styles.expandedValueTertiary}>{new Date(lab.collectedAt).toLocaleString()}</Text>
+                    </View>
                   ) : null}
                   {lab.resultAt ? (
-                    <Text style={styles.detailTextTertiary}>
-                      {`Result: ${new Date(lab.resultAt).toLocaleString()}`}
-                    </Text>
+                    <View style={styles.expandedRow}>
+                      <Ionicons name="checkmark-circle-outline" size={14} color="#9CA3AF" />
+                      <Text style={styles.expandedLabel}>Result</Text>
+                      <Text style={styles.expandedValueTertiary}>{new Date(lab.resultAt).toLocaleString()}</Text>
+                    </View>
                   ) : null}
                 </View>
               ) : null}
-            </TouchableOpacity>
-          </CardBody>
-        </Card>
-      ))}
+            </Pressable>
+          </View>
+        );
+      })}
     </View>
   );
 }
@@ -130,56 +150,124 @@ const styles = StyleSheet.create({
   container: {
     gap: 12,
   },
-  heading: {
-    fontSize: 18,
+  sectionLabel: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#6B7280",
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
+    marginBottom: 4,
+  },
+  emptyContainer: {
+    alignItems: "center",
+    paddingVertical: 48,
+    gap: 12,
+  },
+  emptyIconCircle: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: "#F3F4F6",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 4,
+  },
+  emptyTitle: {
+    fontSize: 17,
     fontWeight: "600",
+    color: "#374151",
+  },
+  emptyMessage: {
+    fontSize: 14,
+    color: "#9CA3AF",
+    textAlign: "center",
+    paddingHorizontal: 24,
+  },
+  resultCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    padding: 14,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 3,
   },
   resultRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    gap: 12,
     alignItems: "flex-start",
   },
-  badgeRow: {
-    flexDirection: "row",
-    gap: 8,
+  iconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#FEF3C7",
     alignItems: "center",
-    marginBottom: 4,
+    justifyContent: "center",
+    flexShrink: 0,
+    marginTop: 2,
   },
-  boldText: {
+  resultMeta: {
+    flex: 1,
+    gap: 4,
+  },
+  nameRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 8,
+    marginBottom: 2,
+  },
+  testName: {
+    fontSize: 15,
     fontWeight: "700",
+    color: "#111827",
+    flex: 1,
   },
-  categoryText: {
-    fontSize: 13,
-    color: "#6B7280",
-    marginVertical: 2,
+  metaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
   },
-  orderedByText: {
-    fontSize: 12,
-    color: "#9CA3AF",
-    marginVertical: 2,
-  },
-  chevronText: {
+  metaText: {
     fontSize: 12,
     color: "#9CA3AF",
   },
-  expandedContainer: {
+  chevron: {
+    marginTop: 2,
+    flexShrink: 0,
+  },
+  expandedBox: {
     marginTop: 12,
     padding: 12,
-    backgroundColor: "#F9FAFB",
-    borderRadius: 8,
+    backgroundColor: "#F0FDF4",
+    borderRadius: 10,
+    gap: 8,
   },
-  detailText: {
-    marginVertical: 4,
-    fontSize: 14,
+  expandedRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
   },
-  detailTextSecondary: {
-    marginVertical: 4,
-    fontSize: 14,
+  expandedLabel: {
+    fontSize: 12,
+    fontWeight: "600",
     color: "#6B7280",
+    width: 90,
   },
-  detailTextTertiary: {
-    marginVertical: 4,
+  expandedValue: {
     fontSize: 13,
+    color: "#111827",
+    flex: 1,
+  },
+  expandedValueSecondary: {
+    fontSize: 13,
+    color: "#6B7280",
+    flex: 1,
+  },
+  expandedValueTertiary: {
+    fontSize: 12,
     color: "#9CA3AF",
+    flex: 1,
   },
 });

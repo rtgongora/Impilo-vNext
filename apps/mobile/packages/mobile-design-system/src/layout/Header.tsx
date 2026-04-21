@@ -1,5 +1,5 @@
 /**
- * Header — Screen header with title, back button, and optional actions.
+ * Header — Screen header with title, optional back button and actions.
  */
 
 import React from "react";
@@ -10,12 +10,9 @@ export interface HeaderProps {
   subtitle?: string;
   onBack?: () => void;
   actions?: React.ReactNode;
-  /**
-   * Back-compat aliases for older app screens.
-   * Prefer `actions` and `onBack`.
-   */
   rightElement?: React.ReactNode;
   leftElement?: React.ReactNode;
+  accent?: string;
   testID?: string;
 }
 
@@ -26,6 +23,7 @@ export function Header({
   actions,
   rightElement,
   leftElement,
+  accent = "#059669",
   testID,
 }: HeaderProps) {
   const resolvedActions = actions ?? rightElement;
@@ -38,17 +36,24 @@ export function Header({
             onPress={onBack}
             accessibilityLabel="Go back"
             accessibilityRole="button"
+            hitSlop={8}
             style={styles.backButton}
           >
-            <Text style={styles.backArrow}>{"\u2190"}</Text>
+            <View style={[styles.backIconCircle, { borderColor: accent + "30" }]}>
+              <Text style={[styles.backArrow, { color: accent }]}>{"\u2190"}</Text>
+            </View>
           </Pressable>
         ) : null}
-        <View>
-          <Text style={styles.title}>{title}</Text>
-          {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+        <View style={styles.titleBlock}>
+          <Text style={styles.title} numberOfLines={1}>{title}</Text>
+          {subtitle ? (
+            <Text style={styles.subtitle} numberOfLines={1}>{subtitle}</Text>
+          ) : null}
         </View>
       </View>
-      {resolvedActions ?? null}
+      {resolvedActions ? (
+        <View style={styles.actions}>{resolvedActions}</View>
+      ) : null}
     </View>
   );
 }
@@ -58,28 +63,51 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E0E0E0",
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    backgroundColor: "#FFFFFF",
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#E5E7EB",
   },
   leftSection: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: 10,
+    flex: 1,
   },
   backButton: {
-    padding: 4,
+    marginRight: 4,
+  },
+  backIconCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
   },
   backArrow: {
-    fontSize: 20,
+    fontSize: 16,
+    fontWeight: "600",
+    lineHeight: 20,
+  },
+  titleBlock: {
+    flex: 1,
   },
   title: {
-    fontSize: 17,
-    fontWeight: "600",
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#111827",
+    letterSpacing: -0.3,
   },
   subtitle: {
-    fontSize: 13,
-    color: "#757575",
+    fontSize: 12,
+    color: "#6B7280",
+    marginTop: 1,
+  },
+  actions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
 });

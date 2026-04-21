@@ -44,16 +44,16 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ],
   },
   plugins: [
-    "expo-router",
+    "expo-web-browser",
     "expo-secure-store",
     [
       "expo-build-properties",
       {
         android: {
-          compileSdkVersion: 34,
-          targetSdkVersion: 34,
+          compileSdkVersion: 35,
+          targetSdkVersion: 35,
           minSdkVersion: 24,
-          buildToolsVersion: "34.0.0",
+          buildToolsVersion: "35.0.0",
         },
         ios: {
           deploymentTarget: "15.1",

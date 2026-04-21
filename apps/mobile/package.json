@@ -6,6 +6,14 @@
     "citizen-app",
     "provider-app",
     "packages/*"
-  ]
+  ],
+  "pnpm": {
+    "peerDependencyRules": {
+      "allowedVersionsOnRoot": {
+        "react": ["19"]
+      },
+      "ignoreMissing": ["react-test-renderer"]
+    }
+  }
 }
 
