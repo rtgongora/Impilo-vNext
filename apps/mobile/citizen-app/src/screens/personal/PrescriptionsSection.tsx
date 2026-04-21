@@ -1,18 +1,11 @@
-/**
- * PrescriptionsSection — View prescriptions and request refills.
- */
-
 import React, { useState, useEffect, useCallback } from "react";
 import { View, Text, StyleSheet } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import {
-  Card,
-  CardBody,
   Button,
   Badge,
   LoadingSpinner,
-  EmptyState,
   ErrorState,
-  RxCard,
 } from "@impilo/mobile-design-system";
 import { fetchPrescriptions, requestRefill } from "../../services/prescriptionService";
 import type { Prescription } from "../../types";
@@ -65,44 +58,56 @@ export function PrescriptionsSection() {
 
   if (prescriptions.length === 0) {
     return (
-      <EmptyState
-        title="No prescriptions"
-        message="Your prescriptions will appear here after a visit"
-      />
+      <View style={styles.emptyContainer}>
+        <View style={styles.emptyIconCircle}>
+          <Ionicons name="receipt-outline" size={32} color="#D1D5DB" />
+        </View>
+        <Text style={styles.emptyTitle}>No prescriptions</Text>
+        <Text style={styles.emptyMessage}>Your prescriptions will appear here after a visit</Text>
+      </View>
     );
   }
 
   return (
     <View testID="prescriptions-section" style={styles.container}>
-      <Text style={styles.heading}>Prescriptions</Text>
+      <Text style={styles.sectionLabel}>MY MEDICATIONS</Text>
       {prescriptions.map((rx) => (
-        <Card key={rx.id}>
-          <CardBody>
-            <View testID={`prescription-${rx.id}`}>
-              <View style={styles.prescriptionRow}>
-                <View>
-                  <View style={styles.badgeRow}>
-                    <Text style={styles.medicationName}>{rx.medicationName}</Text>
-                    <Badge variant={STATUS_VARIANT[rx.status] ?? "outline"}>
-                      {rx.status}
-                    </Badge>
-                  </View>
-                  <Text style={styles.dosageText}>
-                    {`${rx.dosage} \u2022 ${rx.frequency} \u2022 ${rx.duration}`}
-                  </Text>
-                  <Text style={styles.prescribedByText}>
-                    {`Prescribed by ${rx.prescribedBy} at ${rx.facilityName}`}
-                  </Text>
-                  <Text style={styles.quantityText}>
-                    {`Qty: ${rx.quantity} \u2022 Refills remaining: ${rx.refillsRemaining}`}
-                  </Text>
-                  {rx.lastFilledAt ? (
-                    <Text style={styles.lastFilledText}>
-                      {`Last filled: ${new Date(rx.lastFilledAt).toLocaleDateString()}`}
-                    </Text>
-                  ) : null}
+        <View key={rx.id} style={styles.rxCard}>
+          <View testID={`prescription-${rx.id}`} style={styles.rxRow}>
+            <View style={styles.iconCircle}>
+              <Ionicons name="medical" size={20} color="#1E40AF" />
+            </View>
+            <View style={styles.rxMeta}>
+              <View style={styles.nameRow}>
+                <Text style={styles.medicationName}>{rx.medicationName}</Text>
+                <View style={styles.badgeStack}>
+                  <Badge variant={STATUS_VARIANT[rx.status] ?? "outline"}>
+                    {rx.status}
+                  </Badge>
                 </View>
-                {rx.status === "ACTIVE" && rx.refillsRemaining > 0 ? (
+              </View>
+              <Text style={styles.dosageText}>
+                {`${rx.dosage} \u2022 ${rx.frequency} \u2022 ${rx.duration}`}
+              </Text>
+              <View style={styles.metaRow}>
+                <Ionicons name="person-outline" size={12} color="#9CA3AF" />
+                <Text style={styles.metaText}>
+                  {`${rx.prescribedBy} \u2022 ${rx.facilityName}`}
+                </Text>
+              </View>
+              <View style={styles.refillRow}>
+                <View style={styles.refillCountPill}>
+                  <Ionicons name="refresh-outline" size={11} color="#6B7280" />
+                  <Text style={styles.refillCountText}>{`${rx.refillsRemaining} refills left`}</Text>
+                </View>
+                {rx.lastFilledAt ? (
+                  <Text style={styles.lastFilledText}>
+                    {`Filled ${new Date(rx.lastFilledAt).toLocaleDateString()}`}
+                  </Text>
+                ) : null}
+              </View>
+              {rx.status === "ACTIVE" && rx.refillsRemaining > 0 ? (
+                <View style={styles.refillButtonWrapper}>
                   <Button
                     title={refillInProgress === rx.id ? "Requesting..." : "Request Refill"}
                     variant="secondary"
@@ -111,11 +116,11 @@ export function PrescriptionsSection() {
                     disabled={refillInProgress === rx.id}
                     testID={`refill-${rx.id}`}
                   />
-                ) : null}
-              </View>
+                </View>
+              ) : null}
             </View>
-          </CardBody>
-        </Card>
+          </View>
+        </View>
       ))}
     </View>
   );
@@ -125,43 +130,122 @@ const styles = StyleSheet.create({
   container: {
     gap: 12,
   },
-  heading: {
-    fontSize: 18,
-    fontWeight: "600",
-  },
-  prescriptionRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-  },
-  badgeRow: {
-    flexDirection: "row",
-    gap: 8,
-    alignItems: "center",
+  sectionLabel: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#6B7280",
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
     marginBottom: 4,
   },
+  emptyContainer: {
+    alignItems: "center",
+    paddingVertical: 48,
+    gap: 12,
+  },
+  emptyIconCircle: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: "#F3F4F6",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 4,
+  },
+  emptyTitle: {
+    fontSize: 17,
+    fontWeight: "600",
+    color: "#374151",
+  },
+  emptyMessage: {
+    fontSize: 14,
+    color: "#9CA3AF",
+    textAlign: "center",
+    paddingHorizontal: 24,
+  },
+  rxCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    padding: 14,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  rxRow: {
+    flexDirection: "row",
+    gap: 12,
+    alignItems: "flex-start",
+  },
+  iconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#DBEAFE",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+    marginTop: 2,
+  },
+  rxMeta: {
+    flex: 1,
+    gap: 5,
+  },
+  nameRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 8,
+  },
   medicationName: {
-    fontWeight: "700",
     fontSize: 15,
+    fontWeight: "700",
+    color: "#111827",
+    flex: 1,
+  },
+  badgeStack: {
+    flexShrink: 0,
+    marginTop: 1,
   },
   dosageText: {
-    fontSize: 14,
+    fontSize: 13,
     color: "#374151",
-    marginVertical: 2,
   },
-  prescribedByText: {
-    fontSize: 13,
-    color: "#6B7280",
-    marginVertical: 2,
+  metaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
   },
-  quantityText: {
-    fontSize: 13,
-    color: "#9CA3AF",
-    marginVertical: 2,
-  },
-  lastFilledText: {
+  metaText: {
     fontSize: 12,
     color: "#9CA3AF",
-    marginVertical: 2,
+  },
+  refillRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginTop: 2,
+  },
+  refillCountPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "#F3F4F6",
+    borderRadius: 10,
+    paddingVertical: 3,
+    paddingHorizontal: 8,
+  },
+  refillCountText: {
+    fontSize: 11,
+    color: "#6B7280",
+    fontWeight: "600",
+  },
+  lastFilledText: {
+    fontSize: 11,
+    color: "#9CA3AF",
+  },
+  refillButtonWrapper: {
+    marginTop: 6,
+    alignSelf: "flex-start",
   },
 });

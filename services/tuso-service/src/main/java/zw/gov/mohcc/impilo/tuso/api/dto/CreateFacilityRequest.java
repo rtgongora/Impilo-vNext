@@ -35,6 +35,18 @@ public record CreateFacilityRequest(
         @Size(max = 50, message = "Level must not exceed 50 characters")
         String level,
 
+        @Size(max = 64, message = "Facility tier must not exceed 64 characters")
+        String facilityTier,
+
+        @Size(max = 32, message = "Deployment mode must not exceed 32 characters")
+        String deploymentMode,
+
+        @Size(max = 32, message = "Continuity class must not exceed 32 characters")
+        String continuityClass,
+
+        @Size(max = 64, message = "Workflow archetype must not exceed 64 characters")
+        String workflowArchetype,
+
         Long parentId,
 
         String description,

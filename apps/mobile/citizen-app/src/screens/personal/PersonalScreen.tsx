@@ -1,12 +1,7 @@
-/**
- * PersonalScreen — Hub for all personal health features.
- *
- * Sections: Profile, Appointments, Prescriptions, Results, Records, Coverage, Settings.
- */
-
 import React, { useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
-import { Screen, Header, TabBar, type TabItem } from "@impilo/mobile-design-system";
+import { Ionicons } from "@expo/vector-icons";
+import { Screen, Header } from "@impilo/mobile-design-system";
 import { ProfileSection } from "./ProfileSection";
 import { AppointmentsSection } from "./AppointmentsSection";
 import { PrescriptionsSection } from "./PrescriptionsSection";
@@ -33,6 +28,65 @@ import { CarePlansSection } from "./CarePlansSection";
 import { IdRecoverySection } from "./IdRecoverySection";
 import { AssessmentsSection } from "./AssessmentsSection";
 import { CareTeamSection } from "./CareTeamSection";
+
+type PersonalTab =
+  | "profile"
+  | "health-id"
+  | "allergies"
+  | "conditions"
+  | "immunizations"
+  | "referrals"
+  | "care-plans"
+  | "appointments"
+  | "prescriptions"
+  | "results"
+  | "records"
+  | "reminders"
+  | "timeline"
+  | "wellness"
+  | "finance"
+  | "challenges"
+  | "programs"
+  | "wallet"
+  | "monitoring"
+  | "queue"
+  | "sos"
+  | "coverage"
+  | "settings"
+  | "assessments"
+  | "care-team"
+  | "id-recovery";
+
+type IoniconsName = React.ComponentProps<typeof Ionicons>["name"];
+
+const PERSONAL_TABS: Array<{ id: PersonalTab; label: string; icon: IoniconsName }> = [
+  { id: "profile", label: "Profile", icon: "person" },
+  { id: "health-id", label: "Health ID", icon: "card" },
+  { id: "allergies", label: "Allergies", icon: "medical" },
+  { id: "conditions", label: "Conditions", icon: "medical-outline" },
+  { id: "immunizations", label: "Immunizations", icon: "shield-checkmark" },
+  { id: "referrals", label: "Referrals", icon: "people" },
+  { id: "care-plans", label: "Care Plans", icon: "clipboard" },
+  { id: "appointments", label: "Appointments", icon: "calendar" },
+  { id: "prescriptions", label: "Prescriptions", icon: "receipt" },
+  { id: "results", label: "Results", icon: "flask" },
+  { id: "records", label: "Records", icon: "folder" },
+  { id: "reminders", label: "Reminders", icon: "alarm" },
+  { id: "timeline", label: "Timeline", icon: "time" },
+  { id: "wellness", label: "Wellness", icon: "fitness" },
+  { id: "finance", label: "Finance", icon: "cash" },
+  { id: "challenges", label: "Challenges", icon: "trophy" },
+  { id: "programs", label: "Programs", icon: "ribbon" },
+  { id: "wallet", label: "Wallet", icon: "wallet" },
+  { id: "monitoring", label: "Monitoring", icon: "pulse" },
+  { id: "queue", label: "Queue", icon: "location" },
+  { id: "sos", label: "Emergency", icon: "warning" },
+  { id: "coverage", label: "Coverage", icon: "shield" },
+  { id: "settings", label: "Settings", icon: "settings" },
+  { id: "assessments", label: "Assessments", icon: "duplicate" },
+  { id: "care-team", label: "Care Team", icon: "people" },
+  { id: "id-recovery", label: "ID Recovery", icon: "key" },
+];
 
 const SECTIONS: Record<PersonalTab, React.FC> = {
   profile: ProfileSection,
@@ -71,35 +125,44 @@ export function PersonalScreen() {
     <Screen>
       <Header title="My Health" />
       <View testID="personal-screen" style={styles.container}>
-        <ScrollView horizontal style={styles.tabScrollView} contentContainerStyle={styles.tabScrollContent}>
-          <View style={styles.tabRow}>
-            {PERSONAL_TABS.map((tab) => (
-              <TouchableOpacity
-                key={tab.id}
-                onPress={() => setActiveSection(tab.id as PersonalTab)}
-                testID={`personal-tab-${tab.id}`}
-                style={[
-                  styles.tabButton,
-                  {
-                    borderBottomColor: activeSection === tab.id ? "#2563EB" : "transparent",
-                  },
-                ]}
-              >
-                <Text
+        <View style={styles.tabBarWrapper}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.tabScrollView}
+            contentContainerStyle={styles.tabScrollContent}
+          >
+            {PERSONAL_TABS.map((tab) => {
+              const isActive = activeSection === tab.id;
+              return (
+                <TouchableOpacity
+                  key={tab.id}
+                  onPress={() => setActiveSection(tab.id as PersonalTab)}
+                  testID={`personal-tab-${tab.id}`}
+                  activeOpacity={0.85}
                   style={[
-                    styles.tabLabel,
-                    {
-                      fontWeight: activeSection === tab.id ? "600" : "400",
-                      color: activeSection === tab.id ? "#2563EB" : "#6B7280",
-                    },
+                    styles.tabPill,
+                    isActive ? styles.tabPillActive : styles.tabPillInactive,
                   ]}
                 >
-                  {tab.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </ScrollView>
+                  <Ionicons
+                    name={tab.icon}
+                    size={14}
+                    color={isActive ? "#059669" : "#9CA3AF"}
+                  />
+                  <Text
+                    style={[
+                      styles.tabLabel,
+                      isActive ? styles.tabLabelActive : styles.tabLabelInactive,
+                    ]}
+                  >
+                    {tab.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </View>
         <ScrollView style={styles.sectionContainer} contentContainerStyle={styles.sectionContent}>
           <SectionComponent />
         </ScrollView>
@@ -111,31 +174,57 @@ export function PersonalScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "#F9FAFB",
   },
-  tabScrollView: {
+  tabBarWrapper: {
+    backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
     borderBottomColor: "#E5E7EB",
-    paddingHorizontal: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  tabScrollView: {
+    paddingVertical: 10,
   },
   tabScrollContent: {
-    flexGrow: 1,
-  },
-  tabRow: {
-    flexDirection: "row",
-    gap: 4,
-  },
-  tabButton: {
-    paddingVertical: 10,
     paddingHorizontal: 16,
-    borderBottomWidth: 2,
+    gap: 8,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  tabPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+  },
+  tabPillActive: {
+    backgroundColor: "#D1FAE5",
+  },
+  tabPillInactive: {
+    backgroundColor: "#F3F4F6",
   },
   tabLabel: {
-    fontSize: 13,
+    fontSize: 12,
+  },
+  tabLabelActive: {
+    fontWeight: "700",
+    color: "#059669",
+  },
+  tabLabelInactive: {
+    fontWeight: "400",
+    color: "#6B7280",
   },
   sectionContainer: {
     flex: 1,
   },
   sectionContent: {
     padding: 16,
+    paddingBottom: 32,
   },
 });

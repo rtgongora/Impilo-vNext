@@ -10,7 +10,7 @@
  */
 
 import { createStore } from "zustand/vanilla";
-import type { AppMode } from "../types";
+import type { AppMode, ProviderTabKey } from "../types";
 
 export interface AppState {
   mode: AppMode;
@@ -20,6 +20,7 @@ export interface AppState {
   workspaceId: string | null;
   workspaceName: string | null;
   shiftId: string | null;
+  providerTab: ProviderTabKey;
   unreadNotifications: number;
   pendingSyncCount: number;
   globalError: { code: string; message: string } | null;
@@ -29,6 +30,7 @@ export interface AppState {
   setFacilityContext: (id: string, name: string) => void;
   setWorkspaceContext: (id: string, name: string) => void;
   setShiftId: (id: string) => void;
+  setProviderTab: (tab: ProviderTabKey) => void;
   setUnreadNotifications: (count: number) => void;
   setPendingSyncCount: (count: number) => void;
   setGlobalError: (error: { code: string; message: string } | null) => void;
@@ -43,6 +45,7 @@ export const appStore = createStore<AppState>((set) => ({
   workspaceId: null,
   workspaceName: null,
   shiftId: null,
+  providerTab: "dashboard",
   unreadNotifications: 0,
   pendingSyncCount: 0,
   globalError: null,
@@ -52,6 +55,7 @@ export const appStore = createStore<AppState>((set) => ({
   setFacilityContext: (id, name) => set({ facilityId: id, facilityName: name }),
   setWorkspaceContext: (id, name) => set({ workspaceId: id, workspaceName: name }),
   setShiftId: (id) => set({ shiftId: id }),
+  setProviderTab: (providerTab) => set({ providerTab }),
   setUnreadNotifications: (count) => set({ unreadNotifications: count }),
   setPendingSyncCount: (count) => set({ pendingSyncCount: count }),
   setGlobalError: (error) => set({ globalError: error }),

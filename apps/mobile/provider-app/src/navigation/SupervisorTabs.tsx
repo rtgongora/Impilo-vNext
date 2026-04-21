@@ -1,11 +1,12 @@
 /**
  * SupervisorTabs — Tab navigator for Supervisor mode.
  *
- * Tabs: Dashboard, Team, Stock, Escalations
+ * Tabs: Dashboard, Team, Stock, Inventory, Escalations
  */
 
 import React, { useState, useCallback } from "react";
 import { View, StyleSheet } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { TabBar } from "@impilo/mobile-design-system";
 import { SupervisorDashboardScreen } from "../screens/supervisor/SupervisorDashboardScreen";
 import { TeamOverviewScreen } from "../screens/supervisor/TeamOverviewScreen";
@@ -13,15 +14,17 @@ import { StockScreen } from "../screens/supervisor/StockScreen";
 import { InventoryScreen } from "../screens/supervisor/InventoryScreen";
 import { EscalationsScreen } from "../screens/supervisor/EscalationsScreen";
 
-const TABS = [
-  { key: "dashboard", label: "Dashboard", icon: "bar-chart" },
-  { key: "team", label: "Team", icon: "users" },
-  { key: "stock", label: "Stock", icon: "package" },
-  { key: "inventory", label: "Inventory", icon: "box" },
-  { key: "escalations", label: "Escalations", icon: "alert-triangle" },
-] as const;
+const ACCENT = "#1E40AF";
 
-type TabKey = (typeof TABS)[number]["key"];
+type TabKey = "dashboard" | "team" | "stock" | "inventory" | "escalations";
+
+const TABS: Array<{ key: TabKey; label: string; activeIcon: string; inactiveIcon: string }> = [
+  { key: "dashboard", label: "Dashboard", activeIcon: "bar-chart", inactiveIcon: "bar-chart-outline" },
+  { key: "team", label: "Team", activeIcon: "people", inactiveIcon: "people-outline" },
+  { key: "stock", label: "Stock", activeIcon: "cube", inactiveIcon: "cube-outline" },
+  { key: "inventory", label: "Inventory", activeIcon: "albums", inactiveIcon: "albums-outline" },
+  { key: "escalations", label: "Escalations", activeIcon: "warning", inactiveIcon: "warning-outline" },
+];
 
 export function SupervisorTabs() {
   const [activeTab, setActiveTab] = useState<TabKey>("dashboard");
@@ -51,9 +54,20 @@ export function SupervisorTabs() {
     <View testID="supervisor-tabs" style={styles.container}>
       <View style={styles.content}>{renderContent()}</View>
       <TabBar
-        items={TABS.map((t) => ({ key: t.key, label: t.label }))}
+        items={TABS.map((t) => ({
+          key: t.key,
+          label: t.label,
+          icon: (
+            <Ionicons
+              name={(activeTab === t.key ? t.activeIcon : t.inactiveIcon) as never}
+              size={22}
+              color={activeTab === t.key ? ACCENT : "#9CA3AF"}
+            />
+          ),
+        }))}
         activeKey={activeTab}
         onSelect={handleTabChange}
+        accentColor={ACCENT}
       />
     </View>
   );
@@ -62,6 +76,7 @@ export function SupervisorTabs() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "#F8FAFC",
   },
   content: {
     flex: 1,

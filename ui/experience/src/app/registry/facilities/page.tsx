@@ -1,131 +1,206 @@
 "use client";
 
-/**
- * Facility Registry — Browse and search registered facilities.
- * Route: /registry/facilities
- */
-
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { ArrowLeft, Loader2, AlertTriangle, Building2, Search, Plus } from "lucide-react";
+import { ArrowLeft, Building2, ClipboardList, Loader2, Plus, Search, ShieldCheck, TriangleAlert } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { RegistryPlaneContextBar } from "@/components/experience/RegistryPlaneContextBar";
 import { PageShell } from "@/components/PageShell";
-import { useFacilities } from "@/hooks/queries/useFacilities";
+import {
+  useFacilityDashboardSummary,
+  useFacilityRegistryFacilities,
+} from "@/hooks/queries/useFacilityRegulatory";
 
 const STATUS_STYLES: Record<string, string> = {
-  ACTIVE: "bg-green-100 text-green-700",
-  INACTIVE: "bg-gray-100 text-gray-700",
-  SUSPENDED: "bg-red-100 text-red-700",
+  REGISTERED_ACTIVE: "bg-emerald-50 text-emerald-700 border border-emerald-200",
+  PENDING_INSPECTION: "bg-amber-50 text-amber-700 border border-amber-200",
+  PENDING_RECTIFICATION: "bg-rose-50 text-rose-700 border border-rose-200",
+  PENDING_COMMITTEE_REVIEW: "bg-sky-50 text-sky-700 border border-sky-200",
+  RESTRICTED: "bg-orange-50 text-orange-700 border border-orange-200",
+  SUSPENDED: "bg-red-50 text-red-700 border border-red-200",
 };
 
-export default function FacilityRegistryPage() {
-  const searchParams = useSearchParams();
-  const fromRegistryAdmin = searchParams.get("from") === "registry-admin";
-  const [searchTerm, setSearchTerm] = useState("");
-  const { data, isLoading, error } = useFacilities({
-    search: searchTerm || undefined,
-  });
+function statusLabel(status: string) {
+  return status.replaceAll("_", " ");
+}
 
-  const facilities = data?.data ?? [];
+export default function FacilityRegistryPage() {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [regulatoryStatus, setRegulatoryStatus] = useState<string>("");
+  const { data, isLoading, error } = useFacilityRegistryFacilities({
+    search: searchTerm || undefined,
+    regulatoryStatus: regulatoryStatus || undefined,
+    page: 0,
+    size: 30,
+  });
+  const dashboard = useFacilityDashboardSummary();
+
+  const facilities = data?.data.items ?? [];
+  const metrics = useMemo(
+    () => [
+      {
+        title: "Registered active",
+        value: dashboard.data?.data.activeFacilities ?? 0,
+        icon: ShieldCheck,
+        tone: "bg-emerald-50 text-emerald-700 border-emerald-100",
+      },
+      {
+        title: "Pending inspection",
+        value: dashboard.data?.data.pendingInspection ?? 0,
+        icon: ClipboardList,
+        tone: "bg-amber-50 text-amber-700 border-amber-100",
+      },
+      {
+        title: "Overdue shortfalls",
+        value: dashboard.data?.data.overdueComplianceActions ?? 0,
+        icon: TriangleAlert,
+        tone: "bg-rose-50 text-rose-700 border-rose-100",
+      },
+    ],
+    [dashboard.data],
+  );
 
   return (
     <AppLayout>
-      <PageShell title="Facility Registry" subtitle="Browse registered healthcare facilities">
+      <PageShell
+        title="Facility Regulatory Operations"
+        subtitle="HPA-governed facility registration, inspections, compliance, renewal, and certificate oversight"
+      >
         <RegistryPlaneContextBar />
         <div className="mb-4">
           <Link
-            href={fromRegistryAdmin ? "/registry-admin" : "/registry"}
+            href="/registry"
             className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
           >
-            <ArrowLeft className="w-4 h-4" />
-            {fromRegistryAdmin ? "Back to registry administration" : "Back to registry hub"}
+            <ArrowLeft className="h-4 w-4" />
+            Back to registry hub
           </Link>
         </div>
-        <div className="mb-4 flex flex-wrap items-center justify-end">
+
+        <div className="mb-6 grid gap-4 md:grid-cols-3">
+          {metrics.map((metric) => {
+            const Icon = metric.icon;
+            return (
+              <div key={metric.title} className={`rounded-2xl border p-5 ${metric.tone}`}>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-[0.2em] opacity-80">{metric.title}</p>
+                    <p className="mt-3 text-3xl font-semibold">{metric.value}</p>
+                  </div>
+                  <div className="rounded-2xl bg-white/70 p-3">
+                    <Icon className="h-6 w-6" />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-gray-200 bg-white p-4">
+          <div className="flex flex-1 flex-wrap items-center gap-3">
+            <div className="relative min-w-[240px] flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search by facility name or code"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                className="w-full rounded-xl border border-gray-300 px-10 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+            </div>
+            <select
+              value={regulatoryStatus}
+              onChange={(event) => setRegulatoryStatus(event.target.value)}
+              className="rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            >
+              <option value="">All lifecycle states</option>
+              <option value="REGISTERED_ACTIVE">Registered active</option>
+              <option value="PENDING_INSPECTION">Pending inspection</option>
+              <option value="PENDING_RECTIFICATION">Pending rectification</option>
+              <option value="PENDING_COMMITTEE_REVIEW">Pending committee review</option>
+              <option value="RESTRICTED">Restricted</option>
+              <option value="SUSPENDED">Suspended</option>
+            </select>
+          </div>
           <Link
             href="/registry/facilities/new"
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-emerald-700"
           >
-            <Plus className="w-4 h-4" />
-            New Facility
+            <Plus className="h-4 w-4" />
+            New application
           </Link>
-        </div>
-        {/* Search */}
-        <div className="mb-6">
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search facilities..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
         </div>
 
         {isLoading ? (
-          <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">Loading facilities...</span>
+          <div className="flex items-center justify-center py-16 text-gray-500">
+            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+            Loading facility registry...
           </div>
         ) : error ? (
-          <div className="bg-red-50 rounded-lg border border-red-200 p-6 text-center">
-            <AlertTriangle className="w-8 h-8 text-red-400 mx-auto mb-2" />
-            <p className="text-red-600 text-sm">Failed to load facilities</p>
+          <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center text-sm text-red-700">
+            Facility regulatory data could not be loaded right now.
           </div>
         ) : facilities.length === 0 ? (
-          <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-            <Building2 className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-400 text-sm">No facilities found</p>
+          <div className="rounded-2xl border border-gray-200 bg-white p-12 text-center">
+            <Building2 className="mx-auto mb-3 h-10 w-10 text-gray-300" />
+            <p className="text-sm text-gray-500">No facilities matched the current search.</p>
           </div>
         ) : (
-          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
             <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b bg-gray-50">
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Facility Name</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Code</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Type</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">District</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
-                  <th className="text-right px-4 py-3 font-medium text-gray-600">Action</th>
+              <thead className="bg-gray-50 text-left text-xs uppercase tracking-[0.18em] text-gray-500">
+                <tr>
+                  <th className="px-4 py-3 font-medium">Facility</th>
+                  <th className="px-4 py-3 font-medium">Institution File</th>
+                  <th className="px-4 py-3 font-medium">Lifecycle</th>
+                  <th className="px-4 py-3 font-medium">Location</th>
+                  <th className="px-4 py-3 font-medium">Open work</th>
+                  <th className="px-4 py-3 font-medium text-right">Action</th>
                 </tr>
               </thead>
               <tbody>
-                {facilities.map((facility) => {
-                  const attrs = facility.attributes as Record<string, unknown>;
-                  const statusStyle = STATUS_STYLES[facility.attributes.status] ?? "bg-gray-100 text-gray-700";
-                  return (
-                    <tr key={facility.id} className="border-b last:border-b-0 hover:bg-gray-50">
-                      <td className="px-4 py-3 font-medium text-gray-900">
-                        {facility.attributes.name}
-                      </td>
-                      <td className="px-4 py-3 font-mono text-xs text-gray-600">
-                        {facility.attributes.code}
-                      </td>
-                      <td className="px-4 py-3 text-gray-600">{facility.attributes.facilityType}</td>
-                      <td className="px-4 py-3 text-gray-600">
-                        {(attrs.district as string) || "\u2014"}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={`inline-block px-2 py-0.5 text-xs rounded-full font-medium ${statusStyle}`}>
-                          {facility.attributes.status}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <Link
-                          href={`/registry/facilities/${facility.id}`}
-                          className="text-xs text-blue-600 hover:text-blue-800 font-medium"
-                        >
-                          View
-                        </Link>
-                      </td>
-                    </tr>
-                  );
-                })}
+                {facilities.map((facility) => (
+                  <tr key={facility.facilityId} className="border-t border-gray-100 align-top hover:bg-gray-50/60">
+                    <td className="px-4 py-4">
+                      <div className="font-medium text-gray-900">{facility.name}</div>
+                      <div className="mt-1 text-xs text-gray-500">
+                        {facility.facilityCode} • {facility.facilityType}
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 text-gray-600">
+                      {facility.institutionFileNumber ?? "Pending allocation"}
+                    </td>
+                    <td className="px-4 py-4">
+                      <span
+                        className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
+                          STATUS_STYLES[facility.regulatoryStatus] ?? "bg-gray-100 text-gray-700 border border-gray-200"
+                        }`}
+                      >
+                        {statusLabel(facility.regulatoryStatus)}
+                      </span>
+                      {facility.latestCertificateExpiryDate ? (
+                        <p className="mt-2 text-xs text-gray-500">
+                          Cert expires {facility.latestCertificateExpiryDate}
+                        </p>
+                      ) : null}
+                    </td>
+                    <td className="px-4 py-4 text-gray-600">
+                      {[facility.district, facility.province].filter(Boolean).join(", ") || "Not stated"}
+                    </td>
+                    <td className="px-4 py-4 text-gray-600">
+                      <div>{facility.openApplications} open application(s)</div>
+                      <div className="text-xs text-rose-600">{facility.overdueActions} overdue shortfall(s)</div>
+                    </td>
+                    <td className="px-4 py-4 text-right">
+                      <Link
+                        href={`/registry/facilities/${facility.facilityId}`}
+                        className="inline-flex rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:border-emerald-300 hover:text-emerald-700"
+                      >
+                        Open workspace
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>

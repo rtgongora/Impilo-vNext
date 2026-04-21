@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
   },
   connectedText: {
     fontSize: 12,
-    color: "#059669",
+    color: "#009739",
   },
   activeSessionArea: {
     backgroundColor: "#111827",

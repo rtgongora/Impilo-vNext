@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
   },
   successText: {
     marginTop: 8,
-    color: "#059669",
+    color: "#009739",
     fontWeight: "600",
   },
 });

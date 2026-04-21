@@ -21,7 +21,7 @@ export interface RxCardProps {
 }
 
 const STATUS_COLORS: Record<RxStatus, string> = {
-  ACTIVE: "#4CAF50",
+  ACTIVE: "#009739",
   COMPLETED: "#9E9E9E",
   CANCELLED: "#F44336",
   DRAFT: "#FF9800",
@@ -60,7 +60,7 @@ export function RxCard({
         <Text
           style={[
             styles.detailText,
-            { color: refillsRemaining === 0 ? "#F44336" : "#4CAF50" },
+            { color: refillsRemaining === 0 ? "#F44336" : "#009739" },
           ]}
         >
           {`Refills remaining: ${refillsRemaining}`}

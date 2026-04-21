@@ -18,7 +18,7 @@ import {
   ErrorState,
   Avatar,
 } from "@impilo/mobile-design-system";
-import type { Provider } from "../types";
+import type { Provider } from "../../types";
 
 const SPECIALTY_VARIANTS: Record<string, string> = {
   DOCTOR: "primary",
@@ -55,11 +55,11 @@ export function ProviderDiscoveryScreen({ onSelectProvider }: ProviderDiscoveryS
     load();
   }, [load]);
 
-  const filteredProviders = providers.filter(p => {
+  const filteredProviders = providers.filter((p) => {
     const matchesSearch = !searchQuery || 
-      p.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.displayName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.specialty?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesSpecialty = !selectedSpecialty || p.cadre === selectedSpecialty;
+    const matchesSpecialty = !selectedSpecialty || p.title === selectedSpecialty;
     return matchesSearch && matchesSpecialty;
   });
 
@@ -113,10 +113,10 @@ export function ProviderDiscoveryScreen({ onSelectProvider }: ProviderDiscoveryS
             <Card key={provider.id}>
               <CardBody>
                 <View style={styles.providerRow}>
-                  <Avatar name={provider.name} size="lg" />
+                  <Avatar name={provider.displayName} size="lg" />
                   <View style={styles.providerInfo}>
-                    <Text style={styles.providerName}>{provider.name}</Text>
-                    <Text style={styles.providerSpecialty}>{provider.cadre}</Text>
+                    <Text style={styles.providerName}>{provider.displayName}</Text>
+                    <Text style={styles.providerSpecialty}>{provider.specialty ?? provider.title ?? "Provider"}</Text>
                     {provider.facilityName && (
                       <Text style={styles.providerFacility}>{provider.facilityName}</Text>
                     )}

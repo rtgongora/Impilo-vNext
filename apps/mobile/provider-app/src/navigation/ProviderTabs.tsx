@@ -1,48 +1,96 @@
 /**
  * ProviderTabs — Tab navigator for Provider mode.
  *
- * Tabs: Dashboard (Worklist), Patients, Results, Activity, Professional
+ * Tabs: Dashboard (Worklist), Patients, Results, Queue, Tools, Professional
  */
 
-import React, { useState, useCallback } from "react";
+import React, { useCallback, useEffect } from "react";
 import { View, StyleSheet } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { TabBar } from "@impilo/mobile-design-system";
 import { ProviderDashboardScreen } from "../screens/provider/ProviderDashboardScreen";
 import { PatientLookupScreen } from "../screens/provider/PatientLookupScreen";
-import { ActivityFeedScreen } from "../screens/provider/ActivityFeedScreen";
 import { ResultsViewScreen } from "../screens/provider/ResultsViewScreen";
 import { ProfessionalProfileScreen } from "../screens/provider/ProfessionalProfileScreen";
 import { QueueManagementScreen } from "../screens/provider/QueueManagementScreen";
-import { BedManagementScreen } from "../screens/provider/BedManagementScreen";
-import { PharmacyDispensingScreen } from "../screens/provider/PharmacyDispensingScreen";
 import { ClinicalToolsScreen } from "../screens/provider/ClinicalToolsScreen";
+import { EncounterScreen } from "../screens/provider/EncounterScreen";
 import { useAppStore } from "../stores/appStore";
+import { useEncounterStore } from "../stores/encounterStore";
+import type { ProviderTabKey } from "../types";
 
-const TABS = [
-  { key: "dashboard", label: "Worklist", icon: "clipboard" },
-  { key: "patients", label: "Patients", icon: "users" },
-  { key: "results", label: "Results", icon: "activity" },
-  { key: "queue", label: "Queue", icon: "list" },
-  { key: "tools", label: "Tools", icon: "briefcase" },
-  { key: "professional", label: "Profile", icon: "user" },
-] as const;
+const ACCENT = "#1E40AF";
 
-type TabKey = (typeof TABS)[number]["key"];
+function tabIcon(name: string, isActive: boolean): React.ReactNode {
+  const color = isActive ? ACCENT : "#9CA3AF";
+  return <Ionicons name={name as never} size={22} color={color} />;
+}
 
 export function ProviderTabs() {
-  const [activeTab, setActiveTab] = useState<TabKey>("dashboard");
-  const { unreadNotifications } = useAppStore();
+  const { unreadNotifications, providerTab, setProviderTab } = useAppStore();
+  const { activeEncounter } = useEncounterStore();
+
+  useEffect(() => {
+    if (!activeEncounter && providerTab === "encounter") {
+      setProviderTab("dashboard");
+    }
+  }, [activeEncounter, providerTab, setProviderTab]);
 
   const handleTabChange = useCallback((key: string) => {
-    setActiveTab(key as TabKey);
-  }, []);
+    setProviderTab(key as ProviderTabKey);
+  }, [setProviderTab]);
+
+  const tabs = [
+    {
+      key: "dashboard" as const,
+      label: "Launch",
+      icon: tabIcon(providerTab === "dashboard" ? "rocket" : "rocket-outline", providerTab === "dashboard"),
+      badge: unreadNotifications > 0 ? unreadNotifications : undefined,
+    },
+    {
+      key: "patients" as const,
+      label: "Patients",
+      icon: tabIcon(providerTab === "patients" ? "people" : "people-outline", providerTab === "patients"),
+    },
+    ...(activeEncounter
+      ? [
+          {
+            key: "encounter" as const,
+            label: "Encounter",
+            icon: tabIcon(providerTab === "encounter" ? "pulse" : "pulse-outline", providerTab === "encounter"),
+          },
+        ]
+      : []),
+    {
+      key: "results" as const,
+      label: "Results",
+      icon: tabIcon(providerTab === "results" ? "flask" : "flask-outline", providerTab === "results"),
+    },
+    {
+      key: "queue" as const,
+      label: "Queue",
+      icon: tabIcon(providerTab === "queue" ? "list" : "list-outline", providerTab === "queue"),
+    },
+    {
+      key: "tools" as const,
+      label: "Tools",
+      icon: tabIcon(providerTab === "tools" ? "construct" : "construct-outline", providerTab === "tools"),
+    },
+    {
+      key: "professional" as const,
+      label: "Profile",
+      icon: tabIcon(providerTab === "professional" ? "person-circle" : "person-circle-outline", providerTab === "professional"),
+    },
+  ];
 
   const renderContent = () => {
-    switch (activeTab) {
+    switch (providerTab) {
       case "dashboard":
         return <ProviderDashboardScreen />;
       case "patients":
         return <PatientLookupScreen />;
+      case "encounter":
+        return <EncounterScreen />;
       case "results":
         return <ResultsViewScreen />;
       case "queue":
@@ -60,14 +108,10 @@ export function ProviderTabs() {
     <View testID="provider-tabs" style={styles.container}>
       <View style={styles.content}>{renderContent()}</View>
       <TabBar
-        items={TABS.map((t) => ({
-          key: t.key,
-          label: t.label,
-          icon: t.icon,
-          badge: t.key === "dashboard" && unreadNotifications > 0 ? unreadNotifications : undefined,
-        }))}
-        activeKey={activeTab}
+        items={tabs}
+        activeKey={providerTab}
         onSelect={handleTabChange}
+        accentColor={ACCENT}
       />
     </View>
   );
@@ -76,6 +120,7 @@ export function ProviderTabs() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "#F8FAFC",
   },
   content: {
     flex: 1,

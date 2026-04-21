@@ -33,7 +33,10 @@ vi.mock("@/components/home/WorkplaceSelectionHub", () => ({
 }));
 
 vi.mock("@/hooks/useAuthStore", () => ({
-  useAuthStore: (selector: (state: { user: { id: string; displayName: string; roles: string[]; actorType: string } }) => unknown) =>
+  useAuthStore: (selector: (state: {
+    user: { id: string; displayName: string; roles: string[]; actorType: string };
+    hasRole: (role: string) => boolean;
+  }) => unknown) =>
     selector({
       user: {
         id: "user-1",
@@ -41,6 +44,7 @@ vi.mock("@/hooks/useAuthStore", () => ({
         roles: ["doctor"],
         actorType: "PROVIDER",
       },
+      hasRole: (role: string) => role === "SYSTEM_ADMIN" || role === "CITIZEN",
     }),
 }));
 
@@ -79,6 +83,12 @@ vi.mock("@/hooks/queries/useFacilities", () => ({
             code: "HC",
             facilityType: "Hospital",
             capabilities: ["laboratory", "pacs"],
+            operatingModel: {
+              facilityTier: "CENTRAL_HOSPITAL",
+              deploymentMode: "DEDICATED_POD",
+              continuityClass: "LOCAL_EXECUTION_REQUIRED",
+              workflowArchetype: "REFERRAL_AND_SPECIALIST",
+            },
           },
         },
       ],
@@ -110,6 +120,24 @@ vi.mock("@/hooks/queries/useProviderPrivileges", () => ({
   }),
 }));
 
+vi.mock("@/hooks/queries/useFacilityOperations", () => ({
+  useFacilityQueueStats: () => ({
+    data: {
+      data: {
+        waiting: 6,
+        called: 2,
+        inService: 3,
+        completed: 14,
+        noShow: 1,
+        avgWaitSeconds: 840,
+      },
+    },
+  }),
+  useFacilityActiveShiftCount: () => ({
+    activeShiftCount: 4,
+  }),
+}));
+
 vi.mock("@/hooks/queries/useCommunity", () => ({
   useCommunityGroups: () => ({
     data: {
@@ -127,6 +155,12 @@ vi.mock("@/providers/ExperienceEntryProvider", () => ({
     facility: {
       id: "facility-1",
       name: "Harare Central",
+      operatingModel: {
+        facilityTier: "CENTRAL_HOSPITAL",
+        deploymentMode: "DEDICATED_POD",
+        continuityClass: "LOCAL_EXECUTION_REQUIRED",
+        workflowArchetype: "REFERRAL_AND_SPECIALIST",
+      },
     },
     selectFacility: vi.fn(),
     enterMode: vi.fn(),
@@ -220,9 +254,16 @@ describe("HomePage", () => {
 
     render(<HomePage />);
 
-    expect(screen.getByText("Quick Access")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "LIMS" })).toHaveAttribute("href", "/queue/search?workflow=lims");
-    expect(screen.getByRole("link", { name: "PACS" })).toHaveAttribute("href", "/queue/search?workflow=pacs");
+    expect(screen.getByText("Launch Client Experience")).toBeInTheDocument();
+    expect(screen.getByText("Patients waiting")).toBeInTheDocument();
+    expect(screen.getByText("6")).toBeInTheDocument();
+    expect(screen.getByText("Facility operating model")).toBeInTheDocument();
+    expect(screen.getAllByText("Central Hospital").length).toBeGreaterThan(0);
+    expect(screen.getByText("Service Delivery Pathways")).toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: /Find Patient/i })[0]).toHaveAttribute("href", "/queue/search");
+    expect(screen.getByRole("link", { name: /Walk-in Registration/i })).toHaveAttribute("href", "/queue/walk-in");
+    expect(screen.getByRole("link", { name: /Waiting Room/i })).toHaveAttribute("href", "/queue/waiting");
+    expect(screen.getByRole("link", { name: /New Teleconsult/i })).toHaveAttribute("href", "/telemedicine/new");
     expect(screen.getByText("Communication & Access")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Omnichannel" })).toHaveAttribute("href", "/omnichannel");
 

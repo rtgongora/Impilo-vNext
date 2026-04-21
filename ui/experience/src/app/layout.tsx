@@ -12,7 +12,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Impilo — Health Operating System",
   description: "One Health Operating System — Experience Platform",
-  icons: { icon: "/favicon.svg" },
+  icons: { icon: "/brand/mark-rgb.svg" },
 };
 
 export default function RootLayout({

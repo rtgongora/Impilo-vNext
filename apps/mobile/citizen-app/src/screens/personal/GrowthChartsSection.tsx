@@ -20,7 +20,7 @@ const CHART_TYPES = [
 export function GrowthChartsSection() {
   const [chartType, setChartType] = useState("WEIGHT_FOR_AGE");
 
-  const { data: measurements = [], isLoading } = useQuery({
+  const { data: measurements = [], isLoading } = useQuery<GrowthMeasurement[]>({
     queryKey: ["growth-measurements", chartType],
     queryFn: async () => {
       return [];

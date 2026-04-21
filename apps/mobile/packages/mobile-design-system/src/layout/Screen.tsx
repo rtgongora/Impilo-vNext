@@ -1,9 +1,9 @@
 /**
- * Screen — Top-level screen wrapper with safe area and scroll support.
+ * Screen — Top-level screen wrapper with safe area and optional scroll support.
  */
 
 import React from "react";
-import { View, ScrollView, StyleSheet } from "react-native";
+import { View, ScrollView, StyleSheet, Platform } from "react-native";
 
 export interface ScreenProps {
   children: React.ReactNode;
@@ -15,48 +15,62 @@ export interface ScreenProps {
 
 export function Screen({
   children,
-  scrollable = true,
-  padding = true,
-  backgroundColor,
+  scrollable = false,
+  padding = false,
+  backgroundColor = "#F8FAFC",
   testID,
 }: ScreenProps) {
-  const containerStyle = [
-    styles.container,
-    { backgroundColor: backgroundColor ?? "#FFFFFF" },
-    padding ? styles.padded : undefined,
-  ];
-
   if (scrollable) {
     return (
-      <ScrollView
-        testID={testID}
-        style={styles.container}
-        contentContainerStyle={[
-          { backgroundColor: backgroundColor ?? "#FFFFFF" },
-          padding ? styles.padded : undefined,
-          styles.scrollContent,
-        ]}
-      >
-        {children}
-      </ScrollView>
+      <View style={[styles.safe, { backgroundColor }]}>
+        <ScrollView
+          testID={testID}
+          style={styles.scroll}
+          contentContainerStyle={[
+            styles.scrollContent,
+            padding ? styles.padded : undefined,
+          ]}
+          showsVerticalScrollIndicator={false}
+        >
+          {children}
+        </ScrollView>
+      </View>
     );
   }
 
   return (
-    <View testID={testID} style={containerStyle}>
+    <View
+      testID={testID}
+      style={[
+        styles.safe,
+        styles.container,
+        { backgroundColor },
+        padding ? styles.padded : undefined,
+      ]}
+    >
       {children}
     </View>
   );
 }
 
+const STATUS_BAR_HEIGHT = Platform.OS === "ios" ? 44 : 24;
+
 const styles = StyleSheet.create({
+  safe: {
+    flex: 1,
+    paddingTop: STATUS_BAR_HEIGHT,
+  },
   container: {
     flex: 1,
   },
-  padded: {
-    padding: 16,
+  scroll: {
+    flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
+    paddingBottom: 24,
+  },
+  padded: {
+    padding: 16,
   },
 });

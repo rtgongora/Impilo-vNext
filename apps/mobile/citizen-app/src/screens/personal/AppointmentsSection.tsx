@@ -1,9 +1,6 @@
-/**
- * AppointmentsSection — View, request, and manage appointments.
- */
-
 import React, { useState, useEffect, useCallback } from "react";
 import { View, Text, StyleSheet } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import {
   Card,
   CardHeader,
@@ -85,7 +82,7 @@ export function AppointmentsSection() {
   return (
     <View testID="appointments-section" style={styles.container}>
       <View style={styles.headerRow}>
-        <Text style={styles.heading}>Appointments</Text>
+        <Text style={styles.sectionLabel}>MY APPOINTMENTS</Text>
         <Button
           title={showBooking ? "Cancel" : "Book New"}
           variant={showBooking ? "ghost" : "primary"}
@@ -96,97 +93,113 @@ export function AppointmentsSection() {
       </View>
 
       {showBooking ? (
-        <Card>
-          <CardHeader title="Request Appointment" />
-          <CardBody>
-            <View style={styles.formContainer}>
-              <TextField
-                label="Facility ID"
-                value={facilityId}
-                onChange={setFacilityId}
-                placeholder="Enter facility ID"
-                testID="booking-facility"
-              />
-              <Select
-                label="Type"
-                value={appointmentType}
-                onChange={setAppointmentType}
-                options={[
-                  { label: "General Consultation", value: "GENERAL" },
-                  { label: "Follow-Up", value: "FOLLOW_UP" },
-                  { label: "Specialist Referral", value: "SPECIALIST" },
-                  { label: "Lab Work", value: "LAB_WORK" },
-                  { label: "Vaccination", value: "VACCINATION" },
-                ]}
-                testID="booking-type"
-              />
-              <TextField
-                label="Preferred Date"
-                value={preferredDate}
-                onChange={setPreferredDate}
-                placeholder="YYYY-MM-DD"
-                testID="booking-date"
-              />
-              <TextField
-                label="Reason (optional)"
-                value={reason}
-                onChange={setReason}
-                placeholder="Brief description"
-                testID="booking-reason"
-              />
-              <Button
-                title={submitting ? "Submitting..." : "Submit Request"}
-                variant="primary"
-                onPress={handleBook}
-                disabled={submitting || !facilityId || !preferredDate}
-                testID="submit-booking"
-              />
-            </View>
-          </CardBody>
-        </Card>
+        <View style={styles.bookingCard}>
+          <Text style={styles.bookingTitle}>Request Appointment</Text>
+          <View style={styles.formContainer}>
+            <TextField
+              label="Facility ID"
+              value={facilityId}
+              onChange={setFacilityId}
+              placeholder="Enter facility ID"
+              testID="booking-facility"
+            />
+            <Select
+              label="Type"
+              value={appointmentType}
+              onChange={setAppointmentType}
+              options={[
+                { label: "General Consultation", value: "GENERAL" },
+                { label: "Follow-Up", value: "FOLLOW_UP" },
+                { label: "Specialist Referral", value: "SPECIALIST" },
+                { label: "Lab Work", value: "LAB_WORK" },
+                { label: "Vaccination", value: "VACCINATION" },
+              ]}
+              testID="booking-type"
+            />
+            <TextField
+              label="Preferred Date"
+              value={preferredDate}
+              onChange={setPreferredDate}
+              placeholder="YYYY-MM-DD"
+              testID="booking-date"
+            />
+            <TextField
+              label="Reason (optional)"
+              value={reason}
+              onChange={setReason}
+              placeholder="Brief description"
+              testID="booking-reason"
+            />
+            <Button
+              title={submitting ? "Submitting..." : "Submit Request"}
+              variant="primary"
+              onPress={handleBook}
+              disabled={submitting || !facilityId || !preferredDate}
+              testID="submit-booking"
+            />
+          </View>
+        </View>
       ) : null}
 
       {appointments.length === 0 ? (
-        <EmptyState
-          title="No appointments"
-          message="Book your first appointment using the button above"
-        />
+        <View style={styles.emptyContainer}>
+          <View style={styles.emptyIconCircle}>
+            <Ionicons name="calendar-outline" size={32} color="#D1D5DB" />
+          </View>
+          <Text style={styles.emptyTitle}>No appointments</Text>
+          <Text style={styles.emptyMessage}>Book your first appointment using the button above</Text>
+        </View>
       ) : (
-        appointments.map((appt) => (
-          <Card key={appt.id}>
-            <CardBody>
+        appointments.map((appt) => {
+          const dateObj = new Date(appt.scheduledAt);
+          const day = dateObj.getDate();
+          const month = dateObj.toLocaleString("default", { month: "short" }).toUpperCase();
+          const time = dateObj.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+          return (
+            <View key={appt.id} style={styles.appointmentCard}>
               <View testID={`appointment-${appt.id}`} style={styles.appointmentRow}>
-                <View>
-                  <View style={styles.badgeRow}>
-                    <Text style={styles.boldText}>{appt.appointmentType}</Text>
+                <View style={styles.dateBox}>
+                  <Text style={styles.dateDay}>{day}</Text>
+                  <Text style={styles.dateMonth}>{month}</Text>
+                </View>
+                <View style={styles.appointmentMeta}>
+                  <View style={styles.typeRow}>
+                    <Text style={styles.appointmentType}>{appt.appointmentType}</Text>
                     <Badge variant={STATUS_COLORS[appt.status] ?? "outline"}>
                       {appt.status}
                     </Badge>
                   </View>
-                  <Text style={styles.facilityText}>{appt.facilityName}</Text>
+                  <View style={styles.metaRow}>
+                    <Ionicons name="location-outline" size={13} color="#9CA3AF" />
+                    <Text style={styles.metaText}>{appt.facilityName}</Text>
+                  </View>
                   {appt.providerName ? (
-                    <Text style={styles.secondaryText}>{`Dr. ${appt.providerName}`}</Text>
+                    <View style={styles.metaRow}>
+                      <Ionicons name="person-outline" size={13} color="#9CA3AF" />
+                      <Text style={styles.metaText}>{`Dr. ${appt.providerName}`}</Text>
+                    </View>
                   ) : null}
-                  <Text style={styles.secondaryText}>
-                    {new Date(appt.scheduledAt).toLocaleString()}
-                  </Text>
+                  <View style={styles.metaRow}>
+                    <Ionicons name="time-outline" size={13} color="#9CA3AF" />
+                    <Text style={styles.metaText}>{time}</Text>
+                  </View>
                   {appt.reason ? (
-                    <Text style={styles.tertiaryText}>{appt.reason}</Text>
+                    <Text style={styles.reasonText}>{appt.reason}</Text>
+                  ) : null}
+                  {appt.status === "SCHEDULED" || appt.status === "CONFIRMED" ? (
+                    <Button
+                      title="Cancel Appointment"
+                      variant="ghost"
+                      size="sm"
+                      onPress={() => handleCancel(appt.id)}
+                      testID={`cancel-appointment-${appt.id}`}
+                    />
                   ) : null}
                 </View>
-                {appt.status === "SCHEDULED" || appt.status === "CONFIRMED" ? (
-                  <Button
-                    title="Cancel"
-                    variant="ghost"
-                    size="sm"
-                    onPress={() => handleCancel(appt.id)}
-                    testID={`cancel-appointment-${appt.id}`}
-                  />
-                ) : null}
               </View>
-            </CardBody>
-          </Card>
-        ))
+            </View>
+          );
+        })
       )}
     </View>
   );
@@ -194,47 +207,130 @@ export function AppointmentsSection() {
 
 const styles = StyleSheet.create({
   container: {
-    gap: 16,
+    gap: 12,
   },
   headerRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    marginBottom: 4,
   },
-  heading: {
-    fontSize: 18,
-    fontWeight: "600",
+  sectionLabel: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#6B7280",
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
+  },
+  bookingCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    padding: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  bookingTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#111827",
+    marginBottom: 12,
   },
   formContainer: {
     gap: 12,
   },
-  appointmentRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-  },
-  badgeRow: {
-    flexDirection: "row",
-    gap: 8,
+  emptyContainer: {
     alignItems: "center",
+    paddingVertical: 48,
+    gap: 12,
+  },
+  emptyIconCircle: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: "#F3F4F6",
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: 4,
   },
-  boldText: {
-    fontWeight: "700",
-  },
-  facilityText: {
-    fontSize: 14,
+  emptyTitle: {
+    fontSize: 17,
+    fontWeight: "600",
     color: "#374151",
-    marginVertical: 2,
   },
-  secondaryText: {
+  emptyMessage: {
+    fontSize: 14,
+    color: "#9CA3AF",
+    textAlign: "center",
+    paddingHorizontal: 24,
+  },
+  appointmentCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    padding: 14,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  appointmentRow: {
+    flexDirection: "row",
+    gap: 14,
+    alignItems: "flex-start",
+  },
+  dateBox: {
+    width: 52,
+    height: 60,
+    borderRadius: 12,
+    backgroundColor: "#F0FDF4",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 2,
+    flexShrink: 0,
+  },
+  dateDay: {
+    fontSize: 22,
+    fontWeight: "700",
+    color: "#059669",
+    lineHeight: 26,
+  },
+  dateMonth: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: "#059669",
+    letterSpacing: 0.5,
+  },
+  appointmentMeta: {
+    flex: 1,
+    gap: 4,
+  },
+  typeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 4,
+  },
+  appointmentType: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#111827",
+    flex: 1,
+  },
+  metaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+  },
+  metaText: {
     fontSize: 13,
     color: "#6B7280",
-    marginVertical: 2,
   },
-  tertiaryText: {
-    fontSize: 13,
+  reasonText: {
+    fontSize: 12,
     color: "#9CA3AF",
-    marginVertical: 2,
+    marginTop: 2,
   },
 });

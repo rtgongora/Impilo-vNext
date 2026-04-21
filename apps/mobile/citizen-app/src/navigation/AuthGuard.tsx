@@ -36,7 +36,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
   if (auth.isLoading) {
     return (
       <View testID="auth-loading" style={styles.loading}>
-        <ActivityIndicator size="large" color="#059669" />
+        <ActivityIndicator size="large" color="#009739" />
       </View>
     );
   }
@@ -48,7 +48,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
   if (!profile) {
     return (
       <View testID="profile-loading" style={styles.loading}>
-        <ActivityIndicator size="large" color="#059669" />
+        <ActivityIndicator size="large" color="#009739" />
         <Text style={styles.loadingText}>Loading your profile...</Text>
       </View>
     );

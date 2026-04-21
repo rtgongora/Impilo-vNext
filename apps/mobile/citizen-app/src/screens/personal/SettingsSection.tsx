@@ -1,13 +1,7 @@
-/**
- * SettingsSection — Consent management, notification preferences, and account actions.
- */
-
 import React, { useState, useEffect, useCallback } from "react";
 import { View, Text, StyleSheet } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import {
-  Card,
-  CardHeader,
-  CardBody,
   Button,
   Switch,
   LoadingSpinner,
@@ -81,20 +75,27 @@ export function SettingsSection() {
 
   return (
     <View testID="settings-section" style={styles.container}>
-      {/* Consent preferences */}
-      <Card>
-        <CardHeader title="Privacy & Consent" />
-        <CardBody>
+      <View style={styles.section}>
+        <Text style={styles.sectionLabel}>PRIVACY & CONSENT</Text>
+        <View style={styles.card}>
           {consents.length === 0 ? (
-            <Text style={styles.emptyText}>No consent preferences configured</Text>
+            <View style={styles.emptyRow}>
+              <Text style={styles.emptyText}>No consent preferences configured</Text>
+            </View>
           ) : (
-            consents.map((consent) => (
+            consents.map((consent, index) => (
               <View
                 key={consent.id}
                 testID={`consent-${consent.id}`}
-                style={styles.consentRow}
+                style={[
+                  styles.consentRow,
+                  index === consents.length - 1 ? styles.lastRow : null,
+                ]}
               >
-                <View>
+                <View style={styles.consentIconCircle}>
+                  <Ionicons name="lock-closed" size={16} color="#059669" />
+                </View>
+                <View style={styles.consentContent}>
                   <Text style={styles.consentCategory}>{consent.category}</Text>
                   <Text style={styles.consentDescription}>{consent.description}</Text>
                 </View>
@@ -106,68 +107,112 @@ export function SettingsSection() {
               </View>
             ))
           )}
-        </CardBody>
-      </Card>
+        </View>
+      </View>
 
-      {/* Notification preferences */}
-      <Card>
-        <CardHeader title="Notification Preferences" />
-        <CardBody>
+      <View style={styles.section}>
+        <Text style={styles.sectionLabel}>NOTIFICATIONS</Text>
+        <View style={styles.card}>
           {notifPrefs.length === 0 ? (
-            <Text style={styles.emptyText}>No notification preferences available</Text>
+            <View style={styles.emptyRow}>
+              <Text style={styles.emptyText}>No notification preferences available</Text>
+            </View>
           ) : (
-            notifPrefs.map((pref) => (
+            notifPrefs.map((pref, index) => (
               <View
                 key={pref.category}
                 testID={`notif-pref-${pref.category}`}
-                style={styles.notifPrefRow}
+                style={[
+                  styles.notifRow,
+                  index === notifPrefs.length - 1 ? styles.lastRow : null,
+                ]}
               >
-                <Text style={styles.notifPrefCategory}>{pref.category}</Text>
-                <View style={styles.notifSwitchRow}>
-                  <View style={styles.notifSwitchItem}>
+                <View style={styles.notifTop}>
+                  <View style={styles.notifIconCircle}>
+                    <Ionicons name="notifications" size={16} color="#1E40AF" />
+                  </View>
+                  <Text style={styles.notifCategory}>{pref.category}</Text>
+                </View>
+                <View style={styles.notifToggles}>
+                  <View style={styles.togglePill}>
                     <Switch
                       checked={pref.pushEnabled}
                       onChange={(v: boolean) => handleNotifPrefToggle(pref.category, "pushEnabled", v)}
                     />
-                    <Text style={styles.notifSwitchLabel}>Push</Text>
+                    <Text style={styles.toggleLabel}>Push</Text>
                   </View>
-                  <View style={styles.notifSwitchItem}>
+                  <View style={styles.togglePill}>
                     <Switch
                       checked={pref.inAppEnabled}
                       onChange={(v: boolean) => handleNotifPrefToggle(pref.category, "inAppEnabled", v)}
                     />
-                    <Text style={styles.notifSwitchLabel}>In-App</Text>
+                    <Text style={styles.toggleLabel}>In-App</Text>
                   </View>
                 </View>
               </View>
             ))
           )}
-        </CardBody>
-      </Card>
+        </View>
+      </View>
 
-      {/* Account actions */}
-      <Card>
-        <CardHeader title="Account" />
-        <CardBody>
-          <View style={styles.accountContainer}>
+      <View style={styles.section}>
+        <Text style={styles.sectionLabel}>ACCOUNT</Text>
+        <View style={styles.card}>
+          <View style={styles.accountRow}>
+            <View style={styles.accountIconCircle}>
+              <Ionicons name="log-out-outline" size={18} color="#6B7280" />
+            </View>
+            <View style={styles.accountContent}>
+              <Text style={styles.accountActionLabel}>Sign Out</Text>
+              <Text style={styles.accountActionSub}>End your current session</Text>
+            </View>
             <Button
               title="Sign Out"
               variant="secondary"
+              size="sm"
               onPress={() => auth.logout()}
               testID="sign-out"
             />
-            {showDeleteConfirm ? (
-              <View style={styles.deleteConfirmContainer}>
-                <Text style={styles.deleteWarningText}>
-                  This will permanently delete your account and all associated data. This action cannot be undone.
-                </Text>
-                <View style={styles.deleteButtonRow}>
+          </View>
+
+          <View style={[styles.accountRow, styles.lastRow]}>
+            <View style={[styles.accountIconCircle, styles.dangerIconCircle]}>
+              <Ionicons name="trash-outline" size={18} color="#EF4444" />
+            </View>
+            <View style={styles.accountContent}>
+              <Text style={[styles.accountActionLabel, styles.dangerLabel]}>Delete Account</Text>
+              <Text style={styles.accountActionSub}>Permanently remove your data</Text>
+            </View>
+            {!showDeleteConfirm ? (
+              <Button
+                title="Delete"
+                variant="ghost"
+                size="sm"
+                onPress={() => setShowDeleteConfirm(true)}
+                testID="delete-account"
+              />
+            ) : null}
+          </View>
+
+          {showDeleteConfirm ? (
+            <View style={styles.deleteConfirmBox}>
+              <View style={styles.deleteWarningHeader}>
+                <Ionicons name="warning" size={18} color="#991B1B" />
+                <Text style={styles.deleteWarningTitle}>Are you sure?</Text>
+              </View>
+              <Text style={styles.deleteWarningText}>
+                This will permanently delete your account and all associated data. This action cannot be undone.
+              </Text>
+              <View style={styles.deleteButtonRow}>
+                <View style={styles.buttonFlex}>
                   <Button
                     title="Confirm Delete"
                     variant="primary"
                     onPress={handleDeleteAccount}
                     testID="confirm-delete-account"
                   />
+                </View>
+                <View style={styles.buttonFlex}>
                   <Button
                     title="Cancel"
                     variant="ghost"
@@ -175,83 +220,192 @@ export function SettingsSection() {
                   />
                 </View>
               </View>
-            ) : (
-              <Button
-                title="Delete Account"
-                variant="ghost"
-                onPress={() => setShowDeleteConfirm(true)}
-                testID="delete-account"
-              />
-            )}
-          </View>
-        </CardBody>
-      </Card>
+            </View>
+          ) : null}
+        </View>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    gap: 16,
+    gap: 20,
+  },
+  section: {
+    gap: 8,
+  },
+  sectionLabel: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#6B7280",
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
+  },
+  card: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 3,
+    overflow: "hidden",
+  },
+  emptyRow: {
+    padding: 16,
+    alignItems: "center",
   },
   emptyText: {
-    color: "#6B7280",
+    color: "#9CA3AF",
     fontSize: 14,
   },
   consentRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 8,
-    borderBottomWidth: 1,
+    gap: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: "#F3F4F6",
+  },
+  lastRow: {
+    borderBottomWidth: 0,
+  },
+  consentIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#D1FAE5",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
+  consentContent: {
+    flex: 1,
   },
   consentCategory: {
     fontSize: 14,
     fontWeight: "700",
+    color: "#111827",
   },
   consentDescription: {
-    fontSize: 13,
-    color: "#6B7280",
+    fontSize: 12,
+    color: "#9CA3AF",
     marginTop: 2,
   },
-  notifPrefRow: {
-    paddingVertical: 8,
-    borderBottomWidth: 1,
+  notifRow: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: "#F3F4F6",
+    gap: 10,
   },
-  notifPrefCategory: {
+  notifTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  notifIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#DBEAFE",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
+  notifCategory: {
     fontSize: 14,
     fontWeight: "700",
-    marginBottom: 8,
+    color: "#111827",
   },
-  notifSwitchRow: {
+  notifToggles: {
     flexDirection: "row",
-    gap: 24,
+    gap: 16,
+    paddingLeft: 46,
   },
-  notifSwitchItem: {
+  togglePill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: "#F9FAFB",
+    borderRadius: 10,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+  },
+  toggleLabel: {
+    fontSize: 12,
+    color: "#6B7280",
+    fontWeight: "500",
+  },
+  accountRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#F3F4F6",
+  },
+  accountIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#F3F4F6",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
+  dangerIconCircle: {
+    backgroundColor: "#FEE2E2",
+  },
+  accountContent: {
+    flex: 1,
+  },
+  accountActionLabel: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#111827",
+  },
+  dangerLabel: {
+    color: "#EF4444",
+  },
+  accountActionSub: {
+    fontSize: 12,
+    color: "#9CA3AF",
+    marginTop: 1,
+  },
+  deleteConfirmBox: {
+    margin: 12,
+    padding: 14,
+    backgroundColor: "#FEF2F2",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#FECACA",
+    gap: 10,
+  },
+  deleteWarningHeader: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
   },
-  notifSwitchLabel: {
-    fontSize: 13,
-  },
-  accountContainer: {
-    gap: 12,
-  },
-  deleteConfirmContainer: {
-    padding: 12,
-    backgroundColor: "#FEE2E2",
-    borderRadius: 8,
+  deleteWarningTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#991B1B",
   },
   deleteWarningText: {
-    color: "#991B1B",
-    fontSize: 14,
-    marginBottom: 8,
+    color: "#B91C1C",
+    fontSize: 13,
+    lineHeight: 19,
   },
   deleteButtonRow: {
     flexDirection: "row",
-    gap: 8,
+    gap: 10,
+    marginTop: 4,
+  },
+  buttonFlex: {
+    flex: 1,
   },
 });

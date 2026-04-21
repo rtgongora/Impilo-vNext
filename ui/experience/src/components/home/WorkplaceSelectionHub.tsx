@@ -38,6 +38,24 @@ function facilityCardTone(status: string) {
   return "border-slate-200 bg-slate-50";
 }
 
+function formatEnumLabel(value?: string | null) {
+  if (!value) return null;
+  return value
+    .toLowerCase()
+    .split("_")
+    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
+    .join(" ");
+}
+
+function getFacilityOperatingModel(attributes: FacilityResource["attributes"]) {
+  return attributes.operatingModel ?? {
+    facilityTier: attributes.facilityTier,
+    deploymentMode: attributes.deploymentMode,
+    continuityClass: attributes.continuityClass,
+    workflowArchetype: attributes.workflowArchetype,
+  };
+}
+
 export function WorkplaceSelectionHub({
   facilities,
   isLoading,
@@ -113,6 +131,10 @@ export function WorkplaceSelectionHub({
               const attributes = facility.attributes;
               const isSelected = selectedFacilityId === facility.id;
               const capabilities = attributes.capabilities ?? [];
+              const operatingModel = getFacilityOperatingModel(attributes);
+              const tierLabel = formatEnumLabel(operatingModel.facilityTier);
+              const deploymentLabel = formatEnumLabel(operatingModel.deploymentMode);
+              const continuityLabel = formatEnumLabel(operatingModel.continuityClass);
 
               return (
                 <button
@@ -150,6 +172,25 @@ export function WorkplaceSelectionHub({
                           <MapPin className="h-3.5 w-3.5" />
                           <span>{attributes.code}</span>
                         </div>
+                        {(tierLabel || deploymentLabel || continuityLabel) && (
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            {tierLabel && (
+                              <span className="rounded-full bg-sky-100 px-2.5 py-1 text-[11px] font-medium text-sky-700">
+                                {tierLabel}
+                              </span>
+                            )}
+                            {deploymentLabel && (
+                              <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-medium text-emerald-700">
+                                {deploymentLabel}
+                              </span>
+                            )}
+                            {continuityLabel && (
+                              <span className="rounded-full bg-violet-100 px-2.5 py-1 text-[11px] font-medium text-violet-700">
+                                {continuityLabel}
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
 

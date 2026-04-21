@@ -5,6 +5,7 @@
  * Persistence key: exp:facility (sessionStorage)
  */
 
+import type { FacilityOperatingModel } from "@/hooks/queries/useFacilities";
 import { create } from "zustand";
 
 export interface FacilityContext {
@@ -13,6 +14,7 @@ export interface FacilityContext {
   code: string;
   facilityType: string;
   capabilities: string[];
+  operatingModel?: FacilityOperatingModel;
 }
 
 interface FacilityState {

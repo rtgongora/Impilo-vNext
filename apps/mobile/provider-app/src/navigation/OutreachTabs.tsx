@@ -6,20 +6,23 @@
 
 import React, { useState, useCallback } from "react";
 import { View, StyleSheet } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { TabBar } from "@impilo/mobile-design-system";
 import { OutreachDashboardScreen } from "../screens/outreach/OutreachDashboardScreen";
 import { HouseholdListScreen } from "../screens/outreach/HouseholdListScreen";
 import { ScreeningScreen } from "../screens/outreach/ScreeningScreen";
 import { FollowUpScreen } from "../screens/outreach/FollowUpScreen";
 
-const TABS = [
-  { key: "dashboard", label: "Dashboard", icon: "map" },
-  { key: "households", label: "Households", icon: "home" },
-  { key: "screenings", label: "Screenings", icon: "clipboard-check" },
-  { key: "schedule", label: "Schedule", icon: "calendar" },
-] as const;
+const ACCENT = "#1E40AF";
 
-type TabKey = (typeof TABS)[number]["key"];
+type TabKey = "dashboard" | "households" | "screenings" | "schedule";
+
+const TABS: Array<{ key: TabKey; label: string; activeIcon: string; inactiveIcon: string }> = [
+  { key: "dashboard", label: "Dashboard", activeIcon: "map", inactiveIcon: "map-outline" },
+  { key: "households", label: "Households", activeIcon: "home", inactiveIcon: "home-outline" },
+  { key: "screenings", label: "Screenings", activeIcon: "clipboard", inactiveIcon: "clipboard-outline" },
+  { key: "schedule", label: "Schedule", activeIcon: "calendar", inactiveIcon: "calendar-outline" },
+];
 
 export function OutreachTabs() {
   const [activeTab, setActiveTab] = useState<TabKey>("dashboard");
@@ -47,9 +50,20 @@ export function OutreachTabs() {
     <View testID="outreach-tabs" style={styles.container}>
       <View style={styles.content}>{renderContent()}</View>
       <TabBar
-        items={TABS.map((t) => ({ key: t.key, label: t.label }))}
+        items={TABS.map((t) => ({
+          key: t.key,
+          label: t.label,
+          icon: (
+            <Ionicons
+              name={(activeTab === t.key ? t.activeIcon : t.inactiveIcon) as never}
+              size={22}
+              color={activeTab === t.key ? ACCENT : "#9CA3AF"}
+            />
+          ),
+        }))}
         activeKey={activeTab}
         onSelect={handleTabChange}
+        accentColor={ACCENT}
       />
     </View>
   );
@@ -58,6 +72,7 @@ export function OutreachTabs() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "#F8FAFC",
   },
   content: {
     flex: 1,

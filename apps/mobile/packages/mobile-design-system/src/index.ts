@@ -25,6 +25,8 @@ export { Card, CardHeader, CardBody, CardFooter } from "./components/Card";
 export type { CardProps, CardHeaderProps, CardBodyProps, CardFooterProps } from "./components/Card";
 export { Badge } from "./components/Badge";
 export type { BadgeProps, BadgeVariant, BadgeSize } from "./components/Badge";
+export { Progress } from "./components/Progress";
+export type { ProgressProps } from "./components/Progress";
 export { StatusIndicator } from "./components/StatusIndicator";
 export type { StatusIndicatorProps, IndicatorStatus } from "./components/StatusIndicator";
 export { Avatar } from "./components/Avatar";

@@ -10,7 +10,7 @@
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#1E40AF"
+      "backgroundColor": "#009739"
     },
     "assetBundlePatterns": [
       "**/*"
@@ -28,7 +28,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#1E40AF"
+        "backgroundColor": "#009739"
       },
       "package": "zw.gov.impilo.provider",
       "versionCode": 1,
@@ -43,16 +43,16 @@
       ]
     },
     "plugins": [
-      "expo-router",
+      "expo-web-browser",
       "expo-secure-store",
       [
         "expo-build-properties",
         {
           "android": {
-            "compileSdkVersion": 34,
-            "targetSdkVersion": 34,
+            "compileSdkVersion": 35,
+            "targetSdkVersion": 35,
             "minSdkVersion": 24,
-            "buildToolsVersion": "34.0.0"
+            "buildToolsVersion": "35.0.0"
           },
           "ios": {
             "deploymentTarget": "15.1"
@@ -60,9 +60,6 @@
         }
       ]
     ],
-    "experiments": {
-      "typedRoutes": true
-    },
     "extra": {
       "eas": {
         "projectId": "impilo-provider"

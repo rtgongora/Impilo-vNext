@@ -500,6 +500,10 @@ export interface Allergy {
   recordedAt: string;
   recordedBy?: string;
   facilityName?: string;
+  /**
+   * Back-compat alias used by older screens.
+   */
+  notes?: string;
 }
 
 export type AllergySeverity = "MILD" | "MODERATE" | "SEVERE" | "LIFE_THREATENING";
@@ -517,6 +521,13 @@ export interface Condition {
   recordedBy?: string;
   facilityName?: string;
   notes?: string;
+  /**
+   * Back-compat aliases used by older screens.
+   */
+  clinicalStatus?: ConditionStatus;
+  codeSystem?: string;
+  category?: string;
+  severity?: string;
 }
 
 export type ConditionStatus = "ACTIVE" | "RESOLVED" | "INACTIVE" | "REMISSION";
@@ -536,6 +547,14 @@ export interface Immunization {
   expirationDate?: string;
   nextDoseDate?: string;
   notes?: string;
+  /**
+   * Back-compat aliases used by older screens.
+   */
+  status?: "COMPLETED" | "DUE" | "OVERDUE" | "SCHEDULED";
+  administeredDate?: string;
+  scheduledDate?: string;
+  site?: string;
+  seriesDoses?: number;
 }
 
 /* ── Referrals ── */
@@ -556,6 +575,14 @@ export interface Referral {
   completedAt?: string;
   cancelledAt?: string;
   notes?: string;
+  /**
+   * Back-compat aliases used by older screens.
+   */
+  serviceName?: string;
+  referringFacility?: string;
+  validUntil?: string;
+  referralFacility?: string;
+  referralDate?: string;
 }
 
 export type ReferralStatus = "PENDING" | "ACCEPTED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
@@ -574,6 +601,10 @@ export interface CarePlan {
   createdBy?: string;
   goals: CarePlanGoal[];
   interventions: CarePlanIntervention[];
+  /**
+   * Back-compat alias used by older screens.
+   */
+  tasks?: Array<{ id: string; description: string; completed: boolean }>;
 }
 
 export type CarePlanStatus = "DRAFT" | "ACTIVE" | "ON_HOLD" | "COMPLETED" | "CANCELLED";
@@ -584,6 +615,11 @@ export interface CarePlanGoal {
   targetDate?: string;
   achievedAt?: string;
   status: "PENDING" | "IN_PROGRESS" | "ACHIEVED" | "NOT_ACHIEVED";
+  /**
+   * Back-compat aliases used by older screens.
+   */
+  currentValue?: number;
+  targetValue?: number;
 }
 
 export interface CarePlanIntervention {
@@ -614,6 +650,11 @@ export interface Provider {
   currency?: string;
   languages?: string[];
   nextAvailable?: string;
+  /**
+   * Back-compat aliases used by older screens.
+   */
+  name?: string;
+  cadre?: string;
 }
 
 /* ── Care Team ── */

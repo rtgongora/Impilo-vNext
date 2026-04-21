@@ -16,6 +16,7 @@ import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityGeoEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityHistoryEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityIdentifierEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityReadinessEntity;
+import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityRegulatoryStatus;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.WorkspaceEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.EventOutboxRepository;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityCapabilityRepository;
@@ -102,8 +103,14 @@ public class FacilityService {
         facility.setOperationalStatus(dto.operationalStatus() != null ? dto.operationalStatus() : "OPERATIONAL");
         facility.setOwnership(dto.ownership());
         facility.setLevel(dto.level());
+        facility.setFacilityTier(dto.facilityTier());
+        facility.setDeploymentMode(dto.deploymentMode());
+        facility.setContinuityClass(dto.continuityClass());
+        facility.setWorkflowArchetype(dto.workflowArchetype());
         facility.setDescription(dto.description());
         facility.setOpenedDate(dto.openedDate());
+        facility.setRegulatoryStatus(FacilityRegulatoryStatus.REGISTERED_ACTIVE);
+        facility.setRegulatoryStatusUpdatedAt(Instant.now());
         facility.setVersion(1);
         facility.setCreatedBy(actorId);
         facility.setUpdatedBy(actorId);
@@ -256,6 +263,22 @@ public class FacilityService {
             recordHistory(id, "UPDATE", "level", facility.getLevel(), dto.level(), actorId, null);
             facility.setLevel(dto.level());
         }
+        if (dto.facilityTier() != null && !dto.facilityTier().equals(facility.getFacilityTier())) {
+            recordHistory(id, "UPDATE", "facility_tier", facility.getFacilityTier(), dto.facilityTier(), actorId, null);
+            facility.setFacilityTier(dto.facilityTier());
+        }
+        if (dto.deploymentMode() != null && !dto.deploymentMode().equals(facility.getDeploymentMode())) {
+            recordHistory(id, "UPDATE", "deployment_mode", facility.getDeploymentMode(), dto.deploymentMode(), actorId, null);
+            facility.setDeploymentMode(dto.deploymentMode());
+        }
+        if (dto.continuityClass() != null && !dto.continuityClass().equals(facility.getContinuityClass())) {
+            recordHistory(id, "UPDATE", "continuity_class", facility.getContinuityClass(), dto.continuityClass(), actorId, null);
+            facility.setContinuityClass(dto.continuityClass());
+        }
+        if (dto.workflowArchetype() != null && !dto.workflowArchetype().equals(facility.getWorkflowArchetype())) {
+            recordHistory(id, "UPDATE", "workflow_archetype", facility.getWorkflowArchetype(), dto.workflowArchetype(), actorId, null);
+            facility.setWorkflowArchetype(dto.workflowArchetype());
+        }
         if (dto.description() != null && !dto.description().equals(facility.getDescription())) {
             recordHistory(id, "UPDATE", "description", facility.getDescription(), dto.description(), actorId, null);
             facility.setDescription(dto.description());
@@ -321,17 +344,18 @@ public class FacilityService {
         String status = filters != null ? filters.status() : null;
         String district = filters != null ? filters.district() : null;
         String province = filters != null ? filters.province() : null;
+        FacilityRegulatoryStatus regulatoryStatus = null;
 
         if (query != null && !query.isBlank()) {
             log.debug("Searching facilities for tenant {} with query '{}', type={}, status={}, district={}, province={}",
                     tenantId, query, type, status, district, province);
             return facilityRepository.searchByNameAndFilters(tenantId, query.trim(), type, status,
-                    district, province, pageable);
+                    regulatoryStatus, district, province, pageable);
         }
 
         log.debug("Listing facilities for tenant {} with type={}, status={}, district={}, province={}",
                 tenantId, type, status, district, province);
-        return facilityRepository.findByFilters(tenantId, type, status, district, province, pageable);
+        return facilityRepository.findByFilters(tenantId, type, status, regulatoryStatus, district, province, pageable);
     }
 
     /**
@@ -487,6 +511,10 @@ public class FacilityService {
             String operationalStatus,
             String ownership,
             String level,
+            String facilityTier,
+            String deploymentMode,
+            String continuityClass,
+            String workflowArchetype,
             String description,
             LocalDate openedDate,
             Long parentId,
@@ -507,6 +535,10 @@ public class FacilityService {
             String operationalStatus,
             String ownership,
             String level,
+            String facilityTier,
+            String deploymentMode,
+            String continuityClass,
+            String workflowArchetype,
             String description
     ) {}
 

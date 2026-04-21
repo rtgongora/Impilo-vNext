@@ -486,14 +486,6 @@ public class PctServiceClient {
 
     // ── Conditions (strangler migration) ────────────────────────
 
-    public JsonNode listConditions(String patientCpid, int page, int size) {
-        String url = baseUrl + "/v1/conditions?patient_id=" + patientCpid + "&page=" + page + "&size=" + size;
-        log.debug("PCT: Listing conditions for patient={}...",
-                patientCpid.substring(0, Math.min(8, patientCpid.length())));
-        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
-        return extractData(response);
-    }
-
     public JsonNode createCondition(Map<String, Object> body) {
         String url = baseUrl + "/v1/conditions";
         log.info("PCT: Creating condition for patient={}", body.get("patient_id"));

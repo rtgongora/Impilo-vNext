@@ -18,7 +18,7 @@ import {
   EmptyState,
   ErrorState,
 } from "@impilo/mobile-design-system";
-import type { Allergy } from "../types";
+import type { Allergy } from "../../types";
 
 const SEVERITY_VARIANT: Record<string, "default" | "warning" | "destructive"> = {
   SEVERE: "destructive",
@@ -118,10 +118,10 @@ export function AllergiesSection({ patientId }: AllergiesSectionProps) {
                     {new Date(allergy.recordedAt).toLocaleDateString()}
                   </Text>
                 </View>
-                {allergy.notes && (
+                {allergy.facilityName && (
                   <View style={styles.detailRow}>
-                    <Text style={styles.detailLabel}>Notes</Text>
-                    <Text style={styles.detailValue}>{allergy.notes}</Text>
+                    <Text style={styles.detailLabel}>Facility</Text>
+                    <Text style={styles.detailValue}>{allergy.facilityName}</Text>
                   </View>
                 )}
               </CardBody>

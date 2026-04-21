@@ -18,7 +18,7 @@ import {
   EmptyState,
   ErrorState,
 } from "@impilo/mobile-design-system";
-import type { Referral } from "../types";
+import type { Referral } from "../../types";
 
 const STATUS_VARIANT: Record<string, "default" | "warning" | "success" | "destructive"> = {
   PENDING: "warning",

@@ -5,7 +5,8 @@
  */
 
 import React, { useState, useEffect, useCallback } from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import {
   Screen,
   Header,
@@ -19,9 +20,28 @@ import {
   ErrorState,
 } from "@impilo/mobile-design-system";
 import { useAppStore } from "../../stores/appStore";
+import { useEncounterStore } from "../../stores/encounterStore";
 import { getMyTasks } from "../../services/taskService";
 import { listEncounters } from "../../services/encounterService";
-import type { Task, Encounter } from "../../types";
+import { getFacilityMetrics } from "../../services/supportService";
+import type { Task, Encounter, FacilityMetrics, ProviderTabKey } from "../../types";
+
+const BLUE = "#1E40AF";
+
+const LAUNCH_ACTIONS: Array<{
+  key: string;
+  title: string;
+  subtitle: string;
+  target: ProviderTabKey;
+  icon: string;
+  color: string;
+  bg: string;
+}> = [
+  { key: "find-patient", title: "Find Patient", subtitle: "Search and start a new encounter", target: "patients", icon: "search-outline", color: "#059669", bg: "#D1FAE5" },
+  { key: "queue",        title: "Open Queue",   subtitle: "Pick up the next waiting patient",  target: "queue",    icon: "people-outline", color: BLUE, bg: "#DBEAFE" },
+  { key: "results",      title: "Lab Results",  subtitle: "Check new lab and imaging output",  target: "results",  icon: "flask-outline",  color: "#7C3AED", bg: "#EDE9FE" },
+  { key: "tools",        title: "Clinical Tools", subtitle: "Notes, plans, CDS, and handoff", target: "tools",    icon: "construct-outline", color: "#D97706", bg: "#FEF3C7" },
+];
 
 const PRIORITY_VARIANT: Record<string, string> = {
   URGENT: "destructive",
@@ -31,26 +51,37 @@ const PRIORITY_VARIANT: Record<string, string> = {
 };
 
 export function ProviderDashboardScreen() {
-  const { facilityId } = useAppStore();
+  const { facilityId, facilityName, workspaceName, setProviderTab } = useAppStore();
+  const { activeEncounter } = useEncounterStore();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [openEncounters, setOpenEncounters] = useState<Encounter[]>([]);
+  const [metrics, setMetrics] = useState<FacilityMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
 
   const loadDashboard = useCallback(async () => {
-    if (!facilityId) return;
+    if (!facilityId) {
+      setTasks([]);
+      setOpenEncounters([]);
+      setMetrics(null);
+      setLoading(false);
+      setError(null);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
-      const [taskResult, encounterResult] = await Promise.all([
+      const [taskResult, encounterResult, metricsResult] = await Promise.all([
         getMyTasks(undefined, 0, 50),
         listEncounters(undefined, 0, 20),
+        getFacilityMetrics(facilityId).catch(() => null),
       ]);
       setTasks(taskResult.tasks);
       setOpenEncounters(
         encounterResult.encounters.filter((e) => e.status === "IN_PROGRESS")
       );
+      setMetrics(metricsResult);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load dashboard");
     } finally {
@@ -83,101 +114,188 @@ export function ProviderDashboardScreen() {
   const pendingTasks = tasks.filter((t) => t.status === "PENDING" || t.status === "IN_PROGRESS");
   const overdueTasks = tasks.filter((t) => t.status === "OVERDUE");
 
+  if (!facilityId) {
+    return (
+      <Screen>
+        <Header title="Launch Care" />
+        <EmptyState
+          title="Select a facility first"
+          message="Choose your facility and workspace before starting service delivery."
+          action={{
+            label: "Refresh",
+            onPress: loadDashboard,
+          }}
+        />
+      </Screen>
+    );
+  }
+
   return (
     <Screen>
-      <Header title="Worklist" />
-      <ScrollView testID="provider-dashboard" style={styles.container}>
-        {/* Summary tiles */}
-        <View style={styles.summaryRow}>
-          <Card>
-            <CardBody>
-              <View style={styles.tileCenter}>
-                <Text style={styles.tileNumber}>{String(pendingTasks.length)}</Text>
-                <Text style={styles.tileLabel}>Pending Tasks</Text>
+      <Header title="Launch Care" accent={BLUE} />
+      <ScrollView
+        testID="provider-dashboard"
+        style={styles.scroll}
+        contentContainerStyle={styles.container}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Hero banner */}
+        <View style={styles.heroBanner}>
+          <View style={styles.heroLeft}>
+            <Text style={styles.heroEyebrow}>Provider Mode</Text>
+            <Text style={styles.heroTitle}>
+              {activeEncounter ? "Encounter in progress" : "Start service delivery"}
+            </Text>
+            <View style={styles.contextRow}>
+              {facilityName ? (
+                <View style={styles.contextChip}>
+                  <Ionicons name="business-outline" size={11} color="rgba(255,255,255,0.8)" />
+                  <Text style={styles.contextChipText}>{facilityName}</Text>
+                </View>
+              ) : null}
+              {workspaceName ? (
+                <View style={styles.contextChip}>
+                  <Ionicons name="desktop-outline" size={11} color="rgba(255,255,255,0.8)" />
+                  <Text style={styles.contextChipText}>{workspaceName}</Text>
+                </View>
+              ) : null}
+              {activeEncounter ? (
+                <View style={[styles.contextChip, styles.contextChipActive]}>
+                  <Ionicons name="pulse" size={11} color="#FFFFFF" />
+                  <Text style={styles.contextChipText}>{activeEncounter.encounterType}</Text>
+                </View>
+              ) : null}
+            </View>
+          </View>
+          <Pressable
+            style={({ pressed }) => [styles.heroCtaBtn, { opacity: pressed ? 0.85 : 1 }]}
+            onPress={() => setProviderTab(activeEncounter ? "encounter" : "patients")}
+            testID="launch-primary-action"
+          >
+            <Ionicons
+              name={activeEncounter ? "pulse" : "add-circle"}
+              size={20}
+              color={BLUE}
+            />
+            <Text style={styles.heroCtaText}>
+              {activeEncounter ? "Resume" : "New Encounter"}
+            </Text>
+          </Pressable>
+        </View>
+
+        {/* Summary metrics */}
+        <View style={styles.metricsRow}>
+          {[
+            { label: "Pending", value: pendingTasks.length, color: "#111827", icon: "list" },
+            { label: "Seen Today", value: metrics?.patientsSeenToday ?? openEncounters.length, color: "#059669", icon: "checkmark-circle" },
+            { label: "Open Visits", value: metrics?.encountersOpen ?? overdueTasks.length, color: overdueTasks.length > 0 ? "#DC2626" : "#111827", icon: "medical" },
+            { label: "Stock Alerts", value: metrics?.stockAlerts ?? 0, color: (metrics?.stockAlerts ?? 0) > 0 ? "#DC2626" : "#111827", icon: "warning" },
+          ].map((m) => (
+            <Card key={m.label} variant="elevated" padding="sm" style={styles.metricCard}>
+              <CardBody>
+                <View style={styles.metricContent}>
+                  <Ionicons name={m.icon as never} size={18} color={m.color} />
+                  <Text style={[styles.metricValue, { color: m.color }]}>{String(m.value)}</Text>
+                  <Text style={styles.metricLabel}>{m.label}</Text>
+                </View>
+              </CardBody>
+            </Card>
+          ))}
+        </View>
+
+        {/* Quick launch actions */}
+        <Text style={styles.sectionLabel}>Quick Launch</Text>
+        <View style={styles.launchGrid}>
+          {LAUNCH_ACTIONS.map((action) => (
+            <Pressable
+              key={action.key}
+              style={({ pressed }) => [styles.launchCard, { opacity: pressed ? 0.88 : 1 }]}
+              onPress={() => setProviderTab(action.target)}
+              testID={`launch-${action.key}`}
+            >
+              <View style={[styles.launchIconCircle, { backgroundColor: action.bg }]}>
+                <Ionicons name={action.icon as never} size={22} color={action.color} />
               </View>
-            </CardBody>
-          </Card>
-          <Card>
-            <CardBody>
-              <View style={styles.tileCenter}>
-                <Text style={styles.tileNumber}>{String(openEncounters.length)}</Text>
-                <Text style={styles.tileLabel}>Open Visits</Text>
+              <Text style={[styles.launchTitle, { color: action.color }]}>{action.title}</Text>
+              <Text style={styles.launchSubtitle}>{action.subtitle}</Text>
+            </Pressable>
+          ))}
+          {activeEncounter ? (
+            <Pressable
+              style={({ pressed }) => [styles.launchCard, styles.launchCardActive, { opacity: pressed ? 0.88 : 1 }]}
+              onPress={() => setProviderTab("encounter")}
+              testID="launch-resume-encounter"
+            >
+              <View style={[styles.launchIconCircle, { backgroundColor: "#D1FAE5" }]}>
+                <Ionicons name="pulse" size={22} color="#059669" />
               </View>
-            </CardBody>
-          </Card>
-          <Card>
-            <CardBody>
-              <View style={styles.tileCenter}>
-                <Text
-                  style={[
-                    styles.tileNumber,
-                    { color: overdueTasks.length > 0 ? "#DC2626" : "#111827" },
-                  ]}
-                >
-                  {String(overdueTasks.length)}
-                </Text>
-                <Text style={styles.tileLabel}>Overdue</Text>
-              </View>
-            </CardBody>
-          </Card>
+              <Text style={[styles.launchTitle, { color: "#059669" }]}>Resume</Text>
+              <Text style={styles.launchSubtitle}>Continue live encounter</Text>
+            </Pressable>
+          ) : null}
         </View>
 
         {/* Task list */}
-        <CardHeader>My Tasks</CardHeader>
+        <Text style={styles.sectionLabel}>My Tasks</Text>
         {pendingTasks.length === 0 ? (
-          <EmptyState title="No pending tasks" message="All caught up" />
+          <EmptyState title="No pending tasks" message="All caught up for this shift" />
         ) : (
           pendingTasks.map((task) => (
-            <Card key={task.id}>
+            <Card key={task.id} variant="elevated" padding="md">
               <CardBody>
-                <TouchableOpacity
+                <Pressable
                   testID={`task-${task.id}`}
                   onPress={() => setSelectedTaskId(task.id === selectedTaskId ? null : task.id)}
                 >
-                  <View style={styles.taskHeader}>
-                    <Text style={styles.bold}>{task.title}</Text>
-                    <Badge
-                      variant={PRIORITY_VARIANT[task.priority] as "destructive" | "secondary" | "outline"}
-                    >
+                  <View style={styles.taskRow}>
+                    <View style={styles.taskLeft}>
+                      <Text style={styles.taskTitle}>{task.title}</Text>
+                      {task.patientName ? (
+                        <View style={styles.taskMeta}>
+                          <Ionicons name="person-outline" size={12} color="#6B7280" />
+                          <Text style={styles.taskPatient}>{task.patientName}</Text>
+                        </View>
+                      ) : null}
+                      <View style={styles.taskMeta}>
+                        <Badge variant="outline" size="sm">{task.taskType}</Badge>
+                        {task.dueAt ? (
+                          <Text style={styles.taskDue}>
+                            {`Due ${new Date(task.dueAt).toLocaleDateString()}`}
+                          </Text>
+                        ) : null}
+                      </View>
+                    </View>
+                    <Badge variant={PRIORITY_VARIANT[task.priority] as "destructive" | "secondary" | "outline"} size="sm">
                       {task.priority}
                     </Badge>
                   </View>
-                  {task.patientName ? (
-                    <Text style={styles.patientName}>
-                      {`Patient: ${task.patientName}`}
-                    </Text>
-                  ) : null}
-                  <View style={styles.taskMeta}>
-                    <Badge variant="outline">{task.taskType}</Badge>
-                    {task.dueAt ? (
-                      <Text style={styles.dueDate}>
-                        {`Due: ${new Date(task.dueAt).toLocaleDateString()}`}
-                      </Text>
-                    ) : null}
-                  </View>
-                </TouchableOpacity>
+                </Pressable>
               </CardBody>
             </Card>
           ))
         )}
 
-        {/* Open encounters section */}
+        {/* Open encounters */}
         {openEncounters.length > 0 ? (
           <>
-            <CardHeader>Open Encounters</CardHeader>
+            <Text style={styles.sectionLabel}>Open Encounters</Text>
             {openEncounters.map((enc) => (
-              <Card key={enc.id}>
+              <Card key={enc.id} variant="elevated" padding="md">
                 <CardBody>
-                  <View testID={`encounter-${enc.id}`}>
-                    <Text style={styles.bold}>{`${enc.encounterType} Visit`}</Text>
-                    <Text style={styles.encounterTime}>
-                      {`Started: ${new Date(enc.startedAt).toLocaleTimeString()}`}
-                    </Text>
-                    {enc.chiefComplaint ? (
-                      <Text style={styles.chiefComplaint}>
-                        {`CC: ${enc.chiefComplaint}`}
+                  <View testID={`encounter-${enc.id}`} style={styles.encounterRow}>
+                    <View style={styles.encounterIconWrap}>
+                      <Ionicons name="pulse" size={20} color={BLUE} />
+                    </View>
+                    <View style={styles.encounterText}>
+                      <Text style={styles.taskTitle}>{`${enc.encounterType} Visit`}</Text>
+                      <Text style={styles.taskPatient}>
+                        {`Started ${new Date(enc.startedAt).toLocaleTimeString()}`}
                       </Text>
-                    ) : null}
+                      {enc.chiefComplaint ? (
+                        <Text style={styles.taskDue}>{`CC: ${enc.chiefComplaint}`}</Text>
+                      ) : null}
+                    </View>
+                    <Badge variant="info" size="sm">Active</Badge>
                   </View>
                 </CardBody>
               </Card>
@@ -185,12 +303,13 @@ export function ProviderDashboardScreen() {
           </>
         ) : null}
 
-        <View style={styles.refreshContainer}>
+        <View style={styles.refreshRow}>
           <Button
             title="Refresh"
             variant="outline"
             onPress={loadDashboard}
             testID="refresh-dashboard"
+            icon={<Ionicons name="refresh-outline" size={16} color="#059669" />}
           />
         </View>
       </ScrollView>
@@ -199,55 +318,197 @@ export function ProviderDashboardScreen() {
 }
 
 const styles = StyleSheet.create({
+  scroll: {
+    flex: 1,
+  },
   container: {
     padding: 16,
-  },
-  summaryRow: {
-    flexDirection: "row",
     gap: 12,
-    marginBottom: 16,
+    paddingBottom: 32,
   },
-  tileCenter: {
+  heroBanner: {
+    backgroundColor: BLUE,
+    borderRadius: 20,
+    padding: 20,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 12,
+    shadowColor: BLUE,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  heroLeft: {
+    flex: 1,
+    gap: 6,
+  },
+  heroEyebrow: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "rgba(255,255,255,0.7)",
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+  },
+  heroTitle: {
+    fontSize: 20,
+    fontWeight: "800",
+    color: "#FFFFFF",
+    letterSpacing: -0.3,
+  },
+  contextRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
+    marginTop: 4,
+  },
+  contextChip: {
+    flexDirection: "row",
     alignItems: "center",
+    gap: 4,
+    backgroundColor: "rgba(255,255,255,0.15)",
+    borderRadius: 999,
+    paddingVertical: 3,
+    paddingHorizontal: 8,
   },
-  tileNumber: {
-    fontSize: 24,
+  contextChipActive: {
+    backgroundColor: "rgba(255,255,255,0.25)",
+  },
+  contextChipText: {
+    fontSize: 11,
+    color: "rgba(255,255,255,0.9)",
+    fontWeight: "500",
+  },
+  heroCtaBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+  },
+  heroCtaText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: BLUE,
+  },
+  metricsRow: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  metricCard: {
+    flex: 1,
+  },
+  metricContent: {
+    alignItems: "center",
+    gap: 2,
+  },
+  metricValue: {
+    fontSize: 22,
+    fontWeight: "800",
+  },
+  metricLabel: {
+    fontSize: 10,
+    color: "#6B7280",
+    textAlign: "center",
+  },
+  sectionLabel: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#6B7280",
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
+    marginTop: 4,
+  },
+  launchGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+  },
+  launchCard: {
+    flexBasis: "47%",
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    padding: 14,
+    minHeight: 110,
+    gap: 6,
+    alignItems: "flex-start",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  launchCardActive: {
+    borderWidth: 1.5,
+    borderColor: "#A7F3D0",
+  },
+  launchIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 2,
+  },
+  launchTitle: {
+    fontSize: 14,
     fontWeight: "700",
   },
-  tileLabel: {
-    fontSize: 12,
+  launchSubtitle: {
+    fontSize: 11,
     color: "#6B7280",
+    lineHeight: 16,
   },
-  taskHeader: {
+  taskRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "flex-start",
+    gap: 12,
   },
-  bold: {
-    fontWeight: "bold",
+  taskLeft: {
+    flex: 1,
+    gap: 4,
   },
-  patientName: {
+  taskTitle: {
     fontSize: 14,
-    color: "#6B7280",
-    marginVertical: 4,
+    fontWeight: "700",
+    color: "#111827",
   },
   taskMeta: {
     flexDirection: "row",
-    gap: 8,
-    marginTop: 4,
+    alignItems: "center",
+    gap: 6,
   },
-  dueDate: {
+  taskPatient: {
     fontSize: 12,
-    color: "#9CA3AF",
-  },
-  encounterTime: {
-    fontSize: 14,
     color: "#6B7280",
   },
-  chiefComplaint: {
-    fontSize: 14,
+  taskDue: {
+    fontSize: 11,
+    color: "#9CA3AF",
   },
-  refreshContainer: {
-    marginTop: 16,
+  encounterRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  encounterIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#DBEAFE",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  encounterText: {
+    flex: 1,
+    gap: 2,
+  },
+  refreshRow: {
+    alignItems: "center",
+    marginTop: 8,
   },
 });

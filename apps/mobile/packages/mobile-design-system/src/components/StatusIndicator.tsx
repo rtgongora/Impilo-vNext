@@ -15,7 +15,7 @@ export interface StatusIndicatorProps {
 }
 
 const STATUS_COLORS: Record<IndicatorStatus, string> = {
-  online: "#4CAF50",
+  online: "#009739",
   offline: "#9E9E9E",
   syncing: "#2196F3",
   error: "#F44336",

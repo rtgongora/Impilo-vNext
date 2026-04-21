@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   balanceCard: {
-    backgroundColor: "#1E40AF",
+    backgroundColor: "#231F20",
     borderRadius: 16,
     padding: 24,
     alignItems: "center",

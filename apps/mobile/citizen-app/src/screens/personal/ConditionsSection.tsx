@@ -18,7 +18,7 @@ import {
   EmptyState,
   ErrorState,
 } from "@impilo/mobile-design-system";
-import type { Condition } from "../types";
+import type { Condition } from "../../types";
 
 const STATUS_VARIANT: Record<string, "default" | "warning" | "success"> = {
   ACTIVE: "warning",
@@ -55,12 +55,12 @@ export function ConditionsSection({ patientId }: ConditionsSectionProps) {
     load();
   }, [load]);
 
-  const activeCount = conditions.filter(c => c.clinicalStatus === "ACTIVE").length;
-  const resolvedCount = conditions.filter(c => c.clinicalStatus === "RESOLVED").length;
+  const activeCount = conditions.filter((c) => c.status === "ACTIVE").length;
+  const resolvedCount = conditions.filter((c) => c.status === "RESOLVED").length;
 
-  const filteredConditions = filter === "ALL" 
-    ? conditions 
-    : conditions.filter(c => c.clinicalStatus === filter);
+  const filteredConditions = filter === "ALL"
+    ? conditions
+    : conditions.filter((c) => c.status === filter);
 
   return (
     <Screen>
@@ -115,11 +115,11 @@ export function ConditionsSection({ patientId }: ConditionsSectionProps) {
           filteredConditions.map((condition) => (
             <Card key={condition.id}>
               <CardHeader
-                title={condition.code}
+                title={condition.name}
                 subtitle={condition.codeSystem ? `${condition.codeSystem} • ${condition.code}` : undefined}
                 rightElement={
-                  <Badge variant={STATUS_VARIANT[condition.clinicalStatus] || "default"}>
-                    {condition.clinicalStatus}
+                  <Badge variant={STATUS_VARIANT[condition.clinicalStatus ?? condition.status] || "default"}>
+                    {condition.clinicalStatus ?? condition.status}
                   </Badge>
                 }
               />

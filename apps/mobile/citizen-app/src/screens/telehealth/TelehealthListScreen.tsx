@@ -3,7 +3,8 @@
  */
 
 import React, { useState, useEffect, useCallback } from "react";
-import { View, Text, ScrollView, StyleSheet } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import {
   Screen,
   Header,
@@ -28,6 +29,24 @@ const STATUS_COLORS: Record<string, "default" | "secondary" | "destructive" | "o
   IN_PROGRESS: "secondary",
   COMPLETED: "secondary",
   CANCELLED: "destructive",
+};
+
+const SESSION_ICON_MAP: Record<string, React.ComponentProps<typeof Ionicons>["name"]> = {
+  VIDEO: "videocam",
+  AUDIO: "call",
+  CHAT: "chatbubble",
+};
+
+const SESSION_ICON_COLOR: Record<string, string> = {
+  VIDEO: "#1E40AF",
+  AUDIO: "#059669",
+  CHAT: "#7C3AED",
+};
+
+const SESSION_ICON_BG: Record<string, string> = {
+  VIDEO: "#EFF6FF",
+  AUDIO: "#D1FAE5",
+  CHAT: "#F5F3FF",
 };
 
 export function TelehealthListScreen() {
@@ -80,7 +99,6 @@ export function TelehealthListScreen() {
     }
   }, [reason, preferredDate, sessionType, providerId, load]);
 
-  // Active session view
   if (activeSession) {
     return (
       <TelehealthSessionScreen
@@ -98,112 +116,130 @@ export function TelehealthListScreen() {
       <Header title="Telehealth" />
       <ScrollView testID="telehealth-list-screen" style={styles.scrollView} contentContainerStyle={styles.container}>
         <View style={styles.headerRow}>
-          <Text style={styles.heading}>Teleconsultations</Text>
-          <Button
-            title={showRequest ? "Cancel" : "Request Teleconsult"}
-            variant={showRequest ? "ghost" : "primary"}
-            size="sm"
+          <Text style={styles.sectionLabel}>MY TELECONSULTATIONS</Text>
+          <TouchableOpacity
             onPress={() => setShowRequest(!showRequest)}
+            style={[styles.requestBtn, showRequest && styles.requestBtnCancel]}
             testID="toggle-telehealth-request"
-          />
+          >
+            {!showRequest && <Ionicons name="videocam-outline" size={16} color="#FFFFFF" style={styles.btnIcon} />}
+            <Text style={[styles.requestBtnText, showRequest && styles.requestBtnTextCancel]}>
+              {showRequest ? "Cancel" : "Request"}
+            </Text>
+          </TouchableOpacity>
         </View>
 
-        {/* Request form */}
         {showRequest ? (
-          <Card>
-            <CardHeader title="Request Teleconsultation" />
-            <CardBody>
-              <View style={styles.formContainer}>
-                <TextField
-                  label="Reason for Consultation"
-                  value={reason}
-                  onChange={setReason}
-                  placeholder="Describe your concern"
-                  testID="telehealth-reason"
-                />
-                <Select
-                  label="Session Type"
-                  value={sessionType}
-                  onChange={setSessionType}
-                  options={[
-                    { label: "Video Call", value: "VIDEO" },
-                    { label: "Audio Call", value: "AUDIO" },
-                    { label: "Chat", value: "CHAT" },
-                  ]}
-                  testID="telehealth-type"
-                />
-                <TextField
-                  label="Preferred Date (optional)"
-                  value={preferredDate}
-                  onChange={setPreferredDate}
-                  placeholder="YYYY-MM-DD"
-                  testID="telehealth-date"
-                />
-                <TextField
-                  label="Preferred Provider ID (optional)"
-                  value={providerId}
-                  onChange={setProviderId}
-                  placeholder="Leave blank for next available"
-                  testID="telehealth-provider"
-                />
-                <Button
-                  title={submitting ? "Submitting..." : "Submit Request"}
-                  variant="primary"
-                  onPress={handleRequest}
-                  disabled={submitting || !reason}
-                  testID="submit-telehealth-request"
-                />
-              </View>
-            </CardBody>
-          </Card>
+          <View style={styles.formCard}>
+            <Text style={styles.formTitle}>Request Teleconsultation</Text>
+            <View style={styles.formContainer}>
+              <TextField
+                label="Reason for Consultation"
+                value={reason}
+                onChange={setReason}
+                placeholder="Describe your concern"
+                testID="telehealth-reason"
+              />
+              <Select
+                label="Session Type"
+                value={sessionType}
+                onChange={setSessionType}
+                options={[
+                  { label: "Video Call", value: "VIDEO" },
+                  { label: "Audio Call", value: "AUDIO" },
+                  { label: "Chat", value: "CHAT" },
+                ]}
+                testID="telehealth-type"
+              />
+              <TextField
+                label="Preferred Date (optional)"
+                value={preferredDate}
+                onChange={setPreferredDate}
+                placeholder="YYYY-MM-DD"
+                testID="telehealth-date"
+              />
+              <TextField
+                label="Preferred Provider ID (optional)"
+                value={providerId}
+                onChange={setProviderId}
+                placeholder="Leave blank for next available"
+                testID="telehealth-provider"
+              />
+              <TouchableOpacity
+                onPress={handleRequest}
+                disabled={submitting || !reason}
+                style={[styles.submitBtn, (submitting || !reason) && styles.submitBtnDisabled]}
+                testID="submit-telehealth-request"
+              >
+                <Text style={styles.submitBtnText}>{submitting ? "Submitting..." : "Submit Request"}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         ) : null}
 
         {error ? (
           <ErrorState title="Error" message={error.message} onRetry={load} />
         ) : null}
 
-        {/* Sessions list */}
         {isLoading ? (
-          <LoadingSpinner size="md" />
+          <View style={styles.centered}>
+            <LoadingSpinner size="md" />
+          </View>
         ) : sessions.length === 0 ? (
-          <EmptyState
-            title="No teleconsultations"
-            message="Request your first teleconsultation using the button above"
-          />
+          <View style={styles.emptyContainer}>
+            <Ionicons name="videocam-outline" size={48} color="#D1D5DB" />
+            <Text style={styles.emptyTitle}>No teleconsultations</Text>
+            <Text style={styles.emptyMessage}>Request your first teleconsultation using the button above</Text>
+          </View>
         ) : (
           sessions.map((session) => (
-            <Card key={session.id}>
-              <CardBody>
-                <View testID={`telehealth-session-${session.id}`} style={styles.sessionRow}>
-                  <View>
-                    <View style={styles.badgeRow}>
-                      <Text style={styles.boldText}>{session.sessionType}</Text>
-                      <Badge variant={STATUS_COLORS[session.status] ?? "outline"}>
-                        {session.status}
-                      </Badge>
-                    </View>
-                    <Text style={styles.providerText}>
-                      {`Dr. ${session.providerName}`}
-                    </Text>
-                    <Text style={styles.scheduledText}>
-                      {`Scheduled: ${new Date(session.scheduledAt).toLocaleString()}`}
-                    </Text>
-                    {session.notes ? (
-                      <Text style={styles.notesText}>{session.notes}</Text>
-                    ) : null}
-                  </View>
-                  {session.status === "SCHEDULED" || session.status === "IN_PROGRESS" ? (
-                    <Button
-                      title={session.status === "IN_PROGRESS" ? "Rejoin" : "Join"}
-                      variant="primary"
-                      size="sm"
-                      onPress={() => setActiveSession(session)}
-                      testID={`join-session-${session.id}`}
-                    />
-                  ) : null}
+            <View key={session.id} style={styles.sessionCard} testID={`telehealth-session-${session.id}`}>
+              <View
+                style={[
+                  styles.sessionIconCircle,
+                  { backgroundColor: SESSION_ICON_BG[session.sessionType] ?? "#F3F4F6" },
+                ]}
+              >
+                <Ionicons
+                  name={SESSION_ICON_MAP[session.sessionType] ?? "videocam"}
+                  size={22}
+                  color={SESSION_ICON_COLOR[session.sessionType] ?? "#6B7280"}
+                />
+              </View>
+              <View style={styles.sessionInfo}>
+                <Text style={styles.sessionType}>{session.sessionType}</Text>
+                <View style={styles.metaRow}>
+                  <Ionicons name="person-outline" size={12} color="#9CA3AF" />
+                  <Text style={styles.providerText}>{`Dr. ${session.providerName}`}</Text>
                 </View>
-              </CardBody>
-            </Card>
+                <View style={styles.metaRow}>
+                  <Ionicons name="time-outline" size={12} color="#9CA3AF" />
+                  <Text style={styles.scheduledText}>
+                    {new Date(session.scheduledAt).toLocaleString()}
+                  </Text>
+                </View>
+                {session.notes ? (
+                  <Text style={styles.notesText}>{session.notes}</Text>
+                ) : null}
+              </View>
+              <View style={styles.sessionActions}>
+                <Badge variant={STATUS_COLORS[session.status] ?? "outline"}>
+                  {session.status}
+                </Badge>
+                {session.status === "SCHEDULED" || session.status === "IN_PROGRESS" ? (
+                  <TouchableOpacity
+                    style={styles.joinBtn}
+                    onPress={() => setActiveSession(session)}
+                    testID={`join-session-${session.id}`}
+                  >
+                    <Ionicons name="enter-outline" size={14} color="#FFFFFF" />
+                    <Text style={styles.joinBtnText}>
+                      {session.status === "IN_PROGRESS" ? "Rejoin" : "Join"}
+                    </Text>
+                  </TouchableOpacity>
+                ) : null}
+              </View>
+            </View>
           ))
         )}
       </ScrollView>
@@ -214,50 +250,166 @@ export function TelehealthListScreen() {
 const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
+    backgroundColor: "#F8FAFC",
   },
   container: {
     padding: 16,
-    gap: 16,
+    gap: 12,
   },
   headerRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    marginBottom: 4,
   },
-  heading: {
-    fontSize: 18,
+  sectionLabel: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#9CA3AF",
+    letterSpacing: 0.8,
+  },
+  requestBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#059669",
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    gap: 5,
+  },
+  requestBtnCancel: {
+    backgroundColor: "#F3F4F6",
+  },
+  requestBtnText: {
+    fontSize: 13,
     fontWeight: "600",
+    color: "#FFFFFF",
+  },
+  requestBtnTextCancel: {
+    color: "#6B7280",
+  },
+  btnIcon: {
+    marginRight: 1,
+  },
+  formCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    padding: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  formTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#111827",
+    marginBottom: 14,
   },
   formContainer: {
     gap: 12,
   },
-  sessionRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-  },
-  badgeRow: {
-    flexDirection: "row",
-    gap: 8,
+  submitBtn: {
     alignItems: "center",
-    marginBottom: 4,
+    justifyContent: "center",
+    backgroundColor: "#059669",
+    paddingVertical: 12,
+    borderRadius: 12,
   },
-  boldText: {
+  submitBtnDisabled: {
+    opacity: 0.5,
+  },
+  submitBtnText: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#FFFFFF",
+  },
+  centered: {
+    alignItems: "center",
+    paddingVertical: 40,
+  },
+  emptyContainer: {
+    alignItems: "center",
+    paddingVertical: 56,
+    gap: 10,
+  },
+  emptyTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#374151",
+  },
+  emptyMessage: {
+    fontSize: 14,
+    color: "#9CA3AF",
+    textAlign: "center",
+    paddingHorizontal: 24,
+  },
+  sessionCard: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 12,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 14,
+    padding: 14,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  sessionIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 2,
+  },
+  sessionInfo: {
+    flex: 1,
+    gap: 3,
+  },
+  sessionType: {
+    fontSize: 14,
     fontWeight: "700",
+    color: "#111827",
+    marginBottom: 2,
+  },
+  metaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
   },
   providerText: {
-    fontSize: 14,
+    fontSize: 13,
     color: "#374151",
-    marginVertical: 2,
   },
   scheduledText: {
-    fontSize: 13,
+    fontSize: 12,
     color: "#6B7280",
-    marginVertical: 2,
   },
   notesText: {
-    fontSize: 13,
+    fontSize: 12,
     color: "#9CA3AF",
-    marginVertical: 2,
+    marginTop: 2,
+  },
+  sessionActions: {
+    alignItems: "flex-end",
+    gap: 8,
+  },
+  joinBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#059669",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    gap: 4,
+  },
+  joinBtnText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#FFFFFF",
   },
 });

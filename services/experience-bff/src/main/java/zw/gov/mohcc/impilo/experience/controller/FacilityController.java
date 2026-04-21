@@ -208,7 +208,68 @@ public class FacilityController {
         attrs.put("capabilities", capabilities);
         attrs.put("operatingHours", "24/7");
         attrs.put("contactPhone", "+263 4 000 0000");
+        String facilityTier = inferFacilityTier(type);
+        String deploymentMode = inferDeploymentMode(facilityTier);
+        String continuityClass = inferContinuityClass(facilityTier);
+        String workflowArchetype = inferWorkflowArchetype(facilityTier, capabilities);
+        attrs.put("facilityTier", facilityTier);
+        attrs.put("deploymentMode", deploymentMode);
+        attrs.put("continuityClass", continuityClass);
+        attrs.put("workflowArchetype", workflowArchetype);
+        attrs.put("operatingModel", Map.of(
+                "facilityTier", facilityTier,
+                "deploymentMode", deploymentMode,
+                "continuityClass", continuityClass,
+                "workflowArchetype", workflowArchetype
+        ));
 
         return Map.of("id", id, "type", "facility", "attributes", attrs);
+    }
+
+    private static String inferFacilityTier(String type) {
+        String normalized = type.toUpperCase(Locale.ROOT);
+        if (normalized.contains("CENTRAL")) return "CENTRAL_HOSPITAL";
+        if (normalized.contains("PROVINCIAL")) return "PROVINCIAL_OR_TERTIARY_HOSPITAL";
+        if (normalized.contains("MISSION")) return "DISTRICT_OR_MISSION_HOSPITAL";
+        if (normalized.contains("DISTRICT")) return "DISTRICT_OR_MISSION_HOSPITAL";
+        if (normalized.contains("POLYCLINIC")) return "POLYCLINIC";
+        if (normalized.contains("RURAL HOSPITAL")) return "RURAL_HOSPITAL";
+        if (normalized.contains("CLINIC") || normalized.contains("RURAL HEALTH CENTRE")) return "CLINIC";
+        return "GENERAL_HOSPITAL";
+    }
+
+    private static String inferDeploymentMode(String facilityTier) {
+        return switch (facilityTier) {
+            case "CENTRAL_HOSPITAL", "PROVINCIAL_OR_TERTIARY_HOSPITAL", "GENERAL_HOSPITAL",
+                 "DISTRICT_OR_MISSION_HOSPITAL", "RURAL_HOSPITAL" -> "DEDICATED_POD";
+            case "POLYCLINIC" -> "SHARED_POD";
+            case "VIRTUAL_HOSPITAL" -> "VIRTUAL_ONLY";
+            default -> "EDGE_ASSISTED";
+        };
+    }
+
+    private static String inferContinuityClass(String facilityTier) {
+        return switch (facilityTier) {
+            case "CLINIC", "HEALTH_POST", "COMMUNITY" -> "EDGE_CRITICAL";
+            case "POLYCLINIC" -> "CONNECTED_TOLERANT";
+            default -> "LOCAL_EXECUTION_REQUIRED";
+        };
+    }
+
+    private static String inferWorkflowArchetype(String facilityTier, List<String> capabilities) {
+        if ("VIRTUAL_HOSPITAL".equals(facilityTier)) {
+            return "VIRTUAL_CARE_NETWORK";
+        }
+        if (capabilities.contains("INPATIENT") || capabilities.contains("SURGERY") || capabilities.contains("ICU")) {
+            return switch (facilityTier) {
+                case "CENTRAL_HOSPITAL", "PROVINCIAL_OR_TERTIARY_HOSPITAL", "GENERAL_HOSPITAL",
+                     "QUINARY_HOSPITAL" -> "REFERRAL_AND_SPECIALIST";
+                default -> "HOSPITAL_INPATIENT";
+            };
+        }
+        if ("POLYCLINIC".equals(facilityTier)) {
+            return "AMBULATORY_MULTI_SERVICE";
+        }
+        return "PRIMARY_CARE";
     }
 }

@@ -3,7 +3,8 @@
  */
 
 import React, { useState, useEffect, useCallback } from "react";
-import { View, Text, ScrollView, StyleSheet } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import {
   Screen,
   Header,
@@ -26,7 +27,6 @@ import {
   type MarketplaceService,
   type ServiceRequest,
 } from "../../services/marketplaceService";
-// re-import the frontend types (not the service fn return types)
 import type { MarketplaceService as MktService, ServiceRequest as SvcReq } from "../../types";
 import { CartScreen } from "./CartScreen";
 
@@ -49,6 +49,12 @@ const REQUEST_STATUS_COLORS: Record<string, "default" | "secondary" | "destructi
   COMPLETED: "secondary",
   CANCELLED: "destructive",
 };
+
+const TABS: { id: MarketplaceTab; label: string; icon: React.ComponentProps<typeof Ionicons>["name"] }[] = [
+  { id: "browse", label: "Browse", icon: "search-outline" },
+  { id: "requests", label: "Requests", icon: "receipt-outline" },
+  { id: "cart", label: "Cart", icon: "cart-outline" },
+];
 
 export function MarketplaceScreen() {
   const [tab, setTab] = useState<MarketplaceTab>("browse");
@@ -131,201 +137,216 @@ export function MarketplaceScreen() {
     <Screen>
       <Header title="Health Services" />
       <ScrollView testID="marketplace-screen" style={styles.scrollView} contentContainerStyle={styles.container}>
-        {/* Tab toggle */}
-        <View style={styles.tabRow}>
-          <Button
-            title="Browse Services"
-            variant={tab === "browse" ? "primary" : "ghost"}
-            onPress={() => setTab("browse")}
-            testID="marketplace-tab-browse"
-          />
-          <Button
-            title="My Requests"
-            variant={tab === "requests" ? "primary" : "ghost"}
-            onPress={() => setTab("requests")}
-            testID="marketplace-tab-requests"
-          />
-          <Button
-            title="Cart"
-            variant={tab === "cart" ? "primary" : "ghost"}
-            onPress={() => setTab("cart")}
-            testID="marketplace-tab-cart"
-          />
+        <View style={styles.tabBar}>
+          {TABS.map((t) => (
+            <TouchableOpacity
+              key={t.id}
+              onPress={() => setTab(t.id)}
+              style={[styles.tabPill, tab === t.id && styles.tabPillActive]}
+              testID={`marketplace-tab-${t.id}`}
+            >
+              <Ionicons
+                name={t.icon}
+                size={15}
+                color={tab === t.id ? "#059669" : "#6B7280"}
+              />
+              <Text style={[styles.tabPillText, tab === t.id && styles.tabPillTextActive]}>
+                {t.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
         </View>
 
         {error ? (
           <ErrorState title="Error" message={error.message} onRetry={() => tab === "browse" ? loadServices() : loadRequests()} />
         ) : null}
 
-        {/* Service booking modal */}
         {selectedService ? (
-          <Card>
-            <CardHeader title={`Book: ${selectedService.name}`} />
-            <CardBody>
-              <Text style={styles.serviceDescription}>{selectedService.description}</Text>
-              {selectedService.price !== undefined ? (
-                <Text style={styles.servicePrice}>
-                  {`Price: ${selectedService.currency} ${selectedService.price}`}
-                </Text>
-              ) : null}
-              <View style={styles.formContainer}>
-                <TextField
-                  label="Preferred Date"
-                  value={preferredDate}
-                  onChange={setPreferredDate}
-                  placeholder="YYYY-MM-DD"
-                  testID="booking-preferred-date"
-                />
-                <TextField
-                  label="Notes (optional)"
-                  value={notes}
-                  onChange={setNotes}
-                  placeholder="Any special requirements"
-                  testID="booking-notes"
-                />
-                <View style={styles.buttonRow}>
-                  <Button
-                    title={submitting ? "Submitting..." : "Confirm Booking"}
-                    variant="primary"
-                    onPress={handleRequest}
-                    disabled={submitting}
-                    testID="confirm-booking"
-                  />
-                  <Button
-                    title="Cancel"
-                    variant="ghost"
-                    onPress={() => setSelectedService(null)}
-                  />
+          <View style={styles.bookingCard}>
+            <Text style={styles.bookingTitle}>{`Book: ${selectedService.name}`}</Text>
+            <Text style={styles.bookingDescription}>{selectedService.description}</Text>
+            {selectedService.price !== undefined ? (
+              <View style={styles.priceBadgeRow}>
+                <View style={styles.priceBadge}>
+                  <Ionicons name="pricetag-outline" size={12} color="#059669" />
+                  <Text style={styles.priceBadgeText}>{`${selectedService.currency} ${selectedService.price}`}</Text>
                 </View>
               </View>
-            </CardBody>
-          </Card>
+            ) : null}
+            <View style={styles.formContainer}>
+              <TextField
+                label="Preferred Date"
+                value={preferredDate}
+                onChange={setPreferredDate}
+                placeholder="YYYY-MM-DD"
+                testID="booking-preferred-date"
+              />
+              <TextField
+                label="Notes (optional)"
+                value={notes}
+                onChange={setNotes}
+                placeholder="Any special requirements"
+                testID="booking-notes"
+              />
+              <View style={styles.bookingBtnRow}>
+                <TouchableOpacity
+                  onPress={handleRequest}
+                  disabled={submitting}
+                  style={[styles.confirmBtn, submitting && styles.confirmBtnDisabled]}
+                  testID="confirm-booking"
+                >
+                  <Text style={styles.confirmBtnText}>{submitting ? "Submitting..." : "Confirm Booking"}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => setSelectedService(null)} style={styles.cancelBtn}>
+                  <Text style={styles.cancelBtnText}>Cancel</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
         ) : null}
 
-        {/* Browse tab */}
         {tab === "browse" ? (
           <>
-            <TextField
-              value={search}
-              onChange={setSearch}
-              placeholder="Search services..."
-              testID="marketplace-search"
-            />
-            <ScrollView horizontal style={styles.categoryScroll} contentContainerStyle={styles.categoryContent}>
+            <View style={styles.searchRow}>
+              <Ionicons name="search-outline" size={18} color="#9CA3AF" style={styles.searchIcon} />
+              <TextField
+                value={search}
+                onChange={setSearch}
+                placeholder="Search services..."
+                testID="marketplace-search"
+              />
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryScroll} contentContainerStyle={styles.categoryContent}>
               {CATEGORIES.map((cat) => (
-                <Button
+                <TouchableOpacity
                   key={cat.value}
-                  title={cat.label}
-                  variant={category === cat.value ? "primary" : "ghost"}
-                  size="sm"
                   onPress={() => setCategory(cat.value)}
+                  style={[styles.categoryChip, category === cat.value && styles.categoryChipActive]}
                   testID={`category-${cat.value || "all"}`}
-                />
+                >
+                  <Text style={[styles.categoryChipText, category === cat.value && styles.categoryChipTextActive]}>
+                    {cat.label}
+                  </Text>
+                </TouchableOpacity>
               ))}
             </ScrollView>
             {isLoading ? (
-              <LoadingSpinner size="md" />
+              <View style={styles.centered}>
+                <LoadingSpinner size="md" />
+              </View>
             ) : services.length === 0 ? (
-              <EmptyState
-                title="No services found"
-                message="Try adjusting your search or category filter"
-              />
+              <View style={styles.emptyContainer}>
+                <Ionicons name="storefront-outline" size={48} color="#D1D5DB" />
+                <Text style={styles.emptyTitle}>No services found</Text>
+                <Text style={styles.emptyMessage}>Try adjusting your search or category filter</Text>
+              </View>
             ) : (
               services.map((svc) => (
-                <Card key={svc.id}>
-                  <CardBody>
-                    <View testID={`service-${svc.id}`} style={styles.serviceRow}>
-                      <View style={styles.serviceInfo}>
-                        <Text style={styles.serviceName}>{svc.name}</Text>
-                        <Text style={styles.serviceDescText}>{svc.description}</Text>
-                        <Text style={styles.facilityText}>
-                          {`${svc.facilityName} \u2022 ${svc.category}`}
-                        </Text>
+                <View key={svc.id} style={styles.serviceCard} testID={`service-${svc.id}`}>
+                  <View style={styles.serviceCardTop}>
+                    <View style={styles.serviceInfo}>
+                      <Text style={styles.serviceName}>{svc.name}</Text>
+                      <View style={styles.serviceBadgeRow}>
+                        <View style={styles.categoryBadge}>
+                          <Text style={styles.categoryBadgeText}>{svc.category}</Text>
+                        </View>
                         {svc.price !== undefined ? (
-                          <Text style={styles.priceText}>
-                            {`${svc.currency} ${svc.price}`}
-                          </Text>
-                        ) : null}
-                        {svc.rating !== undefined ? (
-                          <Text style={styles.ratingText}>
-                            {`\u2605 ${svc.rating.toFixed(1)}`}
-                          </Text>
+                          <View style={styles.servicePriceBadge}>
+                            <Text style={styles.servicePriceBadgeText}>{`${svc.currency} ${svc.price}`}</Text>
+                          </View>
                         ) : null}
                       </View>
-                      {svc.available ? (
-                        <Button
-                          title="Book"
-                          variant="primary"
-                          size="sm"
-                          onPress={() => setSelectedService(svc)}
-                          testID={`book-${svc.id}`}
-                        />
-                      ) : (
-                        <Badge variant="outline">Unavailable</Badge>
-                      )}
                     </View>
-                  </CardBody>
-                </Card>
+                    {svc.available ? (
+                      <TouchableOpacity
+                        style={styles.bookBtn}
+                        onPress={() => setSelectedService(svc)}
+                        testID={`book-${svc.id}`}
+                      >
+                        <Text style={styles.bookBtnText}>Book</Text>
+                      </TouchableOpacity>
+                    ) : (
+                      <Badge variant="outline">Unavailable</Badge>
+                    )}
+                  </View>
+                  <Text style={styles.serviceDescText} numberOfLines={2}>{svc.description}</Text>
+                  <View style={styles.serviceMeta}>
+                    <Ionicons name="business-outline" size={12} color="#9CA3AF" />
+                    <Text style={styles.facilityText}>{svc.facilityName}</Text>
+                    {svc.rating !== undefined ? (
+                      <>
+                        <Ionicons name="star" size={12} color="#D97706" />
+                        <Text style={styles.ratingText}>{svc.rating.toFixed(1)}</Text>
+                      </>
+                    ) : null}
+                  </View>
+                </View>
               ))
             )}
           </>
         ) : null}
 
-        {/* Requests tab */}
         {tab === "requests" ? (
           <>
             {isLoading ? (
-              <LoadingSpinner size="md" />
+              <View style={styles.centered}>
+                <LoadingSpinner size="md" />
+              </View>
             ) : requests.length === 0 ? (
-              <EmptyState
-                title="No requests yet"
-                message="Browse services and make your first booking"
-              />
+              <View style={styles.emptyContainer}>
+                <Ionicons name="receipt-outline" size={48} color="#D1D5DB" />
+                <Text style={styles.emptyTitle}>No requests yet</Text>
+                <Text style={styles.emptyMessage}>Browse services and make your first booking</Text>
+              </View>
             ) : (
               requests.map((req) => (
-                <Card key={req.id}>
-                  <CardBody>
-                    <View testID={`request-${req.id}`} style={styles.requestRow}>
-                      <View>
-                        <View style={styles.badgeRow}>
-                          <Text style={styles.boldText}>{req.serviceName}</Text>
-                          <Badge variant={REQUEST_STATUS_COLORS[req.status] ?? "outline"}>
-                            {req.status}
-                          </Badge>
-                        </View>
-                        <Text style={styles.secondaryText}>{req.facilityName}</Text>
-                        <Text style={styles.tertiaryText}>
-                          {`Requested: ${new Date(req.requestedAt).toLocaleDateString()}`}
+                <View key={req.id} style={styles.requestCard} testID={`request-${req.id}`}>
+                  <View style={styles.requestTop}>
+                    <View style={styles.requestInfo}>
+                      <Text style={styles.requestServiceName}>{req.serviceName}</Text>
+                      <Text style={styles.requestFacility}>{req.facilityName}</Text>
+                      <View style={styles.requestMetaRow}>
+                        <Ionicons name="calendar-outline" size={12} color="#9CA3AF" />
+                        <Text style={styles.requestDate}>
+                          {new Date(req.requestedAt).toLocaleDateString()}
                         </Text>
-                        {req.scheduledAt ? (
-                          <Text style={styles.scheduledText}>
-                            {`Scheduled: ${new Date(req.scheduledAt).toLocaleString()}`}
-                          </Text>
-                        ) : null}
-                        {req.trackingNumber ? (
-                          <Text style={styles.trackingText}>
-                            {`Tracking: ${req.trackingNumber}`}
-                          </Text>
-                        ) : null}
                       </View>
-                      {req.status === "PENDING" || req.status === "CONFIRMED" ? (
-                        <Button
-                          title="Cancel"
-                          variant="ghost"
-                          size="sm"
-                          onPress={() => handleCancelRequest(req.id)}
-                          testID={`cancel-request-${req.id}`}
-                        />
+                      {req.scheduledAt ? (
+                        <View style={styles.requestMetaRow}>
+                          <Ionicons name="time-outline" size={12} color="#9CA3AF" />
+                          <Text style={styles.scheduledText}>
+                            {new Date(req.scheduledAt).toLocaleString()}
+                          </Text>
+                        </View>
+                      ) : null}
+                      {req.trackingNumber ? (
+                        <View style={styles.requestMetaRow}>
+                          <Ionicons name="barcode-outline" size={12} color="#9CA3AF" />
+                          <Text style={styles.trackingText}>{req.trackingNumber}</Text>
+                        </View>
                       ) : null}
                     </View>
-                  </CardBody>
-                </Card>
+                    <View style={styles.requestActions}>
+                      <Badge variant={REQUEST_STATUS_COLORS[req.status] ?? "outline"}>
+                        {req.status}
+                      </Badge>
+                      {req.status === "PENDING" || req.status === "CONFIRMED" ? (
+                        <TouchableOpacity
+                          style={styles.cancelRequestBtn}
+                          onPress={() => handleCancelRequest(req.id)}
+                          testID={`cancel-request-${req.id}`}
+                        >
+                          <Text style={styles.cancelRequestBtnText}>Cancel</Text>
+                        </TouchableOpacity>
+                      ) : null}
+                    </View>
+                  </View>
+                </View>
               ))
             )}
           </>
         ) : null}
 
-        {/* Cart tab */}
         {tab === "cart" ? <CartScreen /> : null}
       </ScrollView>
     </Screen>
@@ -335,31 +356,120 @@ export function MarketplaceScreen() {
 const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
+    backgroundColor: "#F8FAFC",
   },
   container: {
     padding: 16,
-    gap: 16,
+    gap: 12,
   },
-  tabRow: {
+  tabBar: {
     flexDirection: "row",
     gap: 8,
+    marginBottom: 4,
   },
-  serviceDescription: {
+  tabPill: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 5,
+    paddingVertical: 9,
+    borderRadius: 20,
+    backgroundColor: "#F3F4F6",
+  },
+  tabPillActive: {
+    backgroundColor: "#D1FAE5",
+  },
+  tabPillText: {
+    fontSize: 13,
+    fontWeight: "500",
+    color: "#6B7280",
+  },
+  tabPillTextActive: {
+    color: "#059669",
+    fontWeight: "600",
+  },
+  bookingCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    padding: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+    gap: 10,
+  },
+  bookingTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#111827",
+  },
+  bookingDescription: {
     fontSize: 14,
     color: "#374151",
-    marginBottom: 12,
   },
-  servicePrice: {
-    fontSize: 14,
+  priceBadgeRow: {
+    flexDirection: "row",
+  },
+  priceBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "#D1FAE5",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 10,
+  },
+  priceBadgeText: {
+    fontSize: 13,
     fontWeight: "600",
-    marginBottom: 12,
+    color: "#059669",
   },
   formContainer: {
     gap: 12,
   },
-  buttonRow: {
+  bookingBtnRow: {
     flexDirection: "row",
     gap: 8,
+  },
+  confirmBtn: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#059669",
+    paddingVertical: 11,
+    borderRadius: 12,
+  },
+  confirmBtnDisabled: {
+    opacity: 0.5,
+  },
+  confirmBtnText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#FFFFFF",
+  },
+  cancelBtn: {
+    paddingHorizontal: 16,
+    paddingVertical: 11,
+    borderRadius: 12,
+    backgroundColor: "#F3F4F6",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cancelBtnText: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#6B7280",
+  },
+  searchRow: {
+    position: "relative",
+  },
+  searchIcon: {
+    position: "absolute",
+    left: 12,
+    top: 12,
+    zIndex: 1,
   },
   categoryScroll: {
     flexGrow: 0,
@@ -368,69 +478,188 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingBottom: 4,
   },
-  serviceRow: {
+  categoryChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 20,
+    backgroundColor: "#F3F4F6",
+  },
+  categoryChipActive: {
+    backgroundColor: "#D1FAE5",
+  },
+  categoryChipText: {
+    fontSize: 13,
+    fontWeight: "500",
+    color: "#6B7280",
+  },
+  categoryChipTextActive: {
+    color: "#059669",
+    fontWeight: "600",
+  },
+  centered: {
+    alignItems: "center",
+    paddingVertical: 40,
+  },
+  emptyContainer: {
+    alignItems: "center",
+    paddingVertical: 56,
+    gap: 10,
+  },
+  emptyTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#374151",
+  },
+  emptyMessage: {
+    fontSize: 14,
+    color: "#9CA3AF",
+    textAlign: "center",
+    paddingHorizontal: 24,
+  },
+  serviceCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 14,
+    padding: 14,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+    gap: 8,
+  },
+  serviceCardTop: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
+    gap: 10,
   },
   serviceInfo: {
     flex: 1,
+    gap: 6,
   },
   serviceName: {
-    fontWeight: "700",
     fontSize: 15,
+    fontWeight: "700",
+    color: "#111827",
+  },
+  serviceBadgeRow: {
+    flexDirection: "row",
+    gap: 6,
+    flexWrap: "wrap",
+  },
+  categoryBadge: {
+    backgroundColor: "#EFF6FF",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+  },
+  categoryBadgeText: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: "#1E40AF",
+  },
+  servicePriceBadge: {
+    backgroundColor: "#D1FAE5",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+  },
+  servicePriceBadgeText: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: "#059669",
+  },
+  bookBtn: {
+    backgroundColor: "#059669",
+    paddingHorizontal: 16,
+    paddingVertical: 7,
+    borderRadius: 12,
+  },
+  bookBtnText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#FFFFFF",
   },
   serviceDescText: {
-    fontSize: 14,
-    color: "#374151",
-    marginVertical: 4,
-  },
-  facilityText: {
     fontSize: 13,
     color: "#6B7280",
-    marginVertical: 2,
+    lineHeight: 18,
   },
-  priceText: {
-    fontSize: 14,
-    fontWeight: "600",
-    marginVertical: 4,
+  serviceMeta: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+  },
+  facilityText: {
+    fontSize: 12,
+    color: "#9CA3AF",
+    flex: 1,
   },
   ratingText: {
-    fontSize: 13,
+    fontSize: 12,
     color: "#D97706",
+    fontWeight: "600",
   },
-  requestRow: {
+  requestCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 14,
+    padding: 14,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  requestTop: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
+    gap: 10,
   },
-  badgeRow: {
-    flexDirection: "row",
-    gap: 8,
-    alignItems: "center",
-    marginBottom: 4,
+  requestInfo: {
+    flex: 1,
+    gap: 4,
   },
-  boldText: {
+  requestServiceName: {
+    fontSize: 14,
     fontWeight: "700",
+    color: "#111827",
+    marginBottom: 2,
   },
-  secondaryText: {
+  requestFacility: {
     fontSize: 13,
     color: "#6B7280",
-    marginVertical: 2,
   },
-  tertiaryText: {
-    fontSize: 13,
+  requestMetaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  requestDate: {
+    fontSize: 12,
     color: "#9CA3AF",
-    marginVertical: 2,
   },
   scheduledText: {
-    fontSize: 13,
+    fontSize: 12,
     color: "#374151",
-    marginVertical: 2,
   },
   trackingText: {
     fontSize: 12,
     color: "#6B7280",
-    marginVertical: 2,
+  },
+  requestActions: {
+    alignItems: "flex-end",
+    gap: 8,
+  },
+  cancelRequestBtn: {
+    backgroundColor: "#F3F4F6",
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 10,
+  },
+  cancelRequestBtnText: {
+    fontSize: 12,
+    fontWeight: "500",
+    color: "#6B7280",
   },
 });

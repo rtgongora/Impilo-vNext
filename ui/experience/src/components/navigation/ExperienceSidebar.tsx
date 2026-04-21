@@ -42,7 +42,7 @@ import {
   Wallet,
   X,
 } from "lucide-react";
-import { ImpiloLogo } from "@/components/brand/ImpiloLogo";
+import { ImpiloBrandLogo } from "@/components/brand/ImpiloBrandLogo";
 import { ProviderActivationBanner } from "@/components/ProviderActivationBanner";
 import { WorkspaceSwitcher } from "@/components/WorkspaceSwitcher";
 import { useAuthStore, type AuthUser } from "@/hooks/useAuthStore";
@@ -375,7 +375,7 @@ export function ExperienceSidebar() {
           {!collapsed ? (
             <div className="min-w-0">
               <Link href="/home" className="block">
-                <ImpiloLogo variant="full" size={22} className="[&_svg]:text-white [&_span]:!text-white" />
+                <ImpiloBrandLogo variant="full" tone="white" size={22} />
               </Link>
               <p className="mt-1 text-xs text-slate-400">
                 Health Operating System
@@ -383,7 +383,7 @@ export function ExperienceSidebar() {
             </div>
           ) : (
             <Link href="/home" className="block">
-              <ImpiloLogo variant="mark" size={24} className="[&_svg]:text-white" />
+              <ImpiloBrandLogo variant="mark" tone="white" size={24} />
             </Link>
           )}
           <div className="flex items-center gap-2">
