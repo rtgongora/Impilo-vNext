@@ -292,6 +292,14 @@ public class AffiliationService {
         return false;
     }
 
+    /**
+     * Get all pending affiliations awaiting approval.
+     */
+    @Transactional(readOnly = true)
+    public List<ProviderAffiliationEntity> getPendingAffiliations() {
+        return affiliationRepository.findByStatusIn(List.of("PENDING"));
+    }
+
     private void publishEvent(String aggregateType, String aggregateId, String eventType, String payload) {
         EventOutboxEntity event = new EventOutboxEntity();
         event.setAggregateType(aggregateType);

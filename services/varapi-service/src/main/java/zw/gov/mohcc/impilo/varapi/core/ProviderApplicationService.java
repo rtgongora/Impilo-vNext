@@ -301,7 +301,7 @@ public class ProviderApplicationService {
             ProviderStatusHistoryEntity history = new ProviderStatusHistoryEntity();
             history.setProvider(provider);
             history.setTenantId(ctx.tenantId());
-            history.setPreviousStatus(provider.getLifecycleStatus());
+            history.setPreviousStatus(provider.getStatus());
             history.setNewStatus("LICENCED_ACTIVE");
             history.setReason("Application approved: " + applicationId);
             history.setChangedBy(ctx.actorId());
@@ -310,7 +310,7 @@ public class ProviderApplicationService {
             statusHistoryRepository.save(history);
 
             // Update provider
-            provider.setLifecycleStatus("LICENCED_ACTIVE");
+            provider.setStatus("ACTIVE");
             provider.setVersion(provider.getVersion() + 1);
             provider.setUpdatedBy(ctx.actorId());
             providerRepository.save(provider);

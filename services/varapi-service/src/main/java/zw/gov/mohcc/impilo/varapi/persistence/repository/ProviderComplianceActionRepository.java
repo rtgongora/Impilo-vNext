@@ -20,4 +20,6 @@ public interface ProviderComplianceActionRepository extends JpaRepository<Provid
     List<ProviderComplianceActionEntity> findByTenantIdAndActionType(UUID tenantId, String actionType);
 
     List<ProviderComplianceActionEntity> findByStatusAndDueDateBefore(String status, LocalDate dueDate);
+
+    List<ProviderComplianceActionEntity> findByProviderIdAndStatusAndDueDateBefore(Long providerId, String status, LocalDate dueDate);
 }

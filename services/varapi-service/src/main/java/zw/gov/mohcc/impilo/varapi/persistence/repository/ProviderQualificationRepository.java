@@ -15,4 +15,10 @@ public interface ProviderQualificationRepository extends JpaRepository<ProviderQ
     List<ProviderQualificationEntity> findByTenantIdAndVerificationStatus(UUID tenantId, String verificationStatus);
 
     List<ProviderQualificationEntity> findByProviderIdAndVerificationStatus(Long providerId, String verificationStatus);
+
+    List<ProviderQualificationEntity> findByVerificationStatusIn(List<String> verificationStatuses);
+
+    List<ProviderQualificationEntity> findByAwardingBody(String awardingBody);
+
+    List<ProviderQualificationEntity> findByQualificationLevel(String qualificationLevel);
 }

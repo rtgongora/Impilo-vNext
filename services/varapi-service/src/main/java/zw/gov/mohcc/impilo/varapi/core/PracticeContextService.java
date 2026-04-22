@@ -235,6 +235,139 @@ public class PracticeContextService {
         return contexts.stream().anyMatch(c -> "ACTIVE".equals(c.getStatus()));
     }
 
+    /**
+     * Create a practice context (from controller).
+     */
+    @Transactional
+    public ProviderPracticeContextEntity createPracticeContext(
+            Long providerId,
+            String contextType,
+            String description,
+            String locationCode,
+            String authorizationReference,
+            LocalDate authorizationStartDate,
+            LocalDate authorizationEndDate,
+            String notes) {
+        TrustContext ctx = TrustContextHolder.require();
+        log.info("Creating practice context: providerId={}, type={}", providerId, contextType);
+
+        ProviderEntity provider = providerRepository.findById(providerId)
+                .orElseThrow(() -> new IllegalArgumentException("Provider not found: " + providerId));
+
+        ProviderPracticeContextEntity context = new ProviderPracticeContextEntity();
+        context.setProvider(provider);
+        context.setTenantId(ctx.tenantId());
+        context.setContextType(contextType);
+        context.setServiceScopeSummary(description);
+        context.setLocationCode(locationCode);
+        context.setAuthorisationBasis(authorizationReference);
+        context.setStartDate(authorizationStartDate);
+        context.setEndDate(authorizationEndDate);
+        context.setStatus("PENDING");
+        context.setNotes(notes);
+        context.setVersion(1);
+        context.setCreatedBy(ctx.actorId());
+        context.setUpdatedBy(ctx.actorId());
+
+        context = contextRepository.save(context);
+        log.info("Practice context created: id={}", context.getId());
+        return context;
+    }
+
+    /**
+     * Authorize a practice context.
+     */
+    @Transactional
+    public ProviderPracticeContextEntity authorizeContext(
+            Long contextId,
+            String authorizationReference,
+            LocalDate authorizationStartDate,
+            LocalDate authorizationEndDate,
+            String authorizedBy,
+            String notes) {
+        TrustContext ctx = TrustContextHolder.require();
+        log.info("Authorizing practice context: id={}", contextId);
+
+        ProviderPracticeContextEntity context = contextRepository.findById(contextId)
+                .orElseThrow(() -> new IllegalArgumentException("Context not found: " + contextId));
+
+        context.setStatus("ACTIVE");
+        context.setAuthorisationBasis(authorizationReference);
+        context.setStartDate(authorizationStartDate != null ? authorizationStartDate : LocalDate.now());
+        context.setEndDate(authorizationEndDate);
+        context.setApprovedBy(authorizedBy != null ? authorizedBy : ctx.actorId());
+        context.setDecisionDate(LocalDate.now());
+        context.setNotes(notes);
+        context.setVersion(context.getVersion() + 1);
+        context.setUpdatedBy(ctx.actorId());
+
+        context = contextRepository.save(context);
+        log.info("Practice context authorized: id={}", contextId);
+        return context;
+    }
+
+    /**
+     * Renew a practice context.
+     */
+    @Transactional
+    public ProviderPracticeContextEntity renewContext(
+            Long contextId,
+            LocalDate newEndDate,
+            String renewalReference,
+            String notes) {
+        TrustContext ctx = TrustContextHolder.require();
+        log.info("Renewing practice context: id={}", contextId);
+
+        ProviderPracticeContextEntity context = contextRepository.findById(contextId)
+                .orElseThrow(() -> new IllegalArgumentException("Context not found: " + contextId));
+
+        context.setEndDate(newEndDate);
+        context.setAuthorisationBasis(renewalReference);
+        context.setNotes(context.getNotes() + " | Renewed: " + notes);
+        context.setVersion(context.getVersion() + 1);
+        context.setUpdatedBy(ctx.actorId());
+
+        context = contextRepository.save(context);
+        log.info("Practice context renewed: id={}", contextId);
+        return context;
+    }
+
+    /**
+     * Get practice context by ID.
+     */
+    @Transactional(readOnly = true)
+    public ProviderPracticeContextEntity getPracticeContext(Long contextId) {
+        return contextRepository.findById(contextId)
+                .orElseThrow(() -> new IllegalArgumentException("Context not found: " + contextId));
+    }
+
+    /**
+     * Get active practice contexts by provider.
+     */
+    @Transactional(readOnly = true)
+    public List<ProviderPracticeContextEntity> getActiveContextsByProvider(Long providerId) {
+        return contextRepository.findByProviderIdAndStatus(providerId, "ACTIVE");
+    }
+
+    /**
+     * Get active contexts by type for a provider.
+     */
+    @Transactional(readOnly = true)
+    public List<ProviderPracticeContextEntity> getActiveContextsByType(Long providerId, String contextType) {
+        List<ProviderPracticeContextEntity> contexts = contextRepository.findByProviderIdAndContextType(providerId, contextType);
+        return contexts.stream().filter(c -> "ACTIVE".equals(c.getStatus())).toList();
+    }
+
+    /**
+     * Get practice contexts expiring within days.
+     */
+    @Transactional(readOnly = true)
+    public List<ProviderPracticeContextEntity> getExpiringContexts(int daysAhead) {
+        LocalDate targetDate = LocalDate.now().plusDays(daysAhead);
+        List<ProviderPracticeContextEntity> all = contextRepository.findByStatus("ACTIVE");
+        return all.stream().filter(c -> c.getEndDate() != null && c.getEndDate().isBefore(targetDate)).toList();
+    }
+
     private void publishEvent(String aggregateType, String aggregateId, String eventType, String payload) {
         EventOutboxEntity event = new EventOutboxEntity();
         event.setAggregateType(aggregateType);

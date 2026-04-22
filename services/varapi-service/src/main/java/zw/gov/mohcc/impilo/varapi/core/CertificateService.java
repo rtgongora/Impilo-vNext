@@ -162,6 +162,219 @@ public class CertificateService {
                 .findByProviderIdAndCertificateTypeAndStatus(providerId, "PRACTISING_CERTIFICATE", "ACTIVE");
     }
 
+    /**
+     * Create a certificate (from controller).
+     */
+    @Transactional
+    public ProviderCertificateEntity createCertificate(
+            Long providerId,
+            String certificateType,
+            String certificateNumber,
+            LocalDate issueDate,
+            LocalDate expiryDate,
+            String issuingAuthority,
+            String notes) {
+        TrustContext ctx = TrustContextHolder.require();
+        log.info("Creating certificate: providerId={}, type={}", providerId, certificateType);
+
+        ProviderEntity provider = providerRepository.findById(providerId)
+                .orElseThrow(() -> new IllegalArgumentException("Provider not found: " + providerId));
+
+        ProviderCertificateEntity certificate = new ProviderCertificateEntity();
+        certificate.setProvider(provider);
+        certificate.setTenantId(ctx.tenantId());
+        certificate.setCertificateType(certificateType);
+        certificate.setCertificateNumber(certificateNumber);
+        certificate.setIssueDate(issueDate);
+        certificate.setExpiryDate(expiryDate);
+        certificate.setIssuedUnderAuthority(issuingAuthority);
+        certificate.setStatus("PENDING");
+        certificate.setNotes(notes);
+        certificate.setVersion(1);
+        certificate.setCreatedBy(ctx.actorId());
+        certificate.setUpdatedBy(ctx.actorId());
+
+        certificate = certificateRepository.save(certificate);
+        log.info("Certificate created: id={}", certificate.getId());
+        return certificate;
+    }
+
+    /**
+     * Issue a pending certificate.
+     */
+    @Transactional
+    public ProviderCertificateEntity issueCertificate(
+            Long certificateId,
+            String certificateNumber,
+            LocalDate issueDate,
+            LocalDate expiryDate) {
+        TrustContext ctx = TrustContextHolder.require();
+        log.info("Issuing certificate: id={}", certificateId);
+
+        ProviderCertificateEntity certificate = certificateRepository.findById(certificateId)
+                .orElseThrow(() -> new IllegalArgumentException("Certificate not found: " + certificateId));
+
+        if (!"PENDING".equals(certificate.getStatus())) {
+            throw new IllegalStateException("Can only issue pending certificates");
+        }
+
+        certificate.setCertificateNumber(certificateNumber);
+        certificate.setIssueDate(issueDate != null ? issueDate : LocalDate.now());
+        certificate.setExpiryDate(expiryDate);
+        certificate.setStatus("ACTIVE");
+        certificate.setVersion(certificate.getVersion() + 1);
+        certificate.setUpdatedBy(ctx.actorId());
+
+        certificate = certificateRepository.save(certificate);
+        log.info("Certificate issued: id={}", certificateId);
+        return certificate;
+    }
+
+    /**
+     * Renew a certificate.
+     */
+    @Transactional
+    public ProviderCertificateEntity renewCertificate(
+            Long certificateId,
+            LocalDate newExpiryDate,
+            String renewalReference,
+            String notes) {
+        TrustContext ctx = TrustContextHolder.require();
+        log.info("Renewing certificate: id={}, newExpiryDate={}", certificateId, newExpiryDate);
+
+        ProviderCertificateEntity certificate = certificateRepository.findById(certificateId)
+                .orElseThrow(() -> new IllegalArgumentException("Certificate not found: " + certificateId));
+
+        certificate.setExpiryDate(newExpiryDate);
+        certificate.setStatus("ACTIVE");
+        certificate.setRenewalReference(renewalReference);
+        certificate.setNotes(notes);
+        certificate.setVersion(certificate.getVersion() + 1);
+        certificate.setUpdatedBy(ctx.actorId());
+
+        certificate = certificateRepository.save(certificate);
+        log.info("Certificate renewed: id={}", certificateId);
+        return certificate;
+    }
+
+    /**
+     * Suspend a certificate.
+     */
+    @Transactional
+    public ProviderCertificateEntity suspendCertificate(
+            Long certificateId,
+            LocalDate suspensionDate,
+            String reason,
+            String notes) {
+        TrustContext ctx = TrustContextHolder.require();
+        log.info("Suspending certificate: id={}", certificateId);
+
+        ProviderCertificateEntity certificate = certificateRepository.findById(certificateId)
+                .orElseThrow(() -> new IllegalArgumentException("Certificate not found: " + certificateId));
+
+        certificate.setStatus("SUSPENDED");
+        certificate.setSuspensionDate(suspensionDate);
+        certificate.setNotes(reason + " | " + notes);
+        certificate.setVersion(certificate.getVersion() + 1);
+        certificate.setUpdatedBy(ctx.actorId());
+
+        certificate = certificateRepository.save(certificate);
+        log.info("Certificate suspended: id={}", certificateId);
+        return certificate;
+    }
+
+    /**
+     * Reinstate a suspended certificate.
+     */
+    @Transactional
+    public ProviderCertificateEntity reinstateCertificate(
+            Long certificateId,
+            LocalDate reinstatementDate,
+            String notes) {
+        TrustContext ctx = TrustContextHolder.require();
+        log.info("Reinstating certificate: id={}", certificateId);
+
+        ProviderCertificateEntity certificate = certificateRepository.findById(certificateId)
+                .orElseThrow(() -> new IllegalArgumentException("Certificate not found: " + certificateId));
+
+        certificate.setStatus("ACTIVE");
+        certificate.setNotes(certificate.getNotes() + " | Reinstated: " + notes);
+        certificate.setVersion(certificate.getVersion() + 1);
+        certificate.setUpdatedBy(ctx.actorId());
+
+        certificate = certificateRepository.save(certificate);
+        log.info("Certificate reinstated: id={}", certificateId);
+        return certificate;
+    }
+
+    /**
+     * Revoke a certificate.
+     */
+    @Transactional
+    public ProviderCertificateEntity revokeCertificate(
+            Long certificateId,
+            LocalDate revocationDate,
+            String reason,
+            String notes) {
+        TrustContext ctx = TrustContextHolder.require();
+        log.info("Revoking certificate: id={}", certificateId);
+
+        ProviderCertificateEntity certificate = certificateRepository.findById(certificateId)
+                .orElseThrow(() -> new IllegalArgumentException("Certificate not found: " + certificateId));
+
+        certificate.setStatus("REVOKED");
+        certificate.setRevocationDate(revocationDate != null ? revocationDate : LocalDate.now());
+        certificate.setNotes("Revoked: " + reason + " | " + notes);
+        certificate.setVersion(certificate.getVersion() + 1);
+        certificate.setUpdatedBy(ctx.actorId());
+
+        certificate = certificateRepository.save(certificate);
+        log.info("Certificate revoked: id={}", certificateId);
+        return certificate;
+    }
+
+    /**
+     * Get valid certificates for a provider.
+     */
+    @Transactional(readOnly = true)
+    public List<ProviderCertificateEntity> getValidCertificates(Long providerId) {
+        return certificateRepository.findByProviderIdAndStatus(providerId, "ACTIVE");
+    }
+
+    /**
+     * Get current (most recent valid) certificate for a provider.
+     */
+    @Transactional(readOnly = true)
+    public ProviderCertificateEntity getCurrentCertificate(Long providerId) {
+        List<ProviderCertificateEntity> active = certificateRepository.findByProviderIdAndStatus(providerId, "ACTIVE");
+        return active.isEmpty() ? null : active.get(0);
+    }
+
+    /**
+     * Get certificate by number.
+     */
+    @Transactional(readOnly = true)
+    public ProviderCertificateEntity getCertificateByNumber(String certificateNumber) {
+        return certificateRepository.findByCertificateNumber(certificateNumber).orElse(null);
+    }
+
+    /**
+     * Get expired certificates.
+     */
+    @Transactional(readOnly = true)
+    public List<ProviderCertificateEntity> getExpiredCertificates() {
+        return certificateRepository.findByStatusAndExpiryDateBefore("ACTIVE", LocalDate.now());
+    }
+
+    /**
+     * Get expiring certificates within days.
+     */
+    @Transactional(readOnly = true)
+    public List<ProviderCertificateEntity> getExpiringCertificates(int daysAhead) {
+        LocalDate targetDate = LocalDate.now().plusDays(daysAhead);
+        return certificateRepository.findByExpiryDateBefore(targetDate);
+    }
+
     private void publishEvent(String aggregateType, String aggregateId, String eventType, String payload) {
         EventOutboxEntity event = new EventOutboxEntity();
         event.setAggregateType(aggregateType);

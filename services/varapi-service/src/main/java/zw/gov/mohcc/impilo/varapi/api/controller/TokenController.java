@@ -82,7 +82,7 @@ public class TokenController {
 
         // GENERIC response — same shape/timing whether provider exists or not
         tokenService.startRecovery(request.providerPublicId());
-        GenericResponse response = new GenericResponse("ACCEPTED",
+        GenericResponse response = GenericResponse.success(
                 "If the provider exists, a recovery challenge has been initiated");
 
         return ResponseEntity.ok(ApiResponse.ok(response, ctx.correlationId().toString()));

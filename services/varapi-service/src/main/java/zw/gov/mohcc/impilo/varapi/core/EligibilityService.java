@@ -7,6 +7,8 @@ import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import zw.gov.mohcc.impilo.varapi.api.dto.EligibilityCheckRequest;
 import zw.gov.mohcc.impilo.varapi.api.dto.EligibilityResult;
+import zw.gov.mohcc.impilo.varapi.api.dto.ProviderEligibilityRequest;
+import zw.gov.mohcc.impilo.varapi.api.dto.ProviderEligibilityResponse;
 import zw.gov.mohcc.impilo.varapi.persistence.entity.LicenseEntity;
 import zw.gov.mohcc.impilo.varapi.persistence.entity.PrivilegeEntity;
 import zw.gov.mohcc.impilo.varapi.persistence.entity.ProviderEntity;
@@ -43,15 +45,27 @@ public class EligibilityService {
     private final LicenseRepository licenseRepository;
     private final PrivilegeRepository privilegeRepository;
     private final TokenService tokenService;
+    private final CertificateService certificateService;
+    private final ComplianceService complianceService;
+    private final AffiliationService affiliationService;
+    private final PractitionerInChargeService picService;
 
     public EligibilityService(ProviderRepository providerRepository,
                               LicenseRepository licenseRepository,
                               PrivilegeRepository privilegeRepository,
-                              TokenService tokenService) {
+                              TokenService tokenService,
+                              CertificateService certificateService,
+                              ComplianceService complianceService,
+                              AffiliationService affiliationService,
+                              PractitionerInChargeService picService) {
         this.providerRepository = providerRepository;
         this.licenseRepository = licenseRepository;
         this.privilegeRepository = privilegeRepository;
         this.tokenService = tokenService;
+        this.certificateService = certificateService;
+        this.complianceService = complianceService;
+        this.affiliationService = affiliationService;
+        this.picService = picService;
     }
 
     // ---- Public API ----
@@ -157,5 +171,139 @@ public class EligibilityService {
                 stepUpRequired,
                 resolvedProviderPublicId
         );
+    }
+
+    /**
+     * Check provider eligibility for TUSO interoperability.
+     * Returns detailed eligibility status for facility access decisions.
+     */
+    @Transactional(readOnly = true)
+    public ProviderEligibilityResponse checkEligibility(ProviderEligibilityRequest request) {
+        log.info("TUSO eligibility check: providerId={}, facilityId={}",
+                request.providerId(), request.facilityId());
+
+        List<String> reasons = new ArrayList<>();
+        ProviderEntity provider = null;
+
+        if (request.providerId() != null) {
+            provider = providerRepository.findById(request.providerId()).orElse(null);
+        } else if (request.providerPublicId() != null) {
+            provider = providerRepository.findByProviderPublicId(request.providerPublicId()).orElse(null);
+        }
+
+        if (provider == null) {
+            return ProviderEligibilityResponse.ineligible(
+                    request.providerId(),
+                    request.providerPublicId(),
+                    new String[]{"PROVIDER_NOT_FOUND"}
+            );
+        }
+
+        if (!provider.isActive()) {
+            reasons.add("PROVIDER_NOT_ACTIVE");
+        }
+
+        boolean hasValidLicense = false;
+        LocalDate licenseExpiry = null;
+        if (request.checkLicenseStatus()) {
+            Optional<LicenseEntity> activeLicense = licenseRepository.findActiveByProviderId(provider.getId());
+            if (activeLicense.isPresent() && !activeLicense.get().isExpired()) {
+                hasValidLicense = true;
+                licenseExpiry = activeLicense.get().getValidTo();
+            } else {
+                reasons.add("NO_VALID_LICENSE");
+            }
+        }
+
+        boolean hasCert = false;
+        LocalDate certExpiry = null;
+        if (request.checkCertificateStatus()) {
+            var cert = certificateService.getCurrentCertificate(provider.getId());
+            if (cert != null && cert.isActive()) {
+                hasCert = true;
+                certExpiry = cert.getExpiryDate();
+            } else {
+                reasons.add("NO_ACTIVE_CERTIFICATE");
+            }
+        }
+
+        boolean noCompliance = true;
+        if (request.checkComplianceStatus()) {
+            var overdue = complianceService.getOverdueActions(provider.getId());
+            if (!overdue.isEmpty()) {
+                noCompliance = false;
+                reasons.add("OVERDUE_COMPLIANCE");
+            }
+        }
+
+        boolean hasAffil = true;
+        if (request.checkAffiliationStatus() && request.facilityId() != null) {
+            hasAffil = affiliationService.hasActiveAffiliation(provider.getId(), request.facilityId());
+            if (!hasAffil) {
+                reasons.add("NO_ACTIVE_AFFILIATION");
+            }
+        }
+
+        boolean canServePic = false;
+        if (request.checkPicEligibility() && request.facilityId() != null) {
+            canServePic = picService.isProviderEligibleForPic(provider.getId());
+            if (!canServePic) {
+                reasons.add("NOT_PIC_ELIGIBLE");
+            }
+        }
+
+        return new ProviderEligibilityResponse(
+                provider.getId(),
+                provider.getProviderPublicId(),
+                reasons.isEmpty(),
+                reasons.isEmpty() ? "ELIGIBLE" : "INELIGIBLE",
+                hasValidLicense,
+                hasCert,
+                noCompliance,
+                hasAffil,
+                canServePic,
+                licenseExpiry,
+                certExpiry,
+                reasons.toArray(new String[0])
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public ProviderEligibilityResponse checkEligibilityForFacility(Long providerId, Long facilityId) {
+        return checkEligibility(ProviderEligibilityRequest.fullCheck(providerId, facilityId));
+    }
+
+    @Transactional(readOnly = true)
+    public ProviderEligibilityResponse getEligibilitySummary(Long providerId) {
+        return checkEligibility(ProviderEligibilityRequest.fullCheck(providerId, null));
+    }
+
+    @Transactional(readOnly = true)
+    public ProviderEligibilityResponse checkPicEligibility(Long providerId, Long facilityId) {
+        var request = ProviderEligibilityRequest.fullCheck(providerId, facilityId);
+        return checkEligibility(new ProviderEligibilityRequest(
+                request.providerId(),
+                request.providerPublicId(),
+                request.facilityId(),
+                request.contextType(),
+                true, false, false, false, false
+        ));
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProviderEligibilityResponse> getEligibleProvidersForFacility(Long facilityId) {
+        var affiliations = affiliationService.getActiveAffiliationsByFacility(facilityId);
+        return affiliations.stream()
+                .map(a -> checkEligibilityForFacility(a.getProvider().getId(), facilityId))
+                .filter(r -> r.eligible())
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public boolean facilityHasActiveProvider(Long facilityId, Long excludeProviderId) {
+        var affiliations = affiliationService.getActiveAffiliationsByFacility(facilityId);
+        return affiliations.stream()
+                .filter(a -> excludeProviderId == null || !a.getProvider().getId().equals(excludeProviderId))
+                .anyMatch(a -> a.getProvider().isActive());
     }
 }

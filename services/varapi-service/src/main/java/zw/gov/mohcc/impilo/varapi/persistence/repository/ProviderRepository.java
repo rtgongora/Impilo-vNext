@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import zw.gov.mohcc.impilo.varapi.persistence.entity.ProviderEntity;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -26,4 +27,6 @@ public interface ProviderRepository extends JpaRepository<ProviderEntity, Long> 
                                       Pageable pageable);
 
     Page<ProviderEntity> findByTenantIdAndProfession(UUID tenantId, String profession, Pageable pageable);
+
+    List<ProviderEntity> findByStatus(String status);
 }

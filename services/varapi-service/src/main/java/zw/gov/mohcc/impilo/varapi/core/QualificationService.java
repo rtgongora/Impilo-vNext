@@ -157,6 +157,153 @@ public class QualificationService {
     }
 
     /**
+     * Create a new qualification (from controller).
+     */
+    @Transactional
+    public ProviderQualificationEntity createQualification(
+            Long providerId,
+            String qualificationName,
+            String qualificationCode,
+            String awardingBody,
+            LocalDate dateAwarded,
+            String qualificationLevel,
+            String professionalCategory,
+            String documentReference,
+            String notes) {
+        TrustContext ctx = TrustContextHolder.require();
+        log.info("Creating qualification: providerId={}, name={}, awardingBody={}", providerId, qualificationName, awardingBody);
+
+        ProviderEntity provider = providerRepository.findById(providerId)
+                .orElseThrow(() -> new IllegalArgumentException("Provider not found: " + providerId));
+
+        ProviderQualificationEntity qualification = new ProviderQualificationEntity();
+        qualification.setProvider(provider);
+        qualification.setTenantId(ctx.tenantId());
+        qualification.setTitle(qualificationName);
+        qualification.setQualificationCode(qualificationCode);
+        qualification.setInstitutionName(awardingBody);
+        qualification.setAwardDate(dateAwarded);
+        qualification.setQualificationLevel(qualificationLevel);
+        qualification.setProfessionalCategory(professionalCategory);
+        qualification.setEvidenceDocumentId(documentReference != null ? Long.parseLong(documentReference) : null);
+        qualification.setVerificationStatus("PENDING");
+        qualification.setRemarks(notes);
+        qualification.setVersion(1);
+        qualification.setCreatedBy(ctx.actorId());
+        qualification.setUpdatedBy(ctx.actorId());
+
+        qualification = qualificationRepository.save(qualification);
+        log.info("Qualification created: id={}", qualification.getId());
+        return qualification;
+    }
+
+    /**
+     * Submit qualification for verification.
+     */
+    @Transactional
+    public ProviderQualificationEntity submitForVerification(Long qualificationId) {
+        TrustContext ctx = TrustContextHolder.require();
+        log.info("Submitting qualification for verification: id={}", qualificationId);
+
+        ProviderQualificationEntity qualification = qualificationRepository.findById(qualificationId)
+                .orElseThrow(() -> new IllegalArgumentException("Qualification not found: " + qualificationId));
+
+        if (!"PENDING".equals(qualification.getVerificationStatus())) {
+            throw new IllegalStateException("Can only submit pending qualifications");
+        }
+
+        qualification.setVersion(qualification.getVersion() + 1);
+        qualification.setUpdatedBy(ctx.actorId());
+
+        return qualificationRepository.save(qualification);
+    }
+
+    /**
+     * Complete verification of a qualification.
+     */
+    @Transactional
+    public ProviderQualificationEntity completeVerification(
+            Long qualificationId,
+            String verificationStatus,
+            LocalDate verificationDate,
+            String verifiedBy,
+            String notes) {
+        TrustContext ctx = TrustContextHolder.require();
+        log.info("Completing verification: id={}, status={}", qualificationId, verificationStatus);
+
+        ProviderQualificationEntity qualification = qualificationRepository.findById(qualificationId)
+                .orElseThrow(() -> new IllegalArgumentException("Qualification not found: " + qualificationId));
+
+        qualification.setVerificationStatus(verificationStatus);
+        qualification.setVerificationDate(verificationDate);
+        qualification.setVerifiedBy(verifiedBy != null ? verifiedBy : ctx.actorId());
+        qualification.setVerificationNotes(notes);
+        qualification.setVersion(qualification.getVersion() + 1);
+        qualification.setUpdatedBy(ctx.actorId());
+
+        qualification = qualificationRepository.save(qualification);
+        log.info("Qualification verification completed: id={}, status={}", qualificationId, verificationStatus);
+        return qualification;
+    }
+
+    /**
+     * Supersede a qualification with a new one.
+     */
+    @Transactional
+    public ProviderQualificationEntity supersedeQualification(Long oldQualificationId, Long newQualificationId, String reason) {
+        log.info("Superseding qualification: oldId={}, newId={}", oldQualificationId, newQualificationId);
+
+        ProviderQualificationEntity oldQualification = qualificationRepository.findById(oldQualificationId)
+                .orElseThrow(() -> new IllegalArgumentException("Qualification not found: " + oldQualificationId));
+
+        oldQualification.setVerificationStatus("SUPERSEDED");
+        oldQualification.setRemarks("Superseded by qualification " + newQualificationId + ": " + reason);
+
+        ProviderQualificationEntity newQualification = qualificationRepository.findById(newQualificationId)
+                .orElseThrow(() -> new IllegalArgumentException("Qualification not found: " + newQualificationId));
+
+        newQualification.setSupersedesId(oldQualificationId);
+
+        qualificationRepository.save(oldQualification);
+        qualificationRepository.save(newQualification);
+
+        return newQualification;
+    }
+
+    /**
+     * Get pending verification qualifications for a provider.
+     */
+    @Transactional(readOnly = true)
+    public List<ProviderQualificationEntity> getPendingVerificationQualifications(Long providerId) {
+        return qualificationRepository.findByProviderIdAndVerificationStatus(providerId, "PENDING");
+    }
+
+    /**
+     * Search qualifications by criteria.
+     */
+    @Transactional(readOnly = true)
+    public List<ProviderQualificationEntity> searchQualifications(
+            String awardingBody,
+            String qualificationLevel,
+            String professionalCategory) {
+        if (awardingBody != null) {
+            return qualificationRepository.findByAwardingBody(awardingBody);
+        }
+        if (qualificationLevel != null) {
+            return qualificationRepository.findByQualificationLevel(qualificationLevel);
+        }
+        return qualificationRepository.findAll();
+    }
+
+    /**
+     * Get all pending verification qualifications.
+     */
+    @Transactional(readOnly = true)
+    public List<ProviderQualificationEntity> getPendingVerification() {
+        return qualificationRepository.findByVerificationStatusIn(List.of("PENDING", "SUBMITTED"));
+    }
+
+    /**
      * Delete a qualification (only if not verified).
      */
     @Transactional

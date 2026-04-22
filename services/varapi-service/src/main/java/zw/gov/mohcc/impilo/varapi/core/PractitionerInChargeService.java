@@ -18,6 +18,7 @@ import zw.gov.mohcc.impilo.varapi.persistence.repository.ProviderRepository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -263,6 +264,113 @@ public class PractitionerInChargeService {
      * Validate provider eligibility for PIC role.
      * Returns null if eligible, error message if not.
      */
+    /**
+     * Revoke a PIC assignment.
+     */
+    @Transactional
+    public PractitionerInChargeAssignmentEntity revokeAssignment(Long assignmentId, LocalDate revocationDate, String reason) {
+        TrustContext ctx = TrustContextHolder.require();
+        log.info("Revoking PIC assignment: id={}", assignmentId);
+
+        PractitionerInChargeAssignmentEntity assignment = picRepository.findById(assignmentId)
+                .orElseThrow(() -> new IllegalArgumentException("Assignment not found: " + assignmentId));
+
+        assignment.setStatus("REVOKED");
+        assignment.setEndDate(revocationDate != null ? revocationDate : LocalDate.now());
+        assignment.setNotes("Revoked: " + reason);
+        assignment.setVersion(assignment.getVersion() + 1);
+        assignment.setUpdatedBy(ctx.actorId());
+
+        assignment = picRepository.save(assignment);
+        log.info("PIC assignment revoked: id={}", assignmentId);
+        return assignment;
+    }
+
+    /**
+     * Transfer PIC assignment to a new facility.
+     */
+    @Transactional
+    public PractitionerInChargeAssignmentEntity transferAssignment(Long assignmentId, Long newFacilityId, LocalDate transferDate, String reason) {
+        TrustContext ctx = TrustContextHolder.require();
+        log.info("Transferring PIC assignment: id={} to facilityId={}", assignmentId, newFacilityId);
+
+        PractitionerInChargeAssignmentEntity existing = picRepository.findById(assignmentId)
+                .orElseThrow(() -> new IllegalArgumentException("Assignment not found: " + assignmentId));
+
+        // Terminate existing
+        existing.setStatus("TRANSFERRED");
+        existing.setEndDate(transferDate != null ? transferDate : LocalDate.now());
+        existing.setNotes("Transferred to facility " + newFacilityId + ": " + reason);
+        existing.setVersion(existing.getVersion() + 1);
+        picRepository.save(existing);
+
+        // Create new assignment
+        PractitionerInChargeAssignmentEntity newAssignment = new PractitionerInChargeAssignmentEntity();
+        newAssignment.setProvider(existing.getProvider());
+        newAssignment.setTenantId(ctx.tenantId());
+        newAssignment.setFacilityId(newFacilityId);
+        newAssignment.setAssignmentType(existing.getAssignmentType());
+        newAssignment.setStartDate(transferDate != null ? transferDate : LocalDate.now());
+        newAssignment.setStatus("ACTIVE");
+        newAssignment.setApprovalState("PENDING");
+        newAssignment.setNotes("Transferred from assignment " + assignmentId + ": " + reason);
+        newAssignment.setVersion(1);
+        newAssignment.setCreatedBy(ctx.actorId());
+        newAssignment.setUpdatedBy(ctx.actorId());
+
+        newAssignment = picRepository.save(newAssignment);
+        log.info("PIC assignment transferred: newId={} from assignmentId={}", newAssignment.getId(), assignmentId);
+        return newAssignment;
+    }
+
+    /**
+     * Get active PIC assignment by provider.
+     */
+    @Transactional(readOnly = true)
+    public PractitionerInChargeAssignmentEntity getActiveAssignmentByProvider(Long providerId) {
+        List<PractitionerInChargeAssignmentEntity> active = picRepository.findByProviderIdAndStatus(providerId, "ACTIVE");
+        return active.isEmpty() ? null : active.get(0);
+    }
+
+    /**
+     * Get active PIC assignment by facility.
+     */
+    @Transactional(readOnly = true)
+    public PractitionerInChargeAssignmentEntity getActiveAssignmentByFacility(Long facilityId) {
+        return picRepository.findByFacilityIdAndStatusAndEndDateIsNull(facilityId, "ACTIVE").orElse(null);
+    }
+
+    /**
+     * Get PIC assignment history by facility.
+     */
+    @Transactional(readOnly = true)
+    public List<PractitionerInChargeAssignmentEntity> getAssignmentHistoryByFacility(Long facilityId) {
+        return picRepository.findByFacilityIdAndStatus(facilityId, "ACTIVE");
+    }
+
+    /**
+     * Get PIC assignment history by provider.
+     */
+    @Transactional(readOnly = true)
+    public List<PractitionerInChargeAssignmentEntity> getAssignmentHistoryByProvider(Long providerId) {
+        return picRepository.findByProviderIdAndStatus(providerId, "ACTIVE");
+    }
+
+    /**
+     * Get eligible providers for a facility.
+     */
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> getEligibleProvidersForFacility(Long facilityId) {
+        List<ProviderEntity> activeProviders = providerRepository.findByStatus("ACTIVE");
+        return activeProviders.stream()
+                .filter(p -> validateProviderEligibility(p) == null)
+                .map(p -> Map.<String, Object>of(
+                        "providerId", p.getId(),
+                        "providerPublicId", p.getProviderPublicId(),
+                        "status", p.getStatus()))
+                .toList();
+    }
+
     private String validateProviderEligibility(ProviderEntity provider) {
         // Check provider status
         if (!"ACTIVE".equals(provider.getStatus())) {

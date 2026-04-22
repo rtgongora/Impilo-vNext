@@ -17,4 +17,9 @@ public interface MatchResultRepository extends JpaRepository<MatchResultEntity, 
 
     Page<MatchResultEntity> findByTenantIdAndSourceHealthId(
             UUID tenantId, UUID sourceHealthId, Pageable pageable);
+
+    Page<MatchResultEntity> findByTenantIdAndCandidateHealthId(
+            UUID tenantId, UUID candidateHealthId, Pageable pageable);
+
+    long countByTenantIdAndDisposition(UUID tenantId, MatchDisposition disposition);
 }

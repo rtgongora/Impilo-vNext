@@ -33,6 +33,9 @@ public class ProviderComplianceActionEntity {
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
+    @Column(name = "requirement", columnDefinition = "TEXT")
+    private String requirement;
+
     @Column(name = "owner", length = 255)
     private String owner;
 
@@ -50,6 +53,18 @@ public class ProviderComplianceActionEntity {
 
     @Column(name = "verified_at")
     private Instant verifiedAt;
+
+    @Column(name = "verification_date")
+    private LocalDate verificationDate;
+
+    @Column(name = "version")
+    private Integer version;
+
+    @Column(name = "created_by", length = 255)
+    private String createdBy;
+
+    @Column(name = "updated_by", length = 255)
+    private String updatedBy;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -95,6 +110,9 @@ public class ProviderComplianceActionEntity {
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
 
+    public String getRequirement() { return requirement; }
+    public void setRequirement(String requirement) { this.requirement = requirement; }
+
     public String getOwner() { return owner; }
     public void setOwner(String owner) { this.owner = owner; }
 
@@ -112,6 +130,18 @@ public class ProviderComplianceActionEntity {
 
     public Instant getVerifiedAt() { return verifiedAt; }
     public void setVerifiedAt(Instant verifiedAt) { this.verifiedAt = verifiedAt; }
+
+    public LocalDate getVerificationDate() { return verificationDate; }
+    public void setVerificationDate(LocalDate verificationDate) { this.verificationDate = verificationDate; }
+
+    public Integer getVersion() { return version; }
+    public void setVersion(Integer version) { this.version = version; }
+
+    public String getCreatedBy() { return createdBy; }
+    public void setCreatedBy(String createdBy) { this.createdBy = createdBy; }
+
+    public String getUpdatedBy() { return updatedBy; }
+    public void setUpdatedBy(String updatedBy) { this.updatedBy = updatedBy; }
 
     public Instant getCreatedAt() { return createdAt; }
 
