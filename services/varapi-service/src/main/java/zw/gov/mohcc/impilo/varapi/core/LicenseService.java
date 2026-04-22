@@ -185,8 +185,8 @@ public class LicenseService {
 
         throw new UnsupportedOperationException(
                 "Certificate PDF generation requires integration with reporting-service. " +
-                "Please implement PDF generation using a template engine with provider=" +
-                license.getProvider().getName() + ", licenseType=" + license.getLicenseType() +
+                "Please implement PDF generation using a template engine with providerId=" +
+                license.getProvider().getId() + ", licenseType=" + license.getLicenseType() +
                 ", validFrom=" + license.getValidFrom() + ", validTo=" + license.getValidTo());
     }
 

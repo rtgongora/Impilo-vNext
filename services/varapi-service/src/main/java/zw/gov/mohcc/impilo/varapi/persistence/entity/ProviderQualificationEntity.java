@@ -53,6 +53,33 @@ public class ProviderQualificationEntity {
     @Column(name = "remarks", columnDefinition = "TEXT")
     private String remarks;
 
+    @Column(name = "qualification_code", length = 50)
+    private String qualificationCode;
+
+    @Column(name = "qualification_level", length = 50)
+    private String qualificationLevel;
+
+    @Column(name = "professional_category", length = 100)
+    private String professionalCategory;
+
+    @Column(name = "verification_date")
+    private LocalDate verificationDate;
+
+    @Column(name = "verification_notes", columnDefinition = "TEXT")
+    private String verificationNotes;
+
+    @Column(name = "supersedes_id")
+    private Long supersedesId;
+
+    @Column(name = "version")
+    private Integer version;
+
+    @Column(name = "created_by", length = 255)
+    private String createdBy;
+
+    @Column(name = "updated_by", length = 255)
+    private String updatedBy;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -113,6 +140,33 @@ public class ProviderQualificationEntity {
 
     public String getRemarks() { return remarks; }
     public void setRemarks(String remarks) { this.remarks = remarks; }
+
+    public String getQualificationCode() { return qualificationCode; }
+    public void setQualificationCode(String qualificationCode) { this.qualificationCode = qualificationCode; }
+
+    public String getQualificationLevel() { return qualificationLevel; }
+    public void setQualificationLevel(String qualificationLevel) { this.qualificationLevel = qualificationLevel; }
+
+    public String getProfessionalCategory() { return professionalCategory; }
+    public void setProfessionalCategory(String professionalCategory) { this.professionalCategory = professionalCategory; }
+
+    public LocalDate getVerificationDate() { return verificationDate; }
+    public void setVerificationDate(LocalDate verificationDate) { this.verificationDate = verificationDate; }
+
+    public String getVerificationNotes() { return verificationNotes; }
+    public void setVerificationNotes(String verificationNotes) { this.verificationNotes = verificationNotes; }
+
+    public Long getSupersedesId() { return supersedesId; }
+    public void setSupersedesId(Long supersedesId) { this.supersedesId = supersedesId; }
+
+    public Integer getVersion() { return version; }
+    public void setVersion(Integer version) { this.version = version; }
+
+    public String getCreatedBy() { return createdBy; }
+    public void setCreatedBy(String createdBy) { this.createdBy = createdBy; }
+
+    public String getUpdatedBy() { return updatedBy; }
+    public void setUpdatedBy(String updatedBy) { this.updatedBy = updatedBy; }
 
     public Instant getCreatedAt() { return createdAt; }
 

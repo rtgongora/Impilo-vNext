@@ -96,8 +96,7 @@ public class CouncilController {
                 councilId, request.importType(), ctx.correlationId());
 
         councilService.triggerImport(councilId, request);
-        GenericResponse response = new GenericResponse("ACCEPTED",
-                "Import job queued for council " + councilId);
+        GenericResponse response = GenericResponse.success("Import job queued for council " + councilId);
 
         return ResponseEntity.status(HttpStatus.ACCEPTED)
                 .body(ApiResponse.ok(response, ctx.correlationId().toString()));

@@ -21,4 +21,8 @@ public interface ProviderAffiliationRepository extends JpaRepository<ProviderAff
     List<ProviderAffiliationEntity> findByProviderIdAndPrimaryFlag(Long providerId, Boolean primaryFlag);
 
     int countByFacilityIdAndStatus(Long facilityId, String status);
+
+    List<ProviderAffiliationEntity> findByFacilityIdAndStatus(Long facilityId, String status);
+
+    List<ProviderAffiliationEntity> findByStatusIn(List<String> statuses);
 }

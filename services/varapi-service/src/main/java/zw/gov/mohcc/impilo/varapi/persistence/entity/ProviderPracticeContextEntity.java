@@ -45,6 +45,9 @@ public class ProviderPracticeContextEntity {
     @Column(name = "authorisation_basis", length = 255)
     private String authorisationBasis;
 
+    @Column(name = "location_code", length = 50)
+    private String locationCode;
+
     @Column(name = "approved_by", length = 255)
     private String approvedBy;
 
@@ -54,8 +57,17 @@ public class ProviderPracticeContextEntity {
     @Column(name = "notes", columnDefinition = "TEXT")
     private String notes;
 
+    @Column(name = "authorization_reference", length = 100)
+    private String authorizationReference;
+
     @Column(name = "version")
     private Integer version = 1;
+
+    @Column(name = "created_by", length = 255)
+    private String createdBy;
+
+    @Column(name = "updated_by", length = 255)
+    private String updatedBy;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -109,6 +121,9 @@ public class ProviderPracticeContextEntity {
     public String getAuthorisationBasis() { return authorisationBasis; }
     public void setAuthorisationBasis(String authorisationBasis) { this.authorisationBasis = authorisationBasis; }
 
+    public String getLocationCode() { return locationCode; }
+    public void setLocationCode(String locationCode) { this.locationCode = locationCode; }
+
     public String getApprovedBy() { return approvedBy; }
     public void setApprovedBy(String approvedBy) { this.approvedBy = approvedBy; }
 
@@ -118,8 +133,17 @@ public class ProviderPracticeContextEntity {
     public String getNotes() { return notes; }
     public void setNotes(String notes) { this.notes = notes; }
 
+    public String getAuthorizationReference() { return authorizationReference; }
+    public void setAuthorizationReference(String authorizationReference) { this.authorizationReference = authorizationReference; }
+
     public Integer getVersion() { return version; }
     public void setVersion(Integer version) { this.version = version; }
+
+    public String getCreatedBy() { return createdBy; }
+    public void setCreatedBy(String createdBy) { this.createdBy = createdBy; }
+
+    public String getUpdatedBy() { return updatedBy; }
+    public void setUpdatedBy(String updatedBy) { this.updatedBy = updatedBy; }
 
     public Instant getCreatedAt() { return createdAt; }
 

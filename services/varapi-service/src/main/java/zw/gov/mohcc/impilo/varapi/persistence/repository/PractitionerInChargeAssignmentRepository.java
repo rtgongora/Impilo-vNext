@@ -22,4 +22,6 @@ public interface PractitionerInChargeAssignmentRepository extends JpaRepository<
     Optional<PractitionerInChargeAssignmentEntity> findByFacilityIdAndStatusAndEndDateIsNull(Long facilityId, String status);
 
     int countByFacilityIdAndStatusAndEndDateIsNull(Long facilityId, String status);
+
+    List<PractitionerInChargeAssignmentEntity> findByFacilityIdAndStatus(Long facilityId, String status);
 }

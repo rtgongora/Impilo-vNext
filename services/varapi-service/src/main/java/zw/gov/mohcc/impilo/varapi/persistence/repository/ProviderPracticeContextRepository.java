@@ -19,4 +19,6 @@ public interface ProviderPracticeContextRepository extends JpaRepository<Provide
     List<ProviderPracticeContextEntity> findByProviderIdAndContextType(Long providerId, String contextType);
 
     List<ProviderPracticeContextEntity> findByLinkedFacilityIdAndStatus(Long facilityId, String status);
+
+    List<ProviderPracticeContextEntity> findByStatus(String status);
 }

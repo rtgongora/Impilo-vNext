@@ -95,8 +95,7 @@ public class PortalController {
 
         ProviderEntity provider = providerService.getProvider(ctx.actorId()).provider();
         cpdService.uploadEvidence(request.eventId(), request.documentId(), request.evidenceType(), request.notes());
-        GenericResponse response = new GenericResponse("ACCEPTED",
-                "Evidence submitted for verification");
+        GenericResponse response = GenericResponse.success("Evidence submitted for verification");
 
         return ResponseEntity.ok(ApiResponse.ok(response, ctx.correlationId().toString()));
     }

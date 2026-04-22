@@ -164,6 +164,165 @@ public class ComplianceService {
         return open.size();
     }
 
+    /**
+     * Create a compliance action (from controller).
+     */
+    @Transactional
+    public ProviderComplianceActionEntity createComplianceAction(
+            Long providerId,
+            String complianceActionType,
+            String description,
+            String requirement,
+            LocalDate dueDate,
+            String notes) {
+        TrustContext ctx = TrustContextHolder.require();
+        log.info("Creating compliance action: providerId={}, type={}", providerId, complianceActionType);
+
+        ProviderEntity provider = providerRepository.findById(providerId)
+                .orElseThrow(() -> new IllegalArgumentException("Provider not found: " + providerId));
+
+        ProviderComplianceActionEntity action = new ProviderComplianceActionEntity();
+        action.setProvider(provider);
+        action.setTenantId(ctx.tenantId());
+        action.setActionType(complianceActionType);
+        action.setDescription(description);
+        action.setRequirement(requirement);
+        action.setDueDate(dueDate);
+        action.setStatus("OPEN");
+        action.setCompletionNotes(notes);
+        action.setVerifiedBy(ctx.actorId());
+        action.setUpdatedBy(ctx.actorId());
+
+        action = complianceRepository.save(action);
+        log.info("Compliance action created: id={}", action.getId());
+        return action;
+    }
+
+    /**
+     * Fulfill a compliance action.
+     */
+    @Transactional
+    public ProviderComplianceActionEntity fulfillAction(
+            Long actionId,
+            LocalDate fulfilledDate,
+            String evidence,
+            String notes) {
+        TrustContext ctx = TrustContextHolder.require();
+        log.info("Fulfilling compliance action: id={}", actionId);
+
+        ProviderComplianceActionEntity action = complianceRepository.findById(actionId)
+                .orElseThrow(() -> new IllegalArgumentException("Action not found: " + actionId));
+
+        if (!"OPEN".equals(action.getStatus())) {
+            throw new IllegalStateException("Can only fulfill open actions");
+        }
+
+        action.setStatus("FULFILLED");
+        action.setVerificationDate(fulfilledDate);
+        action.setCompletionNotes(evidence);
+        action.setVerifiedBy(ctx.actorId());
+        action.setVerifiedAt(Instant.now());
+
+        action = complianceRepository.save(action);
+        log.info("Compliance action fulfilled: id={}", actionId);
+        return action;
+    }
+
+    /**
+     * Exempt a compliance action.
+     */
+    @Transactional
+    public ProviderComplianceActionEntity exemptAction(Long actionId, String exemptionReason, String notes) {
+        TrustContext ctx = TrustContextHolder.require();
+        log.info("Exempting compliance action: id={}", actionId);
+
+        ProviderComplianceActionEntity action = complianceRepository.findById(actionId)
+                .orElseThrow(() -> new IllegalArgumentException("Action not found: " + actionId));
+
+        action.setStatus("EXEMPTED");
+        action.setCompletionNotes(exemptionReason + " | " + notes);
+        action.setVerifiedBy(ctx.actorId());
+        action.setVerifiedAt(Instant.now());
+
+        action = complianceRepository.save(action);
+        log.info("Compliance action exempted: id={}", actionId);
+        return action;
+    }
+
+    /**
+     * Escalate a compliance action (extend due date).
+     */
+    @Transactional
+    public ProviderComplianceActionEntity escalateAction(
+            Long actionId,
+            LocalDate newDueDate,
+            String reason,
+            String notes) {
+        TrustContext ctx = TrustContextHolder.require();
+        log.info("Escalating compliance action: id={}, newDueDate={}", actionId, newDueDate);
+
+        ProviderComplianceActionEntity action = complianceRepository.findById(actionId)
+                .orElseThrow(() -> new IllegalArgumentException("Action not found: " + actionId));
+
+        action.setDueDate(newDueDate);
+        action.setCompletionNotes("Escalated: " + reason + " | " + notes);
+        action.setVerifiedBy(ctx.actorId());
+
+        action = complianceRepository.save(action);
+        log.info("Compliance action escalated: id={}", actionId);
+        return action;
+    }
+
+    /**
+     * Get compliance action by ID.
+     */
+    @Transactional(readOnly = true)
+    public ProviderComplianceActionEntity getComplianceAction(Long actionId) {
+        return complianceRepository.findById(actionId)
+                .orElseThrow(() -> new IllegalArgumentException("Action not found: " + actionId));
+    }
+
+    /**
+     * Get compliance actions by provider.
+     */
+    @Transactional(readOnly = true)
+    public List<ProviderComplianceActionEntity> getComplianceActionsByProvider(Long providerId) {
+        return complianceRepository.findByProviderId(providerId);
+    }
+
+    /**
+     * Get outstanding actions for a provider.
+     */
+    @Transactional(readOnly = true)
+    public List<ProviderComplianceActionEntity> getOutstandingActions(Long providerId) {
+        return complianceRepository.findByProviderIdAndStatus(providerId, "OPEN");
+    }
+
+    /**
+     * Get overdue actions for a provider.
+     */
+    @Transactional(readOnly = true)
+    public List<ProviderComplianceActionEntity> getOverdueActions(Long providerId) {
+        return complianceRepository.findByProviderIdAndStatusAndDueDateBefore(providerId, "OPEN", LocalDate.now());
+    }
+
+    /**
+     * Get actions due within a number of days.
+     */
+    @Transactional(readOnly = true)
+    public List<ProviderComplianceActionEntity> getActionsDueWithin(int days) {
+        LocalDate targetDate = LocalDate.now().plusDays(days);
+        return complianceRepository.findByStatusAndDueDateBefore("OPEN", targetDate);
+    }
+
+    /**
+     * Get all overdue actions.
+     */
+    @Transactional(readOnly = true)
+    public List<ProviderComplianceActionEntity> getAllOverdueActions() {
+        return complianceRepository.findByStatusAndDueDateBefore("OPEN", LocalDate.now());
+    }
+
     private void publishEvent(String aggregateType, String aggregateId, String eventType, String payload) {
         EventOutboxEntity event = new EventOutboxEntity();
         event.setAggregateType(aggregateType);
