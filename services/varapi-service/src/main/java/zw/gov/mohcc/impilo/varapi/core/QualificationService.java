@@ -56,8 +56,7 @@ public class QualificationService {
         log.info("Adding qualification: providerId={}, type={}, title={}, actor={}",
                 providerId, qualificationType, title, ctx.actorId());
 
-        ProviderEntity provider = providerRepository.findById(providerId)
-                .orElseThrow(() -> new IllegalArgumentException("Provider not found: " + providerId));
+        ProviderEntity provider = requireProvider(providerId, ctx.tenantId());
 
         ProviderQualificationEntity qualification = new ProviderQualificationEntity();
         qualification.setProvider(provider);
@@ -95,8 +94,7 @@ public class QualificationService {
         log.info("Verifying qualification: id={}, status={}, actor={}",
                 qualificationId, verificationStatus, ctx.actorId());
 
-        ProviderQualificationEntity qualification = qualificationRepository.findById(qualificationId)
-                .orElseThrow(() -> new IllegalArgumentException("Qualification not found: " + qualificationId));
+        ProviderQualificationEntity qualification = requireQualification(qualificationId, ctx.tenantId());
 
         if (!"PENDING".equals(qualification.getVerificationStatus())) {
             throw new IllegalStateException("Can only verify pending qualifications");
@@ -127,8 +125,8 @@ public class QualificationService {
      */
     @Transactional(readOnly = true)
     public ProviderQualificationEntity getQualification(Long qualificationId) {
-        return qualificationRepository.findById(qualificationId)
-                .orElseThrow(() -> new IllegalArgumentException("Qualification not found: " + qualificationId));
+        TrustContext ctx = TrustContextHolder.require();
+        return requireQualification(qualificationId, ctx.tenantId());
     }
 
     /**
@@ -136,7 +134,9 @@ public class QualificationService {
      */
     @Transactional(readOnly = true)
     public List<ProviderQualificationEntity> getQualificationsByProvider(Long providerId) {
-        return qualificationRepository.findByProviderId(providerId);
+        TrustContext ctx = TrustContextHolder.require();
+        requireProvider(providerId, ctx.tenantId());
+        return qualificationRepository.findByTenantIdAndProviderId(ctx.tenantId(), providerId);
     }
 
     /**
@@ -144,7 +144,12 @@ public class QualificationService {
      */
     @Transactional(readOnly = true)
     public List<ProviderQualificationEntity> getVerifiedQualifications(Long providerId) {
-        return qualificationRepository.findByProviderIdAndVerificationStatus(providerId, "VERIFIED");
+        TrustContext ctx = TrustContextHolder.require();
+        requireProvider(providerId, ctx.tenantId());
+        return qualificationRepository.findByTenantIdAndProviderIdAndVerificationStatus(
+                ctx.tenantId(),
+                providerId,
+                "VERIFIED");
     }
 
     /**
@@ -173,8 +178,7 @@ public class QualificationService {
         TrustContext ctx = TrustContextHolder.require();
         log.info("Creating qualification: providerId={}, name={}, awardingBody={}", providerId, qualificationName, awardingBody);
 
-        ProviderEntity provider = providerRepository.findById(providerId)
-                .orElseThrow(() -> new IllegalArgumentException("Provider not found: " + providerId));
+        ProviderEntity provider = requireProvider(providerId, ctx.tenantId());
 
         ProviderQualificationEntity qualification = new ProviderQualificationEntity();
         qualification.setProvider(provider);
@@ -205,8 +209,7 @@ public class QualificationService {
         TrustContext ctx = TrustContextHolder.require();
         log.info("Submitting qualification for verification: id={}", qualificationId);
 
-        ProviderQualificationEntity qualification = qualificationRepository.findById(qualificationId)
-                .orElseThrow(() -> new IllegalArgumentException("Qualification not found: " + qualificationId));
+        ProviderQualificationEntity qualification = requireQualification(qualificationId, ctx.tenantId());
 
         if (!"PENDING".equals(qualification.getVerificationStatus())) {
             throw new IllegalStateException("Can only submit pending qualifications");
@@ -231,8 +234,7 @@ public class QualificationService {
         TrustContext ctx = TrustContextHolder.require();
         log.info("Completing verification: id={}, status={}", qualificationId, verificationStatus);
 
-        ProviderQualificationEntity qualification = qualificationRepository.findById(qualificationId)
-                .orElseThrow(() -> new IllegalArgumentException("Qualification not found: " + qualificationId));
+        ProviderQualificationEntity qualification = requireQualification(qualificationId, ctx.tenantId());
 
         qualification.setVerificationStatus(verificationStatus);
         qualification.setVerificationDate(verificationDate);
@@ -253,14 +255,13 @@ public class QualificationService {
     public ProviderQualificationEntity supersedeQualification(Long oldQualificationId, Long newQualificationId, String reason) {
         log.info("Superseding qualification: oldId={}, newId={}", oldQualificationId, newQualificationId);
 
-        ProviderQualificationEntity oldQualification = qualificationRepository.findById(oldQualificationId)
-                .orElseThrow(() -> new IllegalArgumentException("Qualification not found: " + oldQualificationId));
+        TrustContext ctx = TrustContextHolder.require();
+        ProviderQualificationEntity oldQualification = requireQualification(oldQualificationId, ctx.tenantId());
 
         oldQualification.setVerificationStatus("SUPERSEDED");
         oldQualification.setRemarks("Superseded by qualification " + newQualificationId + ": " + reason);
 
-        ProviderQualificationEntity newQualification = qualificationRepository.findById(newQualificationId)
-                .orElseThrow(() -> new IllegalArgumentException("Qualification not found: " + newQualificationId));
+        ProviderQualificationEntity newQualification = requireQualification(newQualificationId, ctx.tenantId());
 
         newQualification.setSupersedesId(oldQualificationId);
 
@@ -275,7 +276,12 @@ public class QualificationService {
      */
     @Transactional(readOnly = true)
     public List<ProviderQualificationEntity> getPendingVerificationQualifications(Long providerId) {
-        return qualificationRepository.findByProviderIdAndVerificationStatus(providerId, "PENDING");
+        TrustContext ctx = TrustContextHolder.require();
+        requireProvider(providerId, ctx.tenantId());
+        return qualificationRepository.findByTenantIdAndProviderIdAndVerificationStatus(
+                ctx.tenantId(),
+                providerId,
+                "PENDING");
     }
 
     /**
@@ -286,13 +292,16 @@ public class QualificationService {
             String awardingBody,
             String qualificationLevel,
             String professionalCategory) {
+        TrustContext ctx = TrustContextHolder.require();
         if (awardingBody != null) {
-            return qualificationRepository.findByAwardingBody(awardingBody);
+            return qualificationRepository.findByTenantIdAndAwardingBody(ctx.tenantId(), awardingBody);
         }
         if (qualificationLevel != null) {
-            return qualificationRepository.findByQualificationLevel(qualificationLevel);
+            return qualificationRepository.findByTenantIdAndQualificationLevel(ctx.tenantId(), qualificationLevel);
         }
-        return qualificationRepository.findAll();
+        return qualificationRepository.findByTenantIdAndVerificationStatusIn(
+                ctx.tenantId(),
+                List.of("PENDING", "SUBMITTED", "VERIFIED", "FAILED", "NOT_REQUIRED", "SUPERSEDED"));
     }
 
     /**
@@ -300,7 +309,10 @@ public class QualificationService {
      */
     @Transactional(readOnly = true)
     public List<ProviderQualificationEntity> getPendingVerification() {
-        return qualificationRepository.findByVerificationStatusIn(List.of("PENDING", "SUBMITTED"));
+        TrustContext ctx = TrustContextHolder.require();
+        return qualificationRepository.findByTenantIdAndVerificationStatusIn(
+                ctx.tenantId(),
+                List.of("PENDING", "SUBMITTED"));
     }
 
     /**
@@ -311,8 +323,7 @@ public class QualificationService {
         TrustContext ctx = TrustContextHolder.require();
         log.info("Deleting qualification: id={}, actor={}", qualificationId, ctx.actorId());
 
-        ProviderQualificationEntity qualification = qualificationRepository.findById(qualificationId)
-                .orElseThrow(() -> new IllegalArgumentException("Qualification not found: " + qualificationId));
+        ProviderQualificationEntity qualification = requireQualification(qualificationId, ctx.tenantId());
 
         if ("VERIFIED".equals(qualification.getVerificationStatus())) {
             throw new IllegalStateException("Cannot delete verified qualifications");
@@ -320,6 +331,16 @@ public class QualificationService {
 
         qualificationRepository.delete(qualification);
         log.info("Qualification deleted: id={}", qualificationId);
+    }
+
+    private ProviderEntity requireProvider(Long providerId, UUID tenantId) {
+        return providerRepository.findByIdAndTenantId(providerId, tenantId)
+                .orElseThrow(() -> new IllegalArgumentException("Provider not found: " + providerId));
+    }
+
+    private ProviderQualificationEntity requireQualification(Long qualificationId, UUID tenantId) {
+        return qualificationRepository.findByIdAndTenantId(qualificationId, tenantId)
+                .orElseThrow(() -> new IllegalArgumentException("Qualification not found: " + qualificationId));
     }
 
     private void publishEvent(String aggregateType, String aggregateId, String eventType, String payload) {

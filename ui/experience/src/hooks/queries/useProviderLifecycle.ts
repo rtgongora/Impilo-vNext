@@ -3,7 +3,7 @@
  */
 
 import { useQuery } from "@tanstack/react-query";
-import { apiClient, type ApiResponse } from "@/lib/api-client";
+import { apiClient } from "@/lib/api-client";
 
 export interface ApplicationResource {
   id: number;
@@ -88,16 +88,13 @@ export interface ProviderLifecycleSummaryResource {
   eligibility?: EligibilityResource;
 }
 
-type LifecycleSummaryResponse = ApiResponse<ProviderLifecycleSummaryResource>;
-
 export function useProviderLifecycleSummary(providerId: string | number) {
   return useQuery({
     queryKey: ["provider-lifecycle", providerId],
     queryFn: async () => {
-      const response = await apiClient.get<LifecycleSummaryResponse>(
+      return apiClient.get<ProviderLifecycleSummaryResource>(
         `/internal/v1/providers/lifecycle/provider/${providerId}/summary`
       );
-      return response.data;
     },
     enabled: !!providerId,
     staleTime: 5 * 60 * 1000,
@@ -111,8 +108,7 @@ export function useProviderEligibility(providerId: string | number, facilityId?:
       const url = facilityId
         ? `/internal/v1/interop/eligibility/provider/${providerId}/facility/${facilityId}`
         : `/internal/v1/interop/eligibility/provider/${providerId}`;
-      const response = await apiClient.get<ApiResponse<EligibilityResource>>(url);
-      return response.data;
+      return apiClient.get<EligibilityResource>(url);
     },
     enabled: !!providerId,
     staleTime: 5 * 60 * 1000,
@@ -123,10 +119,9 @@ export function usePicEligibility(providerId: string | number, facilityId: strin
   return useQuery({
     queryKey: ["pic-eligibility", providerId, facilityId],
     queryFn: async () => {
-      const response = await apiClient.get<ApiResponse<EligibilityResource>>(
+      return apiClient.get<EligibilityResource>(
         `/internal/v1/interop/eligibility/provider/${providerId}/facility/${facilityId}/pic-eligible`
       );
-      return response.data;
     },
     enabled: !!providerId && !!facilityId,
     staleTime: 5 * 60 * 1000,

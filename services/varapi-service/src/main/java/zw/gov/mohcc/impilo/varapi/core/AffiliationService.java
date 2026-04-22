@@ -60,8 +60,7 @@ public class AffiliationService {
                 providerId, facilityId, affiliationType, ctx.actorId());
 
         // Validate provider exists
-        ProviderEntity provider = providerRepository.findById(providerId)
-                .orElseThrow(() -> new IllegalArgumentException("Provider not found: " + providerId));
+        ProviderEntity provider = requireProvider(providerId, ctx.tenantId());
 
         // Validate facility exists in TUSO
         if (!tusoClient.validateFacilityExists(facilityId)) {
@@ -71,7 +70,7 @@ public class AffiliationService {
         // If this is marked as primary, unset other primary affiliations
         if (Boolean.TRUE.equals(requestPrimary())) {
             List<ProviderAffiliationEntity> existingPrimary = affiliationRepository
-                    .findByProviderIdAndPrimaryFlag(providerId, true);
+                    .findByTenantIdAndProviderIdAndPrimaryFlag(ctx.tenantId(), providerId, true);
             for (ProviderAffiliationEntity existing : existingPrimary) {
                 existing.setPrimaryFlag(false);
                 affiliationRepository.save(existing);
@@ -114,8 +113,7 @@ public class AffiliationService {
         TrustContext ctx = TrustContextHolder.require();
         log.info("Submitting affiliation for approval: id={}", affiliationId);
 
-        ProviderAffiliationEntity affiliation = affiliationRepository.findById(affiliationId)
-                .orElseThrow(() -> new IllegalArgumentException("Affiliation not found: " + affiliationId));
+        ProviderAffiliationEntity affiliation = requireAffiliation(affiliationId, ctx.tenantId());
 
         if (!"PROPOSED".equals(affiliation.getStatus())) {
             throw new IllegalStateException("Can only submit proposed affiliations");
@@ -139,8 +137,7 @@ public class AffiliationService {
         TrustContext ctx = TrustContextHolder.require();
         log.info("Approving affiliation: id={}, actor={}", affiliationId, ctx.actorId());
 
-        ProviderAffiliationEntity affiliation = affiliationRepository.findById(affiliationId)
-                .orElseThrow(() -> new IllegalArgumentException("Affiliation not found: " + affiliationId));
+        ProviderAffiliationEntity affiliation = requireAffiliation(affiliationId, ctx.tenantId());
 
         if (!"PENDING".equals(affiliation.getApprovalState())) {
             throw new IllegalStateException("Can only approve pending affiliations");
@@ -149,7 +146,7 @@ public class AffiliationService {
         // If this is primary, unset other primary affiliations
         if (Boolean.TRUE.equals(affiliation.getPrimaryFlag())) {
             List<ProviderAffiliationEntity> existingPrimary = affiliationRepository
-                    .findByProviderIdAndPrimaryFlag(affiliation.getProvider().getId(), true);
+                    .findByTenantIdAndProviderIdAndPrimaryFlag(ctx.tenantId(), affiliation.getProvider().getId(), true);
             for (ProviderAffiliationEntity existing : existingPrimary) {
                 if (!existing.getId().equals(affiliationId)) {
                     existing.setPrimaryFlag(false);
@@ -184,8 +181,7 @@ public class AffiliationService {
         TrustContext ctx = TrustContextHolder.require();
         log.info("Rejecting affiliation: id={}, actor={}", affiliationId, ctx.actorId());
 
-        ProviderAffiliationEntity affiliation = affiliationRepository.findById(affiliationId)
-                .orElseThrow(() -> new IllegalArgumentException("Affiliation not found: " + affiliationId));
+        ProviderAffiliationEntity affiliation = requireAffiliation(affiliationId, ctx.tenantId());
 
         affiliation.setApprovalState("REJECTED");
         affiliation.setStatus("TERMINATED");
@@ -211,8 +207,7 @@ public class AffiliationService {
         TrustContext ctx = TrustContextHolder.require();
         log.info("Terminating affiliation: id={}", affiliationId);
 
-        ProviderAffiliationEntity affiliation = affiliationRepository.findById(affiliationId)
-                .orElseThrow(() -> new IllegalArgumentException("Affiliation not found: " + affiliationId));
+        ProviderAffiliationEntity affiliation = requireAffiliation(affiliationId, ctx.tenantId());
 
         if (!"ACTIVE".equals(affiliation.getStatus())) {
             throw new IllegalStateException("Can only terminate active affiliations");
@@ -239,8 +234,8 @@ public class AffiliationService {
      */
     @Transactional(readOnly = true)
     public ProviderAffiliationEntity getAffiliation(Long affiliationId) {
-        return affiliationRepository.findById(affiliationId)
-                .orElseThrow(() -> new IllegalArgumentException("Affiliation not found: " + affiliationId));
+        TrustContext ctx = TrustContextHolder.require();
+        return requireAffiliation(affiliationId, ctx.tenantId());
     }
 
     /**
@@ -248,7 +243,9 @@ public class AffiliationService {
      */
     @Transactional(readOnly = true)
     public List<ProviderAffiliationEntity> getAffiliationsByProvider(Long providerId) {
-        return affiliationRepository.findByProviderId(providerId);
+        TrustContext ctx = TrustContextHolder.require();
+        requireProvider(providerId, ctx.tenantId());
+        return affiliationRepository.findByTenantIdAndProviderId(ctx.tenantId(), providerId);
     }
 
     /**
@@ -256,7 +253,9 @@ public class AffiliationService {
      */
     @Transactional(readOnly = true)
     public List<ProviderAffiliationEntity> getActiveAffiliationsByProvider(Long providerId) {
-        return affiliationRepository.findByProviderIdAndStatus(providerId, "ACTIVE");
+        TrustContext ctx = TrustContextHolder.require();
+        requireProvider(providerId, ctx.tenantId());
+        return affiliationRepository.findByTenantIdAndProviderIdAndStatus(ctx.tenantId(), providerId, "ACTIVE");
     }
 
     /**
@@ -264,7 +263,8 @@ public class AffiliationService {
      */
     @Transactional(readOnly = true)
     public List<ProviderAffiliationEntity> getActiveAffiliationsByFacility(Long facilityId) {
-        return affiliationRepository.findByFacilityIdAndStatus(facilityId, "ACTIVE");
+        TrustContext ctx = TrustContextHolder.require();
+        return affiliationRepository.findByTenantIdAndFacilityIdAndStatus(ctx.tenantId(), facilityId, "ACTIVE");
     }
 
     /**
@@ -272,8 +272,9 @@ public class AffiliationService {
      */
     @Transactional(readOnly = true)
     public ProviderAffiliationEntity getPrimaryAffiliation(Long providerId) {
+        TrustContext ctx = TrustContextHolder.require();
         List<ProviderAffiliationEntity> primary = affiliationRepository
-                .findByProviderIdAndPrimaryFlag(providerId, true);
+                .findByTenantIdAndProviderIdAndPrimaryFlag(ctx.tenantId(), providerId, true);
         return primary.isEmpty() ? null : primary.get(0);
     }
 
@@ -282,8 +283,9 @@ public class AffiliationService {
      */
     @Transactional(readOnly = true)
     public boolean hasActiveAffiliation(Long providerId, Long facilityId) {
+        TrustContext ctx = TrustContextHolder.require();
         List<ProviderAffiliationEntity> affiliations = affiliationRepository
-                .findByProviderIdAndStatus(providerId, "ACTIVE");
+                .findByTenantIdAndProviderIdAndStatus(ctx.tenantId(), providerId, "ACTIVE");
         return affiliations.stream().anyMatch(a -> a.getFacilityId() != null && a.getFacilityId().equals(facilityId));
     }
 
@@ -297,7 +299,18 @@ public class AffiliationService {
      */
     @Transactional(readOnly = true)
     public List<ProviderAffiliationEntity> getPendingAffiliations() {
-        return affiliationRepository.findByStatusIn(List.of("PENDING"));
+        TrustContext ctx = TrustContextHolder.require();
+        return affiliationRepository.findByTenantIdAndApprovalState(ctx.tenantId(), "PENDING");
+    }
+
+    private ProviderEntity requireProvider(Long providerId, UUID tenantId) {
+        return providerRepository.findByIdAndTenantId(providerId, tenantId)
+                .orElseThrow(() -> new IllegalArgumentException("Provider not found: " + providerId));
+    }
+
+    private ProviderAffiliationEntity requireAffiliation(Long affiliationId, UUID tenantId) {
+        return affiliationRepository.findByIdAndTenantId(affiliationId, tenantId)
+                .orElseThrow(() -> new IllegalArgumentException("Affiliation not found: " + affiliationId));
     }
 
     private void publishEvent(String aggregateType, String aggregateId, String eventType, String payload) {

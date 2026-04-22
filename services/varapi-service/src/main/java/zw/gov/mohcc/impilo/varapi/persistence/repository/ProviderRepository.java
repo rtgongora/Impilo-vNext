@@ -17,7 +17,13 @@ public interface ProviderRepository extends JpaRepository<ProviderEntity, Long> 
 
     Optional<ProviderEntity> findByProviderPublicId(String providerPublicId);
 
+    Optional<ProviderEntity> findByProviderPublicIdAndTenantId(String providerPublicId, UUID tenantId);
+
+    Optional<ProviderEntity> findByIdAndTenantId(Long id, UUID tenantId);
+
     Page<ProviderEntity> findByTenantIdAndStatus(UUID tenantId, String status, Pageable pageable);
+
+    List<ProviderEntity> findByTenantIdAndStatus(UUID tenantId, String status);
 
     @Query("SELECT p FROM ProviderEntity p WHERE p.tenantId = :tenantId " +
            "AND (LOWER(p.givenName) LIKE LOWER(CONCAT('%', :query, '%')) " +

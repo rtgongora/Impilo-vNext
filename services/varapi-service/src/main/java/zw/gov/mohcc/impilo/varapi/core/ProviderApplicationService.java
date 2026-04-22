@@ -29,6 +29,13 @@ import java.util.UUID;
 public class ProviderApplicationService {
 
     private static final Logger log = LoggerFactory.getLogger(ProviderApplicationService.class);
+    private static final List<String> OPEN_WORKFLOW_STATES = List.of(
+            "SUBMITTED",
+            "UNDER_ADMIN_REVIEW",
+            "AWAITING_DOCUMENTS",
+            "AWAITING_VERIFICATION",
+            "READY_FOR_REVIEW",
+            "PENDING_COMMITTEE_REVIEW");
 
     private final ProviderApplicationRepository applicationRepository;
     private final ProviderRepository providerRepository;
@@ -70,9 +77,7 @@ public class ProviderApplicationService {
         application.setUpdatedBy(ctx.actorId());
 
         if (providerId != null) {
-            ProviderEntity provider = providerRepository.findById(providerId)
-                    .orElseThrow(() -> new IllegalArgumentException("Provider not found: " + providerId));
-            application.setProvider(provider);
+            application.setProvider(requireProvider(providerId, ctx.tenantId()));
         }
 
         application = applicationRepository.save(application);
@@ -95,8 +100,7 @@ public class ProviderApplicationService {
         TrustContext ctx = TrustContextHolder.require();
         log.info("Submitting application: id={}, actor={}", applicationId, ctx.actorId());
 
-        ProviderApplicationEntity application = applicationRepository.findById(applicationId)
-                .orElseThrow(() -> new IllegalArgumentException("Application not found: " + applicationId));
+        ProviderApplicationEntity application = requireApplication(applicationId, ctx.tenantId());
 
         validateTransition(application.getWorkflowState(), "SUBMITTED");
         validateSubmissionRequirements(application);
@@ -124,10 +128,12 @@ public class ProviderApplicationService {
         TrustContext ctx = TrustContextHolder.require();
         log.info("Advancing to verification: id={}", applicationId);
 
-        ProviderApplicationEntity application = applicationRepository.findById(applicationId)
-                .orElseThrow(() -> new IllegalArgumentException("Application not found: " + applicationId));
+        ProviderApplicationEntity application = requireApplication(applicationId, ctx.tenantId());
 
-        validateTransition(application.getWorkflowState(), "UNDER_ADMIN_REVIEW");
+        if (!"UNDER_ADMIN_REVIEW".equals(application.getWorkflowState())) {
+            throw new IllegalStateException("Can only advance applications that are under admin review");
+        }
+        validateTransition(application.getWorkflowState(), "AWAITING_VERIFICATION");
 
         application.setWorkflowState("AWAITING_VERIFICATION");
         application.setVersion(application.getVersion() + 1);
@@ -147,8 +153,7 @@ public class ProviderApplicationService {
         TrustContext ctx = TrustContextHolder.require();
         log.info("Requesting documents: id={}", applicationId);
 
-        ProviderApplicationEntity application = applicationRepository.findById(applicationId)
-                .orElseThrow(() -> new IllegalArgumentException("Application not found: " + applicationId));
+        ProviderApplicationEntity application = requireApplication(applicationId, ctx.tenantId());
 
         validateTransition(application.getWorkflowState(), "AWAITING_DOCUMENTS");
 
@@ -171,8 +176,7 @@ public class ProviderApplicationService {
         TrustContext ctx = TrustContextHolder.require();
         log.info("Completing verification: id={}, state={}", applicationId, verificationState);
 
-        ProviderApplicationEntity application = applicationRepository.findById(applicationId)
-                .orElseThrow(() -> new IllegalArgumentException("Application not found: " + applicationId));
+        ProviderApplicationEntity application = requireApplication(applicationId, ctx.tenantId());
 
         application.setVerificationState(verificationState);
 
@@ -204,8 +208,7 @@ public class ProviderApplicationService {
         TrustContext ctx = TrustContextHolder.require();
         log.info("Advancing to committee: id={}", applicationId);
 
-        ProviderApplicationEntity application = applicationRepository.findById(applicationId)
-                .orElseThrow(() -> new IllegalArgumentException("Application not found: " + applicationId));
+        ProviderApplicationEntity application = requireApplication(applicationId, ctx.tenantId());
 
         validateTransition(application.getWorkflowState(), "PENDING_COMMITTEE_REVIEW");
 
@@ -232,8 +235,7 @@ public class ProviderApplicationService {
         TrustContext ctx = TrustContextHolder.require();
         log.info("Recording decision: id={}, decision={}, actor={}", applicationId, decision, ctx.actorId());
 
-        ProviderApplicationEntity application = applicationRepository.findById(applicationId)
-                .orElseThrow(() -> new IllegalArgumentException("Application not found: " + applicationId));
+        ProviderApplicationEntity application = requireApplication(applicationId, ctx.tenantId());
 
         String targetState = validateAndGetDecisionState(decision);
         validateTransition(application.getWorkflowState(), targetState);
@@ -264,8 +266,7 @@ public class ProviderApplicationService {
         TrustContext ctx = TrustContextHolder.require();
         log.info("Closing application: id={}", applicationId);
 
-        ProviderApplicationEntity application = applicationRepository.findById(applicationId)
-                .orElseThrow(() -> new IllegalArgumentException("Application not found: " + applicationId));
+        ProviderApplicationEntity application = requireApplication(applicationId, ctx.tenantId());
 
         application.setWorkflowState("CLOSED_OUT");
         application.setNotes(reason != null ? reason : application.getNotes());
@@ -291,8 +292,7 @@ public class ProviderApplicationService {
         TrustContext ctx = TrustContextHolder.require();
         log.info("Approving and activating: id={}", applicationId);
 
-        ProviderApplicationEntity application = applicationRepository.findById(applicationId)
-                .orElseThrow(() -> new IllegalArgumentException("Application not found: " + applicationId));
+        ProviderApplicationEntity application = requireApplication(applicationId, ctx.tenantId());
 
         if (application.getProvider() != null) {
             ProviderEntity provider = application.getProvider();
@@ -311,6 +311,11 @@ public class ProviderApplicationService {
 
             // Update provider
             provider.setStatus("ACTIVE");
+            provider.setLifecycleStatus("LICENCED_ACTIVE");
+            provider.setLicenceStatus("ACTIVE");
+            provider.setActiveFlag(true);
+            provider.setEffectiveFrom(LocalDate.now());
+            provider.setEffectiveTo(null);
             provider.setVersion(provider.getVersion() + 1);
             provider.setUpdatedBy(ctx.actorId());
             providerRepository.save(provider);
@@ -330,8 +335,8 @@ public class ProviderApplicationService {
      */
     @Transactional(readOnly = true)
     public ProviderApplicationEntity getApplication(Long applicationId) {
-        return applicationRepository.findById(applicationId)
-                .orElseThrow(() -> new IllegalArgumentException("Application not found: " + applicationId));
+        TrustContext ctx = TrustContextHolder.require();
+        return requireApplication(applicationId, ctx.tenantId());
     }
 
     /**
@@ -339,7 +344,9 @@ public class ProviderApplicationService {
      */
     @Transactional(readOnly = true)
     public List<ProviderApplicationEntity> getApplicationsByProvider(Long providerId) {
-        return applicationRepository.findByProviderId(providerId);
+        TrustContext ctx = TrustContextHolder.require();
+        requireProvider(providerId, ctx.tenantId());
+        return applicationRepository.findByTenantIdAndProviderId(ctx.tenantId(), providerId);
     }
 
     /**
@@ -348,6 +355,9 @@ public class ProviderApplicationService {
     @Transactional(readOnly = true)
     public List<ProviderApplicationEntity> getOpenApplications(String workflowState) {
         TrustContext ctx = TrustContextHolder.require();
+        if (workflowState == null || workflowState.isBlank()) {
+            return applicationRepository.findByTenantIdAndWorkflowStateIn(ctx.tenantId(), OPEN_WORKFLOW_STATES);
+        }
         return applicationRepository.findByTenantIdAndWorkflowState(ctx.tenantId(), workflowState);
     }
 
@@ -377,6 +387,16 @@ public class ProviderApplicationService {
         if (application.getProvider() == null && !"NEW_REGISTRATION".equals(application.getApplicationType())) {
             throw new IllegalStateException("Provider is required for this application type");
         }
+    }
+
+    private ProviderEntity requireProvider(Long providerId, UUID tenantId) {
+        return providerRepository.findByIdAndTenantId(providerId, tenantId)
+                .orElseThrow(() -> new IllegalArgumentException("Provider not found: " + providerId));
+    }
+
+    private ProviderApplicationEntity requireApplication(Long applicationId, UUID tenantId) {
+        return applicationRepository.findByIdAndTenantId(applicationId, tenantId)
+                .orElseThrow(() -> new IllegalArgumentException("Application not found: " + applicationId));
     }
 
     private String validateAndGetDecisionState(String decision) {

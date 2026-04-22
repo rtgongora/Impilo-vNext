@@ -58,6 +58,12 @@ public class ProviderEntity {
     @Column(name = "cadre", length = 100)
     private String cadre;
 
+    @Column(name = "middle_name", length = 255)
+    private String middleName;
+
+    @Column(name = "previous_names", length = 255)
+    private String previousNames;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "primary_council_id")
     private CouncilEntity primaryCouncil;
@@ -70,6 +76,24 @@ public class ProviderEntity {
 
     @Column(name = "status", length = 20)
     private String status = "ACTIVE";
+
+    @Column(name = "lifecycle_status", length = 50)
+    private String lifecycleStatus = "REGISTERED";
+
+    @Column(name = "licence_status", length = 50)
+    private String licenceStatus;
+
+    @Column(name = "professional_standing_status", length = 50)
+    private String professionalStandingStatus;
+
+    @Column(name = "active_flag")
+    private Boolean activeFlag = true;
+
+    @Column(name = "effective_from")
+    private LocalDate effectiveFrom;
+
+    @Column(name = "effective_to")
+    private LocalDate effectiveTo;
 
     @Column(name = "version", nullable = false)
     private Integer version = 1;
@@ -101,7 +125,7 @@ public class ProviderEntity {
     // Convenience methods
 
     public boolean isActive() {
-        return "ACTIVE".equals(status);
+        return !Boolean.FALSE.equals(activeFlag) && "ACTIVE".equals(status);
     }
 
     // Getters and setters
@@ -154,6 +178,12 @@ public class ProviderEntity {
     public String getCadre() { return cadre; }
     public void setCadre(String cadre) { this.cadre = cadre; }
 
+    public String getMiddleName() { return middleName; }
+    public void setMiddleName(String middleName) { this.middleName = middleName; }
+
+    public String getPreviousNames() { return previousNames; }
+    public void setPreviousNames(String previousNames) { this.previousNames = previousNames; }
+
     public CouncilEntity getPrimaryCouncil() { return primaryCouncil; }
     public void setPrimaryCouncil(CouncilEntity primaryCouncil) { this.primaryCouncil = primaryCouncil; }
 
@@ -165,6 +195,24 @@ public class ProviderEntity {
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+    public String getLifecycleStatus() { return lifecycleStatus; }
+    public void setLifecycleStatus(String lifecycleStatus) { this.lifecycleStatus = lifecycleStatus; }
+
+    public String getLicenceStatus() { return licenceStatus; }
+    public void setLicenceStatus(String licenceStatus) { this.licenceStatus = licenceStatus; }
+
+    public String getProfessionalStandingStatus() { return professionalStandingStatus; }
+    public void setProfessionalStandingStatus(String professionalStandingStatus) { this.professionalStandingStatus = professionalStandingStatus; }
+
+    public Boolean getActiveFlag() { return activeFlag; }
+    public void setActiveFlag(Boolean activeFlag) { this.activeFlag = activeFlag; }
+
+    public LocalDate getEffectiveFrom() { return effectiveFrom; }
+    public void setEffectiveFrom(LocalDate effectiveFrom) { this.effectiveFrom = effectiveFrom; }
+
+    public LocalDate getEffectiveTo() { return effectiveTo; }
+    public void setEffectiveTo(LocalDate effectiveTo) { this.effectiveTo = effectiveTo; }
 
     public Integer getVersion() { return version; }
     public void setVersion(Integer version) { this.version = version; }

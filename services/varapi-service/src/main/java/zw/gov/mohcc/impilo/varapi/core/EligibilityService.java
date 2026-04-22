@@ -82,7 +82,7 @@ public class EligibilityService {
      */
     @Transactional(readOnly = true)
     public EligibilityResult checkEligibility(EligibilityCheckRequest request) {
-        TrustContextHolder.require();
+        var ctx = TrustContextHolder.require();
         log.debug("Checking eligibility: providerPublicId={}, haVaToken={}, facilityId={}",
                 request.providerPublicId(),
                 request.vaToken() != null && !request.vaToken().isBlank(),
@@ -107,7 +107,7 @@ public class EligibilityService {
 
         // Step 2: Check provider exists and is ACTIVE
         Optional<ProviderEntity> providerOpt =
-                providerRepository.findByProviderPublicId(resolvedProviderPublicId);
+                providerRepository.findByProviderPublicIdAndTenantId(resolvedProviderPublicId, ctx.tenantId());
         if (providerOpt.isEmpty()) {
             reasons.add("PROVIDER_NOT_FOUND");
             return new EligibilityResult(false, reasons, null, false, resolvedProviderPublicId);
@@ -179,6 +179,7 @@ public class EligibilityService {
      */
     @Transactional(readOnly = true)
     public ProviderEligibilityResponse checkEligibility(ProviderEligibilityRequest request) {
+        var ctx = TrustContextHolder.require();
         log.info("TUSO eligibility check: providerId={}, facilityId={}",
                 request.providerId(), request.facilityId());
 
@@ -186,9 +187,9 @@ public class EligibilityService {
         ProviderEntity provider = null;
 
         if (request.providerId() != null) {
-            provider = providerRepository.findById(request.providerId()).orElse(null);
+            provider = providerRepository.findByIdAndTenantId(request.providerId(), ctx.tenantId()).orElse(null);
         } else if (request.providerPublicId() != null) {
-            provider = providerRepository.findByProviderPublicId(request.providerPublicId()).orElse(null);
+            provider = providerRepository.findByProviderPublicIdAndTenantId(request.providerPublicId(), ctx.tenantId()).orElse(null);
         }
 
         if (provider == null) {

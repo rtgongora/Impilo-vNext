@@ -2,6 +2,7 @@ package zw.gov.mohcc.impilo.varapi.api.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import zw.gov.mohcc.impilo.varapi.api.dto.ProviderEligibilityResponse;
 import zw.gov.mohcc.impilo.varapi.api.dto.ProviderLifecycleSummary;
 import zw.gov.mohcc.impilo.varapi.core.*;
 import zw.gov.mohcc.impilo.varapi.persistence.entity.*;
@@ -23,6 +24,7 @@ public class ProviderLifecycleController {
     private final PracticeContextService practiceContextService;
     private final ComplianceService complianceService;
     private final CertificateService certificateService;
+    private final EligibilityService eligibilityService;
 
     public ProviderLifecycleController(
             ProviderApplicationService applicationService,
@@ -31,7 +33,8 @@ public class ProviderLifecycleController {
             QualificationService qualificationService,
             PracticeContextService practiceContextService,
             ComplianceService complianceService,
-            CertificateService certificateService) {
+            CertificateService certificateService,
+            EligibilityService eligibilityService) {
         this.applicationService = applicationService;
         this.affiliationService = affiliationService;
         this.picService = picService;
@@ -39,6 +42,7 @@ public class ProviderLifecycleController {
         this.practiceContextService = practiceContextService;
         this.complianceService = complianceService;
         this.certificateService = certificateService;
+        this.eligibilityService = eligibilityService;
     }
 
     @GetMapping("/provider/{providerId}/summary")
@@ -50,6 +54,7 @@ public class ProviderLifecycleController {
         List<ProviderComplianceActionEntity> outstandingActions = complianceService.getOutstandingActions(providerId);
         ProviderCertificateEntity currentCertificate = certificateService.getCurrentCertificate(providerId);
         PractitionerInChargeAssignmentEntity picAssignment = picService.getActiveAssignmentByProvider(providerId);
+        ProviderEligibilityResponse eligibility = eligibilityService.getEligibilitySummary(providerId);
 
         return ResponseEntity.ok(new ProviderLifecycleSummary(
                 providerId,
@@ -59,7 +64,8 @@ public class ProviderLifecycleController {
                 contexts,
                 outstandingActions,
                 currentCertificate,
-                picAssignment
+                picAssignment,
+                eligibility
         ));
     }
 

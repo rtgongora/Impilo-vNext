@@ -66,8 +66,7 @@ public class PractitionerInChargeService {
                 providerId, facilityId, assignmentType, ctx.actorId());
 
         // Validate provider exists
-        ProviderEntity provider = providerRepository.findById(providerId)
-                .orElseThrow(() -> new IllegalArgumentException("Provider not found: " + providerId));
+        ProviderEntity provider = requireProvider(providerId, ctx.tenantId());
 
         // Validate facility exists in TUSO
         if (!tusoClient.validateFacilityExists(facilityId)) {
@@ -79,7 +78,7 @@ public class PractitionerInChargeService {
 
         // Check if facility already has an active PIC
         Optional<PractitionerInChargeAssignmentEntity> existingPic = picRepository
-                .findByFacilityIdAndStatusAndEndDateIsNull(facilityId, "ACTIVE");
+                .findByTenantIdAndFacilityIdAndStatusAndEndDateIsNull(ctx.tenantId(), facilityId, "ACTIVE");
         if (existingPic.isPresent()) {
             log.warn("Facility {} already has an active PIC: {}", facilityId, existingPic.get().getId());
         }
@@ -123,8 +122,7 @@ public class PractitionerInChargeService {
         TrustContext ctx = TrustContextHolder.require();
         log.info("Approving PIC assignment: id={}, actor={}", assignmentId, ctx.actorId());
 
-        PractitionerInChargeAssignmentEntity assignment = picRepository.findById(assignmentId)
-                .orElseThrow(() -> new IllegalArgumentException("Assignment not found: " + assignmentId));
+        PractitionerInChargeAssignmentEntity assignment = requireAssignment(assignmentId, ctx.tenantId());
 
         if (!"PENDING".equals(assignment.getApprovalState())) {
             throw new IllegalStateException("Can only approve pending assignments");
@@ -155,8 +153,7 @@ public class PractitionerInChargeService {
         TrustContext ctx = TrustContextHolder.require();
         log.info("Rejecting PIC assignment: id={}, actor={}", assignmentId, ctx.actorId());
 
-        PractitionerInChargeAssignmentEntity assignment = picRepository.findById(assignmentId)
-                .orElseThrow(() -> new IllegalArgumentException("Assignment not found: " + assignmentId));
+        PractitionerInChargeAssignmentEntity assignment = requireAssignment(assignmentId, ctx.tenantId());
 
         assignment.setApprovalState("REJECTED");
         assignment.setStatus("TERMINATED");
@@ -185,8 +182,7 @@ public class PractitionerInChargeService {
         TrustContext ctx = TrustContextHolder.require();
         log.info("Terminating PIC assignment: id={}", assignmentId);
 
-        PractitionerInChargeAssignmentEntity assignment = picRepository.findById(assignmentId)
-                .orElseThrow(() -> new IllegalArgumentException("Assignment not found: " + assignmentId));
+        PractitionerInChargeAssignmentEntity assignment = requireAssignment(assignmentId, ctx.tenantId());
 
         if (!"ACTIVE".equals(assignment.getStatus())) {
             throw new IllegalStateException("Can only terminate active assignments");
@@ -213,8 +209,8 @@ public class PractitionerInChargeService {
      */
     @Transactional(readOnly = true)
     public boolean isProviderEligibleForPic(Long providerId) {
-        ProviderEntity provider = providerRepository.findById(providerId)
-                .orElseThrow(() -> new IllegalArgumentException("Provider not found: " + providerId));
+        TrustContext ctx = TrustContextHolder.require();
+        ProviderEntity provider = requireProvider(providerId, ctx.tenantId());
 
         return validateProviderEligibility(provider) == null;
     }
@@ -224,7 +220,8 @@ public class PractitionerInChargeService {
      */
     @Transactional(readOnly = true)
     public Optional<PractitionerInChargeAssignmentEntity> getCurrentPicForFacility(Long facilityId) {
-        return picRepository.findByFacilityIdAndStatusAndEndDateIsNull(facilityId, "ACTIVE");
+        TrustContext ctx = TrustContextHolder.require();
+        return picRepository.findByTenantIdAndFacilityIdAndStatusAndEndDateIsNull(ctx.tenantId(), facilityId, "ACTIVE");
     }
 
     /**
@@ -232,7 +229,9 @@ public class PractitionerInChargeService {
      */
     @Transactional(readOnly = true)
     public List<PractitionerInChargeAssignmentEntity> getAssignmentsByProvider(Long providerId) {
-        return picRepository.findByProviderId(providerId);
+        TrustContext ctx = TrustContextHolder.require();
+        requireProvider(providerId, ctx.tenantId());
+        return picRepository.findByTenantIdAndProviderId(ctx.tenantId(), providerId);
     }
 
     /**
@@ -240,7 +239,8 @@ public class PractitionerInChargeService {
      */
     @Transactional(readOnly = true)
     public List<PractitionerInChargeAssignmentEntity> getAssignmentsByFacility(Long facilityId) {
-        return picRepository.findByFacilityId(facilityId);
+        TrustContext ctx = TrustContextHolder.require();
+        return picRepository.findByTenantIdAndFacilityId(ctx.tenantId(), facilityId);
     }
 
     /**
@@ -248,7 +248,8 @@ public class PractitionerInChargeService {
      */
     @Transactional(readOnly = true)
     public List<PractitionerInChargeAssignmentEntity> getActiveAssignmentsByFacility(Long facilityId) {
-        return picRepository.findByFacilityIdAndStatus(facilityId, "ACTIVE");
+        TrustContext ctx = TrustContextHolder.require();
+        return picRepository.findByTenantIdAndFacilityIdAndStatus(ctx.tenantId(), facilityId, "ACTIVE");
     }
 
     /**
@@ -256,8 +257,8 @@ public class PractitionerInChargeService {
      */
     @Transactional(readOnly = true)
     public PractitionerInChargeAssignmentEntity getAssignment(Long assignmentId) {
-        return picRepository.findById(assignmentId)
-                .orElseThrow(() -> new IllegalArgumentException("Assignment not found: " + assignmentId));
+        TrustContext ctx = TrustContextHolder.require();
+        return requireAssignment(assignmentId, ctx.tenantId());
     }
 
     /**
@@ -272,8 +273,7 @@ public class PractitionerInChargeService {
         TrustContext ctx = TrustContextHolder.require();
         log.info("Revoking PIC assignment: id={}", assignmentId);
 
-        PractitionerInChargeAssignmentEntity assignment = picRepository.findById(assignmentId)
-                .orElseThrow(() -> new IllegalArgumentException("Assignment not found: " + assignmentId));
+        PractitionerInChargeAssignmentEntity assignment = requireAssignment(assignmentId, ctx.tenantId());
 
         assignment.setStatus("REVOKED");
         assignment.setEndDate(revocationDate != null ? revocationDate : LocalDate.now());
@@ -294,8 +294,7 @@ public class PractitionerInChargeService {
         TrustContext ctx = TrustContextHolder.require();
         log.info("Transferring PIC assignment: id={} to facilityId={}", assignmentId, newFacilityId);
 
-        PractitionerInChargeAssignmentEntity existing = picRepository.findById(assignmentId)
-                .orElseThrow(() -> new IllegalArgumentException("Assignment not found: " + assignmentId));
+        PractitionerInChargeAssignmentEntity existing = requireAssignment(assignmentId, ctx.tenantId());
 
         // Terminate existing
         existing.setStatus("TRANSFERRED");
@@ -328,7 +327,9 @@ public class PractitionerInChargeService {
      */
     @Transactional(readOnly = true)
     public PractitionerInChargeAssignmentEntity getActiveAssignmentByProvider(Long providerId) {
-        List<PractitionerInChargeAssignmentEntity> active = picRepository.findByProviderIdAndStatus(providerId, "ACTIVE");
+        TrustContext ctx = TrustContextHolder.require();
+        List<PractitionerInChargeAssignmentEntity> active = picRepository
+                .findByTenantIdAndProviderIdAndStatusOrderByStartDateDescIdDesc(ctx.tenantId(), providerId, "ACTIVE");
         return active.isEmpty() ? null : active.get(0);
     }
 
@@ -337,7 +338,9 @@ public class PractitionerInChargeService {
      */
     @Transactional(readOnly = true)
     public PractitionerInChargeAssignmentEntity getActiveAssignmentByFacility(Long facilityId) {
-        return picRepository.findByFacilityIdAndStatusAndEndDateIsNull(facilityId, "ACTIVE").orElse(null);
+        TrustContext ctx = TrustContextHolder.require();
+        return picRepository.findByTenantIdAndFacilityIdAndStatusAndEndDateIsNull(ctx.tenantId(), facilityId, "ACTIVE")
+                .orElse(null);
     }
 
     /**
@@ -345,7 +348,8 @@ public class PractitionerInChargeService {
      */
     @Transactional(readOnly = true)
     public List<PractitionerInChargeAssignmentEntity> getAssignmentHistoryByFacility(Long facilityId) {
-        return picRepository.findByFacilityIdAndStatus(facilityId, "ACTIVE");
+        TrustContext ctx = TrustContextHolder.require();
+        return picRepository.findByTenantIdAndFacilityIdOrderByStartDateDescIdDesc(ctx.tenantId(), facilityId);
     }
 
     /**
@@ -353,7 +357,9 @@ public class PractitionerInChargeService {
      */
     @Transactional(readOnly = true)
     public List<PractitionerInChargeAssignmentEntity> getAssignmentHistoryByProvider(Long providerId) {
-        return picRepository.findByProviderIdAndStatus(providerId, "ACTIVE");
+        TrustContext ctx = TrustContextHolder.require();
+        requireProvider(providerId, ctx.tenantId());
+        return picRepository.findByTenantIdAndProviderIdOrderByStartDateDescIdDesc(ctx.tenantId(), providerId);
     }
 
     /**
@@ -361,7 +367,8 @@ public class PractitionerInChargeService {
      */
     @Transactional(readOnly = true)
     public List<Map<String, Object>> getEligibleProvidersForFacility(Long facilityId) {
-        List<ProviderEntity> activeProviders = providerRepository.findByStatus("ACTIVE");
+        TrustContext ctx = TrustContextHolder.require();
+        List<ProviderEntity> activeProviders = providerRepository.findByTenantIdAndStatus(ctx.tenantId(), "ACTIVE");
         return activeProviders.stream()
                 .filter(p -> validateProviderEligibility(p) == null)
                 .map(p -> Map.<String, Object>of(
@@ -369,6 +376,16 @@ public class PractitionerInChargeService {
                         "providerPublicId", p.getProviderPublicId(),
                         "status", p.getStatus()))
                 .toList();
+    }
+
+    private ProviderEntity requireProvider(Long providerId, java.util.UUID tenantId) {
+        return providerRepository.findByIdAndTenantId(providerId, tenantId)
+                .orElseThrow(() -> new IllegalArgumentException("Provider not found: " + providerId));
+    }
+
+    private PractitionerInChargeAssignmentEntity requireAssignment(Long assignmentId, java.util.UUID tenantId) {
+        return picRepository.findByIdAndTenantId(assignmentId, tenantId)
+                .orElseThrow(() -> new IllegalArgumentException("Assignment not found: " + assignmentId));
     }
 
     private String validateProviderEligibility(ProviderEntity provider) {

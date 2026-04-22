@@ -59,8 +59,7 @@ public class PracticeContextService {
         log.info("Requesting practice context: providerId={}, type={}, actor={}",
                 providerId, contextType, ctx.actorId());
 
-        ProviderEntity provider = providerRepository.findById(providerId)
-                .orElseThrow(() -> new IllegalArgumentException("Provider not found: " + providerId));
+        ProviderEntity provider = requireProvider(providerId, ctx.tenantId());
 
         // Validate provider is active
         if (!"ACTIVE".equals(provider.getStatus())) {
@@ -74,7 +73,7 @@ public class PracticeContextService {
 
         // Check for duplicate active context
         List<ProviderPracticeContextEntity> existing = contextRepository
-                .findByProviderIdAndContextType(providerId, contextType);
+                .findByTenantIdAndProviderIdAndContextType(ctx.tenantId(), providerId, contextType);
         boolean hasActive = existing.stream().anyMatch(c -> "ACTIVE".equals(c.getStatus()));
         if (hasActive) {
             log.warn("Provider already has active context for type: {}", contextType);
@@ -116,8 +115,7 @@ public class PracticeContextService {
         TrustContext ctx = TrustContextHolder.require();
         log.info("Approving practice context: id={}, actor={}", contextId, ctx.actorId());
 
-        ProviderPracticeContextEntity context = contextRepository.findById(contextId)
-                .orElseThrow(() -> new IllegalArgumentException("Context not found: " + contextId));
+        ProviderPracticeContextEntity context = requireContext(contextId, ctx.tenantId());
 
         if (!"REQUESTED".equals(context.getStatus()) && !"UNDER_REVIEW".equals(context.getStatus())) {
             throw new IllegalStateException("Can only approve requested or under-review contexts");
@@ -149,8 +147,7 @@ public class PracticeContextService {
         TrustContext ctx = TrustContextHolder.require();
         log.info("Restricting practice context: id={}", contextId);
 
-        ProviderPracticeContextEntity context = contextRepository.findById(contextId)
-                .orElseThrow(() -> new IllegalArgumentException("Context not found: " + contextId));
+        ProviderPracticeContextEntity context = requireContext(contextId, ctx.tenantId());
 
         context.setStatus("RESTRICTED");
         context.setNotes(notes != null ? notes : context.getNotes());
@@ -174,8 +171,7 @@ public class PracticeContextService {
         TrustContext ctx = TrustContextHolder.require();
         log.info("Revoking practice context: id={}", contextId);
 
-        ProviderPracticeContextEntity context = contextRepository.findById(contextId)
-                .orElseThrow(() -> new IllegalArgumentException("Context not found: " + contextId));
+        ProviderPracticeContextEntity context = requireContext(contextId, ctx.tenantId());
 
         context.setStatus("REVOKED");
         context.setEndDate(endDate != null ? endDate : LocalDate.now());
@@ -197,8 +193,8 @@ public class PracticeContextService {
      */
     @Transactional(readOnly = true)
     public ProviderPracticeContextEntity getContext(Long contextId) {
-        return contextRepository.findById(contextId)
-                .orElseThrow(() -> new IllegalArgumentException("Context not found: " + contextId));
+        TrustContext ctx = TrustContextHolder.require();
+        return requireContext(contextId, ctx.tenantId());
     }
 
     /**
@@ -206,7 +202,9 @@ public class PracticeContextService {
      */
     @Transactional(readOnly = true)
     public List<ProviderPracticeContextEntity> getContextsByProvider(Long providerId) {
-        return contextRepository.findByProviderId(providerId);
+        TrustContext ctx = TrustContextHolder.require();
+        requireProvider(providerId, ctx.tenantId());
+        return contextRepository.findByTenantIdAndProviderId(ctx.tenantId(), providerId);
     }
 
     /**
@@ -214,7 +212,9 @@ public class PracticeContextService {
      */
     @Transactional(readOnly = true)
     public List<ProviderPracticeContextEntity> getActiveContexts(Long providerId) {
-        return contextRepository.findByProviderIdAndStatus(providerId, "ACTIVE");
+        TrustContext ctx = TrustContextHolder.require();
+        requireProvider(providerId, ctx.tenantId());
+        return contextRepository.findByTenantIdAndProviderIdAndStatus(ctx.tenantId(), providerId, "ACTIVE");
     }
 
     /**
@@ -222,7 +222,8 @@ public class PracticeContextService {
      */
     @Transactional(readOnly = true)
     public List<ProviderPracticeContextEntity> getActiveContextsByFacility(Long facilityId) {
-        return contextRepository.findByLinkedFacilityIdAndStatus(facilityId, "ACTIVE");
+        TrustContext ctx = TrustContextHolder.require();
+        return contextRepository.findByTenantIdAndLinkedFacilityIdAndStatus(ctx.tenantId(), facilityId, "ACTIVE");
     }
 
     /**
@@ -230,8 +231,9 @@ public class PracticeContextService {
      */
     @Transactional(readOnly = true)
     public boolean isAuthorizedForContext(Long providerId, String contextType) {
+        TrustContext ctx = TrustContextHolder.require();
         List<ProviderPracticeContextEntity> contexts = contextRepository
-                .findByProviderIdAndContextType(providerId, contextType);
+                .findByTenantIdAndProviderIdAndContextType(ctx.tenantId(), providerId, contextType);
         return contexts.stream().anyMatch(c -> "ACTIVE".equals(c.getStatus()));
     }
 
@@ -251,8 +253,7 @@ public class PracticeContextService {
         TrustContext ctx = TrustContextHolder.require();
         log.info("Creating practice context: providerId={}, type={}", providerId, contextType);
 
-        ProviderEntity provider = providerRepository.findById(providerId)
-                .orElseThrow(() -> new IllegalArgumentException("Provider not found: " + providerId));
+        ProviderEntity provider = requireProvider(providerId, ctx.tenantId());
 
         ProviderPracticeContextEntity context = new ProviderPracticeContextEntity();
         context.setProvider(provider);
@@ -263,7 +264,7 @@ public class PracticeContextService {
         context.setAuthorisationBasis(authorizationReference);
         context.setStartDate(authorizationStartDate);
         context.setEndDate(authorizationEndDate);
-        context.setStatus("PENDING");
+        context.setStatus("REQUESTED");
         context.setNotes(notes);
         context.setVersion(1);
         context.setCreatedBy(ctx.actorId());
@@ -288,8 +289,7 @@ public class PracticeContextService {
         TrustContext ctx = TrustContextHolder.require();
         log.info("Authorizing practice context: id={}", contextId);
 
-        ProviderPracticeContextEntity context = contextRepository.findById(contextId)
-                .orElseThrow(() -> new IllegalArgumentException("Context not found: " + contextId));
+        ProviderPracticeContextEntity context = requireContext(contextId, ctx.tenantId());
 
         context.setStatus("ACTIVE");
         context.setAuthorisationBasis(authorizationReference);
@@ -318,8 +318,7 @@ public class PracticeContextService {
         TrustContext ctx = TrustContextHolder.require();
         log.info("Renewing practice context: id={}", contextId);
 
-        ProviderPracticeContextEntity context = contextRepository.findById(contextId)
-                .orElseThrow(() -> new IllegalArgumentException("Context not found: " + contextId));
+        ProviderPracticeContextEntity context = requireContext(contextId, ctx.tenantId());
 
         context.setEndDate(newEndDate);
         context.setAuthorisationBasis(renewalReference);
@@ -337,8 +336,8 @@ public class PracticeContextService {
      */
     @Transactional(readOnly = true)
     public ProviderPracticeContextEntity getPracticeContext(Long contextId) {
-        return contextRepository.findById(contextId)
-                .orElseThrow(() -> new IllegalArgumentException("Context not found: " + contextId));
+        TrustContext ctx = TrustContextHolder.require();
+        return requireContext(contextId, ctx.tenantId());
     }
 
     /**
@@ -346,7 +345,9 @@ public class PracticeContextService {
      */
     @Transactional(readOnly = true)
     public List<ProviderPracticeContextEntity> getActiveContextsByProvider(Long providerId) {
-        return contextRepository.findByProviderIdAndStatus(providerId, "ACTIVE");
+        TrustContext ctx = TrustContextHolder.require();
+        requireProvider(providerId, ctx.tenantId());
+        return contextRepository.findByTenantIdAndProviderIdAndStatus(ctx.tenantId(), providerId, "ACTIVE");
     }
 
     /**
@@ -354,7 +355,11 @@ public class PracticeContextService {
      */
     @Transactional(readOnly = true)
     public List<ProviderPracticeContextEntity> getActiveContextsByType(Long providerId, String contextType) {
-        List<ProviderPracticeContextEntity> contexts = contextRepository.findByProviderIdAndContextType(providerId, contextType);
+        TrustContext ctx = TrustContextHolder.require();
+        List<ProviderPracticeContextEntity> contexts = contextRepository.findByTenantIdAndProviderIdAndContextType(
+                ctx.tenantId(),
+                providerId,
+                contextType);
         return contexts.stream().filter(c -> "ACTIVE".equals(c.getStatus())).toList();
     }
 
@@ -363,9 +368,20 @@ public class PracticeContextService {
      */
     @Transactional(readOnly = true)
     public List<ProviderPracticeContextEntity> getExpiringContexts(int daysAhead) {
+        TrustContext ctx = TrustContextHolder.require();
         LocalDate targetDate = LocalDate.now().plusDays(daysAhead);
-        List<ProviderPracticeContextEntity> all = contextRepository.findByStatus("ACTIVE");
+        List<ProviderPracticeContextEntity> all = contextRepository.findByTenantIdAndStatus(ctx.tenantId(), "ACTIVE");
         return all.stream().filter(c -> c.getEndDate() != null && c.getEndDate().isBefore(targetDate)).toList();
+    }
+
+    private ProviderEntity requireProvider(Long providerId, UUID tenantId) {
+        return providerRepository.findByIdAndTenantId(providerId, tenantId)
+                .orElseThrow(() -> new IllegalArgumentException("Provider not found: " + providerId));
+    }
+
+    private ProviderPracticeContextEntity requireContext(Long contextId, UUID tenantId) {
+        return contextRepository.findByIdAndTenantId(contextId, tenantId)
+                .orElseThrow(() -> new IllegalArgumentException("Context not found: " + contextId));
     }
 
     private void publishEvent(String aggregateType, String aggregateId, String eventType, String payload) {
