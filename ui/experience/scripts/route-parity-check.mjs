@@ -91,6 +91,8 @@ const EXPECTED_ROUTES = [
   "/organization-admin",
   "/organization-admin/facility",
   "/organization-admin/staffing",
+  "/organization-admin/governance",
+  "/organization-admin/governance/[id]",
   "/marketplace",
   "/marketplace/catalog",
   "/marketplace/orders",

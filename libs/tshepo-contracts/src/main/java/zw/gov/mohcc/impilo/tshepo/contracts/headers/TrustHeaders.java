@@ -68,6 +68,8 @@ public final class TrustHeaders {
 
     // ── Operational context (Health OS §7) ────────────────────────────────
     public static final String FACILITY_ID   = "x-facility-id";
+    /** Canonical TUSO numeric facility identifier (Long) for assignment-aware policy. */
+    public static final String TUSO_FACILITY_ID = "x-tuso-facility-id";
     public static final String DEPARTMENT_ID = "x-department-id";
     public static final String WARD_ID       = "x-ward-id";
     public static final String WORKSPACE_ID  = "x-workspace-id";

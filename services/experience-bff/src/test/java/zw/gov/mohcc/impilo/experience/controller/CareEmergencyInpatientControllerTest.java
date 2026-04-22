@@ -57,7 +57,7 @@ class CareEmergencyInpatientControllerTest {
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null
+                null, null, null, null, null, null, null, null, null, null
         );
     }
 

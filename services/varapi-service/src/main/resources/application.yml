@@ -93,3 +93,6 @@ varapi:
   outbox:
     poll-interval-ms: 1000
     kafka-topic-prefix: varapi
+  governance:
+    enabled: false
+    base-url: http://localhost:8165

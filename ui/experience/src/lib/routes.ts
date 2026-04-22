@@ -1,7 +1,7 @@
 /**
  * Experience UI — Complete Route Registry
  *
- * 226 routes across 26 zones.
+ * 242 routes across 26 zones.
  * Each route specifies: path, zone, layout, sidebar context, guard, page title, and nav label.
  *
  * Zones: auth, home, facility, workspace, shift, queue, ehr, admin, registry,
@@ -199,6 +199,8 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/organization-admin", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ORGANIZATION_ADMIN", pageTitle: "Organization Administration", navLabel: "Org Admin", navZone: "professional" },
   { path: "/organization-admin/facility", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ORGANIZATION_ADMIN", pageTitle: "Facility Administration", navLabel: "Org Facility", navZone: "professional" },
   { path: "/organization-admin/staffing", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ORGANIZATION_ADMIN", pageTitle: "Staffing & Scheduling", navLabel: "Org Staffing", navZone: "professional" },
+  { path: "/organization-admin/governance", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ORGANIZATION_ADMIN", pageTitle: "Organisations & governance", navLabel: "Governance", navZone: "professional" },
+  { path: "/organization-admin/governance/[id]", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ORGANIZATION_ADMIN", pageTitle: "Organisation detail", navLabel: "Org detail", navZone: "professional" },
 
   // ── Zone: Registry ──────────────────────────────────────────────
   { path: "/registry/clients", zone: "registry", layout: "app", sidebar: "registry", guard: "role", requiredRole: "REGISTRY_ADMIN", pageTitle: "Client Registry", navLabel: "Client Registry", navZone: "professional" },
@@ -360,7 +362,7 @@ export const ROUTES: RouteDefinition[] = [
 ];
 
 // Total route count assertion
-export const EXPECTED_ROUTE_COUNT = 237;
+export const EXPECTED_ROUTE_COUNT = 242;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

@@ -87,6 +87,8 @@ function getV12Headers(): Record<string, string> {
 
   // ── Governance (Health OS §11: why / under what authority) ────
   headers["X-Purpose-Of-Use"] = getPurposeOfUse();
+  headers["X-Device-Fingerprint"] =
+    getContextString("exp:device_fingerprint") || "experience-web";
 
   const accessMode = getContextString("exp:access_mode");
   if (accessMode) {

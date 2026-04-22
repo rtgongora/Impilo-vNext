@@ -31,12 +31,13 @@ public class WorkspaceValidationService {
             UUID workspaceId,
             boolean active,
             String reason,
-            boolean degradedMode
+            boolean degradedMode,
+            Long facilityNumericId
     ) {}
 
     public WorkspaceValidationResult validate(UUID tenantId, UUID workspaceId) {
         if (workspaceId == null) {
-            return new WorkspaceValidationResult(false, null, false, "No workspace ID provided", false);
+            return new WorkspaceValidationResult(false, null, false, "No workspace ID provided", false, null);
         }
 
         try {
@@ -48,18 +49,22 @@ public class WorkspaceValidationService {
             if (!response.getStatusCode().is2xxSuccessful()) {
                 log.warn("TUSO returned non-success status: {}", response.getStatusCode());
                 return new WorkspaceValidationResult(false, workspaceId, false,
-                        "TUSO returned error", true);
+                        "TUSO returned error", true, null);
             }
 
             JsonNode body = response.getBody();
             if (body == null || !body.has("data")) {
                 log.warn("TUSO returned empty body for workspace {}", workspaceId);
                 return new WorkspaceValidationResult(false, workspaceId, false,
-                        "Empty response", false);
+                        "Empty response", false, null);
             }
 
             JsonNode data = body.get("data");
             boolean active = data.has("active") && data.get("active").asBoolean();
+            Long facilityNumericId = null;
+            if (data.has("facilityId") && data.get("facilityId").canConvertToLong()) {
+                facilityNumericId = data.get("facilityId").longValue();
+            }
 
             log.debug("Workspace {} validation: active={}", workspaceId, active);
 
@@ -68,17 +73,18 @@ public class WorkspaceValidationService {
                     workspaceId,
                     active,
                     active ? "Active" : "Workspace not active",
-                    false
+                    false,
+                    facilityNumericId
             );
 
         } catch (RestClientException e) {
             log.warn("Failed to validate workspace {} via TUSO: {}", workspaceId, e.getMessage());
             return new WorkspaceValidationResult(false, workspaceId, false,
-                    "TUSO call failed", true);
+                    "TUSO call failed", true, null);
         } catch (Exception e) {
             log.error("Unexpected error validating workspace {}: {}", workspaceId, e.getMessage(), e);
             return new WorkspaceValidationResult(false, workspaceId, false,
-                    "Validation error", true);
+                    "Validation error", true, null);
         }
     }
 }

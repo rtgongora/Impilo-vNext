@@ -16,7 +16,7 @@ package zw.gov.mohcc.impilo.companion.context;
  * X-Facility-ID, X-Department-ID, X-Ward-ID, X-Workspace-ID, X-Programme-ID, X-Shift-ID
  *
  * <h3>Governance headers (why / under what authority)</h3>
- * X-Purpose-Of-Use, X-Assurance-Level, X-Subject-ID, X-Access-Mode
+ * X-Purpose-Of-Use, X-Device-Fingerprint, X-Assurance-Level, X-Subject-ID, X-Access-Mode
  *
  * <h3>Idempotency and timeout</h3>
  * Idempotency-Key, X-Client-Timeout-MS
@@ -46,6 +46,7 @@ public final class CompanionHeaders {
 
     // ── Operational Context (Health OS §7: where / under what) ──
     public static final String FACILITY_ID    = "X-Facility-ID";
+    public static final String TUSO_FACILITY_ID = "X-Tuso-Facility-Id";
     public static final String DEPARTMENT_ID  = "X-Department-ID";
     public static final String WARD_ID        = "X-Ward-ID";
     public static final String WORKSPACE_ID   = "X-Workspace-ID";
@@ -54,6 +55,8 @@ public final class CompanionHeaders {
 
     // ── Governance (Health OS §11: why / under what authority) ───
     public static final String PURPOSE_OF_USE   = "X-Purpose-Of-Use";
+    /** Device / client instance binding for risk and audit (recommended on all calls). */
+    public static final String DEVICE_FINGERPRINT = "X-Device-Fingerprint";
     public static final String ASSURANCE_LEVEL  = "X-Assurance-Level";  // LOA1–LOA4
     public static final String SUBJECT_ID       = "X-Subject-ID";       // Patient/subject of action
     public static final String ACCESS_MODE      = "X-Access-Mode";      // INTERNAL, EXTERNAL

@@ -23,6 +23,8 @@ public record AuthorizationRequest(
     String providerId,          // Regulated professional role ID (may be null)
     // ── Operational context (Health OS §7) ──
     UUID facilityId,
+    /** Canonical TUSO facility numeric id when supplied (preferred for registry alignment). */
+    Long tusoFacilityNumericId,
     String departmentId,
     String wardId,
     UUID workspaceId,
@@ -68,6 +70,7 @@ public record AuthorizationRequest(
             headerGetter.apply(TrustHeaders.PROVIDER_ID),
             // Operational context (Health OS §7)
             parseUuid(headerGetter.apply(TrustHeaders.FACILITY_ID)),
+            parseLong(headerGetter.apply(TrustHeaders.TUSO_FACILITY_ID)),
             headerGetter.apply(TrustHeaders.DEPARTMENT_ID),
             headerGetter.apply(TrustHeaders.WARD_ID),
             parseUuid(headerGetter.apply(TrustHeaders.WORKSPACE_ID)),
@@ -96,6 +99,17 @@ public record AuthorizationRequest(
     private static UUID parseUuidOrGenerate(String value) {
         UUID parsed = parseUuid(value);
         return parsed != null ? parsed : UUID.randomUUID();
+    }
+
+    private static Long parseLong(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        try {
+            return Long.parseLong(value.trim());
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     private static String deriveAction(String method, String path) {

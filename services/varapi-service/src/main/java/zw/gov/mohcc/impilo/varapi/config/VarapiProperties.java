@@ -13,6 +13,7 @@ public class VarapiProperties {
     private DocumentProperties document = new DocumentProperties();
     private TokenProperties token = new TokenProperties();
     private OutboxProperties outbox = new OutboxProperties();
+    private GovernanceProperties governance = new GovernanceProperties();
 
     public String getRegistryMode() { return registryMode; }
     public void setRegistryMode(String registryMode) { this.registryMode = registryMode; }
@@ -40,6 +41,9 @@ public class VarapiProperties {
 
     public OutboxProperties getOutbox() { return outbox; }
     public void setOutbox(OutboxProperties outbox) { this.outbox = outbox; }
+
+    public GovernanceProperties getGovernance() { return governance; }
+    public void setGovernance(GovernanceProperties governance) { this.governance = governance; }
 
     // --- Nested ---
 
@@ -121,5 +125,16 @@ public class VarapiProperties {
         public void setPollIntervalMs(int v) { this.pollIntervalMs = v; }
         public String getKafkaTopicPrefix() { return kafkaTopicPrefix; }
         public void setKafkaTopicPrefix(String v) { this.kafkaTopicPrefix = v; }
+    }
+
+    /** Optional Workforce Governance service (assignments / scope summaries). */
+    public static class GovernanceProperties {
+        private boolean enabled = false;
+        private String baseUrl = "http://localhost:8165";
+
+        public boolean isEnabled() { return enabled; }
+        public void setEnabled(boolean enabled) { this.enabled = enabled; }
+        public String getBaseUrl() { return baseUrl; }
+        public void setBaseUrl(String baseUrl) { this.baseUrl = baseUrl; }
     }
 }

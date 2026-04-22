@@ -1,5 +1,7 @@
 package zw.gov.mohcc.impilo.varapi.api.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +32,7 @@ import zw.gov.mohcc.impilo.varapi.api.dto.StatusChangeRequest;
 import zw.gov.mohcc.impilo.varapi.api.dto.UpdateProviderRequest;
 import zw.gov.mohcc.impilo.varapi.core.EligibilityService;
 import zw.gov.mohcc.impilo.varapi.core.ProviderService;
+import zw.gov.mohcc.impilo.varapi.integration.WorkforceGovernanceClient;
 import zw.gov.mohcc.impilo.varapi.persistence.entity.ProviderEntity;
 
 import java.util.List;
@@ -47,10 +50,14 @@ public class ProviderController {
 
     private final ProviderService providerService;
     private final EligibilityService eligibilityService;
+    private final WorkforceGovernanceClient workforceGovernanceClient;
 
-    public ProviderController(ProviderService providerService, EligibilityService eligibilityService) {
+    public ProviderController(ProviderService providerService,
+                              EligibilityService eligibilityService,
+                              WorkforceGovernanceClient workforceGovernanceClient) {
         this.providerService = providerService;
         this.eligibilityService = eligibilityService;
+        this.workforceGovernanceClient = workforceGovernanceClient;
     }
 
     @PostMapping
@@ -113,6 +120,20 @@ public class ProviderController {
                 p.getEffectiveTo()
         );
         return ResponseEntity.ok(ApiResponse.ok(summary, ctx.correlationId().toString()));
+    }
+
+    /**
+     * Workforce Governance assignments for this provider (facilities, jurisdictions, orgs, etc.).
+     * Empty array when governance integration is disabled or unreachable.
+     */
+    @GetMapping("/{providerPublicId}/workforce-assignments-summary")
+    public ResponseEntity<ApiResponse<JsonNode>> workforceAssignmentsSummary(@PathVariable String providerPublicId) {
+        TrustContext ctx = TrustContextHolder.require();
+        JsonNode data = workforceGovernanceClient.fetchProviderAssignments(providerPublicId);
+        if (data == null || data.isNull()) {
+            return ResponseEntity.ok(ApiResponse.ok(JsonNodeFactory.instance.arrayNode(), ctx.correlationId().toString()));
+        }
+        return ResponseEntity.ok(ApiResponse.ok(data, ctx.correlationId().toString()));
     }
 
     @PostMapping("/search")

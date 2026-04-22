@@ -98,7 +98,8 @@ public class ServiceClientConfig {
             String channelsBaseUrl,
             String dispatchBaseUrl,
             String supportBaseUrl,
-            String wellnessBaseUrl
+            String wellnessBaseUrl,
+            String workforceGovernanceBaseUrl
     ) {
         public ServiceEndpoints {
             if (pctBaseUrl == null) pctBaseUrl = "http://localhost:8088";
@@ -160,7 +161,23 @@ public class ServiceClientConfig {
             if (dispatchBaseUrl == null) dispatchBaseUrl = "http://localhost:8291";
             if (supportBaseUrl == null) supportBaseUrl = "http://localhost:8292";
             if (wellnessBaseUrl == null) wellnessBaseUrl = "http://localhost:8293";
+            if (workforceGovernanceBaseUrl == null) workforceGovernanceBaseUrl = "http://localhost:8165";
         }
+    }
+
+    /**
+     * All-null service endpoints for unit tests — the record compact constructor applies localhost defaults
+     * (including {@code workforceGovernanceBaseUrl}).
+     */
+    public static ServiceEndpoints testServiceEndpoints() {
+        return new ServiceEndpoints(
+                null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null, null
+        );
     }
 
     /**
@@ -181,8 +198,12 @@ public class ServiceClientConfig {
                 forwardHeader(inbound, request, CompanionHeaders.AUTHORIZATION);
                 forwardHeader(inbound, request, CompanionHeaders.ACTOR_ID);
                 forwardHeader(inbound, request, CompanionHeaders.ACTOR_TYPE);
+                forwardHeader(inbound, request, CompanionHeaders.PROVIDER_ID);
                 forwardHeader(inbound, request, CompanionHeaders.PURPOSE_OF_USE);
+                forwardHeader(inbound, request, CompanionHeaders.DEVICE_FINGERPRINT);
+                forwardHeader(inbound, request, CompanionHeaders.ASSURANCE_LEVEL);
                 forwardHeader(inbound, request, CompanionHeaders.FACILITY_ID);
+                forwardHeader(inbound, request, CompanionHeaders.TUSO_FACILITY_ID);
                 forwardHeader(inbound, request, CompanionHeaders.WORKSPACE_ID);
                 forwardHeader(inbound, request, CompanionHeaders.SHIFT_ID);
                 forwardHeader(inbound, request, CompanionHeaders.IDEMPOTENCY_KEY);

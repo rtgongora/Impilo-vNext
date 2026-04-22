@@ -162,6 +162,8 @@
         <module>wellness-service</module>
         <!-- Experience Platform BFF -->
         <module>experience-bff</module>
+        <!-- Workforce Governance — organisations, jurisdictions, assignments -->
+        <module>workforce-governance-service</module>
         <!-- Clinical Knowledge & EDLIZ-aligned guidance platform -->
         <module>clinical-knowledge-platform-service</module>
         <module>guidance-service</module>

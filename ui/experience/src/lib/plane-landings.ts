@@ -67,6 +67,13 @@ export const ORGANIZATION_PLANE_CARDS: OrganizationPlaneCard[] = [
     href: "/organization-admin/facility",
   },
   {
+    surface: "settings",
+    title: "Organisations & assignments",
+    description:
+      "Workforce governance — organisations, facility/site links, jurisdictions, role definitions, and assignment scope (BFF → workforce-governance-service).",
+    href: "/organization-admin/governance",
+  },
+  {
     surface: "service_point_admin",
     title: "Service points & devices",
     description: "Trusted device inventory and endpoint posture from `/internal/v1/admin/devices`.",

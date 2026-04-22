@@ -63,6 +63,8 @@ impilo:
   services:
     tuso:
       base-url: ${TUSO_SERVICE_URL:http://localhost:8084}
+    governance:
+      base-url: ${WORKFORCE_GOVERNANCE_SERVICE_URL:}
 
 management:
   endpoints:

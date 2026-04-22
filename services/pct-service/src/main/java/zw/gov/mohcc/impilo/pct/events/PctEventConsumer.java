@@ -214,7 +214,7 @@ public class PctEventConsumer {
      *
      * @param message the Kafka message payload (JSON)
      */
-    @KafkaListener(topics = "tuso.workspace.updated", groupId = "pct-service")
+    @KafkaListener(topics = {"tuso.workspace.updated", "impilo.tuso.workspace"}, groupId = "pct-service")
     public void consumeTusoWorkspaceUpdated(String message) {
         try {
             JsonNode event = objectMapper.readTree(message);

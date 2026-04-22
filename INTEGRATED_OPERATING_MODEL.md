@@ -12,6 +12,7 @@ This document captures the “legitimacy fabric” and cross-service contracts t
 - **Msika Flow (Order orchestration)**: canonical truth for order lifecycle, fulfillment routing, custody/handoffs, and payments/settlement orchestration.
 - **MusheX (Wallet/Payments)**: canonical truth for payment intents and payment state transitions.
 - **Tshepo (ext_authz)**: canonical truth for authorization decisions (roles, scopes, ABAC policy).
+- **Workforce Governance**: canonical truth for **organisations**, **organisational units**, **facility/site ↔ organisation links**, **jurisdictions & jurisdiction links**, **role definitions**, **assignments** (with history), and **facility scope evaluation** consumed by Tshepo when `x-tuso-facility-id` is present; Varapi may read assignment summaries; Experience BFF exposes `/internal/v1/workforce-governance/*` for UI.
 - **Experience BFF**: orchestration façade; does not own truth, but may cache/mirror to support UX.
 
 ### Cross-service reference conventions

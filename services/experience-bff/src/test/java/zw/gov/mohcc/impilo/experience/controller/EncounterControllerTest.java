@@ -24,7 +24,7 @@ class EncounterControllerTest {
     void listEncounters_returnsDataAndMeta() {
         EncounterController controller = new EncounterController(new StubPctClient(), new StubCostaClient());
         ResponseEntity<Map<String, Object>> response =
-                controller.listEncounters("req-1", "corr-1", 0, 20, "patient-1");
+                controller.listEncounters("tenant-1", "req-1", "corr-1", 0, 20, "patient-1");
         assertEquals(200, response.getStatusCode().value());
         assertNotNull(response.getBody());
         assertEquals("req-1", ((Map<?, ?>) response.getBody().get("meta")).get("request_id"));
@@ -34,20 +34,20 @@ class EncounterControllerTest {
     void listEncounters_emptyPatientId_returnsEmptyData() {
         EncounterController controller = new EncounterController(new StubPctClient(), new StubCostaClient());
         ResponseEntity<Map<String, Object>> response =
-                controller.listEncounters("req-2", "corr-2", 0, 20, null);
+                controller.listEncounters("tenant-1", "req-2", "corr-2", 0, 20, null);
         assertEquals(200, response.getStatusCode().value());
     }
 
     @Test
     void createEncounter_returns201() {
         EncounterController controller = new EncounterController(new StubPctClient(), new StubCostaClient());
-        Map<String, Object> request = Map.of(
-                "patient_id", "patient-1",
-                "facility_id", "facility-1",
-                "encounter_type", "CONSULTATION",
-                "chief_complaint", "Headache",
-                "journey_id", "journey-1",
-                "patient_cpid", "cpid-1"
+        EncounterController.CreateEncounterRequest request = new EncounterController.CreateEncounterRequest(
+                "patient-1",
+                "facility-1",
+                "CONSULTATION",
+                "Headache",
+                "journey-1",
+                "cpid-1"
         );
         ResponseEntity<Map<String, Object>> response =
                 controller.createEncounter("t1", "pod-1", "req-3", "corr-3", null, request);
@@ -56,14 +56,7 @@ class EncounterControllerTest {
     }
 
     private static ServiceClientConfig.ServiceEndpoints endpoints() {
-        return new ServiceClientConfig.ServiceEndpoints(
-                null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null
-        );
+        return ServiceClientConfig.testServiceEndpoints();
     }
 
     private static final class StubPctClient extends PctServiceClient {
