@@ -1,0 +1,12 @@
+package zw.gov.mohcc.impilo.vito.core;
+
+public enum ClientRegistrationType {
+    SELF_INITIATED,
+    PROVIDER_ASSISTED,
+    FACILITY_REGISTRATION,
+    COMMUNITY_REGISTRATION,
+    OUTREACH_REGISTRATION,
+    VIRTUAL_REGISTRATION,
+    BULK_IMPORT,
+    INTEROPERABILITY_IMPORT
+}

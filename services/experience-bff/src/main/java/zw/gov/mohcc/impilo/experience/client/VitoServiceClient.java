@@ -144,10 +144,96 @@ public class VitoServiceClient {
         }
     }
 
+    public JsonNode listClientRegistryClients(String query, String status, String verificationState, int page, int size) {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/client-registry/clients")
+                .queryParam("page", page)
+                .queryParam("size", size);
+        if (query != null && !query.isBlank()) builder.queryParam("query", query);
+        if (status != null && !status.isBlank()) builder.queryParam("status", status);
+        if (verificationState != null && !verificationState.isBlank()) builder.queryParam("verificationState", verificationState);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(builder.toUriString(), JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode getClientRegistryProfile(String healthId) {
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(
+                baseUrl + "/v1/client-registry/clients/" + healthId, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode createClientRegistration(Map<String, Object> body) {
+        return postJson(baseUrl + "/v1/client-registry/registrations", body);
+    }
+
+    public JsonNode submitClientRegistration(String registrationId) {
+        return postJson(baseUrl + "/v1/client-registry/registrations/" + registrationId + "/submit", null);
+    }
+
+    public JsonNode addClientEvidence(String healthId, Map<String, Object> body) {
+        return postJson(baseUrl + "/v1/client-registry/clients/" + healthId + "/evidence", body);
+    }
+
+    public JsonNode recordClientVerificationReview(String healthId, Map<String, Object> body) {
+        return postJson(baseUrl + "/v1/client-registry/clients/" + healthId + "/verification-reviews", body);
+    }
+
+    public JsonNode runClientMatching(String healthId) {
+        return postJson(baseUrl + "/v1/client-registry/clients/" + healthId + "/match", null);
+    }
+
+    public JsonNode reviewClientMatchCandidate(String matchId, Map<String, Object> body) {
+        return postJson(baseUrl + "/v1/client-registry/match-candidates/" + matchId + "/review", body);
+    }
+
+    public JsonNode createClientMergeCase(Map<String, Object> body) {
+        return postJson(baseUrl + "/v1/client-registry/merge-cases", body);
+    }
+
+    public JsonNode decideClientMergeCase(String mergeCaseId, Map<String, Object> body) {
+        return postJson(baseUrl + "/v1/client-registry/merge-cases/" + mergeCaseId + "/decision", body);
+    }
+
+    public JsonNode addClientRelationship(String healthId, Map<String, Object> body) {
+        return postJson(baseUrl + "/v1/client-registry/clients/" + healthId + "/relationships", body);
+    }
+
+    public JsonNode addClientAuthorizationLink(String healthId, Map<String, Object> body) {
+        return postJson(baseUrl + "/v1/client-registry/clients/" + healthId + "/authorization-links", body);
+    }
+
+    public JsonNode createClientStewardshipAction(String healthId, Map<String, Object> body) {
+        return postJson(baseUrl + "/v1/client-registry/clients/" + healthId + "/stewardship-actions", body);
+    }
+
+    public JsonNode updateClientStewardshipAction(String actionId, Map<String, Object> body) {
+        return postJson(baseUrl + "/v1/client-registry/stewardship-actions/" + actionId, body);
+    }
+
+    public JsonNode recordClientCorrection(String healthId, Map<String, Object> body) {
+        return postJson(baseUrl + "/v1/client-registry/clients/" + healthId + "/corrections", body);
+    }
+
+    public JsonNode getClientRegistryDashboard() {
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(
+                baseUrl + "/v1/client-registry/dashboard/summary", JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode getClientStewardshipWorkspace() {
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(
+                baseUrl + "/v1/client-registry/stewardship/workspace", JsonNode.class);
+        return extractData(response);
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) {
             return response.getBody().get("data");
         }
         return response.getBody();
+    }
+
+    private JsonNode postJson(String url, Map<String, Object> body) {
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
     }
 }

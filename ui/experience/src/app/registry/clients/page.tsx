@@ -1,121 +1,217 @@
 "use client";
 
-/**
- * Client registry administration — MPI-oriented patient directory via `/internal/v1/patients`.
- * Route: /registry/clients | guard: REGISTRY_ADMIN
- *
- * Distinct from queue search (shift-guarded): registry operators reconcile CPID / demographics without shift.
- */
-
-import { type FormEvent, useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Loader2, Search, User } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, BadgeAlert, Loader2, Plus, Search, ShieldAlert, UserRoundSearch, Users } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { RegistryPlaneContextBar } from "@/components/experience/RegistryPlaneContextBar";
 import { PageShell } from "@/components/PageShell";
-import { usePatients, type PatientResource } from "@/hooks/queries/usePatients";
-import { getPatientDisplayName, getPatientQueueSummary } from "@/lib/queue-workflows";
-import { usePrivacyDisplayStore } from "@/hooks/usePrivacyDisplayStore";
-import { maskDob, displayCpid } from "@/lib/pii-mask";
+import { useClientRegistryClients, useClientRegistryDashboard } from "@/hooks/queries/useClientRegistry";
 
-export default function RegistryClientDirectoryPage() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [submitted, setSubmitted] = useState("");
-  const { data, isLoading } = usePatients(submitted ? { search: submitted } : undefined);
-  const patients = submitted ? (data?.data ?? []) : [];
+const STATUS_STYLES: Record<string, string> = {
+  ACTIVE: "bg-emerald-50 text-emerald-700 border border-emerald-200",
+  PROVISIONAL: "bg-amber-50 text-amber-700 border border-amber-200",
+  PENDING_VERIFICATION: "bg-sky-50 text-sky-700 border border-sky-200",
+  PENDING_MATCH_REVIEW: "bg-orange-50 text-orange-700 border border-orange-200",
+  FLAGGED_FOR_REVIEW: "bg-rose-50 text-rose-700 border border-rose-200",
+  MERGED: "bg-slate-100 text-slate-600 border border-slate-200",
+};
 
-  function onSubmit(e: FormEvent) {
-    e.preventDefault();
-    setSubmitted(searchTerm);
-  }
+function labelize(value: string) {
+  return value.replaceAll("_", " ");
+}
+
+export default function ClientRegistryPage() {
+  const [query, setQuery] = useState("");
+  const [status, setStatus] = useState("");
+  const [verificationState, setVerificationState] = useState("");
+
+  const list = useClientRegistryClients({ query, status, verificationState, page: 0, size: 30 });
+  const dashboard = useClientRegistryDashboard();
+  const items = list.data?.data.items ?? [];
+
+  const metrics = useMemo(
+    () => [
+      {
+        title: "Total clients",
+        value: dashboard.data?.data.totalClients ?? 0,
+        icon: Users,
+        tone: "bg-slate-50 text-slate-700 border-slate-100",
+      },
+      {
+        title: "Pending verification",
+        value: dashboard.data?.data.pendingVerification ?? 0,
+        icon: ShieldAlert,
+        tone: "bg-sky-50 text-sky-700 border-sky-100",
+      },
+      {
+        title: "Match review",
+        value: dashboard.data?.data.pendingMatchReview ?? 0,
+        icon: UserRoundSearch,
+        tone: "bg-orange-50 text-orange-700 border-orange-100",
+      },
+      {
+        title: "Stewardship open",
+        value: dashboard.data?.data.openStewardshipActions ?? 0,
+        icon: BadgeAlert,
+        tone: "bg-rose-50 text-rose-700 border-rose-100",
+      },
+    ],
+    [dashboard.data],
+  );
 
   return (
     <AppLayout>
       <PageShell
-        title="Client registry"
-        subtitle="Patient index search for registry governance — backed by the live patient API"
+        title="Client Identity Operations"
+        subtitle="Canonical person resolution, multi-channel registration, verification, duplicate review, and stewardship"
       >
-        <RegistryPlaneContextBar preferStore />
+        <RegistryPlaneContextBar />
 
-        <div className="mb-4">
+        <div className="mb-4 flex items-center justify-between gap-3">
           <Link
-            href="/registry-admin"
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            href="/registry"
+            className="inline-flex items-center gap-1 text-sm text-gray-500 transition-colors hover:text-gray-700"
           >
-            <ArrowLeft className="h-4 w-4" /> Back to registry administration
+            <ArrowLeft className="h-4 w-4" />
+            Back to registry hub
+          </Link>
+          <Link
+            href="/operations/vito"
+            className="inline-flex items-center gap-2 rounded-xl border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-slate-400 hover:text-slate-900"
+          >
+            Identity stewardship
+            <ArrowUpRight className="h-4 w-4" />
           </Link>
         </div>
 
-        <div className="mb-4 rounded-lg border border-slate-200 bg-white p-4">
-          <p className="text-xs text-slate-600 mb-3">
-            Search the longitudinal patient directory by name, CPID, or other fields supported by the API. Opening
-            the full clinical chart still follows Facility Work sequencing (facility → workspace → shift).
-          </p>
-          <form onSubmit={onSubmit} className="flex flex-wrap gap-2">
+        <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {metrics.map((metric) => {
+            const Icon = metric.icon;
+            return (
+              <div key={metric.title} className={`rounded-2xl border p-5 ${metric.tone}`}>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-[0.2em] opacity-80">{metric.title}</p>
+                    <p className="mt-3 text-3xl font-semibold">{metric.value}</p>
+                  </div>
+                  <div className="rounded-2xl bg-white/70 p-3">
+                    <Icon className="h-6 w-6" />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-gray-200 bg-white p-4">
+          <div className="flex flex-1 flex-wrap items-center gap-3">
             <div className="relative min-w-[240px] flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
               <input
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search patients…"
-                className="w-full rounded-lg border border-gray-300 py-2.5 pl-10 pr-4 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-impilo-400"
+                type="text"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Search by name or Impilo ID"
+                className="w-full rounded-xl border border-gray-300 px-10 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500"
               />
             </div>
-            <button
-              type="submit"
-              className="rounded-lg bg-impilo-500 px-5 py-2.5 text-sm font-medium text-white hover:bg-impilo-600"
+            <select
+              value={status}
+              onChange={(event) => setStatus(event.target.value)}
+              className="rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500"
             >
-              Search directory
-            </button>
-          </form>
+              <option value="">All lifecycle states</option>
+              <option value="PROVISIONAL">Provisional</option>
+              <option value="PENDING_VERIFICATION">Pending verification</option>
+              <option value="PENDING_MATCH_REVIEW">Pending match review</option>
+              <option value="ACTIVE">Active</option>
+              <option value="FLAGGED_FOR_REVIEW">Flagged</option>
+              <option value="MERGED">Merged</option>
+            </select>
+            <select
+              value={verificationState}
+              onChange={(event) => setVerificationState(event.target.value)}
+              className="rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500"
+            >
+              <option value="">All verification states</option>
+              <option value="UNVERIFIED">Unverified</option>
+              <option value="SELF_ASSERTED">Self asserted</option>
+              <option value="PROVIDER_CAPTURED">Provider captured</option>
+              <option value="PARTIALLY_VERIFIED">Partially verified</option>
+              <option value="VERIFIED">Verified</option>
+              <option value="REVIEW_REQUIRED">Review required</option>
+            </select>
+          </div>
+          <Link
+            href="/registry/clients/new"
+            className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-slate-700"
+          >
+            <Plus className="h-4 w-4" />
+            New registration
+          </Link>
         </div>
 
-        {isLoading && (
-          <div className="flex items-center gap-2 text-sm text-gray-500">
-            <Loader2 className="h-4 w-4 animate-spin" /> Loading…
+        {list.isLoading ? (
+          <div className="flex items-center justify-center py-16 text-gray-500">
+            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+            Loading client registry...
           </div>
-        )}
-
-        {submitted && !isLoading && patients.length === 0 && (
-          <div className="rounded-lg border border-gray-200 bg-white p-10 text-center">
-            <User className="mx-auto mb-2 h-10 w-10 text-gray-300" />
-            <p className="text-sm text-gray-500">No patients match &ldquo;{submitted}&rdquo;</p>
+        ) : items.length === 0 ? (
+          <div className="rounded-2xl border border-gray-200 bg-white p-12 text-center">
+            <Users className="mx-auto mb-3 h-10 w-10 text-gray-300" />
+            <p className="text-sm text-gray-500">No clients matched the current filters.</p>
           </div>
-        )}
-
-        {patients.length > 0 && (
-          <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+        ) : (
+          <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
             <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b bg-gray-50">
-                  <th className="px-4 py-3 text-left font-medium text-gray-600">Patient</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-600">CPID</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-600">DOB</th>
-                  <th className="px-4 py-3 text-right font-medium text-gray-600">Actions</th>
+              <thead className="bg-gray-50 text-left text-xs uppercase tracking-[0.18em] text-gray-500">
+                <tr>
+                  <th className="px-4 py-3 font-medium">Client</th>
+                  <th className="px-4 py-3 font-medium">Identifiers</th>
+                  <th className="px-4 py-3 font-medium">Lifecycle</th>
+                  <th className="px-4 py-3 font-medium">Verification</th>
+                  <th className="px-4 py-3 font-medium">Open work</th>
+                  <th className="px-4 py-3 font-medium text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
-                {patients.map((patient: PatientResource) => (
-                  <tr key={patient.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3">
-                      <span className="font-medium text-gray-900">{getPatientDisplayName(patient)}</span>
-                      <p className="text-xs text-gray-500">{getPatientQueueSummary(patient)}</p>
+              <tbody>
+                {items.map((client) => (
+                  <tr key={client.healthId} className="border-t border-gray-100 align-top hover:bg-gray-50/60">
+                    <td className="px-4 py-4">
+                      <div className="font-medium text-gray-900">{client.displayName}</div>
+                      <div className="mt-1 text-xs text-gray-500">
+                        {client.latestRegistrationType ? labelize(client.latestRegistrationType) : "Registration pending"}{" "}
+                        {client.latestRegistrationChannel ? `via ${labelize(client.latestRegistrationChannel)}` : ""}
+                      </div>
                     </td>
-                    <td className="px-4 py-3 font-mono text-xs text-gray-700">{displayCpid(patient.attributes.cpid)}</td>
-                    <td className="px-4 py-3 text-gray-600">{maskDob(patient.attributes.dateOfBirth, usePrivacyDisplayStore.getState().level)}</td>
-                    <td className="px-4 py-3 text-right">
-                      <Link
-                        href={`/ehr/${patient.id}?entry=registry`}
-                        className="text-xs font-medium text-impilo-500 hover:text-impilo-700"
+                    <td className="px-4 py-4 text-gray-600">
+                      <div className="font-mono text-xs text-gray-700">{client.impiloId ?? "No Impilo ID yet"}</div>
+                      <div className="mt-1 text-xs text-gray-500">CRID {client.crid.slice(0, 8)}</div>
+                    </td>
+                    <td className="px-4 py-4">
+                      <span
+                        className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
+                          STATUS_STYLES[client.lifecycleStatus] ?? "bg-gray-100 text-gray-700 border border-gray-200"
+                        }`}
                       >
-                        Open chart (requires shift)
-                      </Link>
-                      <span className="mx-2 text-gray-300">|</span>
+                        {labelize(client.lifecycleStatus)}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4 text-gray-600">
+                      <div>{labelize(client.verificationStatus)}</div>
+                      <div className="mt-1 text-xs text-gray-500">LOA {client.identityAssuranceLevel}</div>
+                    </td>
+                    <td className="px-4 py-4 text-gray-600">
+                      <div>{client.openStewardshipActions} stewardship action(s)</div>
+                      <div className="text-xs text-orange-600">{client.openMatches} active match candidate(s)</div>
+                    </td>
+                    <td className="px-4 py-4 text-right">
                       <Link
-                        href="/id-services?from=registry-admin"
-                        className="text-xs font-medium text-amber-800 hover:text-amber-950"
+                        href={`/registry/clients/${client.healthId}`}
+                        className="inline-flex rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:border-slate-400 hover:text-slate-900"
                       >
-                        Identity services
+                        Open workspace
                       </Link>
                     </td>
                   </tr>

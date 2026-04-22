@@ -63,6 +63,10 @@ public class IdentityService {
         }
         client.setSex(sex);
         client.setStatus(IdentityStatus.PROVISIONAL);
+        client.setVerificationStatus(ClientVerificationState.UNVERIFIED);
+        client.setIdentityAssuranceLevel(0);
+        client.setActiveFlag(true);
+        client.setGoldenRecordFlag(true);
 
         client = clientRepository.save(client);
 
@@ -95,6 +99,8 @@ public class IdentityService {
         }
 
         client.setStatus(IdentityStatus.VERIFIED);
+        client.setVerificationStatus(ClientVerificationState.VERIFIED);
+        client.setIdentityAssuranceLevel(Math.max(2, client.getIdentityAssuranceLevel()));
         client = clientRepository.save(client);
 
         publishEvent("CLIENT", healthId.toString(), "IDENTITY_VERIFIED",
@@ -113,6 +119,8 @@ public class IdentityService {
                 .orElseThrow(() -> new IllegalArgumentException("Client not found"));
 
         client.setStatus(IdentityStatus.DECEASED);
+        client.setDeceasedFlag(true);
+        client.setActiveFlag(false);
         client = clientRepository.save(client);
 
         // Revoke all aliases
@@ -134,6 +142,7 @@ public class IdentityService {
                 .orElseThrow(() -> new IllegalArgumentException("Client not found"));
 
         client.setStatus(IdentityStatus.INACTIVE);
+        client.setActiveFlag(false);
         return clientRepository.save(client);
     }
 
