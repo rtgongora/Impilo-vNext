@@ -66,6 +66,23 @@ public class FacilityRegulatoryController {
         }
     }
 
+    @GetMapping("/facilities/{facilityId}/status-summary")
+    public ResponseEntity<Map<String, Object>> getFacilityStatusSummary(
+            @PathVariable long facilityId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode data = tusoServiceClient.getFacilityStatusSummary(facilityId);
+            return ok(requestId, correlationId, data);
+        } catch (Exception e) {
+            log.warn("Facility status-summary failed: {}", e.getMessage());
+            return ResponseEntity.status(404).body(Map.of(
+                    "error", Map.of("code", "FACILITY_NOT_FOUND", "message", e.getMessage()),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+            ));
+        }
+    }
+
     @PostMapping("/applications")
     public ResponseEntity<Map<String, Object>> createApplication(
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,

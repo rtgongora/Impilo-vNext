@@ -14,6 +14,7 @@ import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import zw.gov.mohcc.impilo.shared.response.ApiResponse;
 import zw.gov.mohcc.impilo.shared.response.PagedResponse;
+import zw.gov.mohcc.impilo.vito.api.dto.ClientIdentitySummary;
 import zw.gov.mohcc.impilo.vito.api.dto.ClientRegistryDtos;
 import zw.gov.mohcc.impilo.vito.core.ClientIdentityOperationsService;
 import zw.gov.mohcc.impilo.vito.core.ClientVerificationState;
@@ -51,6 +52,15 @@ public class ClientIdentityOperationsController {
     public ResponseEntity<ApiResponse<ClientRegistryDtos.ClientProfileResponse>> getClientProfile(@PathVariable UUID healthId) {
         TrustContext ctx = TrustContextHolder.require();
         return ResponseEntity.ok(ApiResponse.ok(service.getClientProfile(healthId), correlationId(ctx)));
+    }
+
+    /**
+     * Lightweight identity summary for cross-service gating (commerce, booking, proxy pickup).
+     */
+    @GetMapping("/clients/{healthId}/identity-summary")
+    public ResponseEntity<ApiResponse<ClientIdentitySummary>> getIdentitySummary(@PathVariable UUID healthId) {
+        TrustContext ctx = TrustContextHolder.require();
+        return ResponseEntity.ok(ApiResponse.ok(service.getIdentitySummary(healthId), correlationId(ctx)));
     }
 
     @PostMapping("/registrations")

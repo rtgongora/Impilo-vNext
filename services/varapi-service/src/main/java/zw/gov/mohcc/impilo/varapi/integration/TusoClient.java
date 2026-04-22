@@ -75,6 +75,23 @@ public class TusoClient {
     }
 
     /**
+     * Retrieve facility status summary for legitimacy checks.
+     * Returns null on lookup failure.
+     */
+    public String getFacilityStatusSummary(Long facilityId) {
+        if (facilityId == null) return null;
+        try {
+            String url = varapiProperties.getTuso().getBaseUrl()
+                    + "/v1/internal/facilities/" + facilityId + "/status-summary";
+            ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
+            return response.getBody();
+        } catch (Exception e) {
+            log.warn("Failed to retrieve facility status summary facilityId={}: {}", facilityId, e.getMessage());
+            return null;
+        }
+    }
+
+    /**
      * Validate that a workspace exists in the TUSO registry.
      *
      * @param workspaceId the workspace UUID

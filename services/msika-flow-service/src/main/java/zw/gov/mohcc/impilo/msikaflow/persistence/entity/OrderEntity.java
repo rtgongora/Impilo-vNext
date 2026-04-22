@@ -46,8 +46,17 @@ public class OrderEntity {
     @Column(name = "facility_id")
     private UUID facilityId;
 
+    @Column(name = "facility_ref", length = 255)
+    private String facilityRef;
+
     @Column(name = "vendor_id")
     private UUID vendorId;
+
+    @Column(name = "vendor_ref", length = 255)
+    private String vendorRef;
+
+    @Column(name = "provider_ref", length = 255)
+    private String providerRef;
 
     @Column(name = "amount_total", nullable = false, precision = 14, scale = 2)
     private BigDecimal amountTotal;
@@ -157,6 +166,9 @@ public class OrderEntity {
         this.facilityId = facilityId;
     }
 
+    public String getFacilityRef() { return facilityRef; }
+    public void setFacilityRef(String facilityRef) { this.facilityRef = facilityRef; }
+
     public UUID getVendorId() {
         return vendorId;
     }
@@ -164,6 +176,12 @@ public class OrderEntity {
     public void setVendorId(UUID vendorId) {
         this.vendorId = vendorId;
     }
+
+    public String getVendorRef() { return vendorRef; }
+    public void setVendorRef(String vendorRef) { this.vendorRef = vendorRef; }
+
+    public String getProviderRef() { return providerRef; }
+    public void setProviderRef(String providerRef) { this.providerRef = providerRef; }
 
     public BigDecimal getAmountTotal() {
         return amountTotal;

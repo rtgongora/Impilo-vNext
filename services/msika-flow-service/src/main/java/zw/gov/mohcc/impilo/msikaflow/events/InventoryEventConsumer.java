@@ -25,7 +25,13 @@ public class InventoryEventConsumer {
         this.objectMapper = objectMapper;
     }
 
-    @KafkaListener(topics = "inventory.reservation.status_changed", groupId = "msika-flow-service")
+    @KafkaListener(
+            topics = {
+                    "inventory.reservation.status_changed",
+                    "impilo.inventory.reservation"
+            },
+            groupId = "msika-flow-service"
+    )
     public void onReservationStatusChanged(String message) {
         try {
             JsonNode node = objectMapper.readTree(message);
@@ -40,7 +46,13 @@ public class InventoryEventConsumer {
         }
     }
 
-    @KafkaListener(topics = "pharmacy.fulfillment.status_changed", groupId = "msika-flow-service")
+    @KafkaListener(
+            topics = {
+                    "pharmacy.fulfillment.status_changed",
+                    "impilo.pharmacy.fulfillment"
+            },
+            groupId = "msika-flow-service"
+    )
     public void onPharmacyFulfillmentChanged(String message) {
         try {
             JsonNode node = objectMapper.readTree(message);

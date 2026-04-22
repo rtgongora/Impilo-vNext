@@ -16,3 +16,5 @@ spring:
 impilo:
   companion:
     enabled: true
+  security:
+    allow-anonymous: true

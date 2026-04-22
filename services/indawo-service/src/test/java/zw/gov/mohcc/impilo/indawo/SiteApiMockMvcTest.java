@@ -210,6 +210,40 @@ public class SiteApiMockMvcTest {
         }
     }
 
+    // ── D) Status summary endpoint ───────────────────────────────────
+
+    @Nested
+    @DisplayName("D) Status-summary endpoint returns lightweight view")
+    class StatusSummaryEndpoint {
+
+        @Test
+        @DisplayName("GET /internal/v1/sites/{id}/status-summary returns status fields")
+        void statusSummaryReturns() throws Exception {
+            UUID siteId = UUID.randomUUID();
+            mockMvc.perform(put("/internal/v1/sites/" + siteId)
+                            .header("X-Tenant-ID", TENANT_ID)
+                            .header("X-Pod-ID", "national")
+                            .header("X-Request-ID", "req-ss-1")
+                            .header("X-Correlation-ID", UUID.randomUUID().toString())
+                            .header("Idempotency-Key", "ss-create-" + System.nanoTime())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"name\":\"Status Site\",\"type\":\"HOSPITAL\"}"))
+                    .andExpect(status().isCreated());
+
+            mockMvc.perform(get("/internal/v1/sites/" + siteId + "/status-summary")
+                            .header("X-Tenant-ID", TENANT_ID)
+                            .header("X-Pod-ID", "national")
+                            .header("X-Request-ID", "req-ss-2")
+                            .header("X-Correlation-ID", UUID.randomUUID().toString()))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.siteId").value(siteId.toString()))
+                    .andExpect(jsonPath("$.status").exists())
+                    .andExpect(jsonPath("$.regulatoryStatus").exists())
+                    .andExpect(jsonPath("$.operationalStatus").exists())
+                    .andExpect(jsonPath("$.active").exists());
+        }
+    }
+
     // ── D) Outbox row has v1.1 context columns ──
 
     @Nested

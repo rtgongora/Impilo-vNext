@@ -21,6 +21,7 @@ import {
   useChecklistTemplates,
   useCreateFacilityApplication,
   useFacilityProfile,
+  useFacilityStatusSummary,
   useMarkApplicationReadyForInspection,
   useOpenEnforcementCase,
   useRecordCommitteeDecision,
@@ -91,6 +92,8 @@ export default function FacilityDetailPage() {
   const profileQuery = useFacilityProfile(id);
   const profile = profileQuery.data?.data;
   const master = profile?.master;
+  const statusSummaryQuery = useFacilityStatusSummary(master?.facilityId);
+  const statusSummary = statusSummaryQuery.data?.data;
 
   const createApplication = useCreateFacilityApplication();
   const submitApplication = useSubmitFacilityApplication();
@@ -232,6 +235,11 @@ export default function FacilityDetailPage() {
                     <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${statusTone(master.regulatoryStatus)}`}>
                       {formatLabel(master.regulatoryStatus)}
                     </span>
+                    {statusSummary ? (
+                      <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${statusTone(statusSummary.status)}`}>
+                        {formatLabel(statusSummary.status)}
+                      </span>
+                    ) : null}
                   </div>
                   <p className="mt-2 text-sm text-gray-500">
                     {master.facilityCode} • {master.facilityType} • {master.institutionFileNumber ?? "Institution file pending"}

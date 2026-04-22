@@ -20,6 +20,13 @@ public class PractitionerInChargeAssignmentEntity {
     @Column(name = "provider_public_id", nullable = false, length = 255)
     private String providerPublicId;
 
+    /**
+     * External assignment identifier from VARAPI (source-of-truth for PIC lifecycle).
+     * Allows TUSO to mirror assignment state without duplicating provider ownership.
+     */
+    @Column(name = "external_assignment_id")
+    private Long externalAssignmentId;
+
     @Column(name = "role", nullable = false, length = 64)
     private String role;
 
@@ -66,6 +73,8 @@ public class PractitionerInChargeAssignmentEntity {
     public void setFacility(FacilityEntity facility) { this.facility = facility; }
     public String getProviderPublicId() { return providerPublicId; }
     public void setProviderPublicId(String providerPublicId) { this.providerPublicId = providerPublicId; }
+    public Long getExternalAssignmentId() { return externalAssignmentId; }
+    public void setExternalAssignmentId(Long externalAssignmentId) { this.externalAssignmentId = externalAssignmentId; }
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
     public LocalDate getStartDate() { return startDate; }

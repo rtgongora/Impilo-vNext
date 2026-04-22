@@ -13,6 +13,7 @@ import zw.gov.mohcc.impilo.shared.auth.AccessMode;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import zw.gov.mohcc.impilo.vito.api.dto.ClientRegistryDtos;
+import zw.gov.mohcc.impilo.vito.api.dto.ClientIdentitySummary;
 import zw.gov.mohcc.impilo.vito.config.VitoProperties;
 import zw.gov.mohcc.impilo.vito.core.matching.MatchingEngine;
 import zw.gov.mohcc.impilo.vito.persistence.entity.ClientAliasEntity;
@@ -255,6 +256,27 @@ class ClientIdentityOperationsServiceTest {
         when(authorizationLinkRepository.findByTenantIdAndClientHealthIdOrderByCreatedAtDesc(any(), any())).thenReturn(List.of());
         when(statusHistoryRepository.findByTenantIdAndClientHealthIdOrderByChangedAtDesc(any(), any())).thenReturn(List.of());
         when(auditEventRepository.findByTenantIdAndClientHealthIdOrderByCreatedAtDesc(any(), any())).thenReturn(List.of());
+    }
+
+    @Test
+    void getIdentitySummary_returnsLightweightIdentityFields() {
+        UUID healthId = UUID.randomUUID();
+        ClientEntity client = new ClientEntity();
+        client.setTenantId(tenantId);
+        client.setHealthId(healthId);
+        client.setStatus(IdentityStatus.ACTIVE);
+        client.setVerificationStatus(ClientVerificationState.VERIFIED);
+        client.setIdentityAssuranceLevel(3);
+
+        when(clientRepository.findByTenantIdAndHealthId(tenantId, healthId)).thenReturn(Optional.of(client));
+
+        ClientIdentitySummary summary = service.getIdentitySummary(healthId);
+
+        assertNotNull(summary);
+        assertEquals(healthId, summary.healthId());
+        assertEquals(IdentityStatus.ACTIVE, summary.identityStatus());
+        assertEquals(ClientVerificationState.VERIFIED, summary.verificationStatus());
+        assertEquals(3, summary.identityAssuranceLevel());
     }
 
     @AfterEach

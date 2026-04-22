@@ -24,9 +24,11 @@ import zw.gov.mohcc.impilo.varapi.api.dto.ProviderIdentifierDto;
 import zw.gov.mohcc.impilo.varapi.api.dto.ProviderResponse;
 import zw.gov.mohcc.impilo.varapi.api.dto.ProviderSearchRequest;
 import zw.gov.mohcc.impilo.varapi.api.dto.ProviderSpecialtyDto;
+import zw.gov.mohcc.impilo.varapi.api.dto.ProviderStandingSummary;
 import zw.gov.mohcc.impilo.varapi.api.dto.ProviderSummary;
 import zw.gov.mohcc.impilo.varapi.api.dto.StatusChangeRequest;
 import zw.gov.mohcc.impilo.varapi.api.dto.UpdateProviderRequest;
+import zw.gov.mohcc.impilo.varapi.core.EligibilityService;
 import zw.gov.mohcc.impilo.varapi.core.ProviderService;
 import zw.gov.mohcc.impilo.varapi.persistence.entity.ProviderEntity;
 
@@ -44,9 +46,11 @@ public class ProviderController {
     private static final Logger log = LoggerFactory.getLogger(ProviderController.class);
 
     private final ProviderService providerService;
+    private final EligibilityService eligibilityService;
 
-    public ProviderController(ProviderService providerService) {
+    public ProviderController(ProviderService providerService, EligibilityService eligibilityService) {
         this.providerService = providerService;
+        this.eligibilityService = eligibilityService;
     }
 
     @PostMapping
@@ -76,6 +80,39 @@ public class ProviderController {
         ProviderResponse response = toProviderDetailResponse(detail);
 
         return ResponseEntity.ok(ApiResponse.ok(response, ctx.correlationId().toString()));
+    }
+
+    /**
+     * Lightweight provider standing summary for cross-service gating (commerce, booking, PIC).
+     */
+    @GetMapping("/{providerPublicId}/standing-summary")
+    public ResponseEntity<ApiResponse<ProviderStandingSummary>> getStandingSummary(@PathVariable String providerPublicId) {
+        TrustContext ctx = TrustContextHolder.require();
+        ProviderService.ProviderDetail detail = providerService.getProvider(providerPublicId);
+        ProviderEntity p = detail.provider();
+
+        // Derive “has valid license” from lifecycle/licence fields (full license model lives elsewhere in Varapi).
+        boolean hasValidLicense = p.getLicenceStatus() != null
+                && (p.getLicenceStatus().equalsIgnoreCase("ACTIVE") || p.getLicenceStatus().equalsIgnoreCase("VALID"));
+
+        boolean picEligible = false;
+        try {
+            var eligibility = eligibilityService.checkPicEligibility(p.getId(), null);
+            picEligible = eligibility != null && Boolean.TRUE.equals(eligibility.canServeAsPic());
+        } catch (Exception ignored) {}
+
+        ProviderStandingSummary summary = new ProviderStandingSummary(
+                p.getProviderPublicId(),
+                p.getStatus(),
+                p.getLifecycleStatus(),
+                p.getLicenceStatus(),
+                p.getProfessionalStandingStatus(),
+                p.isActive(),
+                hasValidLicense,
+                picEligible,
+                p.getEffectiveTo()
+        );
+        return ResponseEntity.ok(ApiResponse.ok(summary, ctx.correlationId().toString()));
     }
 
     @PostMapping("/search")

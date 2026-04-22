@@ -118,6 +118,62 @@ public class MsikaServiceClient {
         return restTemplate.exchange(url, HttpMethod.POST, new HttpEntity<>(body, headers), String.class);
     }
 
+    // ── Offerings / Policies / Governance ───────────────────────────────────
+
+    public ResponseEntity<String> listOfferings(MultiValueMap<String, String> queryParams) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/offerings")
+                .queryParams(queryParams)
+                .toUriString();
+        return restTemplate.getForEntity(url, String.class);
+    }
+
+    public ResponseEntity<String> createOffering(String requestBody) {
+        return postJson(baseUrl + "/v1/offerings", requestBody);
+    }
+
+    public ResponseEntity<String> updateOffering(String offeringId, String requestBody) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        return restTemplate.exchange(baseUrl + "/v1/offerings/" + offeringId, HttpMethod.PATCH, new HttpEntity<>(requestBody, headers), String.class);
+    }
+
+    public ResponseEntity<String> listFulfillmentPolicies(MultiValueMap<String, String> queryParams) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/fulfillment-policies")
+                .queryParams(queryParams)
+                .toUriString();
+        return restTemplate.getForEntity(url, String.class);
+    }
+
+    public ResponseEntity<String> createFulfillmentPolicy(String requestBody) {
+        return postJson(baseUrl + "/v1/fulfillment-policies", requestBody);
+    }
+
+    public ResponseEntity<String> updateFulfillmentPolicy(String policyId, String requestBody) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        return restTemplate.exchange(baseUrl + "/v1/fulfillment-policies/" + policyId, HttpMethod.PATCH, new HttpEntity<>(requestBody, headers), String.class);
+    }
+
+    public ResponseEntity<String> governanceQueue(MultiValueMap<String, String> queryParams) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/governance/queue")
+                .queryParams(queryParams)
+                .toUriString();
+        return restTemplate.getForEntity(url, String.class);
+    }
+
+    public ResponseEntity<String> createGovernanceRecord(String requestBody) {
+        return postJson(baseUrl + "/v1/governance/records", requestBody);
+    }
+
+    public ResponseEntity<String> reviewGovernanceRecord(String recordId, String requestBody) {
+        return postJson(baseUrl + "/v1/governance/records/" + recordId + "/review", requestBody);
+    }
+
+    public ResponseEntity<String> listGovernanceForTarget(String targetType, String targetId) {
+        String url = baseUrl + "/v1/governance/targets/" + targetType + "/" + targetId;
+        return restTemplate.getForEntity(url, String.class);
+    }
+
     private ResponseEntity<String> postJson(String url, String requestBody) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);

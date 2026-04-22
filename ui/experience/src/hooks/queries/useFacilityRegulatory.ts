@@ -407,6 +407,26 @@ export function useFacilityProfile(facilityId: string | number | undefined) {
   });
 }
 
+export interface FacilityStatusSummary {
+  id: number;
+  code: string;
+  name: string;
+  status: string;
+  operationalStatus: string | null;
+  regulatoryStatus: string | null;
+}
+
+export function useFacilityStatusSummary(facilityId: string | number | undefined) {
+  return useQuery<ApiResponse<FacilityStatusSummary>>({
+    queryKey: ["facility-registry", "status-summary", facilityId],
+    queryFn: () =>
+      apiClient.get<ApiResponse<FacilityStatusSummary>>(
+        `/internal/v1/facility-registry/facilities/${facilityId}/status-summary`,
+      ),
+    enabled: facilityId !== undefined && facilityId !== null,
+  });
+}
+
 export function useFacilityDashboardSummary() {
   return useQuery<DashboardResponse>({
     queryKey: ["facility-registry", "dashboard"],

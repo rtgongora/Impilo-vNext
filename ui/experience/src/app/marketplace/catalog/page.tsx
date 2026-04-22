@@ -115,9 +115,14 @@ export default function CatalogPage() {
       setCartError("Add at least one registry item to validate.");
       return;
     }
+    if (!facility?.id) {
+      setCartError("Select a facility before validating regulated items.");
+      return;
+    }
     validateCart.mutate({
       items: cart.map((c) => ({ msikaCoreCode: c.msikaCoreCode, qty: c.qty })),
-      channel: "experience",
+      channel: "facility",
+      facilityRef: `tuso:${facility.id}`,
     });
   }
 

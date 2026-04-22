@@ -53,7 +53,7 @@ public class CostaEventConsumer {
         this.objectMapper = objectMapper;
     }
 
-    @KafkaListener(topics = "pct.encounter.started", groupId = "costa-costing-engine")
+    @KafkaListener(topics = {"pct.encounter.started", "impilo.pct.encounter"}, groupId = "costa-costing-engine")
     @Transactional
     public void onEncounterStarted(String message, Acknowledgment ack) {
         try {
@@ -98,7 +98,7 @@ public class CostaEventConsumer {
         }
     }
 
-    @KafkaListener(topics = "pct.encounter.completed", groupId = "costa-costing-engine")
+    @KafkaListener(topics = {"pct.encounter.completed", "impilo.pct.encounter"}, groupId = "costa-costing-engine")
     @Transactional
     public void onEncounterCompleted(String message, Acknowledgment ack) {
         try {

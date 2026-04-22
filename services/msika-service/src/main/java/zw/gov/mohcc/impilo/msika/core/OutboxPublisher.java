@@ -82,6 +82,9 @@ public class OutboxPublisher extends CompanionOutboxPublisher {
             case "CATALOG_PUBLISHED", "CATALOG_APPROVED" -> "msika.core.catalog.published";
             case "ITEM_CREATED", "ITEM_UPDATED", "ITEM_DELETED" -> "msika.core.item.changed";
             case "MAPPING_APPROVED" -> "msika.core.mapping.approved";
+            case "OFFERING_CREATED", "OFFERING_UPDATED", "OFFERING_ACTIVATED" -> "msika.core.offering.changed";
+            case "FULFILLMENT_POLICY_CREATED", "FULFILLMENT_POLICY_UPDATED" -> "msika.core.fulfillment-policy.changed";
+            case "GOVERNANCE_RECORD_CREATED", "GOVERNANCE_DECISION_RECORDED" -> "msika.core.governance.changed";
             default -> "msika.core.events";
         };
     }

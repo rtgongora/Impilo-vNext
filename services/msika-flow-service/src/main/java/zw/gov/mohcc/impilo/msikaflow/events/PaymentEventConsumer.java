@@ -21,7 +21,14 @@ public class PaymentEventConsumer {
         this.objectMapper = objectMapper;
     }
 
-    @KafkaListener(topics = "mushex.payment.status.changed", groupId = "msika-flow-service")
+    @KafkaListener(
+            topics = {
+                    "mushex.payment.status.changed",
+                    // v1.1 canonical (envelope) topic
+                    "impilo.mushex.payment"
+            },
+            groupId = "msika-flow-service"
+    )
     public void onPaymentStatusChanged(String message) {
         try {
             JsonNode node = objectMapper.readTree(message);

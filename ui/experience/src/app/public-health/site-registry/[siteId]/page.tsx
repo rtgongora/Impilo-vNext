@@ -1,0 +1,337 @@
+"use client";
+
+import Link from "next/link";
+import { useMemo, useState } from "react";
+import { ArrowLeft, Loader2, Plus, RefreshCw } from "lucide-react";
+import {
+  useCreateRenewalApplication,
+  useIssueLicence,
+  useOpenEnforcementCase,
+  useScheduleInspection,
+  useSiteRegistrySiteProfile,
+  useUploadSiteDocument,
+  useVerifySiteDocument,
+  useCreateAssignment,
+  useUpdateComplianceAction,
+} from "@/hooks/queries/useSiteRegistry";
+
+export default function SiteRegistryProfilePage({ params }: { params: { siteId: string } }) {
+  const siteId = decodeURIComponent(params.siteId);
+  const profileQ = useSiteRegistrySiteProfile(siteId);
+
+  const scheduleInspection = useScheduleInspection();
+  const issueLicence = useIssueLicence();
+  const createRenewal = useCreateRenewalApplication();
+  const openCase = useOpenEnforcementCase();
+  const updateAction = useUpdateComplianceAction();
+  const uploadDoc = useUploadSiteDocument();
+  const verifyDoc = useVerifySiteDocument();
+  const createAssignment = useCreateAssignment();
+
+  const [scheduledDate, setScheduledDate] = useState(new Date().toISOString().slice(0, 10));
+  const [inspectionType, setInspectionType] = useState("INITIAL");
+  const [templateCode, setTemplateCode] = useState("");
+
+  const profile = profileQ.data;
+  const actions = useMemo(() => profile?.complianceActions ?? [], [profile]);
+  const inspections = useMemo(() => profile?.inspections ?? [], [profile]);
+  const licences = useMemo(() => profile?.licences ?? [], [profile]);
+  const documents = useMemo(() => profile?.documents ?? [], [profile]);
+  const assignments = useMemo(() => profile?.assignments ?? [], [profile]);
+
+  const [docFile, setDocFile] = useState<File | null>(null);
+  const [docType, setDocType] = useState("SITE_PHOTO");
+  const [docNotes, setDocNotes] = useState("");
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <Link href="/public-health/site-registry" className="inline-flex items-center gap-2 text-sm text-impilo-600 hover:underline">
+            <ArrowLeft className="h-4 w-4" />
+            Site registry
+          </Link>
+          <h1 className="mt-2 text-xl font-semibold text-gray-900">{profile?.site.name || "Site profile"}</h1>
+          <div className="mt-1 text-sm text-gray-600">
+            <span className="font-mono text-xs">{siteId}</span>
+            {profile?.site.siteCode ? <span className="ml-2 text-xs text-gray-500">· Code: {profile.site.siteCode}</span> : null}
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => profileQ.refetch()}
+            className="inline-flex items-center gap-2 rounded-md border bg-white px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Refresh
+          </button>
+        </div>
+      </div>
+
+      {profileQ.isLoading ? (
+        <div className="rounded-lg border bg-white p-6 text-sm text-gray-600">
+          <div className="flex items-center gap-2">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Loading site profile…
+          </div>
+        </div>
+      ) : profileQ.isError || !profile ? (
+        <div className="rounded-lg border bg-white p-6 text-sm text-red-600">Failed to load site profile.</div>
+      ) : (
+        <>
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="rounded-lg border bg-white p-4">
+              <div className="text-xs font-medium uppercase text-gray-500">Regulatory status</div>
+              <div className="mt-1 text-sm font-semibold text-gray-900">{profile.site.regulatoryStatus || "—"}</div>
+              <div className="mt-2 text-xs text-gray-500">Lifecycle: {profile.site.lifecycleStatus || "—"}</div>
+              <div className="mt-1 text-xs text-gray-500">Active: {profile.site.activeFlag ? "Yes" : "No"}</div>
+            </div>
+            <div className="rounded-lg border bg-white p-4">
+              <div className="text-xs font-medium uppercase text-gray-500">Category</div>
+              <div className="mt-1 text-sm font-semibold text-gray-900">{profile.site.siteCategory || "—"}</div>
+              <div className="mt-2 text-xs text-gray-500">Risk: {profile.site.riskClass || "—"}</div>
+            </div>
+            <div className="rounded-lg border bg-white p-4">
+              <div className="text-xs font-medium uppercase text-gray-500">Jurisdiction</div>
+              <div className="mt-1 text-sm font-semibold text-gray-900">{profile.site.province || "—"}</div>
+              <div className="mt-2 text-xs text-gray-500">
+                {profile.site.district || "—"}
+                {profile.site.ward ? ` · ${profile.site.ward}` : ""}
+              </div>
+            </div>
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            <div className="rounded-lg border bg-white">
+              <div className="flex items-center justify-between border-b px-4 py-3">
+                <div className="text-sm font-medium text-gray-900">Schedule inspection</div>
+              </div>
+              <div className="space-y-3 p-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <label className="text-xs text-gray-600">
+                    Type
+                    <select
+                      value={inspectionType}
+                      onChange={(e) => setInspectionType(e.target.value)}
+                      className="mt-1 w-full rounded-md border px-2 py-2 text-sm"
+                    >
+                      {["INITIAL", "ROUTINE", "FOLLOW_UP", "VERIFICATION", "INVESTIGATIVE", "SPECIAL"].map((t) => (
+                        <option key={t} value={t}>
+                          {t}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="text-xs text-gray-600">
+                    Scheduled date
+                    <input
+                      type="date"
+                      value={scheduledDate}
+                      onChange={(e) => setScheduledDate(e.target.value)}
+                      className="mt-1 w-full rounded-md border px-2 py-2 text-sm"
+                    />
+                  </label>
+                </div>
+                <label className="text-xs text-gray-600">
+                  Checklist template code (optional)
+                  <input
+                    value={templateCode}
+                    onChange={(e) => setTemplateCode(e.target.value)}
+                    placeholder="e.g. FOOD_PREMISES_INITIAL"
+                    className="mt-1 w-full rounded-md border px-2 py-2 text-sm"
+                  />
+                </label>
+                <button
+                  disabled={scheduleInspection.isPending}
+                  onClick={() =>
+                    scheduleInspection.mutate({
+                      siteId,
+                      inspectionType,
+                      scheduledDate,
+                      templateCode: templateCode || undefined,
+                      inspectorRefs: [],
+                    })
+                  }
+                  className="inline-flex items-center gap-2 rounded-md bg-impilo-600 px-3 py-2 text-sm font-medium text-white hover:bg-impilo-700 disabled:opacity-50"
+                >
+                  <Plus className="h-4 w-4" />
+                  Schedule
+                </button>
+                {scheduleInspection.isError ? (
+                  <div className="text-xs text-red-600">Failed to schedule inspection.</div>
+                ) : null}
+              </div>
+            </div>
+
+            <div className="rounded-lg border bg-white">
+              <div className="flex items-center justify-between border-b px-4 py-3">
+                <div className="text-sm font-medium text-gray-900">Licensing</div>
+              </div>
+              <div className="space-y-3 p-4">
+                <button
+                  disabled={issueLicence.isPending}
+                  onClick={() =>
+                    issueLicence.mutate({
+                      siteId,
+                      licenceType: "PUBLIC_HEALTH_PERMIT",
+                      issueDate: new Date().toISOString().slice(0, 10),
+                      expiryDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().slice(0, 10),
+                    })
+                  }
+                  className="inline-flex items-center gap-2 rounded-md bg-gray-900 px-3 py-2 text-sm font-medium text-white hover:bg-black disabled:opacity-50"
+                >
+                  Issue licence (1 year)
+                </button>
+                <button
+                  disabled={createRenewal.isPending}
+                  onClick={() => createRenewal.mutate({ siteId, applicantName: "Applicant" })}
+                  className="inline-flex items-center gap-2 rounded-md border bg-white px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                >
+                  Create renewal application
+                </button>
+                {issueLicence.isError ? <div className="text-xs text-red-600">Failed to issue licence.</div> : null}
+                {createRenewal.isError ? <div className="text-xs text-red-600">Failed to create renewal.</div> : null}
+                <div className="mt-2 text-xs text-gray-500">
+                  Licences: {licences.length} · Inspections: {inspections.length} · Actions: {actions.length}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-lg border bg-white">
+            <div className="border-b px-4 py-3">
+              <div className="text-sm font-medium text-gray-900">Compliance actions</div>
+            </div>
+            <div className="divide-y">
+              {actions.map((a) => {
+                const actionId = String(a.actionId || "");
+                return (
+                  <div key={actionId} className="flex flex-col gap-2 px-4 py-3 md:flex-row md:items-center md:justify-between">
+                    <div>
+                      <div className="text-sm font-medium text-gray-900">{String(a.actionType || "ACTION")}</div>
+                      <div className="text-xs text-gray-500">
+                        Status: {String(a.status || "—")} · Due: {String(a.dueDate || "—")}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        disabled={updateAction.isPending || !actionId}
+                        onClick={() => updateAction.mutate({ actionId, body: { status: "COMPLETED", completionNotes: "Completed" } })}
+                        className="rounded-md border bg-white px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                      >
+                        Mark completed
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+              {actions.length === 0 ? <div className="px-4 py-6 text-sm text-gray-500">No compliance actions.</div> : null}
+            </div>
+          </div>
+
+          <div className="rounded-lg border bg-white">
+            <div className="flex items-center justify-between border-b px-4 py-3">
+              <div className="text-sm font-medium text-gray-900">Documents</div>
+            </div>
+            <div className="space-y-3 p-4">
+              <div className="grid gap-3 md:grid-cols-3">
+                <label className="text-xs text-gray-600">
+                  Type
+                  <input value={docType} onChange={(e) => setDocType(e.target.value)} className="mt-1 w-full rounded-md border px-2 py-2 text-sm" />
+                </label>
+                <label className="text-xs text-gray-600 md:col-span-2">
+                  Notes
+                  <input value={docNotes} onChange={(e) => setDocNotes(e.target.value)} className="mt-1 w-full rounded-md border px-2 py-2 text-sm" />
+                </label>
+              </div>
+              <input type="file" onChange={(e) => setDocFile(e.target.files?.[0] ?? null)} className="text-sm" />
+              <button
+                disabled={!docFile || uploadDoc.isPending}
+                onClick={() => docFile && uploadDoc.mutate({ file: docFile, siteId, documentType: docType, notes: docNotes })}
+                className="inline-flex items-center gap-2 rounded-md bg-impilo-600 px-3 py-2 text-sm font-medium text-white hover:bg-impilo-700 disabled:opacity-50"
+              >
+                Upload document
+              </button>
+              {uploadDoc.isError ? <div className="text-xs text-red-600">Failed to upload document.</div> : null}
+            </div>
+            <div className="divide-y">
+              {documents.map((d) => {
+                const documentId = String((d as any).documentId || "");
+                const state = String((d as any).verificationState || "UNVERIFIED");
+                return (
+                  <div key={documentId} className="flex flex-col gap-2 px-4 py-3 md:flex-row md:items-center md:justify-between">
+                    <div>
+                      <div className="text-sm font-medium text-gray-900">{String((d as any).documentType || "DOC")}</div>
+                      <div className="text-xs text-gray-500">State: {state}</div>
+                      <div className="text-[11px] text-gray-400 font-mono">{String((d as any).fileReference || "")}</div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        disabled={verifyDoc.isPending || !documentId}
+                        onClick={() => verifyDoc.mutate({ documentId, verificationState: "VERIFIED", notes: "Verified" })}
+                        className="rounded-md border bg-white px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                      >
+                        Mark verified
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+              {documents.length === 0 ? <div className="px-4 py-6 text-sm text-gray-500">No documents.</div> : null}
+            </div>
+          </div>
+
+          <div className="rounded-lg border bg-white">
+            <div className="flex items-center justify-between border-b px-4 py-3">
+              <div className="text-sm font-medium text-gray-900">Assignments</div>
+              <button
+                disabled={createAssignment.isPending}
+                onClick={() =>
+                  createAssignment.mutate({
+                    siteId,
+                    assignmentType: "INSPECTION",
+                    assignedRole: "INSPECTOR",
+                    priority: "NORMAL",
+                    notes: "Auto-assigned from UI",
+                  })
+                }
+                className="rounded-md border bg-white px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              >
+                Create assignment
+              </button>
+            </div>
+            <div className="divide-y">
+              {assignments.map((a) => (
+                <div key={String((a as any).assignmentId || "")} className="px-4 py-3">
+                  <div className="text-sm font-medium text-gray-900">{String((a as any).assignmentType || "ASSIGNMENT")}</div>
+                  <div className="text-xs text-gray-500">
+                    Status: {String((a as any).status || "—")} · Role: {String((a as any).assignedRole || "—")} · Assignee:{" "}
+                    {String((a as any).assignedToRef || "—")}
+                  </div>
+                </div>
+              ))}
+              {assignments.length === 0 ? <div className="px-4 py-6 text-sm text-gray-500">No assignments.</div> : null}
+            </div>
+          </div>
+
+          <div className="rounded-lg border bg-white">
+            <div className="flex items-center justify-between border-b px-4 py-3">
+              <div className="text-sm font-medium text-gray-900">Enforcement</div>
+              <button
+                disabled={openCase.isPending}
+                onClick={() => openCase.mutate({ siteId, triggerType: "COMPLAINT", recommendation: "Investigate", authorityRoute: "EHO" })}
+                className="rounded-md border bg-white px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              >
+                Open enforcement case
+              </button>
+            </div>
+            <div className="px-4 py-6 text-sm text-gray-500">
+              Foundation support only: cases can be opened and linked refs can be added later.
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+

@@ -96,6 +96,15 @@ public class TusoServiceClient {
         return extractData(response);
     }
 
+    /**
+     * Lightweight facility legitimacy summary for cross-service gating.
+     */
+    public JsonNode getFacilityStatusSummary(long facilityId) {
+        String url = baseUrl + "/v1/internal/facilities/" + facilityId + "/status-summary";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
     // ── Shift Management ─────────────────────────────────────────────
 
     /** Get current active shift for a user. */

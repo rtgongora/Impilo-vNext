@@ -63,7 +63,10 @@ public class OrderStateMachine {
     @Transactional
     public OrderEntity createOrder(UUID tenantId, String actorId, ActorType actorType,
                                    String patientCpid, OrderType orderType,
-                                   UUID facilityId, UUID vendorId, String idempotencyKey) {
+                                   UUID facilityId, String facilityRef,
+                                   UUID vendorId, String vendorRef,
+                                   String providerRef,
+                                   String idempotencyKey) {
         // Idempotency check
         if (idempotencyKey != null) {
             Optional<OrderEntity> existing = orderRepository.findByIdempotencyKey(idempotencyKey);
@@ -82,7 +85,10 @@ public class OrderStateMachine {
         order.setOrderType(orderType);
         order.setStatus(OrderStatus.CREATED);
         order.setFacilityId(facilityId);
+        order.setFacilityRef(facilityRef);
         order.setVendorId(vendorId);
+        order.setVendorRef(vendorRef);
+        order.setProviderRef(providerRef);
         order.setAmountTotal(BigDecimal.ZERO);
         order.setCurrency("ZWG");
         order.setIdempotencyKey(idempotencyKey);

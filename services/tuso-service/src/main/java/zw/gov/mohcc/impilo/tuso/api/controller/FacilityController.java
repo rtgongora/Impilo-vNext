@@ -25,6 +25,7 @@ import zw.gov.mohcc.impilo.tuso.api.dto.FacilityIdentifierDto;
 import zw.gov.mohcc.impilo.tuso.api.dto.FacilityListResponse;
 import zw.gov.mohcc.impilo.tuso.api.dto.FacilityResponse;
 import zw.gov.mohcc.impilo.tuso.api.dto.FacilitySearchRequest;
+import zw.gov.mohcc.impilo.tuso.api.dto.FacilityStatusSummary;
 import zw.gov.mohcc.impilo.tuso.api.dto.UpdateFacilityRequest;
 import zw.gov.mohcc.impilo.tuso.core.FacilityService;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityEntity;
@@ -75,6 +76,26 @@ public class FacilityController {
         FacilityResponse response = toDetailResponse(detail);
 
         return ResponseEntity.ok(ApiResponse.ok(response, ctx.correlationId().toString()));
+    }
+
+    /**
+     * Lightweight status reference endpoint for cross-service legitimacy checks.
+     * Used by VARAPI (PIC assignment) and commerce/booking flows.
+     */
+    @GetMapping("/{id}/status-summary")
+    public ResponseEntity<ApiResponse<FacilityStatusSummary>> getStatusSummary(@PathVariable Long id) {
+        TrustContext ctx = TrustContextHolder.require();
+        FacilityService.FacilityDetail detail = facilityService.getFacility(id);
+        FacilityEntity facility = detail.facility();
+        FacilityStatusSummary summary = new FacilityStatusSummary(
+                facility.getId(),
+                facility.getFacilityCode(),
+                facility.getName(),
+                facility.getStatus(),
+                facility.getOperationalStatus(),
+                facility.getRegulatoryStatus()
+        );
+        return ResponseEntity.ok(ApiResponse.ok(summary, ctx.correlationId().toString()));
     }
 
     @PostMapping("/search")

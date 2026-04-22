@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
+import zw.gov.mohcc.impilo.sharedkernel.events.EventTopicRegistry;
 import zw.gov.mohcc.impilo.varapi.integration.TusoClient;
 import zw.gov.mohcc.impilo.varapi.persistence.entity.EventOutboxEntity;
 import zw.gov.mohcc.impilo.varapi.persistence.entity.LicenseEntity;
@@ -35,6 +36,7 @@ public class PractitionerInChargeService {
     private final LicenseRepository licenseRepository;
     private final TusoClient tusoClient;
     private final EventOutboxRepository outboxRepository;
+    private final EventTopicRegistry topics = new EventTopicRegistry("varapi");
 
     public PractitionerInChargeService(
             PractitionerInChargeAssignmentRepository picRepository,
@@ -103,9 +105,9 @@ public class PractitionerInChargeService {
         log.info("PIC assignment created: id={}, providerId={}, facilityId={}",
                 assignment.getId(), providerId, facilityId);
 
-        publishEvent("PIC_ASSIGNMENT", assignment.getId().toString(),
-                "varapi.pic.assignment.created",
-                String.format("{\"assignmentId\":%d,\"providerId\":%d,\"facilityId\":%d}",
+        publishEvent(ctx, "PIC_ASSIGNMENT", assignment.getId().toString(),
+                topics.eventType("pic_assignment", "created"),
+                String.format("{\"assignmentId\":%d,\"providerId\":%d,\"facilityId\":%d,\"approvalState\":\"PENDING\"}",
                         assignment.getId(), providerId, facilityId));
 
         return assignment;
@@ -137,9 +139,9 @@ public class PractitionerInChargeService {
         assignment = picRepository.save(assignment);
 
         log.info("PIC assignment approved: id={}", assignmentId);
-        publishEvent("PIC_ASSIGNMENT", assignment.getId().toString(),
-                "varapi.pic.assignment.approved",
-                String.format("{\"assignmentId\":%d,\"providerId\":%d,\"facilityId\":%d}",
+        publishEvent(ctx, "PIC_ASSIGNMENT", assignment.getId().toString(),
+                topics.eventType("pic_assignment", "approved"),
+                String.format("{\"assignmentId\":%d,\"providerId\":%d,\"facilityId\":%d,\"approvalState\":\"APPROVED\"}",
                         assignmentId, assignment.getProvider().getId(), assignment.getFacilityId()));
 
         return assignment;
@@ -164,9 +166,10 @@ public class PractitionerInChargeService {
         assignment = picRepository.save(assignment);
 
         log.info("PIC assignment rejected: id={}", assignmentId);
-        publishEvent("PIC_ASSIGNMENT", assignment.getId().toString(),
-                "varapi.pic.assignment.rejected",
-                String.format("{\"assignmentId\":%d}", assignmentId));
+        publishEvent(ctx, "PIC_ASSIGNMENT", assignment.getId().toString(),
+                topics.eventType("pic_assignment", "rejected"),
+                String.format("{\"assignmentId\":%d,\"approvalState\":\"REJECTED\",\"reason\":%s}",
+                        assignmentId, reason != null ? "\"" + reason.replace("\"", "\\\"") + "\"" : "null"));
 
         return assignment;
     }
@@ -197,9 +200,9 @@ public class PractitionerInChargeService {
         assignment = picRepository.save(assignment);
 
         log.info("PIC assignment terminated: id={}", assignmentId);
-        publishEvent("PIC_ASSIGNMENT", assignment.getId().toString(),
-                "varapi.pic.assignment.terminated",
-                String.format("{\"assignmentId\":%d}", assignmentId));
+        publishEvent(ctx, "PIC_ASSIGNMENT", assignment.getId().toString(),
+                topics.eventType("pic_assignment", "terminated"),
+                String.format("{\"assignmentId\":%d,\"status\":\"TERMINATED\"}", assignmentId));
 
         return assignment;
     }
@@ -418,12 +421,17 @@ public class PractitionerInChargeService {
         return null;
     }
 
-    private void publishEvent(String aggregateType, String aggregateId, String eventType, String payload) {
+    private void publishEvent(TrustContext ctx, String aggregateType, String aggregateId, String eventType, String payload) {
         EventOutboxEntity event = new EventOutboxEntity();
         event.setAggregateType(aggregateType);
         event.setAggregateId(aggregateId);
         event.setEventType(eventType);
         event.setPayload(payload);
+        event.setTenantId(ctx.tenantId() != null ? ctx.tenantId().toString() : null);
+        event.setCorrelationId(ctx.correlationId() != null ? ctx.correlationId().toString() : null);
+        event.setSubjectType(aggregateType);
+        event.setSubjectId(aggregateId);
+        event.setPartitionKey(aggregateId);
         outboxRepository.save(event);
     }
 }

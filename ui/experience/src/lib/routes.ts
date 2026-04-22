@@ -72,6 +72,8 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/public-health", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "PUBLIC_HEALTH", pageTitle: "Public Health", navLabel: "Public Health", navZone: "professional" },
   { path: "/public-health/surveillance", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "PUBLIC_HEALTH", pageTitle: "Surveillance", navLabel: "Surveillance", navZone: "professional" },
   { path: "/public-health/campaigns", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "PUBLIC_HEALTH", pageTitle: "Campaigns", navLabel: "Campaigns", navZone: "professional" },
+  { path: "/public-health/site-registry", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "PUBLIC_HEALTH", pageTitle: "Site Registry", navLabel: "Site Registry", navZone: "professional" },
+  { path: "/public-health/site-registry/[siteId]", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "PUBLIC_HEALTH", pageTitle: "Site Profile", navLabel: "Site Profile", navZone: "professional" },
 
   // ── Zone: Omnichannel ───────────────────────────────────────────
   { path: "/omnichannel", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Omnichannel Hub", navLabel: "Omnichannel", navZone: "professional" },
