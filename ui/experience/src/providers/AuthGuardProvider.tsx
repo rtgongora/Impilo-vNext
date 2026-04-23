@@ -14,53 +14,15 @@ import { useConsentStore } from "@/hooks/useConsentStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useWorkspaceStore } from "@/hooks/useWorkspaceStore";
 import { useShiftStore } from "@/hooks/useShiftStore";
+import { matchesRequiredRole, ROLE_GROUPS } from "@/lib/auth/role-groups";
 import { matchRouteDefinition } from "@/lib/routes";
 import { isSchedulingClusterPath } from "@/lib/scheduling-paths";
 
+/** Re-export for existing imports from this module. */
+export { ROLE_GROUPS, matchesRequiredRole };
+
 /** Paths that bypass the consent gate (legal pages, consent page itself, auth). */
 const CONSENT_EXEMPT_PREFIXES = ["/auth", "/consent", "/privacy", "/terms", "/account-deletion", "/kiosk", "/verify", "/share"];
-
-/**
- * Map abstract role-group names used in routes.ts to concrete Keycloak roles.
- * Must stay aligned with backend SecurityConfig.java role-group arrays.
- *
- * Per Health OS Doctrine §4: Role-based means the system adapts what is visible,
- * enabled, required, or emphasized according to the active role and context.
- * This includes regulated professional roles, caregiving roles, operational roles,
- * administrative roles, and non-clinical participation roles.
- */
-export const ROLE_GROUPS: Record<string, string[]> = {
-  /** Sovereign registry / HIE governance plane — distinct from facility org admin. */
-  REGISTRY_ADMIN: ["SYSTEM_ADMIN", "HIE_ADMIN"],
-  /** Facility and enterprise operations (includes finance operators). */
-  ORGANIZATION_ADMIN: ["SYSTEM_ADMIN", "FACILITY_ADMIN", "DEVELOPER", "FINANCE"],
-  /**
-   * Identity + trust operations: facility/developers plus HIE registry operators.
-   * Used for id-services and selected trust admin routes so HIE_ADMIN can reach real tooling.
-   */
-  ADMIN_OR_HIE: ["SYSTEM_ADMIN", "HIE_ADMIN", "FACILITY_ADMIN", "DEVELOPER"],
-  ADMIN: ["SYSTEM_ADMIN", "FACILITY_ADMIN", "DEVELOPER"],
-  FINANCE: ["SYSTEM_ADMIN", "FACILITY_ADMIN", "FINANCE"],
-  PAYER_OPS: ["SYSTEM_ADMIN", "FINANCE", "DEVELOPER"],
-  MSIKA_GOVERNANCE: ["SYSTEM_ADMIN", "FACILITY_ADMIN", "FINANCE", "DEVELOPER"],
-  CLINICAL: ["CLINICIAN", "NURSE", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"],
-  PRESCRIBER: ["CLINICIAN", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"],
-  DISPENSER: ["PHARMACIST", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"],
-  QUEUE: ["CLINICIAN", "NURSE", "SUPPORT_AGENT", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"],
-  CITIZEN: ["CITIZEN", "SYSTEM_ADMIN", "DEVELOPER"],
-  /** Health OS §4: Caregiving roles — delegated care partners and family caregivers. */
-  CAREGIVER: ["CAREGIVER", "CARE_PARTNER", "CITIZEN", "SYSTEM_ADMIN"],
-  /** Health OS §7: Broad operational and public health roles (+ DEVELOPER, aligned with SecurityConfig). */
-  PUBLIC_HEALTH: ["PUBLIC_HEALTH_OFFICER", "ENV_HEALTH", "CHW", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"],
-  /** Health OS §10: App/module extensibility — roles for governed extensions. */
-  COMMERCE: ["FINANCE", "CLINICIAN", "NURSE", "PHARMACIST", "SUPPORT_AGENT", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"],
-};
-
-export function matchesRequiredRole(hasRole: (r: string) => boolean, requiredRole: string): boolean {
-  const group = ROLE_GROUPS[requiredRole];
-  if (group) return group.some((r) => hasRole(r));
-  return hasRole(requiredRole);
-}
 
 export function AuthGuardProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();

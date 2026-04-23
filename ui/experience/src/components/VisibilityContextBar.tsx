@@ -39,7 +39,8 @@ export function VisibilityContextBar() {
 
   return (
     <div
-      className="pointer-events-none fixed bottom-0 left-0 right-0 z-[9975] border-t border-slate-200/80 bg-slate-50/95 px-4 py-1.5 text-[11px] text-slate-600 backdrop-blur-sm dark:border-slate-700/80 dark:bg-slate-900/90 dark:text-slate-300"
+      className="pointer-events-none fixed left-0 right-0 z-[9975] border-t border-slate-200/80 bg-slate-50/95 px-4 py-1.5 text-[11px] text-slate-600 backdrop-blur-sm dark:border-slate-700/80 dark:bg-slate-900/90 dark:text-slate-300"
+      style={{ bottom: "var(--shell-taskbar-height, 0px)" }}
       role="status"
       aria-live="polite"
     >

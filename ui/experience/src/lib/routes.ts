@@ -1,7 +1,7 @@
 /**
  * Experience UI — Complete Route Registry
  *
- * 244 routes across 26 zones.
+ * 247 routes across 26 zones.
  * Each route specifies: path, zone, layout, sidebar context, guard, page title, and nav label.
  *
  * Zones: auth, home, facility, workspace, shift, queue, ehr, admin, registry,
@@ -365,6 +365,10 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/marketplace/cart", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "role", requiredRole: "COMMERCE", pageTitle: "Shopping Cart", navLabel: "Cart", navZone: "work" },
   { path: "/marketplace/substitutions", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "role", requiredRole: "COMMERCE", pageTitle: "Substitutions", navLabel: "Substitutions", navZone: "work" },
 
+  // ── Zone: Experience shell (OS-like utilities) ──────────────────────
+  { path: "/shell/file-manager", zone: "shell", layout: "app", sidebar: "main", guard: "auth", pageTitle: "File manager", navLabel: "Files", navZone: "life" },
+  { path: "/shell/task-manager", zone: "shell", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Task manager", navLabel: "Tasks", navZone: "life" },
+
   // ── Zone: Intelligent Experience (Health OS §2a, §16a) ─────────────
   { path: "/ask", zone: "intelligent", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Ask", navLabel: "Ask", navZone: "life" },
   { path: "/search", zone: "intelligent", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Search", navLabel: "Search", navZone: "life" },
@@ -374,7 +378,7 @@ export const ROUTES: RouteDefinition[] = [
 ];
 
 // Total route count assertion
-export const EXPECTED_ROUTE_COUNT = 244;
+export const EXPECTED_ROUTE_COUNT = 247;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

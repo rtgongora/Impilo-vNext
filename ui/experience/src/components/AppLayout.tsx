@@ -88,7 +88,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
           </div>
         </header>
         <OperationalContextStrip />
-        <main className="flex-1 overflow-auto p-4">{children}</main>
+        <main className="flex-1 overflow-auto p-4 pb-[var(--shell-taskbar-height,0px)]">{children}</main>
       </div>
       <ProactiveAssistant />
     </div>

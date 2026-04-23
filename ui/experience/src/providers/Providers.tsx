@@ -23,6 +23,7 @@ import { usePrivacyDisplayStore } from "@/hooks/usePrivacyDisplayStore";
 import { InactivityLockProvider } from "./InactivityLockProvider";
 import { PrivacyWatermark } from "@/components/PrivacyWatermark";
 import { VisibilityContextBar } from "@/components/VisibilityContextBar";
+import { ShellChrome } from "@/components/shell/ShellChrome";
 import { loadHydratedExperienceContinuity, resetExperienceContinuity } from "@/lib/session-continuity";
 import { useWorkspaceStore } from "@/hooks/useWorkspaceStore";
 import { useShiftStore } from "@/hooks/useShiftStore";
@@ -112,6 +113,7 @@ export function Providers({ children }: { children: ReactNode }) {
               <PrivacyWatermark />
               <VisibilityContextBar />
               {children}
+              <ShellChrome />
             </InactivityLockProvider>
           </AuthGuardProvider>
         </ExperienceEntryProvider>
