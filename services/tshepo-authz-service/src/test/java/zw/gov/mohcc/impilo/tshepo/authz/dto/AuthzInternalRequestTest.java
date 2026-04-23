@@ -123,6 +123,14 @@ class AuthzInternalRequestTest {
                 "Path with only v1/api segments must return UNKNOWN");
     }
 
+    @Test
+    @DisplayName("deriveResourceType: Experience shell workspace synthetic path -> workspace-state")
+    void deriveResourceType_experienceShellWorkspacePath() {
+        String type = AuthzInternalRequest.deriveResourceType("/internal/v1/shell/workspace-state");
+        assertEquals("workspace-state", type,
+                "Synthetic BFF path must map policy resource_type workspace-state (see V008/V009 migrations)");
+    }
+
     // ════════════════════════════════════════════════════════════════════
     // deriveResourceId
     // ════════════════════════════════════════════════════════════════════

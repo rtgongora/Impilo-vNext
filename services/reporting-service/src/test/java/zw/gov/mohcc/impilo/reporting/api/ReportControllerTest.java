@@ -8,6 +8,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -19,6 +21,9 @@ import zw.gov.mohcc.impilo.reporting.persistence.entity.ReportDefinitionEntity;
 import zw.gov.mohcc.impilo.reporting.persistence.entity.ReportRunEntity;
 import zw.gov.mohcc.impilo.reporting.persistence.entity.ReportScheduleEntity;
 
+import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -181,6 +186,25 @@ class ReportControllerTest {
     }
 
     @Test
+    @DisplayName("listTenantRuns returns items from runService")
+    void listTenantRunsSuccess() {
+        ReportRunEntity run = buildRun("ADMIN_DATA_EXPORT");
+        when(runService.listTenantRuns(eq(tenantId), any()))
+                .thenReturn(new PageImpl<>(List.of(run), PageRequest.of(0, 20), 1));
+        when(runService.toResponse(run)).thenReturn(new ReportRunResponse(
+                run.getRunId(), "ADMIN_DATA_EXPORT", "{}", "JSON", "COMPLETED",
+                "{}", null, null, null, "admin", run.getCreatedAt()));
+
+        MockHttpServletRequest req = new MockHttpServletRequest();
+        ResponseEntity<?> result = controller.listTenantRuns(0, 20, req);
+        assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(result.getBody()).isInstanceOf(Map.class);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> body = (Map<String, Object>) result.getBody();
+        assertThat(((Number) body.get("totalElements")).longValue()).isEqualTo(1L);
+    }
+
+    @Test
     @DisplayName("createSchedule returns 404 for unknown report")
     void createScheduleNotFound() {
         when(scheduleService.createSchedule(eq(tenantId), eq("unknown"), anyString(), any()))
@@ -224,6 +248,7 @@ class ReportControllerTest {
         run.setStatus(RunStatus.COMPLETED);
         run.setResult("{}");
         run.setCreatedBy("admin");
+        run.setCreatedAt(OffsetDateTime.parse("2026-01-01T12:00:00Z"));
         return run;
     }
 }

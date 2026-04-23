@@ -12,6 +12,7 @@ export function ShellTaskManagerView() {
   const closeTask = useShellStore((s) => s.closeTask);
   const restoreTask = useShellStore((s) => s.restoreTask);
   const minimizeTask = useShellStore((s) => s.minimizeTask);
+  const clearClosedTasks = useShellStore((s) => s.clearClosedTasks);
   const recentItems = useShellStore((s) => s.recentItems);
 
   const ordered = [...openTasks].sort(
@@ -26,6 +27,15 @@ export function ShellTaskManagerView() {
           Tasks are synced from navigation. Close removes them from this session; reopen modules from Start or the
           sidebar.
         </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <button
+            type="button"
+            className="rounded-md border border-slate-200 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+            onClick={() => clearClosedTasks()}
+          >
+            Clear minimized from taskbar
+          </button>
+        </div>
         <ul className="mt-4 divide-y divide-slate-100 dark:divide-slate-800">
           {ordered.length === 0 ? (
             <li className="py-8 text-center text-sm text-slate-500">No open tasks.</li>

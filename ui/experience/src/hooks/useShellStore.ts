@@ -2,6 +2,7 @@
 
 import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
+import { emitShellEvent } from "@/lib/shell/shell-events";
 import type { AppDefinition, RecentItem, RunningTask, RunningTaskStatus, RunningTaskType } from "@/lib/shell/types";
 
 const STORAGE_PINNED = "exp:shell_pins";
@@ -10,6 +11,12 @@ const STORAGE_RECENT = "exp:shell_recent";
 
 const MAX_OPEN_TASKS = 24;
 const MAX_RECENT = 30;
+const MAX_PINS = 32;
+
+function recordedAtMs(iso: string): number {
+  const t = Date.parse(iso);
+  return Number.isFinite(t) ? t : 0;
+}
 
 function loadJson<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback;
@@ -43,14 +50,27 @@ export interface ShellStore {
   startOpen: boolean;
   searchOpen: boolean;
   taskManagerOpen: boolean;
+  /** Incremented when the search palette should focus its input (toggle, Ctrl+K, or quick action). */
+  searchPaletteFocusTick: number;
 
   setStartOpen: (open: boolean) => void;
   setSearchOpen: (open: boolean) => void;
   setTaskManagerOpen: (open: boolean) => void;
   toggleStart: () => void;
   toggleSearch: () => void;
+  /** Opens search (if closed) and requests input focus — idempotent for already-open palette. */
+  focusSearchPalette: () => void;
 
   hydrateFromSession: () => void;
+
+  /** Replace pins + recents from BFF (Redis) after visibility filtering — also mirrors to sessionStorage. */
+  applyRemoteWorkspaceSnapshot: (snap: { pinnedAppCodes: string[]; recentItems: RecentItem[] }) => void;
+
+  /**
+   * Merge server workspace into hydrated session: pin union (local order first, capped),
+   * recents by refKey — newer `recordedAt` wins; on tie, local wins.
+   */
+  mergeRemoteWorkspaceWithSession: (snap: { pinnedAppCodes: string[]; recentItems: RecentItem[] }) => void;
 
   pinApp: (appCode: string) => void;
   unpinApp: (appCode: string) => void;
@@ -94,6 +114,7 @@ export const useShellStore = create<ShellStore>()(
     startOpen: false,
     searchOpen: false,
     taskManagerOpen: false,
+    searchPaletteFocusTick: 0,
 
     hydrateFromSession: () => {
       set({
@@ -103,21 +124,91 @@ export const useShellStore = create<ShellStore>()(
       });
     },
 
+    applyRemoteWorkspaceSnapshot: (snap) => {
+      const pins = snap.pinnedAppCodes.slice(0, MAX_PINS);
+      const recents = snap.recentItems.slice(0, MAX_RECENT);
+      set({ pinnedAppCodes: pins, recentItems: recents });
+      saveJson(STORAGE_PINNED, pins);
+      saveJson(STORAGE_RECENT, recents);
+    },
+
+    mergeRemoteWorkspaceWithSession: (snap) => {
+      const localPins = get().pinnedAppCodes;
+      const localRecents = get().recentItems;
+      const remotePins = snap.pinnedAppCodes;
+      const remoteRecents = snap.recentItems;
+
+      const seenPin = new Set<string>();
+      const mergedPins: string[] = [];
+      for (const p of localPins) {
+        if (seenPin.has(p)) continue;
+        seenPin.add(p);
+        mergedPins.push(p);
+      }
+      for (const p of remotePins) {
+        if (seenPin.has(p)) continue;
+        seenPin.add(p);
+        mergedPins.push(p);
+      }
+      const pins = mergedPins.slice(0, MAX_PINS);
+
+      const byRef = new Map<string, RecentItem>();
+      for (const r of localRecents) {
+        byRef.set(r.refKey, r);
+      }
+      for (const r of remoteRecents) {
+        const loc = byRef.get(r.refKey);
+        if (!loc) {
+          byRef.set(r.refKey, r);
+          continue;
+        }
+        const tl = recordedAtMs(loc.recordedAt);
+        const tr = recordedAtMs(r.recordedAt);
+        // Newer recordedAt wins; on exact tie keep the local row (already in map).
+        if (tr > tl) {
+          byRef.set(r.refKey, r);
+        }
+      }
+      const recents = Array.from(byRef.values())
+        .sort((a, b) => recordedAtMs(b.recordedAt) - recordedAtMs(a.recordedAt))
+        .slice(0, MAX_RECENT);
+
+      set({ pinnedAppCodes: pins, recentItems: recents });
+      saveJson(STORAGE_PINNED, pins);
+      saveJson(STORAGE_RECENT, recents);
+    },
+
     setStartOpen: (open) => set({ startOpen: open }),
     setSearchOpen: (open) => set({ searchOpen: open }),
     setTaskManagerOpen: (open) => set({ taskManagerOpen: open }),
     toggleStart: () => set((s) => ({ startOpen: !s.startOpen, searchOpen: false })),
-    toggleSearch: () => set((s) => ({ searchOpen: !s.searchOpen, startOpen: false })),
+    toggleSearch: () =>
+      set((s) => {
+        const nextOpen = !s.searchOpen;
+        return {
+          searchOpen: nextOpen,
+          startOpen: false,
+          searchPaletteFocusTick: nextOpen ? s.searchPaletteFocusTick + 1 : s.searchPaletteFocusTick,
+        };
+      }),
+    focusSearchPalette: () =>
+      set((s) => ({
+        searchOpen: true,
+        startOpen: false,
+        searchPaletteFocusTick: s.searchPaletteFocusTick + 1,
+      })),
 
     pinApp: (appCode) => {
       const next = Array.from(new Set([...get().pinnedAppCodes, appCode]));
       set({ pinnedAppCodes: next });
       saveJson(STORAGE_PINNED, next);
+      emitShellEvent("app_pinned", { appCode });
     },
     unpinApp: (appCode) => {
       const next = get().pinnedAppCodes.filter((c) => c !== appCode);
       set({ pinnedAppCodes: next });
       saveJson(STORAGE_PINNED, next);
+      emitShellEvent("app_unpinned", { appCode });
     },
     togglePinApp: (appCode) => {
       if (get().pinnedAppCodes.includes(appCode)) {
@@ -160,6 +251,13 @@ export const useShellStore = create<ShellStore>()(
       set({ openTasks: nextTasks, activeTaskId: activeId });
       saveJson(STORAGE_TASKS, nextTasks);
 
+      emitShellEvent(existing ? "task_activated" : "task_opened", {
+        route,
+        taskId: activeId,
+        appId,
+        taskType,
+      });
+
       get().recordRecent({
         kind: "route",
         title,
@@ -179,6 +277,7 @@ export const useShellStore = create<ShellStore>()(
       );
       set({ openTasks: next });
       saveJson(STORAGE_TASKS, next);
+      emitShellEvent("task_activated", { taskId: id });
     },
 
     minimizeTask: (id) => {
@@ -205,6 +304,7 @@ export const useShellStore = create<ShellStore>()(
         activeTaskId: get().activeTaskId === id ? next.find((t) => t.status === "open")?.id ?? null : get().activeTaskId,
       });
       saveJson(STORAGE_TASKS, next);
+      emitShellEvent("task_closed", { taskId: id });
     },
 
     updateTaskTitleForRoute: (route, title) => {
@@ -214,7 +314,15 @@ export const useShellStore = create<ShellStore>()(
     },
 
     clearClosedTasks: () => {
-      /* placeholder — same as close all minimized optional */
+      const prev = get().openTasks;
+      const next = prev.filter((t) => t.status !== "minimized");
+      const removed = prev.length - next.length;
+      const aid = get().activeTaskId;
+      const nextActive =
+        aid && next.some((t) => t.id === aid) ? aid : (next.find((t) => t.status === "open")?.id ?? null);
+      set({ openTasks: next, activeTaskId: nextActive });
+      saveJson(STORAGE_TASKS, next);
+      if (removed > 0) emitShellEvent("task_cleared_minimized", { count: removed });
     },
 
     recordRecent: (item) => {
@@ -239,6 +347,7 @@ export const useShellStore = create<ShellStore>()(
         refKey: `app:${app.appCode}`,
         sensitivity: "normal",
       });
+      emitShellEvent("app_launched", { appCode: app.appCode, href: app.href });
       routerPush(app.href);
       set({ startOpen: false, searchOpen: false });
     },
@@ -252,6 +361,7 @@ export const useShellStore = create<ShellStore>()(
         startOpen: false,
         searchOpen: false,
         taskManagerOpen: false,
+        searchPaletteFocusTick: 0,
       });
       if (typeof window !== "undefined") {
         sessionStorage.removeItem(STORAGE_TASKS);

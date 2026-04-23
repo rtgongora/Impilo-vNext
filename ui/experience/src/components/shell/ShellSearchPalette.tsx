@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Hash, Loader2, Search, X } from "lucide-react";
 import { useAuthStore } from "@/hooks/useAuthStore";
@@ -8,7 +8,9 @@ import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { fetchShellFusionHints } from "@/hooks/useIntelligence";
 import { useShellStore } from "@/hooks/useShellStore";
 import { apiClient } from "@/lib/api-client";
+import { emitShellEvent } from "@/lib/shell/shell-events";
 import type { ShellFusionHint } from "@/lib/intelligence/types";
+import { normalizeFusionHints } from "@/lib/shell/normalize-fusion-hints";
 import { listVisibleShellApps, visibleShellCommands } from "@/lib/shell/app-registry";
 import type { ShellCommand } from "@/lib/shell/types";
 import { ShellIcon } from "./ShellIcon";
@@ -54,70 +56,20 @@ function normalizeHits(raw: unknown): PlatformHit[] {
     .filter(Boolean) as PlatformHit[];
 }
 
-function titleFromIndexHit(hit: Record<string, unknown>): string {
-  const cj = hit.contentJson as Record<string, unknown> | undefined;
-  const t =
-    (cj && typeof cj.title === "string" && cj.title) ||
-    (cj && typeof cj.name === "string" && cj.name) ||
-    (typeof hit.searchableText === "string" && hit.searchableText.slice(0, 120)) ||
-    (typeof hit.entityType === "string" ? hit.entityType : "entity");
-  return String(t);
-}
-
-function normalizeFusionHints(raw: unknown): ShellFusionHint[] {
-  if (!raw || typeof raw !== "object") return [];
-  const root = raw as Record<string, unknown>;
-  const data = root.data as Record<string, unknown> | undefined;
-  const hints = data?.hints;
-  if (!Array.isArray(hints)) return [];
-  return hints
-    .map((h, index) => {
-      if (!h || typeof h !== "object") return null;
-      const row = h as Record<string, unknown>;
-      const source = typeof row.source === "string" ? row.source : "fusion";
-      const hit = row.hit as Record<string, unknown> | undefined;
-      if (!hit) return null;
-      let title = titleFromIndexHit(hit);
-      if (source === "guidance_knowledge") {
-        title =
-          (typeof hit.title === "string" && hit.title) ||
-          (typeof hit.headline === "string" && hit.headline) ||
-          title;
-      }
-      const subtitle =
-        typeof hit.searchableText === "string"
-          ? hit.searchableText.slice(0, 120)
-          : typeof hit.summary === "string"
-            ? hit.summary.slice(0, 120)
-            : source.replace(/_/g, " ");
-      const ref: IndexSearchHitRef = {
-        entityType: typeof hit.entityType === "string" ? hit.entityType : "entity",
-        entityId: typeof hit.entityId === "string" ? hit.entityId : "",
-        contentJson: hit.contentJson as Record<string, unknown> | undefined,
-      };
-      const href = resolveIndexHitHref(ref) ?? undefined;
-      return {
-        id: `fusion-${source}-${index}`,
-        source,
-        title: String(title),
-        subtitle: String(subtitle),
-        href: href ?? undefined,
-      };
-    })
-    .filter(Boolean) as ShellFusionHint[];
-}
-
 export function ShellSearchPalette() {
   const router = useRouter();
   const hasRole = useAuthStore((s) => s.hasRole);
   const facilityId = useFacilityStore((s) => s.facility?.id ?? null);
   const setSearchOpen = useShellStore((s) => s.setSearchOpen);
+  const searchPaletteFocusTick = useShellStore((s) => s.searchPaletteFocusTick);
   const recordRecent = useShellStore((s) => s.recordRecent);
   const openTasks = useShellStore((s) => s.openTasks);
   const recentItems = useShellStore((s) => s.recentItems);
 
+  const inputRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
+  const [fusionLoading, setFusionLoading] = useState(false);
   const [platformHits, setPlatformHits] = useState<PlatformHit[]>([]);
   const [fusionHints, setFusionHints] = useState<ShellFusionHint[]>([]);
 
@@ -159,11 +111,14 @@ export function ShellSearchPalette() {
 
   const runCommand = useCallback(
     (cmd: ShellCommand) => {
+      let keepSearchOpen = false;
       switch (cmd.action.type) {
         case "navigate":
           router.push(cmd.action.href);
           break;
         case "open-search":
+          useShellStore.getState().focusSearchPalette();
+          keepSearchOpen = true;
           break;
         case "open-start":
           useShellStore.getState().setSearchOpen(false);
@@ -178,15 +133,17 @@ export function ShellSearchPalette() {
         default:
           break;
       }
-      recordRecent({
-        kind: "search",
-        title: cmd.label,
-        subtitle: "Command",
-        href: commandRecentHref(cmd),
-        refKey: `cmd:${cmd.id}`,
-        sensitivity: "normal",
-      });
-      setSearchOpen(false);
+      if (cmd.action.type !== "open-search") {
+        recordRecent({
+          kind: "search",
+          title: cmd.label,
+          subtitle: "Command",
+          href: commandRecentHref(cmd),
+          refKey: `cmd:${cmd.id}`,
+          sensitivity: "normal",
+        });
+      }
+      if (!keepSearchOpen) setSearchOpen(false);
     },
     [recordRecent, router, setSearchOpen],
   );
@@ -200,6 +157,7 @@ export function ShellSearchPalette() {
     }
     const t = setTimeout(() => {
       setLoading(true);
+      emitShellEvent("search_executed", { scope: "platform_index", q: trimmed });
       const sp = new URLSearchParams({ q: trimmed, page: "0", size: "8" });
       apiClient
         .get<unknown>(`/internal/v1/search?${sp.toString()}`)
@@ -211,6 +169,43 @@ export function ShellSearchPalette() {
     }, 280);
     return () => clearTimeout(t);
   }, [query]);
+
+  useEffect(() => {
+    const trimmed = query.trim();
+    if (trimmed.length < 2) {
+      setFusionHints([]);
+      setFusionLoading(false);
+      return;
+    }
+    let cancelled = false;
+    const t = setTimeout(() => {
+      setFusionLoading(true);
+      fetchShellFusionHints(trimmed, facilityId)
+        .then((res) => {
+          if (cancelled) return;
+          const hints = normalizeFusionHints(res);
+          setFusionHints(hints);
+          emitShellEvent("fusion_hints_loaded", { count: hints.length, q: trimmed });
+        })
+        .catch(() => {
+          if (!cancelled) setFusionHints([]);
+        })
+        .finally(() => {
+          if (!cancelled) setFusionLoading(false);
+        });
+    }, 280);
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
+  }, [query, facilityId]);
+
+  useEffect(() => {
+    if (searchPaletteFocusTick > 0) {
+      inputRef.current?.focus();
+      inputRef.current?.select();
+    }
+  }, [searchPaletteFocusTick]);
 
   return (
     <div className="fixed inset-0 z-[10001] flex items-start justify-center pt-[12vh]">
@@ -224,13 +219,14 @@ export function ShellSearchPalette() {
         <div className="flex items-center gap-2 border-b border-slate-100 px-3 py-2 dark:border-slate-800">
           <Search className="h-5 w-5 shrink-0 text-slate-400" />
           <input
+            ref={inputRef}
             autoFocus
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search apps, tasks, recents, platform index…"
             className="min-w-0 flex-1 border-0 bg-transparent py-2 text-base text-slate-900 outline-none placeholder:text-slate-400 dark:text-slate-100"
           />
-          {loading ? <Loader2 className="h-5 w-5 animate-spin text-impilo-500" /> : null}
+          {loading || fusionLoading ? <Loader2 className="h-5 w-5 animate-spin text-impilo-500" /> : null}
           <button
             type="button"
             className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900"
@@ -472,6 +468,10 @@ function commandRecentHref(cmd: ShellCommand): string {
       return "/shell/file-manager";
     case "open-task-manager":
       return "/shell/task-manager";
+    case "open-search":
+      return "/search";
+    case "open-start":
+      return "/home";
     default:
       return "/home";
   }

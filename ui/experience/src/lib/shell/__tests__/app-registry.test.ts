@@ -6,6 +6,8 @@ describe("shell app-registry", () => {
   it("findShellAppByCode returns known system apps", () => {
     expect(findShellAppByCode("shell_file_manager")?.href).toBe("/shell/file-manager");
     expect(findShellAppByCode("home")?.href).toBe("/home");
+    expect(findShellAppByCode("intelligence_hub")?.href).toBe("/intelligence");
+    expect(findShellAppByCode("inventory")?.href).toBe("/inventory");
   });
 
   it("listVisibleShellApps filters by role", () => {

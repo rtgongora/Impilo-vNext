@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Download, ExternalLink, FileText, Loader2, Search } from "lucide-react";
 import { useAuthStore } from "@/hooks/useAuthStore";
+import { useFacilityStore } from "@/hooks/useFacilityStore";
+import { useShellFileCatalog } from "@/hooks/queries/useShellFileCatalog";
 import { useShellStore } from "@/hooks/useShellStore";
 import {
   usePersonalDocumentDownloadUrl,
@@ -11,6 +13,12 @@ import {
   type PersonalDocumentResource,
 } from "@/hooks/queries/usePersonalDocuments";
 import { matchesRequiredRole } from "@/lib/auth/role-groups";
+import {
+  mergeFileResources,
+  personalDocumentsToFileResources,
+  recentItemsToFileResources,
+} from "@/lib/shell/file-resources";
+import type { FileResource } from "@/lib/shell/types";
 
 export function ShellFileExplorer() {
   const hasRole = useAuthStore((s) => s.hasRole);
@@ -18,6 +26,9 @@ export function ShellFileExplorer() {
   const recordRecent = useShellStore((s) => s.recordRecent);
   const [q, setQ] = useState("");
   const [source, setSource] = useState<"all" | "personal" | "recent">("all");
+
+  const facilityId = useFacilityStore((s) => s.facility?.id);
+  const catalogQ = useShellFileCatalog(facilityId, true);
 
   const { data, isLoading, isError } = usePersonalDocuments();
   const downloadMutation = usePersonalDocumentDownloadUrl();
@@ -42,6 +53,28 @@ export function ShellFileExplorer() {
         r.title.toLowerCase().includes("document"),
     );
   }, [recentItems]);
+
+  const unifiedCatalog: FileResource[] = useMemo(() => {
+    const fromPersonal = personalDocumentsToFileResources(personal);
+    const fromRecent = recentItemsToFileResources(recentItems);
+    const fromApis = [
+      ...(catalogQ.data?.reportRuns ?? []),
+      ...(catalogQ.data?.facilityCertificates ?? []),
+    ];
+    return mergeFileResources(mergeFileResources(fromPersonal, fromRecent), fromApis);
+  }, [personal, recentItems, catalogQ.data]);
+
+  const filteredUnified = useMemo(() => {
+    if (!q.trim()) return unifiedCatalog;
+    const n = q.toLowerCase();
+    return unifiedCatalog.filter(
+      (r) =>
+        r.title.toLowerCase().includes(n) ||
+        (r.category ?? "").toLowerCase().includes(n) ||
+        (r.associatedApp ?? "").toLowerCase().includes(n) ||
+        (r.resourceType ?? "").toLowerCase().includes(n),
+    );
+  }, [unifiedCatalog, q]);
 
   const canClinical = matchesRequiredRole(hasRole, "CLINICAL");
 
@@ -132,6 +165,62 @@ export function ShellFileExplorer() {
           </div>
         )}
       </div>
+
+      {source === "all" ? (
+        <section>
+          <h2 className="mb-2 text-sm font-semibold text-slate-800 dark:text-slate-100">
+            Unified catalog (personal + shell recents + BFF catalog)
+          </h2>
+          <p className="mb-3 text-xs text-slate-500">
+            Includes report runs and facility certificates from the Experience BFF file catalog when authorized; vault
+            downloads still use Prepare below.
+          </p>
+          {catalogQ.isLoading ? (
+            <p className="mb-2 flex items-center gap-2 text-xs text-slate-500">
+              <Loader2 className="h-4 w-4 animate-spin" /> Loading BFF file catalog…
+            </p>
+          ) : null}
+          {catalogQ.isError ? (
+            <p className="mb-2 text-xs text-amber-700 dark:text-amber-400">
+              File catalog bridge unavailable (reports or facility registry may be down).
+            </p>
+          ) : null}
+          {filteredUnified.length === 0 ? (
+            <p className="text-xs text-slate-500">No catalog rows yet — open documents or download from your vault.</p>
+          ) : (
+            <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+              <table className="min-w-full text-left text-sm">
+                <thead className="border-b border-slate-100 bg-slate-50 text-xs uppercase text-slate-500 dark:border-slate-800 dark:bg-slate-950">
+                  <tr>
+                    <th className="px-3 py-2">Title</th>
+                    <th className="px-3 py-2">Type</th>
+                    <th className="px-3 py-2">Source</th>
+                    <th className="px-3 py-2 text-right">Open</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                  {filteredUnified.map((r) => (
+                    <tr key={r.id}>
+                      <td className="px-3 py-2 font-medium text-slate-900 dark:text-slate-50">{r.title}</td>
+                      <td className="px-3 py-2 text-slate-600">{r.resourceType}</td>
+                      <td className="px-3 py-2 text-slate-600">{r.associatedApp ?? "—"}</td>
+                      <td className="px-3 py-2 text-right">
+                        {r.href ? (
+                          <Link href={r.href} className="text-xs font-medium text-impilo-600 hover:underline">
+                            Open
+                          </Link>
+                        ) : (
+                          <span className="text-xs text-slate-400">—</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+      ) : null}
 
       {source === "recent" || source === "all" ? (
         <section>

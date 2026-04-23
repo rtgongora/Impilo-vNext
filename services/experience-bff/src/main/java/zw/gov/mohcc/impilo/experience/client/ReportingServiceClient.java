@@ -51,6 +51,13 @@ public class ReportingServiceClient {
         return extractData(restTemplate.postForEntity(url, request, JsonNode.class));
     }
 
+    /** Tenant-wide recent runs (newest first) — {@code GET /internal/v1/reports/tenant-runs}. */
+    public JsonNode listTenantReportRuns(int page, int size) {
+        String url = baseUrl + "/internal/v1/reports/tenant-runs?page=" + page + "&size=" + size;
+        log.info("Reporting: list tenant runs [page={}, size={}]", page, size);
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) {
             return response.getBody().get("data");

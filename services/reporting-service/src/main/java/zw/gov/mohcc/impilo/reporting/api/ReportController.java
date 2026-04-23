@@ -46,6 +46,40 @@ public class ReportController {
         this.objectMapper = objectMapper;
     }
 
+    /**
+     * Tenant-wide recent report runs (newest first). Used by Experience shell file catalog and export UIs.
+     * When export visibility forbids materialized exports, returns an empty page without error.
+     */
+    @GetMapping("/tenant-runs")
+    public ResponseEntity<?> listTenantRuns(@RequestParam(defaultValue = "0") int page,
+                                              @RequestParam(defaultValue = "20") int size,
+                                              HttpServletRequest httpRequest) {
+        RequestContext ctx = RequestContextHolder.require();
+        UUID tenantId = UUID.fromString(ctx.tenantId());
+        VisibilityProfile visibility = VisibilityHeaderParser.resolve(httpRequest, objectMapper);
+        if (ExportVisibilityGuard.deniesReportRun(visibility)) {
+            Map<String, Object> empty = new java.util.LinkedHashMap<>();
+            empty.put("items", List.of());
+            empty.put("page", page);
+            empty.put("size", size);
+            empty.put("totalElements", 0L);
+            empty.put("totalPages", 0);
+            return ResponseEntity.ok(empty);
+        }
+        Pageable pageable = PageRequest.of(page, size);
+        Page<ReportRunEntity> runs = runService.listTenantRuns(tenantId, pageable);
+        List<ReportRunResponse> items = runs.getContent().stream()
+                .map(runService::toResponse)
+                .toList();
+        Map<String, Object> response = new java.util.LinkedHashMap<>();
+        response.put("items", items);
+        response.put("page", runs.getNumber());
+        response.put("size", runs.getSize());
+        response.put("totalElements", runs.getTotalElements());
+        response.put("totalPages", runs.getTotalPages());
+        return ResponseEntity.ok(response);
+    }
+
     /** Create a new report definition. */
     @PostMapping
     public ResponseEntity<?> createReport(@Valid @RequestBody CreateReportRequest request) {

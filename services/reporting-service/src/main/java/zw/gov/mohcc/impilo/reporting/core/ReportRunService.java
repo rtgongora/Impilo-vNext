@@ -129,6 +129,12 @@ public class ReportRunService {
         return runRepository.findByTenantIdAndDefinitionId(tenantId, definition.getId(), pageable);
     }
 
+    /** Recent runs across all report definitions for the tenant (shell file catalog, admin surfaces). */
+    @Transactional(readOnly = true)
+    public Page<ReportRunEntity> listTenantRuns(UUID tenantId, Pageable pageable) {
+        return runRepository.findByTenantIdOrderByCreatedAtDesc(tenantId, pageable);
+    }
+
     public ReportRunResponse toResponse(ReportRunEntity entity) {
         return new ReportRunResponse(
                 entity.getRunId(),

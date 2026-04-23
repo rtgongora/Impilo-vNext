@@ -61,6 +61,10 @@ impilo:
   finance:
     require-tshepo-authorize: ${IMPILO_FINANCE_REQUIRE_TSHEPO:false}
     tshepo-pdp-fallback-allow: ${IMPILO_FINANCE_TSHEPO_FALLBACK_ALLOW:true}
+  shell-workspace:
+    require-tshepo-authorize: ${IMPILO_SHELL_WORKSPACE_REQUIRE_TSHEPO:false}
+    tshepo-pdp-fallback-allow: ${IMPILO_SHELL_WORKSPACE_TSHEPO_FALLBACK_ALLOW:true}
+    redis-ttl-days: ${IMPILO_SHELL_WORKSPACE_REDIS_TTL_DAYS:120}
   security:
     allow-anonymous: false
   auth:

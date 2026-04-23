@@ -12,8 +12,10 @@ import org.springframework.web.bind.annotation.RestController;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.ReportingServiceClient;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -42,9 +44,65 @@ public class AdminReportJobController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return ResponseEntity.ok(Map.of(
-                "data", List.of(),
-                "meta", Map.of("request_id", requestId, "correlation_id", correlationId,
-                        "page", page, "size", size)));
+        List<Map<String, Object>> data = new ArrayList<>();
+        long totalElements = 0;
+        int totalPages = 0;
+        try {
+            JsonNode root = reportingClient.listTenantReportRuns(page, size);
+            totalElements = root.path("totalElements").asLong(0);
+            totalPages = root.path("totalPages").asInt(0);
+            JsonNode items = root.path("items");
+            if (items.isArray()) {
+                for (JsonNode it : items) {
+                    data.add(mapRunToJob(it));
+                }
+            }
+        } catch (Exception e) {
+            log.debug("Admin report jobs list skipped: {}", e.getMessage());
+        }
+        Map<String, Object> meta = new LinkedHashMap<>();
+        meta.put("request_id", requestId);
+        meta.put("correlation_id", correlationId);
+        meta.put("page", page);
+        meta.put("size", size);
+        meta.put("total_elements", totalElements);
+        meta.put("total_pages", totalPages);
+        return ResponseEntity.ok(Map.of("data", data, "meta", meta));
+    }
+
+    private static Map<String, Object> mapRunToJob(JsonNode it) {
+        String runId = text(it, "runId");
+        String reportKey = text(it, "reportKey");
+        String status = text(it, "status").toLowerCase(Locale.ROOT);
+        String parameters = it.has("parameters") && !it.get("parameters").isNull()
+                ? it.get("parameters").asText()
+                : "{}";
+        String queuedAt = text(it, "createdAt");
+        Map<String, Object> attrs = new LinkedHashMap<>();
+        attrs.put("report_type", reportKey);
+        attrs.put("status", status.isEmpty() ? "queued" : status);
+        attrs.put("requested_by", text(it, "createdBy"));
+        attrs.put("parameters", parameters);
+        attrs.put("result_url", null);
+        attrs.put("error_message", text(it, "errorMessage"));
+        attrs.put("queued_at", queuedAt);
+        attrs.put("started_at", text(it, "startedAt"));
+        attrs.put("completed_at", text(it, "completedAt"));
+        Map<String, Object> row = new LinkedHashMap<>();
+        row.put("id", runId.isEmpty() ? java.util.UUID.randomUUID().toString() : runId);
+        row.put("type", "report_job");
+        row.put("attributes", attrs);
+        return row;
+    }
+
+    private static String text(JsonNode n, String field) {
+        JsonNode v = n.path(field);
+        if (v.isMissingNode() || v.isNull()) {
+            return "";
+        }
+        if (v.isTextual()) {
+            return v.asText("").trim();
+        }
+        return v.toString().trim();
     }
 }

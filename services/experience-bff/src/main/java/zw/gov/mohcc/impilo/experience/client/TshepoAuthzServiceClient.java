@@ -159,6 +159,16 @@ public class TshepoAuthzServiceClient {
         return syntheticAuthorizeVerdict(httpMethod, syntheticPath);
     }
 
+    /**
+     * Synthetic ext_authz for Experience shell workspace persistence (pins / recents).
+     * Tshepo PolicyEngine maps the last non-UUID URL segment of {@code :path} to resource type
+     * {@code workspace-state} for {@code /internal/v1/shell/workspace-state}
+     * (tshepo-authz migration {@code V008__shell_workspace_policy_rules.sql}).
+     */
+    public boolean shellWorkspaceStateAllowed(String httpMethod) {
+        return syntheticAuthorizeVerdict(httpMethod, "/internal/v1/shell/workspace-state");
+    }
+
     private boolean syntheticAuthorizeVerdict(String method, String path) {
         String url = baseUrl + "/v1/authorize";
         HttpHeaders headers = new HttpHeaders();

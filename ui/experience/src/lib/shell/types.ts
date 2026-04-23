@@ -95,6 +95,8 @@ export type FileResourceType =
   | "clinical_document"
   | "indexed_entity"
   | "link"
+  | "generated_output"
+  | "registry_certificate"
   | "other";
 
 /** Unified document/resource row for the vNext file explorer */
