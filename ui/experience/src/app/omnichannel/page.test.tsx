@@ -67,7 +67,7 @@ describe("OmnichannelPage", () => {
         messageTemplate: "Visit tomorrow",
       }));
     });
-  }, 10000);
+  }, 30_000);
 
   it("replaces fake ai telemetry with governed links and real counts", async () => {
     searchParamsValue.current = new URLSearchParams("tab=ai-agent");

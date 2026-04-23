@@ -192,16 +192,25 @@ export default function TeleconsultSessionPage() {
             <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
               <CheckCircle2 className="w-5 h-5 text-impilo-500" /> Stage 7 — Completion Note & Loop Closure
             </h2>
-            <label className="block">
+            <label className="block" htmlFor="teleconsult-completion-actions">
               <span className="text-sm font-medium text-gray-700">Actions taken *</span>
-              <textarea value={actionsTaken} onChange={(e) => setActionsTaken(e.target.value)} rows={3}
+              <textarea
+                id="teleconsult-completion-actions"
+                value={actionsTaken}
+                onChange={(e) => setActionsTaken(e.target.value)}
+                rows={3}
                 className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                placeholder="Medications administered, tests done, procedures, monitoring, counseling..." />
+                placeholder="Medications administered, tests done, procedures, monitoring, counseling..."
+              />
             </label>
-            <label className="block">
+            <label className="block" htmlFor="teleconsult-completion-outcome">
               <span className="text-sm font-medium text-gray-700">Patient outcome *</span>
-              <select value={patientOutcome} onChange={(e) => setPatientOutcome(e.target.value)}
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+              <select
+                id="teleconsult-completion-outcome"
+                value={patientOutcome}
+                onChange={(e) => setPatientOutcome(e.target.value)}
+                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              >
                 <option value="">Select...</option>
                 <option value="IMPROVED">Improved</option>
                 <option value="STABLE">Stable</option>
@@ -211,21 +220,30 @@ export default function TeleconsultSessionPage() {
                 <option value="RETURNED_FOR_REVIEW">Returned for review</option>
               </select>
             </label>
-            <label className="block">
+            <label className="block" htmlFor="teleconsult-completion-followup">
               <span className="text-sm font-medium text-gray-700">Follow-up execution</span>
-              <select value={followUpExecution} onChange={(e) => setFollowUpExecution(e.target.value)}
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+              <select
+                id="teleconsult-completion-followup"
+                value={followUpExecution}
+                onChange={(e) => setFollowUpExecution(e.target.value)}
+                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              >
                 <option value="">Select...</option>
                 <option value="COMPLETED">Completed</option>
                 <option value="PARTIALLY_COMPLETED">Partially completed</option>
                 <option value="NOT_COMPLETED">Not completed</option>
               </select>
             </label>
-            <label className="block">
+            <label className="block" htmlFor="teleconsult-completion-narrative">
               <span className="text-sm font-medium text-gray-700">Case closure narrative</span>
-              <textarea value={closureNarrative} onChange={(e) => setClosureNarrative(e.target.value)} rows={3}
+              <textarea
+                id="teleconsult-completion-narrative"
+                value={closureNarrative}
+                onChange={(e) => setClosureNarrative(e.target.value)}
+                rows={3}
                 className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                placeholder="Brief summary of the case and its resolution..." />
+                placeholder="Brief summary of the case and its resolution..."
+              />
             </label>
             <button onClick={handleSubmitCompletion} disabled={submittingCompletion || !actionsTaken.trim()}
               className="w-full flex items-center justify-center gap-2 py-2.5 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 disabled:opacity-40 transition-colors">

@@ -97,5 +97,5 @@ describe("IncomingReferralsPage", () => {
         }),
       ),
     );
-  }, 15000);
+  }, 30_000);
 });

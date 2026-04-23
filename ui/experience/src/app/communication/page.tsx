@@ -199,6 +199,8 @@ function PagesTab() {
           </p>
         </div>
         <button
+          type="button"
+          aria-label="Open page composer"
           onClick={() => setShowSend((value) => !value)}
           className="inline-flex items-center gap-2 rounded-lg bg-impilo-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-impilo-600"
         >
@@ -259,6 +261,8 @@ function PagesTab() {
               Cancel
             </button>
             <button
+              type="button"
+              aria-label="Submit clinical page"
               onClick={() =>
                 sendPage.mutate(
                   {

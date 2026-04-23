@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -161,47 +161,52 @@ describe("DataExportPage", () => {
     expect(screen.getByText(/Not in BFF contract/i)).toBeInTheDocument();
   });
 
-  it("queues export via POST /internal/v1/reports/generate with snake_case body", async () => {
-    const user = userEvent.setup();
-    post.mockResolvedValue({
-      data: {
-        id: "new-job",
-        type: "ReportJob",
-        attributes: {
-          report_type: "ADMIN_DATA_EXPORT",
-          status: "QUEUED",
-          requested_by: "u",
-          queued_at: "2026-04-08T12:00:00Z",
+  it(
+    "queues export via POST /internal/v1/reports/generate with snake_case body",
+    async () => {
+      const user = userEvent.setup();
+      post.mockResolvedValue({
+        data: {
+          id: "new-job",
+          type: "ReportJob",
+          attributes: {
+            report_type: "ADMIN_DATA_EXPORT",
+            status: "QUEUED",
+            requested_by: "u",
+            queued_at: "2026-04-08T12:00:00Z",
+          },
         },
-      },
-      meta: {},
-    });
+        meta: {},
+      });
 
-    renderPage();
-    await waitFor(() => expect(screen.getByText("My export")).toBeInTheDocument());
+      renderPage();
+      await waitFor(() => expect(screen.getByText("My export")).toBeInTheDocument());
 
-    await user.click(screen.getByRole("button", { name: /New export/i }));
-    await user.type(screen.getByPlaceholderText(/e.g., Monthly Patient Summary/i), "Q2 dump");
-    await user.type(screen.getByLabelText("Date From"), "2026-04-01");
-    await user.type(screen.getByLabelText("Date To"), "2026-04-07");
+      await user.click(screen.getByRole("button", { name: /New export/i }));
+      await user.type(screen.getByPlaceholderText(/e.g., Monthly Patient Summary/i), "Q2 dump");
+      fireEvent.change(screen.getByLabelText("Date From"), { target: { value: "2026-04-01" } });
+      fireEvent.change(screen.getByLabelText("Date To"), { target: { value: "2026-04-07" } });
 
-    await user.click(screen.getByRole("button", { name: /Queue Export/i }));
+      await user.click(screen.getByRole("button", { name: /Queue Export/i }));
 
-    await waitFor(() => {
-      expect(post).toHaveBeenCalled();
+      await waitFor(
+        () => {
+          expect(post).toHaveBeenCalled();
+        },
+        { timeout: 15_000 },
+      );
+      const [, body] = post.mock.calls[0] as [string, Record<string, unknown>];
+      expect(body).toMatchObject({
+        report_type: "ADMIN_DATA_EXPORT",
+        requested_by: expect.any(String),
+      });
+      expect(body.parameters).toMatchObject({
+        export_name: "Q2 dump",
+        format: "CSV",
+        date_from: "2026-04-01",
+        date_to: "2026-04-07",
+      });
     });
-    const [, body] = post.mock.calls[0] as [string, Record<string, unknown>];
-    expect(body).toMatchObject({
-      report_type: "ADMIN_DATA_EXPORT",
-      requested_by: expect.any(String),
-    });
-    expect(body.parameters).toMatchObject({
-      export_name: "Q2 dump",
-      format: "CSV",
-      date_from: "2026-04-01",
-      date_to: "2026-04-07",
-    });
-  });
 
   it("shows job-status banner after retry queues a new job", async () => {
     const user = userEvent.setup();

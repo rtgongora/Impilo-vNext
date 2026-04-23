@@ -74,5 +74,5 @@ describe("OrdersPage", () => {
     expect(JSON.parse(payload.items)).toEqual([
       expect.objectContaining({ productId: "95000000-0000-0000-0000-000000000001", description: "Cold-chain boxes", quantity: 2, unitPrice: 60 }),
     ]);
-  }, 15000);
+  }, 30_000);
 });

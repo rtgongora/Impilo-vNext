@@ -9,6 +9,9 @@ export default defineConfig({
     setupFiles: ["./src/test/setup.ts"],
     include: ["src/**/*.test.{ts,tsx}"],
     globals: true,
+    /** Many page tests drive forms + waitFor BFF mocks; parallel runs need headroom for CI. */
+    testTimeout: 30_000,
+    hookTimeout: 15_000,
   },
   resolve: {
     alias: {

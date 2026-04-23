@@ -83,7 +83,7 @@ describe("CommunicationPage", () => {
     const user = userEvent.setup();
     renderPage();
 
-    await user.click(await screen.findByRole("button", { name: /Send page/i }));
+    await user.click(await screen.findByRole("button", { name: /Open page composer/i }));
     fireEvent.change(screen.getByPlaceholderText("Recipient ID"), {
       target: { value: "provider-7" },
     });
@@ -93,7 +93,7 @@ describe("CommunicationPage", () => {
     fireEvent.change(screen.getByPlaceholderText("Page message..."), {
       target: { value: "Please review Bed 4" },
     });
-    await user.click(screen.getAllByRole("button", { name: /^Send page$/i })[1]);
+    await user.click(screen.getByRole("button", { name: /Submit clinical page/i }));
 
     await waitFor(() => {
       expect(post).toHaveBeenCalledWith("/internal/v1/communication/pages", expect.objectContaining({

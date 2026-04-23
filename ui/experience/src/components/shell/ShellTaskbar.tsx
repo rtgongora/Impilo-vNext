@@ -1,12 +1,13 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { Bell, FolderOpen, Layers, LayoutGrid, Search } from "lucide-react";
+import { FolderOpen, Layers, LayoutGrid, Search } from "lucide-react";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useShellStore } from "@/hooks/useShellStore";
 import { findShellAppByCode, listVisibleShellApps, SHELL_TASKBAR_HEIGHT_PX } from "@/lib/shell/app-registry";
 import { ImpiloBrandLogo } from "@/components/brand/ImpiloBrandLogo";
 import { ShellIcon } from "./ShellIcon";
+import { ShellNotificationTray } from "./ShellNotificationTray";
 
 export function ShellTaskbar() {
   const router = useRouter();
@@ -167,20 +168,9 @@ export function ShellTaskbar() {
           })}
         </div>
 
-        <div className="ml-auto hidden shrink-0 items-center gap-2 lg:flex" title="System tray (reserved)">
-          <span className="flex items-center gap-1 rounded-lg border border-dashed border-slate-200 px-1.5 py-1 dark:border-slate-700">
-            <span
-              className="flex h-8 w-8 items-center justify-center rounded-md bg-slate-100 text-slate-400 dark:bg-slate-900 dark:text-slate-500"
-              title="Notifications (planned)"
-            >
-              <Bell className="h-4 w-4" />
-            </span>
-            <span
-              className="flex h-8 w-8 items-center justify-center rounded-md bg-slate-100 text-slate-400 dark:bg-slate-900 dark:text-slate-500"
-              title="Background jobs (planned)"
-            >
-              <span className="text-[10px] font-bold">···</span>
-            </span>
+        <div className="ml-auto hidden shrink-0 items-center gap-2 lg:flex" title="System tray">
+          <span className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white/80 px-1.5 py-1 shadow-sm dark:border-slate-700 dark:bg-slate-900/80">
+            <ShellNotificationTray />
           </span>
           <button
             type="button"

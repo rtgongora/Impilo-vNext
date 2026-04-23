@@ -52,7 +52,7 @@ describe("LoginPage", () => {
 
     expect(screen.getByText("Welcome back")).toBeInTheDocument();
     expect(screen.getByText("Sign in to continue to Impilo")).toBeInTheDocument();
-    expect(screen.getByLabelText("Email address")).toBeInTheDocument();
+    expect(screen.getByLabelText(/Email or phone/i)).toBeInTheDocument();
     expect(screen.getByLabelText("Password")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Sign In" })).toBeInTheDocument();
   });
@@ -61,7 +61,7 @@ describe("LoginPage", () => {
     render(<LoginPage />);
 
     expect(screen.getByText("Other sign-in methods")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Provider ID/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /^Health ID$/i })).toHaveAttribute(
       "href",
       "/auth/login/provider-id",
     );
@@ -69,7 +69,7 @@ describe("LoginPage", () => {
       "href",
       "/auth/login/biometric",
     );
-    expect(screen.getByRole("link", { name: /Create account/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /Create an account/i })).toHaveAttribute(
       "href",
       "/auth/register",
     );

@@ -42,15 +42,16 @@ vi.mock("@/lib/api-client", () => ({
 }));
 
 describe("RegisterPage", () => {
-  it("renders role selection step with all four account types", () => {
+  it("renders the person-first registration form", () => {
     render(<RegisterPage />);
 
-    expect(screen.getByText("Create Account")).toBeInTheDocument();
-    expect(screen.getByText("Choose your account type")).toBeInTheDocument();
-    expect(screen.getByText("Citizen / Patient")).toBeInTheDocument();
-    expect(screen.getByText("Clinician / Doctor")).toBeInTheDocument();
-    expect(screen.getByText("Nurse")).toBeInTheDocument();
-    expect(screen.getByText("Pharmacist")).toBeInTheDocument();
+    expect(screen.getByText("Sign up for Impilo")).toBeInTheDocument();
+    expect(screen.getByText("Create your personal Impilo account")).toBeInTheDocument();
+    expect(screen.getByText("Full name")).toBeInTheDocument();
+    expect(screen.getByText("Email or phone")).toBeInTheDocument();
+    expect(screen.getByText("Password")).toBeInTheDocument();
+    expect(screen.getByText("Confirm password")).toBeInTheDocument();
+    expect(screen.getByText("Do you have a Health ID?")).toBeInTheDocument();
   });
 
   it("shows sign-in link for existing users", () => {
@@ -62,17 +63,23 @@ describe("RegisterPage", () => {
     );
   });
 
-  it("navigates to details step when a role is selected", async () => {
+  it("requires privacy and terms before submit is enabled", async () => {
     const user = userEvent.setup();
     render(<RegisterPage />);
 
-    await user.click(screen.getByText("Citizen / Patient"));
+    const submit = screen.getByRole("button", { name: /Create Account/i });
+    expect(submit).toBeDisabled();
 
-    expect(screen.getByText(/Registering as Citizen \/ Patient/)).toBeInTheDocument();
-    expect(screen.getByText("First Name")).toBeInTheDocument();
-    expect(screen.getByText("Last Name")).toBeInTheDocument();
-    expect(screen.getByText("Email Address")).toBeInTheDocument();
-    expect(screen.getByText("Password")).toBeInTheDocument();
-    expect(screen.getByText("Confirm Password")).toBeInTheDocument();
+    await user.type(screen.getByPlaceholderText("Your full name"), "Tariro Moyo");
+    await user.type(screen.getByPlaceholderText("you@example.com or +263..."), "tariro@example.com");
+    await user.type(screen.getByPlaceholderText("At least 8 characters"), "password123");
+    await user.type(screen.getByPlaceholderText("Repeat password"), "password123");
+
+    const privacy = screen.getByRole("checkbox", { name: /Privacy Policy/i });
+    const terms = screen.getByRole("checkbox", { name: /Terms of Use/i });
+    await user.click(privacy);
+    await user.click(terms);
+
+    expect(submit).not.toBeDisabled();
   });
 });
