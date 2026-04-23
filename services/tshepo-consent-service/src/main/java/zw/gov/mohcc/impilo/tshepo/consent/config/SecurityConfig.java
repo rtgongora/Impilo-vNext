@@ -1,5 +1,7 @@
 package zw.gov.mohcc.impilo.tshepo.consent.config;
 
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -14,12 +16,12 @@ import zw.gov.mohcc.impilo.shared.auth.TrustContextFilter;
 public class SecurityConfig {
 
     @Bean
-    public TrustContextFilter trustContextFilter() {
-        return new TrustContextFilter();
+    public TrustContextFilter trustContextFilter(ObjectMapper objectMapper) {
+        return new TrustContextFilter(objectMapper);
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, TrustContextFilter trustContextFilter) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session ->
@@ -35,7 +37,7 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
             )
             .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> {}))
-            .addFilterBefore(trustContextFilter(), UsernamePasswordAuthenticationFilter.class);
+            .addFilterBefore(trustContextFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

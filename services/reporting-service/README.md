@@ -78,6 +78,8 @@ mvn -pl reporting-service spring-boot:run
 mvn -pl reporting-service test
 ```
 
+**JDK note:** The repo targets **Java 21** (`impilo-parent`). Mockito inline mocks rely on Byte Buddy; on **JDK 24+** the parent POM sets **`-Dnet.bytebuddy.experimental=true`** for Surefire so unit tests (for example `ReportControllerTest`) can run. Prefer **JDK 21** for builds to match CI.
+
 Tests include:
 - `ReportingGoldenContractIT` — v1.1 compliance (header enforcement, idempotency, error envelope)
 - `ReportDefinitionServiceTest` — definition creation, duplicate key rejection, format parsing

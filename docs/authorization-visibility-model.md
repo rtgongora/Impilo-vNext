@@ -26,7 +26,7 @@ This document describes the **wave-1** cross-service model implemented on the `c
 ## Resolving visibility (`x-obligations` + flat headers)
 
 - **`VisibilityHeaderParser.resolve(request, objectMapper)`** — when an `ObjectMapper` is provided, reads **`x-obligations`** JSON and extracts nested **`visibilityProfile`**. **Non-null** JSON fields **overlay** flat trust headers (`x-visibility-tier`, `x-export-policy`, …), so Envoy can mirror coarse headers while the PDP supplies a partial profile. If obligations are absent or invalid, resolution uses **flat** headers only. With **`mapper == null`**, only flat headers are read.
-- **`TrustContextFilter`** accepts an optional **`ObjectMapper`** constructor argument. **`reporting-service`** registers `new TrustContextFilter(objectMapper)` so **`VisibilityContextHolder`** reflects obligations-based profiles on every request, not only flat headers.
+- **`TrustContextFilter`** accepts an optional **`ObjectMapper`** constructor argument. Platform **`SecurityConfig`** beans register **`new TrustContextFilter(objectMapper)`** (Spring’s primary **`ObjectMapper`**) so **`VisibilityContextHolder`** reflects **`x-obligations`** on every request, not only flat headers.
 
 ## Trust headers (Tshepo → Envoy → service)
 

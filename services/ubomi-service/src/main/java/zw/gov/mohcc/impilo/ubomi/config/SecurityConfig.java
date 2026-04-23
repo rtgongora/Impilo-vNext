@@ -1,5 +1,7 @@
 package zw.gov.mohcc.impilo.ubomi.config;
 
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -37,17 +39,17 @@ import zw.gov.mohcc.impilo.shared.auth.TrustContextFilter;
 public class SecurityConfig {
 
     @Bean
-    public TrustContextFilter trustContextFilter() {
-        return new TrustContextFilter();
+    public TrustContextFilter trustContextFilter(ObjectMapper objectMapper) {
+        return new TrustContextFilter(objectMapper);
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, TrustContextFilter trustContextFilter) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .addFilterBefore(trustContextFilter(), UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(trustContextFilter, UsernamePasswordAuthenticationFilter.class)
             .authorizeHttpRequests(auth -> auth
                 // Probes and documentation — open
                 .requestMatchers("/actuator/health", "/actuator/info", "/actuator/prometheus").permitAll()

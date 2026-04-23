@@ -1,5 +1,7 @@
 package zw.gov.mohcc.impilo.procurement.config;
 
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,15 +17,15 @@ import zw.gov.mohcc.impilo.shared.auth.TrustContextFilter;
 @EnableWebSecurity
 public class SecurityConfig {
     @Bean
-    public TrustContextFilter trustContextFilter() {
-        return new TrustContextFilter();
+    public TrustContextFilter trustContextFilter(ObjectMapper objectMapper) {
+        return new TrustContextFilter(objectMapper);
     }
 
     @Bean
-    public SecurityFilterChain chain(HttpSecurity http, @Value("${procurement.security.oauth2-enabled:true}") boolean oauth2) throws Exception {
+    public SecurityFilterChain chain(HttpSecurity http, TrustContextFilter trustContextFilter, @Value("${procurement.security.oauth2-enabled:true}") boolean oauth2) throws Exception {
         http.csrf(c -> c.disable())
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .addFilterBefore(trustContextFilter(), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(trustContextFilter, UsernamePasswordAuthenticationFilter.class);
         if (oauth2) {
             http.authorizeHttpRequests(a -> a.requestMatchers(
                     "/actuator/health", "/actuator/health/**", "/actuator/info",

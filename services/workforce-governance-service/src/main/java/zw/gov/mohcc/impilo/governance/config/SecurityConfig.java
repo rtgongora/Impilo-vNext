@@ -1,5 +1,7 @@
 package zw.gov.mohcc.impilo.governance.config;
 
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -33,9 +35,9 @@ public class SecurityConfig {
     }
 
     @Bean
-    public FilterRegistrationBean<TrustContextFilter> trustContextFilter() {
+    public FilterRegistrationBean<TrustContextFilter> trustContextFilter(ObjectMapper objectMapper) {
         FilterRegistrationBean<TrustContextFilter> registration = new FilterRegistrationBean<>();
-        registration.setFilter(new TrustContextFilter());
+        registration.setFilter(new TrustContextFilter(objectMapper));
         registration.addUrlPatterns("/v1/*");
         registration.setOrder(Ordered.HIGHEST_PRECEDENCE + 10);
         return registration;
