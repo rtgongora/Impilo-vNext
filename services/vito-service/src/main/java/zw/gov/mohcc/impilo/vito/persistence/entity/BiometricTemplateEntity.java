@@ -51,6 +51,15 @@ public class BiometricTemplateEntity {
     @Column(name = "superseded_at")
     private OffsetDateTime supersededAt;
 
+    @Column(name = "profile_id")
+    private UUID profileId;
+
+    @Column(name = "vendor_engine", length = 64)
+    private String vendorEngine;
+
+    @Column(name = "liveness_supported", nullable = false)
+    private boolean livenessSupported;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
@@ -86,4 +95,28 @@ public class BiometricTemplateEntity {
     public OffsetDateTime getSupersededAt() { return supersededAt; }
     public void setSupersededAt(OffsetDateTime supersededAt) { this.supersededAt = supersededAt; }
     public OffsetDateTime getCreatedAt() { return createdAt; }
+
+    public UUID getProfileId() {
+        return profileId;
+    }
+
+    public void setProfileId(UUID profileId) {
+        this.profileId = profileId;
+    }
+
+    public String getVendorEngine() {
+        return vendorEngine;
+    }
+
+    public void setVendorEngine(String vendorEngine) {
+        this.vendorEngine = vendorEngine;
+    }
+
+    public boolean isLivenessSupported() {
+        return livenessSupported;
+    }
+
+    public void setLivenessSupported(boolean livenessSupported) {
+        this.livenessSupported = livenessSupported;
+    }
 }

@@ -4,11 +4,16 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 /**
@@ -147,6 +152,56 @@ public class VarapiServiceClient {
         if (response.getBody() != null && response.getBody().has("data")) {
             return response.getBody().get("data");
         }
+        return response.getBody();
+    }
+
+    public ResponseEntity<String> rawGet(String path) {
+        return restTemplate.getForEntity(baseUrl + path, String.class);
+    }
+
+    public ResponseEntity<String> rawPost(String path, Object body) {
+        return restTemplate.postForEntity(baseUrl + path, body, String.class);
+    }
+
+    /** Council-regulated payment obligations (Varapi). */
+    public JsonNode getProviderCouncilObligations(long providerId) {
+        String url = baseUrl + "/v1/internal/provider-council/obligations?providerId=" + providerId;
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return response.getBody();
+    }
+
+    /** Council workflow queue (Varapi). */
+    public JsonNode getProviderCouncilOpenApplications(long councilId, String workflowStates) {
+        StringBuilder sb = new StringBuilder(baseUrl)
+                .append("/v1/internal/provider-council/applications/open?councilId=")
+                .append(councilId);
+        if (workflowStates != null && !workflowStates.isBlank()) {
+            sb.append("&workflowStates=").append(URLEncoder.encode(workflowStates, StandardCharsets.UTF_8));
+        }
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(sb.toString(), JsonNode.class);
+        return response.getBody();
+    }
+
+    /** Fundo-linked CPD candidates pending council acceptance (Varapi). */
+    public JsonNode getFundoCpdCandidates(long providerId) {
+        String url = baseUrl + "/v1/internal/provider-council/fundo-cpd-candidates?providerId=" + providerId;
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return response.getBody();
+    }
+
+    /** Per-council regulatory JSON configuration (Varapi V009). */
+    public JsonNode getCouncilRegulatoryConfig(long councilId) {
+        String url = baseUrl + "/v1/internal/provider-council/council-regulatory-config?councilId=" + councilId;
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return response.getBody();
+    }
+
+    public JsonNode putCouncilRegulatoryConfig(Map<String, Object> body) {
+        String url = baseUrl + "/v1/internal/provider-council/council-regulatory-config";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        ResponseEntity<JsonNode> response = restTemplate.exchange(
+                url, HttpMethod.PUT, new HttpEntity<>(body, headers), JsonNode.class);
         return response.getBody();
     }
 }

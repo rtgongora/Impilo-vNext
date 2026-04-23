@@ -590,14 +590,17 @@ public class SiteRegulatoryService {
         RequestContext ctx = RequestContextHolder.require();
         UUID tenantId = UUID.fromString(ctx.tenantId());
         return templateRepository.listApplicable(tenantId, InspectionChecklistTemplateRepository.SYSTEM_TENANT, inspectionType, siteCategory)
-                .stream().map(t -> Map.of(
-                "template_id", t.getTemplateId(),
-                "code", t.getCode(),
-                "version", t.getVersion(),
-                "name", t.getName(),
-                "applicable_site_category", t.getApplicableSiteCategory(),
-                "applicable_inspection_type", t.getApplicableInspectionType()
-        )).toList();
+                .stream().map(t -> {
+                    Map<String, Object> m = new LinkedHashMap<>();
+                    m.put("template_id", t.getTemplateId());
+                    m.put("code", t.getCode());
+                    m.put("version", t.getVersion());
+                    m.put("name", t.getName());
+                    m.put("applicable_site_category", t.getApplicableSiteCategory());
+                    m.put("applicable_inspection_type", t.getApplicableInspectionType());
+                    return m;
+                })
+                .toList();
     }
 
     @Transactional(readOnly = true)

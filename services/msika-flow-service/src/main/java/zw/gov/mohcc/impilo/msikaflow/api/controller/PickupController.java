@@ -6,7 +6,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.msikaflow.api.TrustHeaderExtractor;
-import zw.gov.mohcc.impilo.msikaflow.api.dto.*;
+import zw.gov.mohcc.impilo.msikaflow.api.dto.ApiResponse;
+import zw.gov.mohcc.impilo.msikaflow.api.dto.ClaimPickupRequest;
+import zw.gov.mohcc.impilo.msikaflow.api.dto.PickupClaimTrust;
+import zw.gov.mohcc.impilo.msikaflow.api.dto.PickupIssueResponse;
 import zw.gov.mohcc.impilo.msikaflow.core.PickupTokenService;
 
 import java.util.UUID;
@@ -48,9 +51,11 @@ public class PickupController {
         String actorType = TrustHeaderExtractor.actorType(httpReq);
         String deviceFingerprint = TrustHeaderExtractor.deviceFingerprint(httpReq);
         String correlationId = TrustHeaderExtractor.correlationId(httpReq);
+        Integer assurance = TrustHeaderExtractor.assuranceLevel(httpReq);
 
-        PickupTokenService.ClaimResult result = pickupTokenService.claimPickup(
-                req.tokenOrOtp(), actorId, actorType, deviceFingerprint, tenantId);
+        PickupClaimTrust trust =
+                new PickupClaimTrust(tenantId, correlationId, actorId, actorType, assurance, deviceFingerprint);
+        PickupTokenService.ClaimResult result = pickupTokenService.claimPickup(req.tokenOrOtp(), trust);
 
         return ResponseEntity.ok(ApiResponse.ok(result, correlationId));
     }

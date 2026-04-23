@@ -1,5 +1,7 @@
 package zw.gov.mohcc.impilo.reporting.api;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -17,6 +19,9 @@ import zw.gov.mohcc.impilo.reporting.dto.*;
 import zw.gov.mohcc.impilo.reporting.persistence.entity.ReportDefinitionEntity;
 import zw.gov.mohcc.impilo.reporting.persistence.entity.ReportRunEntity;
 import zw.gov.mohcc.impilo.reporting.persistence.entity.ReportScheduleEntity;
+import zw.gov.mohcc.impilo.shared.visibility.ExportVisibilityGuard;
+import zw.gov.mohcc.impilo.shared.visibility.VisibilityHeaderParser;
+import zw.gov.mohcc.impilo.tshepo.contracts.dto.VisibilityProfile;
 
 import java.util.List;
 import java.util.Map;
@@ -29,13 +34,16 @@ public class ReportController {
     private final ReportDefinitionService definitionService;
     private final ReportRunService runService;
     private final ScheduleService scheduleService;
+    private final ObjectMapper objectMapper;
 
     public ReportController(ReportDefinitionService definitionService,
                             ReportRunService runService,
-                            ScheduleService scheduleService) {
+                            ScheduleService scheduleService,
+                            ObjectMapper objectMapper) {
         this.definitionService = definitionService;
         this.runService = runService;
         this.scheduleService = scheduleService;
+        this.objectMapper = objectMapper;
     }
 
     /** Create a new report definition. */
@@ -65,13 +73,27 @@ public class ReportController {
     /** Run a report by its key. */
     @PostMapping("/{key}/run")
     public ResponseEntity<?> runReport(@PathVariable String key,
-                                       @RequestBody(required = false) RunReportRequest request) {
+                                       @RequestBody(required = false) RunReportRequest request,
+                                       HttpServletRequest httpRequest) {
         RequestContext ctx = RequestContextHolder.require();
         UUID tenantId = UUID.fromString(ctx.tenantId());
 
+        VisibilityProfile visibility = VisibilityHeaderParser.resolve(httpRequest, objectMapper);
+        if (ExportVisibilityGuard.deniesReportRun(visibility)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+                    new ErrorEnvelope(new ErrorEnvelope.ErrorBody(
+                            "EXPORT_VISIBILITY_DENIED",
+                            "Report execution is not permitted for the current data visibility and export policy.",
+                            java.util.Map.of("report_key", key),
+                            ctx.requestId(),
+                            ctx.correlationId()
+                    ))
+            );
+        }
+
         try {
             ReportRunEntity run = runService.runReport(
-                    tenantId, key, ctx.correlationId(), request);
+                    tenantId, key, ctx.correlationId(), request, visibility);
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(runService.toResponse(run));
         } catch (IllegalArgumentException e) {

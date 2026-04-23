@@ -1,5 +1,6 @@
 package zw.gov.mohcc.impilo.vito.core.pickup;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -7,6 +8,9 @@ import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.shared.crypto.Argon2IdService;
 import zw.gov.mohcc.impilo.shared.crypto.HmacService;
 import zw.gov.mohcc.impilo.vito.core.PickupStatus;
+import zw.gov.mohcc.impilo.vito.core.biometric.BiometricPolicyDeniedException;
+import zw.gov.mohcc.impilo.vito.core.biometric.policy.BiometricPolicyClient;
+import zw.gov.mohcc.impilo.vito.core.biometric.policy.TshepoBiometricPolicyResponse;
 import zw.gov.mohcc.impilo.vito.persistence.entity.DelegatedPickupEntity;
 import zw.gov.mohcc.impilo.vito.persistence.entity.EventOutboxEntity;
 import zw.gov.mohcc.impilo.vito.persistence.repository.DelegatedPickupRepository;
@@ -26,15 +30,22 @@ public class DelegatedPickupService {
     private final HmacService hmacService;
     private final Argon2IdService argon2IdService;
     private final EventOutboxRepository outboxRepo;
+    private final BiometricPolicyClient biometricPolicyClient;
+    private final boolean biometricPolicyOnRedeem;
 
     public DelegatedPickupService(DelegatedPickupRepository pickupRepo,
                                    HmacService hmacService,
                                    Argon2IdService argon2IdService,
-                                   EventOutboxRepository outboxRepo) {
+                                   EventOutboxRepository outboxRepo,
+                                   BiometricPolicyClient biometricPolicyClient,
+                                   @Value("${vito.pickup.biometric-policy-on-redeem:false}")
+                                   boolean biometricPolicyOnRedeem) {
         this.pickupRepo = pickupRepo;
         this.hmacService = hmacService;
         this.argon2IdService = argon2IdService;
         this.outboxRepo = outboxRepo;
+        this.biometricPolicyClient = biometricPolicyClient;
+        this.biometricPolicyOnRedeem = biometricPolicyOnRedeem;
     }
 
     /**
@@ -92,6 +103,17 @@ public class DelegatedPickupService {
             pickup.setStatus(PickupStatus.EXPIRED);
             pickupRepo.save(pickup);
             throw new IllegalStateException("Pickup has expired");
+        }
+
+        if (biometricPolicyOnRedeem) {
+            TshepoBiometricPolicyResponse policy = biometricPolicyClient.evaluate(
+                    "CLIENT", "DELEGATED_PICKUP", "FACILITY", null, "VERIFY");
+            if (policy == null
+                    || !policy.verificationAllowed()
+                    || "PROHIBITED".equalsIgnoreCase(policy.policyOutcome())) {
+                throw new BiometricPolicyDeniedException(
+                        "Delegated pickup redemption denied by Tshepo biometric policy");
+            }
         }
 
         // Increment attempt count

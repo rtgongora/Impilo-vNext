@@ -86,6 +86,8 @@ public class AuthorizeController {
         String programmeId = request.getHeader(TrustHeaders.PROGRAMME_ID);
         String subjectId = request.getHeader(TrustHeaders.SUBJECT_ID);
         String assuranceLevel = request.getHeader(TrustHeaders.ASSURANCE_LEVEL);
+        String escalationGrantId = request.getHeader(TrustHeaders.ESCALATION_GRANT_ID);
+        String workflowContext = request.getHeader(TrustHeaders.WORKFLOW_STATE);
         String authorization = request.getHeader("authorization");
 
         // Parse UUIDs
@@ -148,7 +150,8 @@ public class AuthorizeController {
                 resourceId, loaLevel, sessionId,
                 authorization != null ? authorization : "",
                 providerId, departmentId, wardId, programmeId,
-                subjectId, assuranceLevel
+                subjectId, assuranceLevel,
+                escalationGrantId, workflowContext
         );
 
         log.debug("ext_authz check: actor={}, action={}, resource={}, purpose={}, correlation={}, " +

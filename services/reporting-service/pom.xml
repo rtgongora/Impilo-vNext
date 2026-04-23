@@ -73,6 +73,13 @@
             <version>${project.version}</version>
         </dependency>
 
+        <!-- Tshepo contracts (visibility DTOs for reporting PEP tests and compile visibility) -->
+        <dependency>
+            <groupId>zw.gov.mohcc.impilo</groupId>
+            <artifactId>tshepo-contracts</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- Tech Companion — v1.1 auto-configuration -->
         <dependency>
             <groupId>zw.gov.mohcc.impilo</groupId>

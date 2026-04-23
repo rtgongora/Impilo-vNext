@@ -7,9 +7,11 @@ import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import zw.gov.mohcc.impilo.varapi.persistence.entity.EventOutboxEntity;
+import zw.gov.mohcc.impilo.varapi.persistence.entity.CouncilEntity;
 import zw.gov.mohcc.impilo.varapi.persistence.entity.ProviderApplicationEntity;
 import zw.gov.mohcc.impilo.varapi.persistence.entity.ProviderEntity;
 import zw.gov.mohcc.impilo.varapi.persistence.entity.ProviderStatusHistoryEntity;
+import zw.gov.mohcc.impilo.varapi.persistence.repository.CouncilRepository;
 import zw.gov.mohcc.impilo.varapi.persistence.repository.EventOutboxRepository;
 import zw.gov.mohcc.impilo.varapi.persistence.repository.ProviderApplicationRepository;
 import zw.gov.mohcc.impilo.varapi.persistence.repository.ProviderRepository;
@@ -34,6 +36,7 @@ public class ProviderApplicationService {
             "UNDER_ADMIN_REVIEW",
             "AWAITING_DOCUMENTS",
             "AWAITING_VERIFICATION",
+            "AWAITING_PAYMENT",
             "READY_FOR_REVIEW",
             "PENDING_COMMITTEE_REVIEW");
 
@@ -41,16 +44,19 @@ public class ProviderApplicationService {
     private final ProviderRepository providerRepository;
     private final ProviderStatusHistoryRepository statusHistoryRepository;
     private final EventOutboxRepository outboxRepository;
+    private final CouncilRepository councilRepository;
 
     public ProviderApplicationService(
             ProviderApplicationRepository applicationRepository,
             ProviderRepository providerRepository,
             ProviderStatusHistoryRepository statusHistoryRepository,
-            EventOutboxRepository outboxRepository) {
+            EventOutboxRepository outboxRepository,
+            CouncilRepository councilRepository) {
         this.applicationRepository = applicationRepository;
         this.providerRepository = providerRepository;
         this.statusHistoryRepository = statusHistoryRepository;
         this.outboxRepository = outboxRepository;
+        this.councilRepository = councilRepository;
     }
 
     /**
@@ -60,11 +66,12 @@ public class ProviderApplicationService {
     public ProviderApplicationEntity createApplication(
             String applicationType,
             Long providerId,
+            Long councilId,
             String authorityRoute,
             String notes) {
         TrustContext ctx = TrustContextHolder.require();
-        log.info("Creating application: type={}, providerId={}, actor={}",
-                applicationType, providerId, ctx.actorId());
+        log.info("Creating application: type={}, providerId={}, councilId={}, actor={}",
+                applicationType, providerId, councilId, ctx.actorId());
 
         ProviderApplicationEntity application = new ProviderApplicationEntity();
         application.setTenantId(ctx.tenantId());
@@ -78,6 +85,11 @@ public class ProviderApplicationService {
 
         if (providerId != null) {
             application.setProvider(requireProvider(providerId, ctx.tenantId()));
+        }
+        if (councilId != null) {
+            CouncilEntity council = councilRepository.findByIdAndTenantId(councilId, ctx.tenantId())
+                    .orElseThrow(() -> new IllegalArgumentException("Council not found: " + councilId));
+            application.setCouncil(council);
         }
 
         application = applicationRepository.save(application);
@@ -118,6 +130,77 @@ public class ProviderApplicationService {
                 String.format("{\"applicationId\":%d}", applicationId));
 
         return application;
+    }
+
+    /**
+     * Council intake: move from submitted to under admin review.
+     */
+    @Transactional
+    public ProviderApplicationEntity advanceToUnderAdminReview(Long applicationId) {
+        TrustContext ctx = TrustContextHolder.require();
+        ProviderApplicationEntity application = requireApplication(applicationId, ctx.tenantId());
+        validateTransition(application.getWorkflowState(), "UNDER_ADMIN_REVIEW");
+        application.setWorkflowState("UNDER_ADMIN_REVIEW");
+        application.setVersion(application.getVersion() + 1);
+        application.setUpdatedBy(ctx.actorId());
+        return applicationRepository.save(application);
+    }
+
+    /**
+     * Require fee payment before substantive review (MusheX is system of record for money).
+     */
+    @Transactional
+    public ProviderApplicationEntity advanceToAwaitingPayment(Long applicationId) {
+        TrustContext ctx = TrustContextHolder.require();
+        ProviderApplicationEntity application = requireApplication(applicationId, ctx.tenantId());
+        validateTransition(application.getWorkflowState(), "AWAITING_PAYMENT");
+        application.setWorkflowState("AWAITING_PAYMENT");
+        application.setFeeState("UNPAID");
+        application.setVersion(application.getVersion() + 1);
+        application.setUpdatedBy(ctx.actorId());
+        application = applicationRepository.save(application);
+        publishEvent("PROVIDER_APPLICATION", application.getId().toString(),
+                "provider_council.application.awaiting_payment",
+                String.format("{\"applicationId\":%d}", applicationId));
+        return application;
+    }
+
+    /**
+     * Called when MusheX reports obligation settled / fee paid — advances workflow toward review.
+     */
+    @Transactional
+    public ProviderApplicationEntity advanceAfterFeePayment(Long applicationId) {
+        TrustContext ctx = TrustContextHolder.require();
+        ProviderApplicationEntity application = requireApplication(applicationId, ctx.tenantId());
+        if (!"AWAITING_PAYMENT".equals(application.getWorkflowState())) {
+            throw new IllegalStateException("Application is not awaiting payment: " + application.getWorkflowState());
+        }
+        validateTransition(application.getWorkflowState(), "READY_FOR_REVIEW");
+        application.setWorkflowState("READY_FOR_REVIEW");
+        application.setFeeState("PAID");
+        application.setVersion(application.getVersion() + 1);
+        application.setUpdatedBy(ctx.actorId());
+        application = applicationRepository.save(application);
+        publishEvent("PROVIDER_APPLICATION", application.getId().toString(),
+                "provider_council.payment.settled",
+                String.format("{\"applicationId\":%d}", applicationId));
+        return application;
+    }
+
+    /**
+     * Council queue filtered by council and workflow states.
+     */
+    @Transactional(readOnly = true)
+    public List<ProviderApplicationEntity> getApplicationsForCouncil(Long councilId, List<String> workflowStates) {
+        TrustContext ctx = TrustContextHolder.require();
+        if (workflowStates == null || workflowStates.isEmpty()) {
+            return applicationRepository.findByTenantIdAndWorkflowStateIn(ctx.tenantId(), OPEN_WORKFLOW_STATES)
+                    .stream()
+                    .filter(a -> a.getCouncil() != null && councilId.equals(a.getCouncil().getId()))
+                    .toList();
+        }
+        return applicationRepository.findByTenantIdAndCouncil_IdAndWorkflowStateIn(
+                ctx.tenantId(), councilId, workflowStates);
     }
 
     /**
@@ -366,11 +449,15 @@ public class ProviderApplicationService {
     private void validateTransition(String current, String target) {
         boolean valid = switch (current) {
             case "DRAFT" -> "SUBMITTED".equals(target);
-            case "SUBMITTED" -> "UNDER_ADMIN_REVIEW".equals(target) || "AWAITING_DOCUMENTS".equals(target) || "AWAITING_VERIFICATION".equals(target);
-            case "UNDER_ADMIN_REVIEW" -> "AWAITING_DOCUMENTS".equals(target) || "AWAITING_VERIFICATION".equals(target);
+            case "SUBMITTED" -> "UNDER_ADMIN_REVIEW".equals(target) || "AWAITING_DOCUMENTS".equals(target)
+                    || "AWAITING_VERIFICATION".equals(target) || "AWAITING_PAYMENT".equals(target);
+            case "UNDER_ADMIN_REVIEW" -> "AWAITING_DOCUMENTS".equals(target) || "AWAITING_VERIFICATION".equals(target)
+                    || "AWAITING_PAYMENT".equals(target);
             case "AWAITING_DOCUMENTS" -> "SUBMITTED".equals(target);
-            case "AWAITING_VERIFICATION" -> "READY_FOR_REVIEW".equals(target) || "AWAITING_DOCUMENTS".equals(target);
-            case "READY_FOR_REVIEW" -> "PENDING_COMMITTEE_REVIEW".equals(target);
+            case "AWAITING_VERIFICATION" -> "READY_FOR_REVIEW".equals(target) || "AWAITING_DOCUMENTS".equals(target)
+                    || "AWAITING_PAYMENT".equals(target);
+            case "AWAITING_PAYMENT" -> "READY_FOR_REVIEW".equals(target) || "CLOSED_OUT".equals(target);
+            case "READY_FOR_REVIEW" -> "PENDING_COMMITTEE_REVIEW".equals(target) || "AWAITING_PAYMENT".equals(target);
             case "PENDING_COMMITTEE_REVIEW" -> "DECIDED_APPROVED".equals(target) || "DECIDED_REJECTED".equals(target) || "DECIDED_DEFERRED".equals(target);
             case "DECIDED_REJECTED", "DECIDED_DEFERRED" -> "CLOSED_OUT".equals(target);
             default -> false;

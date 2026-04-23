@@ -16,4 +16,6 @@ public interface CouncilRepository extends JpaRepository<CouncilEntity, Long> {
     List<CouncilEntity> findByTenantId(UUID tenantId);
 
     List<CouncilEntity> findByTenantIdAndCouncilType(UUID tenantId, String councilType);
+
+    Optional<CouncilEntity> findByIdAndTenantId(Long id, UUID tenantId);
 }

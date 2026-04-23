@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.tshepo.authz.config.AuthzProperties;
 import zw.gov.mohcc.impilo.tshepo.authz.dto.AuthzInternalRequest;
+import zw.gov.mohcc.impilo.tshepo.authz.dto.EscalationGrantView;
 import zw.gov.mohcc.impilo.tshepo.authz.persistence.entity.PolicyDecisionLogEntity;
 import zw.gov.mohcc.impilo.tshepo.authz.persistence.entity.PolicyRuleEntity;
 import zw.gov.mohcc.impilo.tshepo.authz.persistence.repository.PolicyDecisionLogRepository;
@@ -16,6 +17,7 @@ import zw.gov.mohcc.impilo.tshepo.authz.service.*;
 import zw.gov.mohcc.impilo.tshepo.contracts.dto.AuthzResponse;
 import zw.gov.mohcc.impilo.tshepo.contracts.dto.ConsentDecision;
 import zw.gov.mohcc.impilo.tshepo.contracts.dto.Obligations;
+import zw.gov.mohcc.impilo.tshepo.contracts.dto.VisibilityProfile;
 import zw.gov.mohcc.impilo.tshepo.contracts.enums.PurposeOfUse;
 import zw.gov.mohcc.impilo.tshepo.contracts.enums.Verdict;
 import zw.gov.mohcc.impilo.tshepo.contracts.headers.TrustHeaders;
@@ -64,7 +66,7 @@ public class PolicyEngine {
             "DELETE", "EXPORT", "BULK", "MERGE", "RECOVERY"
     );
 
-    private final RiskScoring riskScoring;
+    private final DeviceRiskScoreEvaluator riskScoring;
     private final PolicyCacheService policyCacheService;
     private final ProviderPrivilegeRevocationStore privilegeRevocationStore;
     private final ConsentClient consentClient;
@@ -74,8 +76,9 @@ public class PolicyEngine {
     private final AuditPublisher auditPublisher;
     private final AuthzProperties properties;
     private final ObjectMapper objectMapper;
+    private final VisibilityEscalationService visibilityEscalationService;
 
-    public PolicyEngine(RiskScoring riskScoring,
+    public PolicyEngine(DeviceRiskScoreEvaluator riskScoring,
                         PolicyCacheService policyCacheService,
                         ProviderPrivilegeRevocationStore privilegeRevocationStore,
                         ConsentClient consentClient,
@@ -84,7 +87,8 @@ public class PolicyEngine {
                         PolicyDecisionLogRepository decisionLogRepository,
                         AuditPublisher auditPublisher,
                         AuthzProperties properties,
-                        ObjectMapper objectMapper) {
+                        ObjectMapper objectMapper,
+                        VisibilityEscalationService visibilityEscalationService) {
         this.riskScoring = riskScoring;
         this.policyCacheService = policyCacheService;
         this.privilegeRevocationStore = privilegeRevocationStore;
@@ -95,6 +99,7 @@ public class PolicyEngine {
         this.auditPublisher = auditPublisher;
         this.properties = properties;
         this.objectMapper = objectMapper;
+        this.visibilityEscalationService = visibilityEscalationService;
     }
 
     /**
@@ -117,6 +122,16 @@ public class PolicyEngine {
                 && privilegeRevocationStore.isRevoked(request.providerId())) {
             return denyAndLog(request, "PROVIDER_PRIVILEGE_REVOKED",
                     "Provider privilege suspended or revoked (VARAPI)", 0, startTime);
+        }
+
+        Optional<EscalationGrantView> activeEscalation = Optional.empty();
+        if (request.escalationGrantId() != null && !request.escalationGrantId().isBlank()) {
+            activeEscalation = visibilityEscalationService.resolveActiveGrant(request);
+            if (activeEscalation.isEmpty()) {
+                return denyAndLog(request, "ESCALATION_INVALID",
+                        "Escalation grant is missing, expired, or not bound to this actor",
+                        0, startTime);
+            }
         }
 
         // ────────────────────────────────────────────────────────────────
@@ -150,10 +165,11 @@ public class PolicyEngine {
         // ────────────────────────────────────────────────────────────────
         // Step 4: RBAC/ABAC policy evaluation
         // ────────────────────────────────────────────────────────────────
-        AuthzResponse policyResult = evaluatePolicies(request, purpose, riskScore, startTime);
-        if (policyResult != null) {
-            return policyResult;
+        PolicyStep4 step4 = evaluatePolicies(request, purpose, riskScore, startTime);
+        if (step4.deny() != null) {
+            return step4.deny();
         }
+        PolicyRuleEntity matchedAllowRule = step4.matchedAllowRule();
 
         // ────────────────────────────────────────────────────────────────
         // Step 5: Consent evaluation (clinical resources)
@@ -185,7 +201,8 @@ public class PolicyEngine {
         // ────────────────────────────────────────────────────────────────
         // Step 7: ALLOW with obligations
         // ────────────────────────────────────────────────────────────────
-        Obligations obligations = computeObligations(request, purpose, riskScore);
+        Obligations obligations = VisibilityObligationComposer.compose(
+                request, purpose, riskScore, matchedAllowRule, activeEscalation, objectMapper);
         Map<String, String> headerMutations = buildHeaderMutations(obligations, request);
 
         return allowAndLog(request, obligations, headerMutations, riskScore, startTime);
@@ -212,8 +229,9 @@ public class PolicyEngine {
             return stepUpAndLog(request, riskScore, startTime);
         }
 
-        // Break-glass ALLOWED — with elevated obligations
-        Obligations obligations = new Obligations(null, null, "ELEVATED", null);
+        // Break-glass ALLOWED — with elevated obligations + full visibility envelope
+        Obligations obligations = VisibilityObligationComposer.compose(
+                request, PurposeOfUse.BREAK_GLASS, riskScore, null, Optional.empty(), objectMapper);
         Map<String, String> headers = buildHeaderMutations(obligations, request);
 
         log.warn("BREAK-GLASS ALLOW: actor={}, resource={}/{}, correlation={}",
@@ -226,72 +244,70 @@ public class PolicyEngine {
     // Step 4: RBAC/ABAC policy evaluation
     // ════════════════════════════════════════════════════════════════════
 
-    private AuthzResponse evaluatePolicies(AuthzInternalRequest request, PurposeOfUse purpose,
-                                            int riskScore, long startTime) {
+    private PolicyStep4 evaluatePolicies(AuthzInternalRequest request, PurposeOfUse purpose,
+                                         int riskScore, long startTime) {
         UUID tenantId = request.tenantId();
 
-        // Load matching rules from Redis cache (or DB fallback)
         List<PolicyRuleEntity> rules = policyCacheService.getActiveRulesForResource(
                 tenantId, request.resourceType());
 
-        // No rules at all — default deny
         if (rules.isEmpty()) {
-            // For SYSTEM purpose, allow by default (service-to-service calls)
             if (purpose == PurposeOfUse.SYSTEM) {
-                return null; // Continue to step 5+
+                return PolicyStep4.continueWith(null);
             }
-            return denyAndLog(request, "NO_MATCHING_RULES",
+            return PolicyStep4.deny(denyAndLog(request, "NO_MATCHING_RULES",
                     "No active policy rules found for resource type: " + request.resourceType(),
-                    riskScore, startTime);
+                    riskScore, startTime));
         }
 
-        boolean hasMatchingAllow = false;
+        PolicyRuleEntity matchedAllowRule = null;
 
         for (PolicyRuleEntity rule : rules) {
             if (!matchesRule(rule, request, purpose)) {
                 continue;
             }
 
-            // DENY rule matches — immediate deny
             if ("DENY".equalsIgnoreCase(rule.getEffect())) {
-                return denyAndLog(request, "POLICY_DENY",
+                return PolicyStep4.deny(denyAndLog(request, "POLICY_DENY",
                         "Denied by policy rule: " + rule.getName(),
-                        riskScore, startTime);
+                        riskScore, startTime));
             }
 
-            // ALLOW rule matches — check additional constraints
             if ("ALLOW".equalsIgnoreCase(rule.getEffect())) {
-                // Facility scope check
                 if (rule.isFacilityScope() && request.facilityId() == null) {
-                    continue; // This rule requires facility context, skip
+                    continue;
                 }
-
-                // Workspace scope check
                 if (rule.isWorkspaceScope() && request.workspaceId() == null) {
-                    continue; // This rule requires workspace context, skip
+                    continue;
                 }
-
-                // JSONB conditions check
                 if (!evaluateConditions(rule.getConditions(), request)) {
                     continue;
                 }
-
-                hasMatchingAllow = true;
-                break; // First matching ALLOW wins
+                matchedAllowRule = rule;
+                break;
             }
         }
 
-        if (!hasMatchingAllow) {
-            // SYSTEM purpose gets a pass if no explicit deny was found
+        if (matchedAllowRule == null) {
             if (purpose == PurposeOfUse.SYSTEM) {
-                return null;
+                return PolicyStep4.continueWith(null);
             }
-            return denyAndLog(request, "NO_ALLOW_RULE",
+            return PolicyStep4.deny(denyAndLog(request, "NO_ALLOW_RULE",
                     "No matching ALLOW rule for this actor/resource/action combination",
-                    riskScore, startTime);
+                    riskScore, startTime));
         }
 
-        return null; // Continue to step 5+
+        return PolicyStep4.continueWith(matchedAllowRule);
+    }
+
+    private record PolicyStep4(AuthzResponse deny, PolicyRuleEntity matchedAllowRule) {
+        static PolicyStep4 continueWith(PolicyRuleEntity matchedAllowRule) {
+            return new PolicyStep4(null, matchedAllowRule);
+        }
+
+        static PolicyStep4 deny(AuthzResponse deny) {
+            return new PolicyStep4(deny, null);
+        }
     }
 
     /**
@@ -433,49 +449,6 @@ public class PolicyEngine {
         return SENSITIVE_ACTIONS.stream().anyMatch(upper::contains);
     }
 
-    // ════════════════════════════════════════════════════════════════════
-    // Step 7: Obligation computation
-    // ════════════════════════════════════════════════════════════════════
-
-    private Obligations computeObligations(AuthzInternalRequest request,
-                                            PurposeOfUse purpose, int riskScore) {
-        String loggingLevel = riskScore > 50 ? "ELEVATED" : "STANDARD";
-
-        return switch (purpose) {
-            case RESEARCH -> new Obligations(
-                    "ANONYMIZED",
-                    List.of("name", "phone", "address", "dateOfBirth", "nationalId"),
-                    loggingLevel,
-                    null
-            );
-            case PUBLIC_HEALTH -> new Obligations(
-                    "PSEUDONYMIZED",
-                    List.of("name", "phone", "nationalId"),
-                    loggingLevel,
-                    null
-            );
-            case OPERATIONS -> new Obligations(
-                    "FACILITY_SCOPE",
-                    List.of("name", "phone"),
-                    loggingLevel,
-                    null
-            );
-            case EMERGENCY -> new Obligations(
-                    null,
-                    null,
-                    "ELEVATED",
-                    null
-            );
-            case BREAK_GLASS -> new Obligations(
-                    null,
-                    null,
-                    "ELEVATED",
-                    null
-            );
-            default -> new Obligations(null, null, loggingLevel, null);
-        };
-    }
-
     private Map<String, String> buildHeaderMutations(Obligations obligations,
                                                       AuthzInternalRequest request) {
         Map<String, String> headers = new LinkedHashMap<>();
@@ -516,6 +489,37 @@ public class PolicyEngine {
             } catch (JsonProcessingException e) {
                 headers.put(TrustHeaders.OBLIGATIONS, "{}");
             }
+
+            VisibilityProfile vp = obligations.visibilityProfile();
+            if (vp != null) {
+                if (vp.visibilityTier() != null) {
+                    headers.put(TrustHeaders.VISIBILITY_TIER, vp.visibilityTier());
+                }
+                if (vp.piiAccess() != null) {
+                    headers.put(TrustHeaders.PII_ACCESS, vp.piiAccess());
+                }
+                if (vp.clinicalAccess() != null) {
+                    headers.put(TrustHeaders.CLINICAL_ACCESS, vp.clinicalAccess());
+                }
+                if (vp.aggregateOnly() != null) {
+                    headers.put(TrustHeaders.AGGREGATE_ONLY, Boolean.toString(vp.aggregateOnly()));
+                }
+                if (vp.resourceSensitivityClass() != null) {
+                    headers.put(TrustHeaders.RESOURCE_SENSITIVITY, vp.resourceSensitivityClass());
+                }
+                if (vp.escalationGrantId() != null) {
+                    headers.put(TrustHeaders.ESCALATION_GRANT_ID, vp.escalationGrantId());
+                }
+                if (vp.exportPolicy() != null) {
+                    headers.put(TrustHeaders.EXPORT_POLICY, vp.exportPolicy());
+                }
+                if (vp.suppressFields() != null && !vp.suppressFields().isEmpty()) {
+                    headers.put(TrustHeaders.SUPPRESS_FIELDS, String.join(",", vp.suppressFields()));
+                }
+                if (vp.drillDownAllowed() != null) {
+                    headers.put(TrustHeaders.DRILL_DOWN_ALLOWED, Boolean.toString(vp.drillDownAllowed()));
+                }
+            }
         }
 
         return headers;
@@ -528,7 +532,7 @@ public class PolicyEngine {
     private AuthzResponse allowAndLog(AuthzInternalRequest request, Obligations obligations,
                                        Map<String, String> headers, int riskScore, long startTime) {
         persistDecision(request, "ALLOW", riskScore, null, null, obligations, startTime);
-        auditPublisher.queueAuditEvent(request, "ALLOW", riskScore, null);
+        auditPublisher.queueAuditEvent(request, "ALLOW", riskScore, null, obligations);
 
         return AuthzResponse.allow(obligations, riskScore, headers);
     }

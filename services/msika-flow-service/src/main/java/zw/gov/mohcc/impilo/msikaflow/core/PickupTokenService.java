@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import zw.gov.mohcc.impilo.msikaflow.api.dto.PickupClaimTrust;
 import zw.gov.mohcc.impilo.msikaflow.domain.*;
 import zw.gov.mohcc.impilo.msikaflow.persistence.entity.*;
 import zw.gov.mohcc.impilo.msikaflow.persistence.repository.*;
@@ -33,15 +34,18 @@ public class PickupTokenService {
     private final OrderStateMachine stateMachine;
     private final EventOutboxRepository outboxRepository;
     private final ObjectMapper objectMapper;
+    private final MsikaPickupBiometricPolicyClient pickupBiometricPolicyClient;
 
     public PickupTokenService(PickupTokenRepository tokenRepository,
                               OrderStateMachine stateMachine,
                               EventOutboxRepository outboxRepository,
-                              ObjectMapper objectMapper) {
+                              ObjectMapper objectMapper,
+                              MsikaPickupBiometricPolicyClient pickupBiometricPolicyClient) {
         this.tokenRepository = tokenRepository;
         this.stateMachine = stateMachine;
         this.outboxRepository = outboxRepository;
         this.objectMapper = objectMapper;
+        this.pickupBiometricPolicyClient = pickupBiometricPolicyClient;
     }
 
     @Transactional
@@ -93,13 +97,14 @@ public class PickupTokenService {
     }
 
     @Transactional
-    public ClaimResult claimPickup(String tokenOrOtp, String claimantActorId, String claimantActorType,
-                                   String deviceFingerprint, UUID tenantId) {
+    public ClaimResult claimPickup(String tokenOrOtp, PickupClaimTrust trust) {
         // Rate limiting
-        if (isRateLimited(claimantActorId)) {
+        if (isRateLimited(trust.actorId())) {
             throw new IllegalStateException("Too many claim attempts. Please wait before trying again.");
         }
-        recordAttempt(claimantActorId);
+        recordAttempt(trust.actorId());
+
+        pickupBiometricPolicyClient.assertPickupClaimAllowed(trust);
 
         // Try to find by token hash first, then OTP hash
         String hash = sha256(tokenOrOtp);
@@ -132,13 +137,14 @@ public class PickupTokenService {
 
         // Claim the token
         token.setStatus(PickupTokenStatus.CLAIMED);
-        token.setClaimedBy(claimantActorId);
-        token.setClaimedActorType(claimantActorType);
+        token.setClaimedBy(trust.actorId());
+        token.setClaimedActorType(trust.actorType());
         token.setClaimedAt(OffsetDateTime.now());
 
         try {
             token.setClaimMeta(objectMapper.writeValueAsString(Map.of(
-                    "deviceFingerprint", deviceFingerprint != null ? deviceFingerprint : "unknown",
+                    "deviceFingerprint",
+                    trust.deviceFingerprint() != null ? trust.deviceFingerprint() : "unknown",
                     "claimedAt", OffsetDateTime.now().toString()
             )));
         } catch (Exception e) {
@@ -149,15 +155,15 @@ public class PickupTokenService {
 
         // Transition order to COLLECTED
         stateMachine.transition(token.getOrderId(), OrderStatus.COLLECTED,
-                claimantActorId, claimantActorType, "PICKUP_CLAIMED", null);
+                trust.actorId(), trust.actorType(), "PICKUP_CLAIMED", null);
 
         // Publish event
-        publishOutbox("PickupToken", token.getId(), "PICKUP_CLAIMED", tenantId,
+        publishOutbox("PickupToken", token.getId(), "PICKUP_CLAIMED", trust.tenantId(),
                 Map.of("orderId", token.getOrderId(), "tokenId", token.getId(),
-                        "claimedBy", claimantActorId));
+                        "claimedBy", trust.actorId()));
 
-        log.info("Pickup claimed: orderId={} claimedBy={}", token.getOrderId(), claimantActorId);
-        return new ClaimResult(token.getOrderId(), token.getId(), claimantActorId);
+        log.info("Pickup claimed: orderId={} claimedBy={}", token.getOrderId(), trust.actorId());
+        return new ClaimResult(token.getOrderId(), token.getId(), trust.actorId());
     }
 
     private boolean isRateLimited(String actorId) {

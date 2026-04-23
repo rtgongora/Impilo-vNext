@@ -91,8 +91,18 @@ public class CartService {
         if (items.isEmpty()) throw new IllegalStateException("Cart is empty");
 
         OrderType orderType = req.orderType() != null ? OrderType.valueOf(req.orderType()) : OrderType.OTC_PRODUCT_ORDER;
-        OrderEntity order = stateMachine.createOrder(cart.getTenantId(), cart.getActorId(), cart.getActorType(),
-                cart.getPatientCpid(), orderType, req.facilityId(), req.vendorId(), req.idempotencyKey());
+        OrderEntity order = stateMachine.createOrder(
+                cart.getTenantId(),
+                cart.getActorId(),
+                cart.getActorType(),
+                cart.getPatientCpid(),
+                orderType,
+                req.facilityId(),
+                null,
+                req.vendorId(),
+                null,
+                null,
+                req.idempotencyKey());
 
         for (CartItemEntity i : items) {
             stateMachine.addLine(order.getOrderId(), i.getMsikaCoreCode(), i.getKind(),

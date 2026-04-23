@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.tshepo.core;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -20,7 +21,7 @@ public class WorkspaceValidationService {
     private final String tusoBaseUrl;
 
     public WorkspaceValidationService(
-            @org.springframework.beans.annotation.Qualifier("tusoRestTemplate") RestTemplate tusoRestTemplate,
+            @Qualifier("tusoRestTemplate") RestTemplate tusoRestTemplate,
             @Value("${impilo.services.tuso.base-url:http://localhost:8084}") String tusoBaseUrl) {
         this.restTemplate = tusoRestTemplate;
         this.tusoBaseUrl = tusoBaseUrl;

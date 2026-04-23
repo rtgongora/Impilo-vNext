@@ -32,7 +32,11 @@ public record AuthzInternalRequest(
         String wardId,
         String programmeId,
         String subjectId,
-        String assuranceLevel
+        String assuranceLevel,
+        /** Optional active workflow escalation grant (x-escalation-grant-id). */
+        String escalationGrantId,
+        /** Optional workflow / review context (x-workflow-state). */
+        String workflowContext
 ) {
     /**
      * Derive a human-readable action from method + path.

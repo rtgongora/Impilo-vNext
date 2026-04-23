@@ -107,6 +107,22 @@ class PaymentIntentServiceTest {
     }
 
     @Test
+    void createIntent_shouldAcceptProviderCouncilFeeSourceType() throws Exception {
+        when(intentRepository.findByIdempotencyKey(any())).thenReturn(Optional.empty());
+        when(intentRepository.save(any(PaymentIntentEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(objectMapper.writeValueAsString(any())).thenReturn("{}");
+
+        String metadata = "{\"provider_id\":\"VA-00000000000001\"}";
+        PaymentIntentEntity result = service.createIntent(
+                SourceType.PROVIDER_COUNCIL_FEE, "OBL-42", new BigDecimal("25.00"), "USD",
+                facilityId, "idem-council-001", metadata);
+
+        assertEquals(SourceType.PROVIDER_COUNCIL_FEE, result.getSourceType());
+        assertEquals("OBL-42", result.getSourceId());
+        assertEquals(new BigDecimal("25.00"), result.getAmountTotal());
+    }
+
+    @Test
     void createIntent_shouldSetMetadataWhenProvided() throws Exception {
         String metadata = "{\"patient\":\"P-001\"}";
         when(intentRepository.findByIdempotencyKey(any())).thenReturn(Optional.empty());

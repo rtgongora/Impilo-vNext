@@ -81,6 +81,8 @@ const EXPECTED_ROUTES = [
   "/registry/trust",
   "/registry/providers",
   "/registry/providers/[id]",
+  "/registry/provider-council/self-service",
+  "/registry/provider-council/council-workspace",
   "/registry/facilities",
   "/registry/facilities/[id]",
   "/registry/terminology",

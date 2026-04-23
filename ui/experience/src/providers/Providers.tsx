@@ -22,6 +22,7 @@ import { useConsentStore } from "@/hooks/useConsentStore";
 import { usePrivacyDisplayStore } from "@/hooks/usePrivacyDisplayStore";
 import { InactivityLockProvider } from "./InactivityLockProvider";
 import { PrivacyWatermark } from "@/components/PrivacyWatermark";
+import { VisibilityContextBar } from "@/components/VisibilityContextBar";
 import { loadHydratedExperienceContinuity, resetExperienceContinuity } from "@/lib/session-continuity";
 import { useWorkspaceStore } from "@/hooks/useWorkspaceStore";
 import { useShiftStore } from "@/hooks/useShiftStore";
@@ -109,6 +110,7 @@ export function Providers({ children }: { children: ReactNode }) {
           <AuthGuardProvider>
             <InactivityLockProvider>
               <PrivacyWatermark />
+              <VisibilityContextBar />
               {children}
             </InactivityLockProvider>
           </AuthGuardProvider>

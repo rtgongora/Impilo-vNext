@@ -80,6 +80,12 @@
             <version>${project.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>zw.gov.mohcc.impilo</groupId>
+            <artifactId>shared-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- Shared Kernel (v1.1 enforcement: EventEnvelope) -->
         <dependency>
             <groupId>zw.gov.mohcc.impilo</groupId>

@@ -88,6 +88,18 @@
             <version>${project.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>zw.gov.mohcc.impilo</groupId>
+            <artifactId>shared-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>zw.gov.mohcc.impilo</groupId>
+            <artifactId>tshepo-contracts</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- Shared Kernel Java (EventEnvelope) -->
         <dependency>
             <groupId>zw.gov.mohcc.impilo</groupId>

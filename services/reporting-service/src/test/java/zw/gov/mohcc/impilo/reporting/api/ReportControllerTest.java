@@ -10,6 +10,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockHttpServletRequest;
 import zw.gov.mohcc.impilo.companion.context.RequestContext;
 import zw.gov.mohcc.impilo.companion.context.RequestContextHolder;
 import zw.gov.mohcc.impilo.reporting.core.*;
@@ -22,6 +23,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -38,13 +40,15 @@ class ReportControllerTest {
 
     private ReportController controller;
 
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
     private final UUID tenantId = UUID.fromString("00000000-0000-0000-0000-000000000001");
     private final String requestId = UUID.randomUUID().toString();
     private final String correlationId = UUID.randomUUID().toString();
 
     @BeforeEach
     void setUp() {
-        controller = new ReportController(definitionService, runService, scheduleService);
+        controller = new ReportController(definitionService, runService, scheduleService, objectMapper);
         RequestContext ctx = RequestContext.of(
                 tenantId.toString(), "national", requestId, correlationId,
                 null, null, null);
@@ -104,32 +108,44 @@ class ReportControllerTest {
                 run.getRunId(), "test-report", "{}", "JSON", "COMPLETED",
                 "{}", null, null, null, "admin", null);
 
-        when(runService.runReport(eq(tenantId), eq("test-report"), anyString(), any()))
+        when(runService.runReport(eq(tenantId), eq("test-report"), anyString(), any(), any()))
                 .thenReturn(run);
         when(runService.toResponse(run)).thenReturn(response);
 
-        ResponseEntity<?> result = controller.runReport("test-report", null);
+        ResponseEntity<?> result = controller.runReport("test-report", null, new MockHttpServletRequest());
         assertThat(result.getStatusCode()).isEqualTo(HttpStatus.CREATED);
     }
 
     @Test
     @DisplayName("runReport returns 404 for unknown key")
     void runReportNotFound() {
-        when(runService.runReport(eq(tenantId), eq("unknown"), anyString(), any()))
+        when(runService.runReport(eq(tenantId), eq("unknown"), anyString(), any(), any()))
                 .thenThrow(new IllegalArgumentException("Report not found: unknown"));
 
-        ResponseEntity<?> result = controller.runReport("unknown", null);
+        ResponseEntity<?> result = controller.runReport("unknown", null, new MockHttpServletRequest());
         assertThat(result.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     }
 
     @Test
     @DisplayName("runReport returns 409 for inactive report")
     void runReportInactive() {
-        when(runService.runReport(eq(tenantId), eq("inactive"), anyString(), any()))
+        when(runService.runReport(eq(tenantId), eq("inactive"), anyString(), any(), any()))
                 .thenThrow(new IllegalStateException("Report is not active: inactive"));
 
-        ResponseEntity<?> result = controller.runReport("inactive", null);
+        ResponseEntity<?> result = controller.runReport("inactive", null, new MockHttpServletRequest());
         assertThat(result.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+    }
+
+    @Test
+    @DisplayName("runReport returns 403 when export policy prohibits materialized runs")
+    void runReportExportVisibilityDenied() {
+        MockHttpServletRequest req = new MockHttpServletRequest();
+        req.addHeader("x-export-policy", "PROHIBITED");
+
+        ResponseEntity<?> result = controller.runReport("test-report", null, req);
+
+        assertThat(result.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        verifyNoInteractions(runService);
     }
 
     // ---------------------------------------------------------------

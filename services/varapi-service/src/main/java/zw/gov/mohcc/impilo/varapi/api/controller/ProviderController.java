@@ -19,6 +19,10 @@ import org.springframework.web.bind.annotation.RestController;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import zw.gov.mohcc.impilo.shared.response.ApiResponse;
+import zw.gov.mohcc.impilo.shared.visibility.AggregateVisibilityGuard;
+import zw.gov.mohcc.impilo.shared.visibility.VisibilityContextHolder;
+import zw.gov.mohcc.impilo.varapi.api.policy.ProviderRepresentation;
+import zw.gov.mohcc.impilo.tshepo.contracts.dto.VisibilityProfile;
 import zw.gov.mohcc.impilo.shared.response.PagedResponse;
 import zw.gov.mohcc.impilo.varapi.api.dto.CreateProviderRequest;
 import zw.gov.mohcc.impilo.varapi.api.dto.ProviderContactDto;
@@ -85,6 +89,16 @@ public class ProviderController {
 
         ProviderService.ProviderDetail detail = providerService.getProvider(providerPublicId);
         ProviderResponse response = toProviderDetailResponse(detail);
+
+        VisibilityProfile vis = VisibilityContextHolder.current().orElse(null);
+        if (AggregateVisibilityGuard.blocksRowLevelDetail(vis)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error("VISIBILITY_AGGREGATE_ONLY",
+                            "Full provider record is not available under aggregate-only visibility.",
+                            HttpStatus.FORBIDDEN.value(),
+                            ctx.correlationId().toString()));
+        }
+        response = ProviderRepresentation.apply(response, vis);
 
         return ResponseEntity.ok(ApiResponse.ok(response, ctx.correlationId().toString()));
     }

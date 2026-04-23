@@ -24,4 +24,7 @@ public interface ProviderApplicationRepository extends JpaRepository<ProviderApp
     List<ProviderApplicationEntity> findByTenantIdAndApplicationType(UUID tenantId, String applicationType);
 
     int countByProviderIdAndWorkflowState(Long providerId, String workflowState);
+
+    List<ProviderApplicationEntity> findByTenantIdAndCouncil_IdAndWorkflowStateIn(
+            UUID tenantId, Long councilId, List<String> workflowStates);
 }

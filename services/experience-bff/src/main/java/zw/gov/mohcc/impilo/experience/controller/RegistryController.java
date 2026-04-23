@@ -4,6 +4,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import zw.gov.mohcc.impilo.experience.client.VarapiServiceClient;
 
 import java.util.*;
@@ -163,5 +164,104 @@ public class RegistryController {
         }
     }
 
-    
+    /**
+     * GET /internal/v1/registry/provider-council/obligations — MusheX-linked council fee obligations.
+     */
+    @GetMapping("/provider-council/obligations")
+    public ResponseEntity<Map<String, Object>> getProviderCouncilObligations(
+            @RequestParam long providerId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode rows = varapiClient.getProviderCouncilObligations(providerId);
+            return ResponseEntity.ok(Map.of(
+                    "data", rows != null ? rows : JsonNodeFactory.instance.arrayNode(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            return ResponseEntity.ok(Map.of(
+                    "data", JsonNodeFactory.instance.arrayNode(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
+    }
+
+    /**
+     * GET /internal/v1/registry/provider-council/applications/open — council staff queue.
+     */
+    @GetMapping("/provider-council/applications/open")
+    public ResponseEntity<Map<String, Object>> getProviderCouncilOpenApplications(
+            @RequestParam long councilId,
+            @RequestParam(required = false) String workflowStates,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode rows = varapiClient.getProviderCouncilOpenApplications(councilId, workflowStates);
+            return ResponseEntity.ok(Map.of(
+                    "data", rows != null ? rows : JsonNodeFactory.instance.arrayNode(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            return ResponseEntity.ok(Map.of(
+                    "data", JsonNodeFactory.instance.arrayNode(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
+    }
+
+    /**
+     * GET /internal/v1/registry/provider-council/fundo-cpd-candidates — governed Fundo → CPD pipeline.
+     */
+    @GetMapping("/provider-council/fundo-cpd-candidates")
+    public ResponseEntity<Map<String, Object>> getFundoCpdCandidates(
+            @RequestParam long providerId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode rows = varapiClient.getFundoCpdCandidates(providerId);
+            return ResponseEntity.ok(Map.of(
+                    "data", rows != null ? rows : JsonNodeFactory.instance.arrayNode(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            return ResponseEntity.ok(Map.of(
+                    "data", JsonNodeFactory.instance.arrayNode(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
+    }
+
+    /**
+     * GET /internal/v1/registry/provider-council/council-regulatory-config — per-council fees/CPD/workflow JSON.
+     */
+    @GetMapping("/provider-council/council-regulatory-config")
+    public ResponseEntity<Map<String, Object>> getCouncilRegulatoryConfig(
+            @RequestParam long councilId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode row = varapiClient.getCouncilRegulatoryConfig(councilId);
+            return ResponseEntity.ok(Map.of(
+                    "data", row != null ? row : JsonNodeFactory.instance.objectNode(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            return ResponseEntity.ok(Map.of(
+                    "data", JsonNodeFactory.instance.objectNode(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
+    }
+
+    /**
+     * PUT /internal/v1/registry/provider-council/council-regulatory-config — upsert council regulatory config.
+     */
+    @PutMapping("/provider-council/council-regulatory-config")
+    public ResponseEntity<Map<String, Object>> putCouncilRegulatoryConfig(
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode row = varapiClient.putCouncilRegulatoryConfig(body);
+            return ResponseEntity.ok(Map.of(
+                    "data", row != null ? row : JsonNodeFactory.instance.objectNode(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            return ResponseEntity.ok(Map.of(
+                    "data", JsonNodeFactory.instance.objectNode(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
+    }
 }

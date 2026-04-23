@@ -18,6 +18,8 @@ import zw.gov.mohcc.impilo.reporting.persistence.entity.ReportDefinitionEntity;
 import zw.gov.mohcc.impilo.reporting.persistence.entity.ReportRunEntity;
 import zw.gov.mohcc.impilo.reporting.persistence.repository.EventOutboxRepository;
 import zw.gov.mohcc.impilo.reporting.persistence.repository.ReportRunRepository;
+import zw.gov.mohcc.impilo.shared.visibility.ExportVisibilityGuard;
+import zw.gov.mohcc.impilo.tshepo.contracts.dto.VisibilityProfile;
 
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -57,6 +59,16 @@ public class ReportRunService {
     @Transactional
     public ReportRunEntity runReport(UUID tenantId, String reportKey, String actorId,
                                      RunReportRequest request) {
+        return runReport(tenantId, reportKey, actorId, request, null);
+    }
+
+    /**
+     * Same as {@link #runReport(UUID, String, String, RunReportRequest)} with optional
+     * {@link VisibilityProfile} for export-time redaction (JSON shaping / CSV column masking).
+     */
+    @Transactional
+    public ReportRunEntity runReport(UUID tenantId, String reportKey, String actorId,
+                                     RunReportRequest request, VisibilityProfile visibility) {
         ReportDefinitionEntity definition = definitionService.findByKey(tenantId, reportKey);
 
         if (definition.getStatus() != ReportStatus.ACTIVE) {
@@ -83,6 +95,9 @@ public class ReportRunService {
 
         try {
             String result = executeQuery(definition, runtimeParams, tenantId, format);
+            if (ExportVisibilityGuard.requiresRedactedReportOutput(visibility)) {
+                result = ExportReportOutputRedactor.apply(result, format, visibility, objectMapper);
+            }
             run.setResult(result);
             run.setStatus(RunStatus.COMPLETED);
             run.setCompletedAt(OffsetDateTime.now());

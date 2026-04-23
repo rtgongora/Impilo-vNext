@@ -27,11 +27,12 @@ public class ProviderApplicationController {
     public ResponseEntity<GenericResponse> createApplication(@RequestBody Map<String, Object> request) {
         String applicationType = (String) request.get("applicationType");
         Long providerId = request.get("providerId") != null ? Long.valueOf(request.get("providerId").toString()) : null;
+        Long councilId = request.get("councilId") != null ? Long.valueOf(request.get("councilId").toString()) : null;
         String authorityRoute = (String) request.get("authorityRoute");
         String notes = (String) request.get("notes");
 
         ProviderApplicationEntity application = applicationService.createApplication(
-                applicationType, providerId, authorityRoute, notes);
+                applicationType, providerId, councilId, authorityRoute, notes);
 
         return ResponseEntity.ok(GenericResponse.success(
                 "Application created",

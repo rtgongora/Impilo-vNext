@@ -236,4 +236,13 @@ public class VitoServiceClient {
         ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
         return extractData(response);
     }
+
+    /** Raw JSON string response for BFF biometric proxying (preserves VITO {@code ApiResponse} envelope). */
+    public ResponseEntity<String> rawGet(String path) {
+        return restTemplate.getForEntity(baseUrl + path, String.class);
+    }
+
+    public ResponseEntity<String> rawPost(String path, Object body) {
+        return restTemplate.postForEntity(baseUrl + path, body, String.class);
+    }
 }

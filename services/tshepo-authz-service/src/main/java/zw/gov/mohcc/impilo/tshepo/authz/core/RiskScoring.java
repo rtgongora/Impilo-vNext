@@ -27,7 +27,7 @@ import java.util.UUID;
  * <p>Scores are cached in Redis for fast lookup on every request.</p>
  */
 @Component
-public class RiskScoring {
+public class RiskScoring implements DeviceRiskScoreEvaluator {
 
     private static final Logger log = LoggerFactory.getLogger(RiskScoring.class);
 
@@ -51,6 +51,7 @@ public class RiskScoring {
      * @param actorId     the requesting actor
      * @return risk score 0-100
      */
+    @Override
     public int score(UUID tenantId, String fingerprint, String actorId) {
         if (fingerprint == null || fingerprint.isBlank()) {
             log.debug("No device fingerprint provided, risk={}",

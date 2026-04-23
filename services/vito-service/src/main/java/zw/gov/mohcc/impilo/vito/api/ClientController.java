@@ -2,12 +2,16 @@ package zw.gov.mohcc.impilo.vito.api;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import zw.gov.mohcc.impilo.shared.response.ApiResponse;
 import zw.gov.mohcc.impilo.shared.response.PagedResponse;
+import zw.gov.mohcc.impilo.shared.visibility.AggregateVisibilityGuard;
+import zw.gov.mohcc.impilo.shared.visibility.VisibilityContextHolder;
+import zw.gov.mohcc.impilo.tshepo.contracts.dto.VisibilityProfile;
 import zw.gov.mohcc.impilo.vito.core.IdentityService;
 import zw.gov.mohcc.impilo.vito.core.IdentityStatus;
 import zw.gov.mohcc.impilo.vito.persistence.entity.ClientEntity;
@@ -36,6 +40,12 @@ public class ClientController {
             @RequestParam(defaultValue = "50") int size) {
 
         TrustContext ctx = TrustContextHolder.require();
+        VisibilityProfile vis = VisibilityContextHolder.current().orElse(null);
+        if (AggregateVisibilityGuard.blocksRowLevelDetail(vis)) {
+            return ResponseEntity.ok(ApiResponse.ok(
+                    PagedResponse.of(java.util.List.of(), page, size, 0),
+                    ctx.correlationId().toString()));
+        }
         Page<ClientEntity> clients = identityService.listClients(
                 ctx.tenantId(), status, PageRequest.of(page, size));
 
@@ -47,6 +57,14 @@ public class ClientController {
     @GetMapping("/{healthId}")
     public ResponseEntity<ApiResponse<ClientEntity>> getClient(@PathVariable UUID healthId) {
         TrustContext ctx = TrustContextHolder.require();
+        VisibilityProfile vis = VisibilityContextHolder.current().orElse(null);
+        if (AggregateVisibilityGuard.blocksRowLevelDetail(vis)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+                    ApiResponse.error("VISIBILITY_AGGREGATE_ONLY",
+                            "Client identity detail is not available under aggregate-only visibility.",
+                            HttpStatus.FORBIDDEN.value(),
+                            ctx.correlationId().toString()));
+        }
 
         return identityService.findByHealthId(ctx.tenantId(), healthId)
                 .map(client -> ResponseEntity.ok(

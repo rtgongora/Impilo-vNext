@@ -48,6 +48,13 @@
             <version>0.1.0-SNAPSHOT</version>
         </dependency>
 
+        <!-- Tshepo contracts — visibility profile + trust header names -->
+        <dependency>
+            <groupId>zw.gov.mohcc.impilo</groupId>
+            <artifactId>tshepo-contracts</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- Jackson — JSON serialization for response envelope -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>

@@ -67,6 +67,17 @@ vito:
     threshold-auto-link: 0.95
     threshold-manual-review: 0.70
 
+  # Biometric governance (Tshepo policy + auditable events)
+  biometric:
+    policy-enabled: ${VITO_BIOMETRIC_POLICY_ENABLED:true}
+    tshepo-policy-base-url: ${TSHEPO_POLICY_BASE_URL:http://localhost:8079}
+    # When > 0, verify() requires probeContext.livenessScore() >= this value (vendor pipeline should populate).
+    liveness-min-score: ${VITO_BIOMETRIC_LIVENESS_MIN_SCORE:0}
+
+  pickup:
+    # When true, redeem requires Tshepo CLIENT/DELEGATED_PICKUP/FACILITY/VERIFY rule (actor + assurance aware).
+    biometric-policy-on-redeem: ${VITO_PICKUP_BIOMETRIC_POLICY_ON_REDEEM:false}
+
   # Mode: OPENCR or STANDALONE
   registry-mode: ${VITO_REGISTRY_MODE:STANDALONE}
 

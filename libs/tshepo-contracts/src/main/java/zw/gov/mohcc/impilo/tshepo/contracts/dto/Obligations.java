@@ -20,15 +20,17 @@ public record Obligations(
         /** Logging level override ("STANDARD", "ELEVATED", "FULL"). */
         String loggingLevel,
         /** Consent scope reference ID (for clinical resource access). */
-        String consentScopeRef
+        String consentScopeRef,
+        /** Scoped visibility, PII/clinical separation, export, escalation binding. */
+        VisibilityProfile visibilityProfile
 ) {
-    public static final Obligations NONE = new Obligations(null, null, "STANDARD", null);
+    public static final Obligations NONE = new Obligations(null, null, "STANDARD", null, null);
 
     public static Obligations withElevatedLogging() {
-        return new Obligations(null, null, "ELEVATED", null);
+        return new Obligations(null, null, "ELEVATED", null, null);
     }
 
     public static Obligations withMasking(List<String> fields) {
-        return new Obligations(null, fields, "STANDARD", null);
+        return new Obligations(null, fields, "STANDARD", null, null);
     }
 }

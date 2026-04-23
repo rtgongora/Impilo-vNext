@@ -49,6 +49,8 @@ spring:
 
 # --- TSHEPO-specific ---
 tshepo:
+  council-regulatory:
+    deny-by-default: ${TSHEPO_COUNCIL_REGULATORY_DENY_BY_DEFAULT:true}
   pepper: ${TSHEPO_PEPPER:changeme-generate-a-real-pepper}
   rate-limit:
     max-requests-per-minute: 120

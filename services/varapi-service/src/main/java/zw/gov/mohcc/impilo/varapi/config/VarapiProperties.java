@@ -14,6 +14,9 @@ public class VarapiProperties {
     private TokenProperties token = new TokenProperties();
     private OutboxProperties outbox = new OutboxProperties();
     private GovernanceProperties governance = new GovernanceProperties();
+    private MusheXProperties mushex = new MusheXProperties();
+    private FundoProperties fundo = new FundoProperties();
+    private CouncilRegulatoryProperties councilRegulatory = new CouncilRegulatoryProperties();
 
     public String getRegistryMode() { return registryMode; }
     public void setRegistryMode(String registryMode) { this.registryMode = registryMode; }
@@ -44,6 +47,17 @@ public class VarapiProperties {
 
     public GovernanceProperties getGovernance() { return governance; }
     public void setGovernance(GovernanceProperties governance) { this.governance = governance; }
+
+    public MusheXProperties getMushex() { return mushex; }
+    public void setMushex(MusheXProperties mushex) { this.mushex = mushex; }
+
+    public FundoProperties getFundo() { return fundo; }
+    public void setFundo(FundoProperties fundo) { this.fundo = fundo; }
+
+    public CouncilRegulatoryProperties getCouncilRegulatory() { return councilRegulatory; }
+    public void setCouncilRegulatory(CouncilRegulatoryProperties councilRegulatory) {
+        this.councilRegulatory = councilRegulatory;
+    }
 
     // --- Nested ---
 
@@ -136,5 +150,55 @@ public class VarapiProperties {
         public void setEnabled(boolean enabled) { this.enabled = enabled; }
         public String getBaseUrl() { return baseUrl; }
         public void setBaseUrl(String baseUrl) { this.baseUrl = baseUrl; }
+    }
+
+    /** MusheX payment intent API (financial truth for council fees). */
+    public static class MusheXProperties {
+        private boolean enabled = false;
+        private String baseUrl = "http://localhost:8102";
+
+        public boolean isEnabled() { return enabled; }
+        public void setEnabled(boolean enabled) { this.enabled = enabled; }
+        public String getBaseUrl() { return baseUrl; }
+        public void setBaseUrl(String baseUrl) { this.baseUrl = baseUrl; }
+    }
+
+    /** Impilo Fundo (Moodle) webhook integration. */
+    public static class FundoProperties {
+        private boolean webhookEnabled = true;
+        private String webhookSharedSecret = "CHANGE_ME";
+        private boolean autoAcceptCpdFromFundo = false;
+
+        public boolean isWebhookEnabled() { return webhookEnabled; }
+        public void setWebhookEnabled(boolean webhookEnabled) { this.webhookEnabled = webhookEnabled; }
+        public String getWebhookSharedSecret() { return webhookSharedSecret; }
+        public void setWebhookSharedSecret(String webhookSharedSecret) { this.webhookSharedSecret = webhookSharedSecret; }
+        public boolean isAutoAcceptCpdFromFundo() { return autoAcceptCpdFromFundo; }
+        public void setAutoAcceptCpdFromFundo(boolean autoAcceptCpdFromFundo) {
+            this.autoAcceptCpdFromFundo = autoAcceptCpdFromFundo;
+        }
+    }
+
+    /** Optional Tshepo policy gate for council staff / provider self-service actions. */
+    public static class CouncilRegulatoryProperties {
+        private boolean policyEnabled = false;
+        private String tshepoPolicyBaseUrl = "http://localhost:8079";
+        /** When policy is enabled, deny workflow actions if Tshepo is unreachable or returns an empty body. */
+        private boolean policyDenyWhenUnreachable = true;
+        /** Subscribe to {@code mushex.payment.status.changed} to settle Varapi obligations without polling. */
+        private boolean mushexPaymentStatusKafkaEnabled = false;
+
+        public boolean isPolicyEnabled() { return policyEnabled; }
+        public void setPolicyEnabled(boolean policyEnabled) { this.policyEnabled = policyEnabled; }
+        public String getTshepoPolicyBaseUrl() { return tshepoPolicyBaseUrl; }
+        public void setTshepoPolicyBaseUrl(String tshepoPolicyBaseUrl) { this.tshepoPolicyBaseUrl = tshepoPolicyBaseUrl; }
+        public boolean isPolicyDenyWhenUnreachable() { return policyDenyWhenUnreachable; }
+        public void setPolicyDenyWhenUnreachable(boolean policyDenyWhenUnreachable) {
+            this.policyDenyWhenUnreachable = policyDenyWhenUnreachable;
+        }
+        public boolean isMushexPaymentStatusKafkaEnabled() { return mushexPaymentStatusKafkaEnabled; }
+        public void setMushexPaymentStatusKafkaEnabled(boolean mushexPaymentStatusKafkaEnabled) {
+            this.mushexPaymentStatusKafkaEnabled = mushexPaymentStatusKafkaEnabled;
+        }
     }
 }
