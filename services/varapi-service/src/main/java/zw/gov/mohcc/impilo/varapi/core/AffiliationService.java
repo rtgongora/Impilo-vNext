@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
+import zw.gov.mohcc.impilo.varapi.config.VarapiProperties;
 import zw.gov.mohcc.impilo.varapi.integration.TusoClient;
 import zw.gov.mohcc.impilo.varapi.persistence.entity.EventOutboxEntity;
 import zw.gov.mohcc.impilo.varapi.persistence.entity.ProviderAffiliationEntity;
@@ -31,16 +32,19 @@ public class AffiliationService {
     private final ProviderRepository providerRepository;
     private final TusoClient tusoClient;
     private final EventOutboxRepository outboxRepository;
+    private final VarapiProperties varapiProperties;
 
     public AffiliationService(
             ProviderAffiliationRepository affiliationRepository,
             ProviderRepository providerRepository,
             TusoClient tusoClient,
-            EventOutboxRepository outboxRepository) {
+            EventOutboxRepository outboxRepository,
+            VarapiProperties varapiProperties) {
         this.affiliationRepository = affiliationRepository;
         this.providerRepository = providerRepository;
         this.tusoClient = tusoClient;
         this.outboxRepository = outboxRepository;
+        this.varapiProperties = varapiProperties;
     }
 
     /**
@@ -61,6 +65,10 @@ public class AffiliationService {
 
         // Validate provider exists
         ProviderEntity provider = requireProvider(providerId, ctx.tenantId());
+        if (varapiProperties.getIdentity().isRequireImpiloHealthIdForFacilityAffiliation()
+                && provider.getImpiloHealthId() == null) {
+            throw new IllegalStateException("Provider is missing Impilo Health ID anchor — cannot link facility affiliation");
+        }
 
         // Validate facility exists in TUSO
         if (!tusoClient.validateFacilityExists(facilityId)) {

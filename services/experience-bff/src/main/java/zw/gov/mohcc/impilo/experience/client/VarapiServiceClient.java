@@ -70,6 +70,17 @@ public class VarapiServiceClient {
     }
 
     /**
+     * Search-before-create for provider registry (VARAPI internal).
+     */
+    public JsonNode searchProviders(Map<String, Object> requestBody) {
+        String url = baseUrl + "/v1/internal/providers/search";
+        log.info("VARAPI: Searching providers");
+        ResponseEntity<JsonNode> response =
+                restTemplate.postForEntity(url, new HttpEntity<>(requestBody), JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
      * Get council affiliations for a provider.
      */
     public JsonNode getProviderCouncilAffiliations(String providerId) {

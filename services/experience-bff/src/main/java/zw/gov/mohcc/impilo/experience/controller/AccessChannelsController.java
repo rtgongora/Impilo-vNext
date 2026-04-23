@@ -12,6 +12,7 @@ import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Access Channels BFF — bridges Communication, Landela (document services),
@@ -58,6 +59,18 @@ public class AccessChannelsController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(required = false) String query) {
         String url = landelaUrl + "/internal/v1/documents" + (query != null ? "?q=" + query : "");
+        return proxyGet(url, requestId, correlationId);
+    }
+
+    /**
+     * Landela document metadata (canonical gateway path {@code /v1/internal/documents/{id}}).
+     */
+    @GetMapping("/landela/documents/{documentId}")
+    public ResponseEntity<Map<String, Object>> getLandelaDocumentMetadata(
+            @PathVariable UUID documentId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        String url = landelaUrl + "/v1/internal/documents/" + documentId;
         return proxyGet(url, requestId, correlationId);
     }
 

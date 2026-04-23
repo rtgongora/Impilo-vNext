@@ -22,7 +22,17 @@ import { isSchedulingClusterPath } from "@/lib/scheduling-paths";
 export { ROLE_GROUPS, matchesRequiredRole };
 
 /** Paths that bypass the consent gate (legal pages, consent page itself, auth). */
-const CONSENT_EXEMPT_PREFIXES = ["/auth", "/consent", "/privacy", "/terms", "/account-deletion", "/kiosk", "/verify", "/share"];
+const CONSENT_EXEMPT_PREFIXES = [
+  "/auth",
+  "/consent",
+  "/privacy",
+  "/terms",
+  "/account-deletion",
+  "/kiosk",
+  "/verify",
+  "/share",
+  "/collaboration",
+];
 
 export function AuthGuardProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();

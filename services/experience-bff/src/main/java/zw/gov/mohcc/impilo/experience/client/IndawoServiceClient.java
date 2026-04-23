@@ -4,7 +4,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -15,7 +17,7 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * HTTP client for the Indawo facility / address registry sovereign service.
+ * HTTP client for INDAWO (public health site registry).
  */
 @Component
 public class IndawoServiceClient {
@@ -25,85 +27,38 @@ public class IndawoServiceClient {
     private final RestTemplate restTemplate;
     private final String baseUrl;
 
-    public IndawoServiceClient(RestTemplate serviceRestTemplate,
-                               ServiceClientConfig.ServiceEndpoints endpoints) {
+    public IndawoServiceClient(RestTemplate serviceRestTemplate, ServiceClientConfig.ServiceEndpoints endpoints) {
         this.restTemplate = serviceRestTemplate;
         this.baseUrl = endpoints.indawoBaseUrl();
     }
 
-    public JsonNode listAddresses() {
-        String url = baseUrl + "/internal/v1/addresses";
-        log.info("INDAWO: listAddresses operation");
-        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
-        return extractData(response);
-    }
-
-    public JsonNode getAddress(UUID id) {
-        String url = baseUrl + "/internal/v1/addresses/" + id;
-        log.info("INDAWO: getAddress operation [id={}]", id);
-        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
-        return extractData(response);
-    }
-
-    public JsonNode createAddress(Map<String, Object> request) {
-        String url = baseUrl + "/internal/v1/addresses";
-        log.info("INDAWO: createAddress operation");
-        ResponseEntity<JsonNode> response =
-                restTemplate.postForEntity(url, new HttpEntity<>(request), JsonNode.class);
-        return extractData(response);
-    }
-
-    public JsonNode upsertSite(UUID siteId, Map<String, Object> request) {
-        String url = baseUrl + "/internal/v1/sites/" + siteId;
-        log.info("INDAWO: upsertSite operation [siteId={}]", siteId);
-        ResponseEntity<JsonNode> response =
-                restTemplate.exchange(url, HttpMethod.PUT, new HttpEntity<>(request), JsonNode.class);
-        return extractData(response);
-    }
-
-    public JsonNode getSiteInternal(UUID siteId) {
-        String url = baseUrl + "/internal/v1/sites/" + siteId;
-        log.info("INDAWO: getSiteInternal operation [siteId={}]", siteId);
-        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
-        return extractData(response);
-    }
-
+    /** Paged site list (internal). */
     public JsonNode listSites(int cursor, int limit) {
         String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/sites")
                 .queryParam("cursor", cursor)
                 .queryParam("limit", limit)
-                .build()
-                .encode()
                 .toUriString();
-        log.info("INDAWO: listSites operation [cursor={}, limit={}]", cursor, limit);
+        log.info("INDAWO: listSites cursor={} limit={}", cursor, limit);
         ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
-        return extractData(response);
+        return response.getBody();
     }
 
-    public JsonNode getSiteExternal(UUID siteId) {
-        String url = baseUrl + "/external/v1/sites/" + siteId;
-        log.info("INDAWO: getSiteExternal operation [siteId={}]", siteId);
+    /** Internal site detail. */
+    public JsonNode getSite(UUID siteId) {
+        String url = baseUrl + "/internal/v1/sites/" + siteId;
+        log.info("INDAWO: getSite siteId={}", siteId);
         ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
-        return extractData(response);
+        return response.getBody();
     }
 
-    public JsonNode snapshotSites(int cursor, int limit, String asOf) {
-        UriComponentsBuilder b = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/snapshots/sites")
-                .queryParam("cursor", cursor)
-                .queryParam("limit", limit);
-        if (asOf != null && !asOf.isBlank()) {
-            b.queryParam("as_of", asOf);
-        }
-        String url = b.build().encode().toUriString();
-        log.info("INDAWO: snapshotSites operation [cursor={}, limit={}, asOf={}]", cursor, limit, asOf);
-        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
-        return extractData(response);
-    }
-
-    private JsonNode extractData(ResponseEntity<JsonNode> response) {
-        if (response.getBody() != null && response.getBody().has("data")) {
-            return response.getBody().get("data");
-        }
+    /** Idempotent site upsert (creates or updates shell). */
+    public JsonNode upsertSite(UUID siteId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/sites/" + siteId;
+        log.info("INDAWO: upsertSite siteId={}", siteId);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        ResponseEntity<JsonNode> response = restTemplate.exchange(
+                url, HttpMethod.PUT, new HttpEntity<>(body, headers), JsonNode.class);
         return response.getBody();
     }
 }

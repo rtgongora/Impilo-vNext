@@ -7,8 +7,10 @@
  */
 
 import { Ticket, Plus, Search, Filter, Clock, CheckCircle2 } from "lucide-react";
+import { HelpdeskLearningSuggestions } from "@/components/learning/HelpdeskLearningSuggestions";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
+import { HelpdeskIntelligenceAssist } from "@/components/support/HelpdeskIntelligenceAssist";
 
 export default function TicketsPage() {
   return (
@@ -19,6 +21,9 @@ export default function TicketsPage() {
         icon={<Ticket className="h-6 w-6" />}
       >
         <div className="space-y-6">
+          <HelpdeskIntelligenceAssist />
+          <HelpdeskLearningSuggestions issueType="GENERAL" title="Suggested training before you open a ticket" />
+
           {/* Status summary */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {[

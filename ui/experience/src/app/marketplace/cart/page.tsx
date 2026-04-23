@@ -9,6 +9,7 @@
 import { useState } from "react";
 import { ShoppingCart, Trash2, CreditCard, Loader2, Wallet } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
+import { ContextualLearningPanel } from "@/components/learning/ContextualLearningPanel";
 import { PageShell } from "@/components/PageShell";
 import { useCommerceCart, useValidateCart, useCheckoutCart } from "@/hooks/queries/useCommerceFlow";
 
@@ -33,6 +34,14 @@ export default function MarketplaceCartPage() {
   return (
     <AppLayout>
       <PageShell title="Shopping Cart" subtitle="Review your order before checkout" icon={<ShoppingCart className="h-6 w-6" />}>
+        <div className="mb-4">
+          <ContextualLearningPanel
+            appCode="marketplace"
+            routeRef="/marketplace/cart"
+            workflowCode="order_exception"
+            title="Commerce & exceptions"
+          />
+        </div>
         {isLoading ? (
           <div className="flex items-center justify-center py-12 text-gray-500">
             <Loader2 className="h-5 w-5 animate-spin mr-2" /> Loading cart...

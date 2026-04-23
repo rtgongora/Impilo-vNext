@@ -31,13 +31,30 @@ public class PaymentEventConsumer {
     )
     public void onPaymentStatusChanged(String message) {
         try {
-            JsonNode node = objectMapper.readTree(message);
-            String mushexPaymentIntentId = node.path("paymentIntentId").asText();
-            String status = node.path("status").asText();
-            String actorId = node.path("actorId").asText("SYSTEM");
+            JsonNode root = objectMapper.readTree(message);
+            JsonNode node = unwrapPayload(root);
+
+            String mushexPaymentIntentId = text(node, "intentId");
+            if (mushexPaymentIntentId == null || mushexPaymentIntentId.isBlank()) {
+                mushexPaymentIntentId = text(node, "paymentIntentId");
+            }
+            if (mushexPaymentIntentId == null) {
+                mushexPaymentIntentId = node.path("paymentIntentId").asText("");
+            }
+            String status = text(node, "toStatus");
+            if (status == null || status.isBlank()) {
+                status = text(node, "status");
+            }
+            if (status == null || status.isBlank()) {
+                status = node.path("status").asText("");
+            }
+            String actorId = text(node, "actorId");
+            if (actorId == null || actorId.isBlank()) {
+                actorId = "SYSTEM";
+            }
 
             if (mushexPaymentIntentId.isBlank()) {
-                log.warn("Payment event missing paymentIntentId");
+                log.warn("Payment event missing intentId / paymentIntentId");
                 return;
             }
 
@@ -47,5 +64,23 @@ public class PaymentEventConsumer {
         } catch (Exception e) {
             log.error("Failed to process payment event: {}", e.getMessage(), e);
         }
+    }
+
+    private static JsonNode unwrapPayload(JsonNode root) {
+        if (root.has("payload") && root.get("payload").isObject()) {
+            return root.get("payload");
+        }
+        if (root.has("data") && root.get("data").isObject()) {
+            return root.get("data");
+        }
+        return root;
+    }
+
+    private static String text(JsonNode node, String field) {
+        if (node == null || !node.has(field) || node.get(field).isNull()) {
+            return null;
+        }
+        String v = node.get(field).asText();
+        return v != null && !v.isBlank() ? v : null;
     }
 }

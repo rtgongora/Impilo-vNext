@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -608,9 +610,28 @@ public class PctServiceClient {
     }
 
     public JsonNode createClinicalNote(Map<String, Object> body) {
+        return createClinicalNote(body, null);
+    }
+
+    /**
+     * Creates a clinical note, optionally adding patient-share provenance headers for downstream PCT storage.
+     * Trust headers are still forwarded from the inbound request by the RestTemplate interceptor.
+     */
+    public JsonNode createClinicalNote(Map<String, Object> body, Map<String, String> patientShareProvenanceHeaders) {
         String url = baseUrl + "/v1/clinical-notes";
         log.info("PCT: Creating clinical note for patient={}", body.get("patient_id"));
-        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        if (patientShareProvenanceHeaders == null || patientShareProvenanceHeaders.isEmpty()) {
+            ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+            return extractData(response);
+        }
+        HttpHeaders headers = new HttpHeaders();
+        patientShareProvenanceHeaders.forEach((k, v) -> {
+            if (k != null && v != null && !v.isBlank()) {
+                headers.set(k, v);
+            }
+        });
+        ResponseEntity<JsonNode> response = restTemplate.exchange(
+                url, HttpMethod.POST, new HttpEntity<>(body, headers), JsonNode.class);
         return extractData(response);
     }
 

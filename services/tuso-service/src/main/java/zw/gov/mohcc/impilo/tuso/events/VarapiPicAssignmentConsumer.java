@@ -14,6 +14,7 @@ import zw.gov.mohcc.impilo.tuso.persistence.repository.PractitionerInChargeAssig
 
 import java.time.LocalDate;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Mirrors VARAPI PIC assignment lifecycle events into TUSO's facility regulatory view.
@@ -45,7 +46,9 @@ public class VarapiPicAssignmentConsumer {
         try {
             JsonNode root = objectMapper.readTree(message);
             JsonNode payload = root.path("payload");
-            if (payload.isMissingNode() || payload.isNull()) return;
+            if (payload.isMissingNode() || payload.isNull()) {
+                payload = root;
+            }
 
             long facilityId = payload.path("facilityId").asLong(0);
             long providerId = payload.path("providerId").asLong(0);
@@ -65,7 +68,16 @@ public class VarapiPicAssignmentConsumer {
             PractitionerInChargeAssignmentEntity entity = existing.orElseGet(PractitionerInChargeAssignmentEntity::new);
             entity.setFacility(facility);
             entity.setExternalAssignmentId(assignmentId);
-            entity.setProviderPublicId("varapi:" + providerId);
+            String publicId = payload.path("providerPublicId").asText(null);
+            entity.setProviderPublicId(
+                    publicId != null && !publicId.isBlank() ? publicId : "varapi:" + providerId);
+            if (payload.hasNonNull("impiloHealthId")) {
+                try {
+                    entity.setImpiloHealthId(UUID.fromString(payload.get("impiloHealthId").asText()));
+                } catch (Exception ex) {
+                    log.debug("TUSO PIC mirror: could not parse impiloHealthId: {}", ex.getMessage());
+                }
+            }
             entity.setRole("PRACTITIONER_IN_CHARGE");
             if (entity.getStartDate() == null) entity.setStartDate(LocalDate.now());
 

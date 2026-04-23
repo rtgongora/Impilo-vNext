@@ -14,6 +14,12 @@ export interface RegistryPlaneCard {
 /** Sovereign registry sub-planes — each href is a real in-app route with live hooks. */
 export const REGISTRY_PLANE_CARDS: RegistryPlaneCard[] = [
   {
+    subtype: "registry_intake",
+    title: "Intake & onboarding",
+    description: "Bootstrap snapshot, progressive intake sessions, recovery tickets, and governed facility CSV import.",
+    href: "/registry/intake",
+  },
+  {
     subtype: "client_registry",
     title: "Client registry (MPI)",
     description: "Patient directory search via `/internal/v1/patients` for CPID and demographic governance.",

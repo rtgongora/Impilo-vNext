@@ -55,13 +55,14 @@ public class SearchIndexController {
             @RequestParam("q") String query,
             @RequestParam(value = "entityType", required = false) String entityType,
             @RequestParam(value = "page", defaultValue = "0") int page,
-            @RequestParam(value = "size", defaultValue = "20") int size) {
+            @RequestParam(value = "size", defaultValue = "20") int size,
+            @RequestParam(value = "rankMode", required = false) String rankMode) {
 
         RequestContext ctx = RequestContextHolder.require();
-        log.info("Search [query={}, entityType={}, page={}, size={}] tenantId={}",
-                query, entityType, page, size, ctx.tenantId());
+        log.info("Search [query={}, entityType={}, page={}, size={}, rankMode={}] tenantId={}",
+                query, entityType, page, size, rankMode, ctx.tenantId());
 
-        SearchResponse response = searchIndexService.search(query, ctx.tenantId(), entityType, page, size);
+        SearchResponse response = searchIndexService.search(query, ctx.tenantId(), entityType, page, size, rankMode);
         return ResponseEntity.ok(response);
     }
 

@@ -91,6 +91,25 @@ class PaymentServiceTest {
     }
 
     @Test
+    void handlePaymentCallback_duplicatePaid_doesNotTransitionAgain() {
+        SettlementEntity settlement = new SettlementEntity();
+        settlement.setId("SETTLE1234567890123456");
+        settlement.setOrderId("ORDER12345678901234567");
+        settlement.setStatus(SettlementStatus.SPLIT_CALCULATED);
+
+        OrderEntity order = new OrderEntity();
+        order.setOrderId("ORDER12345678901234567");
+        order.setStatus(OrderStatus.PAID);
+
+        when(settlementRepository.findByMushexPaymentIntentId("mpi_123")).thenReturn(Optional.of(settlement));
+        when(stateMachine.getOrder("ORDER12345678901234567")).thenReturn(order);
+
+        service.handlePaymentCallback("mpi_123", "PAID", "SYSTEM");
+
+        verify(stateMachine, never()).transition(any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
     void requestRefund_exceedsTotal_throws() {
         OrderEntity order = new OrderEntity();
         order.setOrderId("ORDER12345678901234567");

@@ -5,6 +5,9 @@ import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import zw.gov.mohcc.impilo.experience.client.TusoServiceClient;
 import zw.gov.mohcc.impilo.experience.client.VarapiServiceClient;
 
 import java.util.*;
@@ -19,10 +22,14 @@ import java.util.*;
 @RequestMapping("/internal/v1/registry")
 public class RegistryController {
 
-    private final VarapiServiceClient varapiClient;
+    private static final Logger log = LoggerFactory.getLogger(RegistryController.class);
 
-    public RegistryController(VarapiServiceClient varapiClient) {
+    private final VarapiServiceClient varapiClient;
+    private final TusoServiceClient tusoClient;
+
+    public RegistryController(VarapiServiceClient varapiClient, TusoServiceClient tusoClient) {
         this.varapiClient = varapiClient;
+        this.tusoClient = tusoClient;
     }
 
     @GetMapping("/providers")
@@ -33,20 +40,41 @@ public class RegistryController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String search) {
-        return ResponseEntity.ok(Map.of(
-                "data", List.of(),
-                "meta", Map.of("request_id", requestId, "correlation_id", correlationId,
-                        "page", page, "size", size)));
+        try {
+            Map<String, Object> body = new LinkedHashMap<>();
+            body.put("query", search != null ? search : "");
+            body.put("profession", null);
+            body.put("status", null);
+            body.put("page", page);
+            body.put("size", size);
+            JsonNode paged = varapiClient.searchProviders(body);
+            List<Map<String, Object>> rows = new ArrayList<>();
+            if (paged != null && paged.has("items") && paged.get("items").isArray()) {
+                for (JsonNode item : paged.get("items")) {
+                    rows.add(mapProviderSummaryToResource(item));
+                }
+            }
+            return ResponseEntity.ok(Map.of(
+                    "data", rows,
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId,
+                            "page", page, "size", size)));
+        } catch (Exception e) {
+            log.warn("VARAPI provider search failed: {}", e.getMessage());
+            return ResponseEntity.ok(Map.of(
+                    "data", List.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId,
+                            "page", page, "size", size)));
+        }
     }
 
     @GetMapping("/providers/{id}")
     public ResponseEntity<Map<String, Object>> getProvider(
-            @PathVariable UUID id,
+            @PathVariable String id,
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
         try {
-            JsonNode data = varapiClient.getProvider(id.toString());
+            JsonNode data = varapiClient.getProvider(id);
             return ResponseEntity.ok(Map.of(
                     "data", data != null ? data : Map.of(),
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
@@ -68,13 +96,72 @@ public class RegistryController {
             @RequestParam(required = false, name = "facility_type") String facilityType,
             @RequestParam(required = false) String province,
             @RequestParam(required = false) String search) {
-        return ResponseEntity.ok(Map.of(
-                "data", List.of(),
-                "meta", Map.of("request_id", requestId, "correlation_id", correlationId,
-                        "page", page, "size", size)));
+        try {
+            Map<String, Object> body = new LinkedHashMap<>();
+            body.put("query", search != null ? search : "");
+            body.put("facilityType", facilityType);
+            body.put("status", status);
+            body.put("province", province);
+            body.put("district", null);
+            body.put("level", null);
+            body.put("page", page);
+            body.put("size", Math.min(Math.max(size, 1), 200));
+            JsonNode paged = tusoClient.searchFacilities(body);
+            List<Map<String, Object>> rows = new ArrayList<>();
+            if (paged != null && paged.has("items") && paged.get("items").isArray()) {
+                for (JsonNode item : paged.get("items")) {
+                    rows.add(mapRegistryFacilitySummary(item));
+                }
+            }
+            return ResponseEntity.ok(Map.of(
+                    "data", rows,
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId,
+                            "page", page, "size", size)));
+        } catch (Exception e) {
+            log.warn("TUSO facility search (registry path) failed: {}", e.getMessage());
+            return ResponseEntity.ok(Map.of(
+                    "data", List.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId,
+                            "page", page, "size", size)));
+        }
     }
 
-    
+    private static Map<String, Object> mapProviderSummaryToResource(JsonNode n) {
+        String publicId = text(n, "providerPublicId");
+        String title = text(n, "title");
+        String given = text(n, "givenName");
+        String family = text(n, "familyName");
+        String display = (title + " " + given + " " + family).trim().replaceAll("\\s+", " ");
+        Map<String, Object> attrs = new LinkedHashMap<>();
+        attrs.put("displayName", display.isEmpty() ? publicId : display);
+        attrs.put("registrationNumber", text(n, "practiceNumber"));
+        attrs.put("speciality", text(n, "profession"));
+        attrs.put("status", text(n, "status"));
+        attrs.put("impiloHealthId", n.has("impiloHealthId") && !n.get("impiloHealthId").isNull()
+                ? n.get("impiloHealthId").asText()
+                : null);
+        return Map.of("id", publicId, "type", "provider", "attributes", attrs);
+    }
+
+    private static Map<String, Object> mapRegistryFacilitySummary(JsonNode n) {
+        String idStr = n.has("id") ? String.valueOf(n.get("id").asLong()) : "";
+        Map<String, Object> attrs = new LinkedHashMap<>();
+        attrs.put("name", text(n, "name"));
+        attrs.put("code", text(n, "code"));
+        attrs.put("facilityType", text(n, "type"));
+        attrs.put("district", text(n, "district"));
+        attrs.put("province", text(n, "province"));
+        attrs.put("status", text(n, "status"));
+        return Map.of("id", idStr, "type", "facility", "attributes", attrs);
+    }
+
+    private static String text(JsonNode n, String field) {
+        if (n == null || !n.has(field) || n.get(field).isNull()) {
+            return "";
+        }
+        return n.get(field).asText("");
+    }
+
 
     /**
      * GET /internal/v1/registry/providers/{id}/licenses

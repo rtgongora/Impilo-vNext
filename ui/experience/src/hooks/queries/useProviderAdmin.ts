@@ -46,3 +46,26 @@ export function useUpdateProvider(providerId: string) {
     },
   });
 }
+
+/** Governed Varapi create: Vito anchor must exist for {@code impiloHealthId}. */
+export type ProviderFromHealthIdPayload = ProviderAdminPayload & {
+  impiloHealthId: string;
+};
+
+export function useCreateProviderFromHealthId() {
+  const queryClient = useQueryClient();
+  return useMutation<
+    ApiResponse<Record<string, unknown>>,
+    unknown,
+    ProviderFromHealthIdPayload
+  >({
+    mutationFn: (body) =>
+      apiClient.post<ApiResponse<Record<string, unknown>>>(
+        "/internal/v1/registry-intake/providers/from-health-id",
+        body,
+      ),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["providers"] });
+    },
+  });
+}

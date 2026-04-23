@@ -59,6 +59,13 @@
         <!-- PostgreSQL and Flyway REMOVED — BFF is a pure proxy with no database -->
         <!-- All data owned by sovereign services, accessed via typed HTTP clients -->
 
+        <!-- RFC 4180 CSV parsing for governed import -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-csv</artifactId>
+            <version>1.11.0</version>
+        </dependency>
+
         <!-- Jackson -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -118,6 +125,13 @@
             <groupId>org.testcontainers</groupId>
             <artifactId>junit-jupiter</artifactId>
             <version>1.21.4</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.wiremock</groupId>
+            <artifactId>wiremock-standalone</artifactId>
+            <version>3.10.0</version>
             <scope>test</scope>
         </dependency>
 

@@ -46,6 +46,54 @@ public class ImagingStudyEntity {
     @Column(name = "accession_number", length = 128)
     private String accessionNumber;
 
+    @Column(name = "encounter_ref", length = 128)
+    private String encounterRef;
+
+    @Column(name = "facility_id", length = 128)
+    private String facilityId;
+
+    @Column(name = "archive_status", length = 32)
+    private String archiveStatus = "UNKNOWN";
+
+    @Column(name = "report_status", length = 64)
+    private String reportStatus;
+
+    @Column(name = "source_type", length = 32)
+    private String sourceType = "DICOM";
+
+    @Column(name = "body_part_examined", length = 500)
+    private String bodyPartExamined;
+
+    @Column(name = "modality_system", length = 255)
+    private String modalitySystem;
+
+    @Column(name = "body_part_system", length = 255)
+    private String bodyPartSystem;
+
+    @Column(name = "body_part_code", length = 100)
+    private String bodyPartCode;
+
+    @Column(name = "body_part_display", length = 500)
+    private String bodyPartDisplay;
+
+    @Column(name = "procedure_system", length = 255)
+    private String procedureSystem;
+
+    @Column(name = "procedure_code", length = 100)
+    private String procedureCode;
+
+    @Column(name = "procedure_display", length = 500)
+    private String procedureDisplay;
+
+    @Column(name = "reason_system", length = 255)
+    private String reasonSystem;
+
+    @Column(name = "reason_code", length = 100)
+    private String reasonCode;
+
+    @Column(name = "reason_display", length = 500)
+    private String reasonDisplay;
+
     @Column(name = "metadata", columnDefinition = "TEXT")
     private String metadata;
 
@@ -104,6 +152,54 @@ public class ImagingStudyEntity {
 
     public String getAccessionNumber() { return accessionNumber; }
     public void setAccessionNumber(String accessionNumber) { this.accessionNumber = accessionNumber; }
+
+    public String getEncounterRef() { return encounterRef; }
+    public void setEncounterRef(String encounterRef) { this.encounterRef = encounterRef; }
+
+    public String getFacilityId() { return facilityId; }
+    public void setFacilityId(String facilityId) { this.facilityId = facilityId; }
+
+    public String getArchiveStatus() { return archiveStatus; }
+    public void setArchiveStatus(String archiveStatus) { this.archiveStatus = archiveStatus; }
+
+    public String getReportStatus() { return reportStatus; }
+    public void setReportStatus(String reportStatus) { this.reportStatus = reportStatus; }
+
+    public String getSourceType() { return sourceType; }
+    public void setSourceType(String sourceType) { this.sourceType = sourceType; }
+
+    public String getBodyPartExamined() { return bodyPartExamined; }
+    public void setBodyPartExamined(String bodyPartExamined) { this.bodyPartExamined = bodyPartExamined; }
+
+    public String getModalitySystem() { return modalitySystem; }
+    public void setModalitySystem(String modalitySystem) { this.modalitySystem = modalitySystem; }
+
+    public String getBodyPartSystem() { return bodyPartSystem; }
+    public void setBodyPartSystem(String bodyPartSystem) { this.bodyPartSystem = bodyPartSystem; }
+
+    public String getBodyPartCode() { return bodyPartCode; }
+    public void setBodyPartCode(String bodyPartCode) { this.bodyPartCode = bodyPartCode; }
+
+    public String getBodyPartDisplay() { return bodyPartDisplay; }
+    public void setBodyPartDisplay(String bodyPartDisplay) { this.bodyPartDisplay = bodyPartDisplay; }
+
+    public String getProcedureSystem() { return procedureSystem; }
+    public void setProcedureSystem(String procedureSystem) { this.procedureSystem = procedureSystem; }
+
+    public String getProcedureCode() { return procedureCode; }
+    public void setProcedureCode(String procedureCode) { this.procedureCode = procedureCode; }
+
+    public String getProcedureDisplay() { return procedureDisplay; }
+    public void setProcedureDisplay(String procedureDisplay) { this.procedureDisplay = procedureDisplay; }
+
+    public String getReasonSystem() { return reasonSystem; }
+    public void setReasonSystem(String reasonSystem) { this.reasonSystem = reasonSystem; }
+
+    public String getReasonCode() { return reasonCode; }
+    public void setReasonCode(String reasonCode) { this.reasonCode = reasonCode; }
+
+    public String getReasonDisplay() { return reasonDisplay; }
+    public void setReasonDisplay(String reasonDisplay) { this.reasonDisplay = reasonDisplay; }
 
     public String getMetadata() { return metadata; }
     public void setMetadata(String metadata) { this.metadata = metadata; }

@@ -25,6 +25,7 @@ public final class ProviderRepresentation {
         return new ProviderResponse(
                 r.providerPublicId(),
                 r.providerRef(),
+                r.impiloHealthId(),
                 deidentified ? null : r.title(),
                 deidentified ? null : r.givenName(),
                 deidentified ? null : r.familyName(),

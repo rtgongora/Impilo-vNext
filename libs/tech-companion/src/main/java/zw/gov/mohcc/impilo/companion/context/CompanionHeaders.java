@@ -66,6 +66,13 @@ public final class CompanionHeaders {
     public static final String CLIENT_TIMEOUT_MS = "X-Client-Timeout-MS";
     public static final String IDEMPOTENCY_KEY   = "Idempotency-Key";
 
+    // ── Patient-mediated share provenance (BFF → PCT, optional) ────
+    public static final String PATIENT_SHARE_GRANT_ID = "X-Patient-Share-Grant-Id";
+    public static final String VITO_CONTRIBUTION_ID = "X-Vito-Contribution-Id";
+    public static final String TEMPORARY_PROVIDER_PUBLIC_ID = "X-Temporary-Provider-Public-Id";
+    public static final String PATIENT_SHARE_CORRELATION_ID = "X-Patient-Share-Correlation-Id";
+    public static final String EXTERNAL_PROVIDER_TRUST_LEVEL = "X-External-Provider-Trust-Level";
+
     // ── Policy Decision (gateway → service, injected after allow) ─
     public static final String POLICY_DECISION = "X-Policy-Decision";
     public static final String POLICY_VERSION  = "X-Policy-Version";

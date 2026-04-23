@@ -19,6 +19,10 @@ spring:
 impilo:
   companion:
     enabled: true
+  search:
+    embeddings:
+      provider: hash
+      hash-dimension: 128
 
 search:
   security:

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.companion.context.RequestContext;
@@ -11,21 +12,39 @@ import zw.gov.mohcc.impilo.companion.context.RequestContextHolder;
 import zw.gov.mohcc.impilo.pacs.api.dto.CorrelateStudyRequest;
 import zw.gov.mohcc.impilo.pacs.api.dto.CreateImagingStudyRequest;
 import zw.gov.mohcc.impilo.pacs.api.dto.ForwardStudyRequest;
+import zw.gov.mohcc.impilo.pacs.api.dto.ImagingSearchRequest;
+import zw.gov.mohcc.impilo.pacs.api.dto.LaunchViewerRequest;
+import zw.gov.mohcc.impilo.pacs.api.dto.OrderLinkRequest;
+import zw.gov.mohcc.impilo.pacs.api.dto.ReportLinkRequest;
 import zw.gov.mohcc.impilo.pacs.domain.StudyStatus;
+import zw.gov.mohcc.impilo.pacs.integration.OrthancClient;
 import zw.gov.mohcc.impilo.pacs.persistence.entity.EventOutboxEntity;
+import zw.gov.mohcc.impilo.pacs.persistence.entity.ImagingAccessAuditEntity;
+import zw.gov.mohcc.impilo.pacs.persistence.entity.ImagingInstanceEntity;
+import zw.gov.mohcc.impilo.pacs.persistence.entity.ImagingOrderLinkEntity;
+import zw.gov.mohcc.impilo.pacs.persistence.entity.ImagingReportLinkEntity;
+import zw.gov.mohcc.impilo.pacs.persistence.entity.ImagingSeriesEntity;
 import zw.gov.mohcc.impilo.pacs.persistence.entity.ImagingStudyEntity;
+import zw.gov.mohcc.impilo.pacs.persistence.entity.ImagingViewerSessionEntity;
 import zw.gov.mohcc.impilo.pacs.persistence.repository.EventOutboxRepository;
+import zw.gov.mohcc.impilo.pacs.persistence.repository.ImagingAccessAuditRepository;
+import zw.gov.mohcc.impilo.pacs.persistence.repository.ImagingInstanceRepository;
+import zw.gov.mohcc.impilo.pacs.persistence.repository.ImagingOrderLinkRepository;
+import zw.gov.mohcc.impilo.pacs.persistence.repository.ImagingReportLinkRepository;
+import zw.gov.mohcc.impilo.pacs.persistence.repository.ImagingSeriesRepository;
 import zw.gov.mohcc.impilo.pacs.persistence.repository.ImagingStudyRepository;
+import zw.gov.mohcc.impilo.pacs.persistence.repository.ImagingViewerSessionRepository;
 
 import java.time.OffsetDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 /**
- * Core service for imaging study registration, retrieval, and forwarding to Orthanc.
- * Each mutation appends companion outbox rows for Kafka publishing (legacy + v1.1).
+ * Core service for imaging study registration, retrieval, Orthanc forwarding, hierarchy, viewer sessions,
+ * and report/order linkage. Mutations append companion outbox rows for Kafka publishing.
  */
 @Service
 public class ImagingStudyService {
@@ -35,27 +54,121 @@ public class ImagingStudyService {
     public static final String AGGREGATE_IMAGING_STUDY = "IMAGING_STUDY";
     public static final String EVENT_STUDY_AVAILABLE = "pacs.study.available";
     public static final String EVENT_STUDY_CORRELATED = "pacs.study.correlated";
+    public static final String EVENT_VIEWER_LAUNCHED = "imaging.viewer.launched";
+    public static final String EVENT_REPORT_LINKED = "imaging.report.linked";
+    public static final String EVENT_ORDER_LINKED = "imaging.study.linked_to_order";
 
     private final ImagingStudyRepository studyRepository;
     private final EventOutboxRepository outboxRepository;
     private final ObjectMapper objectMapper;
+    private final ImagingHierarchySyncService hierarchySyncService;
+    private final ImagingSeriesRepository seriesRepository;
+    private final ImagingInstanceRepository instanceRepository;
+    private final ImagingViewerSessionRepository viewerSessionRepository;
+    private final ImagingAccessAuditRepository accessAuditRepository;
+    private final ImagingReportLinkRepository reportLinkRepository;
+    private final ImagingOrderLinkRepository orderLinkRepository;
+    private final OrthancClient orthancClient;
+    private final boolean allowPlaceholderOrthancForward;
 
-    public ImagingStudyService(ImagingStudyRepository studyRepository,
-                               EventOutboxRepository outboxRepository,
-                               ObjectMapper objectMapper) {
+    public ImagingStudyService(
+            ImagingStudyRepository studyRepository,
+            EventOutboxRepository outboxRepository,
+            ObjectMapper objectMapper,
+            OrthancClient orthancClient,
+            @Value("${impilo.orthanc.allow-placeholder-forward:false}") boolean allowPlaceholderOrthancForward,
+            ImagingHierarchySyncService hierarchySyncService,
+            ImagingSeriesRepository seriesRepository,
+            ImagingInstanceRepository instanceRepository,
+            ImagingViewerSessionRepository viewerSessionRepository,
+            ImagingAccessAuditRepository accessAuditRepository,
+            ImagingReportLinkRepository reportLinkRepository,
+            ImagingOrderLinkRepository orderLinkRepository) {
         this.studyRepository = studyRepository;
         this.outboxRepository = outboxRepository;
         this.objectMapper = objectMapper;
+        this.orthancClient = orthancClient;
+        this.allowPlaceholderOrthancForward = allowPlaceholderOrthancForward;
+        this.hierarchySyncService = hierarchySyncService;
+        this.seriesRepository = seriesRepository;
+        this.instanceRepository = instanceRepository;
+        this.viewerSessionRepository = viewerSessionRepository;
+        this.accessAuditRepository = accessAuditRepository;
+        this.reportLinkRepository = reportLinkRepository;
+        this.orderLinkRepository = orderLinkRepository;
     }
 
     public List<ImagingStudyEntity> listStudies() {
         return studyRepository.findAll();
     }
 
+    public List<ImagingStudyEntity> listStudiesFiltered(String patientCpid) {
+        if (patientCpid != null && !patientCpid.isBlank()) {
+            return studyRepository.findByPatientCpidOrderByStudyDateDesc(patientCpid.trim());
+        }
+        return studyRepository.findAll();
+    }
+
+    public List<ImagingStudyEntity> searchStudies(ImagingSearchRequest request, String actorId, String actorType) {
+        List<ImagingStudyEntity> base = listStudiesFiltered(request.getPatientCpid());
+        OffsetDateTime from = parseOptionalDate(request.getStudyDateFrom());
+        OffsetDateTime to = parseOptionalDate(request.getStudyDateTo());
+
+        List<ImagingStudyEntity> filtered = base.stream()
+                .filter(s -> request.getStudyUid() == null || request.getStudyUid().isBlank()
+                        || request.getStudyUid().equalsIgnoreCase(s.getStudyUid()))
+                .filter(s -> request.getAccessionNumber() == null || request.getAccessionNumber().isBlank()
+                        || (s.getAccessionNumber() != null
+                        && s.getAccessionNumber().equalsIgnoreCase(request.getAccessionNumber())))
+                .filter(s -> request.getModality() == null || request.getModality().isBlank()
+                        || request.getModality().equalsIgnoreCase(s.getModality()))
+                .filter(s -> request.getFacilityId() == null || request.getFacilityId().isBlank()
+                        || (s.getFacilityId() != null && s.getFacilityId().equalsIgnoreCase(request.getFacilityId())))
+                .filter(s -> request.getReportStatus() == null || request.getReportStatus().isBlank()
+                        || (s.getReportStatus() != null
+                        && s.getReportStatus().equalsIgnoreCase(request.getReportStatus())))
+                .filter(s -> from == null || !s.getStudyDate().isBefore(from))
+                .filter(s -> to == null || !s.getStudyDate().isAfter(to))
+                .toList();
+
+        recordAccess(null, null, null, actorId, actorType, "SEARCH", "imaging_search");
+        appendAccessRecordedOutbox(filtered.stream().findFirst().orElse(null), "SEARCH");
+
+        return filtered;
+    }
+
+    private static OffsetDateTime parseOptionalDate(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        try {
+            return OffsetDateTime.parse(raw);
+        } catch (DateTimeParseException e) {
+            return null;
+        }
+    }
+
     public ImagingStudyEntity getStudy(Long id) {
         return studyRepository.findById(id)
                 .orElseThrow(() -> new StudyNotFoundException(
                         "Imaging study not found: " + id));
+    }
+
+    public List<ImagingSeriesEntity> listSeriesForStudy(Long studyId) {
+        ImagingStudyEntity study = getStudy(studyId);
+        recordAccess(study.getId(), null, null, null, null, "SERIES_LIST", null);
+        return seriesRepository.findByStudy_IdOrderBySeriesNumberAscIdAsc(study.getId());
+    }
+
+    public List<ImagingInstanceEntity> listInstancesForSeries(Long studyId, Long seriesId) {
+        ImagingStudyEntity study = getStudy(studyId);
+        ImagingSeriesEntity series = seriesRepository.findById(seriesId)
+                .orElseThrow(() -> new StudyNotFoundException("Imaging series not found: " + seriesId));
+        if (series.getStudy() == null || !series.getStudy().getId().equals(study.getId())) {
+            throw new IllegalArgumentException("Series does not belong to study " + studyId);
+        }
+        recordAccess(study.getId(), series.getId(), null, null, null, "INSTANCE_LIST", null);
+        return instanceRepository.findBySeries_IdOrderByInstanceNumberAscIdAsc(series.getId());
     }
 
     @Transactional
@@ -71,6 +184,8 @@ public class ImagingStudyService {
         study.setMetadata(request.getMetadata());
         study.setOrosOrderId(request.getOrosOrderId());
         study.setAccessionNumber(request.getAccessionNumber());
+        study.setEncounterRef(request.getEncounterRef());
+        study.setFacilityId(request.getFacilityId());
         study.setCreatedAt(OffsetDateTime.now());
         study.setUpdatedAt(OffsetDateTime.now());
 
@@ -84,10 +199,6 @@ public class ImagingStudyService {
         return study;
     }
 
-    /**
-     * Links a stored study to an OROS order and emits {@code pacs.study.correlated}
-     * plus a fresh {@code pacs.study.available} so OROS can attach imaging results.
-     */
     @Transactional
     public ImagingStudyEntity correlateStudy(Long id, CorrelateStudyRequest request) {
         ImagingStudyEntity study = getStudy(id);
@@ -121,7 +232,24 @@ public class ImagingStudyService {
         study = studyRepository.save(study);
 
         try {
-            String orthancId = UUID.randomUUID().toString();
+            List<String> matches = orthancClient.findStudyIdsByStudyInstanceUid(study.getStudyUid());
+            String orthancId;
+            if (!matches.isEmpty()) {
+                orthancId = matches.get(0);
+                if (matches.size() > 1) {
+                    log.warn("Multiple Orthanc studies for StudyInstanceUID={}, using first orthancId={}",
+                            study.getStudyUid(), orthancId);
+                }
+            } else if (allowPlaceholderOrthancForward) {
+                orthancId = UUID.randomUUID().toString();
+                log.warn("No Orthanc study for StudyInstanceUID={}; placeholder orthanc_id issued (dev flag)",
+                        study.getStudyUid());
+            } else {
+                throw new IllegalStateException(
+                        "No Orthanc study found for StudyInstanceUID=" + study.getStudyUid()
+                                + " — ingest to Orthanc or enable impilo.orthanc.allow-placeholder-forward for dev.");
+            }
+
             study.setOrthancId(orthancId);
             study.setStatus(StudyStatus.FORWARDED.name());
             study.setUpdatedAt(OffsetDateTime.now());
@@ -139,6 +267,204 @@ public class ImagingStudyService {
         }
 
         return study;
+    }
+
+    @Transactional
+    public ImagingStudyEntity syncStudyHierarchy(Long id, String actorId, String actorType) {
+        return hierarchySyncService.syncFromOrthanc(id, actorId, actorType);
+    }
+
+    @Transactional
+    public ImagingViewerSessionEntity launchViewerSession(Long studyId, LaunchViewerRequest request,
+                                                          String actorId, String actorType) {
+        ImagingStudyEntity study = getStudy(studyId);
+
+        ImagingViewerSessionEntity session = new ImagingViewerSessionEntity();
+        session.setStudyId(study.getId());
+        session.setLaunchedBy(actorId);
+        session.setViewerType(request.getViewerType() != null ? request.getViewerType() : "DICOMWEB_STACK");
+        session.setContextRef(request.getContextRef());
+        session.setScope(request.getScope());
+        RequestContext ctx = RequestContextHolder.get();
+        if (ctx != null) {
+            session.setCorrelationId(ctx.correlationId());
+        }
+        session = viewerSessionRepository.save(session);
+
+        recordAccess(study.getId(), null, null, actorId, actorType, "VIEWER_LAUNCH", request.getContextRef());
+        appendViewerLaunchedOutbox(study, session.getId(), request);
+
+        return session;
+    }
+
+    @Transactional
+    public ImagingReportLinkEntity linkReport(Long studyId, ReportLinkRequest request,
+                                              String actorId, String actorType) {
+        ImagingStudyEntity study = getStudy(studyId);
+
+        ImagingReportLinkEntity link = new ImagingReportLinkEntity();
+        link.setStudyId(study.getId());
+        link.setReportRef(request.getReportRef());
+        link.setReportingProviderRef(request.getReportingProviderRef());
+        link.setReportStatus(request.getReportStatus());
+        link = reportLinkRepository.save(link);
+
+        study.setReportStatus(request.getReportStatus());
+        study.setUpdatedAt(OffsetDateTime.now());
+        studyRepository.save(study);
+
+        recordAccess(study.getId(), null, null, actorId, actorType, "REPORT_LINK", request.getReportRef());
+        appendReportLinkedOutbox(study, link.getId(), request.getReportRef());
+
+        return link;
+    }
+
+    @Transactional
+    public ImagingOrderLinkEntity linkOrder(Long studyId, OrderLinkRequest request,
+                                            String actorId, String actorType) {
+        ImagingStudyEntity study = getStudy(studyId);
+
+        ImagingOrderLinkEntity link = new ImagingOrderLinkEntity();
+        link.setStudyId(study.getId());
+        link.setOrderRef(request.getOrderRef());
+        link.setOrderingProviderRef(request.getOrderingProviderRef());
+        link.setStatus(request.getStatus() != null ? request.getStatus() : "LINKED");
+        link.setRequestedAt(OffsetDateTime.now());
+        link = orderLinkRepository.save(link);
+
+        recordAccess(study.getId(), null, null, actorId, actorType, "ORDER_LINK", request.getOrderRef());
+        appendOrderLinkedOutbox(study, request.getOrderRef());
+
+        return link;
+    }
+
+    public List<ImagingReportLinkEntity> listReportLinks(Long studyId) {
+        getStudy(studyId);
+        return reportLinkRepository.findByStudyIdOrderByCreatedAtDesc(studyId);
+    }
+
+    public List<ImagingOrderLinkEntity> listOrderLinks(Long studyId) {
+        getStudy(studyId);
+        return orderLinkRepository.findByStudyIdOrderByCreatedAtDesc(studyId);
+    }
+
+    private void recordAccess(Long studyId, Long seriesId, Long instanceId,
+                              String actorId, String actorType, String accessType, String workflowContext) {
+        ImagingAccessAuditEntity row = new ImagingAccessAuditEntity();
+        row.setStudyId(studyId);
+        row.setSeriesId(seriesId);
+        row.setInstanceId(instanceId);
+        row.setActorId(actorId);
+        row.setActorType(actorType);
+        row.setAccessType(accessType);
+        row.setWorkflowContext(workflowContext);
+        RequestContext ctx = RequestContextHolder.get();
+        if (ctx != null) {
+            row.setCorrelationId(ctx.correlationId());
+        }
+        accessAuditRepository.save(row);
+    }
+
+    private void appendViewerLaunchedOutbox(ImagingStudyEntity study, Long sessionId, LaunchViewerRequest req) {
+        try {
+            Map<String, Object> payload = new LinkedHashMap<>();
+            payload.put("study_id", study.getId());
+            payload.put("viewer_session_id", sessionId);
+            payload.put("patient_cpid", study.getPatientCpid());
+            payload.put("studyInstanceUid", study.getStudyUid());
+            payload.put("viewer_type", req.getViewerType());
+            payload.put("context_ref", req.getContextRef());
+            payload.put("scope", req.getScope());
+
+            EventOutboxEntity row = new EventOutboxEntity();
+            row.setAggregateType(AGGREGATE_IMAGING_STUDY);
+            row.setAggregateId(String.valueOf(study.getId()));
+            row.setEventType(EVENT_VIEWER_LAUNCHED);
+            row.setPayload(objectMapper.writeValueAsString(payload));
+            applyContext(row, study.getTenantId().toString());
+            row.setSubjectType(AGGREGATE_IMAGING_STUDY);
+            row.setSubjectId(String.valueOf(study.getId()));
+            row.setPartitionKey(String.valueOf(study.getId()));
+            row.setOccurredAt(OffsetDateTime.now());
+            row.setSchemaVersion(1);
+            outboxRepository.save(row);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to serialize imaging.viewer.launched payload", e);
+        }
+    }
+
+    private void appendReportLinkedOutbox(ImagingStudyEntity study, Long linkId, String reportRef) {
+        try {
+            Map<String, Object> payload = new LinkedHashMap<>();
+            payload.put("study_id", study.getId());
+            payload.put("report_link_id", linkId);
+            payload.put("report_ref", reportRef);
+            payload.put("patient_cpid", study.getPatientCpid());
+
+            EventOutboxEntity row = new EventOutboxEntity();
+            row.setAggregateType(AGGREGATE_IMAGING_STUDY);
+            row.setAggregateId(String.valueOf(study.getId()));
+            row.setEventType(EVENT_REPORT_LINKED);
+            row.setPayload(objectMapper.writeValueAsString(payload));
+            applyContext(row, study.getTenantId().toString());
+            row.setSubjectType(AGGREGATE_IMAGING_STUDY);
+            row.setSubjectId(String.valueOf(study.getId()));
+            row.setPartitionKey(String.valueOf(study.getId()));
+            row.setOccurredAt(OffsetDateTime.now());
+            row.setSchemaVersion(1);
+            outboxRepository.save(row);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to serialize imaging.report.linked payload", e);
+        }
+    }
+
+    private void appendOrderLinkedOutbox(ImagingStudyEntity study, String orderRef) {
+        try {
+            Map<String, Object> payload = new LinkedHashMap<>();
+            payload.put("study_id", study.getId());
+            payload.put("order_ref", orderRef);
+            payload.put("patient_cpid", study.getPatientCpid());
+
+            EventOutboxEntity row = new EventOutboxEntity();
+            row.setAggregateType(AGGREGATE_IMAGING_STUDY);
+            row.setAggregateId(String.valueOf(study.getId()));
+            row.setEventType(EVENT_ORDER_LINKED);
+            row.setPayload(objectMapper.writeValueAsString(payload));
+            applyContext(row, study.getTenantId().toString());
+            row.setSubjectType(AGGREGATE_IMAGING_STUDY);
+            row.setSubjectId(String.valueOf(study.getId()));
+            row.setPartitionKey(orderRef);
+            row.setOccurredAt(OffsetDateTime.now());
+            row.setSchemaVersion(1);
+            outboxRepository.save(row);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to serialize imaging.study.linked_to_order payload", e);
+        }
+    }
+
+    private void appendAccessRecordedOutbox(ImagingStudyEntity studyOrNull, String accessKind) {
+        try {
+            Map<String, Object> payload = new LinkedHashMap<>();
+            payload.put("access_kind", accessKind);
+            if (studyOrNull != null) {
+                payload.put("study_id", studyOrNull.getId());
+            }
+
+            EventOutboxEntity row = new EventOutboxEntity();
+            row.setAggregateType(AGGREGATE_IMAGING_STUDY);
+            row.setAggregateId(studyOrNull != null ? String.valueOf(studyOrNull.getId()) : "SEARCH");
+            row.setEventType("imaging.access.recorded");
+            row.setPayload(objectMapper.writeValueAsString(payload));
+            applyContext(row, studyOrNull != null ? studyOrNull.getTenantId().toString() : "unknown");
+            row.setSubjectType(AGGREGATE_IMAGING_STUDY);
+            row.setSubjectId(studyOrNull != null ? String.valueOf(studyOrNull.getId()) : "SEARCH");
+            row.setPartitionKey(studyOrNull != null ? String.valueOf(studyOrNull.getId()) : "SEARCH");
+            row.setOccurredAt(OffsetDateTime.now());
+            row.setSchemaVersion(1);
+            outboxRepository.save(row);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to serialize imaging.access.recorded payload", e);
+        }
     }
 
     private void appendStudyAvailableOutbox(ImagingStudyEntity study) {
@@ -195,10 +521,6 @@ public class ImagingStudyService {
         }
     }
 
-    /**
-     * Builds the legacy JSON shape expected by {@code OrosEventConsumer.consumePacsStudy},
-     * with additional fields for PACS-native consumers.
-     */
     private Map<String, Object> buildOrosCompatiblePayload(ImagingStudyEntity study, String eventId) {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("eventId", eventId);

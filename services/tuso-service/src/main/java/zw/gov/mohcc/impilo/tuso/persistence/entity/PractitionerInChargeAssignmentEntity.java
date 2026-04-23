@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.UUID;
 
 @Entity
 @Table(name = "practitioner_in_charge_assignment", schema = "tuso")
@@ -19,6 +20,9 @@ public class PractitionerInChargeAssignmentEntity {
 
     @Column(name = "provider_public_id", nullable = false, length = 255)
     private String providerPublicId;
+
+    @Column(name = "impilo_health_id")
+    private UUID impiloHealthId;
 
     /**
      * External assignment identifier from VARAPI (source-of-truth for PIC lifecycle).
@@ -73,6 +77,8 @@ public class PractitionerInChargeAssignmentEntity {
     public void setFacility(FacilityEntity facility) { this.facility = facility; }
     public String getProviderPublicId() { return providerPublicId; }
     public void setProviderPublicId(String providerPublicId) { this.providerPublicId = providerPublicId; }
+    public UUID getImpiloHealthId() { return impiloHealthId; }
+    public void setImpiloHealthId(UUID impiloHealthId) { this.impiloHealthId = impiloHealthId; }
     public Long getExternalAssignmentId() { return externalAssignmentId; }
     public void setExternalAssignmentId(Long externalAssignmentId) { this.externalAssignmentId = externalAssignmentId; }
     public String getRole() { return role; }

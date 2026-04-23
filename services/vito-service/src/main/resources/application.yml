@@ -78,6 +78,15 @@ vito:
     # When true, redeem requires Tshepo CLIENT/DELEGATED_PICKUP/FACILITY/VERIFY rule (actor + assurance aware).
     biometric-policy-on-redeem: ${VITO_PICKUP_BIOMETRIC_POLICY_ON_REDEEM:false}
 
+  # Patient-mediated external provider collaboration (Tshepo policy + Varapi provisional profile)
+  patient-share:
+    policy-enabled: ${VITO_PATIENT_SHARE_POLICY_ENABLED:true}
+    tshepo-policy-base-url: ${TSHEPO_POLICY_BASE_URL:http://localhost:8079}
+    varapi-base-url: ${VARAPI_BASE_URL:http://localhost:8083}
+    pct-base-url: ${PCT_BASE_URL:http://localhost:8088}
+    pct-bearer-token: ${VITO_TO_PCT_BEARER_TOKEN:}
+    step-up-test-code: ${VITO_PATIENT_SHARE_STEP_UP_CODE:000000}
+
   # Mode: OPENCR or STANDALONE
   registry-mode: ${VITO_REGISTRY_MODE:STANDALONE}
 

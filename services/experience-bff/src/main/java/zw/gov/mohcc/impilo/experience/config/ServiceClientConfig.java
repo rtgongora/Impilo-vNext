@@ -208,6 +208,11 @@ public class ServiceClientConfig {
                 forwardHeader(inbound, request, CompanionHeaders.SHIFT_ID);
                 forwardHeader(inbound, request, CompanionHeaders.IDEMPOTENCY_KEY);
                 forwardHeader(inbound, request, CompanionHeaders.CLIENT_TIMEOUT_MS);
+                forwardHeader(inbound, request, CompanionHeaders.PATIENT_SHARE_GRANT_ID);
+                forwardHeader(inbound, request, CompanionHeaders.VITO_CONTRIBUTION_ID);
+                forwardHeader(inbound, request, CompanionHeaders.TEMPORARY_PROVIDER_PUBLIC_ID);
+                forwardHeader(inbound, request, CompanionHeaders.PATIENT_SHARE_CORRELATION_ID);
+                forwardHeader(inbound, request, CompanionHeaders.EXTERNAL_PROVIDER_TRUST_LEVEL);
             }
             return execution.execute(request, body);
         };

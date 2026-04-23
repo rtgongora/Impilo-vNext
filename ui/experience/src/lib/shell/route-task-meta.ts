@@ -18,6 +18,15 @@ export function deriveRouteTaskMeta(pathname: string): RouteTaskMeta {
   if (pathname.startsWith("/ehr/")) {
     const parts = pathname.split("/").filter(Boolean);
     const patientId = parts[1];
+    if (parts[2] === "imaging" && parts[3] === "viewer") {
+      const app = findShellAppByCode("ehr_search");
+      return {
+        title: "DICOM viewer",
+        appId: app?.id ?? "ehr",
+        taskType: "dicom_viewer",
+        contextRef: patientId ? `patient:${patientId}:dicom-viewer` : undefined,
+      };
+    }
     const segment = parts[2] ?? "summary";
     const app = findShellAppByCode("ehr_search");
     return {

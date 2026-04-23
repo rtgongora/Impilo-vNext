@@ -5,8 +5,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.intelligence.HealthIntelligenceService;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -28,6 +30,12 @@ public class AssistantNotificationsController {
 
     private static final Logger log = LoggerFactory.getLogger(AssistantNotificationsController.class);
 
+    private final HealthIntelligenceService healthIntelligenceService;
+
+    public AssistantNotificationsController(HealthIntelligenceService healthIntelligenceService) {
+        this.healthIntelligenceService = healthIntelligenceService;
+    }
+
     @GetMapping("/notifications")
     public ResponseEntity<Map<String, Object>> getNotifications(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
@@ -37,7 +45,10 @@ public class AssistantNotificationsController {
             @RequestParam(required = false) String shift_id) {
 
         try {
-            List<Map<String, Object>> notifications = buildContextualNotifications(work_mode, tenantId);
+            List<Map<String, Object>> notifications = new ArrayList<>();
+            notifications.addAll(buildContextualNotifications(work_mode, tenantId));
+            notifications.addAll(healthIntelligenceService.buildAssistantNotifications(
+                    work_mode, tenantId, facility_id, shift_id));
             return ResponseEntity.ok(Map.of("data", notifications));
         } catch (Exception e) {
             log.warn("Assistant notifications aggregation failed: {}", e.getMessage());

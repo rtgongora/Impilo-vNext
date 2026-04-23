@@ -36,6 +36,7 @@ export type FacilityWorkSubcontext =
 
 /** Future: sovereign registry plane (high-trust). */
 export type RegistryAdminSubtype =
+  | "registry_intake"
   | "client_registry"
   | "provider_registry"
   | "facility_registry"
@@ -129,6 +130,7 @@ const REGISTRY_PLANE_ROLES = new Set(["SYSTEM_ADMIN", "HIE_ADMIN"]);
 const ORG_ADMIN_ROLES = new Set(["SYSTEM_ADMIN", "FACILITY_ADMIN", "DEVELOPER"]);
 
 const REGISTRY_ADMIN_SUBTYPE_VALUES: RegistryAdminSubtype[] = [
+  "registry_intake",
   "client_registry",
   "provider_registry",
   "facility_registry",

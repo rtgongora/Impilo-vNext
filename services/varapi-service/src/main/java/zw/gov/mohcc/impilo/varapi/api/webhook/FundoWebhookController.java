@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import zw.gov.mohcc.impilo.varapi.config.VarapiProperties;
 import zw.gov.mohcc.impilo.varapi.core.FundoCpdGovernanceService;
+import zw.gov.mohcc.impilo.varapi.integration.LearningPlatformSyncClient;
 import zw.gov.mohcc.impilo.varapi.persistence.entity.FundoCpdCandidateEntity;
 
 import java.nio.charset.StandardCharsets;
@@ -29,11 +30,16 @@ public class FundoWebhookController {
 
     private final VarapiProperties varapiProperties;
     private final FundoCpdGovernanceService fundoCpdGovernanceService;
+    private final LearningPlatformSyncClient learningPlatformSyncClient;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public FundoWebhookController(VarapiProperties varapiProperties, FundoCpdGovernanceService fundoCpdGovernanceService) {
+    public FundoWebhookController(
+            VarapiProperties varapiProperties,
+            FundoCpdGovernanceService fundoCpdGovernanceService,
+            LearningPlatformSyncClient learningPlatformSyncClient) {
         this.varapiProperties = varapiProperties;
         this.fundoCpdGovernanceService = fundoCpdGovernanceService;
+        this.learningPlatformSyncClient = learningPlatformSyncClient;
     }
 
     @PostMapping("/cpd-completion")
@@ -72,6 +78,7 @@ public class FundoWebhookController {
                     credits,
                     externalRef,
                     rawBody);
+            learningPlatformSyncClient.notifyAfterFundoIngest(n, saved);
             return ResponseEntity.ok("{\"candidateId\":" + saved.getId() + "}");
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());

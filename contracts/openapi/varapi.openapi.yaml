@@ -1128,6 +1128,12 @@ components:
       type: object
       required: [givenName, familyName, profession]
       properties:
+        impiloHealthId:
+          type: string
+          format: uuid
+          description: >
+            Canonical Impilo / Health person identity. Required for production registry flows
+            when Varapi `identity.require-impilo-health-id-on-provider-create` is true.
         givenName:
           type: string
         familyName:

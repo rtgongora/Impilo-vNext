@@ -4,8 +4,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
 
@@ -106,6 +109,83 @@ public class TshepoAuthzServiceClient {
         String url = baseUrl + "/v1/devices/" + fingerprint + "/block";
         log.info("TSHEPO-AUTHZ: Unblocking device fingerprint={}", fingerprint);
         restTemplate.delete(url);
+    }
+
+    /**
+     * Synthetic ext_authz check for Health Intelligence plane queries.
+     * Uses {@code :path} {@code /internal/v1/intelligence-plane} so {@code PolicyEngine}
+     * derives resource type {@code intelligence-plane} (see tshepo-authz V006 migration).
+     */
+    public boolean intelligencePlaneQueryAllowed() {
+        return syntheticAuthorizeVerdict("POST", "/internal/v1/intelligence-plane");
+    }
+
+    /**
+     * Synthetic ext_authz check for Experience registry intake mutations.
+     * Uses {@code :method} / {@code :path} headers so {@code PolicyEngine} derives
+     * resource type {@code registry-intake} (see tshepo-authz V005 migration).
+     */
+    public boolean registryIntakeMutationAllowed() {
+        return syntheticAuthorizeVerdict("POST", "/internal/v1/registry-intake");
+    }
+
+    /**
+     * Synthetic ext_authz for governed imaging reads (search, study detail, series list).
+     * Resource type {@code imaging-governed-read} (see PolicyEngine / Tshepo migrations).
+     */
+    public boolean imagingGovernedReadAllowed() {
+        return syntheticAuthorizeVerdict("GET", "/internal/v1/imaging-governed-read");
+    }
+
+    /**
+     * Synthetic ext_authz for governed imaging mutations (correlate, sync, report/order links).
+     */
+    public boolean imagingGovernedMutateAllowed() {
+        return syntheticAuthorizeVerdict("POST", "/internal/v1/imaging-governed-mutate");
+    }
+
+    /**
+     * Synthetic ext_authz for DICOM viewer session creation.
+     */
+    public boolean imagingViewerLaunchAllowed() {
+        return syntheticAuthorizeVerdict("POST", "/internal/v1/imaging-viewer-launch");
+    }
+
+    /**
+     * Synthetic ext_authz for Experience finance plane (billing workspace or MusheX platform).
+     * Resource type is derived from the last path segment (see tshepo-authz V007).
+     */
+    public boolean financePlaneAllowed(String httpMethod, String syntheticPath) {
+        return syntheticAuthorizeVerdict(httpMethod, syntheticPath);
+    }
+
+    private boolean syntheticAuthorizeVerdict(String method, String path) {
+        String url = baseUrl + "/v1/authorize";
+        HttpHeaders headers = new HttpHeaders();
+        headers.set(":method", method);
+        headers.set(":path", path);
+        try {
+            ResponseEntity<JsonNode> response =
+                    restTemplate.exchange(url, HttpMethod.POST, new HttpEntity<>(headers),
+                            JsonNode.class);
+            if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
+                return false;
+            }
+            JsonNode body = response.getBody();
+            if (!body.has("verdict")) {
+                return false;
+            }
+            return "ALLOW".equalsIgnoreCase(body.get("verdict").asText());
+        } catch (HttpClientErrorException e) {
+            if (e.getStatusCode().value() == 403 || e.getStatusCode().value() == 401) {
+                log.debug("TSHEPO-AUTHZ: synthetic authorize denied path={} status={}", path, e.getStatusCode());
+                return false;
+            }
+            return false;
+        } catch (Exception e) {
+            log.warn("TSHEPO-AUTHZ: synthetic authorize failed path={}: {}", path, e.getMessage());
+            return false;
+        }
     }
 
     private JsonNode extractData(ResponseEntity<JsonNode> response) {

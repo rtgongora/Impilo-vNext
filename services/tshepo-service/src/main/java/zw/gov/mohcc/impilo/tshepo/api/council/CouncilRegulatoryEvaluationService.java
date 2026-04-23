@@ -19,7 +19,11 @@ public class CouncilRegulatoryEvaluationService {
             "UPSERT_FUNDO_LINK",
             "RECORD_COUNCIL_REVIEW",
             "ACCEPT_FUNDO_CPD",
-            "REJECT_FUNDO_CPD");
+            "REJECT_FUNDO_CPD",
+            "RECORD_LEARNING_COMPLETION",
+            "OPEN_LEARNING_RESOURCE",
+            "ASSIGN_LEARNING_PATH",
+            "REGISTER_LEARNING_PREREQUISITE");
 
     private final boolean denyByDefault;
 

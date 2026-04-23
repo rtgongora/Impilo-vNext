@@ -176,6 +176,60 @@ public class MushexServiceClient {
         return postJson(baseUrl + "/mushex/v1/claims/" + claimId + "/dispute", requestBody);
     }
 
+    public ResponseEntity<String> platformListWallets(MultiValueMap<String, String> queryParams) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/mushex/v1/platform/wallets")
+                .queryParams(copy(queryParams))
+                .toUriString();
+        return restTemplate.getForEntity(url, String.class);
+    }
+
+    public ResponseEntity<String> platformCreateWallet(String requestBody) {
+        return postJson(baseUrl + "/mushex/v1/platform/wallets", requestBody);
+    }
+
+    public ResponseEntity<String> platformWalletCredit(String walletId, String requestBody) {
+        return postJson(baseUrl + "/mushex/v1/platform/wallets/" + walletId + "/credit", requestBody);
+    }
+
+    public ResponseEntity<String> platformWalletDebit(String walletId, String requestBody) {
+        return postJson(baseUrl + "/mushex/v1/platform/wallets/" + walletId + "/debit", requestBody);
+    }
+
+    public ResponseEntity<String> platformWalletTransactions(String walletId) {
+        return restTemplate.getForEntity(
+                baseUrl + "/mushex/v1/platform/wallets/" + walletId + "/transactions", String.class);
+    }
+
+    public ResponseEntity<String> platformListRemittanceTransfers(MultiValueMap<String, String> queryParams) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/mushex/v1/remittance-transfers")
+                .queryParams(copy(queryParams))
+                .toUriString();
+        return restTemplate.getForEntity(url, String.class);
+    }
+
+    public ResponseEntity<String> platformCreateRemittanceTransfer(String requestBody) {
+        return postJson(baseUrl + "/mushex/v1/remittance-transfers", requestBody);
+    }
+
+    public ResponseEntity<String> platformListCardProfiles(MultiValueMap<String, String> queryParams) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/mushex/v1/platform/card-profiles")
+                .queryParams(copy(queryParams))
+                .toUriString();
+        return restTemplate.getForEntity(url, String.class);
+    }
+
+    public ResponseEntity<String> platformCreateCardProfile(String requestBody) {
+        return postJson(baseUrl + "/mushex/v1/platform/card-profiles", requestBody);
+    }
+
+    public ResponseEntity<String> platformListReversals() {
+        return restTemplate.getForEntity(baseUrl + "/mushex/v1/platform/reversals", String.class);
+    }
+
+    public ResponseEntity<String> platformCreateReversal(String requestBody) {
+        return postJson(baseUrl + "/mushex/v1/platform/reversals", requestBody);
+    }
+
     private ResponseEntity<String> postJson(String url, String requestBody) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);

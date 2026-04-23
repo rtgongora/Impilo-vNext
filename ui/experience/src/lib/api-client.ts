@@ -442,8 +442,50 @@ async function requestForm<T>(
   return response.json();
 }
 
+/** Authenticated GET returning a binary body (e.g. DICOM rendered frames). */
+async function requestBlob(path: string): Promise<Blob> {
+  const headers = { ...getV11Headers() };
+  const response = await fetch(`${BFF_BASE_URL}${path}`, {
+    method: "GET",
+    headers,
+    credentials: "same-origin",
+  });
+
+  if (response.status === 401) {
+    const refreshed = await attemptRefresh();
+    if (refreshed) {
+      const retryHeaders = { ...getV11Headers() };
+      const retryResponse = await fetch(`${BFF_BASE_URL}${path}`, {
+        method: "GET",
+        headers: retryHeaders,
+        credentials: "same-origin",
+      });
+      if (retryResponse.ok) {
+        return retryResponse.blob();
+      }
+      if (retryResponse.status === 401) {
+        handleAuthFailure();
+      }
+    } else {
+      handleAuthFailure();
+    }
+    throw { status: 401, error: { code: "SESSION_EXPIRED", message: "Session expired" } };
+  }
+
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => null);
+    throw {
+      status: response.status,
+      ...(errorBody || {}),
+    };
+  }
+
+  return response.blob();
+}
+
 export const apiClient = {
   get: <T>(path: string) => request<T>("GET", path),
+  getBlob: (path: string) => requestBlob(path),
   getText: (path: string) => request<string>("GET", path, undefined, "text"),
   post: <T>(path: string, body?: unknown, opts?: ApiRequestOptions) => request<T>("POST", path, body, "json", opts),
   put: <T>(path: string, body?: unknown) => request<T>("PUT", path, body),

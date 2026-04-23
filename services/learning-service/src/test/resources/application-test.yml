@@ -1,0 +1,25 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:learning_test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  flyway:
+    enabled: false
+
+learning:
+  security:
+    oauth2-enabled: false
+  integration:
+    varapi-internal-key: test-learning-key
+    orchestration-internal-key: test-orch-key
+
+impilo:
+  companion:
+    enabled: false

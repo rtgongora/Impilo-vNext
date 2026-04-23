@@ -206,15 +206,21 @@ public class OrderStateMachine {
             outbox.setAggregateType("Order");
             outbox.setAggregateId(order.getOrderId());
             outbox.setEventType(eventType);
-            outbox.setPayload(objectMapper.writeValueAsString(Map.of(
-                    "orderId", order.getOrderId(),
-                    "tenantId", order.getTenantId().toString(),
-                    "status", order.getStatus().name(),
-                    "orderType", order.getOrderType().name(),
-                    "actorId", order.getActorId(),
-                    "amountTotal", order.getAmountTotal().toPlainString(),
-                    "currency", order.getCurrency()
-            )));
+            java.util.Map<String, Object> payload = new LinkedHashMap<>();
+            payload.put("orderId", order.getOrderId());
+            payload.put("tenantId", order.getTenantId().toString());
+            payload.put("status", order.getStatus().name());
+            payload.put("orderType", order.getOrderType().name());
+            payload.put("actorId", order.getActorId());
+            payload.put("amountTotal", order.getAmountTotal().toPlainString());
+            payload.put("currency", order.getCurrency());
+            if (order.getPatientCpid() != null && !order.getPatientCpid().isBlank()) {
+                payload.put("patientCpid", order.getPatientCpid());
+            }
+            if (order.getFacilityId() != null) {
+                payload.put("facilityId", order.getFacilityId().toString());
+            }
+            outbox.setPayload(objectMapper.writeValueAsString(payload));
             outbox.setTenantId(order.getTenantId());
             outboxRepository.save(outbox);
         } catch (Exception e) {

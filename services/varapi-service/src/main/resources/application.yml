@@ -74,6 +74,9 @@ springdoc:
 # VARAPI-specific configuration
 varapi:
   registry-mode: STANDALONE  # STANDALONE or EXTERNAL
+  identity:
+    require-impilo-health-id-on-provider-create: ${VARAPI_REQUIRE_IMPILO_HEALTH_ID_ON_CREATE:true}
+    require-impilo-health-id-for-facility-affiliation: ${VARAPI_REQUIRE_IMPILO_HEALTH_ID_FOR_AFFILIATION:true}
   argon2:
     memory-cost-kb: 19456
     iterations: 2
@@ -111,6 +114,9 @@ varapi:
     webhook-enabled: ${VARAPI_FUNDO_WEBHOOK_ENABLED:true}
     webhook-shared-secret: ${FUNDO_WEBHOOK_SECRET:CHANGE_ME}
     auto-accept-cpd-from-fundo: ${VARAPI_FUNDO_AUTO_ACCEPT_CPD:false}
+  learning-platform-sync:
+    base-url: ${VARAPI_LEARNING_PLATFORM_BASE_URL:}
+    internal-api-key: ${VARAPI_TO_LEARNING_INTERNAL_KEY:}
   council-regulatory:
     policy-enabled: ${VARAPI_COUNCIL_REGULATORY_POLICY_ENABLED:false}
     policy-deny-when-unreachable: ${VARAPI_COUNCIL_REGULATORY_POLICY_DENY_WHEN_UNREACHABLE:true}

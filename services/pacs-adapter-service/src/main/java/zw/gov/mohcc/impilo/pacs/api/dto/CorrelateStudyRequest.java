@@ -1,5 +1,6 @@
 package zw.gov.mohcc.impilo.pacs.api.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import jakarta.validation.constraints.NotBlank;
 
 /**
@@ -8,6 +9,7 @@ import jakarta.validation.constraints.NotBlank;
 public class CorrelateStudyRequest {
 
     @NotBlank
+    @JsonAlias("oros_order_id")
     private String orosOrderId;
 
     public String getOrosOrderId() {

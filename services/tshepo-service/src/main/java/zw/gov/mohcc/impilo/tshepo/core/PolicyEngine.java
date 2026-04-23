@@ -444,7 +444,9 @@ public class PolicyEngine {
             resourceType.equals("lab-orders") ||
             resourceType.equals("clinical-notes") ||
             resourceType.equals("vitals") ||
-            resourceType.equals("triage")
+            resourceType.equals("triage") ||
+            resourceType.equals("imaging-governed-mutate") ||
+            resourceType.equals("imaging-viewer-launch")
         );
     }
 

@@ -171,6 +171,31 @@ export function resolveIndexHitHref(hit: IndexSearchHitRef): string | null {
   if (type.includes("report")) {
     return `/reports/${encodeURIComponent(id)}`;
   }
+  if (
+    type.includes("imaging") ||
+    type.includes("imaging_study") ||
+    type.includes("dicom") ||
+    hints.includes("imaging study") ||
+    hints.includes("pacs")
+  ) {
+    if (pid) {
+      const study = asTrimmedString(cj?.studyUid) ?? asTrimmedString(cj?.study_uid);
+      if (study) {
+        return `/ehr/${encodeURIComponent(pid)}/imaging/viewer?studyUid=${encodeURIComponent(study)}`;
+      }
+      return `/ehr/${encodeURIComponent(pid)}/imaging`;
+    }
+    return null;
+  }
+
+  if (type.includes("learning_resource") || type.includes("learning")) {
+    const exp =
+      asTrimmedString(cj?.experienceHref) ??
+      asTrimmedString(cj?.experience_href) ??
+      asTrimmedString(cj?.href);
+    if (exp) return exp;
+    if (id) return `/learning?focus=${encodeURIComponent(id)}`;
+  }
 
   return null;
 }

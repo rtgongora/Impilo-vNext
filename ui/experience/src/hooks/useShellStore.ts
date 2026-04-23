@@ -166,7 +166,7 @@ export const useShellStore = create<ShellStore>()(
         subtitle: route,
         href: route,
         refKey: `route:${route}`,
-        sensitivity: taskType === "patient_chart" ? "clinical" : "normal",
+        sensitivity: taskType === "patient_chart" || taskType === "dicom_viewer" ? "clinical" : "normal",
       });
     },
 

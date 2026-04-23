@@ -19,6 +19,13 @@ public class ProviderEntity {
     @Column(name = "provider_ref", nullable = false, unique = true)
     private UUID providerRef;
 
+    /**
+     * Canonical Impilo / Health person identity (UUID). All provider registry state for this human
+     * is anchored here; {@link #providerPublicId} and linked identifiers are secondary surfaces.
+     */
+    @Column(name = "impilo_health_id", nullable = false)
+    private UUID impiloHealthId;
+
     @Column(name = "provider_public_id", nullable = false, unique = true, length = 26)
     private String providerPublicId;
 
@@ -114,7 +121,12 @@ public class ProviderEntity {
     protected void onCreate() {
         createdAt = Instant.now();
         updatedAt = Instant.now();
-        if (providerRef == null) providerRef = UUID.randomUUID();
+        if (providerRef == null) {
+            providerRef = UUID.randomUUID();
+        }
+        if (impiloHealthId == null) {
+            impiloHealthId = providerRef;
+        }
     }
 
     @PreUpdate
@@ -138,6 +150,9 @@ public class ProviderEntity {
 
     public UUID getProviderRef() { return providerRef; }
     public void setProviderRef(UUID providerRef) { this.providerRef = providerRef; }
+
+    public UUID getImpiloHealthId() { return impiloHealthId; }
+    public void setImpiloHealthId(UUID impiloHealthId) { this.impiloHealthId = impiloHealthId; }
 
     public String getProviderPublicId() { return providerPublicId; }
     public void setProviderPublicId(String providerPublicId) { this.providerPublicId = providerPublicId; }

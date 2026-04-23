@@ -1,12 +1,15 @@
 package zw.gov.mohcc.impilo.experience.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -19,6 +22,8 @@ import java.util.Map;
  * <ul>
  *   <li>QIDO-RS: Query for studies, series, instances</li>
  *   <li>WADO-RS: Retrieve study/series/instance metadata and rendered frames</li>
+ *   <li>STOW-RS: Store DICOM objects (multipart/related) via DICOMweb</li>
+ *   <li>C-STORE style ingest: POST raw {@code application/dicom} to Orthanc {@code /instances}</li>
  *   <li>Study list from Orthanc REST API</li>
  * </ul>
  *
@@ -109,6 +114,17 @@ public class PacsController {
     /**
      * Get a DICOM instance file.
      */
+    /**
+     * C-STORE style single-instance ingest — forwards {@code application/dicom} to Orthanc
+     * {@code POST /instances} (Orthanc REST, not DIMSE).
+     */
+    @PostMapping(value = "/instances/dicom", consumes = "application/dicom")
+    public ResponseEntity<String> postInstanceDicom(
+            HttpServletRequest request,
+            @RequestHeader("X-Tenant-ID") String tenantId) throws IOException {
+        return proxyPostStringBody(orthancBaseUrl + "/instances", request, MediaType.APPLICATION_JSON);
+    }
+
     @GetMapping("/instances/{id}/file")
     public ResponseEntity<byte[]> getInstanceFile(
             @PathVariable String id,
@@ -158,6 +174,40 @@ public class PacsController {
     }
 
     /**
+     * QIDO-RS: List series for a study UID.
+     */
+    @GetMapping("/dicomweb/studies/{studyUid}/series")
+    public ResponseEntity<String> qidoSeriesForStudy(
+            @PathVariable String studyUid,
+            @RequestParam(required = false) Map<String, String> queryParams,
+            @RequestHeader("X-Tenant-ID") String tenantId) {
+        StringBuilder url = new StringBuilder(dicomWebUrl + "/studies/" + studyUid + "/series");
+        if (queryParams != null && !queryParams.isEmpty()) {
+            url.append("?");
+            queryParams.forEach((k, v) -> url.append(k).append("=").append(v).append("&"));
+        }
+        return proxyGetDicomWeb(url.toString());
+    }
+
+    /**
+     * QIDO-RS: List instances in a series.
+     */
+    @GetMapping("/dicomweb/studies/{studyUid}/series/{seriesUid}/instances")
+    public ResponseEntity<String> qidoInstancesForSeries(
+            @PathVariable String studyUid,
+            @PathVariable String seriesUid,
+            @RequestParam(required = false) Map<String, String> queryParams,
+            @RequestHeader("X-Tenant-ID") String tenantId) {
+        StringBuilder url = new StringBuilder(dicomWebUrl + "/studies/" + studyUid
+                + "/series/" + seriesUid + "/instances");
+        if (queryParams != null && !queryParams.isEmpty()) {
+            url.append("?");
+            queryParams.forEach((k, v) -> url.append(k).append("=").append(v).append("&"));
+        }
+        return proxyGetDicomWeb(url.toString());
+    }
+
+    /**
      * WADO-RS: Retrieve series metadata.
      */
     @GetMapping("/dicomweb/studies/{studyUid}/series/{seriesUid}/metadata")
@@ -200,6 +250,28 @@ public class PacsController {
     /**
      * WADO-RS: Retrieve a DICOM instance via DICOMweb.
      */
+    /**
+     * STOW-RS: store to an existing study (DICOMweb).
+     */
+    @PostMapping("/dicomweb/studies/{studyUid}")
+    public ResponseEntity<byte[]> stowToStudy(
+            HttpServletRequest request,
+            @PathVariable String studyUid,
+            @RequestHeader("X-Tenant-ID") String tenantId) throws IOException {
+        String url = dicomWebUrl + "/studies/" + studyUid;
+        return proxyPostBinaryPreserveStatus(url, request);
+    }
+
+    /**
+     * STOW-RS: store instances; multipart/related or single-part body is forwarded unchanged.
+     */
+    @PostMapping("/dicomweb/studies")
+    public ResponseEntity<byte[]> stowStudies(
+            HttpServletRequest request,
+            @RequestHeader("X-Tenant-ID") String tenantId) throws IOException {
+        return proxyPostBinaryPreserveStatus(dicomWebUrl + "/studies", request);
+    }
+
     @GetMapping("/dicomweb/studies/{studyUid}/series/{seriesUid}/instances/{instanceUid}")
     public ResponseEntity<byte[]> wadoRetrieveInstance(
             @PathVariable String studyUid,
@@ -267,5 +339,100 @@ public class PacsController {
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(List.of(MediaType.ALL));
         return new HttpEntity<>(headers);
+    }
+
+    /**
+     * Forwards POST body and selected headers to Orthanc/DICOMweb, returning upstream status and bytes
+     * (e.g. {@code application/dicom+json} STOW response).
+     */
+    private ResponseEntity<byte[]> proxyPostBinaryPreserveStatus(String targetUrl, HttpServletRequest request)
+            throws IOException {
+        byte[] body = request.getInputStream().readAllBytes();
+        HttpHeaders headers = buildForwardHeaders(request);
+        HttpEntity<byte[]> entity = new HttpEntity<>(body.length == 0 ? null : body, headers);
+        try {
+            ResponseEntity<byte[]> response =
+                    restTemplate.exchange(targetUrl, HttpMethod.POST, entity, byte[].class);
+            return copyBinaryResponse(response);
+        } catch (HttpStatusCodeException ex) {
+            return ResponseEntity.status(ex.getStatusCode())
+                    .headers(copySafeResponseHeaders(ex.getResponseHeaders()))
+                    .body(ex.getResponseBodyAsByteArray());
+        } catch (Exception e) {
+            log.error("PACS STOW proxy error for {}: {}", targetUrl, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).build();
+        }
+    }
+
+    private ResponseEntity<String> proxyPostStringBody(
+            String targetUrl, HttpServletRequest request, MediaType acceptResponse) throws IOException {
+        byte[] body = request.getInputStream().readAllBytes();
+        HttpHeaders headers = buildForwardHeaders(request);
+        headers.setAccept(List.of(acceptResponse));
+        HttpEntity<byte[]> entity = new HttpEntity<>(body.length == 0 ? null : body, headers);
+        try {
+            ResponseEntity<String> response =
+                    restTemplate.exchange(targetUrl, HttpMethod.POST, entity, String.class);
+            return ResponseEntity.status(response.getStatusCode())
+                    .headers(copySafeResponseHeaders(response.getHeaders()))
+                    .body(response.getBody());
+        } catch (HttpStatusCodeException ex) {
+            return ResponseEntity.status(ex.getStatusCode())
+                    .headers(copySafeResponseHeaders(ex.getResponseHeaders()))
+                    .body(ex.getResponseBodyAsString());
+        } catch (Exception e) {
+            log.error("PACS C-STORE proxy error for {}: {}", targetUrl, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body("{\"error\":\"Orthanc ingest failed\"}");
+        }
+    }
+
+    private static HttpHeaders buildForwardHeaders(HttpServletRequest request) {
+        HttpHeaders headers = new HttpHeaders();
+        String ct = request.getContentType();
+        if (ct != null && !ct.isBlank()) {
+            headers.setContentType(MediaType.parseMediaType(ct));
+        }
+        String accept = request.getHeader(HttpHeaders.ACCEPT);
+        if (accept != null && !accept.isBlank()) {
+            headers.set(HttpHeaders.ACCEPT, accept);
+        }
+        String transferEncoding = request.getHeader(HttpHeaders.TRANSFER_ENCODING);
+        if (transferEncoding != null && !transferEncoding.isBlank()) {
+            headers.set(HttpHeaders.TRANSFER_ENCODING, transferEncoding);
+        }
+        return headers;
+    }
+
+    private static ResponseEntity<byte[]> copyBinaryResponse(ResponseEntity<byte[]> response) {
+        return ResponseEntity.status(response.getStatusCode())
+                .headers(copySafeResponseHeaders(response.getHeaders()))
+                .body(response.getBody());
+    }
+
+    private static HttpHeaders copySafeResponseHeaders(HttpHeaders source) {
+        if (source == null || source.isEmpty()) {
+            return new HttpHeaders();
+        }
+        HttpHeaders t = new HttpHeaders();
+        MediaType ct = source.getContentType();
+        if (ct != null) {
+            t.setContentType(ct);
+        }
+        long len = source.getContentLength();
+        if (len > 0) {
+            t.setContentLength(len);
+        }
+        // Preserve DICOMweb STOW correlation / warning headers when present
+        for (String h : List.of("Warning", "Content-Location")) {
+            List<String> vals = source.get(h);
+            if (vals != null) {
+                t.addAll(h, vals);
+            }
+        }
+        String cd = source.getFirst(HttpHeaders.CONTENT_DISPOSITION);
+        if (cd != null) {
+            t.set(HttpHeaders.CONTENT_DISPOSITION, cd);
+        }
+        return t;
     }
 }

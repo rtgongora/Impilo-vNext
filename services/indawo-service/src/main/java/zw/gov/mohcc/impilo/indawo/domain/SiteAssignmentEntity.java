@@ -32,6 +32,10 @@ public class SiteAssignmentEntity {
     @Column(name = "assigned_to_ref", length = 255)
     private String assignedToRef;
 
+    /** Impilo / Health ID when the assignee is a person (see Experience Doctrine). */
+    @Column(name = "impilo_health_id")
+    private UUID impiloHealthId;
+
     @Column(name = "jurisdiction_ref", length = 255)
     private String jurisdictionRef;
 
@@ -76,6 +80,8 @@ public class SiteAssignmentEntity {
     public void setAssignedRole(String assignedRole) { this.assignedRole = assignedRole; touch(); }
     public String getAssignedToRef() { return assignedToRef; }
     public void setAssignedToRef(String assignedToRef) { this.assignedToRef = assignedToRef; touch(); }
+    public UUID getImpiloHealthId() { return impiloHealthId; }
+    public void setImpiloHealthId(UUID impiloHealthId) { this.impiloHealthId = impiloHealthId; touch(); }
     public String getJurisdictionRef() { return jurisdictionRef; }
     public void setJurisdictionRef(String jurisdictionRef) { this.jurisdictionRef = jurisdictionRef; touch(); }
     public String getStatus() { return status; }

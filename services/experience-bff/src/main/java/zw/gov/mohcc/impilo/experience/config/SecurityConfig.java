@@ -207,6 +207,10 @@ public class SecurityConfig {
                     .requestMatchers("/internal/v1/pacs/**")
                             .hasAnyRole(CLINICAL_ROLES)
 
+                    // ── Governed imaging (PACS adapter via BFF) ───────────
+                    .requestMatchers("/internal/v1/imaging/**")
+                            .hasAnyRole(CLINICAL_ROLES)
+
                     // ── Mobile provider clinical operations ───────────────
                     .requestMatchers(HttpMethod.POST, "/internal/v1/mobile/provider/encounters/**")
                             .hasAnyRole(CLINICAL_ROLES)
@@ -268,6 +272,10 @@ public class SecurityConfig {
                             .authenticated()
                     .requestMatchers("/internal/v1/search/**")
                             .authenticated()
+                    .requestMatchers("/internal/v1/learning/**")
+                            .authenticated()
+                    .requestMatchers("/internal/v1/intelligence-plane/**")
+                            .authenticated()
 
                     // ── Temp ID review (admin only, Health OS §13) ────────
                     .requestMatchers("/internal/v1/admin/temp-id-review/**")
@@ -297,6 +305,11 @@ public class SecurityConfig {
 
                     // ── Privacy preferences ─────────────────────────────
                     .requestMatchers("/internal/v1/settings/privacy/**").authenticated()
+
+                    // ── Patient-mediated external provider collaboration (VITO-backed) ──
+                    .requestMatchers("/internal/v1/public/patient-shares/**").permitAll()
+                    .requestMatchers("/internal/v1/citizen/clients/*/patient-shares/**")
+                            .hasAnyRole(CITIZEN_ROLES)
 
                     // ── All other endpoints — authenticated ───────────────
                     .anyRequest().authenticated()

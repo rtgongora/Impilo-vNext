@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
   Activity,
@@ -25,7 +26,7 @@ import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { useEncounters } from "@/hooks/queries/useEncounters";
-import { useImagingStudies } from "@/hooks/queries/useImaging";
+import { useImagingStudies, useSyncImagingHierarchy } from "@/hooks/queries/useImaging";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { apiClient } from "@/lib/api-client";
 
@@ -140,6 +141,7 @@ export default function ImagingPage() {
   const { data: studies = [], isLoading, error } = useStudies(patientId);
   const { data: imagingStudiesData } = useImagingStudies(patientId);
   const governedStudies = (imagingStudiesData as { data?: unknown[] } | undefined)?.data ?? [];
+  const syncHierarchy = useSyncImagingHierarchy(patientId);
 
   const patientMatchedStudies = studies.filter((study) => matchesPatient(study, patientId));
   /** Never list unrelated DICOM patients in this chart's rail — avoids wrong-patient review. */
@@ -347,6 +349,50 @@ export default function ImagingPage() {
                   </div>
                 )}
 
+                {governedStudies.length > 0 && (
+                  <div className="mb-3 rounded-xl border border-impilo-100 bg-impilo-50/60 p-3">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-impilo-700">
+                      Governed imaging (adapter)
+                    </p>
+                    <ul className="mt-2 space-y-2">
+                      {governedStudies
+                        .map((raw) => {
+                          const g = raw as Record<string, unknown>;
+                          const id = g.id;
+                          const studyUid = (g.studyUid ?? g.study_uid) as string | undefined;
+                          if (id == null || !studyUid) return null;
+                          return (
+                            <li
+                              key={String(id)}
+                              className="flex flex-col gap-1 rounded-lg border border-white/60 bg-white/80 p-2 text-xs text-slate-700"
+                            >
+                              <span className="font-mono text-[11px] text-slate-500">{studyUid}</span>
+                              <div className="flex flex-wrap gap-2">
+                                <Link
+                                  className="inline-flex items-center rounded-full bg-impilo-600 px-2.5 py-1 text-[11px] font-medium text-white hover:bg-impilo-700"
+                                  href={`/ehr/${encodeURIComponent(patientId)}/imaging/viewer?studyUid=${encodeURIComponent(
+                                    studyUid,
+                                  )}&governedStudyId=${encodeURIComponent(String(id))}`}
+                                >
+                                  DICOMweb viewer
+                                </Link>
+                                <button
+                                  type="button"
+                                  className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                                  disabled={syncHierarchy.isPending}
+                                  onClick={() => syncHierarchy.mutate({ studyId: String(id) })}
+                                >
+                                  Sync hierarchy
+                                </button>
+                              </div>
+                            </li>
+                          );
+                        })
+                        .filter(Boolean)}
+                    </ul>
+                  </div>
+                )}
+
                 {visibleStudies.map((study) => {
                   const isSelected = selectedStudy?.ID === study.ID;
                   return (
@@ -517,6 +563,16 @@ export default function ImagingPage() {
                     <InfoRow label="Patient Name" value={selectedStudy.PatientMainDicomTags?.PatientName} />
                     <InfoRow label="Series Count" value={String(selectedStudy.Series?.length ?? 0)} />
                     <InfoRow label="Orthanc ID" value={selectedStudy.ID} mono />
+                    {selectedStudy.MainDicomTags?.StudyInstanceUID && (
+                      <Link
+                        className="inline-flex w-full items-center justify-center rounded-xl bg-impilo-600 px-3 py-2 text-center text-xs font-semibold text-white hover:bg-impilo-700"
+                        href={`/ehr/${encodeURIComponent(patientId)}/imaging/viewer?studyUid=${encodeURIComponent(
+                          selectedStudy.MainDicomTags.StudyInstanceUID,
+                        )}`}
+                      >
+                        Open DICOMweb viewer (study / series / instances)
+                      </Link>
+                    )}
                     <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">
                       Patient context is aligned in PACS metadata for this study. Review findings here, then carry the outcome into results, documents, or notes.
                     </div>

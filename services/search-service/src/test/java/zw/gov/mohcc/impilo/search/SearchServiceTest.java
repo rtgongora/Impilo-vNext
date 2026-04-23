@@ -364,6 +364,28 @@ class SearchServiceTest {
         assertThat(root2.get("results").size()).isEqualTo(1);
     }
 
+    // ── Test 9b: rankMode semantic / lexical surfaces applied mode ─────
+
+    @Test
+    @DisplayName("GET /internal/v1/search?rankMode=semantic returns rankModeApplied (cosine with test hash embeddings)")
+    void searchSemanticRankModeMetadata() throws Exception {
+        indexEntity("patient", "pat-rank-1",
+                "{\"name\": \"Rank Token Alpha Beta\", \"ward\": \"W1\"}");
+        MvcResult res = mockMvc.perform(get("/internal/v1/search")
+                        .param("q", "Alpha Beta")
+                        .param("rankMode", "semantic")
+                        .param("page", "0")
+                        .param("size", "10")
+                        .header("X-Tenant-ID", TENANT_ID)
+                        .header("X-Pod-ID", POD_ID)
+                        .header("X-Request-ID", UUID.randomUUID().toString())
+                        .header("X-Correlation-ID", UUID.randomUUID().toString()))
+                .andExpect(status().isOk())
+                .andReturn();
+        JsonNode root = MAPPER.readTree(res.getResponse().getContentAsString());
+        assertThat(root.get("rankModeApplied").asText()).isEqualTo("semantic-cosine");
+    }
+
     // ── Test 10: Delete non-existent entity returns 204 silently ────────
 
     @Test

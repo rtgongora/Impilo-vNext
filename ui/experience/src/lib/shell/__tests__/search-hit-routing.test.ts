@@ -76,4 +76,27 @@ describe("resolveIndexHitHref", () => {
       }),
     ).toBe("/registry/providers/PRV-88");
   });
+
+  it("routes imaging study hits to DICOM viewer when patient + studyUid present", () => {
+    expect(
+      resolveIndexHitHref({
+        entityType: "imaging_study",
+        entityId: "ST-1",
+        contentJson: {
+          patientId: "CPID-9",
+          studyUid: "1.2.840.10008.1.2.3.4.5",
+        },
+      }),
+    ).toBe("/ehr/CPID-9/imaging/viewer?studyUid=1.2.840.10008.1.2.3.4.5");
+  });
+
+  it("routes imaging hits without studyUid to imaging workspace", () => {
+    expect(
+      resolveIndexHitHref({
+        entityType: "pacs_study",
+        entityId: "ST-1",
+        contentJson: { patientId: "CPID-9" },
+      }),
+    ).toBe("/ehr/CPID-9/imaging");
+  });
 });

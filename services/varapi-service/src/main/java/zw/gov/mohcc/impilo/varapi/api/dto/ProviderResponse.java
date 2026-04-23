@@ -8,6 +8,7 @@ import java.util.UUID;
 public record ProviderResponse(
         String providerPublicId,
         UUID providerRef,
+        UUID impiloHealthId,
         String title,
         String givenName,
         String familyName,

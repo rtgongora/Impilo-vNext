@@ -15,6 +15,7 @@ import {
   ArrowUpRight,
   BookOpen,
   Building2,
+  Route,
   Shield,
   UserCheck,
 } from "lucide-react";
@@ -27,6 +28,7 @@ import { REGISTRY_PLANE_CARDS } from "@/lib/plane-landings";
 import { isRegistryAdminSubtype, principalHasRegistryAdminPlane } from "@/lib/operational-context";
 
 const SUBTYPE_ICONS = {
+  registry_intake: Route,
   client_registry: Shield,
   provider_registry: UserCheck,
   facility_registry: Building2,

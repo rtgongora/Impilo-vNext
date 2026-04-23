@@ -6,11 +6,18 @@
  */
 
 import Link from "next/link";
-import { UserCheck, Building2, BookOpen, Package } from "lucide-react";
+import { UserCheck, Building2, BookOpen, Package, Route } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 
 const REGISTRY_SECTIONS = [
+  {
+    title: "Intake & onboarding",
+    description: "Bootstrap snapshot, progressive intake sessions, recovery tickets, and governed CSV import",
+    href: "/registry/intake",
+    icon: Route,
+    color: "bg-sky-100 text-sky-700",
+  },
   {
     title: "Providers",
     description: "View and manage registered healthcare providers",

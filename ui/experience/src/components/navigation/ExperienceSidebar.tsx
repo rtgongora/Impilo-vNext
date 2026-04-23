@@ -33,6 +33,7 @@ import {
   Monitor,
   Package,
   Pill,
+  Route,
   Search,
   Settings2,
   Shield,
@@ -193,6 +194,7 @@ function getSidebarSpotlight(pathname: string): SidebarSpotlight {
       description: "Sovereign registry administration — elevated trust, separate from facility shift work.",
       tone: "border-amber-400/30 bg-amber-950/40 text-amber-100",
       actions: [
+        { href: "/registry/intake", label: "Intake hub", icon: Route },
         { href: "/registry/providers", label: "Providers", icon: Users },
         { href: "/registry/facilities", label: "Facilities", icon: Building2 },
       ],
@@ -282,6 +284,7 @@ function getSidebarSpotlight(pathname: string): SidebarSpotlight {
       description: "Reference, governance, and reporting — use Registry plane or Org administration for explicit operational context.",
       tone: "border-violet-400/20 bg-violet-400/10 text-violet-100",
       actions: [
+        { href: "/registry/intake", label: "Registry intake", icon: Route },
         { href: "/admin/clinical-curation", label: "Knowledge curation", icon: Lightbulb },
         { href: "/registry-admin", label: "Registry plane", icon: ShieldCheck },
         { href: "/organization-admin", label: "Org admin", icon: BriefcaseBusiness },

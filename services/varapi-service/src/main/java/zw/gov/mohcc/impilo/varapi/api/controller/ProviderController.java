@@ -205,6 +205,7 @@ public class ProviderController {
         return new ProviderResponse(
                 entity.getProviderPublicId(),
                 entity.getProviderRef(),
+                entity.getImpiloHealthId(),
                 entity.getTitle(),
                 entity.getGivenName(),
                 entity.getFamilyName(),
@@ -234,15 +235,24 @@ public class ProviderController {
 
     // ---- Mapper: ProviderDetail → Response DTO (full with identifiers, specialties, contacts) ----
 
-    private ProviderResponse toProviderDetailResponse(ProviderService.ProviderDetail detail) {
+    public ProviderResponse toProviderDetailResponse(ProviderService.ProviderDetail detail) {
         ProviderEntity entity = detail.provider();
 
         List<ProviderIdentifierDto> identifiers = detail.identifiers() != null
                 ? detail.identifiers().stream()
                     .map(i -> new ProviderIdentifierDto(
-                            i.getId(), i.getIdentifierSystem(), i.getIdentifierValue(),
-                            i.getIssuingCouncilId(), i.getStatus(),
-                            i.getIssuedDate(), i.getExpiryDate()))
+                            i.getId(),
+                            i.getIdentifierSystem(),
+                            i.getIdentifierType(),
+                            i.getIdentifierValue(),
+                            i.getIssuingCouncilId(),
+                            i.getStatus(),
+                            i.getVerificationState(),
+                            i.isPrimary(),
+                            i.getEffectiveFrom(),
+                            i.getEffectiveTo(),
+                            i.getIssuedDate(),
+                            i.getExpiryDate()))
                     .toList()
                 : List.of();
 
@@ -269,6 +279,7 @@ public class ProviderController {
         return new ProviderResponse(
                 entity.getProviderPublicId(),
                 entity.getProviderRef(),
+                entity.getImpiloHealthId(),
                 entity.getTitle(),
                 entity.getGivenName(),
                 entity.getFamilyName(),
@@ -301,6 +312,7 @@ public class ProviderController {
     private ProviderSummary toProviderSummary(ProviderEntity entity) {
         return new ProviderSummary(
                 entity.getProviderPublicId(),
+                entity.getImpiloHealthId(),
                 entity.getTitle(),
                 entity.getGivenName(),
                 entity.getFamilyName(),

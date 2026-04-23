@@ -35,4 +35,6 @@ public interface ProviderRepository extends JpaRepository<ProviderEntity, Long> 
     Page<ProviderEntity> findByTenantIdAndProfession(UUID tenantId, String profession, Pageable pageable);
 
     List<ProviderEntity> findByStatus(String status);
+
+    Optional<ProviderEntity> findByTenantIdAndImpiloHealthId(UUID tenantId, UUID impiloHealthId);
 }

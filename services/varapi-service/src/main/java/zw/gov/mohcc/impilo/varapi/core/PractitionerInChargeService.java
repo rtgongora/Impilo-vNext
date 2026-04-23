@@ -1,5 +1,7 @@
 package zw.gov.mohcc.impilo.varapi.core;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -18,6 +20,7 @@ import zw.gov.mohcc.impilo.varapi.persistence.repository.PractitionerInChargeAss
 import zw.gov.mohcc.impilo.varapi.persistence.repository.ProviderRepository;
 
 import java.time.LocalDate;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -36,6 +39,7 @@ public class PractitionerInChargeService {
     private final LicenseRepository licenseRepository;
     private final TusoClient tusoClient;
     private final EventOutboxRepository outboxRepository;
+    private final ObjectMapper objectMapper;
     private final EventTopicRegistry topics = new EventTopicRegistry("varapi");
 
     public PractitionerInChargeService(
@@ -43,12 +47,14 @@ public class PractitionerInChargeService {
             ProviderRepository providerRepository,
             LicenseRepository licenseRepository,
             TusoClient tusoClient,
-            EventOutboxRepository outboxRepository) {
+            EventOutboxRepository outboxRepository,
+            ObjectMapper objectMapper) {
         this.picRepository = picRepository;
         this.providerRepository = providerRepository;
         this.licenseRepository = licenseRepository;
         this.tusoClient = tusoClient;
         this.outboxRepository = outboxRepository;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -107,8 +113,13 @@ public class PractitionerInChargeService {
 
         publishEvent(ctx, "PIC_ASSIGNMENT", assignment.getId().toString(),
                 topics.eventType("pic_assignment", "created"),
-                String.format("{\"assignmentId\":%d,\"providerId\":%d,\"facilityId\":%d,\"approvalState\":\"PENDING\"}",
-                        assignment.getId(), providerId, facilityId));
+                picPayloadJson(Map.of(
+                        "assignmentId", assignment.getId(),
+                        "providerId", providerId,
+                        "providerPublicId", provider.getProviderPublicId(),
+                        "impiloHealthId", provider.getImpiloHealthId().toString(),
+                        "facilityId", facilityId,
+                        "approvalState", "PENDING")));
 
         return assignment;
     }
@@ -139,10 +150,16 @@ public class PractitionerInChargeService {
         assignment = picRepository.save(assignment);
 
         log.info("PIC assignment approved: id={}", assignmentId);
+        ProviderEntity p = assignment.getProvider();
         publishEvent(ctx, "PIC_ASSIGNMENT", assignment.getId().toString(),
                 topics.eventType("pic_assignment", "approved"),
-                String.format("{\"assignmentId\":%d,\"providerId\":%d,\"facilityId\":%d,\"approvalState\":\"APPROVED\"}",
-                        assignmentId, assignment.getProvider().getId(), assignment.getFacilityId()));
+                picPayloadJson(Map.of(
+                        "assignmentId", assignmentId,
+                        "providerId", p.getId(),
+                        "providerPublicId", p.getProviderPublicId(),
+                        "impiloHealthId", p.getImpiloHealthId().toString(),
+                        "facilityId", assignment.getFacilityId(),
+                        "approvalState", "APPROVED")));
 
         return assignment;
     }
@@ -166,10 +183,18 @@ public class PractitionerInChargeService {
         assignment = picRepository.save(assignment);
 
         log.info("PIC assignment rejected: id={}", assignmentId);
+        ProviderEntity p = assignment.getProvider();
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("assignmentId", assignmentId);
+        m.put("providerId", p.getId());
+        m.put("providerPublicId", p.getProviderPublicId());
+        m.put("impiloHealthId", p.getImpiloHealthId().toString());
+        m.put("facilityId", assignment.getFacilityId());
+        m.put("approvalState", "REJECTED");
+        m.put("reason", reason);
         publishEvent(ctx, "PIC_ASSIGNMENT", assignment.getId().toString(),
                 topics.eventType("pic_assignment", "rejected"),
-                String.format("{\"assignmentId\":%d,\"approvalState\":\"REJECTED\",\"reason\":%s}",
-                        assignmentId, reason != null ? "\"" + reason.replace("\"", "\\\"") + "\"" : "null"));
+                picPayloadJson(m));
 
         return assignment;
     }
@@ -200,9 +225,16 @@ public class PractitionerInChargeService {
         assignment = picRepository.save(assignment);
 
         log.info("PIC assignment terminated: id={}", assignmentId);
+        ProviderEntity p = assignment.getProvider();
         publishEvent(ctx, "PIC_ASSIGNMENT", assignment.getId().toString(),
                 topics.eventType("pic_assignment", "terminated"),
-                String.format("{\"assignmentId\":%d,\"status\":\"TERMINATED\"}", assignmentId));
+                picPayloadJson(Map.of(
+                        "assignmentId", assignmentId,
+                        "providerId", p.getId(),
+                        "providerPublicId", p.getProviderPublicId(),
+                        "impiloHealthId", p.getImpiloHealthId().toString(),
+                        "facilityId", assignment.getFacilityId(),
+                        "status", "TERMINATED")));
 
         return assignment;
     }
@@ -377,6 +409,7 @@ public class PractitionerInChargeService {
                 .map(p -> Map.<String, Object>of(
                         "providerId", p.getId(),
                         "providerPublicId", p.getProviderPublicId(),
+                        "impiloHealthId", p.getImpiloHealthId().toString(),
                         "status", p.getStatus()))
                 .toList();
     }
@@ -419,6 +452,14 @@ public class PractitionerInChargeService {
         }
 
         return null;
+    }
+
+    private String picPayloadJson(Map<String, ?> fields) {
+        try {
+            return objectMapper.writeValueAsString(fields);
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("PIC event payload serialization failed", e);
+        }
     }
 
     private void publishEvent(TrustContext ctx, String aggregateType, String aggregateId, String eventType, String payload) {

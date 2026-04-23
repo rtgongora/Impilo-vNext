@@ -14,9 +14,9 @@
     <artifactId>search-service</artifactId>
     <name>Search Service — SQL-backed Entity Search &amp; Indexing</name>
     <description>
-        v1.1-native search service: provides entity indexing, removal,
-        and SQL ILIKE-based search with pagination. Emits outbox events
-        for index mutations.
+        v1.1-native search service: entity indexing, SQL-backed search,
+        optional dense embeddings (HTTP or local hash) for semantic / hybrid
+        cosine ranking, and outbox events for index mutations.
     </description>
 
     <dependencies>
@@ -113,6 +113,18 @@
             <groupId>zw.gov.mohcc.impilo</groupId>
             <artifactId>tech-companion-harness</artifactId>
             <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>1.21.4</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>1.21.4</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

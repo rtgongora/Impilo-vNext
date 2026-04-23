@@ -12,10 +12,12 @@ import { RegistryPlaneContextBar } from "@/components/experience/RegistryPlaneCo
 import { PageShell } from "@/components/PageShell";
 import { useProviderCouncilQueue } from "@/hooks/queries/useProviderCouncil";
 import { useSearchParams } from "next/navigation";
+import { CouncilLearningEvidencePanel } from "@/components/learning/CouncilLearningEvidencePanel";
 
 export default function CouncilWorkspacePage() {
   const searchParams = useSearchParams();
   const councilId = searchParams.get("councilId") ?? undefined;
+  const providerPublicId = searchParams.get("providerPublicId") ?? undefined;
   const workflowStates = searchParams.get("workflowStates") ?? "SUBMITTED,UNDER_ADMIN_REVIEW,AWAITING_PAYMENT,READY_FOR_REVIEW";
   const { data, isLoading } = useProviderCouncilQueue(councilId, workflowStates);
 
@@ -38,8 +40,14 @@ export default function CouncilWorkspacePage() {
 
         <p className="text-sm text-gray-600 mb-4">
           Use <code className="bg-gray-100 px-1 rounded">?councilId=&lt;id&gt;</code> and optional{" "}
-          <code className="bg-gray-100 px-1 rounded">workflowStates=</code> (comma-separated).
+          <code className="bg-gray-100 px-1 rounded">workflowStates=</code> (comma-separated). Add{" "}
+          <code className="bg-gray-100 px-1 rounded">providerPublicId=</code> to surface learning-service completion
+          evidence for a provider.
         </p>
+
+        <div className="mb-6">
+          <CouncilLearningEvidencePanel providerPublicId={providerPublicId} />
+        </div>
 
         {!councilId ? (
           <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">

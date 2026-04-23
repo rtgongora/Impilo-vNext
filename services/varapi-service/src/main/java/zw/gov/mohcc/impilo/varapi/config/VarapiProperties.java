@@ -16,7 +16,9 @@ public class VarapiProperties {
     private GovernanceProperties governance = new GovernanceProperties();
     private MusheXProperties mushex = new MusheXProperties();
     private FundoProperties fundo = new FundoProperties();
+    private LearningPlatformSyncProperties learningPlatformSync = new LearningPlatformSyncProperties();
     private CouncilRegulatoryProperties councilRegulatory = new CouncilRegulatoryProperties();
+    private IdentityProperties identity = new IdentityProperties();
 
     public String getRegistryMode() { return registryMode; }
     public void setRegistryMode(String registryMode) { this.registryMode = registryMode; }
@@ -54,10 +56,21 @@ public class VarapiProperties {
     public FundoProperties getFundo() { return fundo; }
     public void setFundo(FundoProperties fundo) { this.fundo = fundo; }
 
+    public LearningPlatformSyncProperties getLearningPlatformSync() {
+        return learningPlatformSync;
+    }
+
+    public void setLearningPlatformSync(LearningPlatformSyncProperties learningPlatformSync) {
+        this.learningPlatformSync = learningPlatformSync;
+    }
+
     public CouncilRegulatoryProperties getCouncilRegulatory() { return councilRegulatory; }
     public void setCouncilRegulatory(CouncilRegulatoryProperties councilRegulatory) {
         this.councilRegulatory = councilRegulatory;
     }
+
+    public IdentityProperties getIdentity() { return identity; }
+    public void setIdentity(IdentityProperties identity) { this.identity = identity; }
 
     // --- Nested ---
 
@@ -176,6 +189,45 @@ public class VarapiProperties {
         public boolean isAutoAcceptCpdFromFundo() { return autoAcceptCpdFromFundo; }
         public void setAutoAcceptCpdFromFundo(boolean autoAcceptCpdFromFundo) {
             this.autoAcceptCpdFromFundo = autoAcceptCpdFromFundo;
+        }
+    }
+
+    /** Optional sync to learning-service after Fundo webhook ingestion. */
+    public static class LearningPlatformSyncProperties {
+        private String baseUrl = "";
+        private String internalApiKey = "";
+
+        public String getBaseUrl() {
+            return baseUrl;
+        }
+
+        public void setBaseUrl(String baseUrl) {
+            this.baseUrl = baseUrl;
+        }
+
+        public String getInternalApiKey() {
+            return internalApiKey;
+        }
+
+        public void setInternalApiKey(String internalApiKey) {
+            this.internalApiKey = internalApiKey;
+        }
+    }
+
+    /** Experience Doctrine: Impilo ID (Health ID) anchors provider profiles. */
+    public static class IdentityProperties {
+        private boolean requireImpiloHealthIdOnProviderCreate = true;
+        private boolean requireImpiloHealthIdForFacilityAffiliation = true;
+
+        public boolean isRequireImpiloHealthIdOnProviderCreate() { return requireImpiloHealthIdOnProviderCreate; }
+        public void setRequireImpiloHealthIdOnProviderCreate(boolean requireImpiloHealthIdOnProviderCreate) {
+            this.requireImpiloHealthIdOnProviderCreate = requireImpiloHealthIdOnProviderCreate;
+        }
+        public boolean isRequireImpiloHealthIdForFacilityAffiliation() {
+            return requireImpiloHealthIdForFacilityAffiliation;
+        }
+        public void setRequireImpiloHealthIdForFacilityAffiliation(boolean requireImpiloHealthIdForFacilityAffiliation) {
+            this.requireImpiloHealthIdForFacilityAffiliation = requireImpiloHealthIdForFacilityAffiliation;
         }
     }
 

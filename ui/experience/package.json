@@ -27,7 +27,8 @@
     "@radix-ui/react-navigation-menu": "^1.2.0",
     "@radix-ui/react-toast": "^1.2.1",
     "lucide-react": "^0.441.0",
-    "framer-motion": "^11.5.4"
+    "framer-motion": "^11.5.4",
+    "dicom-parser": "^1.8.21"
   },
   "devDependencies": {
     "typescript": "~5.5.4",

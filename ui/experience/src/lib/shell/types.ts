@@ -42,6 +42,7 @@ export type RunningTaskType =
   | "workspace"
   | "registry_record"
   | "document"
+  | "dicom_viewer"
   | "shell_utility"
   | "other";
 

@@ -21,6 +21,18 @@ export const SHELL_APPS: AppDefinition[] = [
     weight: 0,
   },
   {
+    id: "app-learning",
+    appCode: "learning",
+    name: "Learning",
+    description: "Fundo courses, SOPs, and role-aware training",
+    icon: "GraduationCap",
+    category: "citizen",
+    href: "/learning",
+    activeFlag: true,
+    systemAppFlag: false,
+    weight: 3,
+  },
+  {
     id: "app-clinical",
     appCode: "clinical",
     name: "Clinical Hub",
@@ -230,6 +242,12 @@ export const SHELL_COMMANDS: ShellCommand[] = [
     label: "Go to Home",
     keywords: ["home", "dashboard"],
     action: { type: "navigate", href: "/home" },
+  },
+  {
+    id: "cmd-learning",
+    label: "Open Learning hub",
+    keywords: ["learning", "training", "fundo", "cpd", "courses", "sop"],
+    action: { type: "navigate", href: "/learning" },
   },
   {
     id: "cmd-file-manager",

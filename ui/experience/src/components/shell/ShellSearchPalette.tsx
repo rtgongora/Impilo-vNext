@@ -4,8 +4,11 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Hash, Loader2, Search, X } from "lucide-react";
 import { useAuthStore } from "@/hooks/useAuthStore";
+import { useFacilityStore } from "@/hooks/useFacilityStore";
+import { fetchShellFusionHints } from "@/hooks/useIntelligence";
 import { useShellStore } from "@/hooks/useShellStore";
 import { apiClient } from "@/lib/api-client";
+import type { ShellFusionHint } from "@/lib/intelligence/types";
 import { listVisibleShellApps, visibleShellCommands } from "@/lib/shell/app-registry";
 import type { ShellCommand } from "@/lib/shell/types";
 import { ShellIcon } from "./ShellIcon";
@@ -51,9 +54,63 @@ function normalizeHits(raw: unknown): PlatformHit[] {
     .filter(Boolean) as PlatformHit[];
 }
 
+function titleFromIndexHit(hit: Record<string, unknown>): string {
+  const cj = hit.contentJson as Record<string, unknown> | undefined;
+  const t =
+    (cj && typeof cj.title === "string" && cj.title) ||
+    (cj && typeof cj.name === "string" && cj.name) ||
+    (typeof hit.searchableText === "string" && hit.searchableText.slice(0, 120)) ||
+    (typeof hit.entityType === "string" ? hit.entityType : "entity");
+  return String(t);
+}
+
+function normalizeFusionHints(raw: unknown): ShellFusionHint[] {
+  if (!raw || typeof raw !== "object") return [];
+  const root = raw as Record<string, unknown>;
+  const data = root.data as Record<string, unknown> | undefined;
+  const hints = data?.hints;
+  if (!Array.isArray(hints)) return [];
+  return hints
+    .map((h, index) => {
+      if (!h || typeof h !== "object") return null;
+      const row = h as Record<string, unknown>;
+      const source = typeof row.source === "string" ? row.source : "fusion";
+      const hit = row.hit as Record<string, unknown> | undefined;
+      if (!hit) return null;
+      let title = titleFromIndexHit(hit);
+      if (source === "guidance_knowledge") {
+        title =
+          (typeof hit.title === "string" && hit.title) ||
+          (typeof hit.headline === "string" && hit.headline) ||
+          title;
+      }
+      const subtitle =
+        typeof hit.searchableText === "string"
+          ? hit.searchableText.slice(0, 120)
+          : typeof hit.summary === "string"
+            ? hit.summary.slice(0, 120)
+            : source.replace(/_/g, " ");
+      const ref: IndexSearchHitRef = {
+        entityType: typeof hit.entityType === "string" ? hit.entityType : "entity",
+        entityId: typeof hit.entityId === "string" ? hit.entityId : "",
+        contentJson: hit.contentJson as Record<string, unknown> | undefined,
+      };
+      const href = resolveIndexHitHref(ref) ?? undefined;
+      return {
+        id: `fusion-${source}-${index}`,
+        source,
+        title: String(title),
+        subtitle: String(subtitle),
+        href: href ?? undefined,
+      };
+    })
+    .filter(Boolean) as ShellFusionHint[];
+}
+
 export function ShellSearchPalette() {
   const router = useRouter();
   const hasRole = useAuthStore((s) => s.hasRole);
+  const facilityId = useFacilityStore((s) => s.facility?.id ?? null);
   const setSearchOpen = useShellStore((s) => s.setSearchOpen);
   const recordRecent = useShellStore((s) => s.recordRecent);
   const openTasks = useShellStore((s) => s.openTasks);
@@ -62,6 +119,7 @@ export function ShellSearchPalette() {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [platformHits, setPlatformHits] = useState<PlatformHit[]>([]);
+  const [fusionHints, setFusionHints] = useState<ShellFusionHint[]>([]);
 
   const q = query.trim().toLowerCase();
 
@@ -282,6 +340,59 @@ export function ShellSearchPalette() {
                     </button>
                   </li>
                 ))}
+              </ul>
+            </section>
+          ) : null}
+
+          {q.length >= 2 && fusionHints.length > 0 ? (
+            <section className="mb-3">
+              <h3 className="px-2 pb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                Fused hints
+              </h3>
+              <p className="px-2 pb-1 text-[10px] text-slate-500">
+                Index + guidance knowledge (Health Intelligence plane). Same visibility rules as underlying services.
+              </p>
+              <ul>
+                {fusionHints.map((h) => {
+                  const body = (
+                    <>
+                      <span className="font-medium text-slate-800 dark:text-slate-100">{h.title}</span>
+                      <span className="block text-xs text-slate-500">
+                        {h.source.replace(/_/g, " ")}
+                        {h.href ? " · Open" : ""} · {h.subtitle}
+                      </span>
+                    </>
+                  );
+                  if (h.href) {
+                    return (
+                      <li key={h.id}>
+                        <button
+                          type="button"
+                          className="w-full rounded-lg px-2 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-900"
+                          onClick={() => {
+                            recordRecent({
+                              kind: "resource",
+                              title: h.title,
+                              subtitle: `${h.source} · fused`,
+                              href: h.href!,
+                              refKey: `fusion:${h.id}`,
+                              sensitivity: "normal",
+                            });
+                            router.push(h.href!);
+                            setSearchOpen(false);
+                          }}
+                        >
+                          {body}
+                        </button>
+                      </li>
+                    );
+                  }
+                  return (
+                    <li key={h.id}>
+                      <div className="rounded-lg px-2 py-2">{body}</div>
+                    </li>
+                  );
+                })}
               </ul>
             </section>
           ) : null}
