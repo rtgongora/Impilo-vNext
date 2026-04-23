@@ -4,7 +4,7 @@
  * These components make the experience layer "magical":
  * - ProactiveAssistant: contextual alerts, reminders, conversational chat
  * - WorkspaceContextSwitcher: WORK / MY PROFESSIONAL / MY LIFE zone switching
- * - UnifiedSearch: Cmd+K federated search across all planes
+ * - UnifiedSearch: legacy mount → opens shell search (see ShellChrome)
  * - SmartEncounterFlow: guided clinical workflow with CDS integration
  */
 

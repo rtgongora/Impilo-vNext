@@ -58,6 +58,10 @@ export interface SiteRegistryProfile {
   enforcementCases: UnknownRecord[];
   statusHistory: UnknownRecord[];
   auditEvents: UnknownRecord[];
+  /** Present when BFF includes document attachments for the site */
+  documents?: UnknownRecord[];
+  /** Present when BFF includes staff / assignment rows */
+  assignments?: UnknownRecord[];
 }
 
 function normalizeSummary(row: unknown): SiteRegistrySummary {
@@ -104,6 +108,8 @@ function normalizeProfile(payload: unknown): SiteRegistryProfile {
     enforcementCases: Array.isArray(o.enforcementCases) ? (o.enforcementCases as UnknownRecord[]) : [],
     statusHistory: Array.isArray(o.statusHistory) ? (o.statusHistory as UnknownRecord[]) : [],
     auditEvents: Array.isArray(o.auditEvents) ? (o.auditEvents as UnknownRecord[]) : [],
+    documents: Array.isArray(o.documents) ? (o.documents as UnknownRecord[]) : [],
+    assignments: Array.isArray(o.assignments) ? (o.assignments as UnknownRecord[]) : [],
   };
 }
 
@@ -119,17 +125,18 @@ export function useSiteRegistrySites(params: {
   return useQuery({
     queryKey: ["site-registry-sites", params],
     queryFn: async () => {
-      const response = await apiClient.get<{ data: unknown }>("/internal/v1/public-health/site-registry/sites", {
-        params: {
-          search: params.search || undefined,
-          regulatory_status: params.regulatoryStatus || undefined,
-          site_category: params.siteCategory || undefined,
-          province: params.province || undefined,
-          district: params.district || undefined,
-          page: params.page ?? 0,
-          size: params.size ?? 20,
-        },
-      });
+      const sp = new URLSearchParams();
+      if (params.search) sp.set("search", params.search);
+      if (params.regulatoryStatus) sp.set("regulatory_status", params.regulatoryStatus);
+      if (params.siteCategory) sp.set("site_category", params.siteCategory);
+      if (params.province) sp.set("province", params.province);
+      if (params.district) sp.set("district", params.district);
+      sp.set("page", String(params.page ?? 0));
+      sp.set("size", String(params.size ?? 20));
+      const qs = sp.toString();
+      const response = await apiClient.get<{ data: unknown }>(
+        `/internal/v1/public-health/site-registry/sites${qs ? `?${qs}` : ""}`,
+      );
       const data = asRecord(response.data);
       const items = Array.isArray(data.items) ? (data.items as unknown[]) : [];
       return items.map(normalizeSummary);
@@ -224,8 +231,15 @@ export function useIssueLicence() {
 export function useCreateRenewalApplication() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (args: { siteId: string; applicantName?: string }) =>
-      apiClient.post(`/internal/v1/public-health/site-registry/sites/${encodeURIComponent(args.siteId)}/renewals`, {}, { params: { applicantName: args.applicantName } }),
+    mutationFn: (args: { siteId: string; applicantName?: string }) => {
+      const sp = new URLSearchParams();
+      if (args.applicantName) sp.set("applicantName", args.applicantName);
+      const qs = sp.toString();
+      return apiClient.post(
+        `/internal/v1/public-health/site-registry/sites/${encodeURIComponent(args.siteId)}/renewals${qs ? `?${qs}` : ""}`,
+        {},
+      );
+    },
     onSuccess: (_data, args) => {
       void qc.invalidateQueries({ queryKey: ["site-registry-site", args.siteId] });
     },
@@ -253,9 +267,7 @@ export function useUploadSiteDocument() {
       form.append("documentType", args.documentType);
       if (args.applicationId) form.append("applicationId", args.applicationId);
       if (args.notes) form.append("notes", args.notes);
-      return apiClient.post("/internal/v1/public-health/site-registry/documents", form, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      return apiClient.postForm("/internal/v1/public-health/site-registry/documents", form);
     },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["site-registry-site"] });

@@ -9,12 +9,12 @@ import { apiClient } from "@/lib/api-client";
 import { listVisibleShellApps, visibleShellCommands } from "@/lib/shell/app-registry";
 import type { ShellCommand } from "@/lib/shell/types";
 import { ShellIcon } from "./ShellIcon";
+import { resolveIndexHitHref, type IndexSearchHitRef } from "@/lib/shell/search-hit-routing";
 
-interface PlatformHit {
+interface PlatformHit extends IndexSearchHitRef {
   id: string;
   title: string;
   subtitle: string;
-  entityType: string;
 }
 
 function normalizeHits(raw: unknown): PlatformHit[] {
@@ -30,6 +30,7 @@ function normalizeHits(raw: unknown): PlatformHit[] {
       const o = item as Record<string, unknown>;
       const id = typeof o.id === "string" ? o.id : `hit-${index}`;
       const entityType = typeof o.entityType === "string" ? o.entityType : "entity";
+      const entityId = typeof o.entityId === "string" ? o.entityId : "";
       const cj = o.contentJson as Record<string, unknown> | undefined;
       let title =
         (cj && typeof cj.title === "string" && cj.title) ||
@@ -38,7 +39,14 @@ function normalizeHits(raw: unknown): PlatformHit[] {
         entityType;
       const text = typeof o.searchableText === "string" ? o.searchableText.trim() : "";
       const subtitle = text && text !== title ? text.slice(0, 160) : entityType;
-      return { id, title: String(title), subtitle: String(subtitle), entityType };
+      return {
+        id,
+        title: String(title),
+        subtitle: String(subtitle),
+        entityType,
+        entityId,
+        contentJson: cj,
+      };
     })
     .filter(Boolean) as PlatformHit[];
 }
@@ -126,13 +134,15 @@ export function ShellSearchPalette() {
   );
 
   useEffect(() => {
-    if (q.length < 2) {
+    const trimmed = query.trim();
+    if (trimmed.length < 2) {
       setPlatformHits([]);
+      setLoading(false);
       return;
     }
     const t = setTimeout(() => {
       setLoading(true);
-      const sp = new URLSearchParams({ q: query.trim(), page: "0", size: "8" });
+      const sp = new URLSearchParams({ q: trimmed, page: "0", size: "8" });
       apiClient
         .get<unknown>(`/internal/v1/search?${sp.toString()}`)
         .then((res) => {
@@ -142,7 +152,7 @@ export function ShellSearchPalette() {
         .finally(() => setLoading(false));
     }, 280);
     return () => clearTimeout(t);
-  }, [q.length, query]);
+  }, [query]);
 
   return (
     <div className="fixed inset-0 z-[10001] flex items-start justify-center pt-[12vh]">
@@ -285,16 +295,49 @@ export function ShellSearchPalette() {
                 <p className="px-2 py-3 text-xs text-slate-500">No indexed matches for this query.</p>
               ) : (
                 <ul>
-                  {platformHits.map((h) => (
-                    <li key={h.id}>
-                      <div className="rounded-lg px-2 py-2 hover:bg-slate-50 dark:hover:bg-slate-900">
+                  {platformHits.map((h) => {
+                    const href = resolveIndexHitHref(h);
+                    const body = (
+                      <>
                         <span className="font-medium text-slate-800 dark:text-slate-100">{h.title}</span>
                         <span className="block text-xs text-slate-500">
-                          {h.entityType} · {h.subtitle}
+                          {h.entityType}
+                          {href ? " · Open" : ""} · {h.subtitle}
                         </span>
-                      </div>
-                    </li>
-                  ))}
+                      </>
+                    );
+                    if (href) {
+                      return (
+                        <li key={h.id}>
+                          <button
+                            type="button"
+                            className="w-full rounded-lg px-2 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-900"
+                            onClick={() => {
+                              recordRecent({
+                                kind: "resource",
+                                title: h.title,
+                                subtitle: `${h.entityType} · index`,
+                                href,
+                                refKey: `search-hit:${h.id}`,
+                                sensitivity: h.entityType.toLowerCase().includes("patient")
+                                  ? "clinical"
+                                  : "normal",
+                              });
+                              router.push(href);
+                              setSearchOpen(false);
+                            }}
+                          >
+                            {body}
+                          </button>
+                        </li>
+                      );
+                    }
+                    return (
+                      <li key={h.id}>
+                        <div className="rounded-lg px-2 py-2">{body}</div>
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </section>

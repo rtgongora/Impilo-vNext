@@ -68,7 +68,10 @@ export default function OrganisationGovernanceDetailPage() {
 
   return (
     <AppLayout>
-      <PageShell>
+      <PageShell
+        title={summary?.name ?? "Organisation"}
+        subtitle="Governance summary — linked facilities, sites, and assignments"
+      >
         <OrganizationPlaneContextBar />
         <div className="mb-6 flex items-center gap-3">
           <Link
@@ -89,8 +92,7 @@ export default function OrganisationGovernanceDetailPage() {
             <div className="flex items-start gap-4">
               <Building2 className="h-10 w-10 text-slate-400" />
               <div>
-                <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{summary.name}</h1>
-                <p className="mt-1 text-sm text-slate-600">
+                <p className="text-sm text-slate-600">
                   {summary.organisationCode} · {summary.status}
                 </p>
               </div>

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useShellStore } from "@/hooks/useShellStore";
 import { shouldShowExperienceShell } from "@/lib/shell/shell-visibility";
+import { ShellEhrTaskEnricher } from "./ShellEhrTaskEnricher";
 import { ShellRouteSync } from "./ShellRouteSync";
 import { ShellSearchPalette } from "./ShellSearchPalette";
 import { ShellStartMenu } from "./ShellStartMenu";
@@ -63,7 +64,12 @@ export function ShellChrome() {
   return (
     <>
       <ShellRouteSync />
-      {show ? <ShellTaskbar /> : null}
+      {show ? (
+        <>
+          <ShellEhrTaskEnricher />
+          <ShellTaskbar />
+        </>
+      ) : null}
       {show && startOpen ? <ShellStartMenu /> : null}
       {show && searchOpen ? <ShellSearchPalette /> : null}
       {show ? <ShellTaskManagerModal /> : null}

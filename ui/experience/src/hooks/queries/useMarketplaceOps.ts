@@ -15,10 +15,11 @@ import { apiClient } from "@/lib/api-client";
 
 export type MarketplaceOpsJson = unknown;
 
-function buildQuery(params: Record<string, string | number | undefined>) {
+function buildQuery(params: Record<string, string | number | boolean | undefined>) {
   const query = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {
-    if (value != null && value !== "") query.set(key, String(value));
+    if (value == null || value === "") continue;
+    query.set(key, typeof value === "boolean" ? (value ? "true" : "false") : String(value));
   }
   const suffix = query.toString();
   return suffix ? `?${suffix}` : "";

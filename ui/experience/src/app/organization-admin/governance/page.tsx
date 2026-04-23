@@ -60,7 +60,10 @@ export default function OrganisationGovernancePage() {
 
   return (
     <AppLayout>
-      <PageShell>
+      <PageShell
+        title="Organisations & governance"
+        subtitle="Legal/operating entities, facility and site linkages, jurisdictions, role definitions, and assignment scope used by Tshepo for facility-aware authorization."
+      >
         <OrganizationPlaneContextBar />
         <div className="mb-6 flex items-center gap-3">
           <Link
@@ -71,14 +74,7 @@ export default function OrganisationGovernancePage() {
             Organisation admin
           </Link>
         </div>
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Organisations & governance</h1>
-            <p className="mt-2 max-w-2xl text-sm text-slate-600">
-              Legal/operating entities, facility and site linkages, jurisdictions, role definitions, and assignment scope
-              used by Tshepo for facility-aware authorization.
-            </p>
-          </div>
+        <div className="flex items-start justify-end gap-4">
           <Network className="h-10 w-10 text-slate-400" aria-hidden />
         </div>
 

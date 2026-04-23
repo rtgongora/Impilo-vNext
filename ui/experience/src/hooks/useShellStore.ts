@@ -70,6 +70,9 @@ export interface ShellStore {
   closeTask: (id: string) => void;
   clearClosedTasks: () => void;
 
+  /** Refine task title when async context resolves (e.g. patient display name). */
+  updateTaskTitleForRoute: (route: string, title: string) => void;
+
   recordRecent: (item: Omit<RecentItem, "id" | "recordedAt">) => void;
   launchApp: (app: AppDefinition, routerPush: (href: string) => void) => void;
 
@@ -201,6 +204,12 @@ export const useShellStore = create<ShellStore>()(
         openTasks: next,
         activeTaskId: get().activeTaskId === id ? next.find((t) => t.status === "open")?.id ?? null : get().activeTaskId,
       });
+      saveJson(STORAGE_TASKS, next);
+    },
+
+    updateTaskTitleForRoute: (route, title) => {
+      const next = get().openTasks.map((t) => (t.route === route ? { ...t, title } : t));
+      set({ openTasks: next });
       saveJson(STORAGE_TASKS, next);
     },
 

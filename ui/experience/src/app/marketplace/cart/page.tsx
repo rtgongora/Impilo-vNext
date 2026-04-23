@@ -46,18 +46,24 @@ export default function MarketplaceCartPage() {
           <div className="space-y-4">
             {/* Cart items */}
             <div className="rounded-lg border border-gray-200 bg-white divide-y">
-              {items.map((item: { id: string; name: string; quantity: number; unitPrice: number }) => (
-                <div key={String(item.id ?? item.msikaCoreCode)} className="flex items-center justify-between p-4">
+              {items.map((raw) => {
+                const item = raw as Record<string, unknown>;
+                const lineId = String(item.id ?? item.msikaCoreCode ?? "item");
+                const code = String(item.msikaCoreCode ?? item.name ?? "Unknown item");
+                const qty = Number(item.qty ?? item.quantity ?? 1);
+                return (
+                <div key={lineId} className="flex items-center justify-between p-4">
                   <div>
-                    <p className="font-medium text-gray-900">{String(item.msikaCoreCode ?? "Unknown item")}</p>
-                    <p className="text-sm text-gray-500">Qty: {Number(item.qty ?? 1)}</p>
+                    <p className="font-medium text-gray-900">{code}</p>
+                    <p className="text-sm text-gray-500">Qty: {qty}</p>
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="font-semibold">$0.00</span>
                     <button className="text-red-400 hover:text-red-600"><Trash2 className="h-4 w-4" /></button>
                   </div>
                 </div>
-              ))}
+              );
+              })}
               {/* Total */}
               <div className="flex items-center justify-between p-4 bg-gray-50">
                 <span className="text-sm font-semibold text-gray-900">Total</span>

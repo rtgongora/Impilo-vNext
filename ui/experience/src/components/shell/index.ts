@@ -1,3 +1,4 @@
+export { ShellEhrTaskEnricher } from "./ShellEhrTaskEnricher";
 export { ShellChrome } from "./ShellChrome";
 export { ShellRouteSync } from "./ShellRouteSync";
 export { ShellTaskbar } from "./ShellTaskbar";

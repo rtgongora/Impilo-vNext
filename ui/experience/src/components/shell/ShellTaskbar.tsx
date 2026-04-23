@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { FolderOpen, Layers, LayoutGrid, Search } from "lucide-react";
+import { Bell, FolderOpen, Layers, LayoutGrid, Search } from "lucide-react";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useShellStore } from "@/hooks/useShellStore";
 import { findShellAppByCode, listVisibleShellApps, SHELL_TASKBAR_HEIGHT_PX } from "@/lib/shell/app-registry";
@@ -167,7 +167,21 @@ export function ShellTaskbar() {
           })}
         </div>
 
-        <div className="ml-auto hidden shrink-0 items-center gap-1 lg:flex">
+        <div className="ml-auto hidden shrink-0 items-center gap-2 lg:flex" title="System tray (reserved)">
+          <span className="flex items-center gap-1 rounded-lg border border-dashed border-slate-200 px-1.5 py-1 dark:border-slate-700">
+            <span
+              className="flex h-8 w-8 items-center justify-center rounded-md bg-slate-100 text-slate-400 dark:bg-slate-900 dark:text-slate-500"
+              title="Notifications (planned)"
+            >
+              <Bell className="h-4 w-4" />
+            </span>
+            <span
+              className="flex h-8 w-8 items-center justify-center rounded-md bg-slate-100 text-slate-400 dark:bg-slate-900 dark:text-slate-500"
+              title="Background jobs (planned)"
+            >
+              <span className="text-[10px] font-bold">···</span>
+            </span>
+          </span>
           <button
             type="button"
             className="rounded-md px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"

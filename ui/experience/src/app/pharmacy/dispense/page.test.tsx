@@ -98,6 +98,7 @@ describe("PharmacyDispensePage", () => {
     expect(post).toHaveBeenCalledWith("/internal/v1/pharmacy/dispense", {
       prescription_id: "rx-1",
       dispensed_by: "user-1",
+      payment_method: "CASH",
     });
     expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ["prescriptions", { status: "PENDING" }] });
   });

@@ -256,14 +256,15 @@ export default function SiteRegistryProfilePage({ params }: { params: { siteId: 
             </div>
             <div className="divide-y">
               {documents.map((d) => {
-                const documentId = String((d as any).documentId || "");
-                const state = String((d as any).verificationState || "UNVERIFIED");
+                const row = d as Record<string, unknown>;
+                const documentId = String(row.documentId ?? "");
+                const state = String(row.verificationState ?? "UNVERIFIED");
                 return (
                   <div key={documentId} className="flex flex-col gap-2 px-4 py-3 md:flex-row md:items-center md:justify-between">
                     <div>
-                      <div className="text-sm font-medium text-gray-900">{String((d as any).documentType || "DOC")}</div>
+                      <div className="text-sm font-medium text-gray-900">{String(row.documentType ?? "DOC")}</div>
                       <div className="text-xs text-gray-500">State: {state}</div>
-                      <div className="text-[11px] text-gray-400 font-mono">{String((d as any).fileReference || "")}</div>
+                      <div className="text-[11px] text-gray-400 font-mono">{String(row.fileReference ?? "")}</div>
                     </div>
                     <div className="flex items-center gap-2">
                       <button
@@ -301,15 +302,18 @@ export default function SiteRegistryProfilePage({ params }: { params: { siteId: 
               </button>
             </div>
             <div className="divide-y">
-              {assignments.map((a) => (
-                <div key={String((a as any).assignmentId || "")} className="px-4 py-3">
-                  <div className="text-sm font-medium text-gray-900">{String((a as any).assignmentType || "ASSIGNMENT")}</div>
+              {assignments.map((a) => {
+                const row = a as Record<string, unknown>;
+                return (
+                <div key={String(row.assignmentId ?? "")} className="px-4 py-3">
+                  <div className="text-sm font-medium text-gray-900">{String(row.assignmentType ?? "ASSIGNMENT")}</div>
                   <div className="text-xs text-gray-500">
-                    Status: {String((a as any).status || "—")} · Role: {String((a as any).assignedRole || "—")} · Assignee:{" "}
-                    {String((a as any).assignedToRef || "—")}
+                    Status: {String(row.status ?? "—")} · Role: {String(row.assignedRole ?? "—")} · Assignee:{" "}
+                    {String(row.assignedToRef ?? "—")}
                   </div>
                 </div>
-              ))}
+              );
+              })}
               {assignments.length === 0 ? <div className="px-4 py-6 text-sm text-gray-500">No assignments.</div> : null}
             </div>
           </div>
