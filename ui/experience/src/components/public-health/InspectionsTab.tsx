@@ -140,11 +140,12 @@ export function InspectionsTab() {
           </p>
         </div>
         <button
-          onClick={() => { setShowNewForm(!showNewForm); setInspSubmitted(false); setInspError(null); }}
-          className="flex items-center gap-1.5 px-4 py-2 bg-amber-600 text-white text-sm font-medium rounded-lg hover:bg-amber-700 transition-colors"
+          type="button"
+          disabled
+          className="flex items-center gap-1.5 px-4 py-2 bg-gray-200 text-gray-500 text-sm font-medium rounded-lg cursor-not-allowed"
         >
-          {showNewForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-          {showNewForm ? "Cancel" : "Record New Inspection"}
+          <Plus className="w-4 h-4" />
+          Record New Inspection (pending)
         </button>
       </div>
 
@@ -359,19 +360,20 @@ export function InspectionsTab() {
       <div className="flex flex-wrap gap-1 border-b border-gray-200">
         {[
           { key: "premises" as const, label: "Premises (Indawo)" },
-          { key: "inspections" as const, label: "Inspection register" },
-          { key: "enforcement" as const, label: "Enforcement" },
-          { key: "compliance" as const, label: "Compliance overview" },
+          { key: "inspections" as const, label: "Inspection register (pending)" },
+          { key: "enforcement" as const, label: "Enforcement (pending)" },
+          { key: "compliance" as const, label: "Compliance overview (pending)" },
         ].map((tab) => (
           <button
             key={tab.key}
             type="button"
-            onClick={() => setActiveSubTab(tab.key)}
+            onClick={() => tab.key === "premises" && setActiveSubTab(tab.key)}
+            disabled={tab.key !== "premises"}
             className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
               activeSubTab === tab.key
                 ? "border-amber-600 text-amber-600"
                 : "border-transparent text-gray-500 hover:text-gray-700"
-            }`}
+            } ${tab.key !== "premises" ? "cursor-not-allowed opacity-50" : ""}`}
           >
             {tab.label}
           </button>

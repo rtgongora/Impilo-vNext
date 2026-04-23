@@ -49,21 +49,21 @@ impilo:
     redis-ttl-days: ${REGISTRY_INTAKE_REDIS_TTL_DAYS:30}
     events-topic: ${REGISTRY_INTAKE_EVENTS_TOPIC:impilo.registry.intake}
     tshepo-pdp-enabled: ${REGISTRY_INTAKE_TSHEPO_PDP_ENABLED:false}
-    tshepo-pdp-fallback-allow: ${REGISTRY_INTAKE_TSHEPO_PDP_FALLBACK_ALLOW:true}
+    tshepo-pdp-fallback-allow: ${REGISTRY_INTAKE_TSHEPO_PDP_FALLBACK_ALLOW:false}
   intelligence:
     events-topic: ${IMPILO_INTELLIGENCE_EVENTS_TOPIC:impilo.intelligence.events}
     require-tshepo-authorize: ${IMPILO_INTELLIGENCE_REQUIRE_TSHEPO:false}
-    tshepo-pdp-fallback-allow: ${IMPILO_INTELLIGENCE_TSHEPO_FALLBACK_ALLOW:true}
+    tshepo-pdp-fallback-allow: ${IMPILO_INTELLIGENCE_TSHEPO_FALLBACK_ALLOW:false}
   imaging:
     require-tshepo-authorize: ${IMPILO_IMAGING_REQUIRE_TSHEPO:false}
-    tshepo-pdp-fallback-allow: ${IMPILO_IMAGING_TSHEPO_FALLBACK_ALLOW:true}
+    tshepo-pdp-fallback-allow: ${IMPILO_IMAGING_TSHEPO_FALLBACK_ALLOW:false}
     audit-ingest-enabled: ${IMPILO_IMAGING_AUDIT_INGEST_ENABLED:true}
   finance:
     require-tshepo-authorize: ${IMPILO_FINANCE_REQUIRE_TSHEPO:false}
-    tshepo-pdp-fallback-allow: ${IMPILO_FINANCE_TSHEPO_FALLBACK_ALLOW:true}
+    tshepo-pdp-fallback-allow: ${IMPILO_FINANCE_TSHEPO_FALLBACK_ALLOW:false}
   shell-workspace:
     require-tshepo-authorize: ${IMPILO_SHELL_WORKSPACE_REQUIRE_TSHEPO:false}
-    tshepo-pdp-fallback-allow: ${IMPILO_SHELL_WORKSPACE_TSHEPO_FALLBACK_ALLOW:true}
+    tshepo-pdp-fallback-allow: ${IMPILO_SHELL_WORKSPACE_TSHEPO_FALLBACK_ALLOW:false}
     redis-ttl-days: ${IMPILO_SHELL_WORKSPACE_REDIS_TTL_DAYS:120}
   security:
     allow-anonymous: false

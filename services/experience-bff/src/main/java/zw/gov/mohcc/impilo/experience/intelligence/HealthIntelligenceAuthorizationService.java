@@ -27,7 +27,7 @@ public class HealthIntelligenceAuthorizationService {
     @Value("${impilo.intelligence.require-tshepo-authorize:false}")
     private boolean requireTshepoAuthorize;
 
-    @Value("${impilo.intelligence.tshepo-pdp-fallback-allow:true}")
+    @Value("${impilo.intelligence.tshepo-pdp-fallback-allow:false}")
     private boolean tshepoPdpFallbackAllow;
 
     public HealthIntelligenceAuthorizationService(TshepoAuthzServiceClient tshepoAuthzServiceClient) {

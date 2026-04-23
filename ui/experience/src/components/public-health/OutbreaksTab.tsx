@@ -152,12 +152,18 @@ export function OutbreaksTab() {
           </p>
         </div>
         <button
-          onClick={() => { setShowForm(!showForm); setSubmitted(false); setError(null); }}
-          className="flex items-center gap-1.5 px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors"
+          type="button"
+          disabled
+          className="flex items-center gap-1.5 px-4 py-2 bg-gray-200 text-gray-500 text-sm font-medium rounded-lg cursor-not-allowed"
         >
-          {showForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-          {showForm ? "Cancel" : "Record New Event"}
+          <Plus className="w-4 h-4" />
+          Record New Event (pending)
         </button>
+      </div>
+
+      <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-950">
+        New outbreak and incident creation stays disabled until the Experience BFF exposes a governed outbreak write
+        endpoint. Live case visibility remains available below from surveillance-service.
       </div>
 
       {/* Success banner */}

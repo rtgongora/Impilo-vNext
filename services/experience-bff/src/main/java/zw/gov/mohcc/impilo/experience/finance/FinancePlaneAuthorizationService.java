@@ -27,7 +27,7 @@ public class FinancePlaneAuthorizationService {
     @Value("${impilo.finance.require-tshepo-authorize:false}")
     private boolean requireTshepoAuthorize;
 
-    @Value("${impilo.finance.tshepo-pdp-fallback-allow:true}")
+    @Value("${impilo.finance.tshepo-pdp-fallback-allow:false}")
     private boolean tshepoPdpFallbackAllow;
 
     public FinancePlaneAuthorizationService(TshepoAuthzServiceClient tshepoAuthzServiceClient) {

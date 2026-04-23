@@ -1842,11 +1842,11 @@ function TimelineComposer({ userName }: { userName: string }) {
   );
 }
 
-/** Seeded timeline posts + live feed from the BFF */
+/** Live citizen timeline posts from the BFF. */
 function TimelineFeed({ userId }: { userId?: string }) {
   const hasRole = useAuthStore((s) => s.hasRole);
   const isCitizenAccess = hasRole("CITIZEN") || hasRole("SYSTEM_ADMIN") || hasRole("DEVELOPER");
-  const { data } = useQuery<{ data: Array<{ id: string; attributes: Record<string, unknown> }> }>({
+  const { data, isLoading } = useQuery<{ data: Array<{ id: string; attributes: Record<string, unknown> }> }>({
     queryKey: ["personal-feed", userId],
     queryFn: () => apiClient.get("/internal/v1/mobile/citizen/feed?size=10"),
     staleTime: 30_000,
@@ -1925,15 +1925,10 @@ function TimelineFeed({ userId }: { userId?: string }) {
   };
 
   const avatarColors: Record<string, string> = {
-    MoH: "bg-red-100 text-red-700",
-    N: "bg-impilo-100 text-impilo-700",
-    HCH: "bg-blue-100 text-blue-700",
-    CW: "bg-purple-100 text-purple-700",
-    IP: "bg-amber-100 text-amber-700",
+    Y: "bg-impilo-100 text-impilo-700",
   };
 
-  // Merge live feed items ahead of seeded posts
-  const allPosts = [
+  const livePosts = [
     ...liveItems.map((item) => ({
       id: item.id,
       author: (item.attributes.author as string) ?? "You",
@@ -1944,15 +1939,13 @@ function TimelineFeed({ userId }: { userId?: string }) {
       body: (item.attributes.body as string) ?? (item.attributes.title as string) ?? "",
       likes: (item.attributes.likes as number) ?? 0,
       comments: (item.attributes.comments as number) ?? 0,
-      type: "update" as const,
     })),
-    ...seededPosts,
   ];
 
   return (
     <div className="space-y-4">
       {/* Status updates strip — people/entities you follow */}
-      <div className="bg-white rounded-xl border border-gray-200 p-4">
+      <div className="hidden bg-white rounded-xl border border-gray-200 p-4">
         <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Status updates</h3>
         <div className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1">
           {/* Add your status */}
@@ -1997,7 +1990,20 @@ function TimelineFeed({ userId }: { userId?: string }) {
       </div>
 
       {/* Timeline posts */}
-      {allPosts.map((post) => (
+      {isLoading && (
+        <div className="rounded-xl border border-gray-200 bg-white px-4 py-8 text-center text-sm text-gray-500">
+          Loading your citizen timeline…
+        </div>
+      )}
+      {!isLoading && livePosts.length === 0 && (
+        <div className="rounded-xl border border-gray-200 bg-white px-4 py-8 text-center">
+          <p className="text-sm font-medium text-gray-900">No timeline posts yet</p>
+          <p className="mt-1 text-xs text-gray-500">
+            Your home feed will populate when the citizen feed service returns real posts for this account.
+          </p>
+        </div>
+      )}
+      {livePosts.map((post) => (
         <article key={post.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
           {/* Post header */}
           <div className="flex items-center gap-3 px-4 pt-4 pb-2">
@@ -2005,14 +2011,7 @@ function TimelineFeed({ userId }: { userId?: string }) {
               {post.avatar}
             </div>
             <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2">
-                <p className="text-sm font-semibold text-gray-900 truncate">{post.author}</p>
-                {post.type !== "update" && (
-                  <span className={`px-1.5 py-0.5 text-[10px] font-medium rounded border ${typeColors[post.type]}`}>
-                    {post.type.replace("_", " ")}
-                  </span>
-                )}
-              </div>
+              <p className="text-sm font-semibold text-gray-900 truncate">{post.author}</p>
               <p className="text-xs text-gray-400">{post.time}</p>
             </div>
           </div>

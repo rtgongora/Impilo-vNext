@@ -32,6 +32,7 @@ export function useActivities(cpid?: string | null) {
     queryKey: ["wellness-activities", cpid ?? null],
     queryFn: () =>
       apiClient.get<WellnessListResponse>(withPersonCpidQuery("/internal/v1/wellness/activities", cpid)),
+    enabled: !!cpid,
   });
 }
 
@@ -40,6 +41,7 @@ export function useSleepSegments(cpid?: string | null) {
     queryKey: ["wellness-sleep", cpid ?? null],
     queryFn: () =>
       apiClient.get<WellnessListResponse>(withPersonCpidQuery("/internal/v1/wellness/sleep", cpid)),
+    enabled: !!cpid,
   });
 }
 
@@ -56,6 +58,7 @@ export function useDietEntries(cpid?: string | null) {
     queryKey: ["wellness-diet", cpid ?? null],
     queryFn: () =>
       apiClient.get<WellnessListResponse>(withPersonCpidQuery("/internal/v1/wellness/diet", cpid)),
+    enabled: !!cpid,
   });
 }
 
@@ -64,6 +67,7 @@ export function useMoodLog(cpid?: string | null) {
     queryKey: ["wellness-mood", cpid ?? null],
     queryFn: () =>
       apiClient.get<WellnessListResponse>(withPersonCpidQuery("/internal/v1/wellness/mood", cpid)),
+    enabled: !!cpid,
   });
 }
 
@@ -72,6 +76,7 @@ export function useWellnessGoals(cpid?: string | null) {
     queryKey: ["wellness-goals", cpid ?? null],
     queryFn: () =>
       apiClient.get<WellnessListResponse>(withPersonCpidQuery("/internal/v1/wellness/goals", cpid)),
+    enabled: !!cpid,
   });
 }
 

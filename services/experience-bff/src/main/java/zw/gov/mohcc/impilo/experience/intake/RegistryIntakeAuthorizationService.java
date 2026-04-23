@@ -36,7 +36,7 @@ public class RegistryIntakeAuthorizationService {
     @Value("${impilo.registry-intake.tshepo-pdp-enabled:false}")
     private boolean tshepoPdpEnabled;
 
-    @Value("${impilo.registry-intake.tshepo-pdp-fallback-allow:true}")
+    @Value("${impilo.registry-intake.tshepo-pdp-fallback-allow:false}")
     private boolean tshepoPdpFallbackAllow;
 
     public RegistryIntakeAuthorizationService(TshepoAuthzServiceClient tshepoAuthzServiceClient) {

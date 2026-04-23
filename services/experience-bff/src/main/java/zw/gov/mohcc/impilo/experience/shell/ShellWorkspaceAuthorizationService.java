@@ -27,7 +27,7 @@ public class ShellWorkspaceAuthorizationService {
     @Value("${impilo.shell-workspace.require-tshepo-authorize:false}")
     private boolean requireTshepoAuthorize;
 
-    @Value("${impilo.shell-workspace.tshepo-pdp-fallback-allow:true}")
+    @Value("${impilo.shell-workspace.tshepo-pdp-fallback-allow:false}")
     private boolean tshepoPdpFallbackAllow;
 
     public ShellWorkspaceAuthorizationService(TshepoAuthzServiceClient tshepoAuthzServiceClient) {

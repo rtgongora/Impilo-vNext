@@ -58,8 +58,8 @@ export function SurveillanceTab() {
             color: "text-impilo-600",
             sub: ctrError ? "Could not reach counters" : "From /public-health/counters",
           },
-          { label: "Weekly IDSR (demo)", value: "5", color: "text-amber-700", sub: "Facilities in sample W14 grid" },
-          { label: "Reporting completeness (demo)", value: "89%", color: "text-emerald-800", sub: "See weekly tab KPIs" },
+          { label: "Weekly IDSR", value: "—", color: "text-gray-500", sub: "Pending weekly aggregate endpoint" },
+          { label: "Reporting completeness", value: "—", color: "text-gray-500", sub: "Pending weekly aggregate endpoint" },
         ].map((kpi, i) => (
           <div key={i} className="bg-white rounded-lg border border-gray-200 p-3 text-center">
             <p className={`text-2xl font-bold ${kpi.color}`}>{kpi.value}</p>
@@ -74,12 +74,13 @@ export function SurveillanceTab() {
         {[
           { key: "signals" as const, label: "Threshold Signals" },
           { key: "cases" as const, label: "Case-Based Reports" },
-          { key: "weekly" as const, label: "Weekly Aggregate (IDSR)" },
+          { key: "weekly" as const, label: "Weekly Aggregate (pending)" },
         ].map((tab) => (
-          <button key={tab.key} onClick={() => setActiveSubTab(tab.key)}
+          <button key={tab.key} onClick={() => tab.key !== "weekly" && setActiveSubTab(tab.key)}
+            disabled={tab.key === "weekly"}
             className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
               activeSubTab === tab.key ? "border-amber-600 text-amber-600" : "border-transparent text-gray-500 hover:text-gray-700"
-            }`}>
+            } ${tab.key === "weekly" ? "cursor-not-allowed opacity-50" : ""}`}>
             {tab.label}
           </button>
         ))}
@@ -102,9 +103,12 @@ export function SurveillanceTab() {
                 <option value="ACTIVE">Active</option>
                 <option value="INACTIVE">Inactive</option>
               </select>
-              <button onClick={() => setShowNewEvent(!showNewEvent)}
-                className="inline-flex items-center gap-1 px-3 py-1.5 bg-impilo-500 text-white text-xs font-medium rounded-lg hover:bg-impilo-600">
-                <Plus className="h-3.5 w-3.5" /> Report Event
+              <button
+                type="button"
+                disabled
+                className="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-200 text-gray-500 text-xs font-medium rounded-lg cursor-not-allowed"
+              >
+                <Plus className="h-3.5 w-3.5" /> Report Event (pending)
               </button>
             </div>
           </div>
@@ -362,9 +366,12 @@ export function SurveillanceTab() {
               <h4 className="text-sm font-semibold text-gray-900">Case-Based Surveillance Reports</h4>
               <p className="text-xs text-gray-500">Individual case investigations for notifiable diseases</p>
             </div>
-            <button onClick={() => setShowNewCase(!showNewCase)}
-              className="inline-flex items-center gap-1 px-3 py-1.5 bg-impilo-500 text-white text-xs font-medium rounded-lg hover:bg-impilo-600">
-              <Plus className="h-3.5 w-3.5" /> New Case Report
+            <button
+              type="button"
+              disabled
+              className="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-200 text-gray-500 text-xs font-medium rounded-lg cursor-not-allowed"
+            >
+              <Plus className="h-3.5 w-3.5" /> New Case Report (pending)
             </button>
           </div>
 

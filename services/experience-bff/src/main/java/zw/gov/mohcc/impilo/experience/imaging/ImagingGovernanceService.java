@@ -32,7 +32,7 @@ public class ImagingGovernanceService {
     @Value("${impilo.imaging.require-tshepo-authorize:false}")
     private boolean requireTshepoAuthorize;
 
-    @Value("${impilo.imaging.tshepo-pdp-fallback-allow:true}")
+    @Value("${impilo.imaging.tshepo-pdp-fallback-allow:false}")
     private boolean tshepoPdpFallbackAllow;
 
     @Value("${impilo.imaging.audit-ingest-enabled:true}")
