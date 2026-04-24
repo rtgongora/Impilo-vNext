@@ -26,9 +26,12 @@ const nextConfig = {
         source: "/api/v1/authorize",
         destination: `${tshepo}/v1/authorize`,
       },
+      // Only proxy /api/v1/* to the gateway. Do NOT use "/api/:path*" here: it
+      // would steal Next.js Route Handlers under /api/auth/* (OIDC login/token)
+      // and send them to Envoy, producing broken/non-HTML responses in the browser.
       {
-        source: "/api/:path*",
-        destination: `${gateway}/api/:path*`,
+        source: "/api/v1/:path*",
+        destination: `${gateway}/api/v1/:path*`,
       },
     ];
   },

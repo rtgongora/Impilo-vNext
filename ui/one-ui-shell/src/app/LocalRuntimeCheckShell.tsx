@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import Link from "next/link";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Badge,
   Button,
@@ -13,6 +14,16 @@ import type { ActorType, AuthzResponse, PurposeOfUse } from "@/lib/contracts";
 import { apiClient } from "@/lib/apiClient";
 import { useSession } from "@/hooks/useSession";
 import { useWorkContext } from "@/hooks/useContext";
+import {
+  clearPersistedShellSession,
+  savePersistedShellSession,
+} from "@/lib/auth/sessionStorage";
+import {
+  getKeycloakClientId,
+  getKeycloakIssuerUrl,
+  getShellPublicUrl,
+} from "@/lib/auth/shellOidcEnv";
+import { isLikelyJwt } from "@/lib/auth/isLikelyJwt";
 
 const DEFAULT_TENANT = "00000000-0000-4000-8000-000000000001";
 
@@ -30,10 +41,10 @@ const PURPOSES: PurposeOfUse[] = [
 ];
 
 /**
- * Local dev only: push form values into Zustand so apiClient injects the same
- * trust headers as production-shaped flows. This is not OIDC login.
+ * Local dev only: replace session with a non-OIDC placeholder so TSHEPO can
+ * still be exercised without Keycloak. Prefer OIDC sign-in for real tokens.
  */
-function applyLocalTrustVectors(params: {
+function applyManualIdentity(params: {
   tenantId: string;
   actorId: string;
   actorType: ActorType;
@@ -58,12 +69,36 @@ function applyLocalTrustVectors(params: {
     tenantId: params.tenantId.trim(),
     facilityId: params.facilityId.trim() || undefined,
     workspaceId: params.workspaceId.trim() || undefined,
+    tenantIdHeaderOrigin: "manual",
   });
 
+  setPurposeOfUse(params.purposeOfUse);
+  clearPersistedShellSession();
+}
+
+function applyContextFromForm(params: {
+  tenantId: string;
+  purposeOfUse: PurposeOfUse;
+  facilityId: string;
+  workspaceId: string;
+}) {
+  const setWorkContext = useWorkContext.getState().setWorkContext;
+  const setPurposeOfUse = useWorkContext.getState().setPurposeOfUse;
+  setWorkContext({
+    tenantId: params.tenantId.trim(),
+    facilityId: params.facilityId.trim() || undefined,
+    workspaceId: params.workspaceId.trim() || undefined,
+    tenantIdHeaderOrigin: "manual",
+  });
   setPurposeOfUse(params.purposeOfUse);
 }
 
 export function LocalRuntimeCheckShell() {
+  const isAuthenticated = useSession((s) => s.isAuthenticated);
+  const session = useSession((s) => s.session);
+  const workContext = useWorkContext((s) => s.workContext);
+  const purposeFromStore = useWorkContext((s) => s.purposeOfUse);
+
   const [tenantId, setTenantId] = useState(DEFAULT_TENANT);
   const [actorId, setActorId] = useState("local-test-actor");
   const [actorType, setActorType] = useState<ActorType>("PROVIDER");
@@ -79,8 +114,40 @@ export function LocalRuntimeCheckShell() {
   const [policyJson, setPolicyJson] = useState<string | null>(null);
   const [policyError, setPolicyError] = useState<string | null>(null);
 
-  const applyVectors = useCallback(() => {
-    applyLocalTrustVectors({
+  const oidcSession = Boolean(session && isLikelyJwt(session.accessToken));
+
+  useEffect(() => {
+    if (!isAuthenticated || !workContext) return;
+    setTenantId(workContext.tenantId);
+    setFacilityId(workContext.facilityId ?? "");
+    setWorkspaceId(workContext.workspaceId ?? "");
+    setPurpose(purposeFromStore);
+  }, [isAuthenticated, workContext, purposeFromStore]);
+
+  useEffect(() => {
+    if (oidcSession && session) {
+      setActorId(session.actorId);
+      setActorType(session.actorType);
+    }
+  }, [oidcSession, session]);
+
+  const applyContext = useCallback(() => {
+    applyContextFromForm({
+      tenantId,
+      purposeOfUse,
+      facilityId,
+      workspaceId,
+    });
+    const s = useSession.getState().session;
+    const wc = useWorkContext.getState().workContext;
+    const pou = useWorkContext.getState().purposeOfUse;
+    if (s && wc && isLikelyJwt(s.accessToken)) {
+      savePersistedShellSession({ session: s, workContext: wc, purposeOfUse: pou });
+    }
+  }, [tenantId, purposeOfUse, facilityId, workspaceId]);
+
+  const applyManual = useCallback(() => {
+    applyManualIdentity({
       tenantId,
       actorId,
       actorType,
@@ -88,20 +155,40 @@ export function LocalRuntimeCheckShell() {
       facilityId,
       workspaceId,
     });
-  }, [
-    tenantId,
-    actorId,
-    actorType,
-    purposeOfUse,
-    facilityId,
-    workspaceId,
-  ]);
+  }, [tenantId, actorId, actorType, purposeOfUse, facilityId, workspaceId]);
+
+  const signOut = useCallback(() => {
+    const s = useSession.getState().session;
+    const hadJwt = Boolean(s?.accessToken && isLikelyJwt(s.accessToken));
+    useSession.getState().clearSession();
+    useWorkContext.getState().clearContext();
+    clearPersistedShellSession();
+    if (!hadJwt) return;
+    const shell = getShellPublicUrl();
+    const issuer = getKeycloakIssuerUrl();
+    const clientId = getKeycloakClientId();
+    const logout = new URL(`${issuer}/protocol/openid-connect/logout`);
+    logout.searchParams.set("client_id", clientId);
+    logout.searchParams.set("post_logout_redirect_uri", `${shell}/`);
+    window.location.assign(logout.toString());
+  }, []);
 
   const runPolicyCheck = useCallback(async () => {
     setPolicyLoading(true);
     setPolicyJson(null);
     setPolicyError(null);
-    applyVectors();
+
+    const currentSession = useSession.getState().session;
+    if (!currentSession) {
+      setPolicyError(
+        "No session: sign in with Keycloak or use “Apply manual identity (dev)”."
+      );
+      setPolicyLoading(false);
+      return;
+    }
+
+    applyContext();
+
     try {
       const response = await apiClient.post<AuthzResponse>(
         "/api/v1/authorize",
@@ -123,37 +210,78 @@ export function LocalRuntimeCheckShell() {
       setPolicyLoading(false);
     }
   }, [
-    applyVectors,
+    applyContext,
+    purposeOfUse,
     policyAction,
     policyResourceType,
     policyResourceId,
-    purposeOfUse,
   ]);
 
   const routesToday = useMemo(
-    () => ["/ (this page — local runtime check)", "/_not-found (Next.js built-in)"],
+    () => [
+      "/ (product entry — sign in)",
+      "/dashboard (post–sign-in)",
+      "/dev/runtime (this diagnostic page)",
+      "/auth/callback (OIDC redirect handler)",
+      "/_not-found (Next.js built-in)",
+    ],
     []
   );
 
   return (
     <div className="min-h-screen bg-neutral-50 text-neutral-900">
+      <nav className="border-b border-neutral-200 bg-white">
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3 text-sm">
+          <Link
+            href="/"
+            className="font-medium text-brand-primary hover:underline"
+          >
+            Shell home
+          </Link>
+          <Link href="/dashboard" className="text-neutral-600 hover:underline">
+            Dashboard
+          </Link>
+          <span className="text-neutral-300">|</span>
+          <span className="text-neutral-500">
+            Developer runtime diagnostics (this page)
+          </span>
+        </div>
+      </nav>
       <header className="border-b border-neutral-100 bg-white">
         <div className="mx-auto max-w-5xl px-4 py-6">
           <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">
-            Impilo One UI Shell — Local Runtime Check
+            Developer runtime diagnostics
           </h1>
           <p className="mt-1 text-sm font-medium text-brand-primary">
-            Thin local development shell
+            Impilo One UI Shell — /dev/runtime
           </p>
           <p className="mt-2 max-w-3xl text-sm text-neutral-500">
-            This page is for honest wiring checks against TSHEPO and infra. It
-            does not perform OIDC login and must not be mistaken for production
-            authentication.
+            OIDC sign-in activates a real Keycloak access token for{" "}
+            <code className="text-xs">Authorization</code> and maps the realm{" "}
+            <code className="text-xs">tenant_id</code> claim (for example{" "}
+            <code className="text-xs">moh-zw</code> in the bundled realm export)
+            and optional <code className="text-xs">facility_id</code> into the
+            work context store—without coercing tenant codes into UUIDs. Manual
+            identity remains for TSHEPO smoke tests without tokens.
           </p>
         </div>
       </header>
 
       <main className="mx-auto max-w-5xl space-y-6 px-4 py-8">
+        {workContext?.tenantIdHeaderOrigin === "fallback_uuid_no_claim" && (
+          <div
+            className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950"
+            role="status"
+          >
+            <strong className="font-medium">Tenant header fallback.</strong> The
+            access token had no <code className="text-xs">tenant_id</code> claim,
+            so <code className="text-xs">x-tenant-id</code> uses the dev UUID{" "}
+            <code className="text-xs">{DEFAULT_TENANT}</code> until you fix the
+            realm mapper or sign in with a client scope that emits{" "}
+            <code className="text-xs">tenant_id</code>.
+          </div>
+        )}
+
         <section className="grid gap-4 sm:grid-cols-2">
           <Card>
             <CardHeader>
@@ -165,13 +293,19 @@ export function LocalRuntimeCheckShell() {
                 <StatusIndicator status="active" label="running (dev)" />
               </li>
               <li className="flex items-center justify-between gap-2">
-                <span>TSHEPO via /api/v1/authorize</span>
-                <StatusIndicator status="pending" label="use Policy Check" />
+                <span>OIDC session</span>
+                {oidcSession ? (
+                  <StatusIndicator status="active" label="Keycloak JWT" />
+                ) : isAuthenticated ? (
+                  <StatusIndicator status="pending" label="manual placeholder" />
+                ) : (
+                  <StatusIndicator status="pending" label="unsigned" />
+                )}
               </li>
-              <li className="text-neutral-500">
-                Keycloak:{" "}
+              <li className="flex flex-wrap items-center gap-2">
+                <span>Keycloak</span>
                 <code className="text-xs text-neutral-900">
-                  http://localhost:8080
+                  {getKeycloakIssuerUrl()}
                 </code>
               </li>
               <li className="text-neutral-500">
@@ -189,104 +323,166 @@ export function LocalRuntimeCheckShell() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Identity and context (local only)</CardTitle>
+              <CardTitle>OpenID Connect</CardTitle>
             </CardHeader>
             <p className="mb-4 text-sm text-neutral-500">
-              No OpenID Connect flow is mounted in this package. Values below
-              populate Zustand stores so{" "}
-              <code className="text-xs">apiClient</code> can attach the same
-              trust headers used in production-shaped calls. This is{" "}
-              <strong>not</strong> a logged-in session.
+              Authorization code with PKCE for the public{" "}
+              <code className="text-xs">one-ui-shell</code> client. Callback:{" "}
+              <code className="text-xs">{getShellPublicUrl()}/auth/callback</code>
+              . Changes under <code className="text-xs">tools/auth/impilo-realm.json</code>{" "}
+              do not affect a running Keycloak until you re-import the realm or
+              apply the same client settings in the Keycloak admin UI.
             </p>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <label className="block text-xs font-medium text-neutral-500">
-                x-tenant-id (UUID)
-                <input
-                  className="mt-1 w-full rounded-lg border border-neutral-100 px-3 py-2 text-sm"
-                  value={tenantId}
-                  onChange={(e) => setTenantId(e.target.value)}
-                  spellCheck={false}
-                />
-              </label>
-              <label className="block text-xs font-medium text-neutral-500">
-                x-actor-id
-                <input
-                  className="mt-1 w-full rounded-lg border border-neutral-100 px-3 py-2 text-sm"
-                  value={actorId}
-                  onChange={(e) => setActorId(e.target.value)}
-                  spellCheck={false}
-                />
-              </label>
-              <label className="block text-xs font-medium text-neutral-500">
-                x-actor-type
-                <select
-                  className="mt-1 w-full rounded-lg border border-neutral-100 px-3 py-2 text-sm"
-                  value={actorType}
-                  onChange={(e) =>
-                    setActorType(e.target.value as ActorType)
-                  }
-                >
-                  {ACTOR_TYPES.map((t) => (
-                    <option key={t} value={t}>
-                      {t}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="block text-xs font-medium text-neutral-500">
-                x-purpose-of-use
-                <select
-                  className="mt-1 w-full rounded-lg border border-neutral-100 px-3 py-2 text-sm"
-                  value={purposeOfUse}
-                  onChange={(e) =>
-                    setPurpose(e.target.value as PurposeOfUse)
-                  }
-                >
-                  {PURPOSES.map((p) => (
-                    <option key={p} value={p}>
-                      {p}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="block text-xs font-medium text-neutral-500">
-                x-facility-id (optional UUID)
-                <input
-                  className="mt-1 w-full rounded-lg border border-neutral-100 px-3 py-2 text-sm"
-                  value={facilityId}
-                  onChange={(e) => setFacilityId(e.target.value)}
-                  placeholder="empty = omit header"
-                  spellCheck={false}
-                />
-              </label>
-              <label className="block text-xs font-medium text-neutral-500">
-                x-workspace-id (optional UUID)
-                <input
-                  className="mt-1 w-full rounded-lg border border-neutral-100 px-3 py-2 text-sm"
-                  value={workspaceId}
-                  onChange={(e) => setWorkspaceId(e.target.value)}
-                  placeholder="empty = omit header"
-                  spellCheck={false}
-                />
-              </label>
+            <div className="flex flex-wrap gap-2">
+              <a
+                href="/api/auth/login"
+                className="inline-flex items-center justify-center rounded-[12px] bg-brand-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-primary/90 focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:ring-offset-2"
+              >
+                Sign in with Keycloak
+              </a>
+              {(oidcSession || isAuthenticated) && (
+                <Button type="button" variant="secondary" onClick={signOut}>
+                  Sign out
+                </Button>
+              )}
             </div>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <Button type="button" variant="secondary" size="sm" onClick={applyVectors}>
-                Apply to trust stores (local)
-              </Button>
-            </div>
+            {session && (
+              <dl className="mt-4 space-y-1 text-xs text-neutral-600">
+                <div>
+                  <dt className="font-medium text-neutral-500">Display name</dt>
+                  <dd>{session.displayName}</dd>
+                </div>
+                <div>
+                  <dt className="font-medium text-neutral-500">Actor</dt>
+                  <dd>
+                    {session.actorType} · {session.actorId}
+                    {session.actorTypeSource === "default_no_roles" && (
+                      <span className="mt-1 block text-[11px] font-normal text-neutral-500">
+                        Role fallback: no role claim in token.
+                      </span>
+                    )}
+                  </dd>
+                </div>
+                {session.email && (
+                  <div>
+                    <dt className="font-medium text-neutral-500">Email</dt>
+                    <dd>{session.email}</dd>
+                  </div>
+                )}
+              </dl>
+            )}
           </Card>
         </section>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Identity and work context</CardTitle>
+          </CardHeader>
+          <p className="mb-4 text-sm text-neutral-500">
+            <strong>Apply context</strong> updates tenant, facility, workspace,
+            and purpose in Zustand only (keeps your current bearer).{" "}
+            <strong>Apply manual identity</strong> replaces the session with the
+            non-JWT placeholder used before OIDC.
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="block text-xs font-medium text-neutral-500">
+              x-tenant-id (realm tenant code or UUID)
+              <input
+                className="mt-1 w-full rounded-lg border border-neutral-100 px-3 py-2 text-sm"
+                value={tenantId}
+                onChange={(e) => setTenantId(e.target.value)}
+                spellCheck={false}
+              />
+              {workContext?.tenantIdHeaderOrigin === "keycloak_access_token" && (
+                <span className="mt-1 block text-[11px] font-normal text-neutral-500">
+                  Loaded from access token <code className="text-xs">tenant_id</code>{" "}
+                  (for example <code className="text-xs">moh-zw</code>); not rewritten
+                  to a UUID.
+                </span>
+              )}
+            </label>
+            <label className="block text-xs font-medium text-neutral-500">
+              x-actor-id
+              <input
+                className="mt-1 w-full rounded-lg border border-neutral-100 px-3 py-2 text-sm disabled:bg-neutral-50"
+                value={actorId}
+                onChange={(e) => setActorId(e.target.value)}
+                disabled={oidcSession}
+                spellCheck={false}
+              />
+            </label>
+            <label className="block text-xs font-medium text-neutral-500">
+              x-actor-type
+              <select
+                className="mt-1 w-full rounded-lg border border-neutral-100 px-3 py-2 text-sm disabled:bg-neutral-50"
+                value={actorType}
+                onChange={(e) =>
+                  setActorType(e.target.value as ActorType)
+                }
+                disabled={oidcSession}
+              >
+                {ACTOR_TYPES.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block text-xs font-medium text-neutral-500">
+              x-purpose-of-use
+              <select
+                className="mt-1 w-full rounded-lg border border-neutral-100 px-3 py-2 text-sm"
+                value={purposeOfUse}
+                onChange={(e) =>
+                  setPurpose(e.target.value as PurposeOfUse)
+                }
+              >
+                {PURPOSES.map((p) => (
+                  <option key={p} value={p}>
+                    {p}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block text-xs font-medium text-neutral-500">
+              x-facility-id (optional UUID)
+              <input
+                className="mt-1 w-full rounded-lg border border-neutral-100 px-3 py-2 text-sm"
+                value={facilityId}
+                onChange={(e) => setFacilityId(e.target.value)}
+                placeholder="empty = omit header"
+                spellCheck={false}
+              />
+            </label>
+            <label className="block text-xs font-medium text-neutral-500">
+              x-workspace-id (optional UUID)
+              <input
+                className="mt-1 w-full rounded-lg border border-neutral-100 px-3 py-2 text-sm"
+                value={workspaceId}
+                onChange={(e) => setWorkspaceId(e.target.value)}
+                placeholder="empty = omit header"
+                spellCheck={false}
+              />
+            </label>
+          </div>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Button type="button" variant="secondary" size="sm" onClick={applyContext}>
+              Apply context (keep bearer)
+            </Button>
+            <Button type="button" variant="secondary" size="sm" onClick={applyManual}>
+              Apply manual identity (dev)
+            </Button>
+          </div>
+        </Card>
 
         <Card>
           <CardHeader>
             <CardTitle>Policy check</CardTitle>
           </CardHeader>
           <p className="mb-4 text-sm text-neutral-500">
-            Uses existing <code className="text-xs">apiClient.post</code> to{" "}
-            <code className="text-xs">/api/v1/authorize</code> (Next rewrite →
-            TSHEPO). Applies your local context first, then shows the real JSON
-            or error payload.
+            Applies context fields, then <code className="text-xs">apiClient.post</code>{" "}
+            to <code className="text-xs">/api/v1/authorize</code> (Next rewrite → TSHEPO)
+            with the current session bearer.
           </p>
           <div className="grid gap-3 sm:grid-cols-3">
             <label className="block text-xs font-medium text-neutral-500 sm:col-span-1">
@@ -351,11 +547,12 @@ export function LocalRuntimeCheckShell() {
             ))}
           </ul>
           <p className="mt-4 text-sm text-neutral-500">
-            Next actions for real product flows: add OIDC/OAuth routes (e.g.
-            login + callback), protect segments with session + TSHEPO-backed
-            checks, mount workspace/facility switchers backed by registry
-            services, and wire dashboards to gateway paths beyond this dev
-            bridge.
+            Ensure the <code className="text-xs">impilo</code> realm and{" "}
+            <code className="text-xs">one-ui-shell</code> client exist (for example
+            import <code className="text-xs">tools/auth/impilo-realm.json</code> into
+            Keycloak). Set <code className="text-xs">NEXT_PUBLIC_ONE_UI_SHELL_URL</code>{" "}
+            if the shell is not served from{" "}
+            <code className="text-xs">http://localhost:3000</code>.
           </p>
         </Card>
 
@@ -364,12 +561,12 @@ export function LocalRuntimeCheckShell() {
             <CardTitle>Nompilo readiness placeholder</CardTitle>
           </CardHeader>
           <p className="text-sm text-neutral-600">
-            Nompilo is intended to surface contextual assistance alongside
-            clinical and operational work. No Nompilo component is packaged in{" "}
+            Nompilo is intended to surface contextual assistance alongside clinical
+            and operational work. No Nompilo component is packaged in{" "}
             <code className="text-xs">one-ui-shell</code> or{" "}
-            <code className="text-xs">shared-ui</code> yet, so nothing here
-            calls an assistant or helpdesk backend. When the real surface lands,
-            mount it from this shell without faking responses.
+            <code className="text-xs">shared-ui</code> yet, so nothing here calls an
+            assistant or helpdesk backend. When the real surface lands, mount it
+            from this shell without faking responses.
           </p>
         </Card>
       </main>
